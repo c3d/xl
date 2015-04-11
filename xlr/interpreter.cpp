@@ -387,7 +387,7 @@ bool Bindings::DoInfix(Infix *what)
                 .Arg(ifx->name).Arg(what->name);
             return false;
         }
-        
+
         test = ifx->left;
         if (!what->left->Do(this))
             return false;
@@ -422,7 +422,7 @@ void Bindings::MustEvaluate(bool updateContext)
             std::cerr << "  TEST(" << test << ") = "
                       << "OLD(" << evaluated << ")\n";
     }
-    
+
     test = evaluated;
     if (updateContext)
         if (Tree *inside = IsClosure(test, &context))
@@ -838,7 +838,7 @@ Tree *EvaluateClosure(Context *context, Tree *what)
 
     // This is a safe point for checking collection status
     GarbageCollector::SafePoint();
-    
+
     return result;
 }
 
@@ -1006,4 +1006,3 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 #include "interpreter.tbl"
 
 XL_END
-    

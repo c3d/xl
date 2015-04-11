@@ -104,7 +104,7 @@ struct Code : Op, Info
 
     virtual Op *        Run(Data data);
 
-    void                SetOps(Op **ops, Ops *instr);
+    void                SetOps(Op **ops, Ops *instr, uint outId);
     virtual void        Dump(std::ostream &out);
     static void         Dump(std::ostream &out, Op *ops, Ops &instrs);
     static text         Ref(Op *op, text sep, text set, text null);

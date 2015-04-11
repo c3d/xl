@@ -77,241 +77,6 @@ Function *CompileToBytecode(Context *ctx, Tree *what, Tree *type,
 
 // ============================================================================
 //
-//   Evaluating a code sequence
-//
-// ============================================================================
-
-Code::Code(Context *ctx, Tree *self)
-// ----------------------------------------------------------------------------
-//    Create a new code from the given ops
-// ----------------------------------------------------------------------------
-    : context(ctx), self(self), ops(NULL), instrs()
-{}
-
-
-Code::Code(Context *context, Tree *self, Op *ops)
-// ----------------------------------------------------------------------------
-//    Create a new code from the given ops
-// ----------------------------------------------------------------------------
-    : context(context), self(self), ops(ops), instrs()
-{
-    for (Op *op = ops; op; op = op->success)
-        instrs.push_back(op);
-}
-
-
-Code::~Code()
-// ----------------------------------------------------------------------------
-//    Delete the ops we own
-// ----------------------------------------------------------------------------
-{
-    for (Ops::iterator o = instrs.begin(); o != instrs.end(); o++)
-        delete *o;
-    instrs.clear();
-}
-
-
-void Code::SetOps(Op **newOps, Ops *instrsToTakeOver)
-// ----------------------------------------------------------------------------
-//    Take over the given code
-// ----------------------------------------------------------------------------
-{
-    ops = *newOps;
-    *newOps = NULL;
-    XL_ASSERT(instrs.size() == 0);
-    std::swap(instrs, *instrsToTakeOver);
-}
-
-
-Op *Code::Run(Data data)
-// ----------------------------------------------------------------------------
-//   Run all instructions in the sequence
-// ----------------------------------------------------------------------------
-{
-    // Running in-place in the same context
-    Scope *scope = context->CurrentScope();
-    data[0] = self;
-    data[1] = scope;
-
-    // Run all instructions we have in that code
-    Op *op = ops;
-    while (op)
-        op = op->Run(data);
-
-    // We were successful
-    return success;
-}
-
-
-void Code::Dump(std::ostream &out)
-// ----------------------------------------------------------------------------
-//   Dump all the instructions
-// ----------------------------------------------------------------------------
-{
-    out << OpID() << "\t" << (void *) (Op *) this
-        << "\tentry\t" << (void *) ops
-        << "\t" << self << "\n";
-    out << "\talloc"
-        << "\tI" << Inputs() << " L" << Locals() << "\n";
-    Dump(out, ops, instrs);
-}
-
-
-static Ops *currentDump = NULL;
-
-void Code::Dump(std::ostream &out, Op *ops, Ops &instrs)
-// ----------------------------------------------------------------------------
-//   Dump an instruction list
-// ----------------------------------------------------------------------------
-{
-    Save<Ops *> saveCurrentDump(currentDump, &instrs);
-
-    uint max = instrs.size();
-    for (uint i = 0; i < max; i++)
-    {
-        Op *op = instrs[i];
-        Op *fail = op->Fail();
-        if (op == ops)
-            out << i << "=>\t" << op;
-        else
-            out << i << "\t" << op;
-        if (fail)
-            out << Ref(fail, "\t", "fail", "nofail");
-        if (i + 1 < max)
-        {
-            Op *next = instrs[i]->success;
-            if (next != instrs[i+1])
-                out << Ref(next, "\n\t", "goto", "return");
-        }
-        out << "\n";
-    }
-}
-
-
-text Code::Ref(Op *op, text sep, text set, text null)
-// ----------------------------------------------------------------------------
-//   Return the reference for an op in the current list
-// ----------------------------------------------------------------------------
-{
-    std::ostringstream out;
-
-    bool found = false;
-    uint max = currentDump ? currentDump->size() : 0;
-
-    if (op == NULL)
-        found = (out << sep << null);
-    for (uint o = 0; o < max; o++)
-        if ((*currentDump)[o] == op)
-            found = (out << sep << set << "\t#" << o);
-    if (!found)
-        out << sep << set << "\t" << (void *) op;
-    return out.str();
-}
-
-
-Function::Function(Context *context, Tree *self, uint nInputs, uint nLocals)
-// ----------------------------------------------------------------------------
-//   Create a function
-// ----------------------------------------------------------------------------
-    : Code(context, self), nInputs(nInputs), nLocals(nLocals)
-{}
-
-
-Function::Function(Function *original, Data data, ParmOrder &capture)
-// ----------------------------------------------------------------------------
-//    Copy constructor used for closures
-// ----------------------------------------------------------------------------
-    : Code(original->context, original->self),
-      nInputs(original->nInputs), nLocals(original->nLocals),
-      captured()
-{
-    // We have no instrs, so we don't "own" the instructions
-    ops = original->ops;
-
-    // Copy data in the closure from current data
-    uint max = capture.size();
-    captured.reserve(max);
-    for (uint p = 0; p < max; p++)
-    {
-        int id = capture[p];
-        Tree *arg = data[id];
-        captured.push_back(arg);
-    }
-}
-
-
-Function::~Function()
-// ----------------------------------------------------------------------------
-//    Destructor for functions
-// ----------------------------------------------------------------------------
-{}
-
-
-Op *Function::Run(Data data)
-// ----------------------------------------------------------------------------
-//   Create a new scope and run all instructions in the sequence
-// ----------------------------------------------------------------------------
-{
-    Scope *scope     = context->CurrentScope();
-    uint   frameSize = FrameSize();
-    uint   offset    = OffsetSize();
-    Data   frame     = new Tree_p[frameSize];
-    Data   newData   = frame + offset;
-
-    // Initialize self and scope
-    newData[0] = self;
-    newData[1] = scope;
-
-    // Copy input arguments
-    uint inputs   = Inputs();
-    Data oarg = &newData[-1];
-    Data iarg = &data[-1];
-    for (uint a = 0; a < inputs; a++)
-        *oarg-- = *iarg--;
-
-    // Copy closure data if any
-    uint closures = Closures();
-    if (closures)
-    {
-        Data carg = ClosureData();
-        for (uint c = 0; c < closures; c++)
-            *oarg-- = *carg++;
-    }
-
-    // Execute the following instructions in the newly created data context
-    Op *op = ops;
-    while (op)
-        op = op->Run(newData);
-
-    // Copy result and current context to the old data
-    Tree *result = DataResult(newData);
-    DataResult(data, result);
-
-    // Destroy the frame, we no longer need it
-    delete[] frame;
-
-    // Evaluate next instruction
-    return success;
-}
-
-
-void Function::Dump(std::ostream &out)
-// ----------------------------------------------------------------------------
-//   Dump all the instructions
-// ----------------------------------------------------------------------------
-{
-    out << OpID() << "\t" << (void *) (Op *) this
-        << "\tentry\t" << (void *) ops
-        << "\t" << self << "\n";
-    out << "\talloc"
-        << "\tI" << Inputs() << " L" << Locals() << " C" << Closures() << "\n";
-    Code::Dump(out, ops, instrs);
-}
-
-
-
-// ============================================================================
-//
 //    Opcodes we use in this translation
 //
 // ============================================================================
@@ -442,7 +207,10 @@ struct ArgEvalOp : FailOp
         if (Tree *inside = IsClosure(self, &context))
             self = inside;
         Context *ctx = context;
-        result = EvaluateWithBytecode(ctx, self);
+        if (self->IsConstant())
+            result = self;
+        else
+            result = EvaluateWithBytecode(ctx, self);
         if (result)
         {
             result = MakeClosure(ctx, result);
@@ -493,7 +261,7 @@ struct ClosureOp : Op
 {
     ClosureOp(Context *ctx): context(ctx) {}
     Context_p context;
-    
+
     virtual Op *        Run(Data data)
     {
         Tree *result = DataResult(data);
@@ -501,7 +269,7 @@ struct ClosureOp : Op
         DataResult(data, result);
         return success;
     }
-        
+
     virtual kstring     OpID()  { return "closure"; }
     virtual void        Dump(std::ostream &out)
     {
@@ -742,6 +510,270 @@ struct FormErrorOp : Op
     }
     virtual kstring     OpID()  { return "error"; };
 };
+
+
+
+// ============================================================================
+//
+//   Evaluating a code sequence
+//
+// ============================================================================
+
+Code::Code(Context *ctx, Tree *self)
+// ----------------------------------------------------------------------------
+//    Create a new code from the given ops
+// ----------------------------------------------------------------------------
+    : context(ctx), self(self), ops(NULL), instrs()
+{}
+
+
+Code::Code(Context *context, Tree *self, Op *ops)
+// ----------------------------------------------------------------------------
+//    Create a new code from the given ops
+// ----------------------------------------------------------------------------
+    : context(context), self(self), ops(ops), instrs()
+{
+    for (Op *op = ops; op; op = op->success)
+        instrs.push_back(op);
+}
+
+
+Code::~Code()
+// ----------------------------------------------------------------------------
+//    Delete the ops we own
+// ----------------------------------------------------------------------------
+{
+    for (Ops::iterator o = instrs.begin(); o != instrs.end(); o++)
+        delete *o;
+    instrs.clear();
+}
+
+
+void Code::SetOps(Op **newOps, Ops *instrsToTakeOver, uint outId)
+// ----------------------------------------------------------------------------
+//    Take over the given code
+// ----------------------------------------------------------------------------
+{
+    ops = *newOps;
+    *newOps = NULL;
+    XL_ASSERT(instrs.size() == 0);
+    std::swap(instrs, *instrsToTakeOver);
+
+    // A few post-generation optimizations:
+    uint max = instrs.size();
+    for (uint i = 0; i < max; i++)
+    {
+        Op *op = instrs[i];
+
+        // Make sure calls all use the same out area
+        if (CallOp *call = dynamic_cast<CallOp *>(op))
+            call->outId = outId;
+
+        // Remove labels, since they execute as no-ops
+        while (LabelOp *label = dynamic_cast<LabelOp *>(op->success))
+            op->success = label->success;
+        if (FailOp *fop = dynamic_cast<FailOp *>(op))
+            while (LabelOp *label = dynamic_cast<LabelOp *>(fop->fail))
+                fop->fail = label->success;
+    }
+    for (uint i = 0; i < max; i++)
+    {
+        Op *op = instrs[i];
+        if (LabelOp *label = dynamic_cast<LabelOp *>(op))
+        {
+            instrs.erase(instrs.begin() + i);
+            --i;
+            --max;
+            delete label;
+        }
+    }
+}
+
+
+Op *Code::Run(Data data)
+// ----------------------------------------------------------------------------
+//   Run all instructions in the sequence
+// ----------------------------------------------------------------------------
+{
+    // Running in-place in the same context
+    Scope *scope = context->CurrentScope();
+    data[0] = self;
+    data[1] = scope;
+
+    // Run all instructions we have in that code
+    Op *op = ops;
+    while (op)
+        op = op->Run(data);
+
+    // We were successful
+    return success;
+}
+
+
+void Code::Dump(std::ostream &out)
+// ----------------------------------------------------------------------------
+//   Dump all the instructions
+// ----------------------------------------------------------------------------
+{
+    out << OpID() << "\t" << (void *) (Op *) this
+        << "\tentry\t" << (void *) ops
+        << "\t" << self << "\n";
+    out << "\talloc"
+        << "\tI" << Inputs() << " L" << Locals() << "\n";
+    Dump(out, ops, instrs);
+}
+
+
+static Ops *currentDump = NULL;
+
+void Code::Dump(std::ostream &out, Op *ops, Ops &instrs)
+// ----------------------------------------------------------------------------
+//   Dump an instruction list
+// ----------------------------------------------------------------------------
+{
+    Save<Ops *> saveCurrentDump(currentDump, &instrs);
+
+    uint max = instrs.size();
+    for (uint i = 0; i < max; i++)
+    {
+        Op *op = instrs[i];
+        Op *fail = op->Fail();
+        if (op == ops)
+            out << i << "=>\t" << op;
+        else
+            out << i << "\t" << op;
+        if (fail)
+            out << Ref(fail, "\t", "fail", "nofail");
+        if (i + 1 < max)
+        {
+            Op *next = instrs[i]->success;
+            if (next != instrs[i+1])
+                out << Ref(next, "\n\t", "goto", "return");
+        }
+        out << "\n";
+    }
+}
+
+
+text Code::Ref(Op *op, text sep, text set, text null)
+// ----------------------------------------------------------------------------
+//   Return the reference for an op in the current list
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+
+    bool found = false;
+    uint max = currentDump ? currentDump->size() : 0;
+
+    if (op == NULL)
+        found = (out << sep << null);
+    for (uint o = 0; o < max; o++)
+        if ((*currentDump)[o] == op)
+            found = (out << sep << set << "\t#" << o);
+    if (!found)
+        out << sep << set << "\t" << (void *) op;
+    return out.str();
+}
+
+
+Function::Function(Context *context, Tree *self, uint nInputs, uint nLocals)
+// ----------------------------------------------------------------------------
+//   Create a function
+// ----------------------------------------------------------------------------
+    : Code(context, self), nInputs(nInputs), nLocals(nLocals)
+{}
+
+
+Function::Function(Function *original, Data data, ParmOrder &capture)
+// ----------------------------------------------------------------------------
+//    Copy constructor used for closures
+// ----------------------------------------------------------------------------
+    : Code(original->context, original->self),
+      nInputs(original->nInputs), nLocals(original->nLocals),
+      captured()
+{
+    // We have no instrs, so we don't "own" the instructions
+    ops = original->ops;
+
+    // Copy data in the closure from current data
+    uint max = capture.size();
+    captured.reserve(max);
+    for (uint p = 0; p < max; p++)
+    {
+        int id = capture[p];
+        Tree *arg = data[id];
+        captured.push_back(arg);
+    }
+}
+
+
+Function::~Function()
+// ----------------------------------------------------------------------------
+//    Destructor for functions
+// ----------------------------------------------------------------------------
+{}
+
+
+Op *Function::Run(Data data)
+// ----------------------------------------------------------------------------
+//   Create a new scope and run all instructions in the sequence
+// ----------------------------------------------------------------------------
+{
+    Scope *scope     = context->CurrentScope();
+    uint   frameSize = FrameSize();
+    uint   offset    = OffsetSize();
+    Data   frame     = new Tree_p[frameSize];
+    Data   newData   = frame + offset;
+
+    // Initialize self and scope
+    newData[0] = self;
+    newData[1] = scope;
+
+    // Copy input arguments
+    uint inputs   = Inputs();
+    Data oarg = &newData[-1];
+    Data iarg = &data[-1];
+    for (uint a = 0; a < inputs; a++)
+        *oarg-- = *iarg--;
+
+    // Copy closure data if any
+    uint closures = Closures();
+    if (closures)
+    {
+        Data carg = ClosureData();
+        for (uint c = 0; c < closures; c++)
+            *oarg-- = *carg++;
+    }
+
+    // Execute the following instructions in the newly created data context
+    Op *op = ops;
+    while (op)
+        op = op->Run(newData);
+
+    // Copy result and current context to the old data
+    Tree *result = DataResult(newData);
+    DataResult(data, result);
+
+    // Destroy the frame, we no longer need it
+    delete[] frame;
+
+    // Evaluate next instruction
+    return success;
+}
+
+
+void Function::Dump(std::ostream &out)
+// ----------------------------------------------------------------------------
+//   Dump all the instructions
+// ----------------------------------------------------------------------------
+{
+    out << OpID() << "\t" << (void *) (Op *) this
+        << "\tentry\t" << (void *) ops
+        << "\t" << self << "\n";
+    out << "\talloc"
+        << "\tI" << Inputs() << " L" << Locals() << " C" << Closures() << "\n";
+    Code::Dump(out, ops, instrs);
+}
 
 
 
@@ -1126,7 +1158,8 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
         AddTypeCheck(ctx, what, type);
 
     // The generated code takes over the instructions in all cases
-    function->SetOps(&ops, &instrs);
+    uint outId = values.size() + nParms;
+    function->SetOps(&ops, &instrs, outId);
     if (result)
     {
         // Successful compilation - Return the code we created
@@ -1348,6 +1381,16 @@ int CodeBuilder::ValueID(Tree *self)
 // ----------------------------------------------------------------------------
 {
     int id;
+    if (Name *name = self->AsName())
+    {
+        Rewrite_p rw;
+        if (context->Bound(name, true, &rw, NULL))
+        {
+            // Use the rewrite as the basis for the ID so as to make it unique
+            self = rw;
+        }
+    }
+
     TreeIDs::iterator found = values.find(self);
     if (found == values.end())
     {
@@ -1415,16 +1458,19 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
             {
                 TreeIDs::iterator found = inputs.find(rw);
                 XL_ASSERT(found != inputs.end() && "Parameter not bound?");
-                id = (*found).second;
-                
+                int inputId = (*found).second;
+
                 // Don't evaluate if already evaluated during argument passing
                 Tree *type = RewriteType(rw->left);
                 evaluate = false;
                 if (!type || type == tree_type)
                 {
-                    Tree *defined = RewriteDefined(rw->left);
-                    int vid = ValueID(defined);
-                    Add(new ArgEvalOp(ctx, id, vid, failOp));
+                    id = ValueID(rw);
+                    Add(new ArgEvalOp(ctx, inputId, id, failOp));
+                }
+                else
+                {
+                    id = inputId;
                 }
                 break;
             }
@@ -1441,17 +1487,16 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
             // Global entities can be evaluated directly in place
             case GLOBAL:
             {
-                id = ValueID(name);
+                id = ValueID(rw);
                 break;
             }
 
             // All other values are 'captured' from surrounding context
             case ENCLOSING:
             {
-                Tree *defined = RewriteDefined(rw->left);
-                id = CaptureID(defined);
-                if (count(captured.begin(), captured.end(), defined) == 0)
-                    captured.push_back(defined);
+                id = CaptureID(rw);
+                if (count(captured.begin(), captured.end(), rw) == 0)
+                    captured.push_back(rw);
                 evaluate = false;
                 break;
             }
@@ -1480,7 +1525,7 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
                     AddEval(id, call);
                 }
             }
-            
+
             return id;
         }
     }
@@ -1652,7 +1697,7 @@ struct InfixMatchOp : FailOp
                     data[rid] = MakeClosure(ctx, ifx->right);
                 }
                 else
-                {        
+                {
                     data[lid] = ifx->left;
                     data[rid] = ifx->right;
                 }
