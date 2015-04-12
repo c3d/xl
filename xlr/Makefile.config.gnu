@@ -46,5 +46,5 @@ CFLAGS_debug=-g -Wall -fno-inline
 CFLAGS_opt=-O3 -Wall
 
 CXXFLAGS_debug=-g -Wall -fno-inline
-CXXFLAGS_opt=-O3 -Wall
+CXXFLAGS_opt=-O3 -Wall -g
 

@@ -178,7 +178,8 @@ struct EvalOp : FailOp
     virtual kstring     OpID()          { return "eval"; }
     virtual void        Dump(std::ostream &out)
     {
-        out << OpID() << "\t" << id << Code::Ref(ops, "\t", "code", "null");
+        out << OpID() << "\t" << id << "\t"
+            << Code::Ref(ops, "\t", "code", "null");
     }
 };
 
@@ -348,6 +349,7 @@ struct CallOp : Op
         XL_ASSERT(!remaining);
         if (remaining)
             return remaining;
+
         DataResult(data, out[0]);
         return success;
     }
@@ -793,7 +795,7 @@ CodeBuilder::CodeBuilder(TreeList &captured)
       test(NULL), resultType(NULL),
       context(NULL), parmsCtx(NULL), argsCtx(NULL),
       failOp(NULL), successOp(NULL),
-      instrs(), subexprs(), parms()
+      instrs(), subexprs(), parms(), defer(false)
 {}
 
 
@@ -887,7 +889,6 @@ void CodeBuilder::AddTypeCheck(Context *context, Tree *what, Tree *type)
 
     // Otherwise, we need to generate a dynamic match
     int valueID = ValueID(what);
-    Add(new StoreOp(valueID));
     int typeID = Evaluate(context, type);
     Add(new TypeCheckOp(valueID, typeID, failOp));
 }
@@ -926,7 +927,7 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
     if (nEvals < ne)
         nEvals = ne;
     if (ne > neOld)
-        Add(new ClearOp(neOld+2, ne+2));
+        Add(new ClearOp(neOld+2, ne+1));
     if (defer)
         Add(new ClosureOp(context));
 }
@@ -1158,13 +1159,12 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
         AddTypeCheck(ctx, what, type);
 
     // The generated code takes over the instructions in all cases
-    uint outId = values.size() + nParms;
-    function->SetOps(&ops, &instrs, outId);
+    function->SetOps(&ops, &instrs, 2 + nEvals);
     if (result)
     {
         // Successful compilation - Return the code we created
         function->nInputs = nArgs + captured.size();
-        function->nLocals = values.size() + nEvals + nParms;
+        function->nLocals = nEvals + nParms;
         function->captured = captured;
 
         IFTRACE(ucode)
@@ -1578,8 +1578,7 @@ CallOp *CodeBuilder::Call(Context *ctx, Tree *value, Tree *type,
         nParms = np;
 
     // Output slot where we will pass paramters and generate call
-    int outID = values.size() + np;
-    CallOp *call = new CallOp(fn, outID, parms);
+    CallOp *call = new CallOp(fn, ~0U, parms);
     return call;
 }
 
