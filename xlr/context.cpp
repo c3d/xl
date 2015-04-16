@@ -413,6 +413,16 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
                 if (cname->value == "C")
                     return NULL;
 
+    // Find or create scope info
+    Scope     *scope     = symbols;
+    ScopeInfo *scopeInfo = scope->GetInfo<ScopeInfo>();
+    if (!scopeInfo)
+    {
+        scopeInfo = new ScopeInfo;
+        scope->SetInfo<ScopeInfo>(scopeInfo);
+    }
+    scopeInfo->declarations.push_back(rewrite);
+
     // Updating a symbol in the context invalidates any cached code we may have
     compiled.clear();
 
@@ -438,7 +448,6 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     // That structure has the following layout: (A->B ; (L; R)), where
     // A->B is the local declaration, L and R are the possible children.
     // Children are initially nil.
-    Scope   *scope  = symbols;
     Tree_p  &locals = scope->right;
     Tree_p  *parent = &locals;
     Rewrite *result = NULL;

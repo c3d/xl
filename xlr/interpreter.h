@@ -59,11 +59,13 @@ Opcode *OpcodeInfo(Infix *decl);
 //
 // ============================================================================
 
-struct ClosureInfo : Info
+struct ScopeInfo : Info
 // ----------------------------------------------------------------------------
-//   Mark a given Prefix as a closure
+//   Mark a given tree as a scope
 // ----------------------------------------------------------------------------
-{};
+{
+    TreeList    declarations;
+};
 
 
 inline Tree *IsClosure(Tree *tree, Context_p *context)
@@ -75,7 +77,7 @@ inline Tree *IsClosure(Tree *tree, Context_p *context)
     {
         if (Scope *scope = ScopeParent(closure))
         {
-            if (closure->GetInfo<ClosureInfo>())
+            if (scope->GetInfo<ScopeInfo>())
             {
                 // We normally have a scope on the left
                 if (context)
@@ -120,13 +122,12 @@ retry:
             }
         }
 
-        if (valueKind != PREFIX || !value->GetInfo<ClosureInfo>())
+        Prefix *prefix = value->AsPrefix();
+        if (!prefix || !prefix->left->GetInfo<ScopeInfo>())
         {
             Scope *scope = context->CurrentScope();
+            XL_ASSERT(scope->GetInfo<ScopeInfo>());
             value = new Prefix(scope, value);
-
-            ClosureInfo *closureMarker = new ClosureInfo;
-            value->SetInfo(closureMarker);
         }
     }
     return value;
