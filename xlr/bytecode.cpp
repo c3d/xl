@@ -1381,15 +1381,13 @@ int CodeBuilder::ValueID(Tree *self)
 // ----------------------------------------------------------------------------
 {
     int id;
-    if (Name *name = self->AsName())
-    {
-        Rewrite_p rw;
-        if (context->Bound(name, true, &rw, NULL))
-        {
-            // Use the rewrite as the basis for the ID so as to make it unique
-            self = rw;
-        }
-    }
+
+    // For names, use the rewrite as a unique ID
+    Rewrite_p rw;
+    if (context)
+        if (Name *name = self->AsName())
+            if (context->Bound(name, true, &rw, NULL))
+                self = rw;
 
     TreeIDs::iterator found = values.find(self);
     if (found == values.end())
