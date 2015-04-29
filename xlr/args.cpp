@@ -63,7 +63,7 @@ bool RewriteBinding::IsDeferred()
             val = infix;
     }
 
-    // Defere sequences and function definitions
+    // Defer sequences and function definitions
     if (Infix *infix = val->AsInfix())
         return infix->name == ";" || infix->name == "\n" || infix->name == "->";
 

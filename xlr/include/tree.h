@@ -354,7 +354,7 @@ inline Integer *Tree::AsInteger()
 //    Return a pointer to an Integer or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == INTEGER)
+    if ((void *) this && Kind() == INTEGER)
         return (Integer *) this;
     return NULL;
 }
@@ -365,7 +365,7 @@ inline Real *Tree::AsReal()
 //    Return a pointer to an Real or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == REAL)
+    if ((void *) this && Kind() == REAL)
         return (Real *) this;
     return NULL;
 }
@@ -376,7 +376,7 @@ inline Text *Tree::AsText()
 //    Return a pointer to an Text or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == TEXT)
+    if ((void *) this && Kind() == TEXT)
         return (Text *) this;
     return NULL;
 }
@@ -387,7 +387,7 @@ inline Name *Tree::AsName()
 //    Return a pointer to an Name or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == NAME)
+    if ((void *) this && Kind() == NAME)
         return (Name *) this;
     return NULL;
 }
@@ -398,7 +398,7 @@ inline Block *Tree::AsBlock()
 //    Return a pointer to an Block or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == BLOCK)
+    if ((void *) this && Kind() == BLOCK)
         return (Block *) this;
     return NULL;
 }
@@ -409,7 +409,7 @@ inline Infix *Tree::AsInfix()
 //    Return a pointer to an Infix or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == INFIX)
+    if ((void *) this && Kind() == INFIX)
         return (Infix *) this;
     return NULL;
 }
@@ -420,7 +420,7 @@ inline Prefix *Tree::AsPrefix()
 //    Return a pointer to an Prefix or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == PREFIX)
+    if ((void *) this && Kind() == PREFIX)
         return (Prefix *) this;
     return NULL;
 }
@@ -431,7 +431,7 @@ inline Postfix *Tree::AsPostfix()
 //    Return a pointer to an Postfix or NULL
 // ----------------------------------------------------------------------------
 {
-    if (this && Kind() == POSTFIX)
+    if ((void *) this && Kind() == POSTFIX)
         return (Postfix *) this;
     return NULL;
 }
