@@ -1159,12 +1159,12 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
         AddTypeCheck(ctx, what, type);
 
     // The generated code takes over the instructions in all cases
-    function->SetOps(&ops, &instrs, 2 + nEvals);
+    function->SetOps(&ops, &instrs, nEvals + nParms);
     if (result)
     {
         // Successful compilation - Return the code we created
         function->nInputs = nArgs + captured.size();
-        function->nLocals = nEvals + nParms;
+        function->nLocals = nEvals + nParms + 2;
         function->captured = captured;
 
         IFTRACE(ucode)
