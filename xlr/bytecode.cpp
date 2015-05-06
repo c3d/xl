@@ -892,6 +892,8 @@ void CodeBuilder::AddTypeCheck(Context *context, Tree *what, Tree *type)
         type = tree_type;
     if (!resultType)
         resultType = tree_type;
+    if (resultType == tree_type)
+        return;
 
     // Check if we have some static match
     if (what->IsConstant())
