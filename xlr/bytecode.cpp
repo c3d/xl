@@ -514,6 +514,21 @@ struct FormErrorOp : Op
 };
 
 
+struct PrefixFormErrorOp : FormErrorOp
+// ----------------------------------------------------------------------------
+//   When we fail with all prefix candidates, report an error
+// ----------------------------------------------------------------------------
+{
+    PrefixFormErrorOp(Tree *self): FormErrorOp(self) {}
+    virtual Op *        Run(Data data)
+    {
+        Ooops("No prefix matches $1", self);
+        return success;
+    }
+    virtual kstring     OpID()  { return "pfxerror"; };
+};
+
+
 
 // ============================================================================
 //
@@ -1376,6 +1391,11 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             int argID = Evaluate(ctx, arg);
 
             // Lookup the argument in the callee's context
+            if (!failOp)
+            {
+                failOp = new PrefixFormErrorOp(what);
+                instrs.push_back(failOp);
+            }
             Add (new IndexOp(calleeID, argID, failOp));
             InstructionsSuccess(saveEvals.saved.size());
             return true;
