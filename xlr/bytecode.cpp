@@ -462,7 +462,7 @@ struct IndexOp : FailOp
             {
                 // If we have a single name on the left, like (X->X+1)
                 // interpret that as a lambda function
-                Tree *result = NULL;
+                Tree      *result = NULL;
                 if (Name *lfname = lifx->left->AsName())
                 {
                     // Case like '(X->X+1) Arg':
@@ -1303,6 +1303,9 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             Tree   *callee = pfx->left;
             Tree   *arg = pfx->right;
 
+            while (Block *block = callee->AsBlock())
+                callee = block->child;
+
             if (Name *name = callee->AsName())
             {
                 // A few cases where we don't interpret the result
@@ -1312,6 +1315,59 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
                 {
                     InstructionsSuccess(saveEvals.saved.size());
                     return true;
+                }
+            }
+
+            // Create a call for forms like (X -> X+1) 31
+            if (Infix *lifx = callee->AsInfix())
+            {
+                if (lifx->name == "->")
+                {
+                    TreeIDs   outs;
+                    ParmOrder parms;
+                    
+                    // If we have a single name on the left, like (X->X+1)
+                    // interpret that as a lambda function
+                    int argID = Evaluate(ctx, arg);
+                    parms.push_back(argID);
+
+                    // Context to declare the arguments of the lambda function
+                    ctx = new Context(ctx);
+
+                    if (Name *lfname = lifx->left->AsName())
+                    {
+                        // Case like '(X->X+1) Arg':
+                        // Bind arg in new context and evaluate body
+                        Rewrite *rw = ctx->Define(lfname, arg);
+                        outs[rw->left] = -1;
+                        CallOp *call = Call(ctx, lifx->right, NULL,
+                                            outs, parms);
+                        Add(call);
+                        return true;
+                    }
+                    else
+                    {
+                        // Otherwise, map argument to declaration, e.g.
+                        // '(X,Y->X+Y) (2,3)' should evaluate as 5
+                        success = new LabelOp("lambda_s");
+                        successOp = success;
+                        Save<uint> saveCand(candidates, 0);
+                        compileLookup(originalScope, originalScope,
+                                      arg, lifx, this);
+                        if (candidates)
+                        {
+                            Add(new FormErrorOp(what));
+                            *lastOp = success;
+                            lastOp = &success->success;
+                            instrs.push_back(success);
+                            InstructionsSuccess(saveEvals.saved.size());
+                            return true;
+                        }
+                        delete success;
+                        successOp = NULL;
+                        Add(new FormErrorOp(what));
+                        return true;
+                    }
                 }
             }
 
