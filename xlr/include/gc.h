@@ -389,7 +389,7 @@ inline void TypeAllocator::Release(void *pointer)
         {
             if (finalizing)
                 allocator->DeleteLater(chunk);
-            else if (!chunk->bits & IN_USE)
+            else if (~chunk->bits & IN_USE)
                 allocator->Finalize(pointer);
         }
     }
