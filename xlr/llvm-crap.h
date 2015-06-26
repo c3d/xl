@@ -70,7 +70,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetOptions.h>
-#include <llvm/Target/TargetSelect.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
@@ -110,11 +109,13 @@
 #include <llvm/Module.h>
 #include <llvm/GlobalValue.h>
 #include "llvm/Instructions.h"
+#include <llvm/Target/TargetSelect.h>
 #else
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/GlobalValue.h>
 #include "llvm/IR/Instructions.h"
+#include <llvm/Support/TargetSelect.h>
 #endif
 
 // While we are at it, why not also change the name of headers providing a
