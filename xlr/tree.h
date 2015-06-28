@@ -194,7 +194,7 @@ struct Integer : Tree
 //   Integer constants
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = INTEGER };
+    static const kind KIND = INTEGER;
     typedef Integer  self_t;
     typedef longlong value_t;
     
@@ -213,7 +213,7 @@ struct Real : Tree
 //   Real numbers
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = REAL };
+    static const kind KIND = REAL;
     typedef Real   self_t;
     typedef double value_t;
     
@@ -231,7 +231,7 @@ struct Text : Tree
 //   Text, e.g. "Hello World"
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = TEXT };
+    static const kind KIND = TEXT;
     typedef Text self_t;
     typedef text value_t;
     
@@ -264,7 +264,7 @@ struct Name : Tree
 //   A node representing a name or symbol
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = NAME };
+    static const kind KIND = NAME;
     typedef Name self_t;
     typedef text value_t;
     
@@ -294,7 +294,7 @@ struct Block : Tree
 //   A block, such as (X), {X}, [X] or indented block
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = BLOCK };
+    static const kind KIND = BLOCK;
     typedef Block       self_t;
     typedef Block *     value_t;
 
@@ -320,7 +320,7 @@ struct Prefix : Tree
 //   A prefix operator, e.g. sin X, +3
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = PREFIX };
+    static const kind KIND = PREFIX;
     typedef Prefix      self_t;
     typedef Prefix *    value_t;
 
@@ -339,7 +339,7 @@ struct Postfix : Tree
 //   A postfix operator, e.g. 3!
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = POSTFIX };
+    static const kind KIND = POSTFIX;
     typedef Postfix     self_t;
     typedef Postfix *   value_t;
     
@@ -358,7 +358,7 @@ struct Infix : Tree
 //   Infix operators, e.g. A+B, A and B, A,B,C,D,E
 // ----------------------------------------------------------------------------
 {
-    enum { KIND = INFIX };
+    static const kind KIND = INFIX;
     typedef Infix       self_t;
     typedef Infix *     value_t;
 
