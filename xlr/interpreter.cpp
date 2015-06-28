@@ -27,6 +27,7 @@
 #include "basics.h"
 
 #include <cmath>
+#include <algorithm>
 
 
 XL_BEGIN
