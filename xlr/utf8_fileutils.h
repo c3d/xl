@@ -154,7 +154,7 @@ inline int utf8_access(const char *path, int mode)
 
 inline bool isDirectorySeparator(int c)
 // ----------------------------------------------------------------------------
-//   For Losedows, can be / or \
+//   For Losedows, can be / or \ (and I need this to avoid multiline comment)
 // ----------------------------------------------------------------------------
 {
     return c == '/' || c == '\\';
