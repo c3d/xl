@@ -74,12 +74,15 @@ CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
-CPPFLAGS_llvm342=-std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7
-CPPFLAGS_llvm350=-std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7
-CPPFLAGS_llvm360=-std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7
-LDFLAGS_llvm342=-lz -lncurses -stdlib=libc++ -mmacosx-version-min=10.7
-LDFLAGS_llvm350=-lz -lncurses -stdlib=libc++ -mmacosx-version-min=10.7
-LDFLAGS_llvm360=-lz -lncurses -stdlib=libc++ -mmacosx-version-min=10.7
+CPPFLAGS_llvm342=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
+CPPFLAGS_llvm350=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
+CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
+LDFLAGS_llvm342=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
+LDFLAGS_llvm350=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
+LDFLAGS_llvm360=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
+
+LDFLAGS_CPPLIB_macosx=-stdlib=libc++ -mmacosx-version-min=10.7
+LDFLAGS_CPPLIB_macosx-clang=-stdlib=libc++ -mmacosx-version-min=10.7
 
 test: unit_tests xl_tests
 
