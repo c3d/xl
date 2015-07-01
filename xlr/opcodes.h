@@ -335,7 +335,7 @@ struct FunctionArguments
     template <class TreeType>
     TreeType *Parameter(kstring name)
     {
-        if (-index >= size)
+        if ((uint) -index >= size)
         {
             Ooops("Not enough arguments for parameter $1").Arg(name);
             return NULL;

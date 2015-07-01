@@ -340,7 +340,7 @@ struct CallOp : Op
         DataScope (out, DataScope (data));
 
         // Copy all parameters
-        for (int p = 0; p < sz; p++)
+        for (uint p = 0; p < sz; p++)
         {
             int parmId = parms[p];
             out[~p] = data[parmId];
@@ -1093,7 +1093,6 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     }
 
     // Check if we have builtins (opcode or C bindings)
-    int valueID = 0;
     if (decl->right == xl_self)
     {
         // If the right is "self", just return the input
@@ -1118,7 +1117,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else if (isLeaf)
     {
         // Assign an ID for names
-        valueID = builder->Evaluate(context, defined);
+        builder->Evaluate(context, defined);
     }
     else
     {

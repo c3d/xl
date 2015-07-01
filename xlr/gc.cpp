@@ -69,7 +69,8 @@ void *TypeAllocator::highestAllocatorAddress = (void *) 0;
 Atomic<uint> TypeAllocator::finalizing = 0;
 
 // Identifier of the thread currently collecting if any
-static pthread_t collecting = NULL;
+#define PTHREAD_NULL ((pthread_t) 0)
+static pthread_t collecting = PTHREAD_NULL;
 
 
 TypeAllocator::TypeAllocator(kstring tn, uint os)
@@ -493,7 +494,7 @@ bool GarbageCollector::Collect()
 
     // If we get here, we are at a safe point.
     // Only one thread enters collecting, the others spin and wait
-    if (Atomic<pthread_t>::SetQ(collecting, NULL, self))
+    if (Atomic<pthread_t>::SetQ(collecting, PTHREAD_NULL, self))
     {
         RECORD(MEMORY, "Garbage collection", "self", (intptr_t) self);
 
@@ -530,7 +531,7 @@ bool GarbageCollector::Collect()
 
         // We are done, mark it so
         mustRun &= 0U;
-        if (!Atomic<pthread_t>::SetQ(collecting, self, NULL))
+        if (!Atomic<pthread_t>::SetQ(collecting, self, PTHREAD_NULL))
         {
             XL_ASSERT(!"Someone else stole the collection lock?");
         }

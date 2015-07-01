@@ -96,7 +96,7 @@ Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
 
 extern "C"
 {
-#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+//#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
 integer_t       xl_text2int(kstring t);
 real_t          xl_text2real(kstring t);
 text            xl_int2text(integer_t value);
