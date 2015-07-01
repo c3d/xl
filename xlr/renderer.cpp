@@ -649,7 +649,7 @@ void Renderer::RenderBody(Tree *what)
                  Tree *r = w->right;
 
                  // Don't display closures, only the value inside
-                 if (l->GetInfo<ScopeInfo>())
+                 if (w->GetInfo<ClosureInfo>())
                  {
                      output << "[closure " << (void *) l << "] ";
                      Render(r);
