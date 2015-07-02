@@ -148,7 +148,7 @@ OPTION(frf, "Select the flight recorder flags",
 // Listen for input programs
 OPTVAR(listen, int, 0)
 OPTION(listen, "Listen to given port", listen = INTEGER(1, 99999999))
-OPTION(l, "Listen to default port", listen = 659)
+OPTION(l, "Listen to default port", listen = 1205)
 
 // ============================================================================
 //

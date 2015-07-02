@@ -26,7 +26,7 @@
 
 XL_BEGIN
 
-const uint XL_DEFAULT_PORT = 659;
+const uint XL_DEFAULT_PORT = 1205;
 
 int     xl_tell(text host, Tree *body);
 int     xl_listen(Context *context, uint port = XL_DEFAULT_PORT);
