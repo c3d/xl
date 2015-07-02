@@ -1,0 +1,39 @@
+// ****************************************************************************
+//  remote.tbl                                                    XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Send commands to a remote host
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+FUNCTION(tell, integer,
+         PARM(host, text)
+         PARM(code, tree),
+         tree_r &left = code;
+         R_INT(xl_tell(host, &code)));
+
+FUNCTION(listen_on, integer,
+         PARM(port, integer),
+         integer_r &left = port;
+         Scope_p scope = DataScope(data);
+         Context_p context = new Context(scope);
+         R_INT(xl_listen(context, port)));
+
+FUNCTION(listen, integer, ,
+         Scope_p scope = DataScope(data);
+         Context_p context = new Context(scope);
+         Tree_p leftP = DataSelf(data);
+         Tree &left = *leftP;
+         R_INT(xl_listen(context)));
