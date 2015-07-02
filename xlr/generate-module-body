@@ -8,3 +8,5 @@ echo '#include "'$1'.tbl"'
 echo 'XL_END'
 
 [ -f $1'.cpp' ] && echo '#include "'$1'.cpp"'
+
+echo ''
