@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdlib.h>
@@ -105,7 +106,7 @@ int xl_tell(text host, Tree *code)
     text payload = out.str();
 
     // Write the payload
-    int sent = write(sock, payload.data(), payload.length());
+    uint sent = write(sock, payload.data(), payload.length());
     if (sent < payload.length())
     {
         std::cerr << "xl_tell: Error writing data: "
