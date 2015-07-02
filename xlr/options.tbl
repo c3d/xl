@@ -150,9 +150,9 @@ OPTVAR(listen, int, 0)
 OPTION(listen, "Listen to given port", listen = INTEGER(1, 99999999))
 OPTION(l, "Listen to default port", listen = 1205)
 
-OPTVAR(listen_fork, bool, true)
-OPTION(fork, "Fork on listen", listen_fork = true)
-OPTION(nofork, "Do not fork on listen", listen_fork = false)
+OPTVAR(listen_forks, int, 20)
+OPTION(forks, "Fork on listen", listen_forks = INTEGER(1, 1000))
+OPTION(nofork, "Do not fork on listen", listen_forks = 0)
 
 
 

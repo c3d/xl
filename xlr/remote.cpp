@@ -29,6 +29,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 
 #include <string>
@@ -120,6 +121,7 @@ int xl_tell(text host, Tree *code)
 }
 
 
+static int active_children = 0;
 static void child_died(int)
 // ----------------------------------------------------------------------------
 //    When a child dies, get its exit status
@@ -131,6 +133,7 @@ static void child_died(int)
             break;
         IFTRACE(remote)
             std::cerr << "xl_listen: Child PID " << childPID << " died\n";
+        active_children--;
     }
 }
 
@@ -167,9 +170,27 @@ int xl_listen(Context *context, uint port)
     signal(SIGCHLD, child_died);
 
     // Accept client
-    bool forking = MAIN->options.listen_fork;
+    int forking = MAIN->options.listen_forks;
     while (true)
     {
+        // Block until we can accept more connexions (avoid fork bombs)
+        while (forking && active_children >= forking)
+        {
+            IFTRACE(remote)
+                std::cerr << "xl_listen: Too many children, waiting\n";
+            if (int childPID = waitpid(-1, NULL, 0))
+            {
+                if (childPID > 0)
+                {
+                    IFTRACE(remote)
+                        std::cerr << "xl_listen: Child " << childPID
+                                  << " died, resuming\n";
+                    active_children--;
+                }
+            }
+        }
+
+        // Accept input
         struct sockaddr_in client;
         socklen_t length = sizeof(client);
         int insock = accept(sock, (struct sockaddr *) &client, &length);
@@ -180,6 +201,7 @@ int xl_listen(Context *context, uint port)
             continue;
         }
 
+        // Fork child for incoming connexion
         int pid = forking ? fork() : 0;
         if (pid == -1)
         {
@@ -190,6 +212,7 @@ int xl_listen(Context *context, uint port)
             IFTRACE(remote)
                 std::cerr << "xl_listen: Forked pid " << pid << "\n";
             close(insock);
+            active_children++;
         }
         else
         {
