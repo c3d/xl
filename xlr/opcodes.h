@@ -810,8 +810,8 @@ XL_END
         virtual kstring OpID()  { return #FName; }                      \
     };                                                                  \
                                                                         \
-    Name_p xl_##Name;                                                   \
-    static Opcode_N_##FName init_opcode_N_##Name (xl_##Name);
+    Name_p xl_##FName;                                                  \
+    static Opcode_N_##FName init_opcode_N_##FName (xl_##FName);
 
 
 #define TYPE(sym, BaseType, Condition)                                  \
