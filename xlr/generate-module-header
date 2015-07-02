@@ -5,6 +5,7 @@ echo '#ifndef' $GUARD
 echo '#define' $GUARD
 echo '#define TBL_HEADER'
 echo '#include "opcodes.h"'
+[ -f $1'.h' ] && echo '#include "'$1'.h"'
 echo 'XL_BEGIN'
 echo '#include "'$1'.tbl"'
 echo 'XL_END'

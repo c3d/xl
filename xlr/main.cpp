@@ -57,6 +57,7 @@
 #include "utf8_fileutils.h"
 #include "interpreter.h"
 #include "opcodes.h"
+#include "remote.h"
 
 #ifndef INTERPRETER_ONLY
 #include "args.h"
@@ -195,6 +196,9 @@ int Main::LoadAndRun()
     if (!rc && HadErrors())
         rc = 1;
 
+    if (!rc && options.listen)
+        return xl_listen(context, options.listen);
+    
 #ifndef INTERPRETER_ONLY
     compiler->Dump();
 #endif // INTERPRETER_ONLY
