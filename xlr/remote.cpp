@@ -21,6 +21,7 @@
 #include "remote.h"
 #include "runtime.h"
 #include "serializer.h"
+#include "main.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -118,6 +119,21 @@ int xl_tell(text host, Tree *code)
 }
 
 
+static void child_died(int)
+// ----------------------------------------------------------------------------
+//    When a child dies, get its exit status
+// ----------------------------------------------------------------------------
+{
+    while (int childPID = waitpid(-1, NULL, WNOHANG))
+    {
+        if (childPID < 0)
+            break;
+        IFTRACE(remote)
+            std::cerr << "xl_listen: Child PID " << childPID << " died\n";
+    }
+}
+
+
 int xl_listen(Context *context, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
@@ -146,7 +162,11 @@ int xl_listen(Context *context, uint port)
     // Listen to socket
     listen(sock, 5);
 
+    // Make sure we get notified when a child dies
+    signal(SIGCHLD, child_died);
+
     // Accept client
+    bool forking = MAIN->options.listen_fork;
     while (true)
     {
         struct sockaddr_in client;
@@ -156,35 +176,55 @@ int xl_listen(Context *context, uint port)
         {
             std::cerr << "xl_listen: Error accepting port " << port << ": "
                       << strerror(errno) << "\n";
-            return -1;
+            continue;
         }
 
-        // Read data from client
-        char buffer[256];
-        text payload = "";
-        while(true)
+        int pid = forking ? fork() : 0;
+        if (pid == -1)
         {
-            int rd = read(insock, buffer, sizeof(buffer)-1);
-            if (rd <= 0)
-                break;
-            payload += text(buffer, rd);
+            std::cerr << "xl_listen: Error forking child\n";
         }
-        close(insock);
-
-        // Deserialize data
-        std::istringstream input(payload);
-        Deserializer deserializer(input);
-        Tree *code = deserializer.ReadTree();
-
-        // Evaluate resullting code (todo: fork)
-        if (code)
+        else if (pid)
         {
             IFTRACE(remote)
+                std::cerr << "xl_listen: Forked pid " << pid << "\n";
+            close(insock);
+        }
+        else
+        {
+            // Read data from client
+            char buffer[256];
+            text payload = "";
+            while(true)
             {
-                std::cerr << "Received code: " << code << "\n";
-                std::cerr << "Evaluating\n";
+                int rd = read(insock, buffer, sizeof(buffer)-1);
+                if (rd <= 0)
+                    break;
+                payload += text(buffer, rd);
             }
-            context->Evaluate(code);
+            close(insock);
+
+            // Deserialize data
+            std::istringstream input(payload);
+            Deserializer deserializer(input);
+            Tree *code = deserializer.ReadTree();
+            
+            // Evaluate resullting code (todo: fork)
+            if (code)
+            {
+                IFTRACE(remote)
+                {
+                    std::cerr << "xl_listen: Received code: " << code << "\n";
+                    std::cerr << "xl_listen; Evaluating\n";
+                }
+                context->Evaluate(code);
+            }
+            if (forking)
+            {
+                IFTRACE(remote)
+                    std::cerr << "xl_listen: Exiting PID " << getpid() << "\n";
+                exit(0);
+            }
         }
     }
         

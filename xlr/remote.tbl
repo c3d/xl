@@ -37,3 +37,8 @@ FUNCTION(listen, integer, ,
          Tree_p leftP = DataSelf(data);
          Tree &left = *leftP;
          R_INT(xl_listen(context)));
+
+NAME_FN(GetPid, integer, "process_id",
+         Tree_p leftP = DataSelf(data);
+         Tree &left = *leftP;
+         R_INT(getpid()))
