@@ -120,9 +120,9 @@ modules-clean:
 	rm -f $(MODULES_SOURCES) $(MODULES_HEADERS)
 
 interp-%:
-	make COMPILER=none $*
+	$(MAKE) COMPILER=none $*
 ionly-%:
-	make COMPILER=none $*
+	$(MAKE) COMPILER=none $*
 
 
 %-module.cpp: %.tbl %-module.h Makefile
