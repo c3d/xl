@@ -269,7 +269,8 @@ int xl_listen(Context *context, uint port)
                       << strerror(errno) << "\n";
             continue;
         }
-        std::cerr << "xl_listen: Got incoming connexion\n";
+        IFTRACE(remote)
+            std::cerr << "xl_listen: Got incoming connexion\n";
 
         // Fork child for incoming connexion
         int pid = forking ? fork() : 0;
