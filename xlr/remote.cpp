@@ -27,6 +27,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,9 +36,42 @@
 
 #include <string>
 #include <sstream>
+#include <ext/stdio_filebuf.h>
 
 
 XL_BEGIN
+
+
+// ============================================================================
+// 
+//   Utilities for the code below
+// 
+// ============================================================================
+
+static Tree *xl_read_tree(int sock)
+// ----------------------------------------------------------------------------
+//   Read a tree directly from the socket
+// ----------------------------------------------------------------------------
+{
+    int fd = dup(sock);         // stdio_filebuf closes its fd in dtor
+    __gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::in);
+    std::istream is(&filebuf);
+    return Deserializer::Read(is);
+}
+
+
+static void xl_write_tree(int sock, Tree *tree)
+// ----------------------------------------------------------------------------
+//   Write a tree directly into the socket
+// ----------------------------------------------------------------------------
+{
+    int fd = dup(sock);         // stdio_filebuf closes its fd in dtor
+    __gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::out);
+    std::ostream os(&filebuf);
+    Serializer::Write(os, tree);
+}
+
+
 
 // ============================================================================
 //
@@ -45,9 +79,9 @@ XL_BEGIN
 //
 // ============================================================================
 
-int xl_tell(text host, Tree *code)
+static int xl_send(text host, Tree *code)
 // ----------------------------------------------------------------------------
-//   Send the text for the given body to the target host
+//   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
 {
     // Compute port number
@@ -101,24 +135,48 @@ int xl_tell(text host, Tree *code)
         return -1;
     }
 
-    // Get program in serialized form
-    std::ostringstream out;
-    Serializer serialize(out);
-    code->Do(serialize);
-    text payload = out.str();
+    // Write program to socket
+    xl_write_tree(sock, code);
 
-    // Write the payload
-    uint sent = write(sock, payload.data(), payload.length());
-    if (sent < payload.length())
-    {
-        std::cerr << "xl_tell: Error writing data: "
-                  << strerror(errno) << "\n";
-        return -1;
-    }
+    return sock;
+}
 
-    // Success
+
+int xl_tell(text host, Tree *code)
+// ----------------------------------------------------------------------------
+//   Send the text for the given body to the target host
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(remote)
+        std::cerr << "xl_tell: Telling " << host << ":\n"
+                  << code << "\n";
+    int sock = xl_send(host, code);
+    if (sock < 0)
+        return sock;
     close(sock);
     return 0;
+}
+
+
+Tree_p xl_ask(text host, Tree *code)
+// ----------------------------------------------------------------------------
+//   Send code to the target, wait for reply
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(remote)
+        std::cerr << "xl_ask: Asking " << host << ":\n"
+                  << code << "\n";
+    int sock = xl_send(host, code);
+    if (sock < 0)
+        return xl_nil;
+    
+    Tree *result = xl_read_tree(sock);
+    IFTRACE(remote)
+        std::cerr << "xl_ask: Response from " << host << " was:\n"
+                  << result << "\n";
+    close(sock);
+
+    return result;
 }
 
 
@@ -139,6 +197,9 @@ static void child_died(int)
 }
 
 
+static sockaddr_in client = { 0 };
+
+
 int xl_listen(Context *context, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
@@ -153,6 +214,12 @@ int xl_listen(Context *context, uint port)
         return -1;
     }
     
+    int option = 1;
+    if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR,
+                    (char *)&option, sizeof (option)) < 0)
+        std::cerr << "xl_listen: Error setting SO_REUSEADDR: "
+                  << strerror(errno) << "\n";
+
     struct sockaddr_in address = { 0 };
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -192,7 +259,8 @@ int xl_listen(Context *context, uint port)
         }
 
         // Accept input
-        struct sockaddr_in client;
+        IFTRACE(remote)
+            std::cerr << "xl_listen: Accepting input\n";
         socklen_t length = sizeof(client);
         int insock = accept(sock, (struct sockaddr *) &client, &length);
         if (insock < 0)
@@ -201,6 +269,7 @@ int xl_listen(Context *context, uint port)
                       << strerror(errno) << "\n";
             continue;
         }
+        std::cerr << "xl_listen: Got incoming connexion\n";
 
         // Fork child for incoming connexion
         int pid = forking ? fork() : 0;
@@ -218,32 +287,22 @@ int xl_listen(Context *context, uint port)
         else
         {
             // Read data from client
-            char buffer[256];
-            text payload = "";
-            while(true)
-            {
-                int rd = read(insock, buffer, sizeof(buffer)-1);
-                if (rd <= 0)
-                    break;
-                payload += text(buffer, rd);
-            }
-            close(insock);
-
-            // Deserialize data
-            std::istringstream input(payload);
-            Deserializer deserializer(input);
-            Tree *code = deserializer.ReadTree();
+            Tree *code = xl_read_tree(insock);
             
-            // Evaluate resullting code (todo: fork)
+            // Evaluate resulting code
             if (code)
             {
                 IFTRACE(remote)
-                {
                     std::cerr << "xl_listen: Received code: " << code << "\n";
-                    std::cerr << "xl_listen; Evaluating\n";
-                }
-                context->Evaluate(code);
+                Tree_p result = context->Evaluate(code);
+                IFTRACE(remote)
+                    std::cerr << "xl_listen: Evaluated as: " << result << "\n";
+                xl_write_tree(insock, result);
+                IFTRACE(remote)
+                    std::cerr << "xl_listen: Response sent\n";
             }
+            close(insock);
+
             if (forking)
             {
                 IFTRACE(remote)
@@ -254,5 +313,52 @@ int xl_listen(Context *context, uint port)
     }
         
 }
+
+
+int xl_reply(Tree *code)
+// ----------------------------------------------------------------------------
+//   Send code back to whoever invoked us
+// ----------------------------------------------------------------------------
+{
+    // Open socket
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        std::cerr << "xl_reply: Error opening socket: "
+                  << strerror(errno) << "\n";
+        return -1;
+    }
+
+    // Connect
+    if (connect(sock, (struct sockaddr *) &client, sizeof(client)) < 0)
+    {
+        std::cerr << "xl_reply: Error replying to '"
+                  << inet_ntoa(client.sin_addr)
+                  << "' port " << ntohs(client.sin_port) << ": "
+                  << strerror(errno) << "\n";
+        return -1;
+    }
+
+    // Get program in serialized form
+    std::ostringstream out;
+    Serializer serialize(out);
+    code->Do(serialize);
+    text payload = out.str();
+
+    // Write the payload
+    uint sent = write(sock, payload.data(), payload.length());
+    if (sent < payload.length())
+    {
+        std::cerr << "xl_tell: Error writing data: "
+                  << strerror(errno) << "\n";
+        return -1;
+    }
+
+    close(sock);
+    return 0;
+}
+    
+
+
 
 XL_END

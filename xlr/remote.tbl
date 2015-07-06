@@ -24,6 +24,16 @@ FUNCTION(tell, integer,
          tree_r &left = code;
          R_INT(xl_tell(host, &code)));
 
+FUNCTION(ask, tree,
+         PARM(host, text)
+         PARM(code, tree),
+         RESULT(xl_ask(host, &code)));
+
+FUNCTION(reply, integer,
+         PARM(code, tree),
+         tree_r &left = code;
+         R_INT(xl_reply(&code)));
+
 FUNCTION(listen_on, integer,
          PARM(port, integer),
          integer_r &left = port;

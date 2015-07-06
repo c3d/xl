@@ -89,7 +89,13 @@ struct Serializer : Action
 
     bool        IsValid()       { return out.good(); }
 
-protected:
+    static void Write(std::ostream &out, Tree *tree)
+    {
+        Serializer s(out);
+        tree->Do(s);
+    }
+    
+public:
     // Writing data (low level)
     void        WriteSigned(longlong);
     void        WriteUnsigned(ulonglong);
@@ -115,7 +121,13 @@ struct Deserializer
     Tree *      ReadTree();
     bool        IsValid()       { return in.good(); }
 
-protected:
+    static Tree *Read(std::istream &in)
+    {
+        Deserializer d(in);
+        return d.ReadTree();
+    }
+
+public:
     // Reading low-level data
     longlong    ReadSigned();
     ulonglong   ReadUnsigned();
