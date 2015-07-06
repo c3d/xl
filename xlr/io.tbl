@@ -34,3 +34,6 @@ PREFIX(WriteTree,       boolean, "write", value,
 NAME_FN(WriteNewLine,   boolean, "writeln",
        R_BOOL(std::cout << "\n"));
 
+PREFIX(DebugTree,       boolean, "debug", value,
+       Tree *value = leftPtr;
+       R_BOOL(std::cout << value));
