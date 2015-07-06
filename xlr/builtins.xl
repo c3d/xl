@@ -146,3 +146,16 @@ while Condition loop Body ->
         while Condition loop Body
 until Condition loop Body               -> while not Condition loop Body
 loop Body                               -> Body; loop Body
+for Var in Low..High loop Body ->
+    Var := Low
+    while Var < High loop
+        Body
+        Var := Var + 1
+
+every Duration, Body -> loop { Body; sleep Duration}
+Duration:real h  -> Duration * 3600
+Duration:real m  -> Duration * 60
+Duration:real s  -> Duration
+Duration:real ms -> Duration * 0.001
+
+        

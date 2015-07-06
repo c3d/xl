@@ -42,7 +42,7 @@ PREFIX
         430     &
 
 POSTFIX
-        400     ! ? % cm inch mm pt px
+        400     ! ? % cm inch mm pt px h m s ms us
         420     ++ --
 
 BLOCK
