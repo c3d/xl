@@ -1,0 +1,47 @@
+// ****************************************************************************
+//  time.tbl                                                       XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Functions dealing with time management
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+FUNCTION(sleep, integer,
+         PARM(duration, real),
+         real_r &left = duration;
+         struct timespec ts;
+         ts.tv_sec = (time_t) floor(duration);
+         ts.tv_nsec = (long) floor(1.0e9 * (duration - ts.tv_sec));
+         R_INT(nanosleep(&ts, NULL)));
+
+#define R_TIME(tmfield)                         \
+    struct tm tm;                               \
+    time_t clock;                               \
+    time(&clock);                               \
+    localtime_r(&clock, &tm);                   \
+    Tree_p leftP = DataSelf(data);              \
+    Tree &left = *leftP;                        \
+    R_INT(tmfield)
+
+
+NAME_FN(Hours,          integer, "hours",       R_TIME(tm.tm_hour));
+NAME_FN(Minutes,        integer, "minutes",     R_TIME(tm.tm_min));
+NAME_FN(Seconds,        integer, "seconds",     R_TIME(tm.tm_sec));
+NAME_FN(Year,           integer, "year",        R_TIME(tm.tm_year+1900));
+NAME_FN(Month,          integer, "month",       R_TIME(tm.tm_mon));
+NAME_FN(Day,            integer, "day",         R_TIME(tm.tm_mday));
+NAME_FN(WeekDay,        integer, "week_day",    R_TIME(tm.tm_wday));
+NAME_FN(YearDay,        integer, "year_day",    R_TIME(tm.tm_yday));
+

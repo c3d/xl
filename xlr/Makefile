@@ -28,7 +28,7 @@ COMPILER=llvm
 LLVM_CONFIG=llvm-config
 
 # List of modules to build
-MODULES=basics io math text remote
+MODULES=basics io math text remote time
 MODULES_SOURCES=$(MODULES:%=%-module.cpp)
 MODULES_HEADERS=$(MODULES:%=%-module.h)
 

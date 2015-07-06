@@ -43,10 +43,3 @@ NAME_FN(GetPid, integer, "process_id",
         Tree &left = *leftP;
         R_INT(getpid()));
 
-FUNCTION(sleep, integer,
-         PARM(duration, real),
-         real_r &left = duration;
-         struct timespec ts;
-         ts.tv_sec = (time_t) floor(duration);
-         ts.tv_nsec = (long) floor(1.0e9 * (duration - ts.tv_sec));
-         R_INT(nanosleep(&ts, NULL)));
