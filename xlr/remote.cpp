@@ -245,12 +245,15 @@ static int child_wait(int flag)
         return childPID;
     IFTRACE(remote)
         std::cerr << "xl_listen: Child PID " << childPID << " died\n";
-    active_children--;
-    if (!flag && WIFEXITED(status))
+    if (childPID > 0)
     {
-        int rc = WEXITSTATUS(status);
-        if (rc == 42)
-            listening = false;
+        active_children--;
+        if (!flag && WIFEXITED(status))
+        {
+            int rc = WEXITSTATUS(status);
+            if (rc == 42)
+                listening = false;
+        }
     }
     return childPID;
 }
