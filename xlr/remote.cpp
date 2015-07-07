@@ -49,7 +49,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-static int         active_children = 0;
+static uint        active_children = 0;
 static int         reply_socket    = 0;
 static Tree_p      received        = xl_nil;
 static Tree_p      hook            = xl_true;
