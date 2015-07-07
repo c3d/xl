@@ -29,10 +29,22 @@ FUNCTION(ask, tree,
          PARM(code, tree),
          RESULT(xl_ask(host, &code)));
 
+FUNCTION(invoke, tree,
+         PARM(host, text)
+         PARM(code, tree),
+         Scope_p scope = DataScope(data);
+         Context_p context = new Context(scope);
+         RESULT(xl_invoke(context, host, &code)));
+
 FUNCTION(reply, integer,
          PARM(code, tree),
          tree_r &left = code;
-         R_INT(xl_reply(&code)));
+         Scope_p scope = DataScope(data);
+         Context_p context = new Context(scope);
+         // Must evaluate this ahead of time, otherwise the GC inside
+         // may deallocate the new Integer that is in progress inside R_INT
+         int reply = xl_reply(context, &code);
+         R_INT(reply));
 
 FUNCTION(listen_on, integer,
          PARM(port, integer),

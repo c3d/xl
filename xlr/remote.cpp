@@ -22,6 +22,7 @@
 #include "runtime.h"
 #include "serializer.h"
 #include "main.h"
+#include "save.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -43,9 +44,23 @@ XL_BEGIN
 
 
 // ============================================================================
-// 
+//
+//    Global state (per thread?)
+//
+// ============================================================================
+
+static int         active_children = 0;
+static int         reply_socket    = 0;
+static Tree_p      received        = xl_nil;
+static Tree_p      hook            = xl_true;
+static bool        listening       = true;
+
+
+
+// ============================================================================
+//
 //   Utilities for the code below
-// 
+//
 // ============================================================================
 
 static Tree *xl_read_tree(int sock)
@@ -169,7 +184,7 @@ Tree_p xl_ask(text host, Tree *code)
     int sock = xl_send(host, code);
     if (sock < 0)
         return xl_nil;
-    
+
     Tree *result = xl_read_tree(sock);
     IFTRACE(remote)
         std::cerr << "xl_ask: Response from " << host << " was:\n"
@@ -180,18 +195,44 @@ Tree_p xl_ask(text host, Tree *code)
 }
 
 
+Tree_p xl_invoke(Context *context, text host, Tree *code)
+// ----------------------------------------------------------------------------
+//   Send code to the target, wait for multiple replies
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(remote)
+        std::cerr << "xl_invoke: Invoking " << host << ":\n"
+                  << code << "\n";
+    int sock = xl_send(host, code);
+    if (sock < 0)
+        return xl_nil;
+
+    Tree_p result = xl_nil;
+    while (true)
+    {
+        Tree *response = xl_read_tree(sock);
+        if (response == NULL)
+            break;
+        
+        IFTRACE(remote)
+            std::cerr << "xl_invoke: Response from " << host << " was:\n"
+                      << response << "\n";
+        result = context->Evaluate(response);
+        if (result == xl_nil)
+            break;
+    }
+    close(sock);
+
+    return result;
+}
+
+
+
 // ============================================================================
-// 
+//
 //   Listening side
-// 
+//
 // ============================================================================
-
-static int         active_children = 0;
-static Tree_p      received        = xl_nil;
-static Tree_p      hook            = xl_true;
-static bool        listening       = true;
-static sockaddr_in client          = { 0 };
-
 
 static int child_wait(int flag)
 // ----------------------------------------------------------------------------
@@ -260,7 +301,7 @@ int xl_listen(Context *context, uint forking, uint port)
                   << strerror(errno) << "\n";
         return -1;
     }
-    
+
     int option = 1;
     if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR,
                     (char *)&option, sizeof (option)) < 0)
@@ -303,6 +344,7 @@ int xl_listen(Context *context, uint forking, uint port)
         // Accept input
         IFTRACE(remote)
             std::cerr << "xl_listen: Accepting input\n";
+        sockaddr_in client = { 0 };
         socklen_t length = sizeof(client);
         int insock = accept(sock, (struct sockaddr *) &client, &length);
         if (insock < 0)
@@ -331,7 +373,7 @@ int xl_listen(Context *context, uint forking, uint port)
         {
             // Read data from client
             Tree *code = xl_read_tree(insock);
-            
+
             // Evaluate resulting code
             if (code)
             {
@@ -341,6 +383,7 @@ int xl_listen(Context *context, uint forking, uint port)
                 Tree_p hookResult = context->Evaluate(hook);
                 if (hookResult != xl_nil)
                 {
+                    Save<int> saveReply(reply_socket, insock);
                     Tree_p result = context->Evaluate(code);
                     IFTRACE(remote)
                         std::cerr << "xl_listen: Evaluated as: "
@@ -370,49 +413,26 @@ int xl_listen(Context *context, uint forking, uint port)
 }
 
 
-int xl_reply(Tree *code)
+int xl_reply(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code back to whoever invoked us
 // ----------------------------------------------------------------------------
 {
-    // Open socket
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0)
+    if (!reply_socket)
     {
-        std::cerr << "xl_reply: Error opening socket: "
-                  << strerror(errno) << "\n";
+        std::cerr << "xl_reply: Not replying to anybody\n";
         return -1;
     }
 
-    // Connect
-    if (connect(sock, (struct sockaddr *) &client, sizeof(client)) < 0)
-    {
-        std::cerr << "xl_reply: Error replying to '"
-                  << inet_ntoa(client.sin_addr)
-                  << "' port " << ntohs(client.sin_port) << ": "
-                  << strerror(errno) << "\n";
-        return -1;
-    }
-
-    // Get program in serialized form
-    std::ostringstream out;
-    Serializer serialize(out);
-    code->Do(serialize);
-    text payload = out.str();
-
-    // Write the payload
-    uint sent = write(sock, payload.data(), payload.length());
-    if (sent < payload.length())
-    {
-        std::cerr << "xl_tell: Error writing data: "
-                  << strerror(errno) << "\n";
-        return -1;
-    }
-
-    close(sock);
+    IFTRACE(remote)
+        std::cerr << "xl_reply: Replying:\n" << code << "\n";
+    code = xl_parse_tree(context, code);
+    IFTRACE(remote)
+        std::cerr << "xl_reply: After replacement:\n" << code << "\n";
+    xl_write_tree(reply_socket, code);
     return 0;
 }
-    
+
 
 
 
