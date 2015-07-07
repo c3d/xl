@@ -265,7 +265,7 @@ static void child_died(int)
 //    When a child dies, get its exit status
 // ----------------------------------------------------------------------------
 {
-    while (child_wait(WNOHANG) >= 0)
+    while (child_wait(WNOHANG) > 0)
         /* Loop */;
 }
 
