@@ -180,27 +180,74 @@ Tree_p xl_ask(text host, Tree *code)
 }
 
 
-static int active_children = 0;
+// ============================================================================
+// 
+//   Listening side
+// 
+// ============================================================================
+
+static int         active_children = 0;
+static Tree_p      received        = xl_nil;
+static Tree_p      hook            = xl_true;
+static bool        listening       = true;
+static sockaddr_in client          = { 0 };
+
+
+static int child_wait(int flag)
+// ----------------------------------------------------------------------------
+//   Wait for a child to die
+// ----------------------------------------------------------------------------
+{
+    int status = 0;
+    int childPID = waitpid(-1, &status, flag);
+    if (childPID < 0)
+        return childPID;
+    IFTRACE(remote)
+        std::cerr << "xl_listen: Child PID " << childPID << " died\n";
+    active_children--;
+    if (WIFEXITED(status))
+    {
+        int rc = WEXITSTATUS(status);
+        if (rc == 42)
+            listening = false;
+    }
+    return childPID;
+}
+
+
 static void child_died(int)
 // ----------------------------------------------------------------------------
 //    When a child dies, get its exit status
 // ----------------------------------------------------------------------------
 {
-    while (int childPID = waitpid(-1, NULL, WNOHANG))
-    {
-        if (childPID < 0)
-            break;
-        IFTRACE(remote)
-            std::cerr << "xl_listen: Child PID " << childPID << " died\n";
-        active_children--;
-    }
+    while (child_wait(WNOHANG) >= 0)
+        /* Loop */;
 }
 
 
-static sockaddr_in client = { 0 };
+
+Tree_p  xl_listen_received()
+// ----------------------------------------------------------------------------
+//    Return the incoming message before evaluation
+// ----------------------------------------------------------------------------
+{
+    return received;
+}
 
 
-int xl_listen(Context *context, uint port)
+Tree_p xl_listen_hook(Tree *newHook)
+// ----------------------------------------------------------------------------
+//   Set the listen hook, return the previous one
+// ----------------------------------------------------------------------------
+{
+    Tree_p result = hook;
+    if (newHook != xl_nil)
+        hook = newHook;
+    return result;
+}
+
+
+int xl_listen(Context *context, uint forking, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
 // ----------------------------------------------------------------------------
@@ -238,24 +285,19 @@ int xl_listen(Context *context, uint port)
     signal(SIGCHLD, child_died);
 
     // Accept client
-    int forking = MAIN->options.listen_forks;
-    while (true)
+    listening = true;
+    while (listening)
     {
         // Block until we can accept more connexions (avoid fork bombs)
         while (forking && active_children >= forking)
         {
             IFTRACE(remote)
                 std::cerr << "xl_listen: Too many children, waiting\n";
-            if (int childPID = waitpid(-1, NULL, 0))
-            {
-                if (childPID > 0)
-                {
-                    IFTRACE(remote)
-                        std::cerr << "xl_listen: Child " << childPID
-                                  << " died, resuming\n";
-                    active_children--;
-                }
-            }
+            int childPID = child_wait(0);
+            if (childPID > 0)
+                IFTRACE(remote)
+                    std::cerr << "xl_listen: Child " << childPID
+                              << " died, resuming\n";
         }
 
         // Accept input
@@ -295,12 +337,22 @@ int xl_listen(Context *context, uint port)
             {
                 IFTRACE(remote)
                     std::cerr << "xl_listen: Received code: " << code << "\n";
-                Tree_p result = context->Evaluate(code);
-                IFTRACE(remote)
-                    std::cerr << "xl_listen: Evaluated as: " << result << "\n";
-                xl_write_tree(insock, result);
-                IFTRACE(remote)
-                    std::cerr << "xl_listen: Response sent\n";
+                received = code;
+                Tree_p hookResult = context->Evaluate(hook);
+                if (hookResult != xl_nil)
+                {
+                    Tree_p result = context->Evaluate(code);
+                    IFTRACE(remote)
+                        std::cerr << "xl_listen: Evaluated as: "
+                                  << result << "\n";
+                    xl_write_tree(insock, result);
+                    IFTRACE(remote)
+                        std::cerr << "xl_listen: Response sent\n";
+                }
+                if (hookResult == xl_false || hookResult == xl_nil)
+                {
+                    listening = false;
+                }
             }
             close(insock);
 
@@ -308,11 +360,13 @@ int xl_listen(Context *context, uint port)
             {
                 IFTRACE(remote)
                     std::cerr << "xl_listen: Exiting PID " << getpid() << "\n";
-                exit(0);
+                exit(listening ? 0 : 42);
             }
         }
     }
-        
+
+    close(sock);
+    return 0;
 }
 
 

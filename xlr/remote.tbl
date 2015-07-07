@@ -39,14 +39,28 @@ FUNCTION(listen_on, integer,
          integer_r &left = port;
          Scope_p scope = DataScope(data);
          Context_p context = new Context(scope);
-         R_INT(xl_listen(context, port)));
+         R_INT(xl_listen(context, 0, port)));
 
 FUNCTION(listen, integer, ,
          Scope_p scope = DataScope(data);
          Context_p context = new Context(scope);
          Tree_p leftP = DataSelf(data);
          Tree &left = *leftP;
-         R_INT(xl_listen(context)));
+         R_INT(xl_listen(context, 0)));
+
+FUNCTION(listen_forking, integer, ,
+         Scope_p scope = DataScope(data);
+         Context_p context = new Context(scope);
+         Tree_p leftP = DataSelf(data);
+         Tree &left = *leftP;
+         R_INT(xl_listen(context, MAIN->options.listen_forks)));
+
+FUNCTION(listen_hook, tree,
+         PARM(hook, tree),
+         RESULT(xl_listen_hook(&hook)));
+
+NAME_FN(ListenReceived, tree, "listen_received",
+        RESULT(xl_listen_received()));
 
 NAME_FN(GetPid, integer, "process_id",
         Tree_p leftP = DataSelf(data);

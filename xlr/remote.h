@@ -31,7 +31,9 @@ const uint XL_DEFAULT_PORT = 1205;
 int     xl_tell(text host, Tree *body);
 Tree_p  xl_ask(text host, Tree *body);
 int     xl_reply(Tree *body);
-int     xl_listen(Context *context, uint port = XL_DEFAULT_PORT);
+Tree_p  xl_listen_received();
+Tree_p  xl_listen_hook(Tree *body);
+int     xl_listen(Context *, uint forking, uint port = XL_DEFAULT_PORT);
 
 XL_END
 

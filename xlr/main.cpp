@@ -197,7 +197,7 @@ int Main::LoadAndRun()
         rc = 1;
 
     if (!rc && options.listen)
-        return xl_listen(context, options.listen);
+        return xl_listen(context, options.listen_forks, options.listen);
     
 #ifndef INTERPRETER_ONLY
     compiler->Dump();
