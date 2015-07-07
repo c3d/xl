@@ -243,10 +243,11 @@ static int child_wait(int flag)
     int childPID = waitpid(-1, &status, flag);
     if (childPID < 0)
         return childPID;
-    IFTRACE(remote)
-        std::cerr << "xl_listen: Child PID " << childPID << " died\n";
     if (childPID > 0)
     {
+        IFTRACE(remote)
+            std::cerr << "xl_listen: Child PID " << childPID << " died "
+                      << (flag ? "nowait" : "wait") << "\n";
         active_children--;
         if (!flag && WIFEXITED(status))
         {
