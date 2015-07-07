@@ -246,7 +246,7 @@ static int child_wait(int flag)
     IFTRACE(remote)
         std::cerr << "xl_listen: Child PID " << childPID << " died\n";
     active_children--;
-    if (WIFEXITED(status))
+    if (!flag && WIFEXITED(status))
     {
         int rc = WEXITSTATUS(status);
         if (rc == 42)
