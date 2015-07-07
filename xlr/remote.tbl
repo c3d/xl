@@ -21,7 +21,6 @@
 FUNCTION(tell, integer,
          PARM(host, text)
          PARM(code, tree),
-         tree_r &left = code;
          R_INT(xl_tell(host, &code)));
 
 FUNCTION(ask, tree,
@@ -38,7 +37,6 @@ FUNCTION(invoke, tree,
 
 FUNCTION(reply, integer,
          PARM(code, tree),
-         tree_r &left = code;
          Scope_p scope = DataScope(data);
          Context_p context = new Context(scope);
          // Must evaluate this ahead of time, otherwise the GC inside
@@ -48,7 +46,6 @@ FUNCTION(reply, integer,
 
 FUNCTION(listen_on, integer,
          PARM(port, integer),
-         integer_r &left = port;
          Scope_p scope = DataScope(data);
          Context_p context = new Context(scope);
          R_INT(xl_listen(context, 0, port)));
@@ -56,15 +53,11 @@ FUNCTION(listen_on, integer,
 FUNCTION(listen, integer, ,
          Scope_p scope = DataScope(data);
          Context_p context = new Context(scope);
-         Tree_p leftP = DataSelf(data);
-         Tree &left = *leftP;
          R_INT(xl_listen(context, 0)));
 
 FUNCTION(listen_forking, integer, ,
          Scope_p scope = DataScope(data);
          Context_p context = new Context(scope);
-         Tree_p leftP = DataSelf(data);
-         Tree &left = *leftP;
          R_INT(xl_listen(context, MAIN->options.listen_forks)));
 
 FUNCTION(listen_hook, tree,
@@ -75,7 +68,5 @@ NAME_FN(ListenReceived, tree, "listen_received",
         RESULT(xl_listen_received()));
 
 NAME_FN(GetPid, integer, "process_id",
-        Tree_p leftP = DataSelf(data);
-        Tree &left = *leftP;
         R_INT(getpid()));
 
