@@ -451,7 +451,7 @@ int Main::Run()
     }
 
     // Output the result
-    if (result)
+    if (result && !options.listen)
         std::cerr << result << "\n";
 
     return hadError;
