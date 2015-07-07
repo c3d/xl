@@ -112,7 +112,7 @@ OPTION(pedantic, "Set the maximum warning level",
 // -O1 means interpreted with bytecode-style acceleration
 // -O2 means simple compilation of bytecode
 // -O3 means new-style full compilation with type inference
-OPTVAR(optimize_level, uint, 1)
+OPTVAR(optimize_level, uint, 0)
 OPTION(O, "Set the optimization level, from 0 to 3",
        optimize_level = INTEGER(0, 3))
 OPTVAR(verbose,bool,false)
