@@ -20,7 +20,6 @@
 
 FUNCTION(sleep, integer,
          PARM(duration, real),
-         real_r &left = duration;
          struct timespec ts;
          ts.tv_sec = (time_t) floor(duration);
          ts.tv_nsec = (long) floor(1.0e9 * (duration - ts.tv_sec));
@@ -31,8 +30,6 @@ FUNCTION(sleep, integer,
     time_t clock;                               \
     time(&clock);                               \
     localtime_r(&clock, &tm);                   \
-    Tree_p leftP = DataSelf(data);              \
-    Tree &left = *leftP;                        \
     R_INT(tmfield)
 
 
@@ -46,8 +43,6 @@ NAME_FN(WeekDay,        integer, "week_day",    R_TIME(tm.tm_wday));
 NAME_FN(YearDay,        integer, "year_day",    R_TIME(tm.tm_yday));
 
 NAME_FN(Time,           real,   "time",
-        Tree_p leftP = DataSelf(data);
-        Tree &left = *leftP;
         struct timeval tv;
         gettimeofday(&tv, NULL);
         R_REAL(tv.tv_sec % 86400 + 1.0e-6 * tv.tv_usec));
