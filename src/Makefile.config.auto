@@ -35,10 +35,12 @@ BUILDENV_SunOS=sun
 all:	debug
 
 %:
-	@echo The BUILDENV environment variable is not set
-	@echo You will accelerate builds by setting it as appropriate for
-	@echo your system. The best guess is BUILDENV=$(BUILDENV)
-	@echo Attempting to build $* with $(BUILDENV)
-	@sleep 1
+	@echo "****************************************************************"
+	@echo "* The BUILDENV environment variable is not set"
+	@echo "* You will accelerate builds by setting it as appropriate for"
+	@echo "* your system. The best guess is BUILDENV=$(BUILDENV)"
+	@echo "* Attempting to build $* with $(BUILDENV)"
+	@echo "****************************************************************"
+
 	BUILDENV=$(BUILDENV) $(MAKE) $@;
 
