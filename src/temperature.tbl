@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  temperature.tbl                                                Tao project 
+//  temperature.tbl                                              ELIOT project 
 // ****************************************************************************
 // 
 //   File Description:
@@ -18,7 +18,12 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
-NAME_FN(Temperature, real, "temperature",
+NAME_FN(Temperature,            // Unique internal name
+        real,                   // Return value
+        "temperature",          // Name for ELIOT programmers
+// ----------------------------------------------------------------------------
+//    Return the core temperature as reported by the Linux kernel
+// ----------------------------------------------------------------------------
         std::ifstream is("/sys/class/thermal/thermal_zone0/temp");
         int tval;
         is >> tval;
