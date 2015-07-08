@@ -20,5 +20,8 @@
 
 all:
 
+check:
+	cd tests; ./alltests
+
 %:
 	cd src; $(MAKE) $@
