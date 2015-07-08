@@ -13,6 +13,7 @@ run_test x,y ->
     writeln x lshr y
     writeln -x
     writeln not x
+    writeln abs x
     writeln "---"
 
 run_test 75,17
