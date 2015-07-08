@@ -1,0 +1,14 @@
+#!/bin/bash
+
+function message() {
+echo "************************************************************************"
+echo "* In theory, no configuration is needed and make should have worked.   *"
+echo "* Since that did not work, the code in Makefile.auto may need to be    *"
+echo "* fixed to better detect your environment, and you may need to add     *"
+echo "* a new variant of Makefile.config.XYZ (where XYZ is a platform name). *"
+echo "************************************************************************"
+}
+
+make || message
+
+
