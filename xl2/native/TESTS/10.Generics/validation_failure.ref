@@ -1,0 +1,30 @@
+10.Generics/validation_failure.xl:14: No translation for 'Q := F (P)'
+| Q : complex := F(P)
+|_________________^
+library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
+|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+|______________________________________________________________________________^
+10.Generics/validation_failure.xl:14: No valid function found for 'F'
+| Q : complex := F(P)
+|________________^
+10.Generics/validation_failure.xl:3: Generic validation failed for 'ordered'='complex'
+| generic type ordered where
+|____________________^
+10.Generics/validation_failure.xl:5: No translation for 'Test := A < B'
+|     Test : boolean := A < B
+|_________________________^
+library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
+|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+|______________________________________________________________________________^
+10.Generics/validation_failure.xl:5: No translation for 'A < B'
+|     Test : boolean := A < B
+|_________________________^
+library/runtime/default/./xl_builtins.xs:73: Form ''X' < 'Y'' could not be selected
+|     function LessThan(X, Y : integer) return boolean            written X<Y                     is XL.BYTECODE.lt_int
+|__________________________________________________________________________^
+10.Generics/validation_failure.xl:4: Cannot convert 'a_633' from 'ordered' to 'integer'
+|     A, B : ordered
+|_____^
+10.Generics/validation_failure.xl:7: 'F (A : ordered) return ordered' could not be selected because
+| function F (A : ordered) return ordered is
+|_______________________________^

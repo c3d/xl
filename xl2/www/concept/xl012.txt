@@ -1,0 +1,65 @@
+<!--XL0, XL1, XL2-->
+
+{@xl} is defined at three different levels, called XL0, XL1 and XL2.
+
+<B>XL0</B> is {inside "xl0" "a textual representation of an XL parse tree"}.
+ It can be used to {@represent} {example "gui" "arbitrary data or code"}
+{@concepts}.
+
+{pre}// Example of valid XL0 input
+phone_book
+    person "John Smith"
+        phone "(555) 555-0123"
+        address "1 rue des Pres Chevaux"
+        city "Roquebrune sur Argens"
+        zip 83520
+    person "Wolfgang Amadeus Mozart"
+        city "Vienna"
+        note "Not heard of him in a long while. Is he dead or what?"
+{erp}
+
+<B>XL1</B> is one particular application of XL0 to represent an
+imperative programming language (in the lineage of
+{wiki "ALGOL_programming_language" "ALGOL"}, {@Pascal}, {@C}, {@C++}
+or {@Ada}). However, being based on XL0, that language is
+{concept "extension" "extensible"}. That language is implemented
+using the same {inside "translation"} mechanism used by
+{inside "plugins" "compiler plug-ins"}. All XL1 features can be
+expected to be available in all XL implementations, though that is a
+rather small set (even basic arithmetic is actually in XL2). XL1 also
+defines basic language functionalities such as name look-up, modules,
+or expression evaluation.
+
+{pre}// Example of valid XL1 fragment
+// This example is always valid because it doesn't assume a particular
+// form of arithmetic. Instantiating it with number=integer may require
+// integer arithmetic as typically provided by XL2
+generic [type number]
+function Factorial(N : number) return number written N! assume N >= 0 is
+    if N = 0 then
+       return 1
+    else
+       return N * (N-1)!
+{erp}
+
+<B>XL2</B> adds a set of predefined libraries and language extensions
+on top of XL1. It implements most features that are now considered
+part of a decent language, from arithmetic to exception handling to
+file I/O to multi-tasking. Unlike XL1, the features in XL2 do not
+need to be present. For instance, a machine without floating-point
+capabilities doesn't need to implement floating-point
+arithmetic. However, programmers can rely on XL2 as a standard
+implementation of features. An implementation cannot provide an
+alternative approach to floating-point arithmetic if it doesn't also
+provide the XL2 standard implementation.
+
+{pre}// Example of valid XL2 input
+// This example uses the example above, instantiated using integer arithmetic
+// It makes use of the standard console user interface (text I/O)
+import IO = XL.UI.CONSOLE
+to ShowFactorials is
+    N : integer
+    for N in 1..5 loop
+        IO.WriteLn "The factorial of ", N, " is ", N!
+{erp}
+        

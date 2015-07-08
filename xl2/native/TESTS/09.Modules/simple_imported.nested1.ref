@@ -1,0 +1,14 @@
+09.Modules/simple_imported.nested1.xl:27: No translation for 'module SIMPLE_IMPORTED . NESTED_1 is 
+    procedure Klaxon (volume : real)
+'
+| module SIMPLE_IMPORTED.NESTED_1 is
+|______________________^
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''type' 'name' is 'value'' could not be selected
+[Compiler generated] Form ''type' 'names'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected
+[Compiler generated] Form ''functionname' 'functionargs'' could not be selected

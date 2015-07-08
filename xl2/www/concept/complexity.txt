@@ -1,0 +1,48 @@
+<!--The sources of software complexity-->
+
+There are four main sources of complexity when writing software:
+
+<B>Domain complexity</B> is directly created by the application domain
+   or the {@pb}. If you are writing the software for launching
+   rockets, you need some basics in rocket science. Domain complexity
+   cannot be really avoided. As Einstein once said, we can only keep
+   thing as simple as possible, but no simpler.  {@cp} simply tries to
+   simplify the {@representation} in the {@code} of all
+   core {@concepts} from the {@pb}.
+
+<B>Scale complexity</B> is induced by size or other scaling
+considerations.  From a size perspective, software is now one of the
+most complex, if not the most complex form of engineering. Any piece
+of software today involves millions of bits interacting precisely in
+tens or hundreds of physical components (multiple computers, CPUs,
+graphic cards, memory, networking components, timers, sensors,
+actuators, to cite a few). Most performance issues are a particular
+form of scale complexity, related to the passage of time. In that area
+too, software engineers need to pay attention to an unusually wide
+range of time scales, from nanoseconds when dealing with individual
+computing components up to multiple years when dealing with software
+maintenance or high availability software. Scale complexity is
+reduced by layering abstractions, a process that {@cp} facilitate by
+offering {concept "anything" "more flexible"} ways to represent
+concepts.
+
+<B>Business complexity</B> is introduced by constraints on the
+business environment: budget, team size, time-to-market, ill-defined
+requirements, etc. These considerations are not generally under
+control of software methodologies. Yet best practices improve the
+efficiency of engineers, which in turn allow them to meet higher
+demands. Thus, it is only indirectly that {@cp} addresses this form
+of complexity.
+
+<B>Artificial complexity</B> is caused by the artifacts used for
+building software, notably development tools. Software engineers
+usually begin by learning the details of individual programming
+languages, which have often no equivalent in the {@pb} (that is, they
+do not relate to domain complexity). The concept programming
+{@metrics} are intended to detect artificial complexity, with the
+objective to minimize it.
+
+
+The complexity of software is not constant over time. Domain
+complexity and scale complexity both roughly follow
+{concept "moore" "Moore's law"}.

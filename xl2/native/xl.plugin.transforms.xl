@@ -1,0 +1,48 @@
+// ****************************************************************************
+//  xl.plugin.transforms.xl         (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Plug-in to show transforms happening on a tree
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import XLT = XL.TRANSLATOR
+import RD = XL.RENDERER
+import SYM = XL.SYMBOLS
+
+
+module XL.PLUGIN.TRANSFORMS is
+// ----------------------------------------------------------------------------
+//    Encapsulating module (not really necessary)
+// ----------------------------------------------------------------------------
+
+    translation Transforms
+    // ------------------------------------------------------------------------
+    //    Translations below a 'Transforms' pragma
+    // ------------------------------------------------------------------------
+
+        when
+           'Anything'
+        then
+           marker : PT.info
+           marker.name := "TRANSFORMS"
+           Anything.info["TRANSFORMS"] := marker
+           return Anything

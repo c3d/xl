@@ -1,0 +1,88 @@
+// ****************************************************************************
+//  xl.plugin.define.xl              (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of define
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (initial version)
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+import PR = XL.PARSER
+import PC = XL.PLUGIN.COMMON
+
+
+module XL.PLUGIN.DEFINE is
+// ----------------------------------------------------------------------------
+//    Encapsulating module (not really necessary)
+// ----------------------------------------------------------------------------
+
+
+    translation Define
+    // ------------------------------------------------------------------------
+    //    Translations below a 'Define' pragma
+    // ------------------------------------------------------------------------
+
+        when
+           'Anything'
+        then
+           pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
+           // For debug purpose
+           // ERR.Error "Pragma = '$1'", Pragma
+
+           translate pragma
+
+              when
+                 'PragmaName' 'Variable'
+              where
+                 Variable.kind = PT.xlName
+              then
+                 VariableName : Variable as PT.name_tree
+                 PC.SetDefineInfo(VariableName.value, parse_tree(1))
+
+                 return nil
+
+              when
+                 'PragmaName' 'VariableAndAl'
+              then
+
+                 translate VariableAndAl
+
+                    when
+                       'Variable' 'Value'
+                    where
+                       Variable.kind = PT.xlName
+                    then
+                       VariableName : Variable as PT.name_tree
+                       PC.SetDefineInfo(VariableName.value, Value)
+
+                    else
+                       ERR.Error "Pragma error : '$1'", pragma
+                       ERR.Error "Syntax is : {Define Variable Value}", pragma.position
+                       return ERR.ErrorTree()
+
+              else
+                 ERR.Error "Pragma error : '$1'", pragma
+                 ERR.Error "Syntax is : {Define Variable [Value]}", pragma.position
+                 return ERR.ErrorTree()

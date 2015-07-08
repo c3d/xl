@@ -1,0 +1,55 @@
+<!--For loops-->
+
+First implementation of 'for' loops. It is a simple rewrite:
+
+{pre}for I in 1..5 loop
+   something I
+{erp}
+
+is rewritten as:
+
+{pre}First(I in 1..5)
+while More(I in 1..5) loop
+    something I
+    Next(I in 1..5)
+Last(I in 1..5)
+{erp}
+
+Then, the usual rewrite rules apply. Typically, the definition of a
+written form for {tt "First"} would look like:
+
+{pre}procedure LoopEntry (out It : integer;
+                     Low, High : integer) written First(It in Low..High) is
+    It := Low
+{erp}
+
+Because of the check-in I did yesterday for automatic {tt "out"}
+variable declarations, this will automatically declare the loop
+iterator if necessary. However, if there is already a variable
+declared with that name, it will use that, which may be useful if you
+want to use the variable outside of the loop.
+
+The implementation of {tt "More"} and {tt "Next"} would be something like:
+
+{pre}function LoopMore (It : integer;
+                   Low, High : integer)
+    return boolean
+    written More (It in Low..High) is
+    return It <= High
+
+procedure LoopNext (in out It : integer;
+                    Low, High : integer) written Next(It in Low..High) is
+    It := It + 1
+{erp}
+
+It is not always useful to have a {tt "Last"}, but I thought it might
+be sometimes, in particular when there are premature loop exits, or if
+the iterator allocates something.
+
+For an integer iterator, it would do nothing:
+
+
+{pre}procedure LoopLast(It : integer;
+                   Low, High : integer) written Last(It in Low..High) is
+    It := It
+{erp}

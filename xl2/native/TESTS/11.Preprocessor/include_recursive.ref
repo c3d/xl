@@ -1,0 +1,3 @@
+TESTS/11.Preprocessor/include_recursive.xl:3: Too many macro recursions at 'include "include_recursive.xl"'
+| include "include_recursive.xl"
+|______________________________^

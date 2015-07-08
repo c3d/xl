@@ -1,0 +1,16 @@
+<!--The "Dirty Bootstrap" implementation-->
+
+The XL compiler bootstrapped in a "dirty" way: instead of generating
+"real" code, it currently generates relatively high-level C++
+code. As such, it is dependent on C++ semantics rather than XL
+semantics.
+
+For instance, most name lookup, overload resolution, operator
+resolution, and high-level functionality such as maps or I/O are all
+actually performed by the C++ compiler in the back-end.
+
+The compiler also has a native mode where it tries to do semantics
+itself, and generate low-level code. In this mode, however, only the
+simplest programs compile currently.
+
+

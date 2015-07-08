@@ -1,0 +1,3 @@
+procedure X (A : integer) 
+procedure Y (B : integer ; C : integer) ; procedure Z (D : integer ; E : integer) 
+procedure T (F : integer ; G : integer)

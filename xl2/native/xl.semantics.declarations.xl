@@ -1,0 +1,990 @@
+// ****************************************************************************
+//  xl.semantics.declarations.xl    (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+//
+//     Implementation of semantic declarations 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 361 $
+// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
+// ****************************************************************************
+
+import XLT = XL.TRANSLATOR
+import TYP = XL.SEMANTICS.TYPES
+import CGM = XL.CODE_GENERATOR.MACHINE
+import REC = XL.SEMANTICS.TYPES.RECORDS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import FN = XL.SEMANTICS.FUNCTIONS
+import ITER = XL.SEMANTICS.ITERATORS
+import OVL = XL.SEMANTICS.OVERLOAD
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GN = XL.SEMANTICS.GENERICS
+import BC = XL.BYTECODE
+import PR = XL.PARSER
+
+
+module XL.SEMANTICS.DECLARATIONS is
+// ----------------------------------------------------------------------------
+//   Processing the semantics of declarations
+// ----------------------------------------------------------------------------
+
+    function EnterDeclaration (Names        : PT.tree;
+                               Type         : PT.tree;
+                               Value        : PT.tree;
+                               IsDefinition : boolean) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Process the declaration of the various entities
+    // ------------------------------------------------------------------------
+
+        in_flag    : boolean := false
+        out_flag   : boolean := false
+        var_flag   : boolean := false
+        prefixen   : boolean := Names.kind <> PT.xlNAME
+        isFunction : boolean := false
+        modname    : PT.tree := nil
+
+        // Check all declaration prefixes, like 'in X : integer'
+        while prefixen loop
+            prefixen := false
+            translate Names
+                // Sequence of names, like 'A, B : integer'
+                when
+                    'X', 'Y'
+                then
+                    // TODO: Does it really make sense to initialize all with
+                    // the same value?
+                    X := EnterDeclaration (X, Type, Value, IsDefinition)
+                    Y := EnterDeclaration (Y, Type, Value, IsDefinition)
+                    return parse_tree
+                        'X'
+                        'Y'
+
+                // Input/output modifiers, like 'in X : integer'
+                when
+                    in 'Nm'
+                then
+                    in_flag := true
+                    Names := Nm
+                    prefixen := Names.kind <> PT.xlNAME
+                when
+                    out 'Nm'
+                then
+                    out_flag := true
+                    Names := Nm
+                    prefixen := Names.kind <> PT.xlNAME
+                when
+                    var 'Nm'
+                then
+                    var_flag := true
+                    Names := Nm
+                    prefixen := Names.kind <> PT.xlNAME
+                when
+                    variable 'Nm'
+                then
+                    var_flag := true
+                    Names := Nm
+                    prefixen := Names.kind <> PT.xlNAME
+
+        isparm : boolean := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        isgen  : PT.tree := SYM.GetProperty(XLT.context, "GENERIC", true)
+
+        // Check if we are at the top-level of a module
+        modname := SYM.GetProperty (XLT.context, "MODULE")
+        if modname <> nil then
+            trace[modules] "IsDeclaration(", Names, ") modname ", modname
+            translate Names
+                when ('Base'.'Child') then
+                    if PT.Matches(modname, Base) then
+                        Names := Child
+                        modname := nil
+        if modname <> nil then
+            ERR.Error "'$1' is not a submodule name", Names
+            ERR.Error "but is used as a submodule of '$1'", modname
+            Names := SYM.Temporary ("invalid_submodule")
+
+        // Check that the declaration is not ill-formed
+        if Names.kind <> PT.xlNAME then
+            ERR.Error "A name was expected, got '$1'", Names
+            Names := SYM.Temporary ("invalid_declaration")
+        Name : Names as PT.name_tree
+
+        // Check if the type is just 'variable' or 'var'
+        // If so, try to deduce the type from the context
+        tname : Type as PT.name_tree
+        if tname <> nil then
+            if tname.value = "variable" or tname.value = "var" then
+                if Value = nil then
+                    ERR.Error "No initialization giving type of '$1'", Type
+                else
+                    callDepth : integer := CGM.EnterCall()
+                    SemValue : PT.tree := XLT.XLSemantics(Value)
+                    tp : TY.any_type := TY.GetType(SemValue)
+                    CGM.ExitCall callDepth, SemValue
+                    if tp = nil then
+                        ERR.Error "No type for '$1'", Type
+                        ERR.Error "can be deduced from '$1'", Value
+                    else
+                        Type := TY.Source(TY.NonConstedType(tp))
+
+        // Check if we get there for a type (from instantiation)
+        decl_type : TY.any_type := TY.EvaluateType(Type)
+        if TY.IsTypeType (decl_type) then
+           return TY.EnterType (Name, Value)
+
+        // Check if this is a function type we need to enter
+        decl_base_type : TY.any_type := TY.NonSourceType(decl_type)
+        decl_gen_type : decl_base_type as GEN.generic_type
+        if decl_gen_type <> nil then
+            decl_base_type := TY.NonSourceType(decl_gen_type.base)
+        decl_fn_type : decl_base_type as FT.function_type
+        decl : declaration
+        if decl_fn_type <> nil then
+            if decl_fn_type.iterator then
+                result := ITER.EnterIterator(Name, decl_type, Value, Name)
+            else
+                result := FN.EnterFunction (Name, decl_type, Value, Name)
+            decl := GetDeclaration(result)
+            isFunction := true
+            
+
+        // Tests that do not apply to functions or iterators
+        if not isFunction then
+
+            // Check if this is an uninstantiated generic type
+            if decl_gen_type <> nil then
+                if not isparm and isgen = nil then
+                    Type := GN.InstantiateType(Type, nil)
+                    decl_type := TY.EvaluateType(Type)
+                    gtype2 : decl_type as GEN.generic_type
+                    if gtype2 <> nil then
+                        ERR.Error "Type '$1' is generic", Type
+
+            // Check if there is already an entity by that name
+            original : PT.tree := SYM.LookupOne(XLT.context, "DECL",
+                                                Name.value, SYM.lookupDirect)
+            if original <> nil then
+                ERR.Error "Redeclaration of '$1' ", Name
+                ERR.Error "Previous declaration of '$1' here", original
+                // We go through since this is better at avoiding cascade errors
+
+            // Build the declaration
+            decl := Declare(Name, TY.EvaluateType(Type))
+            decl.initializer        := Value
+
+        // Parameter checking
+        decl.is_input           := in_flag
+        decl.is_output          := out_flag
+        decl.is_variable        := var_flag
+
+        // Check some consistency
+        if out_flag and TY.IsConstant(decl.type) then
+            ERR.Error "Output parameter '$1' cannot have constant type '$2'",
+                      Name, Type
+        if in_flag and not out_flag and TY.IsVariable(decl.type) then
+            ERR.Error "Input parameter '$1' cannot have variable type '$2'",
+                      Name, Type
+        if Value <> nil then
+            if IsDefinition then
+                if TY.IsVariable(decl.type) then
+                    ERR.Error "Cannot define '$1', type '$2' is variable",
+                              Name, Type
+            else
+                if TY.IsConstant(decl.type) then
+                    ERR.Error "Cannot initialize '$1', type '$2' is constant",
+                              Name, Type
+
+        if in_flag or out_flag then
+            if not decl.is_parameter then
+                ERR.Error "'in' or 'out' prefixing non-parameter '$1'", Name
+        else if decl.is_parameter then
+            decl.is_input := true
+
+        // Evaluate the initialization value
+        if not isFunction then
+            if Value <> nil then
+                if not IsDefinition then
+                    // Return initialization
+                    if decl.is_local or decl.is_global then
+                        result := parse_tree ('Name' := 'Value')
+                        PT.AttachTree result, "CTORCALL", result
+                else
+                    // Definition will be processed at semantics time
+                    result := parse_tree(@@def 'Name' 'Value')
+            else if decl.is_local or decl.is_global then
+                // Constructor generation will be processed at semantics time
+                result := parse_tree(@@defctor 'Name')
+                
+
+        // Make sure we have a result to attach the decl to
+        if result = nil then
+            result := parse_tree(@decl)
+
+        // Attach the declaration to the result
+        if not isFunction then
+            SetDeclaration result, decl
+        return result
+
+
+    function Declare(Name : PT.name_tree;
+                     tp   : TY.any_type) return declaration is
+    // ------------------------------------------------------------------------
+    //   Declare a name with the given type
+    // ------------------------------------------------------------------------
+
+        if tp = nil then
+            ERR.Error "'$1' has no type", Name
+            tp := TY.NewType (SYM.Temporary("<undefined type>"))
+
+        // Build the declaration
+        decl : declaration
+        decl.name               := Name
+        decl.type               := tp
+        decl.initializer        := nil
+        decl.machine_name       := CGM.Name(Name, tp)
+        decl.frame_depth        := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
+        decl.is_input           := false
+        decl.is_output          := false
+        decl.is_variable        := false
+        decl.is_parameter       := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        decl.is_local           := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+        decl.is_global          := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+        decl.is_field           := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        decl.is_generic_parm    := false
+        decl.is_builtin         := false
+        decl.implementation     := nil
+
+        // Check internal consistency for flags of the declaration
+        if SYM.GetProperty(XLT.context, "GENERIC", true) = nil then
+            if (integer(decl.is_parameter) + integer(decl.is_field) +
+                integer(decl.is_local) + integer(decl.is_global) <> 1) then
+                ERR.Error "Internal: Bad declaration scope for '$1'", Name
+
+        // Store this declaration name in the symbol table
+        SYM.Enter XLT.context, "DECL", Name.value, Name
+
+        // Insert a declaration for the machine type and machine name
+        dtype : TY.any_type := decl.type
+        mname : PT.name_tree := decl.machine_name
+        mtype : PT.name_tree := dtype.machine_name
+        kind  : PT.name_tree
+        ctxt  : SYM.symbol_table := XLT.context
+
+        if decl.is_local then
+            kind := parse_tree(local_decl)
+            ctxt := XLT.function_context
+        else if decl.is_global then
+            kind := parse_tree(global_decl)
+            ctxt := XLT.global_context
+        else if decl.is_field then
+            kind := parse_tree(field_decl)
+        else if decl.is_parameter then
+            kind := parse_tree(parm_decl)
+
+        XLT.AddScopeDecl ctxt, parse_tree(@ 'kind' 'mtype' 'mname')
+
+        // Set the type of the name
+        TY.SetType Name, dtype
+        if not TY.IsModuleType(dtype) then
+            TY.SetType mname, dtype
+
+        // Attach the declaration to the name (this is where we find it later)
+        SetDeclaration Name, decl
+        SetDeclaration mname, decl
+
+        return decl
+
+
+    function GetDeclaration(Decl : PT.tree) return declaration is
+    // ------------------------------------------------------------------------
+    //    Return the declaration for the tree, if there is one
+    // ------------------------------------------------------------------------
+        decl_info : PT.FindInfo(Decl, "DECL") as declaration
+        return decl_info
+
+
+    procedure SetDeclaration(decl : PT.tree; info : declaration) is
+    // ------------------------------------------------------------------------
+    //    Return the declaration for the tree, if there is one
+    // ------------------------------------------------------------------------
+        PT.SetInfo decl, "DECL", info
+
+
+    procedure SetLookupResult (NameTerminal : PT.tree; Value : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //   Force lookup to return a given value
+    // ------------------------------------------------------------------------
+        PT.AttachTree NameTerminal, "LOOKUPVALUE", Value
+
+
+    function Lookup (NameTerminal : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Return the machine name for a name terminal
+    // ------------------------------------------------------------------------
+
+        // Check if we already ran semantics on it
+        result := PT.Attached(NameTerminal, "LOOKUPVALUE")
+        if result <> nil then
+            return result
+        decl : declaration := GetDeclaration(NameTerminal)
+        if decl <> nil then
+            return decl.machine_name
+
+        if NameTerminal.kind <> PT.xlNAME then
+            ERR.Error "Internal: Invalid name '$1'", NameTerminal
+            NameTerminal := SYM.Temporary("name")
+
+        // Lookup name
+        Name : NameTerminal as PT.name_tree
+        Original : PT.tree := SYM.LookupOne(XLT.context,"DECL",Name.value)
+        if Original = nil then
+            // In that case, we may be interested in interpreting that as
+            // a function call, assuming there is a function with that name
+            functions : PT.tree_list
+            SYM.Lookup XLT.context, "FN", Name.value, functions
+            if size(functions) > 0 then
+                // Resolve the function, but return overload set.
+                // This is useful for the case "Ptr := FuncName
+                return OVL.Resolve(Name, nil, Name, false)
+
+            ERR.Error "Name '$1' was not declared here", Name
+            return ERR.ErrorTree()
+
+        // If the result is an index form (from a using), look it up
+        if Original.kind <> PT.xlNAME then
+            translate Original
+                when ('Context'.'Field') where Field.kind = PT.xlNAME then
+                    FieldName : Field as PT.name_tree
+                    decl := GetDeclaration(FieldName)
+                    if decl <> nil and not decl.is_field then
+                        return decl.machine_name
+                    return REC.Index(Context, FieldName, Original)
+                else
+                    return Original
+
+        // Find associated declaration
+        decl := GetDeclaration(Original)
+        if decl = nil then
+            ERR.Error "Internal: Name '$1' was not declared", Name
+            return Name
+
+        // Check that it has a machine name
+        if decl.machine_name = nil then
+            ERR.Error "Internal: declaration without machine name", Name
+            decl.machine_name = SYM.Temporary("mname")
+
+        // Return original name (which should have type info set)
+        return decl.machine_name
+
+
+    function Assignable(Tgt: declaration; Src: PT.tree) return integer is
+    // ------------------------------------------------------------------------
+    //   Return > 0 if target can receive source value, counts renames
+    // ------------------------------------------------------------------------
+        return Assignable(Tgt, TY.GetType(Src))
+
+
+    function Assignable(Tgt: declaration;
+                        SrcType: TY.any_type) return integer is
+    // ------------------------------------------------------------------------
+    //   Return > 0 if target can receive source type, count renames
+    // ------------------------------------------------------------------------
+        // Cannot assign a constant to an output
+        trace[+assign] "Assigning ",
+                          PT.Tree(Tgt.Name), " : ", TY.Source(Tgt.Type),
+                          " <- ", TY.Source(SrcType)
+
+        if Tgt.is_output then
+            trace[assign] "Declaration is output"
+            if TY.IsConstant(SrcType) then
+                trace[-assign] "FAIL: Cannot assign constant"
+                return 0
+            // Output types must match exactly
+            SrcType := TY.NonVariableType(SrcType)
+            result := TY.SameTypeRenames(SrcType, Tgt.type)
+            if result then
+                trace[-assign] "PASS: Type comparison succeeded, score ", result
+            else
+                trace[-assign] "FAIL: Type comparison failed"
+            return result
+
+        // If decl and value types are identical, it's assignable
+        result := TY.SameTypeRenames(SrcType, Tgt.type)
+        if result > 0 then
+            trace[-assign] "PASS: Types are identical, score", result
+            return result
+
+        // If the value is 'constant', we can strip that for an input
+        NonConst : TY.any_type := TY.NonConstedType(SrcType)
+        trace[assign] "Trying non-consted type ", TY.Source(NonConst)
+        result := TY.SameTypeRenames(NonConst, TGT.type)
+        if result > 0 then
+            trace[-assign] "PASS: Non-consted type succeeded, score ", result
+            return result
+
+        // Otherwise, we don't match
+        trace [-assign] "FAIL: Could not find anything suitable"
+        return 0
+
+
+    function MatchInterface(iface : declarations;
+                            body  : SYM.symbol_table) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a list of declaration is implemented by declared entities
+    // ------------------------------------------------------------------------
+        iface_decl   : declaration
+        for iface_decl in iface loop
+            iface_name : PT.name_tree := iface_decl.name
+            iface_type : TY.any_type := iface_decl.type
+            list       : PT.tree_list
+            isType     : boolean := TY.IsTypeType(iface_type)
+            needIt     : boolean := iface_decl.initializer = nil
+            iname      : text := iface_name.value
+
+            trace [interface] "Looking for ", iface_name.value,
+                              " : ", TY.Source(iface_type)
+
+            // Try to find something with the same name
+            if isType then
+                SYM.Lookup body, "TYPE", iname, list, SYM.lookupLocalOnly
+            else
+                SYM.Lookup body, "DECL", iname, list, SYM.lookupLocalOnly
+                SYM.Lookup body, "FN",iname, list, SYM.lookupLocalOnly
+
+            if needIt then
+                if size(list) = 0 then
+                    // It is OK for a generic type to be declared only in
+                    // the interface
+                    if isType then
+                        gtp : TY.any_type := TY.GetDefinedType(iface_name)
+                        if GEN.IsGenericType(gtp) then
+                            trace[interface] "Generic type ", iface_name.value
+                            restart
+                    ERR.Error "No implementation found for '$1'", iface_name
+                    return false
+
+            // It is enough if one matches
+            found : declaration := nil
+            multi : declaration := nil
+            field : PT.tree
+            errors: boolean := false
+            for field in list loop
+                body_decl : declaration := DCL.GetDeclaration(field)
+                body_type : TY.any_type := body_decl.type
+                body_name : PT.name_tree := body_decl.name
+
+                trace [interface] "For ", iface_name.value,
+                                  " testing ", body_name.value,
+                                  " : ", TY.Source(body_type)
+
+                // Check if initializer is a body of code ('module X is Y')
+                if body_decl.initializer <> nil then
+                    if TY.SameType(body_type, iface_type.base) then
+                        ct: TY.GetType(body_decl.initializer) as TY.code_type
+                        if ct <> nil then
+                            assert ct.base = nil or ct.base = iface_type
+                            ct.base := iface_type
+                            body_type := ct
+                            trace [interface] "... has body type"
+
+                // Check if declaration and implementation match
+                ERR.PushErrorContext()
+                if (iface_type = body_type or
+                    iface_type.interface_match(iface_type, body_type)) then
+                    if found = nil then
+                        found := body_decl
+                        if isType then
+                            idt : TY.any_type := TY.GetDefinedType(iface_name)
+                            bdt : TY.any_type := TY.GetDefinedType(body_name)
+                            trace[interface] "Type iface=", idt, " body=", bdt
+                            if idt = nil then
+                                ERR.Error "Internal: missing i-type for '$1'",
+                                          iface_name
+                            else if bdt = nil then
+                                ERR.Error "Internal: missing b-type for '$1'",
+                                          body_name
+                            else if not idt.interface_match(idt, bdt) then
+                                ERR.Error "Internal: type mismatch for '$1'",
+                                          TY.Source(idt)
+                                ERR.Error "Internal: mismatched is '$1'",
+                                          TY.Source(bdt)
+                    else
+                        multi := body_decl
+                errors := ERR.PopErrorContext()
+                trace [interface] "For ", iface_name.value, " errors: ", errors
+
+            if found = nil then
+                trace [interface] "For ", iface_name.value, " found none"
+            else
+                trace [interface] "For ", iface_name.value,
+                                  " found ", PT.tree(found.name),
+                                  " : ", TY.Source(found.type)
+                if multi <> nil then
+                    trace [interface] "  and also  ", multi.name,
+                                      " : ", TY.Source(multi.type)
+
+                // Copy 'global' properties from implementation
+                if found.is_global then
+                    iface_decl.is_global := true
+                if not found.is_field then
+                    iface_decl.is_field := false
+
+            if not needIt then
+                if found <> nil then
+                    ERR.Error "An implementation of '$1' exists,", found.name
+                    ERR.Error "but '$1' is already defined", iface_name
+                    return false
+            else if found = nil then
+                ERR.Error "There is no valid implementation for '$1'",
+                          iface_name
+                if errors then
+                    ERR.DisplayLastErrors()
+                return false
+
+            if multi <> nil then
+                ERR.Error "Found too many implementations for '$1'", iface_name
+                ERR.Error "A first possible implementation is '$1'", found.name
+                ERR.Error "Another possible implementation is '$1'", multi.name
+                return false
+
+            // If we found a match, we may record the implementation
+            iface_decl.implementation := found
+
+        // Everything seems to match...
+        return true
+
+
+    function ExtendType (Input : PT.tree;
+                         Base : PT.tree; Fields : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Extend a type with additional fields
+    // ------------------------------------------------------------------------
+         trace [recdecl] "Extend type ", Base, " with ", Fields
+         // REVISIT: It is not very logical to use "Input' as the name of the
+         // type, because it's actually the name of the declared entity
+         // We end up with a type that has the name of the declared entity
+         // The type lookup rules are such that it's generally not found,
+         // but still, this is probably worth changing.
+         return REC.EnterType (Input, Base, Fields)
+
+
+    function IsDeclaration (type_expr : PT.tree;
+                            Names : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if the tree represents a type name, such as 'integer'
+    // ------------------------------------------------------------------------
+
+        // Check if we are in the top-level of a module
+        modname : PT.tree := SYM.GetProperty(XLT.context, "MODULE")
+        if modname <> nil then
+            trace[modules] "IsDeclaration(", Names, ") modname ", modname
+            translate Names
+                when ('Base'.'Child') then
+                    if PT.Matches(modname, Base) then
+                        Names := Child
+                        modname := nil
+        if modname <> nil then
+            return false
+
+        // We need a simple name for the declaration
+        if Names.kind <> PT.xlNAME then
+            return false
+
+        // For type names, lookup in the type table.
+        //   (Check algo consistency with TY.EvaluateTypes)
+        if type_expr.kind = PT.xlNAME then
+            tname : type_expr as PT.name_tree
+
+            // If this would also be a valid function, prefer function call
+            if SYM.LookupOne(XLT.context, "FN", tname.value) <> nil then
+                return false
+
+            types : SYM.tree_list
+            SYM.Lookup XLT.context, "TYPE", tname.value,
+                       types, SYM.lookupInnermost
+            if size(types) > 0 then
+                original : PT.tree := types[0]
+                if size(types) > 1 then
+                    ERR.Error "Internal: Multiple types for '$1'", tname
+                    ERR.Error "One candidate is '$1'", types[0]
+                    ERR.Error "Another candidate is '$1'", types[1]
+                if TY.GetDefinedType(original) <> nil then
+                    return true
+
+        // Otherwise, not a type name
+        return false
+
+
+    function IsDeclarationList (type_expr : PT.tree;
+                                Names : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if the tree represents a type name, such as 'integer'
+    // ------------------------------------------------------------------------
+
+        translate Names
+            when
+                'X', 'Y'
+            then
+                return (IsDeclarationList(type_expr, X) and
+                        IsDeclarationList(type_expr, Y))
+
+        return IsDeclaration (type_expr, Names)
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //    Semantics processing of declarations
+    // ------------------------------------------------------------------------
+        when
+            'Names' : 'Type'
+        then
+            trace [decl] "Decl1: Name=", Names, " Type=", Type
+            return EnterDeclaration (Names, Type, nil, false)
+
+        when
+            'Names' : 'Type' ( 'Args' )
+        then
+            trace [decl] "Decl1: Name=", Names, " Type=", Type
+            if not TY.IsTypeName(Type) then
+                ProcOrFn : Type as PT.name_tree
+                if ProcOrFn <> nil then
+                    TName : text := PT.XLNormalize(ProcOrFn.value)
+                    if TName = "procedure" or TName = "function" then
+                        // If we have a procedure type, create a temporary
+                        // type name for construction / copy purpose
+                        infix : input as PT.infix_tree
+                        pType : PT.tree := infix.right
+                        pName : PT.name_tree := SYM.Temporary("functionType",
+                                                              input.position)
+                        result := TY.EnterType(pName, pType)
+                        pDecl : PT.tree := parse_tree
+                            'Names' : 'pName'
+                        return XLDeclarations(pDecl)
+                ERR.Error "'$1' is not a type name", Type
+            init : PT.tree := parse_tree('Type' ('Args'))
+            vartype : PT.tree := parse_tree(variable)
+            return EnterDeclaration (Names, vartype, init, false)
+
+        when
+            'Names' : 'Type' := 'Value'
+        then
+            trace [decl] "Decl2: Name=",Names," Type=",Type," Value=",Value
+            return EnterDeclaration (Names, Type, Value, false)
+
+        when
+            'Names' : 'Type' is 'Value'
+        then
+            trace [decl] "Decl3: Name=",Names," Type=",Type," Value=",Value
+            return EnterDeclaration (Names, Type, Value, true)
+
+
+        // Obsolete: structured declaration instead of simple declaration
+        when
+            'Type' 'Names'
+        where
+            IsDeclarationList (Type, Names)
+        then
+            trace [decl] "Decl4: Name=",Names," Type=",Type
+            return EnterDeclaration (Names, Type, nil, false)
+
+        when
+            'Type' 'Name' := 'Value'
+        where
+            IsDeclaration (Type, Name)
+        then
+            trace [decl] "Decl5: Name=",Name," Type=",Type," Value=",Value
+            return EnterDeclaration (Name, Type, Value, false)
+
+        when
+            'Type' 'Name' is 'Value'
+        where
+            IsDeclaration (Type, Name)
+        then
+            trace [decl] "Decl6: Name=",Name," Type=",Type," Value=",Value
+            return EnterDeclaration (Name, Type, Value, true)
+
+        when
+            'Type' 'Name' with 'Fields'
+        where
+            IsDeclaration (Type, Name)
+        then
+            trace [decl] "Decl7: Name=",Name," Type=",Type," Fields=",Fields
+            ExtType : PT.tree := ExtendType(Name, Type, Fields)
+            return EnterDeclaration (Name, ExtType, nil, false)
+
+        when
+            'Type' 'Name' with 'Fields' is 'Value'
+        where
+            IsDeclaration (Type, Name)
+        then
+            trace [decl] "Decl8: Name=",Name," Type=",Type," Fields=",Fields
+            ExtType : PT.tree := ExtendType(Name, Type, Fields)
+            return EnterDeclaration (Name, ExtType, Value, true)
+
+
+    function Define(Name : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Process a definition at semantics time
+    // ------------------------------------------------------------------------
+        decl : DCL.declaration := DCL.GetDeclaration(Name)
+        if Value.kind = PT.xlBLOCK then
+            B : Value as PT.block_tree
+            if B.opening = PR.INDENT_MARKER then
+                Value := B.child
+        if not GEN.IsGenericDeclaration(decl) then
+            Value := XLT.ScopeSemantics(Value, XLT.scopeGlobal)
+        decl.initializer := Value
+        result := decl.initializer
+        SetDeclaration result, decl
+
+
+    function Construct(DType : PT.tree;
+                       MName : PT.tree;
+                       Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Evaluate 'Value' directly with result 'MName'
+    // ------------------------------------------------------------------------
+
+        trace[ctors] "Construct ", MName, " type ", DType, " val ", Value
+
+        TY.PushTargetType DType
+        PT.AttachTree Value, "CTORCALL", MName
+        result := XLT.XLSemantics (Value)
+        TY.PopTargetType()
+
+        valueType : TY.any_type := TY.NonConstedType(TY.GetType(result))
+        destType  : TY.any_type := TY.NonVariableType(TY.GetDefinedType(DType))
+        if not SameType(valueType, destType) then
+            ERR.Error "Cannot construct a '$2' with a '$1'",
+                      TY.Source(valueType), TY.Source(destType)
+
+        if PT.Attached(Value, "CTORCALL") <> nil then
+            PT.AttachTree Value, "CTORCAL", nil
+            CGM.SetExpressionTarget result, MName
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //    Basic name lookup
+    // ------------------------------------------------------------------------
+        when
+            'NameTerminal'
+        where
+            NameTerminal.kind = PT.xlNAME
+        then
+            return Lookup(NameTerminal)
+
+        when
+            @@def 'Name' 'Value'
+        then
+            return Define (Name, Value)
+
+        when
+            @@defctor 'Name'
+        then
+            decl : declaration := GetDeclaration(Name)
+            return CallConstructor (decl)
+
+        when
+            @@ctor 'DType' 'MName' 'Value'
+        then
+            return Construct (DType, MName, Value)
+
+
+    function ConstructorNames(tp : TY.any_type) return PT.tree_list is
+    // ------------------------------------------------------------------------
+    //    Return the names of the type that can be used for construction
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            Source : PT.tree := TY.Source(tp)
+
+            // Try the name of the type itself
+            Name   : Source as PT.name_tree
+            if Name <> nil then
+                result += Source
+
+            // If the name is an instance of a generic, try generic name
+            instOf   : PT.tree := PT.Attached(Source, "INSTANCEOF")
+            if instOf <> nil then
+                result += ConstructorNames(TY.GetDefinedType(instOf))
+
+            stp : tp as TY.source_type
+            exit if stp = nil
+            tp := stp.base
+
+
+    function CallConstructor (decl : declaration) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return a constructor call if needed
+    // ------------------------------------------------------------------------
+    //   This function is called only if there is no initializer
+    //   If there is any function that matches the type name, then
+    //   the type is constructed, and we try to call a function with no args
+
+        dtype    : TY.any_type := decl.type
+        nameList : PT.tree_list := ConstructorNames(dtype)
+        tSrc     : PT.tree := nil
+        attempt  : XLT.attempt := XLT.BeginAttempt()
+
+        trace [+ctors] "CallConstructor ",
+                        PT.tree(decl.name), " : ", TY.Source(decl.type)
+        trace [ctors] "The type has ", size(nameList), " name(s)"
+
+        // Loop on all possible names for that type
+        for tSrc in NameList loop
+            tName : tSrc as PT.name_tree
+
+            trace[ctors] "Testing name ", tSrc, " for ", PT.tree(decl.name)
+
+            if tName <> nil then
+                list : PT.tree_list
+                SYM.Lookup XLT.context, "FN", tName.value, list, SYM.lookupAll
+                trace[ctors] "Name ", tSrc, " has ", size(list), " candidates"
+                if size(list) > 0 then
+                    attemptOne : XLT.attempt := XLT.BeginAttempt()
+
+                    dname : PT.name_tree := decl.machine_name
+                    dtsrc : PT.tree := TY.Source(dtype)
+                    result := parse_tree('tname' ())
+                    result := parse_tree(@@ctor 'dtsrc' 'dname' 'result')
+                    result := XLT.XLSemantics(result)
+
+                    if XLT.EndAttempt(attemptOne) then
+                        trace[ctors] "Errors calling ctor for ", tSrc
+                        ERR.Error "Constructor '$1' is invalid because", tsrc
+                        ERR.DisplayLastErrors()
+                    else
+                        trace[ctors] "Name ", tSrc, " is a valid candidate"
+                        exit if result <> nil
+
+        if XLT.EndAttempt(attempt) then
+            ERR.Error "No valid constructor for '$1'", decl.name
+            ERR.DisplayLastErrors()
+            result := ERR.ErrorTree()
+
+        trace [-ctors] "CallConstructor result: ", result
+        if result = nil then
+            result := parse_tree(@nop)
+
+
+    function ConstructorCode (decl : declaration) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Inline the default construction code for 'result'
+    // ------------------------------------------------------------------------
+    //   This function is called only if there is no initializer
+    //   If there is any function that matches the type name, then
+    //   the type is constructed, and we try to call a function with no args
+
+        tp : TY.any_type := decl.type
+        mname : PT.tree := tp.machine_name
+        trace[ctors] "ConstructorCode ",
+                     PT.tree(decl.name), " : ", PT.tree(TY.Source(tp))
+        trace[ctors] "  MName=", PT.tree(mname), " at ", mname
+        if mname <> nil then
+            result := PT.Attached(mname, "CTORCODE")
+            trace[ctors] "  Code=", result
+            if result <> nil then
+                instSyms : SYM.symbol_table := GN.InstanceContext(result)
+                if instSyms <> nil then
+                    SYM.AddImplicit XLT.context, instSyms
+
+                result := PT.Clone(result)
+                result.position := mname.position
+                result := XLT.XLSemantics(result)
+
+                if instSyms <> nil then
+                    SYM.RemoveImplicit XLT.context
+
+
+    in_destruction : map[PT.name_tree, integer]
+    function CallDestructor (entry : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Call the destructor for a given name
+    // ------------------------------------------------------------------------
+        decl : DCL.declaration := DCL.GetDeclaration(entry)
+        if entry.kind = PT.xlNAME and decl <> nil then
+            if decl.is_local or decl.is_global then
+                mname : PT.name_tree := decl.machine_name
+                if count(in_destruction, mname) > 0 then
+                    ERR.Error "Recursive 'delete' call for $1", mname
+                    return nil
+                dtorCall : PT.tree := parse_tree(delete 'mname')
+                ERR.PushErrorContext()
+                in_destruction[mname] = 1
+                dtorCall := XLT.XLSemantics(dtorCall)
+                erase in_destruction, mname
+                if not ERR.PopErrorContext() then
+                    return dtorCall
+        return nil
+
+
+    procedure CallDestructors (table : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //    Call all destructors for the current table
+    // ------------------------------------------------------------------------
+        dtors : PT.tree := ScopeDestructors(table, table, false)
+        if dtors <> nil then
+            XLT.AddScopeTerm table, dtors
+
+
+    function ScopeDestructors (inner : SYM.symbol_table;
+                               outer : SYM.symbol_table;
+                               exclu : boolean) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Find all the destructors in the current scope and call them
+    // ------------------------------------------------------------------------
+        while inner <> nil loop
+            exit if exclu and inner = outer
+
+            names   : PT.tree_list
+            entry   : PT.tree
+            deleted : map[PT.tree, boolean]
+
+            temps   : PT.tree := SYM.GetProperty(inner, "TEMPDTORS")
+            result := XLT.Append (result, temps)
+            if temps <> nil then
+                trace [scopedtors] "In ", inner, " temp dtors ", temps
+
+            SYM.LocalSymbols inner, names
+            for entry in names loop
+                if not deleted[entry] then
+                    deleted[entry] := true
+                    decl  : DCL.declaration := DCL.GetDeclaration(entry)
+                    if decl <> nil then
+                        mname : PT.name_tree := decl.machine_name
+                        if mname <> nil then
+                            key   : text := "KEEP:" + mname.value
+                            if SYM.GetProperty(inner, key, false) = nil then
+                                dtorCall : PT.tree := CallDestructor (entry)
+                                if dtorCall <> nil then
+                                    result := XLT.Append(result, dtorCall)
+                                    trace [scopedtors] "In ", inner, " dtor ",
+                                                       dtorCall
+
+            exit if inner = outer
+            inner := SYM.Enclosing(inner)
+
+
+    procedure DoNotDelete (table : SYM.symbol_table; decl : declaration) is
+    // ------------------------------------------------------------------------
+    //   Mark the name to indicate we don't want it deleted in current scope
+    // ------------------------------------------------------------------------
+        assert decl <> nil
+        name : PT.name_tree := decl.machine_name
+        assert name <> nil
+        key  : text := "KEEP:" + name.value
+        SYM.SetProperty table, key, name
+

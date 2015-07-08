@@ -1,0 +1,10 @@
+11.Preprocessor/macro_recursive.xl:3: Too many macro recursions at 'sin (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos ( (cos (A) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )'
+| transform (sin 'X') into (sin (cos('X')))
+|_______________________________^
+11.Preprocessor/macro_recursive.xl:5: No translation for 'A : real := @ nop'
+| A : real := sin A
+|_^
+library/runtime/default/./xl_builtins.xs:58: Form ''Tgt' := 'Src'' could not be selected
+|     to Copy(out Tgt : integer; in Src : integer)                written Tgt := Src              is XL.BYTECODE.copy_int
+|______________________________________________________________________________^
+[Compiler generated] Expression '@ nop' has no type

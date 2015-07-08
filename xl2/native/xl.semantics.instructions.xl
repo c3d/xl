@@ -1,0 +1,763 @@
+// ****************************************************************************
+//  xl.semantics.instructions.xl    (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of basic instructions
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import XLT = XL.TRANSLATOR
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+import CST = XL.CONSTANTS
+
+
+module XL.SEMANTICS.INSTRUCTIONS is
+// ----------------------------------------------------------------------------
+//   Implement basic instructions
+// ----------------------------------------------------------------------------
+
+    function DoReturn(Ret : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Translation of the 'return' statement
+    // ------------------------------------------------------------------------
+         mname : PT.tree := SYM.GetProperty(XLT.context, "FN", true)
+         if mname = nil then
+             ERR.Error "Return statement '$1' not in a function", Ret
+             return ERR.ErrorTree()
+
+         // Branch to exit of function
+         result := parse_tree(@goto_exit 'mname')
+
+         // Invoke destructors for all scopes we quit
+         dtors : PT.tree :=
+             DCL.ScopeDestructors(XLT.context, XLT.function_context, false)
+         result := XLT.Append(dtors, result)
+
+         if Value <> nil then
+             setResult : PT.tree := parse_tree(result := 'Value')
+             setResult := XLT.XLSemantics(setResult)
+             result := XLT.Append(setResult, result)
+
+
+    function DoYield(Yield : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Translation of the 'yield' statement
+    // ------------------------------------------------------------------------
+    //   This can only be used in an iterator, and it evaluates as the body
+    //   The only real trick is that the scope is the iterator enclosing scope
+
+        body : PT.tree := SYM.GetProperty(XLT.context, "ITERATING", true)
+        if body = nil then
+            ERR.Error "'$1' is not in an iterator", Yield
+            return ERR.ErrorTree()
+
+        // Evaluate the body in its original context
+        oldContext   : SYM.symbol_table := XLT.context
+        exitLabel    : PT.tree := SYM.GetProperty(oldContext, "LOOP", true)
+        XLT.context := SYM.ContextProperty(body, "ITERCTX")
+
+        // Make sure that we don't try to 'yield' twice
+        if XLT.context = nil then
+            ERR.Error "This '$1' instruction", Yield
+            ERR.Error "is the second one for this loop body", Body.position
+            result := ERR.ErrorTree()
+        else
+            // Run semantics on the body in that context
+            PT.PurgeInfo body, "ITERCTX"
+            if exitLabel <> nil then
+                SYM.SetProperty XLT.context, "LOOP", exitLabel
+            result := XLT.XLSemantics(body)
+
+        XLT.context := oldContext
+
+
+    function DoIf(Test      : PT.tree;
+                  TrueCase  : PT.tree;
+                  FalseCase : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate the code for an 'if'
+    // ------------------------------------------------------------------------
+
+        // Label base for that if
+        label     : PT.name_tree := SYM.Temporary("if", Test.position)
+        prefix    : PT.tree := nil
+        callDepth : integer := CGM.EnterCall()
+
+        // Check if this is a compile-time if
+        TestConstant : PT.tree := CST.EvaluateConstant(Test)
+        if CST.IsBoolean(TestConstant) then
+            if CST.IsTrue(TestConstant) then
+                CGM.ExitCall callDepth, result
+                if TrueCase <> nil then
+                    result := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+                else
+                    result := parse_tree(@nop)
+                return result 
+            else if CST.IsFalse(TestConstant) then
+                CGM.ExitCall callDepth, result
+                if FalseCase <> nil then
+                    result := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
+                else
+                    result := parse_tree(@nop)
+                return result 
+            else
+                ERR.Error "Internal: Compile-time test '$1' is not true/false",
+                          TestConstant
+
+        // Convert to boolean and evaluate condition
+        Test := XLT.XLSemantics(Test)
+        Test := TY.Convert (Test, TY.const_boolean_type)
+        CGM.SplitExpression Test, prefix
+        CGM.ExitCall callDepth, prefix // REVISIT: wrong if boolean has dtor
+
+        // Perform semantics on cases
+        if TrueCase <> nil then
+            TrueCase := XLT.ScopeSemantics(TrueCase, XLT.scopeLocal)
+            if FalseCase <> nil then
+                FalseCase := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
+                result := parse_tree
+                    @ifnot 'Test' 'label'
+                    'TrueCase'
+                    @ifelse 'label'
+                    'FalseCase'
+                    @ifend 'label'
+            else
+                result := parse_tree
+                    @ifnot 'Test' 'label'
+                    'TrueCase'
+                    @ifendelse 'label'
+        else if FalseCase <> nil then
+            FalseCase := XLT.ScopeSemantics(FalseCase, XLT.scopeLocal)
+            result := parse_tree
+                @if 'Test' 'label'
+                'FalseCase'
+                @ifendelse 'label'
+        else
+            // Degenerate case...
+            result := parse_tree(@nop)
+
+        result := XLT.Append(prefix, result)
+
+
+    function DoLoop(Body : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate the code for an infinite loop
+    // ------------------------------------------------------------------------
+
+        // Label base for that loop
+        label  : PT.name_tree := SYM.Temporary("loop", Body.position)
+        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP", false)
+        SYM.SetProperty XLT.context, "LOOP", label
+
+        Body := XLT.ScopeSemantics (Body, XLT.scopeLocal)
+        result := parse_tree
+            @loop_begin 'label'
+            'Body'
+            @loop_end 'label'
+        SYM.SetProperty XLT.context, "LOOP", oldLoop
+
+
+    function DoConditionalLoop(Test     : PT.tree;
+                               Body     : PT.tree;
+                               loopWhile: boolean;
+                               testAtEnd: boolean) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Generate the code for a while loop
+    // ------------------------------------------------------------------------
+
+        // Label base for that loop
+        label     : PT.name_tree := SYM.Temporary("while")
+        TestCode  : PT.tree := nil
+        callDepth : integer := CGM.EnterCall()
+
+        // Check if this is a compile-time case
+        TestConstant : PT.tree := CST.EvaluateConstant(Test)
+        if CST.IsBoolean(TestConstant) then
+            TestValue : boolean
+            if CST.IsTrue(TestConstant) then
+                TestValue := true
+            else if CST.IsFalse(TestConstant) then
+                TestValue := false
+            else
+                ERR.Error "Internal: Compile-time test '$1' is not true/false",
+                          TestConstant
+            CGM.ExitCall callDepth, result
+            if TestValue = loopWhile then
+                return DoLoop(Body)
+            else if testAtEnd then
+                oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP",false)
+                SYM.SetProperty XLT.context, "LOOP", label
+                result := XLT.ScopeSemantics(Body, XLT.scopeLocal)
+                result := parse_tree
+                    @non_loop_begin 'label'
+                    'result'
+                    @non_loop_end 'label'
+                SYM.SetProperty XLT.context, "LOOP", oldLoop
+                return result
+            else
+                return parse_tree (@nop)
+
+        // Save loop exit pointer
+        oldLoop : PT.tree := SYM.GetProperty (XLT.context, "LOOP", false)
+        SYM.SetProperty XLT.context, "LOOP", label
+
+        // Convert test to boolean and evaluate condition
+        Test := XLT.XLSemantics(Test)
+        Test := TY.Convert (Test, TY.const_boolean_type)
+        CGM.SplitExpression Test, TestCode
+        CGM.ExitCall callDepth, TestCode // REVISIT: Wrong if boolean has dtor
+
+        // Perform semantics on the body
+        Body := XLT.ScopeSemantics(Body, XLT.scopeLocal)
+
+        // Check which test we use
+        if loopWhile then
+            if testAtEnd then
+                result := parse_tree
+                    @do_while_begin 'label' 'Test'
+                    'Body'
+                    @do_while_test 'label' 'Test'
+                    'TestCode'
+                    @do_while_end 'label' 'Test'
+            else
+                result := parse_tree
+                    @while_begin 'label' 'Test'
+                    'TestCode'
+                    @while_test 'label' 'Test'
+                    'Body'
+                    @while_end 'label' 'Test'
+        else
+            if testAtEnd then
+                result := parse_tree
+                    @do_until_begin 'label' 'Test'
+                    'Body'
+                    @do_until_test 'label' 'Test'
+                    'TestCode'
+                    @do_until_end 'label' 'Test'
+            else
+                result := parse_tree
+                    @until_begin 'label' 'Test'
+                    'TestCode'
+                    @until_test 'label' 'Test'
+                    'Body'
+                    @until_end 'label' 'Test'
+
+        SYM.SetProperty XLT.context, "LOOP", oldLoop
+
+
+    function DoExit (Instr : PT.tree; Test : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Implement the 'exit' instruction
+    // ------------------------------------------------------------------------
+        if Test <> nil then
+            result := parse_tree
+                if 'Test' then exit
+            return XLT.XLSemantics (result)
+
+        label : PT.tree := SYM.GetProperty (XLT.context, "LOOP", true)
+        if label = nil then
+            ERR.Error "No loop surrounding '$1' instruction", Instr
+            return ERR.ErrorTree()
+
+        inner : SYM.symbol_table := XLT.context
+        outer : SYM.symbol_table := inner
+        while outer <> nil and SYM.GetProperty(outer, "LOOP", false) = nil loop
+            outer := SYM.Enclosing(outer)
+        dtors : PT.tree := DCL.ScopeDestructors(inner, outer, true)
+        result := parse_tree(@exit_loop 'label')
+        result := XLT.Append(dtors, result)
+
+
+    function DoRestart (Instr : PT.tree; Test : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Implement the 'restart' instruction
+    // ------------------------------------------------------------------------
+        if Test <> nil then
+            result := parse_tree
+                if 'Test' then restart
+            return XLT.XLSemantics (result)
+
+        label : PT.tree := SYM.GetProperty (XLT.context, "LOOP", true)
+        if label = nil then
+            ERR.Error "No loop surrounding '$1' instruction", Instr
+            return ERR.ErrorTree()
+
+        inner : SYM.symbol_table := XLT.context
+        outer : SYM.symbol_table := inner
+        while outer <> nil and SYM.GetProperty(outer, "LOOP", false) = nil loop
+            outer := SYM.Enclosing(outer)
+        dtors : PT.tree := DCL.ScopeDestructors(inner, outer, true)
+        result := parse_tree(@restart_loop 'label')
+        result := XLT.Append(dtors, result)
+
+
+    function DoCase(Cases : PT.tree;
+                    exitL : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the 'case' instruction (selecting one among N cases)
+    // ------------------------------------------------------------------------
+        translate Cases
+            when
+                'Case1'
+                'Case2'
+            then
+                Case1 := DoCase(Case1, exitL)
+                if PT.Attached(Case1, "TRUE_CASE") = nil then
+                    Case2 := DoCase(Case2, exitL)
+                else
+                    Case2 := nil
+                return XLT.Append(Case1, Case2)
+            // REVISIT: Why do we need 'default', when 'true' does it?
+            when
+                default : 'Statement'
+            then
+                result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
+                result := XLT.Append(result,
+                                     parse_tree(@caseskip 'exitL'))
+                PT.AttachTree result, "TRUE_CASE", result
+                return result
+            when
+                'Test' : 'Statement'
+            then
+                prefix    : PT.tree := nil
+                callDepth : integer := CGM.EnterCall()
+
+                // Check if this is a compile-time if
+                TestConstant : PT.tree := CST.EvaluateConstant(Test)
+                if CST.IsBoolean(TestConstant) then
+                    CGM.ExitCall callDepth, result
+                    if CST.IsTrue(TestConstant) then
+                        result := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
+                        result := XLT.Append(result,
+                                             parse_tree(@caseskip 'exitL'))
+                        PT.AttachTree result, "TRUE_CASE", result
+                        return result
+                    else if CST.IsFalse(TestConstant) then
+                        return nil
+                    else
+                        ERR.Error "Internal: Non-boolean test '$1'",
+                                  TestConstant
+                        return ERR.ErrorTree()
+
+                // Convert to boolean and evaluate condition
+                label : PT.name_tree := SYM.Temporary("case", Test.position)
+                Test := XLT.XLSemantics(Test)
+                Test := TY.Convert (Test, TY.const_boolean_type)
+                CGM.SplitExpression Test, prefix
+                CGM.ExitCall callDepth, prefix // REVISIT: Wrong if boolean dtor
+
+                // Perform semantics on statement
+                Statement := XLT.ScopeSemantics(Statement, XLT.scopeLocal)
+                result := parse_tree
+                    @ifnot 'Test' 'label'
+                    'Statement'
+                    @caseskip 'exitL'
+                    @ifendelse 'label'
+                return XLT.Append(prefix, result)
+
+        ERR.Error "'$1' is not a valid case", Cases
+        return nil
+
+
+    function DoCase(Cases : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the 'case' instruction (selecting one among N cases)
+    // ------------------------------------------------------------------------
+        exitL  : PT.name_tree := SYM.Temporary("case_exit", Cases.position)
+        result := DoCase(Cases, exitL)
+        result := XLT.Append(parse_tree(@cases 'exitL'), result)
+        result := XLT.Append(result, parse_tree(@casesend 'exitL'))
+
+
+    procedure SplitCases (Cases         : PT.tree;
+                          in out values : PT.tree_list;
+                          in out stmts  : PT.tree_list;
+                          in out defStmt: PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Split the cases in a 'case' statement
+    // ------------------------------------------------------------------------
+        translate Cases
+            when
+                'Case1'
+                'Case2'
+            then
+                SplitCases Case1, values, stmts, defStmt
+                SplitCases Case2, values, stmts, defStmt
+            when
+                default : 'Statement'
+            then
+                if defStmt <> nil then
+                    ERR.Error "Duplicate default statement '$1'", Statement
+                    ERR.Error "Previously defined here", defStmt.position
+                defStmt := Statement
+            when
+                'Value' : 'Statement'
+            then
+                values += Value
+                stmts  += Statement
+            else
+                ERR.Error "'$1' is not a valid case", Cases
+
+
+    function DoCaseValue(Value : PT.tree;
+                         Cases : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the 'case' instruction with a value
+    // ------------------------------------------------------------------------
+        values : PT.tree_list
+        stmts  : PT.tree_list
+        defStmt: PT.tree
+
+        // Split the individual cases
+        SplitCases Cases, values, stmts, defStmt
+
+        // Build the 'Index' call
+        Args : PT.tree := Value
+        V    : PT.tree
+        for V in values loop
+            Args := parse_tree('Args', 'V')
+        Index : PT.tree := parse_tree(Index('Args'))
+
+        // Evaluate the Index call
+        callDepth : integer := CGM.EnterCall()
+        IndexVal : PT.tree := XLT.XLSemantics(Index)
+        IndexType : TY.any_type := TY.GetType(IndexVal)
+        if not TY.SameType (IndexType, TY.integer_literal_type) then
+            ERR.Error "The type '$2' of '$1' is not integer",
+                      Index, TY.Source(IndexType)
+            IndexVal := TY.Convert(IndexVal, TY.integer_type)
+
+        // Generate "switch" entry
+        prefix : PT.tree
+        label  : PT.name_tree := SYM.Temporary("case", Cases.position)
+        CGM.SplitExpression IndexVal, prefix
+        CGM.ExitCall callDepth, prefix // REVISIT: Wrong if integer dtor
+        result := parse_tree
+            'prefix'
+            @case_begin 'label' 'IndexVal'
+
+        // Generate all the labels (LLVM for instance requires this)
+        E : integer
+        for E in 0..size(values)-1 loop
+            Eval  : PT.tree := values[E]
+            Entry : PT.tree := PT.NewInteger(E, Eval.position)
+            result := parse_tree
+                'result'
+                @case_label 'label' 'Entry'
+        result := parse_tree
+            'result'
+            @case_code 'label'
+
+        // Generate all the entries
+        for E in 0..size(values)-1 loop
+            Eval  : PT.tree := values[E]
+            Entry : PT.tree := PT.NewInteger(E, Eval.position)
+            Code  : PT.tree := XLT.XLSemantics(stmts[E])
+            result := parse_tree
+                'result'
+                @case_entry 'label' 'Entry'
+                'Code'
+                @case_exit 'label' 'Entry'
+
+        // Generate the default entry if required
+        if defStmt <> nil then
+            Code : PT.tree := XLT.XLSemantics(defStmt)
+            result := parse_tree
+                'result'
+                @case_def_entry 'label'
+                'Code'
+                @case_def_exit 'label'
+
+        // Generate the switch exit
+        result := parse_tree
+            'result'
+            @case_end 'label'
+
+
+    function DoInitially(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add initialization code
+    // ------------------------------------------------------------------------
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddScopeInit XLT.context, Block
+        return parse_tree(@nop)
+
+
+    function DoFinally(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add finalization code
+    // ------------------------------------------------------------------------
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddScopeTerm XLT.context, Block
+        return parse_tree(@nop)
+
+
+    function DoOnce(Block : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add finalization code
+    // ------------------------------------------------------------------------
+        label : PT.tree := SYM.Temporary("once")
+        Block := XLT.ScopeSemantics(Block, XLT.scopeLocal)
+        XLT.AddGlobalDecl parse_tree(@once_decl 'label')
+        return parse_tree
+            @once_begin 'label'
+            'Block'
+            @once_end 'label'
+
+
+    procedure SplitCatchBlock (catchBlock       : PT.tree;
+                               in out excList   : PT.tree_list;
+                               in out catchList : PT.tree_list) is
+    // ------------------------------------------------------------------------
+    //   Split a catch block into individual exception clauses
+    // ------------------------------------------------------------------------
+        asBlock : catchBlock as PT.block_tree
+        if asBlock <> nil then
+            catchBlock := asBlock.child
+
+        translate catchBlock
+            when
+                'excType' : 'instrBlock'
+            then
+                excList += excType
+                catchList += instrBlock
+            when
+                'first'
+                'second'
+            then
+                SplitCatchBlock first, excList, catchList
+                SplitCatchBlock second, excList, catchList
+            else
+                ERR.Error "'$1' is not a valid exception clause", catchBlock
+
+
+    function DoTryCatch(tryBlock : PT.tree;
+                        catchBlock: PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Add try-catch block
+    // ------------------------------------------------------------------------
+        excList   : PT.tree_list
+        catchList : PT.tree_list
+        unwind    : PT.tree := SYM.Temporary("unwind")
+        oldUnwind : PT.tree := SYM.GetProperty(XLT.context, "UNWIND")
+        E         : integer
+
+        XLT.AddScopeDecl XLT.context, parse_tree(@unwind_decl 'unwind')
+        SYM.SetProperty XLT.context, "UNWIND", unwind
+
+        tryBlock := XLT.ScopeSemantics(tryBlock, XLT.scopeLocal)
+        SplitCatchBlock catchBlock, excList, catchList
+
+        result := parse_tree
+            @unwind_entry 'unwind'
+            'tryBlock'
+            @unwind_exit 'unwind'
+            @unwind_catch 'unwind'
+
+        for E in 0..size(excList)-1 loop
+            blk : PT.tree := XLT.ScopeSemantics(catchList[E], XLT.scopeLocal)
+            exc : PT.tree := XLT.XLEvaluateType(excList[E])
+            excTy : TY.any_type := TY.GetDefinedType(exc)
+            if excTy <> nil then
+                excN : PT.tree := excTy.machine_name
+                TY.MarkForRuntimeReference excTy
+                result := parse_tree
+                    'result'
+                    @unwind_land 'unwind' 'excN'
+                    'blk'
+                    @unwind_resume 'unwind' 'excN'
+            else
+                ERR.Error "No machine type for '$1'", excList[E]
+
+        result := parse_tree
+            'result'
+            @unwind_caught 'unwind'
+            @unwind_end 'unwind'
+
+        SYM.SetProperty XLT.context, "UNWIND", oldUnwind
+
+
+    function DoRaise(exception : PT.tree;
+                     input     : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement the raise instruction
+    // ------------------------------------------------------------------------
+        if exception <> nil then
+            exception := XLT.XLSemantics(exception)
+            return parse_tree(@unwind_raise 'exception')
+        oldUnwind : PT.tree := SYM.GetProperty(XLT.context, "UNWIND")
+        if oldUnwind = nil then
+            ERR.Error "Cannot '$1' without an exception context", input
+            return ERR.ErrorTree()
+        return parse_tree(@unwind_reraise 'oldUnwind')
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //   Translation forms
+    // ------------------------------------------------------------------------
+
+        when
+            return 'Value'
+        then
+            return DoReturn(input, Value)
+
+        when
+            return
+        then
+            return DoReturn(input, nil)
+
+        when
+            yield
+        then
+            return DoYield(input)
+
+        when
+            if 'Cond' then 'TrueCase'
+        then
+            return DoIf(Cond, TrueCase, nil)
+        when
+            if 'Cond' then 'TrueCase' else 'FalseCase'
+        then
+            return DoIf(Cond, TrueCase, FalseCase)
+
+        when
+            loop 'Body'
+        then
+            return DoLoop(Body)
+
+        when
+            while 'Test' loop 'Body'
+        then
+            return DoConditionalLoop(Test, Body, true, false)
+        when
+            until 'Test' loop 'Body'
+        then
+            return DoConditionalLoop(Test, Body, false, false)
+        when
+            loop 'Body' while 'Test'
+        then
+            return DoConditionalLoop (Test, Body, true, true)
+        when
+            loop 'Body' until 'Test'
+        then
+            return DoConditionalLoop (Test, Body, false, true)
+
+        when
+            loop 'Body'
+            while 'Test'
+        then
+            return DoConditionalLoop (Test, Body, true, true)
+        when
+            loop 'Body'
+            until 'Test'
+        then
+            return DoConditionalLoop (Test, Body, false, true)
+
+        when
+            loop 'Body'
+            while 'Test'
+            'Rest'
+        then
+            result := DoConditionalLoop (Test, Body, true, true)
+            Rest := XLT.XLSemantics(Rest)
+            return parse_tree
+                'result'
+                'Rest'
+        when
+            loop 'Body'
+            until 'Test'
+            'Rest'
+        then
+            result := DoConditionalLoop (Test, Body, false, true)
+            Rest := XLT.XLSemantics(Rest)
+            return parse_tree
+                'result'
+                'Rest'
+
+        when
+            exit
+        then
+            return DoExit(input, nil)
+        when
+            exit if 'Condition'
+        then
+            return DoExit(input, Condition)
+
+        when
+            restart
+        then
+            return DoRestart(input, nil)
+        when
+            restart if 'Condition'
+        then
+            return DoRestart(input, Condition)
+
+        when
+            case
+               'Cases'
+        then
+            return DoCase(Cases)
+
+        when
+            case 'Value'
+               'Cases'
+        then
+            return DoCaseValue(Value, Cases)
+
+
+        when
+            initially 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoInitially(Block)
+        when
+            finally 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoFinally(Block)
+        when
+            once 'Block'
+        where
+            Block.kind = PT.xlBlock
+        then
+            return DoOnce(Block)
+        when
+            try 'tryBlock'
+            catch 'catchBlock'
+        where
+            tryBlock.kind = PT.xlBlock and catchBlock.kind = PT.xlBlock
+        then
+            return DoTryCatch(tryBlock, catchBlock)
+        when
+            raise 'exception'
+        then
+            return DoRaise(exception, input)
+        when
+            raise
+        then
+            return DoRaise(nil, input)

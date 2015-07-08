@@ -1,0 +1,38 @@
+<!--Hello World in XL-->
+
+A simple {wiki "Hello_world" "Hello World"} program in {@xl}
+can be written as follows:
+
+{pre}import IO = XL.UI.CONSOLE
+IO.Writeln "Hello World"
+{erp}
+
+Like most {concept "script" "scripting languages"}, and unlike most
+compiled languages ({@C}, {@C++}, {@Ada}), XL programs can contain
+instructions at the top-level. For short programs, this reduces the
+amount of {@synnoise}. For larger programs, this can be used for
+global initializations.
+
+The program displays {tt "Hello World"} on the console. It makes use
+of the {tt "XL.UI.CONSOLE"} module, locally abbreviated as {tt "IO"},
+which provides the {example "writeln"} procedure.
+The {tt "CONSOLE"} module is the simplest of the available
+user interfaces defined in {concept "xl012" "XL2"}. It features the
+three traditional text streams called standard output, standard input
+and standard error (similar to {@C}'s {tt "stdin"}, {tt "stdout"} and
+{tt "stderr"}). There are other {example "gui" "user interfaces"}
+available for more complex tasks.
+
+It is also possible to put the code in a
+{example "function" "procedure"}. The procedure can have any name,
+though {tt "Main"} is often used by convention (as in {@C}). The
+procedure to execute first is specified at build time. This makes it
+possible for instance to create a {tt "Test"} procedure in software
+modules and to use that as the top-level procedure for unit testing.
+
+{pre}import IO = XL.UI.CONSOLE
+procedure Main is
+    IO.WriteLn "Hello World"
+{erp}
+
+

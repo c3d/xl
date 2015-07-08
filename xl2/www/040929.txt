@@ -1,0 +1,19 @@
+<!--Day off-->
+
+I took a day off today. The french system doesn't allow me to save
+that day for later. So I can spend some time hacking XL. I'm going to
+work on the module system today.
+
+And that's a welcome break from HP too. My best friend received his
+notice, he was working on a red-hot project not so long ago. And
+before that he helped me start what became the
+<A href="http://h71028.www7.hp.com/enterprise/cache/76971-0-0-0-121.aspx?Jumpid=virtualization_081604/Linux">Integrity Virtual Machine</A>.
+If you need a truly outstanding software engineering project/program
+manager,
+<A href="mailto:christophe@dinechin.org">drop me a note</A> and I'll
+forward to him.
+
+I also decided that it was time to post my <A href="http://www.dinechin.org/christophe/Resume.html">Resume</A> on-line.
+
+Found an interesting graph by reading Miguel de Icaza's blog:
+{link "http://www.uuforum.org/deficit.htm"}

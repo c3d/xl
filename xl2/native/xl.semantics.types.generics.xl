@@ -1,0 +1,698 @@
+// ****************************************************************************
+//  xl.semantics.types.generics.xl  (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of generic types
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import IO = XL.TEXT_IO
+import WRF = XL.SEMANTICS.WRITTEN_FORMS
+import GN = XL.SEMANTICS.GENERICS
+
+
+module XL.SEMANTICS.TYPES.GENERICS is
+// ----------------------------------------------------------------------------
+//    Implementation of generic types
+// ----------------------------------------------------------------------------
+//   XL has two types of generics:
+//
+//   - explicit generics are similar to templates in C++, for instance:
+//       generic [type ordered] function Min (A, B : ordered) return ordered
+//     In that case, we create two scopes, as we do for functions.
+//     + The outer scope contains the generic parameters (like 'ordered' above)
+//       This outer scope has the "GENERIC" property set, so that all the
+//       declarations made in that scope are generic.
+//     + The inner scope contains the rest of the declaration, which become
+//       generic by virtue of referring to generic parameters.
+//     A generic reference to the inner declaration is then published into
+//     the enclosing scope (making references to 'Min' possible)
+//
+//   - true generics have no direct equivalent in C++, for instance:
+//       generic type Comparable
+//     A true generic is entered in the current symbol table much like
+//     generic parameters are in the first case. However, since it is
+//     entered in the symbol table, it can then be referred by any other
+//     declaration, making it generic.
+
+    procedure MakeParameterList (Parms : PT.tree;
+                                 in out list : declaration_list) is
+    // ------------------------------------------------------------------------
+    //    Translate a parameter list
+    // ------------------------------------------------------------------------
+
+        translate Parms
+            when
+                'X' ; 'Y'
+            then
+                MakeParameterList X, list
+                MakeParameterList Y, list
+                return
+
+            when
+                'X'
+                'Y'
+            then
+                MakeParameterList X, list
+                MakeParameterList Y, list
+                return
+
+            else
+                decl : declaration := DCL.GetDeclaration(Parms)
+                if decl then
+                    list += decl
+                    decl.is_generic_parm := true
+                else
+                    ERR.Error "'$1' isn't a valid generic parameter", Parms
+
+
+    function GenericTypeMatch(iface: any_type;
+                              body : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if an interface type and a body type match for functions
+    // ------------------------------------------------------------------------
+        ifaceG : iface as generic_type
+        bodyG  : body as generic_type
+        if ifaceG = nil then
+            ERR.Error "Internal: Interface '$1' is not a generic type",
+                      TY.Source(iface)
+            return false
+        if bodyG = nil then
+            ERR.Error "'$1' is not a generic type",
+                      TY.Source(body)
+            return false
+
+        // Check implementation type
+        implType : any_type := ifaceG.base
+        if implType = nil then
+            ERR.Error "Internal: generic '$1' has no implementation ",
+                      TY.Source(iface)
+            return false
+        else
+            if bodyG.base = nil then
+                ERR.Error "Internal: generic '$1' body has no implementation",
+                          TY.Source(iface)
+                return false
+            if not implType.interface_match(implType, bodyG.base) then
+                ERR.Error "The implementation type of '$1'", TY.Source(body)
+                ERR.Error "doesn't match that of '$1'", TY.Source(iface)
+                return false
+
+        // Check that the parameters have the same type and name
+        parmCount : integer := size(ifaceG.parameters)
+        if parmCount <> size(bodyG.parameters) then
+            ERR.Error "Incorrect number of parameters for '$1'",
+                      TY.Source(body)
+            return false
+        i : integer
+        for i in 0..parmCount-1 loop
+            iface_decl : declaration := ifaceG.parameters[i]
+            body_decl  : declaration := bodyG.parameters[i]
+            iface_name : PT.name_tree := iface_decl.name
+            body_name  : PT.name_tree := body_decl.name
+            if iface_name.value <> body_name.value then
+                ERR.Error "Parameter name '$1'", body_name
+                ERR.Error "doesn't match parameter name '$1'", iface_name
+                return false
+            iface_type : any_type := iface_decl.type
+            body_type  : any_type := body_decl.type
+            if not TY.SameType(iface_type, body_type) then
+                ERR.Error "Mismatched parameter type for '$1'", iface_name
+                return false
+            if iface_decl.initializer <> nil then
+                if body_decl.initializer <> nil then
+                    if not PT.Matches(iface_decl.initializer,
+                                      body_decl.initializer) then
+                        ERR.Error "Different initializer '$1' in interface",
+                                  iface_decl.initializer
+                        ERR.Error "and '$1' in implementation",
+                                  body_decl.initializer
+                        return false
+                else
+                    ERR.Error "Initializer '$1' in interface only",
+                              iface_decl.initializer
+            else if body_decl.initializer <> nil then
+                ERR.Error "Initializer '$1' in implementation only",
+                          body_decl.initializer
+
+        // Everything seems in order - match
+        if ifaceG.machine_name = nil or bodyG.machine_name <> nil then
+            ifaceG.machine_name := bodyG.machine_name
+
+        return true
+
+
+    function NewGenericContext(syms : SYM.symbol_table;
+                               prop : PT.tree) return generic_info is
+    // ------------------------------------------------------------------------
+    //   Create a generic context in the given symbol table
+    // ------------------------------------------------------------------------
+
+        // Create the generic info, and attach it to the prop
+        gi : generic_info
+        gi.context := XLT.context
+        gi.symbols := syms
+        gi.generic_context := nil
+        gi.initializer := nil
+        gi.validation := nil
+        gi.variadicity := nil
+        gi.rest := nil
+        PT.SetInfo prop, "GENERIC", gi
+
+        // Mark the context as generic
+        SYM.SetProperty gi.symbols, "GENERIC", prop
+
+        trace[generics] "Created new context in ", gi.context, " for ", prop,
+                        " gi ", gi, " symbols ", gi.symbols
+
+        return gi
+
+
+    function GenericContext() return generic_info is
+    // ------------------------------------------------------------------------
+    //    Return the generic type information for current context
+    // ------------------------------------------------------------------------
+        syms : SYM.symbol_table := XLT.context
+        prop : PT.tree := SYM.GetProperty(syms, "GENERIC", false)
+        while (prop = nil and
+               (SYM.GetInteger(syms, "FNPARM", 0, false) = 1 or
+                SYM.GetInteger(syms, "FIELD", 0, false) = 1)) loop
+            syms := SYM.Enclosing(syms)
+            prop := SYM.GetProperty(syms, "GENERIC", false)
+        if prop = nil then
+            return nil
+        gc : PT.FindInfo (prop, "GENERIC") as generic_info
+        return gc
+
+
+    function IsGenericContext() return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if the current context is generic or not
+    // ------------------------------------------------------------------------
+        return GenericContext() <> nil
+
+
+    function NeededGenericContext(Pos : PT.tree) return generic_info is
+    // ------------------------------------------------------------------------
+    //    Return the generic type information for current context
+    // ------------------------------------------------------------------------
+        result := GenericContext()
+        if result = nil then
+            ERR.Error "Internal: No generic context for '$1'", Pos
+            result := NewGenericContext(XLT.context, PT.NewName("<generic>"))
+
+
+    function IsGenericType (tp : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if a type is generic
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            tpg : tp as generic_type
+            if tpg <> nil then
+                return true
+            tp := tp.base
+        return false
+
+
+    function IsGenericDeclaration (decl : declaration) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if a declaration is generic
+    // ------------------------------------------------------------------------
+        return (IsGenericType(decl.type) or
+                IsGenericType(GetDefinedType(decl.name)))
+
+
+    function DeclGenericType (decl : declaration) return generic_type is
+    // ------------------------------------------------------------------------
+    //   Return the generic type associated with a decl if any
+    // ------------------------------------------------------------------------
+        if TY.IsTypeType (decl.type) then
+            Dtypedef : TY.any_type := TY.GetDefinedType (decl.name)
+            Dtype : Dtypedef as GEN.generic_type
+            return Dtype
+        else
+            Dtype : decl.type as generic_type
+            return Dtype
+
+
+    function NonGenericType (tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the first non-generic type in the list
+    // ------------------------------------------------------------------------
+        gtp : tp as generic_type
+        if gtp <> nil then
+            return gtp.base
+        return tp
+
+
+    function MakeGeneric (tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Make a given type generic in the current generic context
+    // ------------------------------------------------------------------------
+
+        gi : generic_info := GenericContext()
+        trace[generics] "Making (", TY.Source(tp), ") generic gi ", gi
+
+        // Find the current generic context
+        if gi = nil then
+            ERR.Error "'$1' is not declared in a generic context",
+                      TY.Source(tp)
+            return tp
+
+        // Check if we already made this type generic
+        existing : tp as generic_type
+        if existing <> nil then
+            if existing.context = gi.context then
+                if existing.symbols = gi.symbols then
+                    return existing
+        for existing in gi.generic_types loop
+            if TY.SameType (tp, existing) then
+                return existing
+            if TY.SameType (tp, existing.base) then
+                return existing
+
+        // Make a generic type out of the context and the input type
+        mn : tp.name as PT.name_tree
+        mt : text := PT.XLNormalize(mn.value)
+        gc : generic_type
+        gc.base := tp
+        gc.machine_name := SYM.Temporary ("<generic-type>" + mt)
+        gc.interface_match := GenericTypeMatch
+        gc.name := tp.name
+        gc.context := gi.context
+        gc.symbols := gi.symbols
+        gc.parameters := gi.parameters
+        gc.validation := gi.validation
+        gc.in_validation := false
+        TY.SetDefinedType gc.machine_name, gc
+
+        // Record that we made a generic type
+        gi.generic_types += gc
+
+        // Return the generic type we just created
+        return gc
+
+
+    function DependsOn(gi : generic_info; tp : TY.any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if we already depend on the given type
+    // ------------------------------------------------------------------------
+        // Check if we already have a dependency on that type
+        existing : generic_type
+        for existing in gi.generic_types loop
+
+            // Check if we directly depend on the type
+            if TY.SameType(existing, tp) then
+                trace[generics] "Dependent on ", TY.Source(tp)
+                return true
+
+            // Check if the type is one of the type parameters
+            // E.g. in complex[value], if we depend on 'complex', we
+            // implicitly already depend on 'value'
+            parm : DCL.declaration
+            for parm in existing.parameters loop
+                subType : TY.GetDefinedType(parm.name) as generic_type
+                if subType <> nil then
+                    if TY.SameType(subType, tp) then
+                        trace[generics] "Indirect dependency of ",
+                                        TY.Source(subType)
+                        return true
+
+        // No dependency found
+        return false
+
+
+
+    procedure AddGenericDependency (tp : any_type) is
+    // ------------------------------------------------------------------------
+    //   If a generic type is used as argument/field, make fn/rec generic
+    // ------------------------------------------------------------------------
+
+        gi : generic_info := GenericContext()
+        trace[generics] "Adding dependency ", TY.Source(tp), " gi ", gi
+
+        // Check if this is partially instantiated type, like range[ordered]
+        // In that case, we actually depend on the type arguments
+        itp : tp as instantiated_type
+        if itp <> nil then
+            Parm : PT.tree
+            trace[generics] "Type ", TY.Source(itp), " is instantiated"
+            for Parm in itp.args loop
+                Arg      : PT.tree := itp.args[Parm]
+                ArgType  : TY.any_type := TY.GetDefinedType(Arg)
+                ParmType : TY.any_type := TY.GetDefinedType(Parm)
+                trace[generics] "  Parm ", TY.Source(ParmType),
+                                " Arg ", TY.Source(ArgType)
+                if IsGenericType(ArgType) then
+                    AddGenericDependency ArgType
+            return
+
+        // Otherwise, this should be a generic type
+        gtp : TY.NonConstedType(tp) as generic_type
+        if gtp = nil then
+            ERR.Error "Internal: Dependency '$1' is not a generic type",
+                      TY.Source(tp)
+            return
+
+        // If the current context is not generic, make it generic
+        if gi = nil then
+            gi := NewGenericContext (XLT.context, PT.Clone(TY.Source(gtp)))
+            assert gi <> nil
+        else
+            // Check if we already have a dependency on that type
+            if DependsOn(gi, gtp) then
+                return
+
+        // Add the right declaration to the local generic info
+        // CHECK: we don't add it to the generic symbol table, because
+        // presumably the declaration is already visible in context
+        Name : PT.tree := TY.Source(gtp)
+        Decl : DCL.declaration := DCL.GetDeclaration(Name)
+        assert Decl <> nil
+        gi.parameters += Decl
+        gi.generic_types += gtp
+
+        trace[generics] "Simple dependency #",
+                        size(gi.parameters), " is ", Name
+
+
+    procedure AddVariadicity (anchor : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   If a variadic declaration is seen, store it in the generic context
+    // ------------------------------------------------------------------------
+
+        if SYM.GetInteger(XLT.context, "FNPARM") <> 1 then
+            ERR.Error "Internal: Variadic '$1' in non-parameter context",anchor
+
+        gi : generic_info := GenericContext()
+        trace[generics] "Adding variadicity gi ", gi
+
+        // If the current context is not generic, make it generic
+        if gi = nil then
+            gi := NewGenericContext (XLT.context, anchor)
+            assert gi <> nil
+
+        // Check if we are already variadic
+        existing : PT.tree := gi.variadicity
+        if existing <> nil then
+            ERR.Error "The context for '$1' is already variadic", anchor
+            ERR.Error "Variadicity was declared here with '$1'", existing
+            return
+
+        gi.variadicity := anchor
+
+
+    function VariadicExpression() return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return the current variadic expression if it exists
+    // ------------------------------------------------------------------------
+        return SYM.LookupOne (XLT.context, "...", "EXPR")
+
+
+    function VariadicDeclarations() return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return the current variadic declarations if they exist
+    // ------------------------------------------------------------------------
+        return SYM.LookupOne (XLT.context, "...", "DECL")
+
+
+    function EnterGenericDecl(Decl  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a generic declaration
+    // ------------------------------------------------------------------------
+
+        gi : generic_info := NeededGenericContext(Decl)
+        trace[generics] "Generic Decl (", Decl, ") gi ", gi
+
+        // Process the main declaration in a nested generic context
+        oldTypeCount : integer := size(gi.generic_types)
+        oldContext : SYM.symbol_table := gi.context
+        genContext : SYM.symbol_table := SYM.NewSymbolTable(gi.symbols)
+        XLT.context := genContext
+        gi.generic_context := genContext
+        XLT.CopyScopeProperties genContext, oldContext
+
+        // Make sure we know how to find the generic context
+        genProp : PT.tree := SYM.GetProperty(gi.symbols, "GENERIC")
+        SYM.SetProperty genContext, "GENERIC", genProp
+
+        // Restructure the initializer as it would be if parsed
+        Init : PT.tree := gi.initializer
+        if Init <> nil then
+            if Decl.kind <> PT.xlPREFIX then
+                ERR.Error "Internal: '$1' doesn't have prefix structure", Decl
+            else
+                prefix : Decl as PT.prefix_tree
+                right  : PT.tree := prefix.right
+                prefix.right := parse_tree('right' is 'Init')
+
+        // Actually enter the generic declaration
+        trace[generics] "Generic EnterDecl (", Decl, ") gi ", gi
+        result := XLT.XLDeclarations(Decl)
+        XLT.context := oldContext
+
+        // If no type became generic because of the context, error
+        if size(gi.generic_types) = oldTypeCount then
+            ERR.Error "There is no generic declaration in '$1'", Decl
+
+
+    function EnterGenericParms (Parms : PT.tree;
+                                Decl  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter the parameters for a generic declaration
+    // ------------------------------------------------------------------------
+        gi : generic_info := NeededGenericContext(Decl)
+        trace[generics] "Generic parms (",Parms,") Decl (",Decl,")  gi ",gi
+
+        // We can't have parameters more than once
+        if size(gi.parameters) > 0 then
+            ERR.Error "There were generic parameters before '$1'", Parms
+
+        // Check if empty parameter list.
+        // [ ] is a block with an empty name
+        if Parms <> nil and Parms.kind = PT.xlNAME then
+            N : Parms as PT.name_tree
+            if N.value = "" then
+                Parms := nil
+
+        // Declare the parameters in the generic context,
+        // making them generic
+        if Parms <> nil then
+            oldContext : SYM.symbol_table := XLT.context
+            XLT.context := gi.symbols
+            Parms := XLT.XLDeclarations (Parms)
+            MakeParameterList Parms, gi.parameters
+            XLT.context := oldContext
+
+        // Look at 'Decls' with these parameters
+        result := XLT.XLEnterGeneric (Decl)
+
+
+    function EnterGenericWrittenForm (GenDecl : PT.tree;
+                                      WrForm  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a written form for the declaration
+    // ------------------------------------------------------------------------
+
+        gi : generic_info := NeededGenericContext(GenDecl)
+        trace[generics] "Generic written (", WrForm, ") gi ", gi
+
+        // Enter the declaration itself
+        result := XLT.XLEnterGeneric (GenDecl)
+
+        // Then apply the written form to the result
+        Decl : DCL.declaration := DCL.GetDeclaration(result)
+        if Decl = nil then
+            ERR.Error "No generic declaration for written form '$1'", WrForm
+            return result
+        gtp : generic_type := DeclGenericType(decl)
+        if gtp = nil then
+            ERR.Error "Written form '$1' applied to non-generic type '$2'",
+                      WrForm, TY.Source(decl.type)
+            return result
+        oldContext : SYM.symbol_table := XLT.context
+        XLT.context := gi.generic_context
+        if XLT.context = nil then
+            ERR.Error "Internal: No symbols for declaration '$1' written '$2'",
+                      Decl.name, WrForm
+        else
+            WRF.EnterWrittenForm Decl, gtp, WrForm
+        XLT.context := oldContext
+
+
+    function EnterGenericInitializer (Decl : PT.tree;
+                                      Init : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a generic intializer, check that there is only one
+    // ------------------------------------------------------------------------
+        gi : generic_info := NeededGenericContext(Decl)
+        trace[generics] "Generic Init (", Init, ") gi ", gi
+        if gi.initializer <> nil then
+            ERR.Error "Initializer '$1'", Init
+            ERR.Error "follows previous initializer '$1'", gi.initializer
+        gi.initializer := Init
+        result := XLT.XLEnterGeneric (Decl)
+
+
+    function EnterGenericValidation (Decl  : PT.tree;
+                                     Valid : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a generic intializer, check that there is only one
+    // ------------------------------------------------------------------------
+        gi : generic_info := NeededGenericContext(Decl)
+        trace[generics] "Generic Validation (", Valid, ") gi ", gi
+        if gi.validation <> nil then
+            ERR.Error "validation '$1'", Valid
+            ERR.Error "follows previous validation '$1'", gi.validation
+        gi.validation := Valid
+        result := XLT.XLEnterGeneric (Decl)
+
+
+    translation XLEnterGeneric
+    // ------------------------------------------------------------------------
+    //   Parse the elements in a generic interface
+    // ------------------------------------------------------------------------
+    //   This is a little bit ugly, because generics are long declarations
+    //   which we may want to write in a number of different ways which
+    //   happen to not parse exactly the same way. We put the complexity here
+    //   rather than in the individual declarations (function, etc.)
+    //   Since this is a 'translation', it is extensible if it needs to be...
+
+        // Declaration of parameters
+        when (['Parms'] 'Decl') then
+            return EnterGenericParms (Parms, Decl)
+        when
+            ['Parms']
+            'Decl'
+        then
+            return EnterGenericParms (Parms, Decl)
+
+        // Declaration of an initializer
+        when ('Decl' is 'Initializer') then
+            return EnterGenericInitializer (Decl, Initializer)
+
+        // Declaration of a validation clause
+        when ('Decl' where 'Validation') then
+            return EnterGenericValidation (Decl, Validation)
+
+        // Declaration of a written form
+        when ('Decl' written 'WrittenForm') then
+            return EnterGenericWrittenForm(Decl, WrittenForm)
+
+        // Priority inversions for type declarations
+        when
+            type 'Decl' written 'WrittenForm'
+        then
+            Decl := parse_tree(type 'Decl')
+            return EnterGenericWrittenForm(Decl, WrittenForm)
+        when
+            type 'Decl' where 'Validation'
+        then
+            Decl := parse_tree(type 'Decl')
+            return EnterGenericValidation(Decl, Validation)
+        when
+            type 'Decl' is 'Init'
+        then
+            Decl := parse_tree(type 'Decl')
+            return EnterGenericInitializer(Decl, Init)
+
+
+        // Deal with whatever code follows the generic
+        when
+            'FirstGenericDecl'
+            'SecondNonGenericDecl'
+        then
+            gi : generic_info := NeededGenericContext(FirstGenericDecl)
+            result := XLT.XLEnterGeneric (FirstGenericDecl)
+            if gi.rest <> nil then
+                ERR.Error "Internal: '$1' and '$2' following generic",
+                          SecondNonGenericDecl, gi.rest
+            gi.rest := SecondNonGenericDecl
+
+        // For all other cases, just enter the declaration
+        when
+            'GenericDecl'
+        then
+            result := EnterGenericDecl (GenericDecl)
+
+
+    function EnterGeneric (GenIface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Process generic forms
+    // ------------------------------------------------------------------------
+
+        // Avoid nested generics (necessary?)
+        if IsGenericContext() then
+            ERR.Error "Generic declaration '$1' is nested", GenIface
+            return XLT.XLDeclarations (GenIface)
+
+        // Create a local symbol table, and make it our generic context
+        oldContext : SYM.symbol_table := XLT.context
+        genSymbols : SYM.symbol_table := SYM.NewSymbolTable(oldContext)
+        gi : generic_info := NewGenericContext(genSymbols, GenIface)
+        assert gi <> nil
+        assert gi.context = oldContext
+        assert gi.symbols <> nil
+        XLT.context := genSymbols
+        result := XLT.XLEnterGeneric (GenIface)
+        XLT.context := oldContext
+
+        // Import the declarations from the new context into the old one
+        if gi.generic_context <> nil then
+            SYM.AddSymbols oldContext, gi.generic_context
+
+        // Now that we are back in the non-generic context, we can
+        // deal with whatever follows the generic declaration
+        Rest : PT.tree := gi.rest
+        if Rest <> nil then
+            Rest := XLT.XLDeclarations(Rest)
+            result := parse_tree
+                'result'
+                'Rest'
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //   Translation of generic type declarations
+    // ------------------------------------------------------------------------
+        when
+            generic 'GenericStuff'
+        then
+            result := EnterGeneric (GenericStuff)
+        when
+            generic 'GenericStuff'
+            'OtherStuff'
+        then
+            GenericStuff := parse_tree
+                'GenericStuff'
+                'OtherStuff'
+            result := EnterGeneric (GenericStuff)
+        when
+            generic ['Parms']
+            'GenericStuff'
+        then
+            GenericStuff := parse_tree (['Parms'] 'GenericStuff')
+            result := EnterGeneric (GenericStuff)
+        when
+            generic
+            'GenericStuff'
+        then
+            result := EnterGeneric (GenericStuff)

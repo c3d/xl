@@ -1,0 +1,3 @@
+<!--A GUI description in XL-->
+
+Here is an example of {concept "data" "use of XL as a data language"}

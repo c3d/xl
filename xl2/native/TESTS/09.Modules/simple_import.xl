@@ -1,0 +1,5 @@
+import SIMPLE_IMPORTED
+
+to Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.Copy_int
+
+K : integer := SIMPLE_IMPORTED

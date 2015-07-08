@@ -1,0 +1,36 @@
+<!--What is a "concept"?-->
+
+In {@cp}, we call a <EM>concept</EM> anything from the {@pb}
+that matters to your program. These are two important criteria:
+
+<UL>
+<LI>We don't call a concept something that doesn't belong to the
+  {@pb}. Syntactic or efficiency concerns are generally not
+  concepts. The semi-colon at the end of a statement in C matters for
+  most C programs (without it, they won't compile). But it is not a
+  concept, except for the designer of a C compiler, because it
+  doesn't represent anything in the {@pb}. It is a purely
+  {concept "syntax" "syntactic"} concern.
+
+<LI>If it doesn't matter to your program, it is not a concept
+  either. If you are designing a video-game, chances are that the
+  quality of the user interface is paramount to the success of the
+  game, so it is a primary concern of the {@pb}. However, there is no
+  way to translate this important concern into code. {@cp} can
+  improve the language used to describe the user-interface, but
+  not the quality of the user-interface itself.
+</UL>
+
+Depending on the {@pb} being considered, a window displaying some
+information may be a concept; a mathematical operation, such as a
+linear transform, may be a concept; the synchronization between two
+tasks may be a concept; the transformations performed on a stream of
+text may be a concept. There is
+{concept "anything" "no precise limit"} on the set of concepts that
+programmers may need to deal with.
+
+Programmers do not manipulate concepts directly. They deal with
+concept {concept "representations"}. The key focus of {@cp} is how
+programmers transform concepts into representations. {@xl} is an
+example of a language designed for such
+{concept "anything" "general-purpose"} transformations.

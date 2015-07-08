@@ -1,0 +1,20 @@
+<!--June 2007-->
+May | <b>June 2007</b> | July
+<p>
+Friday, 22 June: Back to work...
+<ul>
+<li><a href="http://physics.dinechin.org/tim.pdf">article about physics</a>
+<a href="http://grenouille-bouillie.blogspot.com">my blog</a>
+<a href="http://physics.dinechin.org">dedicated web site</a>
+<li>Meanwhile, C++0X
+<a href="http://herbsutter.spaces.live.com/blog/cns!2D4327CC297151BB!159.entry">continues
+to make slow progress</a>
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2073.pdf">modules
+proposal</a>
+</ul>
+<a href="070628.html">Thursday, 28 June</a>: Extensible Runtime
+<ul>
+</ul>
+
+<p>
+May | <b>June 2007</b> | July

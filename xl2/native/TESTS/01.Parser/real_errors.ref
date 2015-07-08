@@ -1,0 +1,52 @@
+01.Parser/real_errors.xl:36: Invalid use of '_' in number
+| 1__3.0
+|___^
+01.Parser/real_errors.xl:42: Invalid base (should be 2..36)
+| 1#0.0
+|__^
+01.Parser/real_errors.xl:43: Invalid base (should be 2..36)
+| 37#A.0
+|___^
+
+(infix <CR>
+ 1.23457e+18
+ (infix <CR>
+  1e+25
+  (infix <CR>
+   inf
+   (infix <CR>
+    inf
+    (infix <CR>
+     (prefix
+      (prefix
+       1
+       _)
+      3)
+     (infix <CR>
+      (prefix
+       _.
+       3)
+      (infix <CR>
+       (prefix
+        .
+        3)
+       (infix <CR>
+        (implicit ()
+         (prefix
+          3
+          ._))
+        (infix <CR>
+         0
+         (infix <CR>
+          10
+          (infix <CR>
+           (infix .
+            2
+            3)
+           (prefix
+            15
+            (infix .
+             F
+             FE)))))))))))))
+
+

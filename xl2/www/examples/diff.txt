@@ -1,0 +1,38 @@
+<!--Symbolic Differentiation in XL-->
+
+There are a few {@problems} which are best expressed using
+{wiki "Derivative" "the derivative of a function"}, for instance in
+domains such as economics or mechanical engineering. However, with
+traditional programming languages, the {@code} will not contain a
+representation of the original {@concept} (a derivative), but
+directly the derived form.
+
+So, in C, if you think about the output of a
+<A href="http://www.oz.net/~coilgun/theory/dampedoscillator.htm">damped
+ oscillator</A>,
+you can write a quasi-mathematical notation, something like:
+{pre}I = K*exp(-alpha*t)*sin(beta*t){erp}
+It is easy to understand that it's convenient to let the compiler
+transform that into the actual machine code.
+
+On the other hand, if what you are interested is the rate of change of
+ said oscillator, you cannot write the mathematical expression:
+{pre}dI = d(K*exp(-alpha*t)*sin(beta*t))/dt{erp}
+Instead, you need to expand it manually, yielding something ugly like:
+{pre}dI := K * exp (- (alpha * t)) * (beta * cos (beta * t)) - K * (alpha * exp (- (alpha * t))) * sin (beta * t)) {erp}
+The code above is ugly because it doesn't represent the concept. It
+ doesn't indicate that a derivative was computed (except maybe in a
+ comment), and the computation is not automated, so it is error
+ prone.
+
+So far, nobody really expected the compiler to perform the
+differentiation for you, even if cheap pocket calculators like the
+HP-48 have been capable of doing this incredible feat for maybe 10
+years... But why not?
+
+With {@XL}, a simple language {concept "extension"} makes it possible
+to write code exactly like the above. Moreover, the extension is
+{cvs "xl.plugin.differentiation.xl" "not very complicated"}. The
+plug-in simply describes the various transformation used to perform a
+symbolic differentiation.
+

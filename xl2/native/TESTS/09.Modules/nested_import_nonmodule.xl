@@ -1,0 +1,29 @@
+// ****************************************************************************
+//  nested_import_nonmodule.xl       (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    Test that we can't import nested module if outer is not a module
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+// EXIT=2
+
+import SIMPLE_IMPORTED.NESTED1.NESTED2
+
+Klaxon_Enabled : boolean := Simple_imported.Nested_1.nested2.HasKlaxon(0.54)

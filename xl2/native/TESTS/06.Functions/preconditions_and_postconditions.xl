@@ -1,0 +1,71 @@
+// ****************************************************************************
+//  preconditions_and_postconditions.xl(C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Test if preconditions and postconditions work
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+procedure precondition_error(file: text;
+                             line: integer; column: integer
+                             source : text) is
+    postcondition_error file, line, column, source
+
+procedure postcondition_error(file: text;
+                              line: integer; column: integer
+                              source : text) is
+    precondition_error file, line, column, source
+
+function Not (B : boolean) return boolean is XL.BYTECODE.not_bool
+function EqualInt(A, B : integer)
+    return boolean
+    written A=B
+    is XL.BYTECODE.equ_int
+function MulInt(A, B : integer)
+    return integer
+    written A*B
+    is XL.BYTECODE.mul_int
+function SubInt(A, B : integer)
+    return integer
+    written A-B
+    is XL.BYTECODE.sub_int
+function GeInt(A, B : integer)
+    return boolean
+    written A>=B
+    is XL.BYTECODE.ge_int
+function GtInt(A, B : integer)
+    return boolean
+    written A>B is XL.BYTECODE.gt_int
+function LtInt(A, B : integer)
+    return boolean
+    written A<B is XL.BYTECODE.lt_int
+procedure CopyInt(out Tgt : integer; in Src : integer)
+    written Tgt := Src is XL.BYTECODE.copy_int
+
+function Factorial (N : integer)
+    return integer
+    written N!
+    require N >= 0
+    require N < 12
+    ensure result > 0 is
+        if N = 0 then
+            return 1
+        return N * (N-1)!
+

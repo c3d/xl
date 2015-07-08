@@ -1,0 +1,20 @@
+use XL.UI.CONSOLE
+
+WriteLn "Hello World"
+
+initially
+    WriteLn "Initially"
+
+finally
+    WriteLn "Finally"
+
+WriteLn "Done"
+
+to DoSomething is
+    WriteLn "I'm doing something"
+    initially
+        WriteLn "Preparing to do something"
+    finally
+        WriteLn "Did something"
+
+DoSomething

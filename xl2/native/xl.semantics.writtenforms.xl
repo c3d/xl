@@ -1,0 +1,564 @@
+// ****************************************************************************
+//  xl.semantics.writtenforms.xl    (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 331 $
+// * Date       : $Date: 2007-07-17 18:08:23 +0200 (Tue, 17 Jul 2007) $
+// ****************************************************************************
+
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import FN = XL.SEMANTICS.FUNCTIONS
+import OVL = XL.SEMANTICS.OVERLOAD
+import ITER = XL.SEMANTICS.ITERATORS
+import TY = XL.SEMANTICS.TYPES
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import GN = XL.SEMANTICS.GENERICS
+import CGM = XL.CODE_GENERATOR.MACHINE
+
+
+module XL.SEMANTICS.WRITTEN_FORMS is
+// ----------------------------------------------------------------------------
+//   Module dealing with the implementation of 'written' in declarations
+// ----------------------------------------------------------------------------
+
+    function CreateWildcards(form : PT.tree;
+                             in out parms : written_args_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Replace param names with identically-named wildcards
+    // ------------------------------------------------------------------------
+
+        if form.kind = PT.xlNAME then
+            name : form as PT.name_tree
+            if count(parms, name.value) > 0 then
+                return PT.NewWildcard(name.value, name.position)
+            return name
+
+        else if (form.kind = PT.xlINTEGER or
+                 form.kind = PT.xlREAL or
+                 form.kind = PT.xlTEXT) then
+            return form
+
+        else if form.kind = PT.xlBLOCK then
+            block : form as PT.block_tree
+            return PT.NewBlock(CreateWildcards(block.child, parms),
+                               block.opening, block.closing,
+                               block.position)
+
+        else if form.kind = PT.xlPREFIX then
+            prefix : form as PT.prefix_tree
+            return PT.NewPrefix(CreateWildcards(prefix.left, parms),
+                                CreateWildcards(prefix.right, parms),
+                                prefix.position)
+
+
+        else if form.kind = PT.xlINFIX then
+            infix : form as PT.infix_tree
+            return PT.NewInfix(infix.name,
+                               CreateWildcards(infix.left, parms),
+                               CreateWildcards(infix.right, parms),
+                               infix.position)
+
+        else
+            ERR.Error "Unknown tree type in written form: $1", form
+            return form
+
+
+    function WrittenScoreAdjust(test        : PT.tree;
+                                info        : SYM.rewrite;
+                                in out args : PT.tree_map;
+                                depth       : integer;
+                                base_score  : integer) return integer is
+    // -----------------------------------------------------------------------
+    //   Check the type of parameters to see if written form matches
+    // -----------------------------------------------------------------------
+    //   At this point, we already ran through PT.Matches, so the 'args'
+    //   map already contains the trees for each argument. We simply need
+    //   to check that the types match.
+
+        written    : info as written_form
+        param_name : text
+        F          : FN.function := written.function
+        FType      : F.type as FT.function_type
+        Gtype      : F.type as GEN.generic_type
+        Gargs      : GN.generic_map
+        trace[+expr] "Lookup ", test, " against ", info.reference_form,
+                     " for ", PT.tree(F.Name), " : ", TY.Source(F.type)
+
+        if Ftype = nil and Gtype <> nil then
+            SYM.AdjustScoreGenericity base_score
+
+        // Check whether this is an iterator / we are looking for one
+        inIterator: boolean := PT.FindInfo(test, "ITERATOR_EXPR") <> nil
+        asIterator: F as ITER.iterator
+        if (asIterator <> nil) <> inIterator then
+            trace[-expr] "FAIL: Iterator vs. non-iterator"
+            return 0
+
+        // Check parameter types
+        for param_name in args loop
+            value  : PT.tree := args[param_name]
+            key    : text := "WARG"
+            semArg : PT.tree := PT.Attached(value, key)
+            decl   : DCL.declaration := written.args_map[param_name]
+            skip   : boolean := false
+            tempDt : PT.tree // Temporary destructors
+            keyD   : text := "WARG_DTORS"
+            trace[expr] "Testing parm ", param_name,
+                        " type ", TY.Source(decl.type),
+                        " against ", value
+            if semArg = nil then
+                if value.kind=PT.xlNAME and DCL.GetDeclaration(value)=nil then
+                    // Undeclared out parameters will be declared in call
+                    if decl.is_variable then
+                        Name : value as PT.name_tree
+                        N    : text := Name.value
+                        Orig : PT.tree := SYM.LookupOne(XLT.context, "DECL", N)
+                        if Orig = nil then
+                            semArg := value
+                            skip := true
+                            trace[expr] "Will declare ", param_name
+                if semArg = nil then
+                    tnt : XLT.attempt := XLT.BeginAttempt()
+                    callDepth : integer := CGM.EnterCall()
+                    TY.PushTargetType nil
+                    semArg := XLT.XLSemantics(value)
+                    TY.PopTargetType()
+                    CGM.ExitCall callDepth, tempDt
+                    if XLT.EndAttempt(tnt) then
+                        semArg := ERR.ErrorTree()
+                        PT.AttachTree value, key, semArg
+                        trace[-expr] "FAIL: error ", semArg
+                        return 0
+                    if PT.Attached(semArg, "TODEDUCE") = nil then
+                        PT.AttachTree value, key, semArg
+                        if tempDT <> nil then
+                            PT.AttachTree semArg, keyD, tempDt
+                    else
+                        trace[deduce] "For ", PT.tree(info.reference_form)
+                        trace[deduce] "will try deducing return of ", value
+                        trace[deduce] "from type ", TY.Source(decl.type),
+                                      " of parameter ", PT.tree(decl.name)
+
+                        dt  : TY.any_type := decl.type
+                        dgt : dt as GEN.generic_type
+                        if dgt <> nil then
+                            trace[deduce] "Type is generic, deferring"
+                        else
+                            tnt : XLT.attempt := XLT.BeginAttempt()
+                            callDepth : integer := CGM.EnterCall()
+                            TY.PushTargetType TY.Source(dt)
+                            semArg := XLT.XLSemantics(value)
+                            TY.PopTargetType()
+                            CGM.ExitCall callDepth, tempDt
+                            if XLT.EndAttempt(tnt) then
+                                trace[deduce] "Failed: ", ERR.LastErrorsText()
+                                trace[-expr] "FAIL: ded ", ERR.LastErrorsText()
+                                return 0
+                        
+            translate semArg
+                when (@error 'Errors') then
+                    trace[-expr] "FAIL: Cached errors ", Errors
+                    ERR.PushErrorContext()
+                    ERR.ReplayErrors semArg
+                    ERR.PopErrorContext()
+                    return 0
+
+            argType : PT.tree := TY.Source(TY.GetType(semArg))
+            trace[expr] "Value for ", param_name, " has type ", argType
+            args[param_name] := semArg
+            if not skip then
+                if Gtype <> nil then
+                    ERR.PushErrorContext()
+                    ok : boolean := GN.Deduce (Gtype, decl, semArg, Gargs)
+                    if ERR.PopErrorContext() then
+                        ok := false
+                    if not ok then
+                        trace[-expr] "FAIL: type deduct ", ERR.ErrorTree()
+                        return 0
+                else
+                    assignable : integer := DCL.Assignable(decl, semArg)
+                    if assignable > 0 then
+                        trace[expr] "Assignable: ", assignable, " for ", semArg
+                        SYM.AdjustScoreRenames base_score, assignable
+                    else
+                        // Not assignable, try implicit conversion
+                        trace[expr] "Trying implicit conversions"
+                        callDepth : integer := CGM.EnterCall()
+                        semArg := TY.TryConvert(semArg, decl.type)
+                        CGM.ExitCall callDepth, tempDt
+                        if semArg = nil then
+                            trace[-expr] "FAIL: implicit ", ERR.LastErrorsText()
+                            return 0
+                        assignable := DCL.Assignable(decl, semArg)
+                        if assignable = 0 then
+                            trace[-expr] "FAIL: Type error"
+                            return 0
+                        args[param_name] := semArg
+                        SYM.AdjustScoreConversions base_score
+
+        // Check if there are non-deduced generic arguments
+        if Gtype <> nil then
+            if not GN.FinalizeDeductions(Gtype, Gargs) then
+                trace[-expr] "FAIL: Could not finalize deductions"
+                return 0
+
+            // This is the case for P := Pointer(3). Now we have
+            // finalized deductions for P successfully, so we know
+            // that P = pointer[znort], and consequently we can
+            // use that information to deduce the return type of Pointer.
+            for param_name in args loop
+                value  : PT.tree := args[param_name]
+                if PT.Attached(value, "TODEDUCE") <> nil then
+                    decl   : DCL.declaration := written.args_map[param_name]
+                    tempDt : PT.tree // Temporary destructors
+
+                    trace[expr] "Deduce return type of ", value
+                    trace[deduce] "For ", PT.tree(info.reference_form)
+                    trace[deduce] "will try deducing return of ", value
+                    trace[deduce] "from gen type ", TY.Source(decl.type),
+                                  " of parameter ", PT.tree(decl.name)
+
+                    dt  : TY.any_type := decl.type
+                    dgt : dt as GEN.generic_type
+                    if dgt <> nil then
+                        inst : PT.tree := TY.Source(dgt)
+                        inst := GN.InstantiateType(inst, Gargs)
+                        trace[deduce] "instantiated as ", inst
+                        dt := TY.GetDefinedType(inst)
+                        trace[deduce] "of type ", TY.Source(dt)
+
+                    tnt : XLT.attempt := XLT.BeginAttempt()
+                    callDepth : integer := CGM.EnterCall()
+                    TY.PushTargetType TY.Source(dt)
+                    value := XLT.XLSemantics(value)
+                    args[paramName] := value
+                    TY.PopTargetType()
+                    CGM.ExitCall callDepth, tempDt
+                    if XLT.EndAttempt(tnt) then
+                        // Oh well, all this effort to fail now...
+                        trace[deduce] "Failed: ", ERR.LastErrorsText()
+                        trace[-expr] "FAIL: ret deduce ", ERR.LastErrorsText()
+                        return 0
+
+        written.generic_args := Gargs
+        trace[-expr] "PASS: score ",base_score," for ",PT.tree(F.machine_name)
+        return base_score
+
+
+    function WrittenTranslator (input       : PT.tree;
+                                scope       : PT.tree;
+                                info        : SYM.rewrite;
+                                in out args : PT.tree_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    For a valid written form, return function-call form
+    // ------------------------------------------------------------------------
+    //    We directly return the machine-level function call (CGM)
+
+        written   : info as written_form
+        margs     : CGM.machine_args
+        fninfo    : FN.function := written.function
+        fntype    : fninfo.type as FT.function_type
+        gentype   : fninfo.type as GEN.generic_type
+        arg       : FN.declaration
+        Dnames    : PT.tree_list
+        Didx      : string of integer
+        callDepth : integer := CGM.EnterCall()
+        ctorTarget: PT.tree := PT.Attached(input, "CTORCALL")
+
+        trace[+expr] "Translate ", input, " in scope ", scope
+
+        // Check for generic functions
+        if gentype <> nil then
+            GFType : gentype.base as FT.function_type
+            fntype := GFType
+
+        // Order parameters in function call order
+        a : integer := 0
+        for arg in fntype.parameters loop
+            name_tree : PT.name_tree := arg.name
+            name_text : text := name_tree.value
+            value     : PT.tree := args[name_text]
+            if value.kind=PT.xlNAME and DCL.GetDeclaration(value)=nil then
+                decl   : DCL.declaration := written.args_map[name_text]
+                // Declare the undeclared out parameters
+                if decl.is_variable then
+                    Name : value as PT.name_tree
+                    N    : text := Name.value
+                    Orig : PT.tree := SYM.LookupOne(XLT.context, "DECL", N)
+                    if Orig = nil then
+                        Dnames += value
+                        Didx += a
+            margs += value
+            tempDtors : PT.tree := PT.Attached(value, "WARG_DTORS")
+            if tempDtors <> nil then
+                CGM.AddCallDtors tempDtors
+
+            a += 1
+
+        // See if callee is a generic function
+        if gentype <> nil then
+            result := GN.InstantiateFunction (fninfo.name, fninfo,
+                                              written.generic_args, nil,
+                                              scope)
+            fninfo := FN.GetFunction (result)
+            if fninfo = nil then
+                // Instantiation error
+                CGM.ExitCall callDepth, result
+                trace[-expr] "Instantiation error for ", input,
+                             " result=", result
+                return result
+
+        ctors        : PT.tree
+        declaredHere : map[DCL.declaration, boolean]
+        ftype        : fninfo.type as FN.function_type
+        if size(Dnames) > 0 then
+            for a in 0..size(Dnames)-1 loop
+                Name : Dnames[a] as PT.name_tree
+                idx  : integer := Didx[a]
+                parm : DCL.declaration := ftype.parameters[idx]
+                decl : DCL.declaration := DCL.Declare(Name, parm.type)
+                if parm.is_input or not parm.is_output then
+                    ctors := XLT.Append(ctors, DCL.CallConstructor(decl))
+                margs[a] := XLT.XLSemantics(margs[a])
+                declaredHere[parm] := true
+
+        // Call the destructors for all output parameters
+        // (the value will be constructed in the callee)
+        // Avoid doing that if this is 'Copy' as called by ctor calls...
+        dtors : PT.tree
+        for a in 0..size(ftype.parameters)-1 loop
+            parm : DCL.declaration := ftype.parameters[a]
+            if parm.is_output and not parm.is_input then
+                if not declaredHere[parm] then
+                    dtorCall : PT.tree := DCL.CallDestructor(margs[a])
+                    if dtorCall <> nil then
+                        trace [calldtors] "Parm ", parm, " dtor ", dtorCall
+                    dtors := XLT.Append(dtors, dtorCall)
+
+        // Check if this is an iterator call
+        iterator : fninfo as ITER.iterator
+        if iterator <> nil then
+            result := ITER.InvokeIterator(input, scope, iterator,
+                                          margs, ctors, dtors)
+        else if scope = nil then
+            result := CGM.FunctionCall (fninfo, margs, ctorTarget, ctors, dtors)
+        else
+            scope := XLT.XLSemantics(scope)
+            result := CGM.RecordFunctionCall(scope,fninfo, margs, ctorTarget,
+                                             ctors,dtors)
+
+        // Destroy temporaries if necessary
+        CGM.ExitCall callDepth, result
+        trace[-expr] "Translated ", input, " as ", result
+
+
+    function EnterWrittenForm(fniface : PT.tree;
+                              wrform  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter the written form in the symbol table
+    // ------------------------------------------------------------------------
+        trace[written] "Written form for ", fniface
+
+        // Find which function we are talking about
+        fninfo : FN.function := FN.GetFunction(fniface)
+        if fninfo = nil then
+            // If not a function, error message emitted already
+            return fniface
+        fntype : fninfo.type as FT.function_type
+
+        // Check for generic functions
+        gentype : fninfo.type as GEN.generic_type
+        if gentype <> nil then
+            GFType : gentype.base as FT.function_type
+            fntype := GFType
+ 
+        written : written_form
+
+        // Discover all the function parameters
+        decl : FN.declaration
+        for decl in fntype.parameters loop
+            nm : PT.name_tree := decl.name
+            trace[written] "Written parm ", nm.value
+            written.args_map[nm.value] := decl
+
+        // Create copy of written form where params are replaced with wildcards
+        wildcards : PT.tree := CreateWildcards(wrform, written.args_map)
+        trace[written] "Wildcards=", wildcards
+
+        // Check for the case of "F(X) written X"
+        if wildcards.kind = PT.xlWILDCARD then
+            // This is an implicit conversion
+            tgtType : TY.any_type := fntype.base
+            tgtName : PT.tree := tgtType.machine_name
+            wildcards := parse_tree(@@convert 'tgtName' 'wildcards')
+
+
+        // TODO: Check one-on-one mapping of params and written wildcards
+
+        // Enter written form in current context
+        written.reference_form := wildcards
+        written.score_adjust := WrittenScoreAdjust
+        written.translator := WrittenTranslator
+        written.function := fninfo
+        SYM.EnterRewrite XLT.context, "xlsemantics", written
+
+        return fniface
+
+
+    translation XLEnterFunction
+    // ------------------------------------------------------------------------
+    //   Entering a written form in a function declaration
+    // ------------------------------------------------------------------------
+
+        // Translate written statements
+        when
+            'Interface' written 'WrForm'
+        then
+            result := XLT.XLEnterFunction(Interface)
+            trace [written] "/* Written ", WrForm, "*/"
+            result := EnterWrittenForm(result, WrForm)
+
+
+    translation XLEnterIterator
+    // ------------------------------------------------------------------------
+    //   Entering a written form in an iterator declaration
+    // ------------------------------------------------------------------------
+
+        // Translate written statements
+        when
+            'Interface' written 'WrForm'
+        then
+            result := XLT.XLEnterIterator(Interface)
+            trace [written] "/* Written ", WrForm, "*/"
+            result := EnterWrittenForm(result, WrForm)
+
+
+
+    // ========================================================================
+    //
+    //   Written forms for generic types
+    //
+    // ========================================================================
+
+    function GenericScoreAdjust(test        : PT.tree;
+                                info        : SYM.rewrite;
+                                in out args : PT.tree_map;
+                                depth       : integer;
+                                base_score  : integer) return integer is
+    // -----------------------------------------------------------------------
+    //   Check the type of parameters to see if written form matches
+    // -----------------------------------------------------------------------
+    //   At this point, we already ran through PT.Matches, so the 'args'
+    //   map already contains the trees for each argument. We simply need
+    //   to check that the types match.
+
+        // Loop on all generic parameters
+        written : info as generic_written_form
+        param_name : text
+        for param_name in args loop
+
+            // Run semantics on args,
+            // cache for all loops through LookupRewrite
+            value  : PT.tree := args[param_name]
+            key    : text := "WARG"
+            semArg : PT.tree := PT.Attached(value, key)
+            if semArg = nil then
+                ERR.PushErrorContext()
+                semArg := TY.EvaluateTypeAsTree(value)
+                errors : boolean := ERR.PopErrorContext()
+                if errors then
+                    return 0
+                PT.AttachTree value, key, semArg
+
+            // Look at the generic declaration
+            gd : DCL.declaration := written.args_map[param_name]
+            if TY.IsTypeType (gd.type) then
+                // Generic parameter is a type.
+                GenTypeParm : TY.GetDefinedType (gd.name) as GEN.generic_type
+                if GenTypeParm <> nil then
+                    semType : TY.any_type := TY.GetDefinedType(semArg)
+                    assert semType.machine_name <> nil
+                    args[param_name] := TY.Source(semType)
+                    return base_score
+            else
+                // Generic parameter is not a type
+                if DCL.Assignable (gd, semArg) > 0 then
+                    return base_score
+
+        return 0
+
+
+    function GenericTranslator (input       : PT.tree;
+                                scope       : PT.tree;
+                                info        : SYM.rewrite;
+                                in out args : PT.tree_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    For a valid written form, return type instantiation form
+    // ------------------------------------------------------------------------
+
+        written : info as generic_written_form
+        ArgList : GN.generic_map
+        gentype : GEN.generic_type := written.generic_type
+        arg     : DCL.declaration
+
+        // Order parameters in function call order
+        for arg in gentype.parameters loop
+            name_tree : PT.name_tree := arg.name
+            name_text : text := name_tree.value
+            value     : PT.tree := args[name_text]
+            ArgList[name_tree] := value
+
+        // Instantiate type
+        return GN.InstantiateType (written.declaration, ArgList)
+
+
+    procedure EnterWrittenForm(GenDecl : DCL.declaration;
+                               gentype : GEN.generic_type
+                               wrform  : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Enter the written form in the symbol table
+    // ------------------------------------------------------------------------
+        trace[written] "Generic written form for ", TY.Source (gentype)
+
+        written : generic_written_form
+
+        // Discover all the function parameters
+        decl : DCL.declaration
+        for decl in gentype.parameters loop
+            nm : PT.name_tree := decl.name
+            trace[written] "Written parm ", nm.value
+            written.args_map[nm.value] := decl
+
+        // Create copy of written form where params are replaced with wildcards
+        wildcards : PT.tree := CreateWildcards(wrform, written.args_map)
+        trace[written] "Wildcards=", wildcards
+        written.reference_form := wildcards
+        written.score_adjust := GenericScoreAdjust
+        written.translator := GenericTranslator
+        written.generic_type := gentype
+        written.declaration := GenDecl
+
+        // TODO: Check one-on-one mapping of params and written wildcards
+
+        SYM.EnterRewrite XLT.context, "xlevaluatetype", written

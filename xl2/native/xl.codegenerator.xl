@@ -1,0 +1,1967 @@
+// ****************************************************************************
+//  xl.codegenerator.xl             (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     This is the implementation of a basic C code generator
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import PR = XL.PARSER
+import SC = XL.SCANNER
+import POS = XL.SCANNER.POSITION
+import IO = XL.TEXT_IO
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import FL = XL.FILES
+import MACRO = XL.SEMANTICS.MACROS
+
+module XL.CODE_GENERATOR is
+
+    // ========================================================================
+    //
+    //     Temporary : forward references
+    //
+    // ========================================================================
+
+    type args_map is map[text, integer]
+    type enum_info is record with
+        name  : text
+        value : text
+    type enum_list is string of enum_info
+
+    procedure XL2C_Asm (name : BC.bytecode;
+                        arg1 : BC.bytecode;
+                        arg2 : BC.bytecode;
+                        arg3 : BC.bytecode;
+                        arg4 : BC.bytecode)
+    procedure XL2C_Arg (input : BC.bytecode)
+    procedure XL2C_Args (input : BC.bytecode)
+    procedure XL2C_Stmt (input : BC.bytecode)
+    procedure XL2C_Body (input : BC.bytecode; in_fn : boolean)
+    procedure XL2C_Enum (input : BC.bytecode; out enums : enum_list)
+    procedure XL2C_EnumName (name : BC.bytecode; enums : enum_list)
+    procedure XL2C_Import (input : BC.bytecode; alias : BC.bytecode)
+    procedure XL2C_PendingImports
+    procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode)
+    procedure XL2C_Namespace (name : BC.bytecode)
+    procedure XL2C_Translate (what : BC.bytecode; how : BC.bytecode)
+    procedure XL2C_SemanticsTranslation (Name : PT.name_tree; what : PT.tree)
+    procedure XL2C_EarlyInit (What : PT.tree)
+    procedure XL2C_LateCleanup (What : PT.tree)
+    procedure XL2C_Quote (form : BC.bytecode;
+                          in out args : args_map;
+                          nesting : integer;
+                          wildcard : boolean)
+    procedure XL2C(input : BC.bytecode)
+    procedure Rename(from : text; to : text)
+    function XLNormalize (name : text) return text
+    function XLSanitize (str : text; quote : character) return text
+    function XLModuleName (name : BC.bytecode) return text
+    function XLModuleNameCPlus (name : text) return text
+    function XLNamespaceScope (dot : BC.bytecode) return boolean
+
+
+    // ========================================================================
+    //
+    //    Globals
+    //
+    // ========================================================================
+
+    name_changes        : map [text, text]
+    module_name         : map [text, text]
+    module_imports      : map [text, integer]
+    bytecode_formats    : map [text, text]
+    loop_index          : integer
+    namespace_closing   : text := ""
+    in_function         : boolean := false
+    current_module      : text := ""
+    translations        : map[text, int]
+    traces              : map[text, int]
+    trace_count         : integer := 0
+
+
+
+    // ========================================================================
+    //
+    //    Top-level
+    //
+    // ========================================================================
+
+    procedure InitializeRenames is
+    // ------------------------------------------------------------------------
+    //   Initialize the XL-to-C renaming table
+    // ------------------------------------------------------------------------
+
+        rename "character",  "char"
+        rename "integer",    "int"
+        rename "real",       "double"
+        rename "boolean",    "bool"
+        rename "main",       "XLMain"
+
+        rename ":=",         "="
+        rename "=",          "=="
+        rename "<>",         "!="
+        rename "and",        "&&"
+        rename "or",         "||"
+        rename "xor",        "^"
+        rename "bitwisenot", "~"
+        rename "nil",        "0"
+
+        rename "text",       "::text"
+
+
+    procedure InitializeBytecodeMap is
+    // ------------------------------------------------------------------------
+    //   Read the xl.bytecode file to get the map formats
+    // ------------------------------------------------------------------------
+        empty  : map[text, text]
+        bytecode_formats := empty
+        LoadBytecodeMap XLT.bytecode_file
+
+
+    procedure LoadBytecodeMap(filename : text) is
+    // ------------------------------------------------------------------------
+    //   Read the xl.bytecode file to get the map formats
+    // ------------------------------------------------------------------------
+        S       : SC.scanner
+        DirName : text
+        for DirName in MACRO.include_path loop
+            NormalizedName : text := PT.XLNormalize(filename)
+            NameInDir : text
+            Directory : string of text := FL.Directory(DirName)
+            for NameInDir in Directory loop
+                if PT.XLNormalize(NameInDir) = NormalizedName then
+                    FullName : text := DirName + "/" + NameInDir
+                    S := SC.Open (FullName)
+                    exit if S <> nil and IO.valid S.input
+            exit if S <> nil and IO.valid S.input
+
+        if S = nil or not IO.valid S.input then
+           ERR.Error "Unable to load bytecode file $1",
+                     PT.NewText(filename, '"', -1)
+           return
+
+        tok       : SC.token
+        symbol    : text
+        existing  : text
+        copy      : text
+        had_nl    : boolean := false
+        copy_mode : boolean := false
+
+        loop
+            tok := SC.NextToken S
+            exit if tok = SC.tokEOF or tok = SC.tokERROR
+
+            if tok = SC.tokNAME or tok = SC.tokSYMBOL then
+                name : text := XLNormalize(S.string_value)
+                if name = "//" then
+                    SC.Comment S, ASCII.CR
+                else if name = "->" then
+                    copy_mode := true
+                else if name = "include" then
+                    tok := SC.NextToken S
+                    if tok = SC.tokTEXT then
+                        LoadBytecodeMap S.string_value
+                    else
+                        ERR.Error "Invalid include file name in bytecode", -1
+                else if had_nl then
+                    symbol := name
+                    had_nl := false
+                else if copy_mode then
+                    for existing in bytecode_formats loop
+                        eLen : integer := length(existing)
+                        sLen : integer := length(symbol)
+                        if eLen > sLen then
+                            if existing[eLen - sLen..eLen-1] = symbol then
+                                copy := existing[0..eLen - sLen - 1] + name
+                                bytecode_formats[copy] +=
+                                    bytecode_formats[existing]
+                else
+                    bytecode_formats[symbol] += bytecode_formats[name]
+            else if tok = SC.tokTEXT then
+                format : text := S.string_value
+                if had_nl then
+                    bytecode_formats[symbol] += ASCII.CR
+                    had_nl := false
+                bytecode_formats[symbol] += format
+            else if (tok = SC.tokNEWLINE or
+                     tok = SC.tokINDENT or
+                     tok = SC.tokUNINDENT) then
+                had_nl := true
+                copy_mode := false
+            else
+                ERR.Error "Invalid formats in xl.bytecode", -1
+
+        SC.Close S
+        XLT.runtime_name := bytecode_formats["runtime"]
+
+
+    function HasFormat(input : text) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a given bytecode format exists
+    // ------------------------------------------------------------------------
+        return count(bytecode_formats, XLNormalize(input)) > 0
+
+
+    function Format(input : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return a given bytecode format
+    // ------------------------------------------------------------------------
+        return bytecode_formats[XLNormalize(input)]
+
+
+    procedure EmitSemanticsPlugins is
+    // ------------------------------------------------------------------------
+    //    Emit the code for the SemanticsPlugins function
+    // ------------------------------------------------------------------------
+        IO.WriteLn "namespace xl { namespace translator {"
+
+        IO.WriteLn "void pluginsinit() {"
+        IO.WriteLn semantics_translations_init
+        IO.WriteLn "}"
+
+        T : text
+        for T in translations loop
+            T := PT.XLNormalize(T)
+            IO.WriteLn "xl::parser::tree::tree ", T, "("
+            IO.WriteLn "   xl::parser::tree::tree input) {"
+            IO.WriteLn "   return xl::symbols::lookuprewrite("
+            IO.WriteLn "   xl::translator::context, ", '"', T, '"', ", input);"
+            IO.WriteLn "}"
+        IO.WriteLn "}}"
+
+
+    procedure EmitXLInitAndTerm is
+    // ------------------------------------------------------------------------
+    //   Emit the code for the XLInit() function
+    // ------------------------------------------------------------------------
+        IO.WriteLn "void XLInit() {"
+        IO.WriteLn initializations
+        IO.WriteLn "}"
+        IO.WriteLn "void XLTerm() {"
+        IO.WriteLn terminations
+        IO.WriteLn "}"
+
+        // Emit traces
+        T : text
+        IO.WriteLn "char XLTrace[", trace_count + 1, "] = { 0 };"
+        IO.WriteLn "void XLTraceInit(int Argc, char **Argv) {"
+        IO.WriteLn "int Arg; for (Arg = 1; Arg < Argc; Arg++) {";
+        IO.WriteLn "::text N = Argv[Arg];"
+        for T in traces loop
+            IO.WriteLn "if (N == ""-t", T, """) XLTrace[", traces[T], "] = 1; "
+        IO.WriteLn "}}"
+
+
+
+    procedure Transcode (input : BC.bytecode; output : IO.output_file) is
+    // ------------------------------------------------------------------------
+    //   Rewrite the whole tree
+    // ------------------------------------------------------------------------
+
+        old_stdout : IO.output_file := IO.standard_output
+        IO.standard_output := output
+
+        InitializeRenames
+        InitializeBytecodeMap
+
+        XL2C_Asm parse_tree(xcinit), nil, nil, nil, nil
+        XL2C_Asm parse_tree(init), nil, nil, nil, nil
+
+        XL2C input
+        XL2C_PendingImports
+
+        EmitSemanticsPlugins
+        EmitXLInitAndTerm
+
+        XL2C_Asm parse_tree(term), nil, nil, nil, nil
+        XL2C_Asm parse_tree(xcterm), nil, nil, nil, nil
+
+        IO.standard_output := old_stdout
+
+
+    procedure Generate (input : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Rewrite an individual tree
+    // ------------------------------------------------------------------------
+        if input = nil then
+            ERR.Error "Invalid null bytecode", -1
+        else if input.kind = PT.xlPREFIX then
+            // Prefix trees have to be '@' something
+            translate input
+                when
+                    @ 'name' 'arg1' 'arg2' 'arg3' 'arg4'
+                then
+                    XL2C_Asm name, arg1, arg2, arg3, arg4
+                when
+                    @ 'name' 'arg1' 'arg2' 'arg3'
+                then
+                    XL2C_Asm name, arg1, arg2, arg3, nil
+                when
+                    @ 'name' 'arg1' 'arg2'
+                then
+                    XL2C_Asm name, arg1, arg2, nil, nil
+                when
+                    @ 'name' 'arg1'
+                then
+                    XL2C_Asm name, arg1, nil, nil, nil
+                when
+                    @ 'name'
+                then
+                    XL2C_Asm name, nil, nil, nil, nil
+                else
+                    ERR.Error "Invalid prefix bytecode '$1'", input
+        else if input.kind = PT.xlINFIX then
+            infix : input as PT.infix_tree
+            if infix.name <> ASCII.CR and infix.name <> ";" then
+                ERR.Error "Invalid infix bytecode '$1'", input
+            Generate infix.left
+            Generate infix.right
+        else if input.kind = PT.xlBLOCK then
+            block : input as PT.block_tree
+            if (block.opening <> PR.INDENT_MARKER or
+                block.closing <> PR.UNINDENT_MARKER) then
+                ERR.Error "Invalid block bytecode '$1'", input
+            Generate block.child
+        else
+            ERR.Error "Invalid bytecode kind '$1'", input
+        
+
+    procedure Generate (input : BC.bytecode; output : IO.output_file) is
+    // ------------------------------------------------------------------------
+    //   Rewrite the whole tree
+    // ------------------------------------------------------------------------
+
+        old_stdout : IO.output_file := IO.standard_output
+        IO.standard_output := output
+
+        InitializeBytecodeMap
+
+        XL2C_Asm parse_tree(init), nil, nil, nil, nil
+        Generate input
+        XL2C_Asm parse_tree(term), nil, nil, nil, nil
+
+        IO.standard_output := old_stdout
+
+
+
+    // ========================================================================
+    //
+    //    Implementation
+    //
+    // ========================================================================
+
+    procedure Rename(from : text; to : text) is
+    // ------------------------------------------------------------------------
+    //   Indicate that we want to rename
+    // ------------------------------------------------------------------------
+         name_changes[from] := to
+
+
+    function XLNormalize (name : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return the normalized name (lower-case, no underscores)
+    // ------------------------------------------------------------------------
+        return PT.XLNormalize(name)
+
+
+    function XLSanitize (name : text; quote : character) return text is
+    // ------------------------------------------------------------------------
+    //    Adds C escapes and such as necessary
+    // ------------------------------------------------------------------------
+        result := ""
+        Max : integer := length(name)
+        I   : integer
+        CR  : character := ASCII.CR[0]
+        TAB : character := ASCII.TAB[0]
+        esc : character := '\'
+
+        for I in 0..Max-1 loop
+            C : character := name[I]
+            if C = CR then
+                result += "\n"
+            else if C = TAB then
+                result += "\t"
+            else if C = esc or C = quote then
+                result := result + '\' + C
+            else
+                result += C
+
+
+    separator_stack : string of integer
+    function XL2C_AsmText (arg : PT.tree) return text is
+    // ------------------------------------------------------------------------
+    //    Check that an argument is 'basic', and return its text
+    // ------------------------------------------------------------------------
+        kind : PT.tree_kind := arg.kind
+        if kind > PT.xlNAME then
+            ERR.Error "Bytecode argument '$1' is too complex", arg
+        return text(arg)
+
+
+    procedure XL2C_Asm (name : BC.bytecode;
+                        arg1 : BC.bytecode;
+                        arg2 : BC.bytecode;
+                        arg3 : BC.bytecode;
+                        arg4 : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //   Translate the @ statements from a map
+    // ------------------------------------------------------------------------
+        if name.kind <> PT.xlNAME then
+            ERR.Error "Invalid bytecode opcode type [$1]", name
+            return
+
+        Tname  : name as PT.name_tree
+        symbol : text := XLNormalize(Tname.value)
+        if count (bytecode_formats, symbol) <= 0 then
+            ERR.Error "The bytecode opcode '$1' is invalid", name
+            return
+
+        format : text := bytecode_formats[symbol]
+
+        // Replace arguments
+        args : string of text
+        if arg1 <> nil then args += XL2C_AsmText (arg1)
+        if arg2 <> nil then args += XL2C_AsmText (arg2)
+        if arg3 <> nil then args += XL2C_AsmText (arg3)
+        if arg4 <> nil then args += XL2C_AsmText (arg4)
+
+        // Replace $1, $2, $3 strings
+        fmt       : text
+        I         : integer
+        J         : integer
+        Max       : integer
+        hadDollar : boolean := false
+        noNewLine : boolean := true
+        skipMode  : boolean := false
+        copyMode  : boolean := false
+        keyMode   : boolean := false
+        key       : text := ""
+        prefix    : text := ""
+        saveFmt   : text := ""
+        CR        : character := ASCII.CR[0]
+        lastWasCR : boolean := false
+        indent    : integer := 0
+        hadNewLine: boolean := false
+
+        // Get message and perform substitution
+        Max := length format
+        for I in 0..Max-1 loop
+            C : character := format[I]
+            if skipMode then
+                if C = ']' then
+                    skipMode := false
+            else if copyMode then
+                if C = ']' then
+                    copyMode := false
+                else
+                    fmt += C
+            else if keyMode and C = ' ' then
+                if fmt <> "" then
+                    key := prefix + text("$") + fmt
+                    fmt := ""
+                    keyMode := false
+                    while I+1 < Max-1 and format[I+1] = ' ' loop
+                        I += 1
+            else if C = '$' then
+                if hadDollar then
+                    fmt += "$"
+                    hadDollar := false
+                else
+                    hadDollar := true
+                prefix := ""
+            else if hadDollar then
+                newDollar : boolean := false
+                if C >= '1' and C <= '9' then
+                    idx : integer := integer(C) - integer('1')
+                    if idx >= size(args) then
+                        ERR.Error "Missing bytecode argument in '$1' ($2>=$3)",
+                            name,PT.NewInteger(idx),PT.NewInteger(size(args))
+                    else
+                        arg    : text := args[integer(C) - integer('1')]
+                        if not keyMode then
+                            argKey : text := prefix + text("$") + arg
+                            if count(bytecode_formats, argKey) > 0 then
+                                arg := bytecode_formats[argKey]
+                        fmt += arg
+                else if C = '{' then
+                    separator_stack += 0
+                else if C = '}' then
+                    pop_back separator_stack
+                else if C = '[' then
+                    sep : integer := back(separator_stack)
+                    if sep <> 0 then
+                        copyMode := true
+                    else
+                        skipMode := true
+                    back(separator_stack) += 1
+                else if C = '#' then
+                    sep : integer := back(separator_stack)
+                    fmt += prefix + text(sep)
+                else if C = '<' then
+                    indent += 1
+                else if C = '>' then
+                    indent -= 1
+                else if C = '=' then
+                    if key <> "" then
+                        if lastWasCR then
+                            fmt := fmt[0..length(fmt)-2]
+                        bytecode_formats[key] := fmt
+                        fmt := saveFmt
+                    keyMode := true
+                    key := ""
+                    saveFmt := fmt
+                    fmt := ""
+                else if C = ';' then
+                    if key <> "" then
+                        bytecode_formats[key] := fmt
+                        fmt := saveFmt
+                    keyMode := false
+                    key := ""
+                else if ASCII.isletter(C) then
+                    prefix := prefix + C
+                    newDollar := true
+                else
+                    ERR.Error "Invalid format for '$1'", name
+                hadDollar := newDollar
+                noNewLine := false
+            else
+                fmt += C
+                lastWasCR := C = CR
+                noNewLine := C = ' '
+
+        // Check if we were defining a key
+        if key <> "" then
+            bytecode_formats[key] := fmt
+            fmt := saveFmt
+            noNewLine := fmt = ""
+
+        // Output result
+        if hadNewLine then
+            for J in 0..indent loop
+                IO.Write " "
+            hadNewLine := false
+        if noNewLine then
+            IO.Write fmt
+        else
+            IO.WriteLn fmt
+            hadNewLine := true
+
+
+    last_position : integer := -1
+    procedure XL2C_Stmt (input : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Translate a statement
+    // ------------------------------------------------------------------------
+
+        if debug and input.position > 0 then
+            if input.position <> last_position then
+                file     : text
+                line     : integer
+                column   : integer
+                linetext : text
+                POS.PositionToLine input.position, file, line, column, linetext
+                IO.WriteLn "# ", line, ' ', '"', file, '"'
+                last_position := input.position
+
+        XL2C input
+        if input.kind = PT.xlNAME then
+            name : input as PT.name_tree
+            if name.value <> "return" then
+                IO.write "()"
+        IO.writeln ";"
+
+
+    procedure XL2C_Body (input : BC.bytecode; in_fn : boolean) is
+    // ------------------------------------------------------------------------
+    //    Translate a statement
+    // ------------------------------------------------------------------------
+        old_in_function : boolean := in_function
+        in_function := in_fn
+        XL2C_Stmt input
+        in_function := old_in_function
+
+
+    procedure XL2C_Enum (input : BC.bytecode; out enums : enum_list) is
+    // ------------------------------------------------------------------------
+    //    Translate an enumeration list
+    // ------------------------------------------------------------------------
+        if input.kind = PT.xlBLOCK then
+            T : input as PT.block_tree
+            XL2C_Enum T.child, enums
+        else if input.kind = PT.xlNAME then
+            T : input as PT.name_tree
+            N : text := XLNormalize(T.value)
+            E : enum_info
+            IO.write N
+            E.name := N
+            E.value := T.value
+            enums += E
+        else
+            translate input
+                when
+                    'A', 'B'
+                then
+                    XL2C_Enum A, enums
+                    IO.WriteLn ","
+                    XL2C_Enum B, enums
+                when
+                    'A'
+                    'B'
+                then
+                    XL2C_Enum A, enums
+                    IO.WriteLn ","
+                    XL2C_Enum B, enums
+                when
+                    'A' = 'B'
+                then
+                    if A.kind = PT.xlNAME and B.kind = PT.xlTEXT then
+                        TA : A as PT.name_tree
+                        TB : B as PT.text_tree
+                        N : text := XLNormalize(TA.value)
+                        E : enum_info
+                        IO.write N
+                        E.name := N
+                        E.value := TB.value
+                        enums += E
+                    else
+                        ERR.Error "Invalid named enumeration", input.position
+                else
+                    ERR.Error "Invalid enumeration", input.position
+
+
+    procedure XL2C_EnumName(name : BC.bytecode; enums : enum_list)  is
+    // ------------------------------------------------------------------------
+    //    Translate an enumeration list
+    // ------------------------------------------------------------------------
+        I : integer
+        Max : integer := size(enums)
+        IO.write "inline const char *XLtext("
+        XL2C name
+        IO.writeln " x) {"
+        IO.writeln "switch(x) {"
+        for I in 0..Max-1 loop
+            E : enum_info := enums[I]
+            IO.writeln "case ", E.name, ": return """, E.value, """;"
+        IO.write "default: return ""<Unknown "
+        XL2C name
+        IO.writeln " value>"";"
+        IO.writeln "}}"
+
+
+    procedure XL2C_Arg (input : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Translate a single argument
+    // ------------------------------------------------------------------------
+
+        translate input
+
+            // Input parameters stay as is
+            when
+                in 'A'
+            then
+                XL2C_Arg A
+
+            // Input parameters stay as is
+            when
+                out 'A'
+            then
+                IO.write "&"
+                XL2C_Arg A
+
+            // By default, simply emit argument
+            else
+                XL2C input
+
+
+    procedure XL2C_Args (input : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Translate the name portion of a procedure declaration
+    // ------------------------------------------------------------------------
+
+        translate input
+            when
+                'A' ; 'B'
+            then
+                XL2C_Args A
+                IO.writeln ","
+                XL2C_Args B
+
+            when
+                'A'
+                'B'
+            then
+                XL2C_Args A
+                IO.writeln ","
+                XL2C_Args B
+
+            when
+                'A' : 'B' := 'DefaultValue'
+            then
+                XL2C B
+                IO.write " "
+                XL2C_Arg A
+                IO.write " = "
+                XL2C DefaultValue
+
+            when
+                'A' : 'B'
+            then
+                XL2C B
+                IO.write " "
+                XL2C_Arg A
+
+
+    procedure XL2C(input : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    The main XL to C translator
+    // ------------------------------------------------------------------------
+
+        // Make macro preprocessor available even in transcode mode
+        input := XLT.XLMacros(input)
+
+        // --------------------------------------------------------------------
+        //    Leafs
+        // --------------------------------------------------------------------
+
+        if input.kind = PT.xlINTEGER then
+            T : input as PT.integer_tree
+            IO.write T.value
+
+        if input.kind = PT.xlREAL then
+            T : input as PT.real_tree
+            IO.write T.value
+
+        if input.kind = PT.xlTEXT then
+            T : input as PT.text_tree
+            IO.write T.quote, XLSanitize(T.value, T.quote), T.quote
+
+        if input.kind = PT.xlNAME then
+            T : input as PT.name_tree
+            N : text := XLNormalize(T.value)
+            if count(name_changes, N) > 0 then
+                IO.write name_changes[N]
+            else
+                IO.write N
+
+
+        // --------------------------------------------------------------------
+        //   Special forms
+        // --------------------------------------------------------------------
+
+        trace [XL2C] "/* XL2C: ", input, " */"
+
+        translate input
+
+            // ----------------------------------------------------------------
+            //    Sequences
+            // ----------------------------------------------------------------
+
+            when
+                @ 'name' 'arg1' 'arg2' 'arg3' 'arg4'
+            then
+                XL2C_Asm name, arg1, arg2, arg3, arg4
+            when
+                @ 'name' 'arg1' 'arg2' 'arg3'
+            then
+                XL2C_Asm name, arg1, arg2, arg3, nil
+            when
+                @ 'name' 'arg1' 'arg2'
+            then
+                XL2C_Asm name, arg1, arg2, nil, nil
+            when
+                @ 'name' 'arg1'
+            then
+                XL2C_Asm name, arg1, nil, nil, nil
+            when
+                @ 'name'
+            then
+                XL2C_Asm name, nil, nil, nil, nil
+
+
+            when
+                'A'
+                'B'
+            then
+                trace [XL2C] "/* XL2C-Seq */"
+                XL2C_Stmt A
+                XL2C_Stmt B
+
+            when
+                'A' ; 'B'
+            then
+                XL2C_Stmt A
+                XL2C_Stmt B
+
+            when
+                'A' , 'B'
+            then
+                XL2C A
+                IO.write ", "
+                XL2C B
+
+
+            // ----------------------------------------------------------------
+            //   Special statements
+            // ----------------------------------------------------------------
+
+            when
+                if 'A' then 'B' else 'C'
+            then
+                IO.write "if ("
+                XL2C A
+                IO.writeln ") {"
+                XL2C_Stmt B
+                IO.writeln "} else {"
+                XL2C_Stmt C
+                IO.writeln "}"
+
+            when
+                if 'A' then 'B'
+            then
+                IO.write "if ("
+                XL2C A
+                IO.writeln ") {"
+                XL2C_Stmt B
+                IO.writeln "}"
+
+            when
+                loop 'A'
+            then
+                IO.writeln "for(;;) {"
+                XL2C_Stmt A
+                IO.writeln "}"
+
+            when
+                while 'C' loop 'A'
+            then
+                IO.write "while ("
+                XL2C C
+                IO.writeln ") {"
+                XL2C_Stmt A
+                IO.writeln "}"
+
+            when
+                for 'I' loop 'Body'
+            then
+                loop_index += 1
+                IO.write "XLIterator *XLiter", loop_index, " = "
+                XL2C I
+                IO.writeln ";"
+                IO.writeln "for (XLiter", loop_index, "->first();"
+                IO.write   "     XLiter", loop_index, "->more() || "
+                IO.writeln     " XLDeleteIterator(XLiter", loop_index, ");"
+                IO.writeln "     XLiter", loop_index, "->next())"
+                IO.writeln "{"
+                XL2C_Stmt Body
+                IO.writeln "}"
+
+            when
+                exit if 'C'
+            then
+                IO.write "if ("
+                XL2C C
+                IO.writeln ") break;"
+
+            when
+                translate 'What'
+                    'How'
+            then
+                IO.WriteLn "{"
+                IO.WriteLn "bool XLtranslateDone = false;"
+                IO.WriteLn "do {"
+                XL2C_Translate What, How
+                IO.WriteLn "} while (0);"
+                IO.WriteLn "}"
+
+            when
+                translation 'Name'
+                    'What'
+            then
+                if Name.kind = PT.xlNAME then
+                    N : Name as PT.name_tree
+                    XL2C_SemanticsTranslation N, What
+
+            when
+                initially
+                    'What'
+            then
+                XL2C_EarlyInit What
+
+            when
+                termination
+                    'What'
+            then
+                XL2C_LateCleanup What
+
+
+            // ----------------------------------------------------------------
+            //   Declarations
+            // ----------------------------------------------------------------
+
+            // Procedure and function pointers
+            when
+                'Name' : procedure ( 'Args' )
+            then
+                IO.write "void (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                'Name' : procedure 'Name'
+            then
+                IO.write "void (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
+                'Name' : function ( 'Args' ) return 'T'
+            then
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                'Name' : function return 'T'
+            then
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
+                'A' : 'B' := 'C'
+            then
+                XL2C B
+                IO.write " "
+                XL2C A
+                IO.write " = "
+                XL2C C
+
+            when
+                'A' : 'B' is 'C'
+            then
+                IO.write "const "
+                XL2C B
+                IO.write " "
+                XL2C A
+                IO.write " = "
+                XL2C C
+
+            when
+                'A' : 'B' as 'C'
+            then
+                XL2C C
+                IO.write " "
+                XL2C A
+                IO.write " = dynamic_cast< "
+                XL2C C
+                IO.Write " > ("
+                XL2C B
+                IO.Write ")"
+
+            when
+                'A' : 'B'
+            then
+                translate A
+                    when
+                        'X','Y'
+                    then
+                        XL2C parse_tree('X' : 'B')
+                        IO.WriteLn ";"
+                        XL2C parse_tree('Y' : 'B')
+                    else
+                        XL2C B
+                        IO.write " "
+                        XL2C A
+                        if in_function then
+                            IO.Write " = XLDefaultInit < "
+                            XL2C B
+                            IO.Write " > :: value()"
+
+            when
+                import 'Shortcut' = 'ModName'
+            then
+                XL2C_Import ModName, Shortcut
+            when
+                import 'ModName'
+            then
+                XL2C_Import ModName, nil
+
+            when
+                module 'Name' with
+                    'Body'
+            then
+                trace [XL2C] "/* XL2C-ModWith */"
+                XL2C_Module Name, Body
+            when
+                module 'Name' is
+                    'Body'
+            then
+                trace [XL2C] "/* XL2C-ModBody */"
+                XL2C_Module Name, Body
+            when
+                module 'Name'
+            then
+                trace [XL2C] "/* XL2C-ModName */"
+                XL2C_Module Name, nil
+
+            when
+                type 'T' is record with
+                   'Fields'
+            then
+                 IO.write "struct "
+                 XL2C T
+                 IO.writeln " {"
+                 IO.write "virtual ~"
+                 XL2C T
+                 IO.writeln "(){}"
+                 XL2C_Body Fields, false
+                 IO.writeln "};"
+            when
+                type 'T' is 'Base' with
+                   'Fields'
+            then
+                 IO.write "struct "
+                 XL2C T
+                 IO.write " : "
+                 XL2C Base
+                 IO.writeln " {"
+                 XL2C_Body Fields, false
+                 IO.writeln "};"
+            when
+                type 'T' is enumeration 'Values'
+            then
+                enums : enum_list
+                IO.write "enum "
+                XL2C T
+                IO.Writeln " {"
+                XL2C_Enum Values, enums
+                IO.Writeln "};"
+
+                // Emit the text conversion function
+                // XL2C_EnumName T, enums
+
+            when
+                type 'Name' is procedure ( 'Args' )
+            then
+                IO.write "typedef void (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                type 'Name'  is procedure
+            then
+                IO.write "typedef void (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
+                type 'Name' is function ( 'Args' ) return 'T'
+            then
+                IO.write "typedef "
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.write ")("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                type 'Name' is function return 'T'
+            then
+                IO.write "typedef "
+                XL2C T
+                IO.write " (*"
+                XL2C Name
+                IO.writeln ")(void);"
+
+            when
+                type 'X' is 'Y'
+            then
+                IO.write "typedef "
+                XL2C Y
+                IO.write " "
+                XL2C X
+                IO.writeln ";"
+
+            when
+                type 'T'
+            then
+                IO.write "struct "
+                XL2C T
+                IO.writeln ";"
+
+            // Functions and procedures
+            when
+                procedure 'Name' ( 'Args' ) is
+                    'Body'
+            then
+                IO.write "void "
+                XL2C Name
+                IO.write "("
+                XL2C_Args Args
+                IO.writeln ") {"
+                XL2C_Body Body, true
+                IO.writeln "}"
+            when
+                procedure 'Name' is
+                    'Body'
+            then
+                IO.write "void "
+                XL2C Name
+                IO.writeln "(void) {"
+                XL2C_Body Body, true
+                IO.writeln "}"
+
+            when
+                function 'Name' ( 'Args' ) return 'T' is
+                    'Body'
+            then
+                XL2C T
+                IO.write " "
+                XL2C Name
+                IO.write "("
+                XL2C_Args Args
+                IO.writeln ") {"
+
+                XL2C T
+                IO.Write " result = XLDefaultInit < "
+                XL2C T
+                IO.WriteLn " > ::value();"
+
+                IO.WriteLn "{"
+                XL2C_Body Body, true
+                IO.WriteLn "}"
+                IO.WriteLn "return result;"
+                IO.writeln "}"
+            when
+                function 'Name' return 'T' is
+                    'Body'
+            then
+                XL2C T
+                IO.write " "
+                XL2C Name
+                IO.writeln "(void) {"
+                XL2C_Body Body, true
+                IO.writeln "}"
+
+
+            // Declaration-only for functions and procedures
+            when
+                procedure 'Name' ( 'Args' )
+            then
+                IO.write "void "
+                XL2C Name
+                IO.write "("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                procedure 'Name'
+            then
+                IO.write "void "
+                XL2C Name
+                IO.writeln "(void);"
+
+            when
+                function 'Name' ( 'Args' ) return 'T'
+            then
+                XL2C T
+                IO.write " "
+                XL2C Name
+                IO.write "("
+                XL2C_Args Args
+                IO.writeln ");"
+            when
+                function 'Name' return 'T'
+            then
+                XL2C T
+                IO.write " "
+                XL2C Name
+                IO.writeln "(void);"
+
+
+
+            // ----------------------------------------------------------------
+            //   Expressions
+            // ----------------------------------------------------------------
+
+            when
+                'A' ['B'..'C']
+            then
+                IO.write "range("
+                XL2C A
+                IO.write ", XLMakeRange("
+                XL2C B
+                IO.Write ", "
+                XL2C C
+                IO.write "))"
+
+            when // Temporary hack for enums...
+                text 'A'
+            then
+                IO.Write "XLtext("
+                XL2C A
+                IO.Write ")"
+
+            when
+                'A' in 'B'
+            then
+                IO.write "XLMakeIterator("
+                XL2C A
+                IO.write ", "
+                XL2C B
+                IO.write ")"
+
+            when
+                'A' .. 'B'
+            then
+                IO.write "XLMakeRange("
+                XL2C A
+                IO.write ", "
+                XL2C B
+                IO.write ")"
+
+            when
+                'A' . 'B'
+            then
+                if XLNamespaceScope (A) then
+                    IO.Write "::"
+                else
+                    IO.Write "."
+                XL2C B
+
+            when
+                parse_tree
+                    'A'
+            then
+                args : args_map
+                XL2C_Quote A, args, 2, false
+            when
+                parse_tree ('A')
+            then
+                args : args_map
+                XL2C_Quote A, args, 2, false
+
+            // ----------------------------------------------------------------
+            //   Some special case...
+            // ----------------------------------------------------------------
+
+            when
+                map['A','B']
+            then
+                IO.write "std::map < "
+                XL2C A
+                IO.write ", "
+                XL2C B
+                IO.write " > "
+
+            when
+                access to 'A'
+            then
+                XL2C A
+                IO.write "* "
+
+            when
+                string of 'A'
+            then
+                IO.write "std::vector < "
+                XL2C A
+                IO.write " > "
+
+            when
+                trace['A'] 'B'
+            then
+                indent : integer := 0
+                translate A
+                    when
+                        +'X'
+                    then
+                        indent := 1
+                        A := X
+                    when
+                        -'X'
+                    then
+                        indent := -1
+                        A := X
+                if A.kind = PT.xlNAME then
+                    N : PT.name_tree := PT.name_tree(A)
+                    tname : text := XLNormalize(N.value)
+                    if count(traces, tname) = 0 then
+                        trace_count += 1
+                        traces[tname] := trace_count
+                    IO.Write "{ if (XLTrace[", traces[tname], "]) {"
+                    IO.Write " XLTraceName(""", tname, """);"
+                    IO.Write " xl::textio::writeln(";
+                    XL2C B
+                    IO.Write ");"
+                    if indent <> 0 then
+                        IO.Write "XLTraceIndent += ", indent, ";"
+                    IO.WriteLn "}}"
+
+
+            // ----------------------------------------------------------------
+            //   Other cases...
+            // ----------------------------------------------------------------
+
+            else
+
+                // For non-atoms, check recursively
+                if input.kind = PT.xlBLOCK then
+                    T : input as PT.block_tree
+                    if T.opening = PR.INDENT_MARKER then
+                        IO.writeln "{"
+                        XL2C_Stmt T.child
+                        IO.writeln "}"
+                    else
+                        IO.write T.opening
+                        XL2C T.child
+                        IO.write T.closing
+
+
+                if input.kind = PT.xlPREFIX then
+                    T : input as PT.prefix_tree
+                    R : BC.bytecode := T.right
+
+                    XL2C T.left
+                    if R.kind <> PT.xlBLOCK then
+                        IO.write " ("
+                        XL2C R
+                        IO.write ")"
+                    else
+                        IO.write " "
+                        XL2C R
+
+                if input.kind = PT.xlINFIX then
+                    T : input as PT.infix_tree
+                    N : text := XLNormalize(T.name)
+                    if count(name_changes, N) > 0 then
+                        N := name_changes[N]
+
+                    IO.write "("
+                    XL2C T.left
+                    IO.write " ", N, " "
+                    XL2C T.right
+                    IO.write ")"
+
+
+
+
+    function XLModuleName (name : BC.bytecode) return text is
+    // ------------------------------------------------------------------------
+    //   Return the XL module name for A.B.C
+    // ------------------------------------------------------------------------
+        translate name
+            when
+                'A' . 'B'
+            then
+                result := XLModuleName(A)
+                result += "."
+                result += XLModuleName(B)
+
+            else
+                if name.kind = PT.xlNAME then
+                    N : name as PT.name_tree
+                    modname : text := XLNormalize(N.value)
+                    if count (module_name, modname) = 0 then
+                        module_name[modname] := modname
+                    result := modname
+
+
+    function XLModuleNameCPlus (name : text) return text is
+    // ------------------------------------------------------------------------
+    //   Return the C++ module name for A.B.C
+    // ------------------------------------------------------------------------
+        I          : integer
+        max        : integer := length name
+
+        result := ""
+        for I in 0..max-1 loop
+            C : character := name[I]
+            if C = '.' then
+                result += "::"
+            else
+                result += C
+
+
+    function SplitPath(Path : text;
+                       Sep  : character) return string of text is
+    // ------------------------------------------------------------------------
+    //    Turn a separator-separated list of paths into a string of paths
+    // ------------------------------------------------------------------------
+        I          : integer
+        element    : text := ""
+        max        : integer := length Path
+
+        for I in 0..max-1 loop
+            C : character := Path[I]
+
+            if C = Sep then
+                result += element
+                element := ""
+            else
+                element += C
+        result += element
+
+
+    function OpenParserInPath (filename : text) return PR.parser is
+    // ------------------------------------------------------------------------
+    //    Find the file to open in XL_MODULE_PATH and return a parser for it
+    // ------------------------------------------------------------------------
+        XlModulePath : text
+        PathList     : string of text
+
+        if getenv("XL_MODULE_PATH") <> nil then
+           XlModulePath := getenv("XL_MODULE_PATH")
+           PathList := SplitPath(XlModulePath, ';')
+        else
+           PathList += text(".")
+
+        I          : integer
+        max        : integer := size(PathList)
+
+        for I in 0..max-1 loop
+            Path      : text := PathList[I]
+            Candidate : text := Path + "/" + filename
+
+            result := PR.Open(Candidate, XLT.RuntimePath(XLT.syntax_file))
+
+            CurrentScanner : SC.scanner := result.scanner
+            exit if IO.valid CurrentScanner.input
+
+            if I <> max-1 then
+               PR.Close result
+
+        assert result <> nil
+
+
+    procedure XL2C_Import (modname : BC.bytecode; alias : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Deal with import clauses
+    // ------------------------------------------------------------------------
+
+        imported      : text := XLModuleName(modname)
+        cplusified    : text := XLModuleNameCPlus(imported)
+        done          : integer := 0
+
+        if alias <> nil then
+            alias_name : text := XLModuleName(alias)
+            module_name[alias_name] := cplusified
+        module_name[imported] := cplusified
+
+        interface_name : text := imported + ".xs"
+        body_name      : text := imported + ".xl"
+
+        done := module_imports[imported]
+        if (done & 1) = 0 then
+            iface_parser : PR.parser := OpenParserInPath(interface_name)
+            iface_tree   : BC.bytecode := PR.Parse(iface_parser)
+            IO.WriteLn ""
+            IO.WriteLn "// Interface ", interface_name, " done=", done
+            module_imports[imported] |= 1
+            if iface_tree <> nil then
+                XL2C_Stmt iface_tree
+                done |= 1
+            IO.WriteLn ""
+            IO.WriteLn "// End of Interface ", interface_name, " done=", done
+            PR.Close iface_parser
+
+
+    procedure XL2C_PendingImports() is
+    // ------------------------------------------------------------------------
+    //    Emit code for pending imports
+    // ------------------------------------------------------------------------
+
+        someChange : boolean := true
+        while someChange loop
+            imported   : text
+            someChange := false
+            for imported in module_imports loop
+                exit if someChange
+                if (module_imports[imported] & 2) = 0 then
+                    body_name      : text := imported + ".xl"
+                    IO.WriteLn ""
+                    IO.WriteLn "// Body ", body_name
+                    body_parser : PR.parser := OpenParserInPath(body_name)
+                    body_tree   : PT.tree := PR.Parse(body_parser)
+                    module_imports[imported] |= 2
+                    if body_tree <> nil then
+                        XL2C_Stmt body_tree
+                        someChange := true
+                    IO.WriteLn ""
+                    IO.WriteLn "// End of Body ", body_name
+                    PR.Close body_parser
+
+
+    procedure XL2C_Namespace (name : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //   Translate a module
+    // ------------------------------------------------------------------------
+
+        translate name
+            when
+               'A' . 'B'
+            then
+               XL2C_Namespace A
+               IO.writeln " {"
+               XL2C_Namespace B
+               namespace_closing += "}"
+            else
+               IO.write "namespace "
+               XL2C name
+               if name.kind = PT.xlNAME then
+                   N : name as PT.name_tree
+                   current_module += XLNormalize(N.value)
+                   current_module += "::"
+
+
+    procedure XL2C_Module (name : BC.bytecode; body : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Display a module
+    // ------------------------------------------------------------------------
+
+         current_module := ""
+         XL2C_Namespace name
+         if body <> nil then
+             IO.WriteLn " {"
+             XL2C_Stmt body
+             IO.WriteLn " } ", namespace_closing
+         else
+             IO.Writeln " {} ", namespace_closing
+         namespace_closing := ""
+
+
+    function XLNamespaceScope (name : BC.bytecode) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if the name denotes a namespace scope
+    // ------------------------------------------------------------------------
+
+        if name.kind = PT.xlNAME then
+            T : name as PT.name_tree
+            N : text := XLNormalize (T.value)
+            if count (module_name, N) > 0 then
+                IO.Write module_name[N]
+                return true
+            else
+                IO.Write "XLDeref(", N, ")"
+                return false
+
+        translate name
+            when
+                'X' . 'Y'
+            then
+                if XLNamespaceScope (X) then
+                    IO.Write "::"
+                else
+                    IO.Write "."
+                return XLNamespaceScope(Y)
+
+        IO.Write "XLDeref("
+        XL2C name
+        IO.Write ")"
+        return false
+
+
+    // ========================================================================
+    //
+    //    Translate translate
+    //
+    // ========================================================================
+
+    procedure XL2C_Quote (form : BC.bytecode;
+                          in out args : args_map;
+                          nesting : integer;
+                          wildcard : boolean) is
+    // ------------------------------------------------------------------------
+    //    Emit the code for the translate form
+    // ------------------------------------------------------------------------
+
+        I : integer
+        for I in 1..nesting loop
+            IO.Write ' '
+
+        // For each kind of atom, check and return 0 or 1
+        if form.kind = PT.xlINTEGER then
+            T : form as PT.integer_tree
+            IO.Write "xl::parser::tree::newinteger(", T.value, ")"
+
+        if form.kind = PT.xlREAL then
+            T : form as PT.real_tree
+            IO.Write "xl::parser::tree::newreal(", T.value, ")"
+
+        if form.kind = PT.xlTEXT then
+            // 'A' or "A" is transformed into a name
+            // '"A"' or "'A'" is transformed into corresponding string
+            T : form as PT.text_tree
+            quote : character := character(0)
+            is_quote : boolean := false
+            if length(T.value) > 2 then
+               quote := T.value[0]
+               if quote <> T.value[length(T.value)-1] then
+                   quote := character(0)
+               else
+                   is_quote := ASCII.is_quote(quote)
+
+            if is_quote then
+                // The normal syntax would be T.value[1..length(T.value)-2]
+                // but our current Advanced Fuzzy Compilation Technology (TM)
+                // doesn't support that yet.
+                contents : text := T.value [1..length(T.value)-2]
+                IO.Write "xl::parser::tree::newtext(text("""
+                IO.Write XLSanitize(contents, '"')
+                IO.Write """), "
+                IO.Write "'", XLSanitize(text("") + quote, ''''), "')"
+            else
+                if wildcard then
+                    IO.Write "xl::parser::tree::newwildcard(text("""
+                    IO.Write XLSanitize(XLNormalize(T.value), '"'), """))"
+                else
+                    // We should check that it's a single name
+                    IO.Write XLNormalize(T.value)
+            args[T.value] = 1
+
+        if form.kind = PT.xlNAME then
+            T : form as PT.name_tree
+            N : text := XLNormalize(T.value)
+            IO.Write "xl::parser::tree::newname(text(""", N, """))"
+
+        // For non-atoms, check recursively
+        if form.kind = PT.xlBLOCK then
+            T : form as PT.block_tree
+            IO.Writeln "xl::parser::tree::newblock("
+            XL2C_Quote T.child, args, nesting+2, wildcard
+            IO.Write ", "
+            if T.opening = PR.INDENT_MARKER then
+               IO.Write """I+"", ""I-"""
+            else
+               IO.Write '"', T.opening, """, """, T.closing, '"'
+            IO.Write ")"
+
+        if form.kind = PT.xlPREFIX then
+            T : form as PT.prefix_tree
+            IO.WriteLn "xl::parser::tree::newprefix("
+            XL2C_Quote T.left, args, nesting+2, wildcard
+            IO.WriteLn ","
+            XL2C_Quote T.right, args, nesting+2, wildcard
+            IO.WriteLn ")"
+
+        if form.kind = PT.xlINFIX then
+            T : form as PT.infix_tree
+            IO.Write "xl::parser::tree::newinfix("
+            if T.name = ASCII.CR then
+                IO.WriteLn "xl::textio::encoding::ascii::cr,"
+            else
+                IO.WriteLn "text(", '"', T.name, '"', "),"
+            XL2C_Quote T.left, args, nesting+2, wildcard
+            IO.WriteLn ","
+            XL2C_Quote T.right, args, nesting+2, wildcard
+            IO.WriteLn ")"
+
+
+
+    procedure XL2C_TranslateOne (to_translate: BC.bytecode;
+                                 ToMatch : PT.tree; Body : PT.tree;
+                                 Condition : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //   Translate a single 'when' clause
+    // ------------------------------------------------------------------------
+        args : args_map
+        loop_index += 1
+
+        IO.WriteLn "{"
+        IO.WriteLn "static xl::parser::tree::tree ref", loop_index, "="
+        XL2C_Quote ToMatch, args, 2, true
+        IO.WriteLn ";"
+        IO.WriteLn "xl::parser::tree::treemap args", loop_index, ";"
+        IO.Write "if (xl::parser::tree::matches("
+        XL2C to_translate
+        IO.Writeln ", ref", loop_index, ", args", loop_index, ")) {"
+
+        N : text
+        for N in args loop
+            Nm : text := XLNormalize(N)
+            IO.Write "xl::parser::tree::tree ", Nm
+            IO.WriteLn " = args",loop_index,"[text(", '"',Nm,'"', ")];"
+            IO.WriteLn Nm, "=", Nm, ";"
+
+        if Condition <> nil then
+            IO.Write "if ("
+            XL2C Condition
+            IO.WriteLn ") {"
+        XL2C_Stmt Body
+
+        IO.WriteLn "XLtranslateDone = true;"
+        IO.Writeln "break;"
+        IO.WriteLn "}}"
+        if Condition <> nil then
+            IO.WriteLn "}"
+
+
+
+    procedure XL2C_Translate (to_translate : BC.bytecode; how : BC.bytecode) is
+    // ------------------------------------------------------------------------
+    //    Translate a translate statement
+    // ------------------------------------------------------------------------
+
+        translate how
+           when
+              when
+                  'ToMatch'
+              where
+                  'Condition'
+              then
+                  'Body'
+           then
+              Xl2C_TranslateOne to_translate, ToMatch, Body, Condition
+
+           when
+              when ('ToMatch') where 'Condition' then
+                  'Body'
+           then
+              Xl2C_TranslateOne to_translate, ToMatch, Body, Condition
+
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               XL2C_TranslateOne to_translate, ToMatch, Body
+
+           when
+              when ('ToMatch') then
+                  'Body'
+           then
+               XL2C_TranslateOne to_translate, ToMatch, Body
+
+           when
+               'A' else 'B'
+           then
+               XL2C_Translate to_translate, A
+               IO.WriteLn "if (!XLtranslateDone) {"
+               XL2C_Stmt B
+               IO.WriteLn "}"
+
+           when
+              'A'
+              'B'
+           then
+              XL2C_Translate to_translate, A
+              XL2C_Translate to_translate, B
+
+           else
+              IO.Writeln "*** Ungrokable 'translate'"
+              IO.WriteLn "[[", how, "]]"
+
+
+    procedure XL2C_SemanticsTranslationOne (Name     : PT.name_tree;
+                                           ToMatch   : PT.tree;
+                                           Body      : PT.tree;
+                                           Condition : PT.tree := nil) is
+    // ------------------------------------------------------------------------
+    //   One 'when' clause in a translation
+    // ------------------------------------------------------------------------
+        args : args_map
+        NmT : text := PT.XLNormalize(Name.value)
+        first : boolean := false
+        loop_index += 1
+
+        // Local declaration for recursion
+        if count(translations, NmT) = 0 then
+            IO.WriteLn "xl::parser::tree::tree ", NmT
+            IO.WriteLn " (xl::parser::tree::tree input) {"
+            IO.WriteLn "  return xl::symbols::lookuprewrite("
+            IO.WriteLn "      xl::translator::context,"
+            IO.WriteLn "      """, NmT, ""","
+            IO.WriteLn "      input);"
+            IO.WriteLn "}"
+            first := true
+
+        // Record that we had a translation for that name
+        translations [NmT] := 1
+
+        // Write the initialization of the symbol table
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+
+        IO.WriteLn "{"
+        IO.WriteLn "static xl::parser::tree::tree ref ="
+        XL2C_Quote ToMatch, args, 2, true
+        IO.WriteLn ";"
+        IO.WriteLn "xl::symbols::rewrite rew ="
+        IO.WriteLn "new xl::symbols::rewritedata;"
+        IO.WriteLn "rew->referenceform = ref;"
+        if Condition <> nil then
+            IO.WriteLn "rew->scoreadjust = ",
+                       current_module, "scoreadjust_", loop_index, ";"
+        else
+            IO.WriteLn "rew->scoreadjust = 0;"
+        IO.Write   "rew->translator = "
+        IO.WriteLn current_module, "translator_", loop_index, ";"
+        IO.WriteLn "xl::symbols::enterrewrite("
+        IO.WriteLn "  xl::translator::context,"
+        IO.WriteLn "  ", '"', NmT, '"', ","
+        IO.WriteLn "  rew);"
+        if first then
+            IO.WriteLn "xl::symbols::setinteger("
+            IO.WriteLn "  xl::translator::context,"
+            IO.WriteLn "  ", '"', NmT, ".pragma", '"', ","
+            IO.WriteLn "  1);"
+        IO.WriteLn "}"
+
+        semantics_translations_init+=IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout
+
+
+        // Write the callback function
+        IO.WriteLn "xl::parser::tree::tree translator_", loop_index
+        IO.WriteLn "  (xl::parser::tree::tree input,"
+        IO.WriteLn "   xl::parser::tree::tree scope,"
+        IO.WriteLn "   xl::symbols::rewrite info,"
+        IO.WriteLn "   xl::parser::tree::treemap &Args) {"
+
+        N : text
+        for N in args loop
+            Nm : text := XLNormalize(N)
+            IO.Write "xl::parser::tree::tree ", Nm
+            IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
+            IO.WriteLn Nm, "=", Nm, ";"
+        IO.WriteLn "xl::parser::tree::tree result = input;"
+
+        XL2C_Body Body, true
+        IO.WriteLn "return result;"
+        IO.WriteLn "}"
+
+        // Write the score adjust function if necessary
+        if Condition <> nil then
+            IO.WriteLn "int scoreadjust_", loop_index, "("
+            IO.WriteLn "xl::parser::tree::tree Test,"
+            IO.WriteLn "xl::symbols::rewrite Info,"
+            IO.WriteLn "xl::parser::tree::treemap &Args,"
+            IO.WriteLn "int Depth, int Score) {"
+
+            N : text
+            for N in args loop
+                Nm : text := XLNormalize(N)
+                IO.Write "xl::parser::tree::tree ", Nm
+                IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
+                IO.WriteLn Nm, "=", Nm, ";"
+            IO.WriteLn "int result = Score + 0x80;"
+            IO.Write "if (!("
+            XL2C Condition
+            IO.WriteLn ")) result = 0;"
+            IO.WriteLn "return result;"
+            IO.WriteLn "}"
+
+
+    procedure XL2C_SemanticsTranslation (Name : PT.name_tree; How: PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Translate a semantics_translation statement
+    // ------------------------------------------------------------------------
+
+        // Translate the statement itself
+        translate How
+           when
+              when
+                  'ToMatch'
+              where
+                  'Condition'
+              then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body, Condition
+           when
+              when ('ToMatch') where 'Condition' then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body, Condition
+
+           when
+              when
+                  'ToMatch'
+              then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body
+
+           when
+              when ('ToMatch') then
+                  'Body'
+           then
+               XL2C_SemanticsTranslationOne Name, ToMatch, Body
+
+           when
+              'A'
+              'B'
+           then
+              XL2C_SemanticsTranslation Name, A
+              XL2C_SemanticsTranslation Name, B
+
+           else
+              IO.Writeln "*** Ungrokable 'semantics_translation'"
+              IO.WriteLn "[[", how, "]]"
+
+
+    procedure XL2C_EarlyInit (What : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Emit the code for early initialization
+    // ------------------------------------------------------------------------
+
+        // Write the call to the initialization function
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+        loop_index += 1
+        IO.WriteLn current_module, "init_", loop_index, "();"
+        initializations += IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout
+
+        // Write the initialization code in said function
+        IO.WriteLn "void init_", loop_index, "() {"
+        XL2C_Body What, true
+        IO.WriteLn "}"
+
+
+    procedure XL2C_LateCleanup (What : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Emit the code for late cleanup
+    // ------------------------------------------------------------------------
+
+        // Write the call to the initialization function
+        old_stdout : IO.output_file := IO.standard_output
+        new_stdout : IO.output_string_stream := IO.open_string_stream()
+        IO.standard_output := new_stdout
+        loop_index += 1
+        IO.WriteLn current_module, "term_", loop_index, "();"
+        terminations += IO.close_string_stream(new_stdout)
+        IO.standard_output := old_stdout
+
+        // Write the initialization code that calls said function
+        IO.WriteLn "void term_", loop_index, "() {"
+        XL2C_Body What, true
+        IO.WriteLn "}"
+
+

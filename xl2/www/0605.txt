@@ -1,0 +1,9 @@
+<!--May 2006-->
+<a href="0604.html">April</a> | <b>May 2006</b> | June
+<p>
+<a href="060501.html">Monday, 1 May</a>: Optimization
+<ul>
+</ul>
+
+<p>
+<a href="0604.html">April</a> | <b>May 2006</b> | June

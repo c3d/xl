@@ -1,0 +1,31 @@
+// ****************************************************************************
+//  xl.errors.xl                    (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Errors for the XL compiler
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This program is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import IO = XL.TEXT_IO
+
+module XL.ERRORS is
+
+    procedure Report(E : error; file : text; line : integer) is
+        IO.WriteLn "", file, ":", line, ": Error ", integer(E)

@@ -1,0 +1,3 @@
+03.Declarations/direct_constructor_invokation_fail.xl:2: 'add' is not a type name
+| Z : add(0.777, 0.888)
+|_______^

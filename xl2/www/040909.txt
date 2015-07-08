@@ -1,0 +1,17 @@
+<!--Working on code generation for function calls-->
+
+I've got a prototype of {concept "expred" "written"} that seems to
+work. For simple cases, that is. Not checked-in yet, see below.
+
+Unfortunately, it made the current limitations in the code generation
+for function really really painful. Specifically, at this point, when
+you do full semantics / code generation (not the hacked-together
+{inside "bootstrap" "C++-emitting mode"}), you cannot have nested
+function calls... So I'm trying to fix that and, while I am at it,
+implement {example "inout" "input and output parameters"}.
+
+Also, I settled on a syntax for built-in operators (those which are
+defined in the {inside "bytecode"}):
+
+{pre}function Add(X, Y : integer) return integer written X+Y is bultin add_int{erp}
+

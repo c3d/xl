@@ -1,0 +1,25 @@
+<!--Import takes more time than expected-->
+
+Well, I thought I could do it last Wednesday, and then my wife
+reminded me of various things we need to do to host a guest in two
+weeks. So I spent the day hacking furniture instead of hacking
+software.
+
+There is one little thing I'm trying to evaluate. When you write
+{tt "import X.Y.Z"}, I intend to make sure that it first imports
+{tt "X"}, then {tt "X.Y"}, and finally {tt "X.Y.Z"}. On the other hand, I'm
+tempted to reuse imports, to avoid re-parsing and processing the same
+import again and again. This means that if I write {tt "import X.Y"} and
+another module imported {tt "X.Y.Z"}, then I'm going to see
+{tt "X.Y.Z"} despite the fact that I didn't import it myself. Is that
+bad?
+
+<HR>
+
+Found in a Slashdot signature:
+<A HREF="http://www.greenfaces.se/upload/uploads/godvsbush.gif">
+God is against Bush</A>. I found some other arguments against Bush
+smart, enlightening, frightening. This one I found funny, since it
+uses Bush's own "God is with me" arguments against him :-) I just
+hope the guy who designed that page doesn't consider it too seriously...
+

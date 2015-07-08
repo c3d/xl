@@ -1,0 +1,52 @@
+<!--Generic declarations-->
+
+Like several languages before it, notably {@Ada} and {@C++}, {@XL}
+features {wiki "Generic_programming" "generic entities"}.
+
+From a {@semantics} point of view, XL generics
+are closer to C++ templates than to Ada generics. In particular, XL
+features 
+{mcvs "instantiation/transitive.xl" "implicit and transitive instantiation"},
+which are a key requirement for advanced template
+libraries similar to the C++
+{wiki "Standard_Template_Library" "STL"}. Instead of using the
+{tt "&lt;"} separator for generic parameter or arguments, XL uses a
+block notation delimited with angle brackets {tt "[&nbsp;]"}.
+
+{pre}// Simple example of generic type declaration
+generic [index : range; value : type] type array written array[index] of value
+Cards : array[1..52] of card
+Frequency : array['A'..'Z', integer]
+
+// Example of generic function declaration (see a {example "maximum" "better definition"})
+generic [value : type]
+function Max (X, Y : value) return value is
+    if X &lt; Y then
+        return Y
+    else
+        return X
+{erp}
+
+There are a few aspects of XL generics that might surprise C++ or Ada
+programmers.
+<UL>
+<LI>XL uses generics for types that are built-in in other languages, like
+pointers, arrays, strings or lists.
+<LI>XL generics are typically defined
+with a {concept "expred" "written form"} to offer a convenient syntax,
+as illustrated by the {tt "array"} type above.
+<LI>XL generic types can be used much like
+{concept "truegen" "regular types"}.
+<LI>XL can {concept "generic-validation" "validate generics"}.
+Validated generic types can represent {@concepts} common in the
+{wiki "Standard_template_library" "C++ STL"}, such as
+{tt "ForwardIterator"}. By contrast, in C++, everybody but the
+  compiler knows what a {tt "ForwardIterator"} is.
+</UL>
+
+{concept "variadics" "Variadic entities"} are also considered a form
+of generic.
+
+Note: At this stage, only the C++ version of the XL compiler has
+{mcvs "instantiation/deducing_generic.xl" "any kind of support"}
+for generics.

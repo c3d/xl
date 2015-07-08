@@ -1,0 +1,20 @@
+use XL.UI.CONSOLE
+
+TAB : character := character(9)
+
+to ShowDivOps (A, B : integer) is
+    WriteLn A, TAB, B, TAB, A/B, TAB, A rem B, TAB, A mod B
+
+to Test (A : integer) is
+    ShowDivOps A, 5
+    ShowDivOps A, -5
+
+WriteLn "A", TAB, "B", TAB, "A/B", TAB, "A rem B", TAB, "A mod B"
+for A in 10..14 loop
+    ShowDivOps A, 5
+for A in 10..14 loop
+    ShowDivOps (-A, 5)
+for A in 10..14 loop
+    ShowDivOps A, -5
+for A in 10..14 loop
+    ShowDivOps (-A, -5)

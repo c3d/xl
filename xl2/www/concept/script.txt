@@ -1,0 +1,6 @@
+<!--XL as a scripting language-->
+
+Being able to use {@xl} as a script language, or as an interpreted
+language, is a desirable feature. This is still under
+investigation. At this point, the objective is simply to avoid
+putting in the language things that would actively prevent it.

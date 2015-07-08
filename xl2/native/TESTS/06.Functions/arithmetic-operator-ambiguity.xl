@@ -1,0 +1,25 @@
+use XL.ARRAY.BASIC
+use XL.UI.CONSOLE
+
+generic type numeric where
+    x, y : numeric
+    x := x + y
+    x := x - y
+    x := x * y
+    x := x / y
+
+function sum (A : array) return array.item is
+    for I in Range(A) loop
+        Add result, A[I]
+
+
+X : array[5] of integer
+X[0] := 3
+X[1] := 2
+X[2] := 6
+X[3] := 7
+X[4] := 8
+
+Y : integer := sum(X)
+
+WriteLn "Sum=", Y

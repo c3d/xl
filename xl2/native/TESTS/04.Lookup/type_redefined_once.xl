@@ -1,0 +1,43 @@
+// ****************************************************************************
+//  type_redefined.xl               (C) 1992-2006 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Detect attempts to redefine types
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+// This definition is valid, and creates a local type, because the
+// XL_BUILTIN module is only visible through a using map, not directly.
+// So the declaration here is not a redeclaration. See type_redefined to
+// see the error case.
+
+use XL.UI.CONSOLE
+
+type integer is record with
+    A : real
+   
+XYZ : integer
+
+function real() return real is
+    WriteLn "Real default constructor called"
+    return 42.000001
+
+type K is function (Z : integer) return integer
+
+Glop : K

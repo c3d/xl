@@ -1,0 +1,117 @@
+I=1 and J=1
+I=1 and J=2
+I=1 and J=3
+I=1 and J=4
+I=1 and J=5
+I=2 and J=1
+I=2 and J=2
+I=2 and J=3
+I=2 and J=4
+I=2 and J=5
+I=3 and J=1
+I=3 and J=2
+I=3 and J=3
+I=3 and J=4
+I=3 and J=5
+I=4 and J=1
+I=4 and J=2
+I=4 and J=3
+I=4 and J=4
+I=4 and J=5
+I=5 and J=1
+I=5 and J=2
+I=5 and J=3
+I=5 and J=4
+I=5 and J=5
+Entering For loop, It=30
+Entering body, It=30
+TeaForTwo I=30
+End of body, It=30
+Entering body, It=31
+TeaForTwo I=31
+End of body, It=31
+Entering body, It=32
+TeaForTwo I=32
+End of body, It=32
+Entering body, It=33
+TeaForTwo I=33
+End of body, It=33
+Entering body, It=34
+TeaForTwo I=34
+End of body, It=34
+Entering body, It=35
+TeaForTwo I=35
+End of body, It=35
+Entering body, It=36
+TeaForTwo I=36
+End of body, It=36
+Entering body, It=37
+TeaForTwo I=37
+End of body, It=37
+Entering body, It=38
+TeaForTwo I=38
+End of body, It=38
+Entering body, It=39
+TeaForTwo I=39
+End of body, It=39
+Entering body, It=40
+TeaForTwo I=40
+End of body, It=40
+Entering body, It=41
+TeaForTwo I=41
+End of body, It=41
+Entering body, It=42
+TeaForTwo I=42
+End of body, It=42
+Entering body, It=43
+TeaForTwo I=43
+End of body, It=43
+Entering body, It=44
+TeaForTwo I=44
+End of body, It=44
+Entering body, It=45
+TeaForTwo I=45
+End of body, It=45
+Entering body, It=46
+TeaForTwo I=46
+End of body, It=46
+Entering body, It=47
+TeaForTwo I=47
+End of body, It=47
+Entering body, It=48
+TeaForTwo I=48
+End of body, It=48
+Entering body, It=49
+TeaForTwo I=49
+End of body, It=49
+Entering body, It=50
+TeaForTwo I=50
+End of body, It=50
+Exited for loop, It=51 Sum=840
+Bye Bye!
+A=3 and B=7
+A=3 and B=8
+A=3 and B=9
+A=4 and B=7
+A=4 and B=8
+A=4 and B=9
+A=5 and B=7
+A=5 and B=8
+A=5 and B=9
+Final A=6 and B=10
+I=6 and J=9
+I=6 and J=10
+I=6 and J=11
+I=6 and J=12
+I=7 and J=9
+I=7 and J=10
+I=7 and J=11
+I=7 and J=12
+I=8 and J=9
+I=8 and J=10
+I=8 and J=11
+I=8 and J=12
+I=9 and J=9
+I=9 and J=10
+I=9 and J=11
+I=9 and J=12

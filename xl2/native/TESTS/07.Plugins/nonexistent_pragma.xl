@@ -1,0 +1,41 @@
+// ****************************************************************************
+//  nonexistent_pragma.xl           (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                              XL project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check error messages for invalid pragmas
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is distributed under the GNU General Public License
+// See the enclosed COPYING file or http://www.gnu.org for information
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// Don't run anything but bare semantics
+// CMD=%x -parse %f -sem
+// EXIT=2
+
+// This one should pass
+{listing} function Foo(X : integer) return real is
+    temp : integer := X + 1
+    return 0.7
+
+// This one should not
+{listingue} procedure Bar is
+    K : real := Foo(0)
+
+{listingue "html"} function Baz(A : real) return real is
+    return A + A
+

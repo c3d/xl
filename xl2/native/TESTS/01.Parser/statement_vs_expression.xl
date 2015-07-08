@@ -1,0 +1,47 @@
+// ****************************************************************************
+//  statement_vs_expression.xl      (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check that we correctly alternate between statement and expression modes
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// CMD=%x -parse %f -style debug -show
+
+// This one is in expression mode. It should parse as an infix comma:
+//   (prefix
+//    parse_tree
+//    (block( )
+//     (infix ,
+//      (prefix
+//       sin
+//       X)
+//      Y)))
+T := parse_tree(sin X, Y)
+
+// This one is in statement mode. It should parse as a prefix sin
+//     (prefix
+//      sin
+//      (implicit ()
+//       (infix ,
+//        X
+//        Y)))
+T := parse_tree
+         sin X, Y

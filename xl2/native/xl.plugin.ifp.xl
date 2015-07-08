@@ -1,0 +1,62 @@
+// ****************************************************************************
+//  xl.plugin.if.xl                 (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of if
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (initial version)
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+import PR = XL.PARSER
+import PC = XL.PLUGIN.COMMON
+import CST = XL.CONSTANTS
+
+module XL.PLUGIN.IFP is
+// ----------------------------------------------------------------------------
+//    Encapsulating module (not really necessary)
+// ----------------------------------------------------------------------------
+
+    translation ifp
+    // ------------------------------------------------------------------------
+    //    Translations below a 'If' pragma
+    // ------------------------------------------------------------------------
+
+        when
+           'Anything'
+        then
+           pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
+           translate pragma
+
+              when
+                  'PragmaName' 'Variable'
+              then
+                  if CST.IsTrue (Variable) then
+                      return input
+                  else
+                      return parse_tree(@nop)
+              else
+                 ERR.Error "Incorrect syntax '$1', use {ifp value}", pragma
+                 return ERR.ErrorTree()
+

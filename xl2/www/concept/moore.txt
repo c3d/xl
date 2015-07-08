@@ -1,0 +1,150 @@
+<!--Moore's Law-->
+
+The implications of {wiki "Moore%27s_law" "Moore's law"} on software
+are too often overlooked. As long as hardware {concept "complexity"}
+grows at an exponential rate, the {@complexity} of the software that
+runs on this hardware tends to follow the same exponential
+growth. This is problematic, because the brain of the developers do
+not follow the same exponential growth pattern. The traditional way to
+fix this problem has been to invent new so-called <em>software
+paradigms</em> regularly, yielding repeated discontinuous jumps in
+productivity, at the expense of most of the existing code base.
+
+{@cp} in general, and {@xl} in particular, are designed to
+make the creation of {concept "extension" "new paradigms"} a standard
+part of the software development process. As a result, programmers
+will be able to benefit Moore's law (by adding new tools to their
+toolchest as soon as Moore's law makes them practical) rather than
+merely fighting the ever growing complexity it introduces.
+
+
+<H4>Limits of Software Growth</H4>
+
+{picr "MooreFeast.jpg" "Figure 1 - FEAST study results" 350}
+
+There are a number of ways to illustrate how software developed using
+a single technology doesn't and cannot follow Moore's law.
+
+The 
+<A href=\"http://www.doc.ic.ac.uk/~mml/feast2/papers/pdf/jfr103c.pdf\">
+FEAST study</A> focused on the evolution over large periods of time
+(15 to 20 years) of a variety of unnamed software projects. Some
+results are shown in Figure 1. Very early on, the projects may
+follow a somewhat exponential growth (see in particular the yellow
+curve). But this early enthusiasm quickly leaves place to a much
+slower pace. The FEAST study actually proposes models of software
+evolution over time that are well below linear. One might expect a
+linear growth if programmers could keep adding code at a constant
+pace. But the FEAST study demonstrates how negative interaction
+between software components (sometimes known as bugs) slow down this
+process well below any linear growth.
+
+As an aside, the FEAST study also consider a number of factors
+impacting the growth, discussing in details the impact of the choice
+of programming language to long-term evolution of the project. An
+interesting observation is that the projects written in C tend to
+degrade over time faster than those written in Cobol! I don't know if
+this should really be a surprise...
+
+
+<H4>User demands</H4>
+
+We made the hypothesis that users demands on software are growing as
+fast a Moore's law. One might argue that development tapers off simply
+because there are no more features to add. However, empirical
+evidence doesn't support that view... Consider the fact that today's
+software rarely works well on three-years-old computers. The need for
+speed and features is particularly visible in areas such as games,
+which always push the envelope of what is possible with a given
+computer. But even the simplest office suites accumulate features that
+were simply unthinkable ten years ago, like on-the-fly spelling and
+grammar corrections.
+
+{picr "MooreLinux.jpg" "Figure 2 - Moore's law applied to size of Linux kernel" 350}
+
+Another study support the notion that programmers, not users, are the
+limiting factor. Figure 2 is taken from
+<A href=\"http://plg.uwaterloo.ca/~migod/papers/icsm00.pdf\">a
+  published study of the growth of the Linux kernel over
+  time</A>. We can first notice the same pattern of early
+  quasi-exponential growth, followed by a much reduced pace.
+
+But what is particularly interesting in this picture is the
+difference between the so-called stable and unstable kernels. The
+stable kernels, after a while, follows the kind of sub-linear
+growth predicted and observed by the FEAST study. The unstable
+kernel, on the other hand, keeps growing at a much faster pace. In
+other words, users would like to add more features, but these
+features can't be added without disrupting the kernel development
+process, and so they don't make it to the stable kernel base.
+This comment is not meant at all as a criticism of kernel developers,
+but rather as an observation that, even if the abilities of these
+developers are truly out of the ordinary, they don't improve over time
+as rapidly as the users would demand it.
+
+The important point is that users, not programmers, are the
+motivation behind radical changes in software technology. Users
+wanted Visicalc, graphical user interfaces or the web. Only once the
+demand was obvious did programmers figure out a way to write such
+software comfortably and efficiently.
+
+
+<H4>Software paradigms</H4>
+
+{picr "Paradigms.png" "Figure 3 - Software paradigms" 350}
+
+Historically, the problem of growing software complexity has been
+addressed by creating new software paradigms, which are basically
+brand new ways to consider software. Figure 3 shows some of the most
+recent paradigms.
+
+A new paradigm emerges under intense pressure from software users to
+create a kind of software that the old development model simply didn't
+consider. For instance, Java's success was fueled by a new kind of
+web-centric applications or applets, which can be written in {@C} or {@C++}
+only at great pains (who wants to use {wiki "CORBA" "Corba"}?)
+Similarly, {@GUI} development was doable in C, but painful and slow
+(who wants to write {wiki "X11"} callbacks?)
+
+Old languages don't really die, they fade into irrelevance.  Thanks to
+the exponential nature of Moore's law, the new {@pb} is generally much
+larger than all other previous software applications combined. So the
+relevance of any old programming model fades over time. Cobol still
+exists, but it is simply irrelevant to the vast majority of
+web-centric software development happening today. C and C++ still
+exist (and they will remain alive for a long time), but they will
+never expand to reach the new areas that Java is currently
+exploring. An interesting twist in that case is that C++ is also
+exploring a number of areas that Java cannot touch, for instance
+template meta-programming. And finally, you wouldn't be able to
+develop anything interesting by today's standards using a 1980's
+version of Basic or Pascal, not matter how much energy you put into
+it.
+
+<H4>The XL value proposition</H4>
+
+There is only one little problem with each new software paradigm. It
+comes at the expense of only a few million lines of code... {@xl}
+tries to address that by being a language designed for long-term
+{concept "extension" "evolution"}. Whereas the integration of a new
+programming model is difficult in older languages, it is considered a
+{inside "translation" "key feature"} of XL.
+
+This kind of evolution is not totally unheard of in the history of
+programming languages. Lisp in particular offers the basic features
+necessary for long-term language evolution.
+It is <A href="http://c2.com/cgi/wiki?MainstreamInfluenceOfFunctionalLanguages">not an accident</A> if Lisp was one of the first
+existing languages to integrate the object-oriented paradigm and to
+make it an ANSI standard. Despite being the second oldest high-level
+programming language (after Fortran), Lisp remains surprisingly young
+and strong.
+
+So why XL? Because despite it's surprising agility, Lisp is
+{concept "diverge" "not a concept-programming language"}. It causes a
+higher-than-average level of {@synnoise} or {@semnoise}. An example
+of {@synnoise} is the over-use of parentheses. An example of
+{@semnoise} is the existence of a heavy runtime, which is necessary
+if only to be able to evaluate a Lisp list. {@xl} tries to keep the
+main benefits of Lisp, without the costs.
+
+

@@ -1,0 +1,31 @@
+use XL.POINTER
+use XL.POINTER.ADDRESS
+use XL.MATH.COMPLEX
+use XL.UI.CONSOLE
+
+
+Ptr : pointer to integer 
+Val : integer := 5
+
+Ptr := &Val
+WriteLn "Five=", *Ptr, "=", Val
+
+Val := 6
+WriteLn "Five=", *Ptr, "=", Val
+
+*Ptr := 7
+WriteLn "Five=", *Ptr, "=", Val
+
+C : variable := complex(3,5)
+PC : pointer to complex[integer] := &C
+
+WriteLn "C=(", C.re, ";", C.im, ")"
+WriteLn "PC=(", PC.re, ";", PC.im, ")"
+
+Copy PC.re, 2
+WriteLn "C=(", C.re, ";", C.im, ")"
+WriteLn "PC=(", PC.re, ";", PC.im, ")"
+
+PC.re := 6
+WriteLn "C=(", C.re, ";", C.im, ")"
+WriteLn "PC=(", PC.re, ";", PC.im, ")"

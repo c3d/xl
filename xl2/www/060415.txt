@@ -1,0 +1,19 @@
+<!--Generic iterators-->
+
+Of course, generic iterators did not work the first time. Some
+tuning required. Now, the following works:
+
+{pre}generic [type item]
+iterator Looping (var It : item;
+                  Low, High : item) written It in Low..High is
+    It := Low
+    while It <= High loop
+        yield
+        It := It + 1
+
+for I in 1..5 loop
+    for J in 2..4 loop
+        WriteLn "I=", I, " J=", J
+{erp}
+
+Hello World is still borked.

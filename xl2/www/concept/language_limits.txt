@@ -1,0 +1,50 @@
+<!--Limits of existing languages-->
+
+Historically, most programming languages have been defined by a specific
+{concept "syntax"}, {concept "semantics"}, and a predefined set of
+abstraction mechanisms (functions, {@objects}, keywords, composition
+rules).
+
+Consequently, there are always some {@concepts} that are not easily
+{concept "representation" "represented"} with such languages. For
+instance, it is difficult to integrate 
+{example "diff" "symbolic differentiation"},
+{@Prolog}-style {example "prolog" "backtracking"} or
+{@Ada}-style {example "tasking" "tasking"} into languages such as {@C}
+or {@Java}. Many simple concepts, such as {example "maximum"}, are
+actually quite difficult to represent using most existing languages.
+
+More precisely, it is almost always possible to represent any concept
+in any language. It doesn't take much to be able to perform any
+  computation. In assembler, you don't need more than the notion of
+  addressable memory, loads, stores, and half a dozen basic
+  operations. The Turing machine needed even less than that.
+But this too often requires
+<a href="http://mozart-dev.sf.net/moka.html">incredibly tortuous
+  mechanisms</a>, or very verbose code where the intent is all but lost.
+Or, as Philip Greenspun once
+<A href="http://philip.greenspun.com/bboard/q-and-a-fetch-msg?msg_id=000tgU">put it</A>, 
+<em>"Any sufficiently complicated C or Fortran program contains an
+  ad-hoc, informally-specified bug-ridden slow implementation of half
+  of Common Lisp"</em>. 
+
+Of course, nobody wants to code directly to a Turing machine, and
+most programmers try to avoid assembler. So the question becomes: are
+the limits of your programming languages visible to you? Do they reduce your
+productivity? This is a valid question, because the concepts being
+implemented in common programming languages are the most common
+ones. Practically all languages features building-blocks such as
+functions, user-defined data types, objects, and reasonable
+composition rules. These may be sufficient for your purpose.
+
+Yet most of these languages won't deal gracefully with {@concepts}
+that fall outside of their domain of expertise, much like C doesn't
+deal gracefully with differentiation or backtracking. This is more
+visible with slightly less common {@pb}, where programmers often resort
+to {concept "dsl" "domain specific languages"}, in other words
+languages tailored for a particular application. Even that is not
+always a solution, since developing a domain-specific language is
+complex, and quite often not worth the effort.
+
+Lowering this barrier
+to {concept "extension" "language extensions"} is an objective of {@xl}.

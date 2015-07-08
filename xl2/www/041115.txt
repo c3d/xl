@@ -1,0 +1,16 @@
+<!--iPod-->
+
+I received an iPod Mini offered by IBM for being judge of ports of XL
+on LinuxPPC (see the
+<A href="http://sourceforge.net/ppc_contest.php">LinuxPPC
+contest</A>). It's gold. Definitely not pink. A very nice gesture from
+IBM there.
+
+I never considered buying an iPod, since I don't like having buds
+in my ears (it always feels painful after a while). So I always listen
+to music from my Mac or from the HP DE200C Linux appliance where I
+installed MythTV. But now that I have one, I understand what all the
+fuss about it is. It is a remarkable piece of engineering and
+design. And the sound is surprisingly good. Too bad it still hurts my
+ears after a few minutes, I'd probably be using it a lot more
+otherwise...

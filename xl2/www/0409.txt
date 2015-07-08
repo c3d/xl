@@ -1,0 +1,27 @@
+<!--September 2004-->
+August | <b>September 2004</b> | October
+<p>
+Saturday, 4 September: Expression Reduction
+<ul>
+</ul>
+Thursday, 9 September: Working on code generation for function calls
+<ul>
+</ul>
+Saturday, 11 September: Compiling a factorial
+<ul>
+</ul>
+Sunday, 19 September: Basic infrastructure for records
+<ul>
+</ul>
+Saturday, 25 September: Zeroth release
+<ul>
+</ul>
+<a href="040929.html">Wednesday, 29 September</a>: Day off
+<ul>
+<li><A href="http://h71028.www7.hp.com/enterprise/cache/76971-0-0-0-121.aspx?Jumpid=virtualization_081604/Linux">Integrity Virtual Machine</A>
+<A href="mailto:christophe@dinechin.org">drop me a note</A>
+<li>I also decided that it was time to post my <A href="http://www.dinechin.org/christophe/Resume.html">Resume</A>
+</ul>
+
+<p>
+August | <b>September 2004</b> | October

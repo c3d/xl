@@ -1,0 +1,8 @@
+use XL.UI.CONSOLE
+
+function integer() return integer is
+    WriteLn "Initializing an integer"
+    return 33
+
+X : integer
+WriteLn "X=", X

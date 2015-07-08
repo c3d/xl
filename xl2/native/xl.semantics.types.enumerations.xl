@@ -1,0 +1,338 @@
+// ****************************************************************************
+//  xl.semantics.types.enumerations.xl      (C) 1992-2007 C. de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    Implementation of enumeration types
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import TY = XL.SEMANTICS.TYPES
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import REC = XL.SEMANTICS.TYPES.RECORDS
+import CGM = XL.CODE_GENERATOR.MACHINE
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+import CST = XL.CONSTANTS
+
+
+module XL.SEMANTICS.TYPES.ENUMERATIONS is
+// ----------------------------------------------------------------------------
+//    Implementation of the module
+// ----------------------------------------------------------------------------
+
+    function EnumerationTypeMatch(iface : any_type;
+                                  body : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if an interface type and a body type match for enumerations
+    // ------------------------------------------------------------------------
+    //  For enumerations, we simply want a match in name/type
+        ifaceE : iface as enumeration_type
+        bodyE  : body as enumeration_type
+
+        if ifaceE = nil then
+            ERR.Error "Internal: '$1' is not a enumeration", TY.Source(iface)
+            return false
+        if bodyE = nil then
+            ERR.Error "'$1' is not a enumeration type", TY.Source(body)
+            return false
+
+        // Check base type
+        baseType : any_type := ifaceE.base
+        if not baseType.interface_match(baseType, bodyE.base) then
+            ERR.Error "The base type of '$1'", TY.Source(bodyE)
+            ERR.Error "doesn't match that of '$1'", TY.Source(ifaceE)
+            return false
+
+        if ifaceE.machine_name = nil or bodyE.machine_name <> nil then
+            ifaceE.machine_name := bodyE.machine_name
+
+
+    procedure MakeNameList (Names        : PT.tree;
+                            in out etp   : enumeration_type;
+                            in out Index : integer) is
+    // ------------------------------------------------------------------------
+    //    Translate a names list from parse tree form into a list
+    // ------------------------------------------------------------------------
+
+        if Names.kind = PT.xlBLOCK then
+            block : Names as PT.block_tree
+            MakeNameList block.child, etp, Index
+            return
+
+        translate Names
+            when
+                'X' , 'Y'
+            then
+                MakeNameList X, etp, Index
+                MakeNameList Y, etp, Index
+
+            when
+                'X'
+                'Y'
+            then
+                MakeNameList X, etp, Index
+                MakeNameList Y, etp, Index
+
+            when
+                'X' = 'Value'
+            then
+                IntConst : CST.EvaluateConstant(Value) as PT.integer_tree
+                if IntConst = nil then
+                    ERR.Error "Enumeration value $1 is not an integer constant",
+                              Value
+                else
+                    Index := IntConst.value
+                MakeNameList X, etp, Index
+
+            else
+                Name : Names as PT.name_tree
+                if Name = nil then
+                    ERR.Error "Enumeration $1 is not a name", Names
+                else
+                    decl : DCL.declaration := DCL.Declare (Name, etp)
+                    etp.names += decl
+                    ival  : PT.tree := PT.NewInteger(Index, Name.position)
+                    mname : PT.tree := decl.machine_name
+                    mtype : PT.tree := etp.machine_name
+                    enumDecl : BC.Bytecode :=
+                         parse_tree(@enum_decl 'mtype' 'mname' 'ival')
+                    XLT.AddGlobalDecl enumDecl
+                    if etp.lowest_value > Index then
+                        etp.lowest_value := Index
+                    if etp.highest_value < Index then
+                        etp.highest_value := Index
+                    Index += 1
+
+
+    function NewEnumerationType(Source     : PT.tree;
+                                Base       : PT.tree;
+                                Names      : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create an enumeration type
+    // ------------------------------------------------------------------------
+        etp : enumeration_type
+
+        etp.symbols := XLT.context
+
+        // Add the base if there is one
+        etp.base := nil
+        if Base <> nil then
+            BaseType : any_type := TY.EvaluateType (Base)
+            BaseEnum : TY.NonSourceType(BaseType) as enumeration_type
+            if BaseEnum = nil then
+                ERR.Error "Base '$1' is not an enumeration", Base
+            else
+                SYM.AddUsing etp.symbols, nil, BaseEnum.symbols
+                etp.base := BaseEnum
+
+        etp.interface_match := EnumerationTypeMatch
+        etp.name := Source
+
+        // Each enumeration type gets a new machine name
+        mname : PT.name_tree := SYM.Temporary("enum", Source.position)
+        etp.machine_name := mname
+
+        // Check if we have set a representation type
+        repType : PT.tree := PT.Attached(Source, "BYTECODE")
+
+        // Associate the machine name to the representation type
+        if repType = nil then
+            XLT.AddGlobalDecl parse_tree(@enum_type 'mname')
+        else
+            XLT.AddGlobalDecl parse_tree(@enum_type_rep 'mname' 'repType')
+
+        // Elaborate the names
+        if Names <> nil then
+            Index : integer := 0
+            MakeNameList Names, etp, Index
+
+        result := etp
+        TY.SetDefinedType etp.machine_name, result
+        TY.SetDefinedType Source, result
+
+
+    function EnterEnumerationType (Source  : PT.tree;
+                                   Base    : PT.tree;
+                                   Names   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter an enumeration type in the symbol table
+    // ------------------------------------------------------------------------
+
+        oldContext : SYM.symbol_table := XLT.context
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "FIELD", 1
+
+        // Attach a type info to the original name
+        tp : any_type := NewEnumerationType(Source, Base, Names)
+        TY.SetDefinedType Source, tp
+
+        // Return the end type
+        result := parse_tree (@type)
+        TY.SetDefinedType result, tp
+        SYM.AddUsing oldContext, nil, XLT.context
+
+        XLT.context := oldContext
+
+
+    function EnterDefaultCtor(enName : PT.name_tree;
+                              etp : enumeration_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Default constructor initializes with zero
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            function 'enName' () return 'enName' is XL.BYTECODE.zero_enum
+        result := REC.EnterDefaultFunction(enName, result)
+
+
+    function EnterCopy(enName : PT.name_tree;
+                       etp : enumeration_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a default copy function
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            to Copy(out this : 'enName'; that : 'enName')
+                written this := that is XL.BYTECODE.copy_enum
+        result := REC.EnterDefaultFunction(enName, result)
+
+
+    function EnterEqual(enName : PT.name_tree;
+                        etp : enumeration_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a default copy function
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            function Equal(this : 'enName'; that : 'enName')
+                written this = that is XL.BYTECODE.equal_enum
+        result := REC.EnterDefaultFunction(enName, result)
+
+
+    function EnterToInt(enName : PT.name_tree;
+                        etp : enumeration_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a default copy function
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            function Integer(this : 'enName')
+                return integer
+                is XL.BYTECODE.enum_to_int
+        result := REC.EnterDefaultFunction(enName, result)
+
+
+    function EnterFromInt(enName : PT.name_tree;
+                          etp : enumeration_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a default copy function
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            function 'enName'(this : integer)
+                return 'enName'
+                is XL.BYTECODE.int_to_enum
+        result := REC.EnterDefaultFunction(enName, result)
+
+
+    function EnterDefaults(N : PT.name_tree;
+                           etp : enumeration_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter all the default functions for records
+    // ------------------------------------------------------------------------
+        result := XLT.Append(result, EnterDefaultCtor(N, etp))
+        result := XLT.Append(result, EnterCopy(N, etp))
+        result := XLT.Append(result, EnterEqual(N, etp))
+        result := XLT.Append(result, EnterToInt(N, etp))
+        result := XLT.Append(result, EnterFromInt(N, etp))
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //    Translation of function types
+    // ------------------------------------------------------------------------
+        when (enumeration 'Names') then
+            return EnterEnumerationType (input, nil, Names)
+        when (enum 'Names') then
+            return EnterEnumerationType (input, nil, Names)
+
+
+
+    // ========================================================================
+    //
+    //   Indexing
+    //
+    // ========================================================================
+
+    function GetEnumerationType(En : PT.tree) return enumeration_type is
+    // ------------------------------------------------------------------------
+    //    Return the enumeration type, or nil if non-enumeration
+    // ------------------------------------------------------------------------
+
+        // Evaluate enumeration expression if type is not known
+        tp : TY.any_type := TY.GetDefinedType(En)
+        if tp = nil then
+            En := XLT.XLEvaluateType(En)
+            if En = nil then
+                return nil
+            tp := TY.GetDefinedType(En)
+
+        // Evaluate expression type
+        etp : TY.NonConstGenSourceType(tp) as enumeration_type
+        return etp
+
+
+    function IsEnumeration (En : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if something is a enumeration
+    // ------------------------------------------------------------------------
+        ERR.PushErrorContext()
+        result := GetEnumerationType (En) <> nil
+        if ERR.PopErrorContext() then
+            result := false
+        trace[enum] "IsEnumeration ", En, "=", integer(result)
+
+
+    function Index(EnumName : PT.tree;
+                   ItemName : PT.name_tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Lookup an ambiguous name in a specific enumeration
+    // ------------------------------------------------------------------------
+        etp : enumeration_type := GetEnumerationType(EnumName)
+        if etp = nil then
+            ERR.Error "'$1' is not the name of an enumeration", EnumName
+            return ERR.ErrorTree()
+        result := SYM.LookupOne (etp.symbols, "DECL",
+                                 ItemName.value, SYM.lookupLocalOnly)
+        if result = nil then
+            result := ERR.ErrorTree()
+        else
+            decl : DCL.declaration := DCL.GetDeclaration(result)
+            if decl = nil then
+                result := ERR.ErrorTree()
+            else
+                result := decl.machine_name
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //    Try to translate X.Y expressions for enumeration
+    // ------------------------------------------------------------------------
+        when ('EnumName'.'Item') where (EN.IsEnumeration(EnumName) and
+                                        Item.kind = PT.xlNAME) then
+            ItemName : Item as PT.name_tree
+            return EN.Index(EnumName, ItemName)
+

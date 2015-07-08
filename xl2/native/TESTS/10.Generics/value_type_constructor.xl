@@ -1,0 +1,18 @@
+// When we create a generic type, we want to be able to call a construct
+// using the type name
+
+use XL.UI.CONSOLE
+
+generic [type item] type test is record with
+  a : item
+  b : item
+
+function test (n : test.item) return test is
+   result.a := n
+   result.b := test.item(31)
+
+K : test(3)
+L : test(3.5)
+
+WriteLn "K.a=", K.a, ", K.b=", K.b
+WriteLn "L.a=", L.a, ", L.b=", K.b

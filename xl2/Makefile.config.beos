@@ -1,0 +1,37 @@
+#******************************************************************************
+#  (C) 1999 Attila Lendvai (C) 2003 Christophe de Dinechin         XL PROJECT
+#  XL: Makefile.config.beos
+#******************************************************************************
+#
+#  File Description:
+#
+#    This is the shared makefile configuration and shared targets for all
+#    Mozart directories
+#
+#    This version is for GCC / BeOS
+#
+#
+#
+#
+#******************************************************************************
+# This program is released under the GNU General Public License.
+# See http://www.gnu.org/copyleft/gpl.html for details
+#******************************************************************************
+#* File       : $RCSFile$
+#* Revision   : $Revision$
+#* Date       : $Date$
+#******************************************************************************
+
+#------------------------------------------------------------------------------
+#  Tools
+#------------------------------------------------------------------------------
+
+ifndef BUILDENV
+BUILDENV=beos
+endif
+
+DEFINES_beos=-DCONFIG_BEOS
+
+include $(BROOT)Makefile.config.gnu
+include $(BROOT)Makefile.rules
+

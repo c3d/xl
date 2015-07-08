@@ -1,0 +1,16 @@
+To build the C++ version of the compiler, type "make" at the top level.
+
+If this is successful, it should build
+1/ A bootstrap compiler written in C++ in the top directory
+2/ A bootstrap compiler written in XL in the 'bootstrap' directory
+3/ A development compiler written in XL in the 'native' directory
+
+It should also run a fairly small series of tests found under native/TESTS.
+You can run these tests manually by going there and typing ./alltests
+
+The 'native' directory is where your own contributions should go.
+
+For documentation on the project, please refer to http://xlr.sf.net
+
+
+Thank you for helping.

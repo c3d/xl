@@ -1,0 +1,10 @@
+// EXIT=2
+generic [type anything_I_want]
+function TestInOut(in out Z : anything_I_want) return anything_I_want is
+    return Z + 1
+
+// We should not be able to deduce anything_I_want to be constant integer
+// because the parameter is 'out'
+if TestInOut(0) = 1 then
+    failed : integer := 1
+

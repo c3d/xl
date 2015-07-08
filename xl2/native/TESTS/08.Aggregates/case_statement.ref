@@ -1,0 +1,22 @@
+I<5: I=1
+I<5: I=2
+I=3: I=3
+I<5: I=4
+I>4: I=5
+I>4: I=6
+I>4: I=7
+I=8: I=8 (somewhat of a special case)
+I>4: I=9
+I>4: I=10
+This case is always taken
+I forgot...
+Two
+I forgot...
+Four
+ (of a kind)
+Five
+I forgot...
+I forgot...
+Eight
+Nine
+I forgot...

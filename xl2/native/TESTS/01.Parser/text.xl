@@ -1,0 +1,45 @@
+// ****************************************************************************
+//  text.xl                         (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check how we parse and render text
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// CMD=%x -parse %f -style debug -show
+
+"Hello World"
+"Hello ""World"""
+"Hello 'World'"
+
+'Hello World'
+'Hello ''World'''
+'Hello "World"'
+
+Write << Hello World >>
+
+<<Hello World>>
+<<Hello World,
+  This is a rather long piece
+  of text.>>
+<< -Il etait une fois
+   un morceau de texte
+   qui n'en finissait pas.
+>>

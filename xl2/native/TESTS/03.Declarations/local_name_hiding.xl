@@ -1,0 +1,8 @@
+// Checks that we can hide globals with parameters only
+// EXIT=2
+A : real := 3.5
+B : real := 0.4
+
+function Znort (A : integer) return integer is
+    B : integer := 0
+    return B + 1

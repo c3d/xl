@@ -1,0 +1,7 @@
+use XL.UI.CONSOLE
+
+procedure xl_assertion_failure(msg : text; file : text; line : integer) is
+    WriteLn file, ":", line, ": Assertion failed: ", msg
+
+X : integer
+assert X < 0

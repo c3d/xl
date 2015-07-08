@@ -1,0 +1,49 @@
+<!--Recruiting-->
+
+Just a little reminder: <B><FONT SIZE=+1>This project is
+recruiting</FONT></B>. No pay, hard work, very low probability of
+eternal glory, but 
+<A href="http://www.marssociety.org">
+very low probability of ever being strapped in a
+insanely high-velocity projectile either</A>.
+
+I found someone who might be interested a few days ago, and I
+hope he will contribute. But anybody with even a mild interest in
+meta-programming, or with a mild annoyance with C++, C# or Java, is
+very welcome to join.
+
+Historically, recruiting has been difficult, because the best
+engineers tend to have their hands full or conflicting commitments. I
+once had a contributor who happened to work for... Microsoft. When
+asked, Microsoft wouldn't let him work on any open-source
+project. What a surprise!
+
+To be fair, even companies 
+<A href="http://www.eweek.com/article2/0,1759,1189424,00.asp">
+professing an undying love of open-source or free software</A> seem to
+grok the benefits much faster than the ideology or the method
+(particularly true for Free Software). HP, for instance, requests that
+all engineers working on open-source or free software sign a release
+granting special rights to HP. This is fair when HP paid the engineers
+to do the job. But what if HP had nothing to do with the software in
+the first place? What if the software predates employment at HP? More
+generally, how do you balance open-source and protection of IP or
+shareholder value?
+
+<HR>
+
+I was away in Belgium for a few days, so no real work done on XL. I'm
+hesitating between a quick and dirty hack for imports or a fairly
+complete implementation that, obviously, is more tricky to get right.
+
+<HR>
+
+Regarding <A href="http://emacs-on-aqua.sf.net">another project</A>,
+Adrian Robert has just
+<A href="http://penguin.med.cornell.edu/stuff/emacs-gnustep.png">
+completed an adaptation</A> of my MacOSX port of
+Emacs to GNUStep. Congratulations! Folks, fire your browsers! I have
+zero time to dedicate to a port to Emacs 21 (all this is currently
+based on Emacs 20.7). And Adrian seems to be a bit burnt out to
+attack this rather large job right now himself. Another case of free
+software needing your help.

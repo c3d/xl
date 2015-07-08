@@ -1,0 +1,24 @@
+<!--Concept Programming Metrics-->
+
+Concept programming suggests a few metrics to identify if the
+{concept "process"} has been applied correctly and if the mapping
+from the {@pb} to the {@cs} is satisfactory:
+
+<OL>
+<LI>The {@synnoise} measures the quality of the visible {@representation} of
+  the {@code} (most often a sequence of characters known as the
+  "source code").
+<LI>The {@semnoise} measures the quality of the non-visible aspects
+  of the {@code}, notably how it relates to the underlying {@concepts} it
+  {@represents}.
+<LI>The {@bandwidth} measures how much of the {@pb} is covered by a
+  particular {@representation}.
+<LI>The {@signoise} measures how much of the {@code} is really useful
+  to solving an actual problem from the {@pb} (as opposed to some
+  form of {concept "complexity" "artificial complexity"}).
+</OL>
+
+The analogy to signal and music is deliberate. Much like in
+engineering, reducing noise is a worthy objective, but eliminating it
+entirely is in general impossible. Much like in music,
+{concept "diverge" "what is noise to one person can be music to another"}.

@@ -1,0 +1,55 @@
+use XL.ARRAY.BASIC
+use XL.UI.CONSOLE
+use XL.POINTER
+use XL.POINTER.ADDRESS
+
+use XL.SIZED_INTEGERS
+
+generic type numeric where
+    x, y : numeric
+    x := x + y
+    x := x - y
+    x := x * y
+    x := x / y
+
+function sum (A : array) return array.item is
+    for I in Range(A) loop
+        result += A[I]
+
+
+intArray : array[5] of integer
+
+for I in Range(intArray) loop
+    intArray[I] := I + 3
+    WriteLn "intArray[", I, "]=", intArray[I]
+
+totalOfInts : integer := sum(intArray)
+
+WriteLn "Sum is ", totalOfInts
+
+
+realArray : array[12] of real
+
+for I in Range(realArray) loop
+    realArray[I] := 3.2 / (real(I) - 2.7)
+    WriteLn "realArray[", I, "]=", realArray[I]
+
+totalOfReals : real := sum(realArray)
+
+WriteLn "Sum is ", totalOfReals
+
+type vec4 is record with
+    glop, glap, glip, flop : real
+
+function Add (in out X : vec4; Y : vec4) return vec4 written X += Y is
+    // Could be optimized to a bytecode add_vec4 if supported on target
+    X.glop += Y.glop
+    X.glap += Y.glap
+    X.glip += Y.glip
+    X.flop += Y.flop
+
+v4 : vec4
+v4a : array[32] of vec4
+
+v4 := sum(v4a)
+

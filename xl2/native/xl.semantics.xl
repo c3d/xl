@@ -1,0 +1,138 @@
+// ****************************************************************************
+//  xl.semantics.xl                 (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//      This is the semantics phase of the XL compiler
+//      It takes an XL tree as input, and returns an XL tree as output
+//      after checking that the semantics are correct.
+// 
+//      The phase also performs what other compilers might call "expansion",
+//      that is the generation of lower-level trees from high-level
+//      constructs. The low-level constructs are found in XL.BYTECODE
+//      and can be used to directly generate code.
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+import XLT = XL.TRANSLATOR
+import PPR = XL.SEMANTICS.MACROS
+
+
+module XL.SEMANTICS is
+// ----------------------------------------------------------------------------
+//    Implementation of XL semantics
+// ----------------------------------------------------------------------------
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //   Processing declarations (goes into XL.TRANSLATOR.Declarations )
+    // ------------------------------------------------------------------------
+
+        // Sequences
+        // Don't do them in place, generic instantiation depends on
+        // resulting declarations being "clones" of the original
+        when
+            'FirstDeclLine'
+            'SecondDeclLine'
+        then
+            FirstDeclLine := XLT.XLDeclarations FirstDeclLine
+            if PT.Attached(FirstDeclLine, "REPROCESSMACROS") <> nil then
+                SecondDeclLine := PPR.Preprocess(SecondDeclLine)
+            SecondDeclLine := XLT.XLDeclarations SecondDeclLine
+            return parse_tree
+                'FirstDeclLine'
+                'SecondDeclLine'
+        when
+            'FirstDecl' ; 'SecondDecl'
+        then
+            FirstDecl := XLT.XLDeclarations FirstDecl
+            if PT.Attached(FirstDecl, "REPROCESSMACROS") <> nil then
+                SecondDecl := PPR.Preprocess(SecondDecl)
+            SecondDecl := XLT.XLDeclarations SecondDecl
+            return parse_tree ('FirstDecl'; 'SecondDecl')
+
+        // When semantics have been done already, don't do it again
+        when
+            @ 'AsmStatement'
+        then
+            return input
+
+
+    semantics_error : boolean := false
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //   Some basic semantics (goes into XL.TRANSLATOR.Semantics )
+    // ------------------------------------------------------------------------
+
+        // Sequences
+        when
+            'FirstLine'
+            'SecondLine'
+        then
+            FirstLine := XLT.XLSemantics FirstLine
+            SecondLine := XLT.XLSemantics SecondLine
+            infix : input as PT.infix_tree
+            infix.left := FirstLine
+            infix.right := SecondLine
+            return infix
+        when
+            'FirstStatement' ; 'SecondStatement'
+        then
+            FirstStatement := XLT.XLSemantics FirstStatement
+            SecondStatement := XLT.XLSemantics SecondStatement
+            infix : input as PT.infix_tree
+            infix.left := FirstStatement
+            infix.right := SecondStatement
+            return infix
+
+        when
+            ( 'Expr' )
+        then
+            return XLT.XLSemantics(Expr)
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlBLOCK
+        then
+            block : Thing as PT.block_tree
+            block.child := XLT.ScopeSemantics (block.child, XLT.scopeLocal)
+            return block
+
+        // When semantics have been done already, don't do it again
+        when
+            @ 'AsmStatement'
+        then
+            return input
+
+
+    translation Tentative
+    // ------------------------------------------------------------------------
+    //   The 'tentative' pragma indicates that something may compile or not
+    // ------------------------------------------------------------------------
+    //   This is used for default constructors and destructors
+
+        when ('thing') then
+            tnt : XLT.attempt := XLT.BeginAttempt()
+            phase : text := SYM.GetText(XLT.context, "PHASE")
+            result := SYM.LookupRewrite(XLT.context, phase, thing)
+            if XLT.EndAttempt(tnt) then
+                result := parse_tree(@nop)
+            else if result = thing then
+                result := parse_tree({tentative} 'result')
+                PT.AttachTree result, "PRAGMA_RESULT", result

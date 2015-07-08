@@ -1,0 +1,1005 @@
+// ****************************************************************************
+//  xl.semantics.types.xl           (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of the basic type system
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 368 $
+// * Date       : $Date: 2008-03-28 22:46:28 +0100 (Fri, 28 Mar 2008) $
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import CST = XL.CONSTANTS
+import DCL = XL.SEMANTICS.DECLARATIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import REC = XL.SEMANTICS.TYPES.RECORDS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import EN = XL.SEMANTICS.TYPES.ENUMERATIONS
+import OVL = XL.SEMANTICS.OVERLOAD
+
+
+module XL.SEMANTICS.TYPES is
+// ----------------------------------------------------------------------------
+//   Implements data type parsing and representation
+// ----------------------------------------------------------------------------
+
+    type_table : map[text, any_type]
+    // ------------------------------------------------------------------------
+    //   A table holding all existing types
+    // ------------------------------------------------------------------------
+
+
+    types_with_rtti : PT.tree_list
+    // ------------------------------------------------------------------------
+    //   List of the types that need runtime type information
+    // ------------------------------------------------------------------------
+
+
+    procedure SetType(tree : PT.tree; type : any_type) is
+    // ------------------------------------------------------------------------
+    //   Record the type associated with a tree, if any
+    // ------------------------------------------------------------------------
+        PT.SetInfo tree, "TYPE", type
+
+
+    function GetType(tree : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated to a tree
+    // ------------------------------------------------------------------------
+        info : PT.info := PT.FindInfo(tree, "TYPE");
+        tp : info as any_type
+        return tp
+
+
+    procedure SetDefinedType(tree : PT.tree; type : any_type) is
+    // ------------------------------------------------------------------------
+    //   Record the type associated with a tree, if any
+    // ------------------------------------------------------------------------
+        PT.SetInfo tree, "TYPEDEF", type
+
+
+    function GetDefinedType(tree : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated to a tree
+    // ------------------------------------------------------------------------
+        info : PT.info := PT.FindInfo(tree, "TYPEDEF");
+        tp : info as any_type
+        return tp
+
+
+    function SourceTypeMatch(iface : any_type;
+                             body : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a source type and a body match
+    // ------------------------------------------------------------------------
+        stp : iface as source_type
+        if stp = nil then
+            ERR.Error "Internal: '$1' is not a source type", Source(iface)
+            return false
+        if stp.implementation <> nil then
+            result := SameType (stp.implementation, body)
+            if not result then
+                ERR.Error "Types '$1' and '$2' don't match",
+                          Source(stp.implementation), Source(body)
+                return false
+            if body.machine_name <> nil then
+                stp.machine_name := body.machine_name
+            return true
+
+        // Matches and remember what we matched.
+        stp.implementation := body
+        if stp.machine_name = nil or body.machine_name <> nil then
+            stp.machine_name := body.machine_name
+        return true
+
+
+    function NewType(Name : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //   Create a new type from source
+    // ------------------------------------------------------------------------
+        tp : source_type
+        tp.base := nil
+        tp.machine_name := nil
+        tp.interface_match := SourceTypeMatch
+        tp.name := Name
+        tp.interface := nil
+        tp.implementation := nil
+        return tp
+
+
+    function ChangeTypeConstness(base : any_type;
+                                 cst  : boolean) return any_type is
+    // ------------------------------------------------------------------------
+    //   Make the constant version of a type if needed
+    // ------------------------------------------------------------------------
+
+        // Check if already in type table by name
+        sigbase : text
+        if cst then
+            sigbase := "K"
+        else
+            sigbase := "V"
+
+        // Check if already in type table
+        mtype : PT.name_tree := base.machine_name
+        if mtype = nil then
+            ERR.Error "Internal: ConstVarType on unknown type", -1
+        ksig : text := sigbase + mtype.value
+        result := SignatureType(ksig)
+        if result <> nil then
+            return result
+
+        // Check if this already has a const-ness
+        tp : any_type := base
+        while tp <> nil loop
+            ktp : tp as constvar_type
+            if ktp <> nil then
+                if ktp.is_constant = cst then
+                    // Same constness: just return original type
+                    return base
+                if ktp.is_constant then
+                    ERR.Error "Constant type cannot be made variable",
+                              mtype.position
+                else
+                    ERR.Error "Variable type cannot be made constant",
+                              mtype.position
+            tp := tp.base
+
+        // Generate new type, and enter it in table
+        ktype : constvar_type
+        bname : PT.tree := base.name
+        ktype.base := base
+        ktype.machine_name := mtype
+        ktype.interface_match := SourceTypeMatch
+        if cst then
+            ktype.name := parse_tree(constant 'bname')
+        else
+            ktype.name := parse_tree(variable 'bname')
+        ktype.is_constant := cst
+        EnterSignature ksig, ktype
+        return ktype
+
+
+    function ConstantType(base : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create a 'constant' version of a type
+    // ------------------------------------------------------------------------
+        return ChangeTypeConstness (base, true)
+
+
+    function VariableType(base : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create a 'variable' version of a type
+    // ------------------------------------------------------------------------
+        return ChangeTypeConstness (base, false)
+
+
+    procedure EnterSignature(sig : text; tp : any_type) is
+    // ------------------------------------------------------------------------
+    //   Enter a new type signature in the type table
+    // ------------------------------------------------------------------------
+        type_table[sig] := tp
+
+
+    function SignatureType(sig : text) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type associated with a type signature
+    // ------------------------------------------------------------------------
+        return type_table[sig]
+
+
+    function IsConstVar (tp: any_type; cst : boolean) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if a type is explicitly constant or variable
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            tpk : tp as constvar_type
+            if tpk then
+                return tpk.is_constant = cst
+            tp := tp.base
+        return false
+
+
+    function IsConstant(tp: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a type is explicitly constant
+    // ------------------------------------------------------------------------
+        return IsConstVar(tp, true)
+
+
+    function IsVariable(tp: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a type is explicitly variable
+    // ------------------------------------------------------------------------
+        return IsConstVar(tp, false)
+
+
+    function BaseType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the base type
+    // ------------------------------------------------------------------------
+        if tp = nil then
+            return nil
+        return tp.base
+
+
+    function NonSourceType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type after stripping names declared with 'type X is Y'
+    // ------------------------------------------------------------------------
+        result := tp
+        loop
+            stp : result as source_type
+            exit if stp = nil 
+            result := stp.base
+
+
+    function NonConstSourceType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type after stripping generics, constness and alias names
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            result := tp
+            stp : result as source_type
+            if stp <> nil and stp.base <> nil then
+                result := stp.base
+            ctp : result as const_var_type
+            if ctp <> nil then
+                result := ctp.base
+            exit if result = tp
+            tp := result
+
+
+    function NonConstGenSourceType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return the type after stripping generics, constness and alias names
+    // ------------------------------------------------------------------------
+        while tp <> nil loop
+            result := tp
+            stp : result as source_type
+            if stp <> nil and stp.base <> nil then
+                result := stp.base
+            gtp : result as GEN.generic_type
+            if gtp <> nil then
+                result := gtp.base
+            ctp : result as const_var_type
+            if ctp <> nil then
+                result := ctp.base
+            exit if result = tp
+            tp := result
+
+
+    function IsConstedType(tp : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the type is constant X or variable X
+    // ------------------------------------------------------------------------
+        ktp : NonSourceType(tp) as const_var_type
+        return ktp <> nil
+
+
+    function NonConstedType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the non-consted version of the type
+    // ------------------------------------------------------------------------
+        ktp : NonSourceType(tp) as const_var_type
+        if ktp <> nil then
+            return ktp.base
+        return tp
+
+
+    function NonVariableType(tp : any_type) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the non-variable version of the type
+    // ------------------------------------------------------------------------
+        ktp : NonSourceType(tp) as const_var_type
+        if ktp <> nil then
+            if not ktp.is_constant then
+                return ktp.base
+        return tp
+
+
+    function MachineName (tp: any_type ) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Return the machine name, create one if necessary
+    // ------------------------------------------------------------------------
+
+        // Check if we need to create a machine name
+        if tp.machine_name = nil then
+            ERR.Error "Trying to get machine name for unknown type", -1
+
+        return tp.machine_name
+
+
+    function Source(tp : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Return some source representation of the type
+    // ------------------------------------------------------------------------
+        if tp <> nil then
+            return tp.name
+        return nil
+
+
+    procedure MarkForRuntimeReference(tp : any_type) is
+    // ------------------------------------------------------------------------
+    //   Mark a given type to indicate we need the runtime type information
+    // ------------------------------------------------------------------------
+        mname : PT.tree := tp.machine_name
+        if tp = nil then
+            ERR.Error "Internal: '$1' has no type yet", TY.Source(tp)
+            return
+        rtti : PT.tree := PT.Attached(mname, "RTTI")
+        if rtti = nil then
+            rtti := PT.NewInteger(size(types_with_rtti) + 1, mname.position)
+            PT.AttachTree mname, "RTTI", rtti
+            types_with_rtti += mname
+            XLT.AddGlobalDecl parse_tree
+                @type_info 'mname' 'rtti'
+
+
+    function EnterTypeSym (Name : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a named type in the symbol table
+    // ------------------------------------------------------------------------
+    //   A type is entered in the symbol table as a simple replacement
+    //   with the name, and the type info is attached to the name
+
+        // When we enter a type, we expect a valid type name
+        if Name.kind <> PT.xlNAME then
+            ERR.Error "A type name was expected, got '$1'", Name
+            Name := SYM.Temporary ("invalid_type", Name.position)
+
+        // Check if there is already a type by that name
+        N : Name as PT.name_tree
+        if Value <> nil then
+            // Check if there was a prototype with the same name
+            types : SYM.tree_list
+            SYM.Lookup XLT.context, "TYPE", N.value, types, SYM.lookupLocalOnly
+            if size(types) = 1 then
+                proto : PT.tree := types[0]
+                decl : DCL.declaration := DCL.GetDeclaration(proto)
+                if decl <> nil and decl.initializer = nil then
+                    tp : any_type := GetDefinedType(proto)
+                    assert tp.base = nil
+                    base : any_type := EvaluateType(Value)
+                    tp.base := base
+                    if base = nil then
+                        ERR.Error "Expression '$1' is not a type", Value
+                    else
+                        exist : PT.name_tree := tp.machine_name
+                        impl  : PT.name_tree := base.machine_name
+                        assert exist <> nil
+                        assert impl <> nil
+                        ren : PT.tree :=  parse_tree(@type_impl 'exist' 'impl')
+                        SYM.PushScopeItem XLT.global_context, "DECL", ren
+                    result := parse_tree(@type)
+                    DCL.SetDeclaration result, decl
+                    SetDefinedType result, tp
+                    return result                    
+
+        original : PT.tree := SYM.LookupOne(XLT.context, "TYPE",
+                                            N.value, SYM.lookupDirect)
+        if original <> nil then
+            otype : any_type := GetDefinedType (original)
+            // Accept redefinition if instantiating a type,
+            // or if overloading a generic type
+            if (not GEN.IsGenericType(otype) and
+                original <> PT.Attached(Name, "INSTANCEOF")) then
+                ERR.Error "The type '$1' can't be defined here", Name
+                ERR.Error "because a type named '$1' already exists", original
+                result := ERR.ErrorTree()
+                SetDefinedType result, otype
+                return result
+
+
+        // Check if we have a type value associated with the type
+        tp : any_type := NewType(Name)
+        if Value <> nil then
+            base : any_type := EvaluateType(Value)
+            tp.base := base
+            if base = nil then
+                ERR.Error "Expression '$1' is not a type", Value
+            else
+                tp.machine_name := base.machine_name
+
+        if GEN.IsGenericContext() then
+            tp := GEN.MakeGeneric(tp)
+            tp.name := Name
+
+        GenSource : PT.tree := PT.Attached(Value, "INSTSRC")
+        if GenSource <> nil then
+            tp.name := GenSource
+            TY.SetDefinedType GenSource, tp
+
+        return EnterTypeDecl(N, Value, tp)
+ 
+
+    function EnterTypeDecl(Name : PT.name_tree;
+                           Value : PT.tree;
+                           tp : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter a type in the symbol table and associate declaration
+    // ------------------------------------------------------------------------
+
+        // Attach the type just defined to the name
+        SetDefinedType Name, tp
+
+        // Store the original name (with its type info) in symbol table
+        SYM.Enter XLT.context, "TYPE", Name.value, Name
+
+        // Create the result node and attach type to it
+        result := parse_tree(@type)
+        SetDefinedType result, tp
+
+        // Also make the type declaration a declaration
+        decl : DCL.declaration
+        decl.name               := Name
+        decl.type               := type_of_types
+        decl.initializer        := Value
+        decl.machine_name       := nil
+        decl.frame_depth        := 0
+        decl.is_input           := false
+        decl.is_output          := false
+        decl.is_variable        := false
+        decl.is_parameter       := false
+        decl.is_local           := false
+        decl.is_global          := false
+        decl.is_field           := false
+        decl.is_generic_parm    := false
+        decl.is_builtin         := false
+        decl.implementation     := nil
+
+        DCL.SetDeclaration result, decl
+        DCL.SetDeclaration Name, decl
+
+
+    function EnterBytecodeType (Name        : PT.name_tree;
+                                MachineName : PT.name_tree;
+                                tp          : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a bytecode type in the symbol table
+    // ------------------------------------------------------------------------
+        if tp = nil then
+            result := EnterTypeSym(Name, nil)
+            tp  := GetDefinedType (result)
+            stp : tp as source_type
+            if tp <> stp then
+                gtp : tp as GEN.generic_type
+                if tp <> gtp then
+                    ERR.Error "Internal: Error creating builtin type", -1
+        else
+            result := Name
+
+        tp.machine_name := MachineName
+        EnterSignature MachineName.Value, tp
+        SetDefinedType MachineName, tp
+
+        // Record builtin type as necessary
+        mname : text := MachineName.value
+        if mname = "xlint" then
+            integer_type                := result
+            integer_literal_type        := ConstantType(tp)
+        else if mname = "xlreal" then
+            real_type                   := result
+            real_literal_type           := ConstantType(tp)
+        else if mname = "xlbool" then
+            boolean_type                := result
+            const_boolean_type          := ConstantType(tp)
+            true_tree : PT.name_tree := PT.NewName("true")
+            false_tree : PT.name_tree := PT.NewName("false")
+            TY.SetType true_tree, const_boolean_type
+            TY.SetType false_tree, const_boolean_type
+            CST.EnterNamedConstant true_tree, true_tree
+            CST.EnterNamedConstant false_tree, false_tree
+
+        else if mname = "xlchar" then
+            character_type              := result
+            character_literal_type      := ConstantType(tp)
+        else if mname = "xltext" then
+            text_type                   := result
+            text_literal_type           := ConstantType(tp)
+        else if mname = "xlrecord" then
+            record_type                 := result
+            type_of_records             := tp
+        else if mname = "xlmodule" then
+            module_type                 := result
+            type_of_modules             := tp
+
+        decl : DCL.Declaration := DCL.GetDeclaration(result)
+        decl.is_builtin := true
+        decl.machine_name := MachineName
+        if result <> Name then
+            DCL.SetDeclaration Name, decl
+
+        return result
+
+
+    function EnterBuiltinType (Name  : text; MType : text) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a built-in type in the symbol table
+    // ------------------------------------------------------------------------
+        return EnterBytecodeType(PT.NewName(Name), PT.NewName(MType), nil)
+
+
+    function EnterType(Name : PT.tree; Value : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a type definition from the source
+    // ------------------------------------------------------------------------
+        result := EnterTypeSym (Name, Value)
+
+        // The type may already have a machine name from EvaluateType(Value)
+        tp  : any_type := GetDefinedType(result)
+        if tp.machine_name = nil then
+
+            // No associated machine type: need to enter type
+            NameTree : Name as PT.name_tree
+            tp.machine_name := CGM.DeclareType(tp, NameTree)
+
+            MName : PT.name_tree := tp.machine_name
+            sig : text := MName.Value
+            EnterSignature sig, tp
+            SetDefinedType MName, tp
+
+        // Check if we need to enter default ctors, dtors and copy functions
+        N : Name as PT.name_tree
+
+        if N <> nil then
+            if (PT.Attached(N, "INSTANCEOF") = nil and
+                PT.Attached(N, "INSTARG") = nil) then
+
+                // Eliminate constness, generics and source names
+                baseType : any_type := NonConstGenSourceType(tp)
+
+                // Original tree before we append ctors, dtors, etc.
+                previous : PT.tree := result
+
+                // Check if this is record type
+                rtp : baseType as REC.record_type
+                if rtp <> nil then
+                     result := XLT.Append(result, REC.EnterDefaults(N, rtp))
+
+                // Same for enumeration types
+                etp : baseType as EN.enumeration_type
+                if etp <> nil then
+                     result := XLT.Append(result,EN.EnterDefaults (N, etp))
+
+                // Same for function types
+                ftp : baseType as FT.function_type
+                if ftp <> nil then
+                     result := XLT.Append(result,FT.EnterDefaults (N, ftp))
+
+                if previous <> result then
+                    result := XLT.Append(result, parse_tree(@nop))
+                    result.info := previous.info
+
+
+    function TypeTypeMatch (iface : any_type;
+                            body  : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if the type type matches
+    // ------------------------------------------------------------------------
+        return iface = body
+
+
+    procedure InitializeTypes is
+    // ------------------------------------------------------------------------
+    //    Initialize the type table
+    // ------------------------------------------------------------------------
+    //    This depends on context initialization, which is done earlier
+    //    since it is in imported module XL.SYMBOLS
+    //    TODO: Do this by importing XL.BUILTINS and getting special names
+    //    It's obvious that "text" cannot be entered that way,
+    //    since its definition is complex (string of character)
+    //    TODO: The fact that we go through a separate procedure
+    //    for initialization is a workaround until ordering of inits
+    //    based on module dependencies works correctly
+    //    This code rightfully belongs to initialization
+
+        if module_type = nil then
+            XLT.InitializeTranslator()
+
+            // Enter the type for types
+            tot : type_type
+            tot.base := nil
+            tot.machine_name := parse_tree(xltype)
+            tot.interface_match := TypeTypeMatch
+            tot.name := parse_tree(type)
+            tot.symbols := nil
+            type_of_types := tot
+            SetDefinedType tot.name, tot
+
+            // Enter the module type so that we can deal with XL_BUILTINS
+            module_type    := EnterBuiltinType ("module", "xlmodule")
+
+
+    initially
+    // ------------------------------------------------------------------------
+    //    Initialize the various built-in types
+    // ------------------------------------------------------------------------
+        InitializeTypes
+
+
+    function EvaluateType (type_expr : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //   Evaluate a type expression
+    // ------------------------------------------------------------------------
+    //   When a type expression is first evaluated, the type result is cached
+    //   For type names such as "integer", the original type name is looked up
+    //   which will contain the type info that was entered.
+
+        // Check if the node itself had a type computed for it
+        original : PT.tree := type_expr
+        result := GetDefinedType(original)
+        if result <> nil then
+            return result
+
+        // If non-name, try to find if there is an expression that matches
+        if type_expr.kind <> PT.xlNAME then
+            type_expr := XLT.XLEvaluateType(type_expr)
+            result := GetDefinedType(type_expr)
+            if type_expr <> original then
+                SetDefinedType original, result
+            if result = nil then
+                ERR.Error "Expression '$1' has no type", original
+            return result
+
+        // For names, lookup in the type table.
+        tname : type_expr as PT.name_tree
+        result := NamedType(tname)
+        SetDefinedType original, result
+        return result
+
+
+    function EvaluateTypeAsTree (type_expr : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Evaluate a type, return a tree
+    // ------------------------------------------------------------------------
+        tp : any_type := EvaluateType(type_expr)
+        assert GetDefinedType(type_expr) = tp
+        return type_expr
+
+
+    function NamedType (tname : PT.name_tree) return any_type is
+    // ------------------------------------------------------------------------
+    //   Return the type for a name
+    // ------------------------------------------------------------------------
+        types : SYM.tree_list
+        SYM.Lookup XLT.context, "TYPE", tname.value, types, SYM.lookupInnermost
+        if size(types) > 0 then
+            original : PT.tree := types[0]
+            if size(types) > 1 then
+                ERR.Error "Internal: Multiple types for '$1'", tname
+                ERR.Error "One candidate is '$1'", types[0]
+                ERR.Error "Another candidate is '$1'", types[1]
+            result := GetDefinedType(original)
+            if result = nil then
+                ERR.Error "The type '$1' is undefined", tname
+        else
+            ERR.Error "The type '$1' is unknown", tname
+
+
+    function IsTypeName(type_expr : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the expression is the name of a type
+    // ------------------------------------------------------------------------
+        if type_expr.kind <> PT.xlNAME then
+            return false
+        types : SYM.tree_list
+        tname : type_expr as PT.name_tree
+        SYM.Lookup XLT.context, "TYPE", tname.value, types, SYM.lookupInnermost
+        if size(types) < 1 then
+            return false
+        original : PT.tree := types[0]
+        return GetDefinedType(original) <> nil
+
+
+    function SameType (t1 : any_type; t2: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if two types are identical
+    // ------------------------------------------------------------------------
+        return SameTypeRenames(t1, t2) > 0
+
+
+    function SameTypeRenames (t1 : any_type; t2: any_type) return integer is
+    // ------------------------------------------------------------------------
+    //   Check if two types are identical, count number of renames
+    // ------------------------------------------------------------------------
+        trace[+sametype] "SameType t1=", t1, " t2=", t2
+        if t1 = nil or t2 = nil then
+            trace[-sametype] "FAIL: Null type"
+            return 0
+        trace[sametype] "Names t1=", PT.tree(t1.name),
+                         " ", PT.tree(t1.machine_name),
+                         " t2=", PT.tree(t2.name),
+                         " ", PT.tree(t2.machine_name)
+        if t1 = t2 then
+            trace[-sametype] "PASS: Equal"
+            return 1
+        t1s : t1 as source_type
+        t2s : t2 as source_type
+        if t1s <> nil then
+            trace[sametype] "Testing t1's base"
+            result := SameTypeRenames(t1s.base, t2)
+            if result > 0 then
+                trace[-sametype] "PASS: matched t1's base, score "
+                return result + 1
+            if t1s.implementation <> t1s then
+                trace[sametype] "Testing t1's implementation"
+                result := SameTypeRenames(t1s.implementation, t2)
+                if result > 0 then
+                    trace[-sametype] "PASS: matched t1's implementation "
+                    return result + 1
+        if t2s <> nil then
+            trace[sametype] "Testing t2's base"
+            result := SameTypeRenames(t1, t2s.base)
+            if result > 0 then
+                trace[-sametype] "PASS: matched t2's base"
+                return result + 1
+            if t2s.implementation <> t2s then
+                trace[sametype] "Testing t2's implementation"
+                result := SameTypeRenames(t1, t2s.implementation)
+                if result > 0 then
+                    trace[-sametype] "PASS: matched t2's implementation"
+                    return result + 1
+
+        trace[-sametype] "FAIL: distinct types"
+        return 0
+
+
+    function IsTypeType (t : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if this is the type type
+    // ------------------------------------------------------------------------
+        result := t = type_of_types
+
+
+    function IsModuleType (t : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if this is the type for modules
+    // ------------------------------------------------------------------------
+        result := t = type_of_modules
+
+
+    invalid_type_counter : integer := 0
+    function InvalidType (reason : text) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return an invalid type for error reporting reasons
+    // ------------------------------------------------------------------------
+        invalid_type_counter += 1
+        reason := "<" + reason + " " + text(invalid_type_counter) + ">"
+        I : PT.tree := EnterBuiltinType (reason, reason)
+        return GetDefinedType(I)
+
+
+    function InterfaceMatch (iface: any_type; body: any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Return true if the interface and body of types match
+    // ------------------------------------------------------------------------
+        ERR.PushErrorContext()
+        result := iface.interface_match(iface, body)
+        messages : boolean := ERR.PopErrorContext()
+        if messages then
+            ERR.DisplayLastErrors()
+
+
+    function Convert(expr : PT.tree; toType : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Convert the expression to given type
+    // ------------------------------------------------------------------------
+
+        // Check that we have types
+        exprType : any_type := GetType(expr)
+        if exprType = nil then
+            ERR.Error "Expression '$1' has no type", expr
+            return expr
+        translate expr
+            when (@@overload 'FunName' 'overloadSet') then
+                toSource : PT.tree := TY.Source(toType)
+                trace[overload] "Convert ", expr, " to ", TY.Source(toType)
+                return OVL.ResolveOverload(FunName, overloadSet, toSource)
+
+        if toType = nil then
+            ERR.Error "Cannot convert '$1' to null type", expr
+            return expr
+
+        // If we already have the right type, return expression
+        if SameType(exprType, toType) then
+            return expr
+
+        // We can convert to constant
+        if IsConstant(toType) and not IsVariable(exprType) then
+            nonConsted : any_type := NonConstedType(toType)
+            if SameType(exprType, nonConsted) then
+                return expr
+
+        // Find if there is an implicit conversion
+        tgtName : PT.tree := toType.machine_name
+        implConv : PT.tree := parse_tree(@@convert 'tgtName' 'expr')
+        ERR.PushErrorContext()
+        result := XLT.XLSemantics(implConv)
+        if not ERR.PopErrorContext() then
+            if result <> implConv then
+                trace[implconv] "Convert ", expr, " to ", TY.Source(toType),
+                                " is", result
+                return result
+
+        // Otherwise, barf
+        ERR.Error "Cannot convert '$1' from '$2' to '$3'",
+                  expr, TY.Source(exprType), TY.Source(toType)
+        return expr
+
+
+    function Convert(expr : PT.tree; toType : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Convertion given a type expression
+    // ------------------------------------------------------------------------
+        return Convert(expr, EvaluateType(toType))
+
+
+    function TryConvert(expr : PT.tree; toType : any_type) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Try to convert to target type, return nil on errors
+    // ------------------------------------------------------------------------
+        tnt : XLT.attempt := XLT.BeginAttempt()
+        result := Convert(expr, toType)
+        if XLT.EndAttempt(tnt) then
+            return nil
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //   Translation of type statements
+    // ------------------------------------------------------------------------
+        // Type declaration (the implementation is unknown yet)
+        when
+            type 'Name'
+        then
+            return EnterType (Name, nil)
+
+        // Type definition
+        when
+            type 'Name' is 'Value'
+        then
+            return EnterType (Name, Value)
+
+        // The following two are for generic parameters
+        when (type 'Name' is 'Value') then
+            return EnterType (Name, Value)
+        when (type 'Name' := 'Value') then
+            return EnterType (Name, Value)
+
+        // Bytecode type definition
+        when
+            type 'Name' is XL.BYTECODE.'MachineName'
+        where
+            Name.kind = PT.xlNAME and MachineName.kind = PT.xlNAME
+        then
+            TName : Name as PT.name_tree
+            MName : MachineName as PT.name_tree
+            return EnterBytecodeType (TName, MName, nil)
+
+        when
+            type 'Name' is 'Value' as XL.BYTECODE.'MachineName'
+        where
+            Name.kind = PT.xlNAME and MachineName.kind = PT.xlNAME
+        then
+            TName : Name as PT.name_tree
+            MName : MachineName as PT.name_tree
+            PT.AttachTree Value, "BYTECODE", MachineName
+            result := EnterType (Name, Value)
+            tp : any_type := GetDefinedType(TName)
+            Name := EnterBytecodeType (TName, MName, tp)
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //   Associating built-in types to basic terminals
+    // ------------------------------------------------------------------------
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlINTEGER
+        then
+            SetType Thing, integer_literal_type
+            return Thing
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlREAL
+        then
+            SetType Thing, real_literal_type
+            return Thing
+
+        when
+            'Thing'
+        where
+            Thing.kind = PT.xlTEXT
+        then
+            TextTerminal : Thing as PT.text_tree
+            if TextTerminal.quote = '"' then
+                SetType Thing, text_literal_type
+            else
+                SetType Thing, character_literal_type
+            return Thing
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //   Evaluate common type expressions
+    // ------------------------------------------------------------------------
+        when
+            constant 'T'
+        then
+            tp: any_type := EvaluateType(T)
+            tp := ConstantType(tp)
+            // tp.name := input
+            SetDefinedType input, tp
+            return input
+
+        when
+            variable 'T'
+        then
+            tp: any_type := EvaluateType(T)
+            tp := VariableType(tp)
+            // tp.name := input
+            SetDefinedType input, tp
+            return input
+
+        when
+            ('T')
+        then
+            return EvaluateTypeAsTree(T)
+
+        when
+            'T'
+        where
+            T.kind = PT.xlNAME
+        then
+            return EvaluateTypeAsTree(T)
+
+
+
+    target_types : string of PT.tree
+
+    procedure PushTargetType(type : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Add a target type
+    // ------------------------------------------------------------------------
+        trace[deduce] "Push target type ", type
+        target_types += type
+
+
+    function TargetType() return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Return current target type if any
+    // ------------------------------------------------------------------------
+        if size(target_types) > 0 then
+            return back(target_types)
+        return nil
+
+
+    procedure PopTargetType() is
+    // ------------------------------------------------------------------------
+    //   Remove the last target type
+    // ------------------------------------------------------------------------
+        trace[deduce] "Pop target type ", back(target_types)
+        pop_back target_types

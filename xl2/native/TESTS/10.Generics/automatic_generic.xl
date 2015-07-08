@@ -1,0 +1,11 @@
+// Test that a type declared as generic makes types that use it generic
+use XL.UI.CONSOLE
+
+generic type Zabata
+
+function H1(X : Zabata) return integer is
+    WriteLn "H1 called with ", X
+    return 0
+
+Alpha : integer := H1(0)
+Beta  : integer := H1(0.5)

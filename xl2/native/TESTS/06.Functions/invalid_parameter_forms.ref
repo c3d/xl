@@ -1,0 +1,51 @@
+06.Functions/invalid_parameter_forms.xl:28: The type 'kano' is unknown
+| function Zaboo() return kano is Y
+|____________________________^
+06.Functions/invalid_parameter_forms.xl:28: Return type 'kano' is not a valid type
+| function Zaboo() return kano is Y
+|____________________________^
+06.Functions/invalid_parameter_forms.xl:29: The type 'kona' is unknown
+| function Zoba return kona is Y
+|_________________________^
+06.Functions/invalid_parameter_forms.xl:29: Return type 'kona' is not a valid type
+| function Zoba return kona is Y
+|_________________________^
+06.Functions/invalid_parameter_forms.xl:30: The type 'kano' is unknown
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|______________________________________________^
+06.Functions/invalid_parameter_forms.xl:30: Return type 'kano' is not a valid type
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|______________________________________________^
+06.Functions/invalid_parameter_forms.xl:30: The type 'zabo' is unknown
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|_______________________^
+06.Functions/invalid_parameter_forms.xl:30: The type 'zabo' is unknown
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|_______________________^
+06.Functions/invalid_parameter_forms.xl:30: 'X' has no type
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|________________^
+06.Functions/invalid_parameter_forms.xl:30: The type 'zoba' is unknown
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|_________________________________^
+06.Functions/invalid_parameter_forms.xl:30: The type 'zoba' is unknown
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|_________________________________^
+06.Functions/invalid_parameter_forms.xl:30: 'Y' has no type
+| function Bazoo(X : zabo; Y : zoba) return kano is Y
+|__________________________^
+06.Functions/invalid_parameter_forms.xl:31: 'Bozaa [3]' is not a valid function name
+| function Bozaa[3] return vibes
+|_______________^
+06.Functions/invalid_parameter_forms.xl:31: The type 'vibes' is unknown
+| function Bozaa[3] return vibes
+|______________________________^
+06.Functions/invalid_parameter_forms.xl:31: Return type 'vibes' is not a valid type
+| function Bozaa[3] return vibes
+|______________________________^
+06.Functions/invalid_parameter_forms.xl:28: Name 'Y' was not declared here
+| function Zaboo() return kano is Y
+|_________________________________^
+06.Functions/invalid_parameter_forms.xl:29: Name 'Y' was not declared here
+| function Zoba return kona is Y
+|______________________________^

@@ -1,0 +1,33 @@
+// Test the basic loop exit functionality
+use XL.UI.CONSOLE
+
+I : integer := 1
+
+loop
+    WriteLn "Infinite I=", I
+    I := I + 1
+    exit if I > 100
+
+while I < 200 loop
+    WriteLn "Pre-while I=", I
+    I := I + 2
+    exit if I > 150
+
+until I > 300 loop
+    WriteLn "Pre-until I=", I
+    I := I + 3
+    exit if I > 200
+
+loop
+    WriteLn "Post-while I=", I
+    I := I + 6
+    exit if I > 300
+while I < 600
+
+loop
+    WriteLn "Post-until I=", I
+    I := I + 7
+    exit if I > 400
+until I > 700
+
+WriteLn "Final I=", I

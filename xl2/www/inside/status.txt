@@ -1,0 +1,281 @@
+<!--XL Status-->
+
+There are currently two versions of the {@xl} compiler, one written in
+XL and one written in {@C++}.
+
+The version written in XL has been bootstrapped around November 2003, and
+new development is now being made {cvs "compiler.xl" "in XL"}. This
+is a {inside "bootstrap" "dirty bootstrap"}, but it is
+a practical solution to the severe resource constraints this project
+has to live with. The status of this compiler is shown below:
+
+<TABLE width="100%" border="0" cellpadding="3">
+
+<TR>
+<TD>{cvs "../xl_lib.h" "Bootstrap library"}</TD>
+<TD>Basic runtime functions needed by bootstrap compilers (very crude)</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "scanner" "Scanner"}</TD>
+<TD>Scan input text and generate XL tokens</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "scanner" "Scanner"}</TD>
+<TD>Scannner configuration file ({cvs "xl.syntax" "xl.syntax" "."})</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "parser" "Parser"}</TD>
+<TD>Generate a {inside "tree" "parse tree"} from a stream of tokens</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "bootstrap" "Dirty Bootstrap"}</TD>
+<TD>Transform the {inside "tree" "parse tree"} into C++ for
+  bootstrap purpose.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "translation" "Translation"}</TD>
+<TD>General mechanisms for translating XL trees.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "symbols" "Named symbols"}</TD>
+<TD>Storing and retrieving XL declarations by name.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "symbols" "Tree symbols"}</TD>
+<TD>Storing and retrieving XL trees by shape.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "scope_data" "Compiler symbols"}</TD>
+<TD>Storing and retrieving compiler-private information in symbol tables</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "types" "Type system"}</TD>
+<TD>Type system, comparing types, entering types in the symbol table.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "bytecode" "Bytecode interface"}</TD>
+<TD>Interface used to generate "low-level" code ({concept "bytecode"}).</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "declarations" "Declarations"}</TD>
+<TD>Entering declarations in the symbol table.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "functions" "Functions semantics"}</TD>
+<TD>Performing basic semantics on functions.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "default" "Default arguments"}</TD>
+<TD>Default arguments for functions.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "overload" "Overloading"}</TD>
+<TD>Overload resolution for function calls.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "expred" "Expression reduction"}</TD>
+<TD>{concept "expred" "Rewriting"} expression trees to function calls</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "statements" "Basic statements"}</TD>
+<TD>Core XL {concept "statements" "statements"} (if, while, loop, etc)</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>Automatic type deduction</TD>
+<TD>Deducing the type of a variable from the initialization in code
+  like {tt "K : variable := 0"}
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "statements" "For loops"}</TD>
+<TD>Extensible for loops, where {tt "for Iterator loop Body"} expands
+  the {tt "Iterator"} expression according to written form rules</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "statements" "Enumerations and sets"}</TD>
+<TD>Enumerations and sets ("flags")</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "generics" "Generic declarations"}</TD>
+<TD>{concept "generics" "Parameterized types and functions"}</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "generics" "Implicit generics"}</TD>
+<TD>Functions using generic types in arguments become themselves generic.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "generics" "Generic specialization"}</TD>
+<TD>Specialization of generics for specific instances of the generic</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "generics" "Generic written forms"}</TD>
+<TD>Written forms to denote generic types</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "variadics" "Compile-time variadics"}</TD>
+<TD>Compile-time, type-safe {concept "variadics" "variable argument lists"}.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "case" "Case statements"}</TD>
+<TD>Extensible case statement.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "pragma" "Pragmas"}</TD>
+<TD>Compile-time {concept "pragma" "instructions"} for the compiler.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "plugins" "Plug-in architecture"}</TD>
+<TD>{inside "plugins" "Compiler plug-ins"} to deal with
+{concept "extension" "language extensions"}.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "preprocessor" "Preprocessor"}</TD>
+<TD>Preprocessor based on tree rewrite rules.</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "library" "Library"}</TD>
+<TD>XL runtime {inside "library"}.</TD>
+<TD align="center" bgcolor="#F0B000">In progress</TD>
+</TR>
+
+<TR>
+<TD>{inside "operators" "Basic operators"}</TD>
+<TD>XL basic {concept "operators"} (arithmetic, bitwise, bitshifts, etc).</TD>
+<TD align="center" bgcolor="#00FF00">Done</TD>
+</TR>
+
+<TR>
+<TD>{inside "objects" "Object model"}</TD>
+<TD>XL default {inside "object_model" "object models"} (classes,
+dynamic dispatch, memory management)</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "exceptions" "Error handling"}</TD>
+<TD>XL default {inside "exceptions" "error handling"} mechanisms.</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "algorithms" "Generic algorithms"}</TD>
+<TD>XL basic STL-style {inside "algorithms"} (sorting, finding, iterating).</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "containers" "Generic containers"}</TD>
+<TD>XL basic STL-style {inside "containers"} (arrays, strings, maps, sets).</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "math" "Math libraries"}</TD>
+<TD>XL basic  {inside "math" "numeric algorithms"} (matrix and
+  complex arithmetic, transcendental).</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "text" "Text libraries"}</TD>
+<TD>XL basic  {inside "text" "text manipulation"} library.</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "binaryio" "Binary I/O"}</TD>
+<TD>XL basic  {inside "binaryio" "binary I/O"} library.</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+<TR>
+<TD>{inside "textio" "Text I/O"}</TD>
+<TD>XL basic  {inside "textio" "text I/O"} library.</TD>
+<TD align="center" bgcolor="#F0B000">In progress</TD>
+</TR>
+
+<TR>
+<TD>{inside "boostrap" "Final Bootstrap"}</TD>
+<TD>Final bootstrap of the compiler, where the compiler generates
+  low-level code that does not rely on C++ semantics ("not dirty" bootstrap).</TD>
+<TD align="center" bgcolor="#FF0000">To-Do</TD>
+</TR>
+
+</TABLE>
+
+
+<HR>
+
+An earlier version of the XL compiler, written in C++, can be found on
+the {@mozart} web site. Its implementation is much more advanced, but
+the basic
+{inside "tree" "syntax tree"} model made the development of
+{concept "extension" "language extensions"} more difficult than
+necessary.  Moreover, the compiler had grown large enough to make
+bootstrapping (rewriting it in XL) difficult. This old version is now
+on hold, though it demonstrates how one can implement some of the
+advanced capabilities described on this web site. A few examples given
+on this web site will not compile with the current compiler, but will
+compile with the old one (sometimes, with syntax
+adjustments). However, the number of such tests is getting small,
+since the new compiler is now almost at parity with the old one (and
+definitely ahead in a few important areas, like plug-ins or
+preprocessing).
+

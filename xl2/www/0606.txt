@@ -1,0 +1,40 @@
+<!--June 2006-->
+May | <b>June 2006</b> | July
+<p>
+Thursday, 1 June: Update to new CVS, documentation
+<ul>
+</ul>
+Saturday, 10 June: Generic deduction
+<ul>
+</ul>
+Sunday, 11 June: Implicit conversion
+<ul>
+</ul>
+Monday, 12 June: ISP is back
+<ul>
+</ul>
+Tuesday, 13 June: Optimization in the library
+<ul>
+</ul>
+Friday, 16 June: American Scientist makes a case for XL
+<ul>
+</ul>
+Saturday, 17 June: About bugs and integers
+<ul>
+<li><A href="http://googleresearch.blogspot.com/2006/06/extra-extra-read-all-about-it-nearly.html">this interesting piece</A>
+<li>Another interesting piece is a
+a <A href="http://patricklogan.blogspot.com/2006/06/integers.html">reply
+from Patrick Logan</A>
+</ul>
+Monday, 19 June: Generic deduction
+<ul>
+</ul>
+Tuesday, 20 June: First "Graphical" Test passing
+<ul>
+</ul>
+<a href="060621.html">Wednesday, 21 June</a>: Switching to Subversion
+<ul>
+</ul>
+
+<p>
+May | <b>June 2006</b> | July

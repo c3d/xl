@@ -1,0 +1,461 @@
+// ****************************************************************************
+//  xl.semantics.macros.xl          (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     XL Macro System
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+import PR = XL.PARSER
+import SC = XL.SCANNER
+import IO = XL.TEXT_IO
+import FL = XL.FILES
+import CST = XL.CONSTANTS
+import ERR = XL.ERRORS
+import POS = XL.SCANNER.POSITION
+
+
+module XL.SEMANTICS.MACROS is
+// ----------------------------------------------------------------------------
+//    Implement the macro system during declarations and semantics
+// ----------------------------------------------------------------------------
+
+    max_recursions : integer := 100
+    recursions     : integer := 0
+    max_includes   : integer := 100
+    includes       : integer := 0
+
+
+    initially
+    // ------------------------------------------------------------------------
+    //    Start with a '.' path
+    // ------------------------------------------------------------------------
+        include_path += text "."
+        include_path += XLT.RuntimePath(".")
+
+
+    procedure AddPath (path : text) is
+    // ------------------------------------------------------------------------
+    //   Add a path to the path list
+    // ------------------------------------------------------------------------
+        new_path : string of text
+        new_path += path
+        new_path += include_path
+        include_path := new_path
+
+
+    procedure ReplacePath(oldPath : text; newPath : text) is
+    // ------------------------------------------------------------------------
+    //    Remove the given path if among the module paths
+    // ------------------------------------------------------------------------
+        new_paths : string of text
+        path      : text
+        for path in include_path loop
+            if path = oldPath then
+                new_paths += newPath
+            else
+                new_paths += path
+        include_path := new_paths
+
+
+    function CreateWildcards(form : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Replace param names with identically-named wildcards
+    // ------------------------------------------------------------------------
+
+        if form.kind = PT.xlTEXT then
+            name : form as PT.text_tree
+            if name.quote = '''' then
+                return PT.NewWildcard(name.value, name.position)
+            return name
+
+        else if (form.kind = PT.xlINTEGER or
+                 form.kind = PT.xlREAL or
+                 form.kind = PT.xlNAME) then
+            return form
+
+        else if form.kind = PT.xlBLOCK then
+            block : form as PT.block_tree
+            return PT.NewBlock(CreateWildcards(block.child),
+                               block.opening, block.closing,
+                               block.position)
+
+        else if form.kind = PT.xlPREFIX then
+            prefix : form as PT.prefix_tree
+            return PT.NewPrefix(CreateWildcards(prefix.left),
+                                CreateWildcards(prefix.right),
+                                prefix.position)
+
+
+        else if form.kind = PT.xlINFIX then
+            infix : form as PT.infix_tree
+            return PT.NewInfix(infix.name,
+                               CreateWildcards(infix.left),
+                               CreateWildcards(infix.right),
+                               infix.position)
+
+        else
+            ERR.Error "Unknown tree type in macro: $1", form
+            return form
+
+
+    function Replace(form : PT.tree; args : PT.tree_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Replace param names with matched trees
+    // ------------------------------------------------------------------------
+
+        if form.kind = PT.xlTEXT then
+            name : form as PT.text_tree
+            if name.quote = '''' then
+                repl : PT.tree := args[name.value]
+                if repl = nil then
+                    ERR.Error "Macro parameter '$1' not defined", form
+                    return form
+                return repl
+            return name
+
+        else if (form.kind = PT.xlINTEGER or
+                 form.kind = PT.xlREAL or
+                 form.kind = PT.xlNAME) then
+            return form
+
+        else if form.kind = PT.xlBLOCK then
+            block : form as PT.block_tree
+            return PT.NewBlock(Replace(block.child, args),
+                               block.opening, block.closing,
+                               block.position)
+
+        else if form.kind = PT.xlPREFIX then
+            prefix : form as PT.prefix_tree
+            return PT.NewPrefix(Replace(prefix.left, args),
+                                Replace(prefix.right, args),
+                                prefix.position)
+
+
+        else if form.kind = PT.xlINFIX then
+            infix : form as PT.infix_tree
+            return PT.NewInfix(infix.name,
+                               Replace(infix.left, args),
+                               Replace(infix.right, args),
+                               infix.position)
+
+        else
+            ERR.Error "Unknown tree type in macro: $1", form
+            return form
+
+
+    function MacroTranslator (input       : PT.tree;
+                              scope       : PT.tree;
+                              info        : SYM.rewrite;
+                              in out args : PT.tree_map) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Perform the macro replacement
+    // ------------------------------------------------------------------------
+
+        if recursions > max_recursions then
+            ERR.Error "Too many macro recursions at '$1'", input
+            return parse_tree(@nop)
+
+        ERR.PushErrorContext()
+        recursions += 1
+
+        // Apply the macro itself
+        mac     : info as macro
+        trace [macro] "Macro #", recursions, ": ", input
+        trace [macro] "Macro #", recursions, " replacement: ", mac.replacement
+        result := Replace (mac.replacement, args)
+        trace [macro] "Macro #", recursions, " expanded to: ", result
+
+        // Reapply XLMacros if this is not what we are doing, so that
+        // things like xl.include, xl.value or xl.file work for other macros
+        if mac.kind <> "xlmacros" then
+            result := Preprocess(result)
+            trace [macro] "Macro #", recursions, " preprocessed to: ", result
+            result := SYM.LookupRewrite (XLT.context, mac.kind, result)
+            trace [macro] "Macro #", recursions, " translated to: ", result
+
+        recursions -= 1
+        if ERR.PopErrorContext() then
+            ERR.Error "While preprocessing '$1'", input
+            ERR.DisplayLastErrors()
+
+
+    procedure EnterMacro (kind : text; from : PT.tree; to : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Enter a macro in the given table
+    // ------------------------------------------------------------------------
+        mac : macro
+        trace [macro] "Enter macro in ", kind, ": ", from, " -> ", to
+
+        mac.reference_form := CreateWildcards(from)
+        mac.score_adjust := nil
+        mac.translator := MacroTranslator
+        mac.replacement := to
+        mac.kind := kind
+
+        SYM.EnterRewrite XLT.context, kind, mac
+
+
+    procedure EnterGlobalMacro (kind : text; from : PT.tree; to : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Enter a macro in the main table
+    // ------------------------------------------------------------------------
+        old : SYM.symbol_table := XLT.context
+        XLT.context := XLT.main_context
+        EnterMacro kind, from, to
+        XLT.context := old
+
+
+    function IsIncludeName(filename : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if the parameter is a valid include file
+    // ------------------------------------------------------------------------
+        filename := CST.EvaluateConstant(filename)
+        return fileName.kind = PT.xlTEXT
+
+
+    function Include (filename : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Parse the file, and return the parsed file
+    // ------------------------------------------------------------------------
+        trace[macro] "Include ", filename
+        filename := CST.EvaluateConstant(filename)
+        if filename.kind <> PT.xlTEXT then
+            ERR.Error "'$1' is not a valid include file name", filename
+            return parse_tree(@nop)
+
+        if includes > max_includes then
+            ERR.Error "Too many recursive file inclusions at '$1'", filename
+            return parse_tree(@nop)
+
+        includes += 1
+        name    : filename as PT.text_tree
+        P       : PR.parser := nil
+        DirName : text
+        for DirName in include_path loop
+            NormalizedName : text := PT.XLNormalize(name.value)
+            NameInDir : text
+            Directory : string of text := FL.Directory(DirName)
+            trace[macro] "Looking for ", filename, " in ", DirName
+            for NameInDir in Directory loop
+                if PT.XLNormalize(NameInDir) = NormalizedName then
+                    // TODO: Machine dependency here
+                    FullName : text := DirName + "/" + NameInDir
+                    trace[macro] "Found matching name ", FullName
+                    P := PR.Open (FullName)
+                    if PR.IsValid (P) then
+                        trace[macro] "Including ", FullName
+                        result := PR.Parse(P)
+                        exit if result <> nil
+                    PR.Close(P)
+                exit if result <> nil
+            exit if result <> nil
+
+        includes -= 1
+        if result = nil then
+           ERR.Error "Cannot open include file '$1'", filename
+           return parse_tree(@nop)
+
+
+    function Preprocess (input : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Run a preprocessing phase before compilation
+    // ------------------------------------------------------------------------
+        if input = nil then
+            return input
+        if recursions > max_recursions then
+            ERR.Error "Too many macro recursions at '$1'", input
+            return parse_tree(@nop)
+        result := XLT.XLMacros (input)
+        if result.kind = PT.xlBLOCK then
+            bt : result as PT.block_tree
+            bt.child := Preprocess(bt.child)
+        else if result.kind = PT.xlPREFIX then
+            xt : result as PT.prefix_tree
+            xt.left := Preprocess(xt.left)
+            xt.right := Preprocess(xt.right)
+        if result.kind = PT.xlINFIX then
+            it : result as PT.infix_tree
+            it.left := Preprocess(it.left)
+            it.right := Preprocess(it.right)
+        if result <> input then
+            trace[macro] "Macro reprocessing #", recursions, " for: ", result
+            recursions += 1
+            result := Preprocess(result)
+            recursions -= 1
+
+
+    procedure EmitError (Message : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Make the compiler emit an error message (from xl.error)
+    // ------------------------------------------------------------------------
+        MsgTxt : text
+        Arg1, Arg2, Arg3 : PT.tree
+        if Message.kind = PT.xlBLOCK then
+            asBlock : Message as PT.block_tree
+            Message := asBlock.child
+        translate Message
+            when ('M', 'X', 'Y', 'Z') then
+                Message := M
+                Arg1 := X
+                Arg2 := Y
+                Arg3 := Z
+            when ('M', 'X', 'Y') then
+                Message := M
+                Arg1 := X
+                Arg2 := Y
+            when ('M', 'X') then
+                Message := M
+                Arg1 := X
+        Message := CST.EvaluateConstant (Message)
+        if Message.kind = PT.xlTEXT then
+            Msg : Message as PT.text_tree
+            MsgTxt := Msg.value
+        else
+            MsgTxt := text (Message)
+        ERR.Error MsgTxt, Arg1, Arg2, Arg3
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //   The scoped translations done by the macro system at declaration time
+    // ------------------------------------------------------------------------
+        when
+            transform 'Phase' 'Match' into 'Repl'
+        where
+            Phase.kind = PT.xlNAME and
+            Match.kind = PT.xlBLOCK and
+            Repl.kind = PT.xlBLOCK
+        then
+            MatchBlock : Match as PT.block_tree
+            ReplBlock : Repl as PT.block_tree
+            PhaseTree : Phase as PT.name_tree
+            PhaseName : text := PT.XLNormalize(PhaseTree.value)
+            EnterMacro PhaseName, MatchBlock.child, ReplBlock.child
+            return parse_tree(@nop)
+
+
+    translation XLMacros
+    // ------------------------------------------------------------------------
+    //   The non-scoped translations done during preprocessing
+    // ------------------------------------------------------------------------
+        when
+            transform 'Match' into 'Repl'
+        where
+            Match.kind = PT.xlBLOCK and Repl.kind = PT.xlBLOCK
+        then
+            MatchBlock : Match as PT.block_tree
+            ReplBlock : Repl as PT.block_tree
+            EnterMacro "xlmacros", MatchBlock.child, ReplBlock.child
+            return parse_tree(@nop)
+
+        when
+            transform 'Variable' := 'Value'
+        where
+            Variable.kind = PT.xlNAME
+        then
+            VarName : Variable as PT.name_tree
+            VarValue : PT.tree := CST.EvaluateConstant(Value)
+            trace[macro] "Setting ", Variable, " to ", Value, " = ", VarValue
+            CST.EnterNamedConstant VarName, VarValue
+            return parse_tree(@nop)
+
+        when
+            include 'File'
+        where
+            IsIncludeName(File)
+        then
+            return Include (File)
+
+        when (xl.value 'Expression') then
+            // Constant evaluation of an expression
+            count : integer := 0
+            trace[macro] "Constant ", Expression
+            Expression := XLT.XLMacros (Expression)
+            trace[macro] "Expand as ", Expression
+            result := CST.EvaluateConstant(Expression)
+            while result <> Expression loop
+                count += 1
+                if count > max_recursions then
+                    ERR.Error "Too many recursive evaluations of '$1'", result
+                    return result
+                trace[macro] "Reprocess ", result
+                Expression := Preprocess (result)
+                trace[macro] "Reprocessed as ", Expression
+                result := CST.EvaluateConstant (Expression)
+            trace[macro] "Constant value ", result
+
+        when (xl.position 'Expression') then
+            // Return the position of the expression (not that useful)
+            return PT.NewInteger (Expression.position, input.position)
+
+        when (xl.file 'Expression') then
+            // Return the file where a given expression was seen
+            file   : text
+            offset : integer
+            POS.PositionToFile Expression.position, file, offset
+            return PT.NewText (file, '"', input.position)
+
+        when (xl.line 'Expression') then
+            // Return the line where a given expression was seen
+            file, source : text
+            line, column : integer
+            POS.PositionToLine Expression.position, file, line, column, source
+            return PT.NewInteger (line, input.position)
+
+        when (xl.column 'Expression') then
+            // Return the line where a given expression was seen
+            file, source : text
+            line, column : integer
+            POS.PositionToLine Expression.position, file, line, column, source
+            return PT.NewInteger (column, input.position)
+
+        when (xl.source_text 'Expression') then
+            // Return the line where a given expression was seen
+            file, source : text
+            line, column : integer
+            POS.PositionToLine Expression.position, file, line, column, source
+            return PT.NewText (source, '"', input.position)
+
+        when (xl.text 'Expression') then
+            // Turn an expression into the equivalent text
+            return PT.NewText (text(Expression), '"', input.position)
+
+        when (xl.concat 'N1' 'N2') then
+            // Concatenate the two names
+            N1 := XLT.XLMacros N1
+            N2 := XLT.XLMacros N2
+            N1N : N1 as PT.name_tree
+            N2N : N2 as PT.name_tree
+            if N1N = nil then
+                ERR.Error "Argument $1 to xl.concat is not a name", N1
+                return parse_tree('N1' 'N2')
+            else if N2N = nil then
+                ERR.Error "Argument $1 to xl.concat is not a name", N2
+                return parse_tree('N1' 'N2')
+            return PT.NewName (N1N.value + N2N.value, input.position)
+
+        when (xl.error 'Message') then
+            EmitError Message
+            return parse_tree (@nop)
+

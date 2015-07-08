@@ -1,0 +1,732 @@
+// ****************************************************************************
+//  xl.codegenerator.machine.xl     (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//      Machine-dependent part of the code generator
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 351 $
+// * Date       : $Date: 2007-11-18 22:05:37 +0100 (Sun, 18 Nov 2007) $
+// ****************************************************************************
+
+import BC = XL.BYTECODE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import TY = XL.SEMANTICS.TYPES
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import EN = XL.SEMANTICS.TYPES.ENUMERATIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import XLT = XL.TRANSLATOR
+import CG = XL.CODE_GENERATOR
+
+
+module XL.CODE_GENERATOR.MACHINE is
+// ----------------------------------------------------------------------------
+//    The machine-dependent code generator
+// ----------------------------------------------------------------------------
+
+
+    // ========================================================================
+    //
+    //    Machine names
+    //
+    // ========================================================================
+
+    function Name (Name : PT.name_tree;
+                   Type : TY.any_type) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //    Return a 'mangled' function name
+    // ------------------------------------------------------------------------
+        base : text := PT.XLNormalize(Name.value)
+
+        // To include type in the generated name
+        // mtype : PT.name_tree := Type.machine_type
+        // if mtype <> nil then
+        //   prefix := mtype.value + "_"
+
+        // Make name unique by postfixing it with an index
+        return SYM.Temporary(base, Name.position)
+
+
+    function HasBytecode(name : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if a given bytecode format exists
+    // ------------------------------------------------------------------------
+        Tname  : name as PT.name_tree
+        if Tname = nil then
+            ERR.Error "'$1' is not a valid bytecode name", name
+            return false
+        symbol : text := XLNormalize(Tname.value)
+        if not CG.HasFormat(symbol) then
+            ERR.Error "The bytecode '$1' is invalid", name
+            return false
+        return true
+
+
+
+    // ========================================================================
+    //
+    //    Expression management
+    //
+    // ========================================================================
+
+    function MakeExpression(computation : BC.bytecode;
+                            mname       : PT.name_tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Create an expression from consistutive parts
+    // ------------------------------------------------------------------------
+        result := parse_tree
+                        'computation'
+                        @value 'mname'
+        result.info := mname.info
+
+
+    procedure SplitExpression(in out arg  : PT.tree;
+                              in out code : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Split the evaluation of an argument if it is an @value
+    // ------------------------------------------------------------------------
+        translate arg
+            when
+                ('Value')
+            then
+                SplitExpression Value, code
+                arg := Value
+
+            when
+                'ValueGenerator'
+                @value 'ValueName'
+            then
+                code := XLT.Append(code, ValueGenerator)
+                arg := ValueName
+
+
+    procedure SetExpressionTarget(in out value  : PT.tree;
+                                  mname         : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Target the result of an expression directly into given machine name
+    // ------------------------------------------------------------------------
+        translate value
+            when
+                'ValueGenerator'
+                @value 'ValueName'
+            then
+                copy : PT.tree := parse_tree(@copy 'mname' 'ValueName')
+                info : PT.infos := value.info
+                value := parse_tree
+                    'value'
+                    'copy'
+                    @value 'mname'
+                value.info := info
+
+
+
+    // ========================================================================
+    //
+    //   Function declarations
+    //
+    // ========================================================================
+
+    function MakeMachineEntry (DeclName : PT.tree;
+                               BaseName : PT.name_tree;
+                               RetType  : TY.any_type;
+                               Parms    : FT.declaration_list;
+                               icnt     : integer;
+                               ocnt     : integer) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Return a machine-level function declaration from a function or ptr
+    // ------------------------------------------------------------------------
+        Parm     : DCL.declaration
+        ParmDType: TY.any_type
+        ParmType : PT.tree
+        ParmName : PT.tree
+        retDecl  : PT.tree
+
+        // If there is a return type, add a 'result' output parameter
+        if RetType <> nil then
+            ocnt += 1
+
+        // Construct the return value from output parameters
+        if ocnt = 0 then
+            result := parse_tree(@fn_ret0)
+        else if ocnt = 1 then
+            if RetType <> nil then
+                ParmType := RetType.machine_name
+                result := parse_tree(@fn_ret1 'ParmType')
+            else
+                for Parm in Parms loop
+                    if Parm.is_output then
+                        ParmDType := Parm.type
+                        ParmType := ParmDType.machine_name
+                        result := parse_tree(@fn_ret1 'ParmType')
+        else
+            // Emit return type declaration early
+            retDecl := parse_tree(@fn_retN_begin 'BaseName')
+            if RetType <> nil then
+                ParmType := RetType.machine_name
+                resName : PT.tree := PT.NewName("result", BaseName.position)
+                retDecl := parse_tree
+                    'retDecl'
+                    @fn_retN_decl 'ParmType' 'resName'
+            for Parm in Parms loop
+                if Parm.is_output then
+                    ParmDType := Parm.type
+                    ParmName := Parm.machine_name
+                    ParmType := ParmDType.machine_name
+                    retDecl := parse_tree
+                        'retDecl'
+                        @fn_retN_decl 'ParmType' 'ParmName'
+            retDecl := parse_tree
+                'retDecl'
+                @fn_retN_end 'BaseName'
+            XLT.AddGlobalDecl retDecl
+            result := XLT.Append(result, parse_tree(@fn_retN 'BaseName'))
+
+        // Follow the return value declaration with name
+        result := parse_tree
+            'result'
+            'DeclName'
+            @fn_begin_parms 'BaseName'
+
+        // Pointer to return struct if any (mandatory for LLVM at this point)
+        if retDecl <> nil then
+            result := parse_tree
+                'result'
+                @fn_retN_ptr 'BaseName'
+
+        // Input parameters
+        for Parm in Parms loop
+            if Parm.is_input then
+                ParmDType := Parm.type
+                ParmName := Parm.machine_name
+                ParmType := ParmDType.machine_name
+                result := parse_tree
+                    'result'
+                    @fn_parm 'ParmType' 'ParmName'
+
+        // Close declaration
+        result := parse_tree
+            'result'
+            @fn_end_parms 'BaseName'
+
+
+    function MakeEntry (DeclName : PT.tree;
+                        BaseName : PT.name_tree;
+                        RetType  : TY.any_type;
+                        Parms    : FT.declaration_list;
+                        icnt     : integer;
+                        ocnt     : integer) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Expand all types to primitive machine types and make machine entry
+    // ------------------------------------------------------------------------
+        return MakeMachineEntry(DeclName, BaseName, RetType,
+                                Parms, icnt, ocnt)
+
+
+    function Entry (f : FN.function) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Entry for an actual function
+    // ------------------------------------------------------------------------
+        MName   : PT.tree := f.machine_name
+        FnType  : f.type as FT.function_type
+        if FnType <> nil then
+            RetType : TY.any_type := FnType.base
+            Parms   : FT.declaration_list := FnType.parameters
+            icnt    : integer := FnType.inputs_count
+            ocnt    : integer := FnType.outputs_count
+
+            MName := parse_tree(@fn_name 'MName')
+            return MakeEntry(MName, f.machine_name, RetType, Parms, icnt, ocnt)
+        else
+            // We get here for generic interfaces
+            return parse_tree(@nop)
+
+
+    function EntryPointer (f : FT.function_type) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Return a pointer to an entry with given parameters
+    // ------------------------------------------------------------------------
+        MName   : PT.name_tree := SYM.Temporary("FnPtr")
+        PName   : PT.tree := parse_tree(@fn_ptr_name 'MName')
+        RetType : TY.any_type := f.base
+        Parms   : FT.declaration_list := f.parameters
+        icnt    : integer := f.inputs_count
+        ocnt    : integer := f.outputs_count
+
+        T : BC.bytecode := MakeEntry(PName, MName, RetType, Parms, icnt, ocnt)
+        T := parse_tree
+            @fn_ptr_begin 'MName'
+            'T'
+            @fn_ptr_end 'MName'
+        XLT.AddGlobalDecl T
+
+        return MName
+
+
+    function FunctionBody(f     : FN.function;
+                          Iface : PT.tree;
+                          Body  : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Create the bytecode for the complete function
+    // ------------------------------------------------------------------------
+    //    Copy all the output parameters to a big return struct if required
+
+        FnType    : f.type as FT.function_type
+        retType   : TY.any_type := FnType.base
+        retName   : PT.name_tree
+        mtype     : PT.name_tree
+        dtype     : TY.any_type
+        mname     : PT.name_tree := f.machine_name
+        ocnt      : integer := FnType.outputs_count
+        parms     : FN.declaration_list := FnType.parameters
+        parmCount : integer := size(parms)
+        parmIndex : integer
+
+        if retType <> nil then
+            ocnt += 1
+
+        // Copy preconditions checks
+        condition : PT.tree
+        for condition in f.preconditions loop
+            Body := parse_tree
+                'condition'
+                'Body'
+
+        Body := parse_tree
+            'Body'
+            @fn_exit 'mname'
+
+        // Copy post-conditions
+        for condition in f.postconditions loop
+            Body := parse_tree
+                'Body'
+                'condition'
+
+        if ocnt = 1 then
+            // One output to declare. It will be the returned value
+            if retType <> nil then
+                mtype := retType.machine_name
+                retName := f.result_machine_name
+            else
+                for parmIndex in 0..parmCount-1 loop
+                    decl : FN.declaration := parms[parmIndex]
+                    if decl.is_output then
+                        dtype := decl.type
+                        mtype := dtype.machine_name
+                        retName := decl.machine_name
+                        if not decl.is_input then
+                            Body := parse_tree
+                                @entry_ret1_decl 'mtype' 'retName' 'mname'
+                                'Body'
+            Body := parse_tree
+                'Body'
+                @exit_ret1 'retName' 'mname'
+
+        else if ocnt > 1 then
+            Body := parse_tree
+                @entry_retN_decl 'mname'
+                'Body'
+            if retType <> nil then
+                retName := f.result_machine_name
+                mtype := retType.machine_name
+                Body := parse_tree
+                    'Body'
+                    @exit_retN_set 'mname' result 'retName'
+            for parmIndex in 0..parmCount-1 loop
+                decl : FN.declaration := parms[parmIndex]
+                if decl.is_output then
+                    dtype := decl.type
+                    mtype := dtype.machine_name
+                    retName := decl.machine_name
+                    if not decl.is_input then
+                        Body := parse_tree
+                            @entry_retN_loc 'mtype' 'retName' 'mname'
+                            'Body'
+                    Body := parse_tree
+                        'Body'
+                        @exit_retN_set 'mname' 'retName' 'retName'
+            Body := parse_tree
+                'Body'
+                @exit_retN 'mname'
+
+        return parse_tree
+            @fn_body_begin 'mname'
+            'Iface'
+            @fn_body 'mname'
+            'Body'
+            @fn_body_end 'mname'
+
+
+
+    // ========================================================================
+    //
+    //    Function calls
+    //
+    // ========================================================================
+
+    function FunctionCall (toCall  : FN.function;
+                           margs   : machine_args;
+                           target  : PT.tree;
+                           ctors   : PT.tree;
+                           dtors   : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Generate a low-level function call
+    // ------------------------------------------------------------------------
+    //  In order to be able to create temporaries for nested function calls,
+    //  the bytecode for any complex code that returns a value is in the form:
+    //       [value-generating-bytecode]
+    //       @value 'Type' 'Name'
+    //  The caller then "pops" the @value part to know where the value resides
+
+        // Check if this is a module implementation
+        if toCall.implementation <> nil then
+            toCallImpl : toCall.implementation as FN.function
+            if toCallImpl <> nil then
+                toCall := toCallImpl
+
+        FnType       : TY.NonSourceType (toCall.type) as FT.function_type
+        if FnType = nil then
+            ERR.Error "Internal: Calling non-function '$1'", toCall.machine_name
+            return ERR.ErrorTree()
+        parms        : FN.declaration_list := FnType.parameters
+        mname        : PT.name_tree := toCall.machine_name
+        ocnt         : integer := FnType.outputs_count
+        argCount     : integer := size(margs)
+        parmCount    : integer := size(parms)
+        retType      : TY.any_type := FnType.base
+        retValueName : target as PT.name_tree
+        retValueType : PT.name_tree := nil
+        outputsName  : PT.name_tree := nil
+        prefixCode   : PT.tree := nil
+        arg          : PT.tree
+        argIndex     : integer
+
+        if argCount <> parmCount then
+            ERR.Error "Internal: Calling $1 with invalid number of arguments",
+                      mname
+            return ERR.ErrorTree()
+
+        // If the callee has a return value, then we are going to emit @value
+        // Create a local temporary holding the returned value
+        if retType <> nil then
+            retValueType := retType.machine_name
+            if retValueName = nil then
+                retValueName := SYM.Temporary("ret")
+                retDecl : PT.tree :=
+                    parse_tree(@temp_decl 'retValueType' 'retValueName')
+                XLT.AddScopeDecl XLT.function_context, retDecl
+
+        // Evaluate all arguments, simplify them to single values
+        for argIndex in 0..argCount-1 loop
+           arg := margs[argIndex]
+           SplitExpression arg, prefixCode
+           margs[argIndex] := arg
+
+        // If the callee is a built-in, then emit a bytecode directly
+        if toCall.is_builtin then
+
+            // The result is a bytecode tree
+            result := parse_tree('mname')
+
+            // Check if there is a return value, if so it becomes first arg
+            if retType <> nil then
+                result := parse_tree('result' 'retValueName')
+
+            // Add other arguments
+            for arg in margs loop
+                result := parse_tree('result' 'arg')
+
+            result := parse_tree(@ 'result')
+
+            // If it's a built-in call, we are not going to call destructors
+            // on output parameters. It's assumed the built-in deals
+            // with destruction if appropriate
+
+        else // Not a built-in, regular function call
+
+            // Count one extra argument for the return value
+            if retType <> nil then
+                ocnt += 1
+
+            // Begin call block
+            result := parse_tree
+                @call_begin 'mname'
+
+            if ocnt = 1 then
+                // One output to declare. It will be the returned value
+                if retType <> nil then
+                    result := parse_tree
+                        'result'
+                        @call_ret1 'retValueType' 'retValueName'
+                else
+                    for argIndex in 0..argCount-1 loop
+                        decl : FN.declaration := parms[argIndex]
+                        if decl.is_output then
+                            declDType : TY.any_type := decl.type
+                            declMType : PT.name_tree := declDType.machine_name
+                            retValueName := SYM.Temporary("outret")
+                            outputsDecl : PT.tree := parse_tree
+                                @call_ret1_decl 'declMType' 'retValueName'
+                            XLT.AddScopeDecl XLT.function_context, outputsDecl
+                            result := parse_tree
+                               'result'
+                               @call_ret1 'declMType' 'retValueName'
+            else if ocnt > 1 then
+                outputsName := SYM.Temporary("out")
+                result := parse_tree
+                    'result'
+                    @call_retN 'mname' 'outputsName'
+                outputsDecl : PT.tree := parse_tree
+                    @call_retN_decl 'mname' 'outputsName'
+                XLT.AddScopeDecl XLT.function_context, outputsDecl
+
+            // Insert the name of the called function
+            result := parse_tree
+                'result'
+                @call_args_begin 'mname'
+
+            // Pass return value parameter if needed
+            if ocnt > 1 then
+                result := parse_tree
+                    'result'
+                    @call_arg_retN 'mname' 'outputsName'
+
+            // Pass input parameters
+            for argIndex in 0..argCount-1 loop
+                decl : FN.declaration := parms[argIndex]
+                if decl.is_input then
+                    DType  : TY.any_type := decl.type
+                    MType  : PT.name_tree := DType.machine_name
+                    MValue : PT.tree := margs[argIndex]
+                    result := parse_tree
+                        'result'
+                        @call_arg 'MType' 'MValue'
+
+            // End list of input parameters
+            result := parse_tree
+                'result'
+                @call_args_end 'mname'
+
+            // Destroy outputs before copying them
+            result := XLT.Append(result, dtors)
+
+            // Copy output parameters
+            if retType <> nil and ocnt > 1 then
+                MType  : PT.tree := retValueType
+                MValue : PT.tree := retValueName
+                result := parse_tree
+                    'result'
+                    @call_outargN 'MValue' 'outputsName' result 'MType'
+            if ocnt > 1 or (ocnt = 1 and retType = nil) then
+                Kind   : PT.tree
+                if ocnt = 1 and retType = nil then
+                    Kind := parse_tree(call_outarg1)
+                else
+                    Kind := parse_tree(call_outargN)
+                for argIndex in 0..argCount-1 loop
+                    decl : FN.declaration := parms[argIndex]
+                    if decl.is_output then
+                        DType  : TY.any_type := decl.type
+                        MType  : PT.name_tree := DType.machine_name
+                        MName  : PT.name_tree := decl.machine_name
+                        MValue : PT.tree := margs[argIndex]
+                        if ocnt = 1 then
+                            MName := retValueName
+                        result := parse_tree
+                            'result'
+                            @'Kind' 'MValue' 'outputsName' 'MName' 'MType'
+
+        // If there was prefix code generated by arg evaluation, prepend it
+        result := XLT.Append(prefixCode, result)
+        result := XLT.Append(ctors, result)
+
+        // Check if we need to compute a return value
+        if retType <> nil then
+            // If the callee has a value, then we specify it here
+            isVariable : boolean := TY.IsVariable(retType)
+            result := MakeExpression(result, retValueName)
+            if not isVariable then
+                retType := TY.ConstantType(retType)
+            if target = nil then
+                TY.SetType result, retType
+                TY.SetType retValueName, retType
+                // Post a temporary destructor for the temp we just created
+                if not isVariable and retValueType <> nil then
+                    dtor : PT.tree := parse_tree(delete 'retValueName')
+                    ERR.PushErrorContext()
+                    dtor := XLT.XLSemantics(dtor)
+                    if not ERR.PopErrorContext() then
+                        AddCallDtors dtor
+
+
+    function RecordFunctionCall (Record   : PT.tree;
+                                 toCall   : FN.function;
+                                 margs    : machine_args;
+                                 target  : PT.tree;
+                                 ctors    : PT.tree;
+                                 dtors    : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Call a function in a record
+    // ------------------------------------------------------------------------
+
+        if toCall.is_global and not toCall.is_field then
+            // Ignore the record, this is really a module
+            return FunctionCall(toCall, margs, target, ctors, dtors)
+
+        // Save the machine name, which is really the field name
+        fName : PT.name_tree := toCall.machine_name
+
+        // Create a field tag to reference that particular value
+        fTag : PT.name_tree := SYM.Temporary("indirectFn")
+        result := parse_tree(@field 'fTag' 'Record' 'fName')
+
+        // Use the tag for the function call
+        toCall.machine_name := fTag
+        result := XLT.Append(result,
+                             FunctionCall(toCall, margs, target, ctors, dtors))
+
+        // Restore original machine name
+        toCall.machine_name := fName
+
+
+    function EnterCall() return integer is
+    // ------------------------------------------------------------------------
+    //   Increase call depth to keep track of temporaries
+    // ------------------------------------------------------------------------
+        result := SYM.GetInteger(XLT.context, "CALLDEPTH")
+        SYM.SetInteger XLT.context, "CALLDEPTH", result+1
+
+
+    procedure AddCallDtors(dtor : PT.tree) is
+    // ------------------------------------------------------------------------
+    //    Add a destructor created during argument passing
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem XLT.Context, "TEMPDTORS", dtor
+
+
+    procedure ExitCall(depth : integer; in out value : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Check if we need to cleanup call temporaries
+    // ------------------------------------------------------------------------
+        assert SYM.GetInteger(XLT.context, "CALLDEPTH") = depth+1
+        SYM.SetInteger XLT.context, "CALLDEPTH", depth
+        if depth = 0 then
+            calldtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+            SYM.SetProperty XLT.context, "TEMPDTORS", nil
+            value := XLT.Append(value, calldtors)
+
+
+    // ========================================================================
+    //
+    //    Record types
+    //
+    // ========================================================================
+
+    function DeclareRecord(r : RT.record_type) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Create the global declaration for a record type
+    // ------------------------------------------------------------------------
+        Field     : DCL.declaration
+        Fields    : RT.declaration_list := R.fields
+        FieldDType: TY.any_type
+        FieldType : PT.tree
+        FieldName : PT.tree
+        MDecl     : BC.bytecode
+        MName     : PT.name_tree := SYM.Temporary("Record")
+
+        MDecl := parse_tree(@record_begin 'MName')
+        for Field in Fields loop
+            FieldDType := Field.type
+            if not TY.IsTypeType(FieldDType) then
+                if not GEN.IsGenericType(FieldDType) then
+                    FieldName := Field.machine_name
+                    FieldType := FieldDType.machine_name
+                    MDecl := parse_tree
+                        'MDecl'
+                        @record_field 'MName' 'FieldType' 'FieldName'
+        MDecl := parse_tree
+            'MDecl'
+            @record_end 'MName'
+        PT.AttachTree MName, "MACHINEDECL", MDecl
+
+        XLT.AddGlobalDecl MDecl
+        return MName
+
+
+    function IndexRecord(Record  : PT.tree;
+                         MField  : PT.tree;
+                         MType   : PT.tree;
+                         Type    : TY.any_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Index a field in a record type
+    // ------------------------------------------------------------------------
+
+        // If this is really some module, we have just generated some globals
+        rtype : TY.any_type := TY.GetType(Record)
+        if rtype = nil or TY.IsModuleType(rtype.base) then
+            return MField
+
+        mname : PT.name_tree := SYM.Temporary ("fld")
+        fdecl : PT.tree :=
+                parse_tree(@ref_decl 'mtype' 'mname')
+
+        XLT.AddScopeDecl XLT.function_context, fdecl
+
+        // Evaluate the argument so that it is a single value
+        SplitExpression Record, result
+
+        // Evaluate the field indexing
+        Idx : PT.tree := parse_tree(@field 'mname' 'Record' 'MField')
+        if result <> nil then
+            result := parse_tree
+                'result'
+                'Idx'
+        else
+            result := Idx
+
+        result := MakeExpression(result, mname)
+
+        TY.SetType result, Type
+        TY.SetType mname, Type
+        DCL.SetLookupResult result, mname // Indicate semantic already ran
+        DCL.SetLookupResult mname, mname
+
+
+
+    // ========================================================================
+    // 
+    //   Declaring types in the generated code
+    // 
+    // ========================================================================
+
+    function DeclareType(tp   : TY.any_type;
+                         Name : PT.name_tree) return PT.name_tree is
+    // ------------------------------------------------------------------------
+    //   Create the global declaration for a record type
+    // ------------------------------------------------------------------------
+        sig       : text := "type"
+        if Name <> nil then
+            sig += "_"
+            sig += PT.XLNormalize(Name.Value)
+        MName     : PT.name_tree := SYM.Temporary(sig)
+
+        MDecl : PT.tree := parse_tree(@type_decl 'MName' 'MName')
+        XLT.AddGlobalDecl MDecl
+        return MName
+
+

@@ -1,0 +1,12 @@
+<!--Concept Programming Slides-->
+
+I finally posted
+<a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">a
+slideset about concept programming</a> that had been rotting on my
+hard disk for way too long...
+
+This gave me an opportunity to re-read older articles on
+these topics, one I had written for <a href="http://www.ddj.com/java/184404696">Dr
+  Dobb's Journal</a>,
+and <a href="http://www.byte.com/documents/s=7784/byt1070853295820/1208_heller.html">another one </a>
+written by Martin Heller (Mr. Computer Language Person) in Byte.

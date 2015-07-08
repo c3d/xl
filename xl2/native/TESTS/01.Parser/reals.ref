@@ -1,0 +1,138 @@
+
+(infix <CR>
+ 0
+ (infix <CR>
+  1.1
+  (infix <CR>
+   10.2
+   (infix <CR>
+    100.3
+    (infix <CR>
+     1000.4
+     (infix <CR>
+      10000.5
+      (infix <CR>
+       100001
+       (infix <CR>
+        1e+06
+        (infix <CR>
+         (prefix
+          -
+          1.1)
+         (infix <CR>
+          (prefix
+           +
+           3.3)
+          (infix <CR>
+           1000
+           (infix <CR>
+            100000
+            (infix <CR>
+             1000
+             (infix <CR>
+              100100
+              (infix <CR>
+               1e+06
+               (infix <CR>
+                0.001
+                (infix <CR>
+                 0.1001
+                 (infix <CR>
+                  1
+                  (infix <CR>
+                   0.001
+                   (infix <CR>
+                    0.1
+                    (infix <CR>
+                     1
+                     (infix <CR>
+                      58.625
+                      (infix <CR>
+                       58.625
+                       (infix <CR>
+                        1.07374e+09
+                        (infix <CR>
+                         6.71088e+07
+                         (infix <CR>
+                          6.71085e+07
+                          (infix <CR>
+                           58.625
+                           (infix <CR>
+                            58.625
+                            (infix <CR>
+                             1.07374e+09
+                             (infix <CR>
+                              6.71088e+07
+                              (infix <CR>
+                               6.71085e+07
+                               (infix <CR>
+                                5.625
+                                (infix <CR>
+                                 11.4074
+                                 (infix <CR>
+                                  19.2969
+                                  (infix <CR>
+                                   29.232
+                                   (infix <CR>
+                                    41.1898
+                                    (infix <CR>
+                                     55.1603
+                                     (infix <CR>
+                                      71.1387
+                                      (infix <CR>
+                                       89.1221
+                                       (infix <CR>
+                                        109.109
+                                        (infix <CR>
+                                         131.098
+                                         (infix <CR>
+                                          155.09
+                                          (infix <CR>
+                                           181.082
+                                           (infix <CR>
+                                            209.076
+                                            (infix <CR>
+                                             239.071
+                                             (infix <CR>
+                                              271.066
+                                              (infix <CR>
+                                               305.062
+                                               (infix <CR>
+                                                341.058
+                                                (infix <CR>
+                                                 379.055
+                                                 (infix <CR>
+                                                  419.052
+                                                  (infix <CR>
+                                                   461.05
+                                                   (infix <CR>
+                                                    505.047
+                                                    (infix <CR>
+                                                     551.045
+                                                     (infix <CR>
+                                                      599.043
+                                                      (infix <CR>
+                                                       649.042
+                                                       (infix <CR>
+                                                        701.04
+                                                        (infix <CR>
+                                                         755.038
+                                                         (infix <CR>
+                                                          811.037
+                                                          (infix <CR>
+                                                           869.036
+                                                           (infix <CR>
+                                                            929.034
+                                                            (infix <CR>
+                                                             991.033
+                                                             (infix <CR>
+                                                              1055.03
+                                                              (infix <CR>
+                                                               1121.03
+                                                               (infix <CR>
+                                                                1189.03
+                                                                (infix <CR>
+                                                                 1259.03
+                                                                 1331.03)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+

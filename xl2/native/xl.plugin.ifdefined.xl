@@ -1,0 +1,99 @@
+// ****************************************************************************
+//  xl.plugin.ifdefined.xl          (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of ifdefined
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// * Credits    : Sebastien <sebbrochet@users.sourceforge.net> (initial version)
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import BC = XL.BYTECODE
+import ERR = XL.ERRORS
+import XLT = XL.TRANSLATOR
+import SYM = XL.SYMBOLS
+import PR = XL.PARSER
+import PC = XL.PLUGIN.COMMON
+
+
+module XL.PLUGIN.IFDEFINED is
+// ----------------------------------------------------------------------------
+//    Encapsulating module (not really necessary)
+// ----------------------------------------------------------------------------
+
+    translation IfDefined
+    // ------------------------------------------------------------------------
+    //    Translations below a 'IfDefined' pragma
+    // ------------------------------------------------------------------------
+
+        when
+           'Anything'
+        then
+           pragma : PT.tree := SYM.GetProperty(XLT.context, "PRAGMA")
+
+           translate pragma
+
+              when
+                 'PragmaName' 'Variable'
+              where
+                 Variable.kind = PT.xlName
+              then
+                 VariableName : Variable as PT.name_tree
+                 IfDefined : boolean := PC.GetDefineInfo(VariableName.value) <> nil
+
+                 if IfDefined then
+                    return input
+                 else
+                    return nil
+
+              when
+                 'PragmaName' 'VariableAndAl'
+              then
+
+                 translate VariableAndAl
+
+                    when
+                       'Variable' 'Value'
+                    where
+                       Variable.kind = PT.xlName
+                    then
+                       VariableName : Variable as PT.name_tree
+                       Pattern : PT.Tree := PC.GetDefineInfo(VariableName.value)
+
+                       if Pattern = nil then
+                          return nil
+
+                       Args : PT.tree_map
+
+                       if PT.Matches(Value, Pattern, Args) > 0 then
+                          return input
+                       else
+                          return nil
+
+                    else
+                       ERR.Error "Pragma error : '$1'", pragma
+                       ERR.Error "Syntax is : {IfDefined Variable Value}", pragma.position
+                       return ERR.ErrorTree()
+
+              else
+                 ERR.Error "Pragma error : '$1'", pragma
+                 ERR.Error "Syntax is : {IfDefined Variable [Value]}", pragma.position
+                 return ERR.ErrorTree()
+

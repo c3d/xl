@@ -1,0 +1,59 @@
+// ****************************************************************************
+//  overload_resolution.xl          (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check that we can correctly resolve overloads for multiple functions
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// Functions, that we use for simple overload resolution
+function F(K : integer) return integer is
+    return 1
+
+function F(K : real) return integer is
+    return 2
+
+function F(K : text) return integer is
+    return 3
+
+function F(K, L : integer) return integer is
+    return 4
+
+function F(K : integer; L : real) return integer is
+    return 5
+
+// Checking overload resolution for written forms
+function CopyInt(out Tgt : integer; in Src : integer) written Tgt := Src is
+    XL.BYTECODE.CopyInt
+function CopyInt(out Tgt : real; in Src : real) written Tgt := Src is
+    XL.BYTECODE.CopyReal
+
+// Testing it
+to Test is
+    A : integer := 1
+    A := F(1)
+    A := F(1.5)
+    A := F("ABC")
+    A := F(1, 2)
+    A := F(1, 3.5)
+    B : real := 3.5
+    B := 5.1
+    B := B
+

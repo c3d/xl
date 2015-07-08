@@ -1,0 +1,25 @@
+
+(infix <CR>
+ (infix :=
+  T
+  (prefix
+   parse_tree
+   (block( )
+    (infix ,
+     (prefix
+      sin
+      X)
+     Y))))
+ (infix :=
+  T
+  (prefix
+   parse_tree
+   (block indent
+    (prefix
+     sin
+     (implicit ()
+      (infix ,
+       X
+       Y)))))))
+
+

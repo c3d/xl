@@ -1,0 +1,32 @@
+<!--Hello World...-->
+
+It has been a long interruption: my PowerBook was suffering from a
+known problem with some 15' models, it lost half of its RAM (I only
+had 512M instead of 1G). I sent it back to Apple for repair.
+
+Bad luck 1: It was lost by UPS, and started looping between Germany
+and the Netherlands. When Apple finally got it, they repaired it in
+one day and returned it to me. Bad luck 2: the machine was dead on
+arrival (freezing after 5 minutes of use), and its enclosure had
+apparently been damaged during transport. Return to Apple. Bad luck 3:
+this time, it takes 1 week for me to just get the UPS box. I finally
+send it back to Apple. This time, they changed the enclosure,
+motherboard, hard disk, and a few other components. I have an
+almost-new machine, but that meant I had to restore everything from
+backup.
+
+Overall, that took close to a month, during which XL development was
+on hold. That was frustrating, because I had a few things not
+checked-in.
+
+Finally, I got back to where I left, which was the library
+implementation of I/O routines (XL.TEXT_IO and XL.UI.CONSOLE). It was
+a bit difficult to make it work, mostly because it pushes the
+interface with C/C++ a bit, so I kept discovering bugs in that area,
+mostly causing interface and implementation code to be inconsistent. I
+added an 'externc' bytecode entry so that I could generate C++ code at
+will for testing purpose (C++ testing is a bit stricter).
+
+But finally, I have "Hello World" running in an all-XL implementation
+that uses variadics, C interface code, etc.
+See {cvs "TESTS/12.Library/hello_world.xl" "the test here..." }

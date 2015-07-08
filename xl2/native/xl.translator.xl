@@ -1,0 +1,443 @@
+// ****************************************************************************
+//  xl.translator.xl                (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The basic XL translator
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This program is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import PT = XL.PARSER.TREE
+import PR = XL.PARSER
+import IO = XL.TEXT_IO
+import BC = XL.BYTECODE
+import SEM = XL.SEMANTICS
+import PPR = XL.SEMANTICS.MACROS
+import FL = XL.FILES
+import TY = XL.SEMANTICS.TYPES
+import REC = XL.SEMANTICS.TYPES.RECORDS
+import OPT = XL.OPTIMIZER
+import CG = XL.CODE_GENERATOR
+import SYM = XL.SYMBOLS
+import ERR = XL.ERRORS
+import MDL = XL.SEMANTICS.MODULES
+import PPR = XL.SEMANTICS.MACROS
+import RD = XL.RENDERER
+
+
+module XL.TRANSLATOR is
+// ----------------------------------------------------------------------------
+//    The high-level XL translator
+// ----------------------------------------------------------------------------
+
+    procedure InitializeTranslator is
+    // ------------------------------------------------------------------------
+    //    Initialize the translator
+    // ------------------------------------------------------------------------
+    //    We put this in a procedure so that other modules can call it
+    //    to guarantee proper initialization
+    //    TODO: The fact that we go through a separate procedure
+    //    for initialization is a workaround until ordering of inits
+    //    based on module dependencies works correctly
+    //    This code rightfully belongs to initialization
+    //
+    //    Outermost symbol table contains the plug-in definitions
+
+        if context = nil then
+            context := SYM.NewSymbolTable(nil)
+            top_context := context
+            PluginsInit
+            nop := parse_tree(@nop)
+
+
+    initially
+    // ------------------------------------------------------------------------
+    //    Initialization of the semantics module
+    // ------------------------------------------------------------------------
+        InitializeTranslator
+        SYM.report_misses["xlsemantics"] := true
+
+
+    function RuntimePath(fileName : text) return text is
+    // ------------------------------------------------------------------------
+    //   Return the runtime path associated with a given file
+    // ------------------------------------------------------------------------
+        return text("library/runtime/") + runtime + text("/") + fileName
+
+
+    procedure ChangeRuntime(newRuntime : text) is
+    // ------------------------------------------------------------------------
+    //   Switch to the given runtime path
+    // ------------------------------------------------------------------------
+        oldPath : text := RuntimePath(".")
+        runtime := newRuntime
+        newPath : text := RuntimePath(".")
+        MDL.ReplacePath oldPath, newPath
+        PPR.ReplacePath oldPath, newPath
+        RD.Close RD.DefaultRenderer
+        RD.DefaultRenderer := RD.Open(RuntimePath(XLT.style_file))
+        CG.InitializeBytecodeMap()
+
+
+    procedure Compile(input : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Compile the tree to standard output
+    // ------------------------------------------------------------------------
+        Compile input, IO.standard_output
+
+
+    procedure Compile(input : PT.tree; output : text) is
+    // ------------------------------------------------------------------------
+    //   Compile the tree to a named file
+    // ------------------------------------------------------------------------
+        file : IO.file := IO.Open(output, IO.write_mode)
+        Compile input, file
+        IO.Close file
+
+
+    procedure Compile(input : PT.tree; output : IO.output_file) is
+    // ------------------------------------------------------------------------
+    //    Compile the tree to a given file
+    // ------------------------------------------------------------------------
+        full_compile := true
+        after_semantics : BC.bytecode := ScopeSemantics(input, scopeMain)
+        if ERR.error_count = 0 then
+            after_opt : BC.bytecode := XLOptimizations(after_semantics)
+            if ERR.error_count = 0 then
+                CG.Generate after_opt, output
+        if ERR.error_count > 0 then
+            exit 2
+
+
+    function Append (t1 : PT.tree; t2 : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Append two trees, each can be nil
+    // ------------------------------------------------------------------------
+        if t1 <> nil then
+            if t2 <> nil then
+                return parse_tree
+                    't1'
+                    't2'
+            return t1
+        return t2
+
+
+    function AddMainInitAndTerm(input : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Add the init and termination code
+    // ------------------------------------------------------------------------
+    // The reason this is separate from other inits is to guarantee that the
+    // main initialization occurs after any module initialization
+        inits : PT.tree := SYM.ScopeItems(main_context, "MAIN_INIT")
+        terms : PT.tree := SYM.ScopeItems(main_context, "MAIN_TERM")
+        decls : PT.tree := SYM.ScopeItems(main_context, "MAIN_DECL")
+        locals: PT.tree := SYM.ScopeItems(main_context, "MAIN_LOCALS")
+        result := Append(decls, input)
+        result := Append(result, parse_tree(@main_begin))
+        result := Append(result, locals)
+        result := Append(result, parse_tree(@main_entry))
+        result := Append(result, inits)
+        result := Append(result, terms)
+        result := Append(result, parse_tree(@main_end))
+
+
+    procedure CopyScopeProperties(toTable   : SYM.symbol_table;
+                                  fromTable : SYM.symbol_table) is
+    // ------------------------------------------------------------------------
+    //   Copy the properties used to identify a scope
+    // ------------------------------------------------------------------------
+        SYM.CopyProperty toTable, fromTable, "GLOBAL"
+        SYM.CopyProperty toTable, fromTable, "LOCAL"
+        SYM.CopyProperty toTable, fromTable, "FNPARM"
+        SYM.CopyProperty toTable, fromTable, "FIELD"
+        SYM.CopyProperty toTable, fromTable, "GENPARM"
+
+
+    function ScopeSemantics (input : PT.tree;
+                             scope : scope_kind) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Scope semantics for non-module scopes
+    // ------------------------------------------------------------------------
+        return ScopeSemantics(input, scope, nil)
+
+
+    function ScopeSemantics (input  : PT.tree;
+                             scope  : scope_kind;
+                             modname: PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Deal with the semantics in a scope
+    // ------------------------------------------------------------------------
+
+        ModIface : PT.tree := PT.Attached(input, "MODIFACE")
+        if scope = scopeMain or scope = scopeModule then
+            input := PPR.Preprocess (input)
+
+        old_global   : SYM.symbol_table := global_context
+        old_function : SYM.symbol_table := function_context
+        old_context  : SYM.symbol_table := context
+
+        // If we are within a module, select that context
+        if modname <> nil then
+            trace[modules] "ScopeSemantics(", modname, ") in ", context
+            Base : PT.tree := XLSemantics(modname)
+            trace[modules] "Base(", modname, ") is ", Base
+            symbols : SYM.symbol_table := MDL.GetSymbols(Base)
+            if symbols <> nil then
+                // Use the module as enclosing context
+                context := symbols
+            else
+                ERR.Error "'$1' has no symbol table", modname
+                ERR.Error "Its type is ", TY.Source(TY.GetType(Base))
+            SYM.SetProperty context, "MODULE", modname
+
+        // Create the symbol table for this scope
+        if scope = scopeMain or scope = scopeModule then
+            context := SYM.NewSymbolTable(top_context)
+        else if scope <> scopeFunction then
+            context := SYM.NewSymbolTable(context)
+
+        if modname <> nil then
+            SYM.SetProperty context, "MODULE", modname
+
+        // If there are symbols in the interface, see them in body
+        if ModIface <> nil then
+            ifaceSyms : SYM.symbol_table := MDL.GetSymbols(ModIface)
+            if ifaceSyms <> nil then
+                trace[modules] "Using interface symbols ", ifaceSyms,
+                               " for ", ModName
+                SYM.AddUsing context, nil, ifaceSyms
+                CopyScopeProperties context, ifaceSyms 
+                SYM.SetProperty context, "FIELD", nil
+
+        if scope = scopeMain or scope = scopeModule or scope = scopeGlobal then
+            global_context := context
+
+            // Set global context, except for submodules
+            SYM.SetInteger context, "GLOBAL", 1
+
+            // Storage for Init and Term temps
+            function_context := SYM.NewSymbolTable(context)
+
+            if scope = scopeMain then
+                // We are the outermost ('main') context
+                main_context := context
+                old_global := context
+        else if scope = scopeFunction or scope = scopeLocal then
+            SYM.SetInteger context, "LOCAL", 1
+        result := XLDeclarations(input)
+        result := XLSemantics(result)
+        DCL.CallDestructors context
+        result := PostScopeSemantics (result, scope, modname)
+
+        // Set the type of the result so that we can get inner symbols
+        if TY.GetType(result) = nil then
+            code_type : TY.code_type
+            code_type.base := nil
+            code_type.machine_name := nil
+            code_type.interface_match := nil //TODO - Catch internal errors
+            code_type.name := input
+            code_type.symbols := context
+            TY.SetType result, code_type
+
+        // Get back to original context
+        if scope = scopeMain then
+            result := AddMainInitAndTerm(result)
+        context := old_context
+        global_context := old_global
+        function_context := old_function
+
+
+    function PostScopeSemantics (input   : PT.tree;
+                                 scope   : scope_kind;
+                                 modname : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Move inits, globals and so on where they belong
+    // ------------------------------------------------------------------------
+        result := input
+
+        // 'Declarations' will populate sections in the
+        // current context, called DECL, INIT, and TERM (see AddScopeXYZ)
+        // DECL are local declarations
+        // INIT are the initializations for the scope
+        // TERM are the terminations for the scope
+        init : PT.tree := SYM.ScopeItems(context, "INIT")
+        term : PT.tree := SYM.ScopeItems(context, "TERM")
+        if init <> nil then
+            init := XLSemantics(init)
+        if term <> nil then
+            term := XLSemantics(term)
+        // The above semantics may have added declarations
+        decl : PT.tree := SYM.ScopeItems(context, "DECL")
+        if decl <> nil then
+            decl := XLSemantics(decl)
+
+        if scope = scopeGlobal or scope = scopeModule or scope = scopeMain then
+            // Make sure global init and term invoked from 'main'
+            local_decl : PT.tree := SYM.ScopeItems(function_context, "DECL")
+            SYM.SetProperty (function_context, "DECL", nil)
+            if init <> nil then
+                SYM.AddScopeItem main_context, "MAIN_INIT", init
+            if term <> nil then
+                SYM.AddScopeItem main_context, "MAIN_TERM", term
+            if decl <> nil then
+                SYM.AddScopeItem main_context, "MAIN_DECL", decl
+            if local_decl <> nil then
+                SYM.AddScopeItem main_context, "MAIN_LOCALS", local_decl
+            SYM.AddScopeItem main_context, "MAIN_INIT", result
+            if scope = scopeMain then
+                result := SYM.ScopeItems(main_context, "MAIN_BODY")
+            else
+                result := parse_tree(@nop)
+        else // Some local scope
+            result := Append(init, result)
+            result := Append(result, term)
+            result := Append(decl, result)
+
+
+    procedure AddScopeDecl(table: SYM.symbol_table; decl : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add a declaration to the DECL section
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem table, "DECL", decl
+
+
+    procedure AddScopeInit(table: SYM.symbol_table; init : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add an initialization to the INIT section
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem table, "INIT", init
+
+
+    procedure AddScopeTerm(table: SYM.symbol_table; term : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add a termination to the TERM section
+    // ------------------------------------------------------------------------
+        SYM.PushScopeItem table, "TERM", term
+
+
+    procedure AddGlobalDecl(decl : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add a declaration to the DECL section
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem global_context, "DECL", decl
+
+
+    procedure AddGlobalInit(init : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add an initialization to the INIT section
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem global_context, "INIT", init
+
+
+    procedure AddGlobalTerm(term : PT.tree) is
+    // ------------------------------------------------------------------------
+    //   Add a termination to the TERM section
+    // ------------------------------------------------------------------------
+        SYM.AddScopeItem global_context, "TERM", term
+
+
+    function Recurse(input : PT.tree;
+                     what  : recurse_fn) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Recurse on a given plugin function
+    // ------------------------------------------------------------------------
+         if input.kind = PT.xlBLOCK then
+             block     : input as PT.block_tree
+             block.child := what(block.child)
+         else if input.kind = PT.xlPREFIX then
+             prefix : input as PT.prefix_tree
+             prefix.left := what(prefix.left)
+             prefix.right := what(prefix.right)
+         else if input.kind = PT.xlINFIX then
+             infix : input as PT.infix_tree
+             infix.left := what(infix.left)
+             infix.right := what(infix.right)
+         return input
+
+
+    type attempt_data is record with
+    // ------------------------------------------------------------------------
+    //   Description of what we preserve / restore for a tentative evaluation
+    // ------------------------------------------------------------------------
+        init            : PT.tree
+        decl            : PT.tree
+        term            : PT.tree
+        fn_init         : PT.tree
+        fn_decl         : PT.tree
+        fn_term         : PT.tree
+        main_locals     : PT.tree
+        main_decl       : PT.tree
+        main_init       : PT.tree
+        main_body       : PT.tree
+        main_term       : PT.tree
+
+
+    function BeginAttempt() return attempt is
+    // ------------------------------------------------------------------------
+    //   Begin a tentative translation of the tree
+    // ------------------------------------------------------------------------
+        result.init := SYM.ScopeItems(context, "INIT")
+        result.decl := SYM.ScopeItems(context, "DECL")
+        result.term := SYM.ScopeItems(context, "TERM")
+        result.fn_init := SYM.ScopeItems(function_context, "INIT")
+        result.fn_decl := SYM.ScopeItems(function_context, "DECL")
+        result.fn_term := SYM.ScopeItems(function_context, "TERM")
+        result.main_locals := SYM.ScopeItems(main_context,"MAIN_LOCALS")
+        result.main_decl := SYM.ScopeItems(main_context, "MAIN_DECL")
+        result.main_init := SYM.ScopeItems(main_context, "MAIN_INIT")
+        result.main_body := SYM.ScopeItems(main_context, "MAIN_BODY")
+        result.main_term := SYM.ScopeItems(main_context, "MAIN_TERM")
+        ERR.PushErrorContext()
+
+
+    procedure ClearAttempt(what : attempt; globals : boolean) is
+    // ------------------------------------------------------------------------
+    //   End the tentative translation of a tree, return true if error
+    // ------------------------------------------------------------------------
+        SYM.SetProperty context, "INIT", what.init
+        SYM.SetProperty context, "DECL", what.decl
+        SYM.SetProperty context, "TERM", what.term
+        SYM.SetProperty function_context, "INIT", what.fn_init
+        SYM.SetProperty function_context, "DECL", what.fn_decl
+        SYM.SetProperty function_context, "TERM", what.fn_term
+        if globals then
+            SYM.SetProperty main_context, "MAIN_LOCALS", what.main_locals
+            SYM.SetProperty main_context, "MAIN_DECL", what.main_decl
+            SYM.SetProperty main_context, "MAIN_INIT", what.main_init
+            SYM.SetProperty main_context, "MAIN_BODY", what.main_body
+            SYM.SetProperty main_context, "MAIN_TERM", what.main_term
+
+
+    function EndAttempt(what : attempt) return boolean is
+    // ------------------------------------------------------------------------
+    //   End the tentative translation of a tree, return true if error
+    // ------------------------------------------------------------------------
+        result := ERR.PopErrorContext()
+        if result then
+            ClearAttempt what, true
+
+
+    function TentativeSemantics(what : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Run semantics on the tree, return nil if error
+    // ------------------------------------------------------------------------
+        tnt : attempt := XLT.BeginAttempt()
+        result := XLT.XLSemantics(what)
+        if EndAttempt(tnt) then
+            result := nil

@@ -1,0 +1,32 @@
+// ****************************************************************************
+//  xl.text_io.xs                   (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//    The bootstrap text I/O facility
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This program is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+module STD // The C++ std namespace
+
+import XL.UI.CONSOLE
+
+module XL.TEXT_IO is
+
+    function nothing(x : integer) return integer

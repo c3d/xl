@@ -1,0 +1,38 @@
+// ****************************************************************************
+//  indentation_in_parentheses.xl   (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Check freedom of indentation for parentheses
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+// CMD=%x -parse %f -show
+
+procedure X(A : integer)
+procedure Y(B : integer;
+            C : integer);
+procedure Z(
+    D : integer;
+    E : integer)
+procedure T(
+    F : integer;
+    G : integer
+)
+

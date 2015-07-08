@@ -1,0 +1,8 @@
+<!--First implementation of destructors-->
+
+An XL destructor is any procedure called {tt "delete"}. I did a basic
+implementation today, without much testing yet.
+
+I repaired "Hello world" and a case that was failing with
+iterators. Both boiled down to incorrect determination whether we were
+evaluating an iterator or an expression.

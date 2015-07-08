@@ -1,0 +1,192 @@
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:8: Error instantiating 'Pair':
+| type kazoo is Pair[integer]
+|__________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:8: Error instantiating 'Pair':
+| type kazoo is Pair[integer]
+|__________________^
+10.Generics/simple_pair_fail.xl:8: Expression 'Pair [integer]' has no type
+| type kazoo is Pair[integer]
+|___________________^
+10.Generics/simple_pair_fail.xl:8: Expression 'Pair [integer]' is not a type
+| type kazoo is Pair[integer]
+|___________________^
+10.Generics/simple_pair_fail.xl:9: Error instantiating 'Pair':
+| type kazaa is Pair[real]
+|__________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:9: Error instantiating 'Pair':
+| type kazaa is Pair[real]
+|__________________^
+10.Generics/simple_pair_fail.xl:9: Expression 'Pair [real]' has no type
+| type kazaa is Pair[real]
+|___________________^
+10.Generics/simple_pair_fail.xl:9: Expression 'Pair [real]' is not a type
+| type kazaa is Pair[real]
+|___________________^
+10.Generics/simple_pair_fail.xl:10: Error instantiating 'Pair':
+| type koza is Pair[kazaa]
+|_________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:10: Error instantiating 'Pair':
+| type koza is Pair[kazaa]
+|_________________^
+10.Generics/simple_pair_fail.xl:10: Expression 'Pair [kazaa]' has no type
+| type koza is Pair[kazaa]
+|__________________^
+10.Generics/simple_pair_fail.xl:10: Expression 'Pair [kazaa]' is not a type
+| type koza is Pair[kazaa]
+|__________________^
+10.Generics/simple_pair_fail.xl:11: Unable to instantiate 'Pair', because
+| type kzoo is Pair[Pair[boo_lean]]
+|_________________^
+10.Generics/simple_pair_fail.xl:11: No valid generic found for 'Pair'
+| type kzoo is Pair[Pair[boo_lean]]
+|_________________^
+10.Generics/simple_pair_fail.xl:11: Error instantiating 'Pair':
+| type kzoo is Pair[Pair[boo_lean]]
+|______________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:11: Expression 'Pair [boo_lean]' has no type
+| type kzoo is Pair[Pair[boo_lean]]
+|_______________________^
+10.Generics/simple_pair_fail.xl:4: 'Pair' could not be selected because
+| type Pair is record with
+|_________^
+10.Generics/simple_pair_fail.xl:11: 'Pair [boo_lean]' is not a type
+| type kzoo is Pair[Pair[boo_lean]]
+|_______________________^
+10.Generics/simple_pair_fail.xl:3: for parameter 'item'
+| generic [type item]
+|__________________^
+10.Generics/simple_pair_fail.xl:11: Unable to instantiate 'Pair', because
+| type kzoo is Pair[Pair[boo_lean]]
+|_________________^
+10.Generics/simple_pair_fail.xl:11: Expression 'Pair [Pair [boo_lean] ]' has no type
+| type kzoo is Pair[Pair[boo_lean]]
+|__________________^
+10.Generics/simple_pair_fail.xl:11: Expression 'Pair [Pair [boo_lean] ]' is not a type
+| type kzoo is Pair[Pair[boo_lean]]
+|__________________^
+10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
+| flax : Pair [Pair [ Pair [real ]]]
+|___________^
+10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
+| flax : Pair [Pair [ Pair [real ]]]
+|___________^
+10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
+| flax : Pair [Pair [ Pair [real ]]]
+|_________________^
+10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
+| flax : Pair [Pair [ Pair [real ]]]
+|_________________^
+10.Generics/simple_pair_fail.xl:14: Error instantiating 'Pair':
+| flax : Pair [Pair [ Pair [real ]]]
+|________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:14: Expression 'Pair [real]' has no type
+| flax : Pair [Pair [ Pair [real ]]]
+|__________________________^
+10.Generics/simple_pair_fail.xl:4: 'Pair' could not be selected because
+| type Pair is record with
+|_________^
+10.Generics/simple_pair_fail.xl:14: 'Pair [real]' is not a type
+| flax : Pair [Pair [ Pair [real ]]]
+|__________________________^
+10.Generics/simple_pair_fail.xl:3: for parameter 'item'
+| generic [type item]
+|__________________^
+10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [Pair [real] ] ]' has no type
+| flax : Pair [Pair [ Pair [real ]]]
+|_____________^
+10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
+| flax : Pair [Pair [ Pair [real ]]]
+|___________^
+10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
+| flax : Pair [Pair [ Pair [real ]]]
+|___________^
+10.Generics/simple_pair_fail.xl:14: Unable to instantiate 'Pair', because
+| flax : Pair [Pair [ Pair [real ]]]
+|_________________^
+10.Generics/simple_pair_fail.xl:14: No valid generic found for 'Pair'
+| flax : Pair [Pair [ Pair [real ]]]
+|_________________^
+10.Generics/simple_pair_fail.xl:14: Error instantiating 'Pair':
+| flax : Pair [Pair [ Pair [real ]]]
+|________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: The type 'nonexistent_item' is unknown
+|     Second : nonexistent_item
+|_____________________________^
+10.Generics/simple_pair_fail.xl:6: 'Second' has no type
+|     Second : nonexistent_item
+|__________^
+10.Generics/simple_pair_fail.xl:14: Expression 'Pair [real]' has no type
+| flax : Pair [Pair [ Pair [real ]]]
+|__________________________^
+10.Generics/simple_pair_fail.xl:4: 'Pair' could not be selected because
+| type Pair is record with
+|_________^
+10.Generics/simple_pair_fail.xl:14: 'Pair [real]' is not a type
+| flax : Pair [Pair [ Pair [real ]]]
+|__________________________^
+10.Generics/simple_pair_fail.xl:3: for parameter 'item'
+| generic [type item]
+|__________________^
+10.Generics/simple_pair_fail.xl:14: Expression 'Pair [Pair [Pair [real] ] ]' has no type
+| flax : Pair [Pair [ Pair [real ]]]
+|_____________^
+10.Generics/simple_pair_fail.xl:14: 'flax' has no type
+| flax : Pair [Pair [ Pair [real ]]]
+|____^

@@ -1,0 +1,344 @@
+// ****************************************************************************
+//  xl.semantics.types.functions.xl (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Translation of function types
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import TY = XL.SEMANTICS.TYPES
+import PT = XL.PARSER.TREE
+import DCL = XL.SEMANTICS.DECLARATIONS
+import CGM = XL.CODE_GENERATOR.MACHINE
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import REC = XL.SEMANTICS.TYPES.RECORDS
+
+
+module XL.SEMANTICS.TYPES.FUNCTIONS is
+// ----------------------------------------------------------------------------
+//    Implementation of function types
+// ----------------------------------------------------------------------------
+//    A function type appears in a declaration like
+//    Z : function (X : integer) return integer
+
+    procedure MakeParameterList (Parms      : PT.tree;
+                                 in out ftp : function_type) is
+    // ------------------------------------------------------------------------
+    //    Translate a parameter list
+    // ------------------------------------------------------------------------
+
+        translate Parms
+            when
+                'X' ; 'Y'
+            then
+                MakeParameterList X, ftp
+                MakeParameterList Y, ftp
+                return
+
+            when
+                'X'
+                'Y'
+            then
+                MakeParameterList X, ftp
+                MakeParameterList Y, ftp
+                return
+
+            when
+                ...
+            then
+                // Check if parameter list has '...' in it
+                VariadicDecls : PT.tree := GEN.VariadicDeclarations()
+                if VariadicDecls = nil then
+                    ftp.variadic := true
+                    GEN.AddVariadicity Parms
+                else
+                    // In instantiation context, replace variadicity
+                    VariadicDecls := XLT.XLDeclarations (VariadicDecls)
+                    MakeParameterList VariadicDecls, ftp
+            when () then
+                // Empty parameter list gotten from a variadics decl
+                return
+
+            else
+                decl : declaration := DCL.GetDeclaration(Parms)
+                if decl then
+                    ftp.parameters += decl
+                    if GEN.IsGenericType(decl.type) then
+                        GEN.AddGenericDependency decl.type
+                    if decl.is_output then
+                        ftp.outputs_count += 1
+                    if decl.is_input then
+                        ftp.inputs_count += 1
+                    else if not(decl.is_output) then
+                        ftp.inputs_count += 1
+                        ERR.Error "Hmmm, '$1' is not input nor output",
+                                  decl.name
+                        decl.is_input := true
+                else
+                    ERR.Error "'$1' isn't a parameter declaration", Parms
+
+
+    function FunctionTypeMatch(iface: any_type;
+                               body : any_type) return boolean is
+    // ------------------------------------------------------------------------
+    //   Check if an interface type and a body type match for functions
+    // ------------------------------------------------------------------------
+        ifaceF : iface as function_type
+        bodyF  : body as function_type
+        if ifaceF = nil then
+            ERR.Error "Internal: Interface '$1' is not a function type",
+                      TY.Source(iface)
+            return false
+        if bodyF = nil then
+            ERR.Error "'$1' is not a function type",
+                      TY.Source(body)
+            return false
+
+        // Check return type
+        retType : any_type := ifaceF.base
+        if retType = nil then
+            if bodyF.base <> nil then
+                ERR.Error "Type '$1' returns a value", TY.Source(body)
+                ERR.Error "but '$1' does not", TY.Source(iface)
+                return false
+        else
+            if bodyF.base = nil then
+                ERR.Error "Type '$1' doesn't return a value", TY.Source(body)
+                ERR.Error "but '$1' does", TY.Source(iface)
+                return false
+            if not TY.SameType(retType, bodyF.base) then
+                ERR.Error "The return type '$1'", TY.Source(bodyF.base)
+                ERR.Error "doesn't match return type '$1'", TY.Source(retType)
+                return false
+
+        // Check parameter counts
+        if ifaceF.inputs_count <> bodyF.inputs_count then
+            ERR.Error "Incorrect number of input parameters for '$1'",
+                      TY.Source(body)
+            return false
+        if ifaceF.outputs_count <> bodyF.outputs_count then
+            ERR.Error "Incorrect number of output parameters for '$1'",
+                      TY.Source(body)
+            return false
+
+        // Check that the parameters have the same type and name
+        parmCount : integer := size(ifaceF.parameters)
+        if parmCount <> size(bodyF.parameters) then
+            ERR.Error "Incorrect number of parameters for '$1'",
+                      TY.Source(body)
+            return false
+        if ifaceF.variadic <> bodyF.variadic then
+            ERR.Error "Incorrect variadicity for '$1'", TY.Source(body)
+            return false
+        i : integer
+        for i in 0..parmCount-1 loop
+            iface_decl : declaration := ifaceF.parameters[i]
+            body_decl  : declaration := bodyF.parameters[i]
+            iface_name : PT.name_tree := iface_decl.name
+            body_name  : PT.name_tree := body_decl.name
+            if iface_name.value <> body_name.value then
+                ERR.Error "Parameter name '$1'", body_name
+                ERR.Error "doesn't match parameter name '$1'", iface_name
+                return false
+            iface_type : any_type := iface_decl.type
+            body_type  : any_type := body_decl.type
+            if not TY.SameType(iface_type, body_type) then
+                ERR.Error "Mismatched parameter type for '$1'", iface_name
+                return false
+            if iface_decl.initializer <> nil then
+                if body_decl.initializer <> nil then
+                    if not PT.Matches(iface_decl.initializer,
+                                      body_decl.initializer) then
+                        ERR.Error "Different initializer '$1' in interface",
+                                  iface_decl.initializer
+                        ERR.Error "and '$1' in implementation",
+                                  body_decl.initializer
+                        return false
+                else
+                    ERR.Error "Initializer '$1' in interface only",
+                              iface_decl.initializer
+            else if body_decl.initializer <> nil then
+                ERR.Error "Initializer '$1' in implementation only",
+                          body_decl.initializer
+
+        // Everything seems in order - match
+        if ifaceF.machine_name = nil or  bodyF.machine_name <> nil then
+            ifaceF.machine_name := bodyF.machine_name
+
+        return true
+
+
+    function IsNullParm(Parms : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //    Return true if Parms is a null parameter list
+    // ------------------------------------------------------------------------
+    //    In the parse tree, () is a block with a null name inside
+        if Parms <> nil and Parms.kind = PT.xlNAME then
+            N : Parms as PT.name_tree
+            return N.value = ""
+        return false
+
+
+    function NewFnType(Source     : PT.tree;
+                       Parms      : PT.tree;
+                       ReturnType : PT.tree;
+                       iterator_tp: boolean) return any_type is
+    // ------------------------------------------------------------------------
+    //    Create a function type (returns a function_type or generic_type)
+    // ------------------------------------------------------------------------
+
+        ftp : function_type
+
+        // Create a new context for the parameters
+        oldContext : SYM.symbol_table := XLT.context 
+        XLT.context := SYM.NewSymbolTable (XLT.context)
+        SYM.SetInteger XLT.context, "FNPARM", 1
+
+        ftp.result_decl := nil
+        if ReturnType <> nil then
+            ftp.base := TY.EvaluateType (ReturnType)
+            if ftp.base = nil then
+                ERR.Error "Return type '$1' is not a valid type", ReturnType
+                TmpN : PT.name_tree := PT.NewName("function", Source.position)
+                ftp.base := TY.NewType(TmpN)
+            retType : any_type := ftp.base
+            if GEN.IsGenericType(retType) then
+                GEN.AddGenericDependency retType
+            ftp.name := parse_tree(function ('Parms') return 'ReturnType')
+            retName : PT.name_tree := PT.NewName("result", ReturnType.position)
+            retDecl : DCL.declaration := DCL.Declare(retName, retType)
+            retDecl.is_output := true
+            ftp.result_decl := retDecl
+        else if iterator_tp then
+            ftp.base := nil
+            ftp.name := parse_tree(iterator('Parms'))
+        else
+            ftp.base := nil
+            ftp.name := parse_tree(procedure('Parms'))
+
+        ftp.interface_match := FunctionTypeMatch
+        ftp.inputs_count := 0
+        ftp.outputs_count := 0
+        ftp.variadic := false
+        ftp.iterator := iterator_tp
+        ftp.symbols := XLT.context
+
+        // Check if empty parameter list. () is a block with an empty name
+        if IsNullParm(Parms) then
+            Parms := nil
+        else if Parms <> nil then
+            Parms := XLT.XLDeclarations (Parms)
+            MakeParameterList Parms, ftp
+
+        // Assign type to the tree
+        TY.SetType Source, ftp
+        TY.SetDefinedType Source, ftp
+        TY.SetDefinedType ftp.name, ftp
+
+        // Generate a machine type in case we want to put it in a record
+        if GEN.IsGenericContext() then
+            ftp.machine_name := SYM.Temporary("<generic-function-type>")
+            result := GEN.MakeGeneric (ftp)
+        else
+            MType : PT.name_tree := CGM.EntryPointer(ftp)
+            ftp.machine_name := MType
+            result := ftp
+
+        // Return to enclosing context
+        XLT.context := oldContext
+
+
+    function NewFnType(Source     : PT.tree;
+                       Parms      : PT.tree;
+                       ReturnType : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return an actual function type
+    // ------------------------------------------------------------------------
+        return NewFnType(Source, Parms, ReturnType, false)
+
+
+    function NewIteratorType(Source     : PT.tree;
+                             Parms      : PT.tree) return any_type is
+    // ------------------------------------------------------------------------
+    //    Return an iterator type
+    // ------------------------------------------------------------------------
+        return NewFnType (Source, Parms, nil, true)
+
+
+    function EnterFnType (Source  : PT.tree;
+                          Parms   : PT.tree;
+                          Ret     : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function type in the symbol table
+    // ------------------------------------------------------------------------
+
+        // Attach a type info to the original name
+        tp : any_type := NewFnType(Source, Parms, Ret)
+        MType : PT.name_tree := tp.machine_name
+        TY.EnterSignature MType.value, tp
+        return Source
+
+
+    function EnterIteratorType (Source  : PT.tree;
+                                Parms   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function type in the symbol table
+    // ------------------------------------------------------------------------
+
+        // Attach a type info to the original name
+        tp : any_type := NewIteratorType(Source, Parms)
+        MType : PT.name_tree := tp.machine_name
+        TY.EnterSignature MType.value, tp
+        return Source
+
+
+    function EnterFunctionCopy(fnName : PT.name_tree;
+                               tp : any_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter a copy subroutine copying a pointer to the function
+    // ------------------------------------------------------------------------
+        result := parse_tree
+            procedure copy (out this:'fnName';
+                            that : 'fnName') written this := that is
+                XL.BYTECODE.fnptr_copy
+        result := REC.EnterDefaultFunction(fnName, result)
+
+
+    function EnterDefaults(fnName : PT.name_tree;
+                           ftp    : any_type) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Enter the defaults 
+    // ------------------------------------------------------------------------
+        result := XLT.Append(result, EnterFunctionCopy(fnName, ftp))
+
+
+    translation XLEvaluateType
+    // ------------------------------------------------------------------------
+    //    Translation of function types
+    // ------------------------------------------------------------------------
+        when (function ('Parms') return 'ReturnType') then
+            return EnterFnType (input, Parms, ReturnType)
+
+        when (procedure ('Parms')) then
+            return EnterFnType (input, Parms, nil)
+
+        when (iterator ('Parms')) then
+            return EnterIteratorType (input, Parms)
+

@@ -1,0 +1,135 @@
+
+(infix <CR>
+ (prefix
+  Write
+  A)
+ (infix <CR>
+  (prefix
+   Write
+   (infix ,
+    (infix ,
+     A
+     B)
+    C))
+  (infix <CR>
+   (prefix
+    Write
+    (block( )
+     (infix ,
+      (infix ,
+       A
+       B)
+      C)))
+   (infix <CR>
+    (infix :=
+     X
+     (prefix
+      Write
+      A))
+    (infix <CR>
+     (infix ,
+      (infix ,
+       (infix :=
+        X
+        (prefix
+         Write
+         A))
+       B)
+      C)
+     (infix <CR>
+      (infix :=
+       X
+       (prefix
+        Write
+        (block( )
+         (infix ,
+          (infix ,
+           A
+           B)
+          C))))
+      (infix <CR>
+       (prefix
+        -
+        A)
+       (infix <CR>
+        (prefix
+         -
+         1)
+        (infix <CR>
+         (prefix
+          +
+          A)
+         (infix <CR>
+          (prefix
+           +
+           1)
+          (infix <CR>
+           (prefix
+            -
+            (block( )
+             (infix -
+              A
+              1)))
+           (infix <CR>
+            (prefix
+             +
+             (block( )
+              (infix +
+               A
+               1)))
+            (infix <CR>
+             (infix -
+              (prefix
+               -
+               A)
+              A)
+             (infix <CR>
+              (infix -
+               (prefix
+                -
+                1)
+               1)
+              (infix <CR>
+               (infix +
+                (prefix
+                 +
+                 A)
+                A)
+               (infix <CR>
+                (infix +
+                 (prefix
+                  +
+                  1)
+                 1)
+                (infix <CR>
+                 (prefix
+                  (block( )
+                   A)
+                  (block( )
+                   B))
+                 (infix <CR>
+                  (prefix
+                   (block{ }
+                    A)
+                   (block{ }
+                    B))
+                  (infix <CR>
+                   (prefix
+                    (block{ }
+                     A)
+                    (prefix
+                     F
+                     (block( )
+                      B)))
+                   (infix <CR>
+                    (prefix
+                     A
+                     !)
+                    (prefix
+                     (block( )
+                      (infix +
+                       A
+                       1))
+                     !)))))))))))))))))))))
+
+

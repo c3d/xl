@@ -1,0 +1,52 @@
+// Check that a variable automatically gets declared when used to call
+// a subroutine with an output parameter and name does not exist in scope
+use XL.UI.CONSOLE
+
+procedure MakeIt (var out A : integer; B : integer) written A &= B is
+    WriteLn "MakeIt (integer) ", B
+    A := B
+procedure MakeIt (variable out A : real; B : real) written A &= B is
+    WriteLn "MakeIt (real) ", B
+    A := B
+generic [type item]
+procedure MakeIt (var out A : item; B : item) written A &= B is
+    WriteLn "MakeIt (generic) "
+    A := B
+
+procedure Test is
+    MakeIt Zero, 1
+
+    // Check that it works with declarations
+    MakeIt Glop, 2
+    MakeIt Glap, 1.5
+
+    // Check that it does not redeclare
+    MakeIt Glop, 3
+    MakeIt Glap, 6.3
+
+    WriteLn "Zero=", Zero
+    WriteLn "Glop=", Glop
+    WriteLn "Glap=", Glap
+
+// Check the generic case
+type zoo is record with
+    A, B : integer
+procedure Copy(out Target : zoo; in Source : zoo) written Target := Source is
+    Target.A := Source.B
+    Target.B := Source.A
+
+Crapal, Fungoid : zoo
+MakeIt Znort, Crapal
+MakeIt Znort, Fungoid
+
+// Test with operators
+to TestOperators is
+   Bingo &= 1
+   Bonga &= 2.3
+   Blatoid &= Fungoid
+   WriteLn "Bingo=", Bingo
+   WriteLn "Bonga=", Bonga
+   WriteLn "Blatoid=", Blatoid.A, ":", Blatoid.B
+
+Test
+TestOperators

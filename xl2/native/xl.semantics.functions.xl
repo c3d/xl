@@ -1,0 +1,576 @@
+// ****************************************************************************
+//  xl.semantics.functions.xl       (C) 1992-2003 Christophe de Dinechin (ddd) 
+//                                                                 XL2 project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Implementation of C++-style functions and overloading
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 362 $
+// * Date       : $Date: 2007-12-22 21:50:23 +0100 (Sat, 22 Dec 2007) $
+// ****************************************************************************
+
+import DCL = XL.SEMANTICS.DECLARATIONS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+import BC = XL.BYTECODE
+import CGM = XL.CODE_GENERATOR.MACHINE
+import POS = XL.SCANNER.POSITION
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+
+
+module XL.SEMANTICS.FUNCTIONS is
+// ----------------------------------------------------------------------------
+//   Implementation of the semantics of basic C++-style functions
+// ----------------------------------------------------------------------------
+
+
+    function GetFunction (input : PT.tree) return function is
+    // ------------------------------------------------------------------------
+    //   Return the function info associated with a tree
+    // ------------------------------------------------------------------------
+        info : PT.FindInfo(input, "FN") as function
+        return info
+
+
+    procedure SetFunction (input : PT.tree; fn : function) is
+    // ------------------------------------------------------------------------
+    //    Set the function info for the tree
+    // ------------------------------------------------------------------------
+        DCL.SetDeclaration input, fn
+        PT.SetInfo input, "FN", fn
+
+
+    function EnterFunctionDecl (Names   : PT.tree;
+                                Parms   : PT.tree;
+                                RetType : PT.tree;
+                                Iface   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function in symbol table and return corresponding bytecode
+    // ------------------------------------------------------------------------
+
+        // Check validity of input name
+        if Names.kind <> PT.xlNAME then
+            ERR.Error "'$1' is not a valid function name", Names
+            Names := PT.NewName("invalid_function", Names.position)
+        fntype : any_type := FT.NewFnType(Iface, Parms, RetType)
+        return EnterFunction (Names, fntype, nil, Iface)
+ 
+
+    function EnterFunction (Names   : PT.tree;
+                            FnType  : any_type;
+                            Init    : PT.tree;
+                            Iface   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a function in symbol table and return corresponding bytecode
+    // ------------------------------------------------------------------------
+
+        Name        : Names as PT.name_tree
+        MName       : SYM.GetProperty(XLT.context, "MNAME") as PT.name_tree
+        PreCoating  : SYM.GetProperty (XLT.context, "EXTERN") as PT.tree
+
+        // Create the function
+        f : function
+        f.Name                  := Name
+        f.type                  := FnType
+        f.initializer           := Init
+        if MName = nil then
+            MName := CGM.Name(Name, f.type)
+        f.machine_name          := MName
+        f.result_machine_name   := nil
+        f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
+        f.is_input              := false
+        f.is_output             := false
+        f.is_variable           := false
+        f.is_parameter          := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+        f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+        f.is_field              := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        f.is_generic_parm       := false
+        f.is_builtin            := false
+        f.implementation        := nil
+        f.machine_interface     := XLT.Append(PreCoating, CGM.Entry(f))
+        f.symbols               := nil          // Only create if has body
+
+        // Declare the bytecode for the function declaration
+        MachineIface  : PT.Tree := f.machine_interface
+        MachineDecl   : PT.Tree := parse_tree
+            @fn_decl_begin 'MName'
+            'MachineIface'
+            @fn_decl_end 'MName'
+
+        // Indicate that this is a function and a declaration
+        SetFunction Iface, f
+        SetFunction MachineIface, f
+
+        // Add the interface declaration in an outer scope
+        if not GEN.IsGenericDeclaration(f) then
+            XLT.AddScopeDecl XLT.global_context, MachineDecl
+
+        // Enter the machine interface into the symbol table
+        SYM.Enter XLT.context, "FN", Name.value, Iface
+
+        // Wrap the interface until semantics, and mark as decl / function
+        result := parse_tree(@@fn_decl 'MachineIface')
+        SetFunction result, f
+
+        // If we got an initializer (from instantiation)
+        if Init <> nil then
+            result := parse_tree(@@fn_body 'result' 'Init')
+            SetFunction result, f
+
+        TY.SetType f.machine_name, FnType
+
+
+    function EnterBuiltinFunction(input : PT.tree;
+                                  Interface : PT.tree;
+                                  BuiltinName : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter a builtin function (bytecode)
+    // ------------------------------------------------------------------------
+        savedGlobals : PT.tree := SYM.GetProperty(XLT.global_context, "DECL")
+        SYM.SetProperty XLT.global_context, "DECL", nil
+
+        Interface := EnterFunction(Interface)
+        f : function := GetFunction(Interface)
+        assert f <> nil
+        if f.initializer <> nil then
+            ERR.Error "Built-in '$1' was given initializer '$2'",
+                      BuiltinName, f.initializer
+            result := input
+        else if BuiltinName.kind <> PT.xlNAME then
+            ERR.Error "'$1' is not a valid built-in name", BuiltinName
+            result := input
+        else if CGM.HasBytecode(BuiltinName) then
+            BN : BuiltinName as PT.name_tree
+            f.is_builtin := true
+            f.machine_name := PT.NewName(PT.XLNormalize(BN.Value),BN.position)
+            result := Interface
+        newGlobals : PT.tree := SYM.GetProperty(XLT.global_context, "DECL")
+        PT.AttachTree f.machine_name, "GLOBALDECL", newGlobals
+        SYM.SetProperty XLT.global_context, "DECL", savedGlobals
+
+
+    function IsRuntime(runtime : PT.tree) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if a function uses the name of a runtime (e.g. C)
+    // ------------------------------------------------------------------------
+        name : runtime as PT.name_tree
+        if name <> nil then
+            runtimeName : text := name.value
+            native_bytecode : text := "native_" + runtimeName
+            return CG.HasFormat(native_bytecode)
+        return false
+
+
+    function RuntimeCode(runtime : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Check if a function uses the name of a runtime (e.g. C)
+    // ------------------------------------------------------------------------
+        runtimeName : text
+        if runtime = nil then
+            runtimeName := CG.Format("RUNTIME")
+        else
+            name : runtime as PT.name_tree
+            if name = nil then
+                return nil
+            runtimeName := name.value
+        native_bytecode : text := "native_" + runtimeName
+        if CG.HasFormat(native_bytecode) then
+            ntree : PT.name_tree := PT.NewName(native_bytecode, runtime.position)
+            return parse_tree(@ 'ntree')
+        return nil
+
+
+    function EnterNativeFunction(input : PT.tree;
+                                 Interface : PT.tree;
+                                 Runtime : PT.tree;
+                                 CName : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Enter a function declared in the native runtime
+    // ------------------------------------------------------------------------
+        if CName.kind = PT.xlTEXT then
+            textually : CName as PT.text_tree
+            CName := PT.NewName (textually.value, CName.position)
+
+        assert SYM.GetProperty (XLT.context, "MNAME") = nil
+        assert SYM.GetProperty (XLT.context, "EXTERN") = nil
+        SYM.SetProperty XLT.context, "MNAME", CName
+        SYM.SetProperty XLT.context, "EXTERN", RuntimeCode(Runtime)
+        Interface := EnterFunction(Interface)
+        f : function := GetFunction(Interface)
+        assert f <> nil
+        if f.initializer <> nil then
+            ERR.Error "Native function '$1' was given initializer '$2'",
+                      CName, f.initializer
+            result := input
+        else if CName.kind <> PT.xlNAME then
+            ERR.Error "'$1' is not a valid native function name", CName
+            result := input
+        else
+            BN : CName as PT.name_tree
+            assert f.machine_name = BN
+            result := Interface
+            f.is_global := true // Make sure code generated is not x.f()
+            f.is_field := false
+        SYM.SetProperty XLT.context, "MNAME", nil
+        SYM.SetProperty XLT.context, "EXTERN", nil
+
+
+    function EnterFunctionBody(input : PT.tree;
+                               Interface : PT.tree;
+                               Body : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter the body of a function
+    // ------------------------------------------------------------------------
+        Interface := EnterFunction(Interface)
+        f : function := GetFunction(Interface)
+        assert f <> nil
+        if f.initializer <> nil then
+            ERR.Error "Duplicate initializer '$1'", Body
+            ERR.Error "Original initializer was '$1'", f.initializer
+        else if f.is_builtin then
+            ERR.Error "Initializer for builtin '$1'", Interface
+        else
+            f.initializer := Body
+            result := parse_tree(@@fn_body 'Interface' 'Body')
+            SetFunction result, f
+            return result
+        return input
+
+
+    function NormalizeInterface(Interface : PT.tree;
+                                RestOfInterface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Used when the rest of an interface is in a block
+    // ------------------------------------------------------------------------
+        if RestOfInterface.kind = PT.xlINFIX then
+            N : RestOfInterface as PT.infix_tree
+            if N.name = ASCII.CR then
+                Interface := NormalizeInterface(Interface, N.left)
+                Interface := NormalizeInterface(Interface, N.right)
+                return Interface
+            else
+                Interface := NormalizeInterface(Interface, N.left)
+                N.left := Interface
+                return N
+
+        if RestOfInterface.kind = PT.xlPREFIX then
+            N : RestOfInterface as PT.prefix_tree
+            Left : PT.tree := N.left
+            Right : PT.tree := N.right
+            if Left.kind = PT.xlNAME then
+                L : Left as PT.name_tree
+                if Right.kind = PT.xlINFIX then
+                    R : Right as PT.infix_tree
+                    if R.name = "is" then
+                        Interface := PT.NewInfix(L.value, Interface, R.left)
+                        Interface := PT.NewInfix("is", Interface, R.right)
+                        return Interface
+                Interface := PT.NewInfix (L.value, Interface, N.right)
+                return Interface
+
+        ERR.Error "Invalid function attribute '$1'", RestOfInterface
+        return Interface
+
+
+    translation XLEnterFunction
+    // ------------------------------------------------------------------------
+    //   Entering a function and returning the corresponding form
+    // ------------------------------------------------------------------------
+        // Normalize an interface that spans multiple lines
+        when
+            'Interface'
+                'RestOfInterface'
+        then
+            Interface := NormalizeInterface(Interface, RestOfInterface)
+            return XLT.XLEnterFunction(Interface)
+
+        // Bytecode declarations
+        when ('Interface' is xl.bytecode.'BuiltinName') then
+            return EnterBuiltinFunction(input, Interface, BuiltinName)
+        when
+            'Interface' is
+                xl.bytecode.'BuiltinName'
+        then
+            return EnterBuiltinFunction(input, Interface, BuiltinName)
+
+        when ('Interface' is XL.RUNTIME.'CName') then
+            return EnterNativeFunction(input, Interface, nil, CName)
+        when
+            'Interface' is
+                XL.RUNTIME.'CName'
+        then
+            return EnterNativeFunction(input, Interface, nil, CName)
+
+        when ('Interface' is 'RT'.'CName') where IsRuntime(RT) <> nil then
+            return EnterNativeFunction(input, Interface, RT, CName)
+        when
+            'Interface' is
+                'RT'.'CName'
+        where
+            IsRuntime(RT) <> nil
+        then
+            return EnterNativeFunction(input, Interface, RT, CName)
+
+        // Definition of a function
+        when ('Interface' is nil) then
+            return EnterFunctionBody(input, Interface, parse_tree(@nop))
+
+        when ('Interface' is 'Body') then
+            return EnterFunctionBody(input, Interface, Body)
+
+        // Function preconditions and postconditions
+        when ('Interface' require 'Pre') then
+            result := EnterFunction(Interface)
+            f : function := GetFunction(result)
+            assert f <> nil
+            f.preconditions += Pre
+        when ('Interface' ensure 'Post') then
+            result := EnterFunction(Interface)
+            f : function := GetFunction(result)
+            assert f <> nil
+            f.postconditions += Post
+
+        // Parameter lists
+        when ('Name' ('Parms') return 'RetType') then
+            return EnterFunctionDecl(Name, Parms, RetType, input)
+        when ('Name' return 'RetType') then
+            return EnterFunctionDecl(Name, nil, RetType, input)
+        when ('Name' ('Parms')) then
+            return EnterFunctionDecl(Name, Parms, nil, input)
+        when ('Name') then
+            return EnterFunctionDecl(Name, nil, nil, input)
+
+
+    function EnterFunction (FnIface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Process function forms
+    // ------------------------------------------------------------------------
+        return XLT.XLEnterFunction(FnIface)
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //    Translation of function declarations
+    // ------------------------------------------------------------------------
+        when
+            function 'FunctionStuff'
+        then
+            return EnterFunction (FunctionStuff)
+
+        when
+            procedure 'FunctionStuff'
+        then
+            return EnterFunction (FunctionStuff)
+
+        when
+            to 'FunctionStuff'
+        then
+            return EnterFunction (FunctionStuff)
+
+
+    function CallAssertion (cond : PT.tree;
+                            call: text) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //    Generate the code to call an assertion
+    // ------------------------------------------------------------------------
+        file    : text
+        line    : integer
+        column  : integer
+        source  : text
+        POS.PositionToLine cond.position, file, line, column, source
+
+        fileT   : PT.tree := PT.NewText (file, '"', cond.position)
+        lineT   : PT.tree := PT.NewInteger (line, cond.position)
+        columnT : PT.tree := PT.NewInteger (column, cond.position)
+        sourceT : PT.tree := PT.NewText(source, '"', cond.position)
+        callT   : PT.tree := PT.NewName(call, cond.position)
+
+        code    : BC.bytecode
+        code := parse_tree
+            if not('cond') then
+                'callT' ('fileT', 'lineT', 'columnT', 'sourceT')
+
+        oldContext : SYM.symbol_table := XLT.context
+        fnContext  : SYM.symbol_table := XLT.function_context
+
+        XLT.context := SYM.NewSymbolTable(XLT.context)
+        XLT.function_context := XLT.context
+
+        result := XLT.ScopeSemantics(code, XLT.scopeFunction)
+
+        XLT.context := oldContext
+        XLT.function_context := fnContext
+
+
+    function FunctionSemantics (Interface : PT.tree;
+                                Body      : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Perform function semantics, primarily semantics on function body
+    // ------------------------------------------------------------------------
+
+        // Remove the coating around the machine interface
+        translate Interface
+            when
+                @@fn_decl 'DeclaredIface'
+            then
+                Interface := DeclaredIface
+
+        // Create a symbol table for the body (taking parms as enclosing)
+        f           : function := GetFunction(Interface)
+        preCode     : PT.tree
+        assert f <> nil
+        ftype       : GEN.NonGenericType(f.type) as FT.function_type
+        assert ftype <> nil
+        context     : SYM.symbol_table := XLT.context
+        fncontext   : SYM.symbol_table := XLT.function_context
+        frame_depth : integer := SYM.GetInteger(context, "FRAMEDEPTH", 0, true)
+        XLT.context := SYM.NewSymbolTable (ftype.symbols)
+        XLT.function_context := XLT.context
+        SYM.SetInteger XLT.context, "FNPARM", 1
+        SYM.SetInteger XLT.context, "FRAMEDEPTH", frame_depth+1
+        if frame_depth > 0 then
+            ERR.Error "Nested functions are not supported yet",
+                      Body.position
+
+        // Indicate that we are in a function (for return instructions)
+        SYM.SetProperty XLT.context, "FN", f.machine_name
+
+        // If there is a return type, create a 'result' variable
+        retType : TY.any_type := ftype.base
+        if retType <> nil then
+            decl    : DCL.declaration := ftype.result_decl
+            if decl <> nil then
+                DType : TY.any_type := decl.type
+                MName : PT.name_tree := decl.machine_name
+                MType : PT.name_tree := DType.machine_name
+                f.result_machine_name := MName
+                preCode := parse_tree(@result_decl 'MType' 'MName')
+
+        // For generic functions, just skip body semantics and the like
+        if not GEN.IsGenericDeclaration(f) then
+            trace[+ctors] "Check constructors for ", PT.tree(f.machine_name),
+                         " source ", PT.tree(f.name),
+                         " result ", PT.tree(f.result_machine_name)
+
+            // Insert constructors for out parameters, except 'result'
+            // if the function is itself a constructor for the result type
+            bbl : body as PT.block_tree
+            if bbl <> nil and PT.Attached(bbl.child, "DEFAULTCOPY") = nil then
+                entries : PT.tree_list
+                entry   : PT.tree
+                SYM.LocalSymbols XLT.context, entries
+                SYM.LocalSymbols ftype.symbols, entries
+                for entry in entries loop
+                    trace[ctors] "Parm ", entry
+                    decl : DCL.declaration := DCL.GetDeclaration(entry)
+                    if entry.kind = PT.xlNAME and decl <> nil then
+                        trace[ctors] "Decl ", PT.tree(decl.machine_name)
+                        if decl.is_output and not decl.is_input then
+                            callCtor : boolean := true
+                            // If this is 'result' of a ctor,
+                            // field-initialize it to avoid recursion
+                            if decl.machine_name = f.result_machine_name then
+                                if IsConstructor(f) then
+                                    callCtor := false
+                            trace[ctors] "callCtor=", callCtor
+                            if callCtor then
+                                ctor : PT.tree := DCL.CallConstructor(decl)
+                                preCode := XLT.Append(preCode, ctor)
+                            else
+                                ctor : PT.tree := DCL.ConstructorCode(decl)
+                                preCode := XLT.Append(preCode, ctor)
+            trace[-ctors] "Constructor preCode=", preCode
+
+            // Compute preconditions
+            preCond : PT.tree
+            preList : PT.tree_list
+            for preCond in f.preconditions loop
+                preList += CallAssertion(preCond, "precondition_error")
+            f.preconditions := preList
+
+            // Compute postconditions
+            postCond : PT.tree
+            postList : PT.tree_list
+            for postCond in f.postconditions loop
+                postList += CallAssertion(postCond, "postcondition_error")
+            f.postconditions := postList
+
+            // Perform body semantics
+            mname : PT.tree := f.machine_name
+            Body := parse_tree
+                @fn_entry 'mname'
+                'Body'
+            Body := XLT.Append(preCode, Body)
+            Body := XLT.ScopeSemantics(Body, XLT.scopeFunction)
+            result := CGM.FunctionBody(f, Interface, Body)
+
+            // Add the function body to global scope
+            SYM.AddScopeItem XLT.main_context, "MAIN_BODY", result
+
+        result := parse_tree(@nop)
+        PT.SetInfo result, "FN", f
+
+        XLT.context := context
+        XLT.function_context := fncontext
+
+
+    function IsConstructor (F : function) return boolean is
+    // ------------------------------------------------------------------------
+    //    Check if a given function is a constructor
+    // ------------------------------------------------------------------------
+
+        ftype      : GEN.NonGenericType(f.type) as FT.function_type
+        retType    : TY.any_type := ftype.base
+        ctorNames  : PT.tree_list := DCL.ConstructorNames(retType)
+        ctorName   : PT.tree
+        fnName     : PT.name_tree := F.Name
+        fnNameT    : text := PT.XLNormalize(fnName.value)
+
+        for ctorName in ctorNames loop
+            AsName : ctorName as PT.name_tree
+            if AsName <> nil then
+                if PT.XLNormalize(AsName.value) = fnNameT then
+                    return true
+        return false
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //    Translation of function declarations
+    // ------------------------------------------------------------------------
+
+        when
+            @@fn_body 'Interface' 'Body'
+        then
+            return FunctionSemantics (Interface, Body)
+
+        when
+            @@fn_decl 'Interface'
+        then
+            // We put a coating around the interface during Declarations
+            // The interface itself is added to the scope decls, so
+            // we don't need it anymore.
+            f : function := GetFunction(input)
+            result := parse_tree(@nop)
+            PT.SetInfo result, "FN", f
+            return result 

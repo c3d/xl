@@ -1,0 +1,14 @@
+generic [type value]
+type complex is record with
+   re : value
+   im : value
+
+function Complex (re : complex.value) return complex is
+   result.re := re
+   result.im := re - re
+
+to Copy (out Tgt : complex; in Src : complex) written Tgt := Src is
+   Tgt.re := Src.re
+   Tgt.im := Src.im
+
+Z : variable := complex(1.5)

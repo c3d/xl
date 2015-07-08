@@ -1,0 +1,12 @@
+03.Declarations/local_name_hiding.xl:6: Redeclaration of 'A' 
+| function Znort (A : integer) return integer is
+|_________________^
+03.Declarations/local_name_hiding.xl:3: Previous declaration of 'A' here
+| A : real := 3.5
+|_^
+03.Declarations/local_name_hiding.xl:7: Redeclaration of 'B' 
+|     B : integer := 0
+|_____^
+03.Declarations/local_name_hiding.xl:4: Previous declaration of 'B' here
+| B : real := 0.4
+|_^

@@ -1,0 +1,38 @@
+<!--C++ Considered Harmful-->
+
+There is a <a href="http://esr.ibiblio.org/?p=532">blog entry</a> on
+Eric Raymond's web page that is worth pointing at, in particular
+because of the discussion in the comments.
+
+What strikes me in these comments is that people still oppose
+dynamic or scripting languages like Lisp or Python to system languages
+like C or C++. One commenter indicates that he has to use C++ because
+no other advanced language can do real-time. That is one of the
+reasons I chose to design XL (I started my professional life writing
+hard real-time code, think sub-millisecond.) 
+
+But as XL proves, even in its present unfinished state, it is possible
+to design a language that offers a much higher level of abstraction
+than C++ and is also much more efficient. For example, I remember at
+some point timing the code for {svn "TESTS/12.Library/julia.xl"} on
+Itanium, and getting almost a 70% speed boost relative to C++. Why?
+Because the XL construction does not require any kind of memory touch
+to perform complex operations, whereas C++ mandates
+them.
+
+Specifically, the complex class has an implicit {tt "this"} pointer,
+so that an operator like {tt "operator+"} implicitly performs four loads
+(real and imaginary part of both arguments) and two stores (storing
+real and imaginary part of the result). These loads and stores can be
+eliminated with really advanced back-end optimizations such as
+register field promotion, the kind of which the HP C++ compiler only
+performs at O3 or above. The XL complex arithmetic code in
+{svn "library/xl.math.complex.xl"}, by contrast, generates code that
+can be done entirely in registers, even at the lowest optimization
+levels. And this, despite having a level of abstraction that is at
+least comparable to
+<a href="http://gcc.gnu.org/viewcvs/trunk/libstdc%2B%2B-v3/include/std/complex?view=markup">the C++ implementation of the same</a>.
+
+What this tells me is that it is possible to design a language that is
+very high level, yet at the same time retains and even enhances the
+good attributes of C++, its ability to generate high-performance code.

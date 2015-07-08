@@ -1,0 +1,43 @@
+<!--XL as a data language-->
+
+As computing {@problems} became {concept "moore" "more complex"},
+most programs came to use a combination of instructions and  data to
+solve them. The data itself became more and more complex and
+structured. Data languages such as {@XML} or HTML are now necessary
+knowledge for programmers.
+<A href="http://zerotrilogy.gotdns.com/jaysonblog/archive/2004/01/22/215.aspx">New languages are being created</A>
+specifically to ease the integration between XML data and source code.
+
+Several authors have actually suggested to
+<A href="http://www.swen.uwaterloo.ca/~yzou/publications/xse-camera.pdf">
+use XML as a source code representation</A>. Unfortunately, markup
+languages such as XML are really designed for loosely structured
+data, and they emphasis the ability to represent text. They are not
+very appropriate for highly structured forms of data like source code,
+in particular when textual content is marginal. XML files
+representing such complex data are littered with arbitrary tags using
+complicated {@syntax} and {@semantics} that fall outside of XML's
+expressive power. A DTD is not a good way to describe a C-like
+syntax, and XSLT is not a good way to describe the semantics of a
+language like {@C++}.
+
+On the other hand, the {@xl} {inside "tree" "abstract syntax tree"}
+focuses specifically on representing highly structured data such as
+source code. It has a standard textual representation called
+{inside "xl0" "XL0"}, which makes the integration of arbitrary data in
+the source code natural. The XL {inside "translation"} process is
+designed to manipulate such data easily. The conceptual proof that 
+this approach works is the use of this technology for the compiler
+itself. But it can be used for simpler forms of data as well,
+which {example "gui" "integrate naturally in the XL source code"}.
+
+For those segments where textual content is predominant, XL also
+features a {example "text" "text syntax"} which supports long text
+segments.
+
+Another aspect of interest is that the XL {inside "translation"}
+process could be applied to data, not just code. This would allow for
+instance documentation to be emitted along with code. This requires a
+{concept "bytecode"} that is capable of representing the usual forms
+of data. This is under consideration, but not designed nor implemented
+yet.

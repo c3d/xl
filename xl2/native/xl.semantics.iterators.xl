@@ -1,0 +1,361 @@
+// ****************************************************************************
+//  xl.semantics.iterators.xl       (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of iterators
+//     This code is largely based on XL.SEMANTICS.FUNCTIONS
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision$
+// * Date       : $Date$
+// ****************************************************************************
+
+import DCL = XL.SEMANTICS.DECLARATIONS
+import FT = XL.SEMANTICS.TYPES.FUNCTIONS
+import GEN = XL.SEMANTICS.TYPES.GENERICS
+import FN = XL.SEMANTICS.FUNCTIONS
+import PT = XL.PARSER.TREE
+import SYM = XL.SYMBOLS
+import XLT = XL.TRANSLATOR
+import ERR = XL.ERRORS
+import TY = XL.SEMANTICS.TYPES
+import BC = XL.BYTECODE
+import CGM = XL.CODE_GENERATOR.MACHINE
+import POS = XL.SCANNER.POSITION
+import ASCII = XL.TEXT_IO.ENCODING.ASCII
+
+
+module XL.SEMANTICS.ITERATORS is
+// ----------------------------------------------------------------------------
+//   Implementation of the semantics of basic C++-style iterators
+// ----------------------------------------------------------------------------
+
+
+    function GetIterator (input : PT.tree) return iterator is
+    // ------------------------------------------------------------------------
+    //   Return the iterator info associated with a tree
+    // ------------------------------------------------------------------------
+        info : PT.FindInfo(input, "ITERATOR") as iterator
+        return info
+
+
+    procedure SetIterator (input : PT.tree; it : iterator) is
+    // ------------------------------------------------------------------------
+    //    Set iterator (and function and decl) for the tree
+    // ------------------------------------------------------------------------
+        PT.SetInfo input, "ITERATOR", it
+        FN.SetFunction input, it
+
+
+    function EnterIteratorDecl (Names   : PT.tree;
+                                Parms   : PT.tree;
+                                Iface   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a iterator in symbol table and return corresponding bytecode
+    // ------------------------------------------------------------------------
+
+        // Check validity of input name
+        if Names.kind <> PT.xlNAME then
+            ERR.Error "'$1' is not a valid iterator name", Names
+            Names := PT.NewName("invalid_iterator", Names.position)
+        fntype : any_type := FT.NewIteratorType(Iface, Parms)
+        return EnterIterator (Names, fntype, nil, Iface)
+
+
+    function EnterIterator (Names   : PT.tree;
+                            FnType  : any_type;
+                            Init    : PT.tree;
+                            Iface   : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter a iterator in symbol table and return corresponding bytecode
+    // ------------------------------------------------------------------------
+
+        Name        : Names as PT.name_tree
+
+        // Create the iterator
+        f : iterator
+        f.Name                  := Name
+        f.type                  := FnType
+        f.initializer           := Init
+        f.machine_name          := SYM.Temporary("iterator", Names.position)
+        f.frame_depth           := SYM.GetInteger(XLT.context, "FRAMEDEPTH")
+        f.is_input              := false
+        f.is_output             := false
+        f.is_variable           := false
+        f.is_parameter          := SYM.GetInteger(XLT.context, "FNPARM") <> 0
+        f.is_local              := SYM.GetInteger(XLT.context, "LOCAL") <> 0
+        f.is_global             := SYM.GetInteger(XLT.context, "GLOBAL") <> 0
+        f.is_field              := SYM.GetInteger(XLT.context, "FIELD") <> 0
+        f.is_generic_parm       := false
+        f.is_builtin            := false
+        f.implementation        := nil
+        f.machine_interface     := nil
+        f.symbols               := nil          // Only create if has body
+        f.declaration_context   := XLT.context
+
+        // Indicate that this is a iterator (and a function and a declaration)
+        SetIterator Iface, f
+
+        // Enter the machine interface into the symbol table
+        SYM.Enter XLT.context, "FN", Name.value, Iface
+
+        // Mark the result as iterator/decl
+        result := parse_tree(@nop)
+        SetIterator result, f
+
+
+    function EnterIteratorBody(input : PT.tree;
+                               Interface : PT.tree;
+                               Body : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Enter the body of a iterator
+    // ------------------------------------------------------------------------
+        Interface := EnterIterator(Interface)
+        f : iterator := GetIterator(Interface)
+        if f = nil then
+            ERR.Error "Initializing non-iterator '$1'", Interface
+            ERR.Error "with '$1'", Body
+            return ERR.ErrorTree()
+
+        if f.initializer <> nil then
+            ERR.Error "Duplicate iterator initializer '$1'", Body
+            ERR.Error "Original initializer was '$1'", f.initializer
+        else
+            f.initializer := Body
+            return Interface
+        return input
+
+
+    function NormalizeInterface(Interface : PT.tree;
+                                RestOfInterface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //    Used when the rest of an interface is in a block
+    // ------------------------------------------------------------------------
+        if RestOfInterface.kind = PT.xlINFIX then
+            N : RestOfInterface as PT.infix_tree
+            if N.name = ASCII.CR then
+                Interface := NormalizeInterface(Interface, N.left)
+                Interface := NormalizeInterface(Interface, N.right)
+                return Interface
+            else
+                Interface := NormalizeInterface(Interface, N.left)
+                N.left := Interface
+                return N
+
+        if RestOfInterface.kind = PT.xlPREFIX then
+            N : RestOfInterface as PT.prefix_tree
+            Left : PT.tree := N.left
+            Right : PT.tree := N.right
+            if Left.kind = PT.xlNAME then
+                L : Left as PT.name_tree
+                if Right.kind = PT.xlINFIX then
+                    R : Right as PT.infix_tree
+                    if R.name = "is" then
+                        Interface := PT.NewInfix(L.value, Interface, R.left)
+                        Interface := PT.NewInfix("is", Interface, R.right)
+                        return Interface
+                Interface := PT.NewInfix (L.value, Interface, N.right)
+                return Interface
+
+        ERR.Error "Invalid iterator attribute '$1'", RestOfInterface
+        return Interface
+
+
+    translation XLEnterIterator
+    // ------------------------------------------------------------------------
+    //   Entering a iterator and returning the corresponding form
+    // ------------------------------------------------------------------------
+        // Normalize an interface that spans multiple lines
+        when
+            'Interface'
+                'RestOfInterface'
+        then
+            Interface := NormalizeInterface(Interface, RestOfInterface)
+            return XLT.XLEnterIterator(Interface)
+
+        // Definition of a iterator
+        when ('Interface' is 'Body') then
+            return EnterIteratorBody(input, Interface, Body)
+
+        // Parameter lists
+        when ('Name' ('Parms')) then
+            return EnterIteratorDecl(Name, Parms, input)
+        when ('Name') then
+            return EnterIteratorDecl(Name, nil, input)
+
+
+    function EnterIterator (ItIface : PT.tree) return PT.tree is
+    // ------------------------------------------------------------------------
+    //   Process iterator forms
+    // ------------------------------------------------------------------------
+        return XLT.XLEnterIterator(ItIface)
+
+
+    translation XLDeclarations
+    // ------------------------------------------------------------------------
+    //    Translation of iterator declarations
+    // ------------------------------------------------------------------------
+        when
+            iterator 'IteratorStuff'
+        then
+            return EnterIterator (IteratorStuff)
+
+
+    function InvokeIterator(Input   : PT.tree;
+                            Base    : PT.tree;
+                            it      : iterator;
+                            Args    : PT.tree_list;
+                            ctors   : PT.tree;
+                            dtors   : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Perform iterator semantics, primarily semantics on iterator body
+    // ------------------------------------------------------------------------
+
+        // Save current context
+        context     : SYM.symbol_table := XLT.context
+        oldTemps    : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+        SYM.SetProperty XLT.context, "TEMPDTORS", nil
+
+        // Check that this is invoked in a for loop
+        LoopBody    : PT.tree := SYM.GetProperty(context, "ITERATING")
+        if LoopBody = nil then
+            ERR.Error "'$1' called outside of loop", it.name
+            ERR.Error "as '$1'", Input
+            return ERR.ErrorTree()
+
+        // Create a symbol table for the iterator body
+        decl_context : SYM.symbol_table := it.declaration_context
+        iter_context : SYM.symbol_table := SYM.NewSymbolTable (decl_context)
+        XLT.context := iter_context
+        SYM.SetInteger XLT.context, "LOCAL", 1
+        SYM.SetProperty iter_context, "ITERATING", LoopBody
+        SYM.AddImplicit iter_context, context // For := on generics
+
+        // This should not be generic code at that stage...
+        if GEN.IsGenericDeclaration(it) then
+            ERR.Error "The iterator '$1' is generic", it.Name
+            ERR.Error "while evaluating '$1'", Input
+
+        // Find the parameters for the iterator
+        ftype : GEN.NonGenericType(it.type) as FT.function_type
+        if ftype = nil then
+            ERR.Error "'$1' doesn't have a function type", it.Name
+            ERR.Error "while evaluating '$1'", Input
+            XLT.context := context
+            SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
+            return ERR.ErrorTree()
+        Parms : DCL.declarations := ftype.parameters
+        NA    : integer := size(Args)
+        NP    : integer := size(Parms)
+        if NA <> NP then
+            ERR.Error "'$1' called with wrong number of arguments", it.Name
+            ERR.Error "as '$1'", Input
+            XLT.context := context
+            SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
+            return ERR.ErrorTree()
+
+        // Enter evaluated arguments in the newly created symbol table
+        A  : integer
+        for A in 0..NA-1 loop
+           Parm : DCL.declaration := Parms[A]
+           Arg  : PT.tree := Args[A]
+           Name : PT.name_tree := Parm.name
+           trace[iterator] "Setting ", Name.value, "=", Arg
+           if Parm.is_variable then
+               // Iterator variable, passed by name
+               if Arg.kind <> PT.xlNAME then
+                   ERR.Error "Iterator variable '$1'", Name
+                   ERR.Error "was given non-name '$1'", Arg
+                   Arg := SYM.Temporary("iterarg", Arg.position)
+               SYM.Enter iter_context, "DECL", Name.value, Arg
+               DCL.DoNotDelete iter_context, DCL.GetDeclaration(Arg)
+           else
+               // Create a local declaration
+               Name := PT.NewName(Name.value, Name.position)
+               Local : DCL.declaration := DCL.Declare (Name, Parm.type)
+               if Parm.is_input or not Parm.is_output then
+                   argCopy : PT.tree := parse_tree('Name' := 'Arg')
+                   PT.AttachTree argCopy, "CTORCALL", argCopy
+                   result := XLT.Append(result, argCopy)
+               else
+                   result := XLT.Append(result, DCL.CallConstructor(Local))
+
+        // Create a clone of the iterator body, add it to parm decls/copies
+        result := XLT.Append(result, PT.Clone(it.initializer))
+        result := XLT.Append(ctors, result)
+        result := XLT.Append(result, dtors)
+
+
+        // Copy output parameters if needed
+        for A in 0..NA-1 loop
+           Parm : DCL.declaration := Parms[A]
+           Arg  : PT.tree := Args[A]
+           Name : PT.name_tree := Parm.name
+           if Parm.is_output and not Parm.is_variable then
+               argCopy : PT.tree := parse_tree('Arg' := 'Name')
+               result := XLT.Append(result, argCopy)
+
+
+        // Run semantics on the whole result
+        result := XLT.ScopeSemantics (result, XLT.scopeFunction)
+
+        // Cleanup all call temporaries
+        calldtors : PT.tree := SYM.ScopeItems(XLT.context, "TEMPDTORS")
+        result := XLT.Append(result, calldtors)
+
+        // Restore original context
+        XLT.context := context
+        SYM.SetProperty XLT.context, "TEMPDTORS", oldTemps
+
+
+    function DoForLoop (IterExpr : PT.tree;
+                        Body     : PT.tree) return BC.bytecode is
+    // ------------------------------------------------------------------------
+    //   Implement for loops
+    // ------------------------------------------------------------------------
+
+        // Record that we are indeed in a 'for' loop
+        oldIterating : PT.tree := SYM.GetProperty(XLT.context, "ITERATING")
+        SYM.SetProperty XLT.context, "ITERATING", Body
+
+        // Record in what context we are evaluating that body
+        SYM.SetContextProperty Body, "ITERCTX", XLT.context
+
+        // Evaluate the iterator expression, which should indirectly call
+        // 'InvokeIterator' above through either written form or call form
+        markAsIterator : PT.info
+        markAsIterator.name := ""
+        PT.SetInfo IterExpr, "ITERATOR_EXPR", markAsIterator
+        result := XLT.XLSemantics (IterExpr)
+
+        // Check that we did indeed call the iterator and yield the body
+        if SYM.ContextProperty (Body, "ITERCTX") <> nil then
+            ERR.Error "The loop body was never executed", Body.position
+            ERR.Error "by iterator '$1'", IterExpr
+
+        // Restore iterating context we had on entry
+        SYM.SetProperty XLT.context, "ITERATING", oldIterating
+
+
+    translation XLSemantics
+    // ------------------------------------------------------------------------
+    //    Translation of iterator declarations
+    // ------------------------------------------------------------------------
+
+        when
+            for 'Iterator' loop 'Body'
+        then
+            return DoForLoop (Iterator, Body)

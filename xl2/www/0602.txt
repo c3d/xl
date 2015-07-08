@@ -1,0 +1,22 @@
+<!--February 2006-->
+January | <b>February 2006</b> | March
+<p>
+Saturday, 4 February: Generics
+<ul>
+</ul>
+Saturday, 11 February: Preprocessor
+<ul>
+</ul>
+Sunday, 12 February: Generics are working
+<ul>
+</ul>
+Monday, 13 February: Generic written forms
+<ul>
+<li><A href="http://mozart-dev.sf.net">Mozart</A>
+</ul>
+<a href="060221.html">Tuesday, 21 February</a>: 'Any' lookup
+<ul>
+</ul>
+
+<p>
+January | <b>February 2006</b> | March

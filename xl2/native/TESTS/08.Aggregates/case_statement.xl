@@ -1,0 +1,43 @@
+// This tests the simple case statement
+
+use XL.UI.CONSOLE
+
+for I in 1..10 loop
+    case
+       I = 3 : WriteLn "I=3: I=", I
+       I < 5 : WriteLn "I<5: I=", I
+       I = 8 :
+           Write "I=8: I=", I
+           WriteLn " (somewhat of a special case)"
+       I > 4 : WriteLn "I>4: I=", I
+       I = 9 :
+           WriteLn "I would be surprised if this ever comes up..."
+
+// Check compile-time optimizations
+case
+   1 = 0: We do not care if it does not compile, since it is false
+   1 = 1: WriteLn "This case is always taken"
+   3 = 3: This case does not need to compile either, because it is never taken
+
+
+// Check the index case
+function Index(Val : integer; Ref : integer; ...) return integer is
+    if Val = Ref then
+        return 0
+    return 1 + Index(Val, ...)
+function Index(Val : integer) return integer is
+    return 1
+
+for I in 1..10 loop
+    case I
+        0 : WriteLn "Zero"
+        2 : WriteLn "Two"
+        4 :
+            WriteLn "Four"
+            WriteLn " (of a kind)"
+        5 : WriteLn "Five"
+        8 : WriteLn "Eight"
+        9 : WriteLn "Nine"
+        default: WriteLn "I forgot..."
+
+

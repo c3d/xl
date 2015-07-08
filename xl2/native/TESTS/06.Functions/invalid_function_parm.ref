@@ -1,0 +1,3 @@
+06.Functions/invalid_function_parm.xl:29: 'X = integer' isn't a parameter declaration
+| type L is function (X = integer) return integer
+|_______________________^

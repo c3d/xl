@@ -1,0 +1,32 @@
+<!--XL-->
+
+XL stands for "eXtensible Language". It is a programming language
+designed to implement the ideas of {@cp}. Being {concept "extension" "extensible"}
+is one of the key {concept "anything" "consequences"} of the concept
+programming principles on the design of XL.
+
+In practice, what makes XL different from most other programming
+languages is that it can apply to a very large number of domains and
+{@pb}, not just a small subset of the problems that you need to solve. Whereas
+today you might have to use a combination of Java, Python, XML and C
+to create a large-scale application, you can use XL alone to do the
+same task. XL can act as a {concept "data" "data language"}, as
+a {concept "perf" "high performance programming language"} or as a
+{concept "script" "scripting language"}. But you can also use it
+where you would use {concept "dsl" "domain specific languages"} today.
+
+This is possible because, from the ground up, XL was designed to
+represent {concept "anything" "arbitrary concepts"}, not simply a
+limited subset such as functions or objects.
+
+The {concept "top" "conceptual overview"} is a good way to understand
+the design principles behind XL. The {example "top" "examples"}
+illustrate how XL can be used, and what interesting features it
+provides. The {inside "top" "implementation description"} describes
+the the design and implementation of both the XL compiler and its
+associated runtime library.
+
+These web pages describe the language as I intend it to be
+implemented. The current status of the compiler(s) can be found
+{inside "status" "on the status page"}. XL is very much a work in
+progress. A lot of things may change by the time we reach 1.0...

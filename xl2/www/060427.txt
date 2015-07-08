@@ -1,0 +1,4 @@
+<!--Generic bytecode types-->
+
+Added support for generic bytecode types, to declare bytecode
+array or pointer types.

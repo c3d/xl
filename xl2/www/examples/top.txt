@@ -1,0 +1,39 @@
+<!--Examples-->
+
+Here are a number of simple example showing some {@xl}
+capabilities. Examples point back to the {concept "top" "concepts"}
+they illustrate, and in some cases to the {inside "top""implementation"} 
+where relevant.
+
+<A name="top.html">
+
+<H4>Simple examples</H4>
+<A href="hello.html">Hello World</A><BR>
+<A href="factorial.html">Factorial</A><BR>
+<A href="maximum.html">Maximum</A> and
+<A href="average.html">Average</A><BR>
+<A href="complex.html">Complex numbers</A><BR>
+
+<H4>Basic Syntax and Semantics</H4>
+<A href="numbers.html">Numbers</A><BR>
+<A href="text.html">Text</A><BR>
+<A href="operators.html">Operators</A><BR>
+<A href="decl.html">Declarations</A><BR>
+<A href="statements.html">Basic statements</A><BR>
+<A href="function.html">Functions</A><BR>
+<A href="inout.html">Input and output parameters</A><BR>
+<A href="generic.html">Generic Declarations</A><BR>
+<A href="written.html">Operator overloading (expression reduction)</A><BR>
+
+<H4>Library</H4>
+<A href="object.html">Objects</A><BR>
+<A href="writeln.html">Text I/O</A><BR>
+<A href="string.html">XL Strings</A><BR>
+
+<H4>Language extensions</H4>
+<A href="prolog.html">Prolog-Style Logic Programming</A><BR>
+<A href="tasking.html">Ada-style Tasking</A><BR>
+<A href="diff.html">Symbolic Differentiation</A><BR>
+<A href="gui.html">GUI description</A><BR>
+<A href="translate.html">Translation statements</A><BR>
+<A href="quote.html">Quote</A><BR>

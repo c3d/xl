@@ -1,0 +1,42 @@
+<!--April 2006-->
+March | <b>April 2006</b> | May
+<p>
+Sunday, 9 April: Hello World...
+<ul>
+</ul>
+Monday, 10 April: Automatic output parameters
+<ul>
+</ul>
+Tuesday, 11 April: Added auto-declaration for operators
+<ul>
+</ul>
+Wednesday, 12 April: For loops
+<ul>
+</ul>
+Thursday, 13 April: Iterators, redux
+<ul>
+</ul>
+Friday, 14 April: New implementation of iterators
+<ul>
+</ul>
+Saturday, 15 April: Generic iterators
+<ul>
+</ul>
+Monday, 17 April: First implementation of destructors
+<ul>
+</ul>
+Wednesday, 19 April: Constructors and destructors
+<ul>
+</ul>
+Thursday, 20 April: Case statement
+<ul>
+</ul>
+<a href="060421.html">Friday, 21 April</a>: The subtle cases of destructors
+<ul>
+</ul>
+<a href="060427.html">Thursday, 27 April</a>: Generic bytecode types
+<ul>
+</ul>
+
+<p>
+March | <b>April 2006</b> | May

@@ -1,0 +1,43 @@
+use XL.POINTER
+use XL.POINTER.ADDRESS
+use XL.POINTER.MACHINE_ADDRESS
+use XL.UI.CONSOLE
+
+Ptr1, Ptr2, Ptr3, Ptr4 : pointer to integer 
+
+Ptr1 := nil
+Ptr2 := Pointer(16#FF)
+Ptr3 := Pointer(16#FFF)
+Ptr4 := Pointer(16#FFFF)
+
+Ptr1 := & (*Ptr1)
+Ptr2 := Address(*Ptr2)
+Ptr3 := & (Dereference(Ptr3))
+Ptr4 := Address(Dereference Ptr4)
+
+WriteLn "Ptr1=", Integer(Ptr1)
+WriteLn "Ptr2=", Integer(Ptr2)
+WriteLn "Ptr3=", Integer(Ptr3)
+WriteLn "Ptr4=", Integer(Ptr4)
+
+
+Ptr1 := * (&Ptr2)
+Ptr2 := * (&Ptr3)
+Ptr3 := * (&Ptr4)
+Ptr4 := * (&Ptr1)
+
+WriteLn "Ptr1=", Integer(Ptr1)
+WriteLn "Ptr2=", Integer(Ptr2)
+WriteLn "Ptr3=", Integer(Ptr3)
+WriteLn "Ptr4=", Integer(Ptr4)
+
+*(&Ptr1) := Ptr2
+*(&Ptr2) := Ptr3
+*(&Ptr3) := Ptr4
+*(&Ptr4) := Ptr1
+
+WriteLn "Ptr1=", Integer(Ptr1)
+WriteLn "Ptr2=", Integer(Ptr2)
+WriteLn "Ptr3=", Integer(Ptr3)
+WriteLn "Ptr4=", Integer(Ptr4)
+
