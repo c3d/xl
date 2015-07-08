@@ -18,47 +18,59 @@
 //  (C) 2015 Taodyne SAS
 // ****************************************************************************
 
+// WARNING: In all the following, we do a two-step evaluation, e.g. we use
+//    int result = foo(...);
+//    R_INT(result);
+// instead of the simpler
+//    R_INT(foo(...))
+//
+// This is intentional and necessary. The reason is that a macro like R_INT
+// does a 'new Integer(arg)', which some compilers will optimize by splitting
+// it into an 'operator new' followed by the evaluation of 'arg'. In our case,
+// the called function foo(...) often does various evaluations, e.g as a
+// result of calling xl_parse_tree. These evaluations may cause multiple
+// garbage collections, which may end up cleaning up the block allocated
+// by 'operator new' before we even began using it!
+//
+// This is an issue with the garbage collector that will need fixing, but
+// until it is addressed, the two step evaluation is a requirement.
+
+
 FUNCTION(tell, integer,
          PARM(host, text)
          PARM(code, tree),
-         R_INT(xl_tell(host, &code)));
+         int rc = xl_tell(CONTEXT, host, &code);
+         R_INT(rc));
 
 FUNCTION(ask, tree,
          PARM(host, text)
          PARM(code, tree),
-         RESULT(xl_ask(host, &code)));
+         Tree_p rc = xl_ask(CONTEXT, host, &code);
+         RESULT(rc));
 
 FUNCTION(invoke, tree,
          PARM(host, text)
          PARM(code, tree),
-         Scope_p scope = DataScope(data);
-         Context_p context = new Context(scope);
-         RESULT(xl_invoke(context, host, &code)));
+         Tree_p rc = xl_invoke(CONTEXT, host, &code);
+         RESULT(rc));
 
 FUNCTION(reply, integer,
          PARM(code, tree),
-         Scope_p scope = DataScope(data);
-         Context_p context = new Context(scope);
-         // Must evaluate this ahead of time, otherwise the GC inside
-         // may deallocate the new Integer that is in progress inside R_INT
-         int reply = xl_reply(context, &code);
+         int reply = xl_reply(CONTEXT, &code);
          R_INT(reply));
 
 FUNCTION(listen_on, integer,
          PARM(port, integer),
-         Scope_p scope = DataScope(data);
-         Context_p context = new Context(scope);
-         R_INT(xl_listen(context, 0, port)));
+         int rc = xl_listen(CONTEXT, 0, port);
+         R_INT(rc));
 
 FUNCTION(listen, integer, ,
-         Scope_p scope = DataScope(data);
-         Context_p context = new Context(scope);
-         R_INT(xl_listen(context, 0)));
+         int rc = xl_listen(CONTEXT, 0);
+         R_INT(rc));
 
 FUNCTION(listen_forking, integer, ,
-         Scope_p scope = DataScope(data);
-         Context_p context = new Context(scope);
-         R_INT(xl_listen(context, MAIN->options.listen_forks)));
+         int rc = xl_listen(CONTEXT, OPTIONS.listen_forks);
+         R_INT(rc));
 
 FUNCTION(listen_hook, tree,
          PARM(hook, tree),

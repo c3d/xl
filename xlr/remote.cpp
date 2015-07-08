@@ -94,11 +94,14 @@ static void xl_write_tree(int sock, Tree *tree)
 //
 // ============================================================================
 
-static int xl_send(text host, Tree *code)
+static int xl_send(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
 {
+    // Process all the escapes inside
+    code = xl_parse_tree(context, code);
+
     // Compute port number
     int port = XL_DEFAULT_PORT;
     size_t found = host.rfind(':');
@@ -157,7 +160,7 @@ static int xl_send(text host, Tree *code)
 }
 
 
-int xl_tell(text host, Tree *code)
+int xl_tell(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host
 // ----------------------------------------------------------------------------
@@ -165,7 +168,7 @@ int xl_tell(text host, Tree *code)
     IFTRACE(remote)
         std::cerr << "xl_tell: Telling " << host << ":\n"
                   << code << "\n";
-    int sock = xl_send(host, code);
+    int sock = xl_send(context, host, code);
     if (sock < 0)
         return sock;
     close(sock);
@@ -173,7 +176,7 @@ int xl_tell(text host, Tree *code)
 }
 
 
-Tree_p xl_ask(text host, Tree *code)
+Tree_p xl_ask(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for reply
 // ----------------------------------------------------------------------------
@@ -181,7 +184,7 @@ Tree_p xl_ask(text host, Tree *code)
     IFTRACE(remote)
         std::cerr << "xl_ask: Asking " << host << ":\n"
                   << code << "\n";
-    int sock = xl_send(host, code);
+    int sock = xl_send(context, host, code);
     if (sock < 0)
         return xl_nil;
 
@@ -203,7 +206,7 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
     IFTRACE(remote)
         std::cerr << "xl_invoke: Invoking " << host << ":\n"
                   << code << "\n";
-    int sock = xl_send(host, code);
+    int sock = xl_send(context, host, code);
     if (sock < 0)
         return xl_nil;
 
