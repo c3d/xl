@@ -1,9 +1,0 @@
-// This test checks text I/O operations
-// It was the first test to actually output something on the console
-
-import IO = XL.UI.CONSOLE
-
-K : integer := 17
-
-IO.WriteLn "Hello World"
-IO.WriteLn "One=", 1, " Two=", 2, " and K=", K

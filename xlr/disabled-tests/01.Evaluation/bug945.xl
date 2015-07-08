@@ -1,9 +1,0 @@
-tv_language -> "en"
-tv_tagline -> "geeks"
-tv_img_format -> "svg"
-tv_logo_file ->
-    if tv_tagline = "none" then
-        "image:Taodyne_logo." & tv_img_format
-    else
-        "image:Taodyne_" & tv_tagline & "_" & tv_language & "." & tv_img_format
-writeln tv_logo_file

@@ -1,6 +1,0 @@
-writeln "Hello, world! Καλημέρα κόσμε or こんにちは 世界"
-writeln "1+1=", 1+1
-
-display_factorial N -> writeln "The factorial of ", N, " is ", N!
-display_factorial with 0..10
-

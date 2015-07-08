@@ -1,3 +1,0 @@
-data complex x:value,y:value
-
-complex 1,2+3

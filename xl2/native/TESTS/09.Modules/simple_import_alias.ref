@@ -1,3 +1,0 @@
-09.Modules/simple_import_alias.xl:3: Defining an alias 'I' for non-record module
-| import I = SIMPLE_IMPORTED
-|________^

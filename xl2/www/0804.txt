@@ -1,9 +1,0 @@
-<!--April 2008-->
-March | <b>April 2008</b> | May
-<p>
-<a href="080408.html">Tuesday, 8 April</a>: Function pointers
-<ul>
-</ul>
-
-<p>
-March | <b>April 2008</b> | May

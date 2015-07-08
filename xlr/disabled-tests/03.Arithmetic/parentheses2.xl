@@ -1,5 +1,0 @@
-// Tests the fix for Bug #29
-foo x:integer, y:integer -> x + y
-
-foo (1+1, 2)
-

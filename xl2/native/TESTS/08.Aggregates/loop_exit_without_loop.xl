@@ -1,6 +1,0 @@
-// This checks that 'exit' or 'restart' without a loop fails
-// EXIT=2
-
-exit
-
-restart

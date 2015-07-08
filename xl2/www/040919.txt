@@ -1,3 +1,0 @@
-<!--Basic infrastructure for records-->
-
-The basic infrastructure for record types has been added.

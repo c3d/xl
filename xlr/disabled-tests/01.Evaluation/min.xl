@@ -1,5 +1,0 @@
-min x, y -> if x < min y then x else min y
-min x -> x
-writeln "Min 0=", min (2, 3, 0)
-writeln "Min 2=", min (2, 3, 5)
-writeln "Min 3=", min (4, 3, 5)

@@ -1,6 +1,0 @@
-// OPT=-O3 -tcode
-foo A -> A + A + A + 5 + 12
-
-foo 3
-
-

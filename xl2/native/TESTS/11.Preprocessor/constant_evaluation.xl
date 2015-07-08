@@ -1,9 +1,0 @@
-// Check the behavior of constant_evaluation
-use XL.UI.CONSOLE
-
-transform (fact 0) into (1)
-transform (fact 'X') into (xl.value('X' * xl.value(fact ('X'-1))))
-
-K : integer := fact(5)
-
-WriteLn "K=", K

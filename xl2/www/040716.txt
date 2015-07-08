@@ -1,7 +1,0 @@
-<!--Article on Intentional Programming-->
-
-I found the following article on intentional programming:
-
-<A href="http://www.codegeneration.net/tiki-read_article.php?articleId=61">
-http://www.codegeneration.net/tiki-read_article.php?articleId=61
-</A>

@@ -1,4 +1,0 @@
-// OPT=-O3
-(X:integer < Y:integer):boolean -> opcode ICmpSLT
-
-1 < 3

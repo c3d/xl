@@ -1,6 +1,0 @@
-y -> 35 - x
-foo x:source ->
-    parse_tree ({x+x} * {{x+x}} * {{{x+x}}} / (x - 2 * {x} - y - {y}))
-
-foo (3+4)
-

@@ -1,7 +1,0 @@
-type U is integer
-generic [type T is integer]
-type pair is record with
-    A : T
-    B : T
-
-K : pair

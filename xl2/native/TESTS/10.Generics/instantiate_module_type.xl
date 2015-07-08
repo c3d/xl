@@ -1,6 +1,0 @@
-import IO = XL.TEXT_IO
-
-to Znort(K : IO.writable) is
-    return
-
-Znort "Hello"

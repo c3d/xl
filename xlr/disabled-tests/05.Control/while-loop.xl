@@ -1,4 +1,0 @@
-// CMD=%x -stack 50 %f
-X := 0
-while X < 100 loop
-    writeln "X=", (X := X+1)

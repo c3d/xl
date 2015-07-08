@@ -1,1 +1,0 @@
-// CMD= %x -parse -diff %f.src /dev/null

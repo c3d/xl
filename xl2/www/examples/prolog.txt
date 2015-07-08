@@ -1,1 +1,0 @@
-<!--Prolog-Style Backtracking in XL-->

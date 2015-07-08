@@ -1,7 +1,0 @@
-// This test checks that we require evaluation for pattern matching
-// when we have the same tree twice
-foo pi:real, y -> if pi < foo y then pi else foo y
-foo y    -> y
-window_scale -> foo pi / 10, pi / 3
-
-window_scale

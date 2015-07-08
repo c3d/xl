@@ -1,9 +1,0 @@
-#!/bin/bash
-
-echo '#include "runtime.h"'
-echo '#include "'$1'-module.h"'
-echo '#include "opcodes.h"'
-[ -f $1'.cpp' ] && echo '#include "'$1'.cpp"'
-echo 'XL_BEGIN'
-echo '#include "'$1'.tbl"'
-echo 'XL_END'

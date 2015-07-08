@@ -1,7 +1,0 @@
-// Test that recursive instantiation is detected
-// This also tests that "upwards" instantiation is possible
-// EXIT=2
-function Moxotron(...) return integer is
-    return Moxotron(2, ...)
-
-L : integer := Moxotron(3)

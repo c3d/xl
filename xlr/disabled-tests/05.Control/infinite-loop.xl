@@ -1,6 +1,0 @@
-// CMD=%x -stack 50 %f
-// EXIT=33
-X := 0
-loop
-    writeln "Hello", (X := X + 1)
-    if X >= 100 then exit 33

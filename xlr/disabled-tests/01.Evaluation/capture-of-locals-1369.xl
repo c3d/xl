@@ -1,9 +1,0 @@
-history_logo 1
-
-history_logo Creation ->
-    name -> glop month_name Creation
-    debug  name
-
-glop T:text -> writeln T
-
-month_name 1 -> "Toto"

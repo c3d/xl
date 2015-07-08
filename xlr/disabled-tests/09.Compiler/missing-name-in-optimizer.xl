@@ -1,6 +1,0 @@
-// OPT=-O3
-// EXIT=1
-{printf fmt:text, arg:integer, arg2:integer}:integer -> C
-printf "The value of fib %lld is %lld", N, fib N
-
-

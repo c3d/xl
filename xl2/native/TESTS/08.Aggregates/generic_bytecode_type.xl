@@ -1,7 +1,0 @@
-// Check that we can instantiate a bytecode type
-generic [type T; Sz : integer]
-type array is XL.BYTECODE.array_type
-
-type myarray is array[integer, 5]
-
-K : myarray

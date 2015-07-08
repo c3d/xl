@@ -1,3 +1,0 @@
-// EXIT=2
-// Verify that we correctly fail in case of incomplete block
-function F(

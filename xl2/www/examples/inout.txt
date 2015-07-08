@@ -1,3 +1,0 @@
-<!--Input and output parameters-->
-
-Impact on performance

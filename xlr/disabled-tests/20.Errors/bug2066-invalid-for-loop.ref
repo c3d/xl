@@ -1,4 +1,0 @@
-error "Couldn't compile $1", 'A := 0...    writeln "Hello"'
-20.Errors/bug2066-invalid-for-loop.xl:3: No rewrite candidate for 'for i in A .. 3 ...    writeln "Hello"'
-20.Errors/bug2066-invalid-for-loop.xl:2: Couldn't compile 'A := 0...    writeln "Hello"'
-20.Errors/bug2066-invalid-for-loop.xl:2: Couldn't compile 'A := 0...    writeln "Hello"'

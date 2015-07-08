@@ -1,7 +1,0 @@
-<!--Enumerations-->
-
-With {svnrev 338}, XL now has basic support for
-{svn "TESTS/08.Aggregates/enumerations.xl" "enumerations"}.
-Not a big deal as far as features are concerned, but it allowed me to
-figure out a long-standing bug in the treatment of named types that
-had prevented alternate {tt "X.Y"} translations from working right.

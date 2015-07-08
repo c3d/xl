@@ -1,0 +1,84 @@
+// ****************************************************************************
+//  remote.tbl                                                   ELIOT project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Send commands to a remote host
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+// WARNING: In all the following, we do a two-step evaluation, e.g. we use
+//    int result = foo(...);
+//    R_INT(result);
+// instead of the simpler
+//    R_INT(foo(...))
+//
+// This is intentional and necessary. The reason is that a macro like R_INT
+// does a 'new Integer(arg)', which some compilers will optimize by splitting
+// it into an 'operator new' followed by the evaluation of 'arg'. In our case,
+// the called function foo(...) often does various evaluations, e.g as a
+// result of calling eliot_parse_tree. These evaluations may cause multiple
+// garbage collections, which may end up cleaning up the block allocated
+// by 'operator new' before we even began using it!
+//
+// This is an issue with the garbage collector that will need fixing, but
+// until it is addressed, the two step evaluation is a requirement.
+
+
+FUNCTION(tell, integer,
+         PARM(host, text)
+         PARM(code, tree),
+         int rc = eliot_tell(CONTEXT, host, &code);
+         R_INT(rc));
+
+FUNCTION(ask, tree,
+         PARM(host, text)
+         PARM(code, tree),
+         Tree_p rc = eliot_ask(CONTEXT, host, &code);
+         RESULT(rc));
+
+FUNCTION(invoke, tree,
+         PARM(host, text)
+         PARM(code, tree),
+         Tree_p rc = eliot_invoke(CONTEXT, host, &code);
+         RESULT(rc));
+
+FUNCTION(reply, integer,
+         PARM(code, tree),
+         int reply = eliot_reply(CONTEXT, &code);
+         R_INT(reply));
+
+FUNCTION(listen_on, integer,
+         PARM(port, integer),
+         int rc = eliot_listen(CONTEXT, 0, port);
+         R_INT(rc));
+
+FUNCTION(listen, integer, ,
+         int rc = eliot_listen(CONTEXT, 0);
+         R_INT(rc));
+
+FUNCTION(listen_forking, integer, ,
+         int rc = eliot_listen(CONTEXT, OPTIONS.listen_forks);
+         R_INT(rc));
+
+FUNCTION(listen_hook, tree,
+         PARM(hook, tree),
+         RESULT(eliot_listen_hook(&hook)));
+
+NAME_FN(ListenReceived, tree, "listen_received",
+        RESULT(eliot_listen_received()));
+
+NAME_FN(GetPid, integer, "process_id",
+        R_INT(getpid()));
+

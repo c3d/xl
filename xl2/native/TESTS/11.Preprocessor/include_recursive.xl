@@ -1,3 +1,0 @@
-// Test that infinite recursion is bad
-// EXIT=2
-include "include_recursive.xl"

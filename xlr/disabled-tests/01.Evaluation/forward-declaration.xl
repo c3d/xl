@@ -1,5 +1,0 @@
-foo -> bar
-bar -> writeln "Hello"
-
-foo
-

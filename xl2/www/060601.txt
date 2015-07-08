@@ -1,7 +1,0 @@
-<!--Update to new CVS, documentation-->
-
-CVS has been upgraded by SourceForge, and I needeed to update my web
-page generator.
-
-I spent most of last month bringing the book I'm writing on XL up to
-date with some recent changes and writing new chapters.

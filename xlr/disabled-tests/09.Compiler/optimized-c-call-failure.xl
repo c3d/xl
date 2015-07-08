@@ -1,8 +1,0 @@
-// OPT=-O3
-// EXIT=1
-(sin x:real):real -> C
-(broumf x : real):real -> C
-
-broumf 3.5
-
-sin 3.5

@@ -1,6 +1,0 @@
-import SIMPLE_MODULE
-
-function Copy (out T : integer; in S : integer) written T := S is
-    XL.ByteCode.Copy_INT
-
-Test_Call : integer := SIMPLE_MODULE.FooZoo(0)

@@ -1,7 +1,0 @@
-// OPT=-O3
-fib 0 -> 1
-fib 1 -> 1
-fib "A" -> "A"
-fib N -> (fib (N-1) + fib (N-2))
-
-fib 25

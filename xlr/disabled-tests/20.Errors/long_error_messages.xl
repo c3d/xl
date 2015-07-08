@@ -1,3 +1,0 @@
-// EXIT=1
-cos "This is a very long long message, that should be shortened in errors"
-

@@ -1,4 +1,0 @@
-foo "Hello" -> writeln "Hello World"
-foo X -> writeln "General foo"
-
-foo invalid expression

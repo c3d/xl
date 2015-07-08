@@ -1,6 +1,0 @@
-<!--Building and Space-->
-
-I checked in a minor change to the makefile rules, which avoids
-errors when building from a directory where the full path name
-contains a space.
-

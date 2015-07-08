@@ -1,4 +1,0 @@
-A -> 3.5
-foo X:real ->
-    writeln sin (X)
-foo 3.5

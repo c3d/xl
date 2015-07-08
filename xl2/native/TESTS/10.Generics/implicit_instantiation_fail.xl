@@ -1,7 +1,0 @@
-// Test implicit instantiation of simple functions with mismatched parameters
-// EXIT=2
-generic [type item]
-function Ajouter (X, Y : item) return item is
-    return X + Y
-
-C : text := Ajouter (3, "ABC")

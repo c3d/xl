@@ -1,0 +1,184 @@
+// ============================================================================
+// 
+//    Garbage collection initialization
+// 
+// ============================================================================
+
+INIT_GC;
+
+INIT_ALLOCATOR(Tree);
+INIT_ALLOCATOR(Integer);
+INIT_ALLOCATOR(Real);
+INIT_ALLOCATOR(Text);
+INIT_ALLOCATOR(Name);
+INIT_ALLOCATOR(Block);
+INIT_ALLOCATOR(Prefix);
+INIT_ALLOCATOR(Postfix);
+INIT_ALLOCATOR(Infix);
+
+INIT_ALLOCATOR(Context);
+
+#ifndef INTERPRETER_ONLY
+INIT_ALLOCATOR(Types);
+INIT_ALLOCATOR(RewriteCalls);
+#endif // INTERPRETER_ONLY
+
+
+
+// ============================================================================
+// 
+//   Built-in names
+// 
+// ============================================================================
+
+NAME(nil);
+NAME(self);
+NAME(true);
+NAME(false);
+NAME(error);
+
+
+
+// ============================================================================
+// 
+//   Built-in types
+// 
+// ============================================================================
+
+TYPE(boolean, Name,
+     if (Name *name = AsName())
+         if (name->value == "true" || name->value == "false")
+             return (boolean_p) name;
+    );
+TYPE(integer, Integer,
+     if (Integer *ival = AsInteger())
+         return (integer_p) ival;
+    );
+TYPE(real, Real,
+     if (Real *rval = AsReal())
+         return (real_r *) rval;
+     if (Integer *ival = AsInteger())
+         return (real_p) new Real(ival->value, ival->Position());
+    );
+TYPE(text, Text,
+     if (Text *text = AsText())
+         return (text_p) text;
+    );
+TYPE(character, Text,
+     if (Text *tval = AsText())
+         if (tval->IsCharacter())
+             return (character_p) tval;
+    );
+TYPE(tree,    Tree, return (tree_p)  this);
+TYPE(value,   Tree, return (value_p) this);
+TYPE(symbol,  Name,
+     if (Name *name = AsName())
+         return (symbol_p) name;
+    );
+TYPE(name,    Name,
+     if (Name *name = AsName())
+         if (name->IsName())
+             return (name_p) name;
+    );
+TYPE(operator,Name,
+     if (Name *name = AsName())
+         if (name->IsOperator())
+             return (operator_p) name;
+    );
+TYPE(infix,Infix,
+     if (Infix *infix = AsInfix())
+         return (infix_p) infix;
+    );
+TYPE(declaration,Infix,
+     if (Infix *infix = AsInfix())
+         if (infix->IsDeclaration())
+             return (declaration_p) infix;
+    );
+TYPE(prefix,Prefix,
+     if (Prefix *prefix = AsPrefix())
+         return (prefix_p) prefix;
+    );
+TYPE(postfix,Postfix,
+     if (Postfix *postfix = AsPostfix())
+         return (postfix_p) postfix;
+    );
+TYPE(block,Block,
+     if (Block *block = AsBlock())
+         return (block_p) block;
+    );
+
+TYPE(integer8,integer,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= -0x80 && ival->value < 0x80)
+             return (integer8_p) ival;
+    );
+            
+TYPE(integer16,integer,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= -0x8000 && ival->value < 0x8000)
+             return (integer16_p) ival;
+    );
+TYPE(integer32,integer,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= -0x80000000LL && ival->value < 0x80000000LL)
+             return (integer32_p) ival;
+    );
+TYPE(integer64,integer,
+     if (Integer *ival = AsInteger())
+         return (integer64_p) ival;
+    );
+TYPE(unsigned,integer,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= 0)
+             return (unsigned_p) ival;
+    );
+TYPE(unsigned8,unsigned,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= 0 && ival->value < 0x100)
+             return (unsigned8_p) ival;
+    );
+TYPE(unsigned16,unsigned,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= 0 && ival->value < 0x10000)
+             return (unsigned16_p) ival;
+    );
+TYPE(unsigned32,unsigned,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= 0 && ival->value < 0x100000000)
+             return (unsigned32_p) ival;
+    );
+TYPE(unsigned64,unsigned,
+     if (Integer *ival = AsInteger())
+         if (ival->value >= 0)
+             return (unsigned64_p) ival;
+    );
+TYPE(real32,real,
+     if (Real *rval = AsReal())
+         return (real32_p) rval;
+    );
+TYPE(real64,real,
+     if (Real *rval = AsReal())
+         return (real64_p) rval;
+    );
+
+
+
+// ============================================================================
+// 
+//   Basic operations
+// 
+// ============================================================================
+
+INFIX_CTX(Assign, tree, tree, ":=", value,
+          RESULT(context->Assign(&left, &right)));
+
+INFIX(TextEQ, boolean, text, "=",  text, R_BOOL(LEFT == RIGHT));
+INFIX(TextNE, boolean, text, "<>", text, R_BOOL(LEFT != RIGHT));
+INFIX(TextLT, boolean, text, "<",  text, R_BOOL(LEFT <  RIGHT));
+INFIX(TextGT, boolean, text, ">",  text, R_BOOL(LEFT >  RIGHT));
+INFIX(TextLE, boolean, text, "<=", text, R_BOOL(LEFT <= RIGHT));
+INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
+
+PREFIX_CTX(quote, tree, "quote", tree,  RESULT(eliot_parse_tree(context,leftPtr)));
+PREFIX_FN(parse, tree, text,            RESULT(eliot_parse_text(left)));
+PREFIX_FN(exit,  tree, integer,         exit(left); R_INT(0))

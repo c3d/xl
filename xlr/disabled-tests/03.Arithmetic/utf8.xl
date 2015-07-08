@@ -1,5 +1,0 @@
-fàctörièllé 0 -> 1
-fàctörièllé N -> N * fàctörièllé(N-1)
-
-fàctörièllé 7
-

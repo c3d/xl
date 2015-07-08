@@ -1,3 +1,0 @@
-3
-20.Errors/local-variables-redeclaration.xl:3: Variable 'X' already exists
-20.Errors/local-variables-redeclaration.xl:2: Declared as 'X'

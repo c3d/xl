@@ -1,6 +1,0 @@
-procedure CopyInt (out Tgt : integer; in Src : integer) written Tgt := Src is
-    XL.BYTECODE.CopyInt
-
-module test_module is
-    function Foo return integer is
-        return 23323

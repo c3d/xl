@@ -1,7 +1,0 @@
-<!--Extensible Runtime-->
-
-Finally, the "runtime" aspect of the "X" (extensible) in XL is there
-in {svnrev 315}. Right now, there is only one functioning runtime
-called C, but I expect to populate the Java and C++ runtime pretty
-soon.
-

@@ -1,5 +1,0 @@
-// Test that we can include another file
-include "macros.xl"
-
-WriteLn "S=", S
-WriteLn "T=", T

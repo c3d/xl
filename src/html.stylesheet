@@ -1,0 +1,92 @@
+// ****************************************************************************
+//  html.stylesheet                 (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                               ELIOT project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Style sheet for rendering colorized ELIOT as HTML
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 70 $
+// * Date       : $Date: 2004-09-09 23:05:57 +0200 (Thu, 09 Sep 2004) $
+// ****************************************************************************
+
+infix  = separator left space self space right separator
+prefix = separator left space right separator
+block  = separator opening separator child separator closing separator
+
+indents = nbsp nbsp nbsp nbsp
+"block I+ I-" = indent newline child unindent newline
+"block  ( ) " = "<FONT COLOR=""#707070"">(</FONT>" child "<FONT COLOR=""#707070"">)</FONT>"
+"block { }" = "<FONT COLOR=""#C00000"">{" child "}</FONT>"
+"infix cr" = separator left newline right separator
+"infix else" = separator left separator self separator right separator
+
+begin         = "<HTML><BODY>"
+end           = "</BODY></HTML>"
+
+
+// Character remapping
+nbsp            = "&nbsp;"
+space           = nbsp
+cr              = "<BR>" 
+'<'             = "&lt;"
+'>'             = "&gt;"
+'&'             = "&amper;"
+
+// Colorization of comments
+"comment_before "= "<FONT color=""#800000"">" self "</FONT>"
+"comment_after " = "<FONT color=""#806020"">" space self "</FONT>"
+
+// Colorization of numbers
+integer         = "<FONT color=""#008080"">" self "</FONT>"
+real            = "<FONT color=""#008000"">" self "</FONT>"
+
+// Basic keywords
+keyword         = "<FONT color=""#000080""><B>" self "</B></FONT>"
+
+"if"            = keyword
+"then"          = keyword
+"else"          = keyword
+"loop"          = keyword
+"while"         = keyword
+"for"           = keyword
+"exit"          = keyword
+"function"      = keyword
+"procedure"     = keyword
+"to"            = keyword
+"import"        = keyword
+
+// Basic types
+type            = "<FONT color=""#008080""><B>" self "</B></FONT>"
+
+"integer"       = type
+"real"          = type
+
+// Basic function names
+function        = "<FONT color=""#00C080""><B>" self "</B></FONT>"
+
+"exp"           = function
+"sin"           = function
+"cos"           = function
+"tan"           = function
+"log"           = function
+
+"?wildcard?"    = "<FONT color=""#808000"">" self "</FONT>"
+
+"text "" """ = """" quoted_self """"
+"text << >>" = "<<" self ">>"
+"longtext "" """ = "<<" self ">>"
+"longtext << >>" = "<<" self ">>"

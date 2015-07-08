@@ -1,4 +1,0 @@
-error "No form matches $1", box (1, 2, (3, 4) 
-    writeln "Hello World"
-    writeln "How are you")
-01.Evaluation/automatic-generation-of-blocks.xl:10: No form matches 'box 1, 2, (3, 4) ...    writeln "How are you"'

@@ -1,0 +1,185 @@
+#******************************************************************************
+#  Christophe de Dinechin                                       ELIOT PROJECT  
+#  ELIOT: Makefile.rules                 (C) 2003-2015 Christophe de Dinechin
+#******************************************************************************
+#
+#  File Description:
+#
+#   Common rules for building the targets
+#
+#
+#
+#
+#
+#
+#
+#
+#******************************************************************************
+# This program is released under the GNU General Public License.
+# See http://www.gnu.org/copyleft/gpl.html for details
+#******************************************************************************
+
+CPPFLAGS=	$(DEFINES) $(DEFINES_$(BUILDENV))	\
+		$(DEFINES_all) $(DEFINES_$(TARGET))	\
+		$(INCLUDES)
+CFLAGS=		$(CPPFLAGS) $(CFLAGS_$(TARGET)) $(CFLAGS_all)
+CXXFLAGS=	$(CPPFLAGS) $(CXXFLAGS_$(TARGET)) $(CXXFLAGS_all)
+LDFLAGS=	$(LDFLAGS_$(TARGET)) $(LDFLAGS_all)
+
+ifndef DIR
+# The cd ./ in FULLDIR is for a corner case where . is a symbolic link
+# At least with bash (not sure with other shells), pwd returns me
+# the symbolic link path (as for BASEDIR), rather than the physical path
+# So this is necessary for the substitution to happen correctly. Ugh!
+BASEDIR=        $(shell cd ./$(BROOT); pwd)
+FULLDIR=	$(shell cd ./; pwd)
+DIR=            $(subst $(BASEDIR),,$(FULLDIR))
+endif
+OBJROOT=        $(BROOT)obj/$(BUILDENV)/$(TARGET)
+OBJDIR=		$(OBJROOT)$(DIR)
+INCDIR=		$(BROOT)obj/$(BUILDENV)/include
+OBJECTS=	$(SOURCES:%=$(OBJDIR)/%.o)
+OBJLIBRARY=	$(LIBRARY:%=$(OBJROOT)/%)
+OBJDRIVER=	$(DRIVER:%=$(OBJROOT)/%)
+OBJEXE=		$(PRODUCT)
+OBJLIBRARIES=	$(LIBRARIES:%.a=$(OBJROOT)/%.a)
+OBJLIBDEP=	$(filter %.a, $(OBJLIBRARIES))
+GARBAGE=	*~ *.bak
+
+# Default target
+all: debug
+
+everything: hello recurse build goodbye
+
+debug opt:
+	@$(MAKE) everything TARGET=$@ RECURSE=everything
+
+clean: dirclean
+	rm -rf $(BROOT)obj
+	rm -f $(PRODUCT)
+
+dirclean:
+	rm -f $(GARBAGE) $(TOCLEAN)
+	$(MAKE) recurse RECURSE=dirclean
+
+install: all
+
+startup: clean all
+
+depend: $(OBJDIR)/Makefile.depend
+	@echo --------- Dependencies for $(TARGET) done ----------
+hello:
+	@echo ----------- Making $(TARGET) in $$(pwd) ------------
+goodbye: $(OBJECTS) $(OBJLIBRARY) $(OBJDRIVER) $(OBJEXE)
+	@echo ---------- Done with $(TARGET) in $$(pwd) ----------
+
+build:									\
+        depend                                                          \
+	prebuild							\
+	$(OBJDIR) $(OBJECTS) $(OBJLIBRARY) $(OBJDRIVER) $(OBJEXE)	\
+	postbuild
+
+# "Hooks" for pre and post build steps
+prebuild:
+postbuild:
+
+tags: TAGS
+TAGS: $(SOURCES)
+	etags $(SOURCES) *.h
+
+#------------------------------------------------------------------------------
+#  General rules
+#------------------------------------------------------------------------------
+
+recurse: $(SUBDIRS:%=%.recurse)
+%.recurse:
+	@cd $*;								    \
+	$(MAKE) BROOT=../$(BROOT) DIR=$(DIR)/$* TARGET=$(TARGET) $(RECURSE)
+
+top-%:
+	cd ./$(BROOT); $(MAKE) $*
+
+v-%:
+	$(MAKE) $* V= R= H=
+timing-%:
+	$(MAKE) $* V=time R= H=
+s-%:
+	$(MAKE) -s --no-print-directory $* 2> build.err
+l-%:
+	$(MAKE) v-$* 2>&1 | tee buildlog
+
+#------------------------------------------------------------------------------
+#  Product generation rules
+#------------------------------------------------------------------------------
+
+V=@if [ ! -z "$<" ]; then echo Compiling $<; fi;
+R=@if [ ! -z "$@" ]; then echo Building $@; fi;
+D=@if [ ! -z "$@" ]; then echo Dependency $@; fi;
+H=@
+
+$(OBJDIR):
+	$R mkdir -p $(OBJDIR) && touch $(OBJDIR)/created
+$(OBJDIR)/created: $(OBJDIR)
+
+
+$(OBJEXE) exe: $(OBJECTS) $(OBJLIBDEP)
+	$R $(LD) $(OBJECTS) $(LDFLAGS) $(LDFLAGS_$(OBJEXE))		\
+		 -L$(OBJROOT) $(OBJLIBRARIES) -o $(OBJEXE)
+
+$(OBJLIBRARY) lib: $(OBJECTS)
+	$R $(AR) -r $@ $(OBJECTS); $(RANLIB) $@
+
+$(OBJDRIVER) dvr: $(OBJECTS) $(OBJLIBDEP)
+	$R $(DRIVER_LD) $@ $(LDFLAGS) $(LDFLAGS_$*)		\
+		 $(OBJECTS) -L$(OBJROOT) $(OBJLIBRARIES)
+
+
+#------------------------------------------------------------------------------
+#  Inference rules
+#------------------------------------------------------------------------------
+
+$(OBJDIR)/%.c.o: %.c
+	$V $(CC) $(CFLAGS) $(CPPFLAGS_$*) $(CFLAGS_$*) -o $@ -c $<
+$(OBJDIR)/%.C.o: %.C
+	$V $(CXX) $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
+$(OBJDIR)/%.cpp.o: %.cpp
+	$V $(CXX) $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
+
+ifdef TARGET
+
+# Dependencies generation
+
+# Don't you just love the sed syntax?
+# This means: Replace runtime.o in .d file with $(OBJDIR)/runtime.cpp.o
+# The $(OBJDIR) is actually in the name of the .d file in $@,
+# So $(@:.d=) removes the .d, and then we add the .o back... Smart, eh?
+SED_DEPEND=sed -e 's!$*.o:!$@ $(@:.d=).o:!g'
+
+DEPENDENCIES=$(SOURCES:%=$(OBJDIR)/%.d)
+
+$(OBJDIR)/Makefile.depend: $(OBJDIR) $(DEPENDENCIES)
+	$D cat $(SOURCES:%=$(OBJDIR)/%.d) > $@
+
+$(DEPENDENCIES): $(OBJDIR)/created
+
+$(OBJDIR)/%.c.d: %.c
+	$D $(CC_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.C.d: %.C
+	$D $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.cpp.d: %.cpp
+	$D $(CXX_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.S.d: %.S
+	$D $(AS_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.s.d: %.s
+	$D $(AS_DEPEND) $< | $(SED_DEPEND) > $@
+$(OBJDIR)/%.eliot.d: %.eliot
+	@echo No dependency for $*
+	$H touch $@
+
+endif
+
+
+# Include dependencies from current directory
+ifdef SOURCES
+-include $(OBJDIR)/Makefile.depend
+endif

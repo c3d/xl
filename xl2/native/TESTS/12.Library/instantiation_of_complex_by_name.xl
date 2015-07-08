@@ -1,9 +1,0 @@
-import CS = XL.MATH.COMPLEX
-
-K : CS.complex[real]
-L : CS.complex
-
-CS.Copy K, CS.Add(K,L)
-
-
-

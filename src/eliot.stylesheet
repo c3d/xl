@@ -1,0 +1,43 @@
+// ****************************************************************************
+//  eliot.stylesheet                (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                               ELIOT project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Default renderer for ELIOT
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+
+// Nothing really special here...
+infix  = separator left space self space right separator
+prefix = separator left space right separator
+block  = separator opening separator child separator closing separator
+
+indents = "    "
+"block I+ I-" = indent cr child unindent newline
+"block  ( ) " = "(" child ")"
+"?wildcard?" = "'" self "'"
+"infix ," = separator left "," space right separator
+"infix ;" = separator left ";" space right separator
+"infix :" = separator left ":" right separator
+"infix cr" = separator left newline right separator
+"infix else" = separator left separator self separator right separator
+"postfix %" = separator left "%" separator
+"postfix !" = separator left "!" separator
+"text "" """ = """" quoted_self """"
+"text << >>" = "<<" unindented_self ">>"
+"longtext "" """ = "<<" unindented_self ">>"
+"longtext << >>" = "<<" unindented_self ">>"
+"comment " = ""
+

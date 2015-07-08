@@ -1,7 +1,0 @@
-// It is not valid to give an alias name to a non-record imported item
-// EXIT=2
-import I = SIMPLE_IMPORTED
-
-to Copy(out Tgt : integer; in Src : integer) written Tgt := Src is XL.BYTECODE.Copy_int
-
-K : integer := SIMPLE_IMPORTED

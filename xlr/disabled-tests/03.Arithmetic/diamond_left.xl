@@ -1,5 +1,0 @@
-// Test that we can accommodate Lionel's style on the left
-polygon n, a, b, c -> (a + b + c) * n
-diamond t -> polygon 4, t
-
-diamond 2, 3, 5

@@ -1,9 +1,0 @@
-// This checks that we can pass validation successfully
-generic type ordered where
-    A, B : ordered
-    Test : boolean := A < B
-
-function F (A : ordered) return ordered is
-    return A
-
-P : integer := F(1)

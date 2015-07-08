@@ -1,4 +1,0 @@
-// Test that basic ranges work
-MyRange : variable := 1..3
-MyOtherRange : variable := 1.5..7.2
-

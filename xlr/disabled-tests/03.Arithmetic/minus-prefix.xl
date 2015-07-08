@@ -1,9 +1,0 @@
-truc x:real             -> debug "Truc1"
-truc x:real, y:real     -> debug "Truc2"
-moochoo                 ->
-    debug "Moo Choo"
-    -247
-truc -1, 2
-truc -1
-moochoo-1
-

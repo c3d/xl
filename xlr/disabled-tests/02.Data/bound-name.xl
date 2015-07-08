@@ -1,6 +1,0 @@
-foo X:source ->
-    bound X
-
-foo
-    writeln "Hello"
-    writeln "World"

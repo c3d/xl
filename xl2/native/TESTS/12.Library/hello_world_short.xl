@@ -1,7 +1,0 @@
-// This test checks text I/O operations
-use XL.UI.CONSOLE
-
-K : integer := 17
-
-WriteLn "Hello World"
-WriteLn "One=", 1, " Two=", 2, " and K=", K

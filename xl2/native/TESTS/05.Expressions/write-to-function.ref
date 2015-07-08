@@ -1,9 +1,0 @@
-05.Expressions/write-to-function.xl:35: No translation for 'F (0) := B'
-|     F(0) := B
-|___________^
-05.Expressions/write-to-function.xl:27: Form ''Tgt' := 'Src'' could not be selected
-| to Copy(out Tgt : integer; in Src : integer) written Tgt := Src
-|___________________________________________________________^
-05.Expressions/write-to-function.xl:35: Cannot convert 'F (0)' from 'constant integer' to 'integer'
-|     F(0) := B
-|______^

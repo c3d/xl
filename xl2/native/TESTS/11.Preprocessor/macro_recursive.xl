@@ -1,6 +1,0 @@
-// Test that infinite recursion is bad
-// EXIT=2
-transform (sin 'X') into (sin (cos('X')))
-
-A : real := sin A
-

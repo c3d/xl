@@ -1,3 +1,0 @@
-<HTML><BODY>
-X&nbsp;:&nbsp;<FONT color="#008080"><B>integer</B></FONT>&nbsp;:=&nbsp;<FONT color="#800000">1</FONT>&nbsp;+&nbsp;F&nbsp;(A&nbsp;,&nbsp;B&nbsp;,&nbsp;C&nbsp;,&nbsp;D)&nbsp;<BR><FONT COLOR="#C00000">{pragma}</FONT>&nbsp;<FONT color="#000080"><B>procedure</B></FONT>&nbsp;Test&nbsp;(X&nbsp;:&nbsp;<FONT color="#008080"><B>integer</B></FONT>)
-</BODY></HTML>

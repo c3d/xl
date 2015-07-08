@@ -1,6 +1,0 @@
-// CMD=%x -stack 50 %f
-recurse 0, M:integer -> writeln "Done, iterations = ", M
-recurse N:integer, M:integer ->
-    recurse N-1, M+1
-
-recurse 1000, 0
