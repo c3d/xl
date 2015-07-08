@@ -1,4 +1,4 @@
 @ - ` -> @ + `
 3 - 5
-00.Parser/reject_symbols_in_pattern.xl:3: The pattern variable '@' is not a name
-00.Parser/reject_symbols_in_pattern.xl:3: The pattern variable '`' is not a name
+00.Parser/reject_symbols_in_pattern.eliot:3: The pattern variable '@' is not a name
+00.Parser/reject_symbols_in_pattern.eliot:3: The pattern variable '`' is not a name

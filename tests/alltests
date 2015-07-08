@@ -1,7 +1,7 @@
 #!/bin/bash
 #******************************************************************************
-#  Christophe de Dinechin                                          XL PROJECT
-#  XL COMPILER TESTS: alltests
+#  Christophe de Dinechin                                        ELIOT PROJECT
+#  alltests
 #******************************************************************************
 #
 #  File Description:
@@ -9,7 +9,7 @@
 #    Script for testing the compiler
 #
 #    This file runs through every possible test. It looks for all files
-#    ending in .test below the current directory, and executes them.
+#    ending in .eliot below the current directory, and executes them.
 #
 #
 #
@@ -19,16 +19,12 @@
 #This document is distributed under the GNU General Public License
 #See the enclosed COPYING file or http://www.gnu.org for information
 #******************************************************************************
-#* File       : $RCSFile$
-#* Revision   : $Revision$
-#* Date       : $Date$
-#******************************************************************************
 
-# Environment - Note that 'xl' is typically a symbolic link to real compiler
+# Environment
 OS=$(uname)
 TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
-XL=./xl
+ELIOT=eliot
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z0-9]*'
@@ -48,7 +44,7 @@ MISSING_REFERENCE=0
 EXCLUDED=0
 TOTAL_TESTS=0
 
-if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
+if [ "$1" == '-eliot' ]; then ELIOT="$2"; shift; shift; fi
 if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
     shift; RUNTIME="$1"; shift;
 fi
@@ -76,22 +72,16 @@ FAILURE="$TESTDIR/failure-"$RUNTIME".out"
 EXPECTED="$TESTDIR/expected-"$RUNTIME".out"
 BASEFILE="$TESTDIR/baseline-"$RUNTIME".txt"
 
-export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
+export TESTDIR ELIOT SUCCESS FAILURE PASS UPDATE BASELINE
 
 # Make sure the proper files are linked in place
 # MinGW's unable to follow symlinks, so we have to copy dependencies
-LN="ln -sf"
-if (echo "$OS" | grep -iq "mingw"); then LN="cp"; fi
-$LN ../xlr ./xl
-$LN ../*.stylesheet .
-$LN ../xl.syntax .
-$LN ../builtins.xl .
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > "$SUCCESS"
 echo Failed tests on $(date) on $HOSTNAME > "$FAILURE"
 echo Expected test failures on $(date) on $HOSTNAME > "$EXPECTED"
-export XL
+export ELIOT
 
 # Clear the baseline if we are updating it
 if [ ! -z "$BASELINE" ]; then
@@ -104,12 +94,12 @@ SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 for SUBDIR in $(find "$TESTDIR" -type d -a -name '*'$SUBDIRS'*')
 do
-for TEST in $(find "$SUBDIR" -name "$PATTERN".xl -print)
+for TEST in $(find "$SUBDIR" -name "$PATTERN".eliot -print)
 do
     TESTNAME=${TEST/$TESTDIR\/}
 
     # Setup useful variables - These can be set in the test files
-    BASE=${TESTNAME/\.xl}                           # Basename
+    BASE=${TESTNAME/\.eliot}                           # Basename
     DIR="$(dirname $TEST)"                          # Directory
     REF=$BASE.ref                                   # Reference file
     REFR=$BASE-$RUNTIME.ref                         # Reference file
@@ -117,9 +107,9 @@ do
     CMD=                                            # Command to execute
     EXIT=0                                          # Expected exit code
     RUN=                                            # What to run afterwards
-    OPT=                                            # XL compiler options
-    RT_OPT=                                         # XL options for runtime
-    #INC="-I $DIR -I $TESTDIR/library"              # XL include directory
+    OPT=                                            # ELIOT compiler options
+    RT_OPT=                                         # ELIOT options for runtime
+    #INC="-I $DIR -I $TESTDIR/library"              # ELIOT include directory
     EXCLUDE=                                        # Runtimes to exclude
     CACHED=
     OUTLINE=
@@ -137,11 +127,11 @@ do
     eval $(grep TO_REMOVE alltests_$RUNTIME)
     [ -z "$RT_OPT" ] && { eval $(grep RT_OPT alltests_$RUNTIME); }
     if [ -z "$CMD" ]; then
-        CMD="$XL $RT_OPT $OPT $TESTNAME";
+        CMD="$ELIOT $RT_OPT $OPT $TESTNAME";
         [ -z "$RUN" ] && { eval $(grep RUN alltests_$RUNTIME); }
     fi
 
-    # Run the XL compiler on the test
+    # Run the ELIOT compiler on the test
     THIS_FAILED=
     TOTAL_TESTS=$(($TOTAL_TESTS+1))
     if (echo $EXCLUDE | grep -q $RUNTIME) then

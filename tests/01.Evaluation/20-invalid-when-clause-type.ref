@@ -1,5 +1,5 @@
 collatz 10
-01.Evaluation/20-invalid-when-clause-type.xl:4: Invalid guard clause, "glop" is not a boolean
-01.Evaluation/20-invalid-when-clause-type.xl:5: Invalid guard clause, "glap" is not a boolean
-01.Evaluation/20-invalid-when-clause-type.xl:7: No name matches 'collatz'
-01.Evaluation/20-invalid-when-clause-type.xl:7: No prefix matches 'collatz 10'
+01.Evaluation/20-invalid-when-clause-type.eliot:4: Invalid guard clause, "glop" is not a boolean
+01.Evaluation/20-invalid-when-clause-type.eliot:5: Invalid guard clause, "glap" is not a boolean
+01.Evaluation/20-invalid-when-clause-type.eliot:7: No name matches 'collatz'
+01.Evaluation/20-invalid-when-clause-type.eliot:7: No prefix matches 'collatz 10'
