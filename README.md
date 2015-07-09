@@ -13,8 +13,8 @@ applications.
 Consider a sensor named `sensor.corp.net` running ELIoT and featuring
 a temperature measurement through a `temperature` function.
 
-ELIoT lets you evaluate programss on this sensor remotely to do all
-kind of interesting temperature measurements. By deferring
+ELIoT lets you evaluate programs on this sensor remotely to do all
+kinds of interesting temperature measurements. By deferring
 computations to the sensor, we minimize network traffic and energy
 consumption. Examples similar to the ones below can be found in the
 [demo directory](https://github.com/c3d/eliot/tree/master/demo).
