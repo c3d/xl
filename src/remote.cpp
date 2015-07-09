@@ -313,7 +313,7 @@ Tree_p eliot_ask(Context *context, text host, Tree *code)
     if (sock < 0)
         return eliot_nil;
 
-    Tree *result = eliot_read_tree(sock);
+    Tree_p result = eliot_read_tree(sock);
     result = eliot_merge_context(context, result);
     IFTRACE(remote)
         std::cerr << "eliot_ask: Response from " << host << " was:\n"
@@ -340,7 +340,7 @@ Tree_p eliot_invoke(Context *context, text host, Tree *code)
     Tree_p result = eliot_nil;
     while (true)
     {
-        Tree *response = eliot_read_tree(sock);
+        Tree_p response = eliot_read_tree(sock);
         if (response == NULL)
             break;
         
@@ -507,13 +507,14 @@ int eliot_listen(Context *context, uint forking, uint port)
         else
         {
             // Read data from client
-            Tree *code = eliot_read_tree(insock);
+            Tree_p code = eliot_read_tree(insock);
 
             // Evaluate resulting code
             if (code)
             {
                 IFTRACE(remote)
-                    std::cerr << "eliot_listen: Received code: " << code << "\n";
+                    std::cerr << "eliot_listen: Received code: "
+                              << code << "\n";
                 received = code;
                 Tree_p hookResult = context->Evaluate(hook);
                 if (hookResult != eliot_nil)

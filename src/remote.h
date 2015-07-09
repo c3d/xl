@@ -28,8 +28,8 @@ ELIOT_BEGIN
 
 const uint ELIOT_DEFAULT_PORT = 1205;
 
-int     eliot_tell(text host, Tree *body);
-Tree_p  eliot_ask(text host, Tree *body);
+int     eliot_tell(Context *, text host, Tree *body);
+Tree_p  eliot_ask(Context *, text host, Tree *body);
 Tree_p  eliot_invoke(Context *, text host, Tree *body);
 int     eliot_reply(Context *, Tree *body);
 Tree_p  eliot_listen_received();

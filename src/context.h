@@ -233,6 +233,7 @@ public:
     Scope *             CurrentScope()          { return symbols; }
     void                SetScope(Scope *s)      { symbols = s; }
     Context *           Parent();
+    Context *           Pointer()               { return this; }
 
     // Compile and evaluate a tree in the current context
     eval_fn             Compile(Tree *what);
