@@ -181,7 +181,7 @@ located hundreds of miles from one another.
 With these examples, we have demonstrated that using ELIoT, we can
 answer queries from applications that have very different requirements.
 An application will get exactly the data it needs, when it needs it,
-minimizing network traffic and optimizing energy utiliation.
+minimizing network traffic and optimizing energy utilization.
 
 Yet the API on the sensors and on the controlling computer is
 extremely simple. On the sensor, we only have a single function
