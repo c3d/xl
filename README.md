@@ -1,22 +1,23 @@
 # ELIoT
 ### Extensible Language for the Internet of Things
 
-ELIoT is a very simple programming language specifcally designed to
-facilitate the configuration and control of swarms of small
-devices such as sensors or actuators. It can also be used as a
+ELIoT is a very simple and small programming language specifcally
+designed to facilitate the configuration and control of swarms of
+small devices such as sensors or actuators. It can also be used as a
 powerful, remotely-accessible extension language for larger
 applications.
 
 
-## Example: Measuring temperature from remote sensors
+## Example: Measuring temperature
 
-Imagine you have a sensor named `sensor.corp.net` running ELIoT,
-which features a temperature measurement through a `temperature`
-function. We can evaluate programs on this sensor remotely to do all
+Consider a sensor named `sensor.corp.net` running ELIoT and featuring
+a temperature measurement through a `temperature` function.
+
+ELIoT lets you evaluate programss on this sensor remotely to do all
 kind of interesting temperature measurements. By deferring
 computations to the sensor, we minimize network traffic and energy
 consumption. Examples similar to the ones below can be found in the
-[demo directory]
+[demo directory](https://github.com/c3d/eliot/tree/master/demo).
 
 ### Simple temperature measurement (polling)
 
@@ -40,10 +41,11 @@ value.
 
 ### Reporting sudden changes in temperatures
 
-Imagine that you are interested in sudden changes in temperatures,
-e.g. if the sensor suddenly warms up. You can check the temperature
-every second and report if it changed by more than 1 degree since last
-time it was measured, you can use:
+An application may be interested in sudden changes in temperatures,
+e.g. if the sensor suddenly warms up. With ELIoT, without changing
+anything to the temperature API, you can check the temperature every
+second and report if it changed by more than 1 degree since last time
+it was measured with the following program:
 
     invoke "sensor.corp.net",
         last_temperature := temperature
@@ -61,18 +63,20 @@ time it was measured, you can use:
 The `invoke` function sends a program to the remote node and opens a
 bi-directional connexion, which allows the sensor to `reply` when it
 feels it has useful data to report. In that case, the sensor replies
-with a call to `temperature_changed` with the old and new temperature,
-and the controlling node can display a message using `writeln`.
+with a call to `temperature_changed`, sending back the old and new
+temperature, and the controlling node can display a message using
+`writeln`.
 
 
 
 ### Reporting changes in temperatures since last report
 
-Maybe what really interests you is change over time, even if it's
-gradual. In that case, you want to report temperature if it changes by
-more than one degree since last time it was *reported* (instead of
-measured). You can do that with a slight variation in the code above,
-simply changing when you store `last_temperature`:
+Another application may be interested in how temperature changes over
+time, even if it's gradual. In that case, you want to report
+temperature if it changes by more than one degree since last time it
+was *reported* (instead of measured). You can do that with a slight
+variation in the code above, so that you update `last_temperature`
+only after having transmitted the new value, not after having measured it:
 
     invoke "sensor.corp.net",
         last_temperature := temperature
@@ -96,9 +100,9 @@ latter two are used for expressions.
 
 ### Computing average, min and max temperatures
 
-With the same sensor, and without changing anything on the target, you
-can also have it compute min, max and average temperatures from
-samples taken every 2.5 seconds:
+Again using the same sensor, and again without any code or API change
+on the sensor, you can also have it compute min, max and average
+temperatures from samples taken every 2.5 seconds:
              
     invoke "sensor.corp.net",
         min   -> 100.0
@@ -140,8 +144,8 @@ Imagine now that you have two temperature sensors called
 Australia, while your controlling application is located in Sydney,
 Canada. If you need the difference in temperature between the two
 sensors, wouldn't it make sense to minimize the traffic between Canada
-and Australia, and have the two sensors talk to one another across the
-room?
+and Australia, and have the two sensors talk to one another locally in
+Australia?
 
 This is very easy with ELIoT. The following program will only send a
 traffic across the ocean if the temperature between the two sensors
@@ -218,12 +222,10 @@ the list of modules in the
 
 This will build at least `temperature.tbl`. That file contains the
 interface between ELIoT and your code. In simple cases like our
-temperature measurement, it may be sufficient. However, if you have a
-file called `temperature.h`, it will be read too. That's where you
-would add your own headers, classes or helper declarations. If you
-have a file called `temperature.cpp`, it will also be added to the
-module. That's where you can implement your helper functions or
-classes.
+temperature measurement, it may be sufficient. However, if you have
+files called `temperature.h` or `temperature.cpp`, they will be
+integrated in your `temperature` module. This lets you add supporting
+classes or functions.
 
 The `tell`, `ask`, `invoke` and `reply` words are implemented in the
 module called `remote`, which consists of
@@ -314,7 +316,14 @@ This is the reason why things appear to work as a single program.
 
 
 
-## Basics of ELIoT syntax
+## Basics of ELIoT syntax and semantics
+
+ELIoT derives from [XLR](http://xlr.sourceforge.net). It is a
+specially trimmed-down version that does not require LLVM and can work
+in full interpreted mode, making it easier to compiler and use, but
+also safer, since you cannot call arbitrary C functions.
+
+### Semantics: One operator to rule them all
 
 ELIoT has one fundamental operator, `->`, the "rewrite operator",
 which reads as *transforms into*. It is used to declare variables:
@@ -325,8 +334,89 @@ It can be used to declare functions:
 
     add_one X -> X + 1
 
-ELIoT is a functional language, where functions are first-class
-entities, i.e. you can manipulate them, pass them around, etc:
+The rewrite operator  can be used to declare other operators:
+
+    X + Y -> writeln "Adding ", X, " and ", Y; X - (-Y)
+
+But it is a more general tool than the operator overloading found in
+most other languages, in particular since it allows you to easily
+overload combinations of operators, or special cases:
+
+    A in B..C -> A >= B and A <= C
+    X * 1 -> X
+
+Rewrites are considered in program order, and pattern matching finds
+the first one that applies. For example, factorial is defined as follows:
+
+    0! -> 1
+    N! -> N * (N-1)!
+
+Many basic program structures are defined that way in
+[builtins.eliot](https://github.com/c3d/eliot/blob/master/src/builtins.eliot).
+For example, if-then-else and infinite loops are defined as follows:
+
+    if true  then X else Y      -> X
+    if false then X else Y      -> Y
+    loop Body                   -> Body; loop Body
+
+
+### Syntax: Look, Ma, no keywords!
+
+ELIoT has no keywords. Instead, the syntax relies on a rather simple
+[recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser)
+[parser](https://github.com/c3d/eliot/blob/master/src/parser.cpp).
+
+The parser has no keywords, and generates a parse tree made of * node
+types. The first four node types are leaf nodes:
+
+ * `Integer` is for integer numbers such as `2` or `16#FFFF_FFFF`.
+ * `Real` is for real numbers such as `2.5` or `2#1.001_001_001#e-3`
+ * `Text` is for text values such as `"Hello" or `'World'`. Text can
+   be encoded using UTF-8
+ * `Name` is for names and symbols such as `ABC` or `**`
+
+The last four node types are inner nodes:
+
+ * `Infix` are nodes where a named operator separates the operands,
+   e.g. `A+B` or `A and B`.
+ * `Prefix` are nodes where the operator precedes the operand, e.g.
+   `+X` or `sin X`. By default, functions are prefix.
+ * `Postfix` are nodes where the operator follows the operand, e.g.
+   `3%` or `5km`.
+ * `Block` are nodes with only one child surrounded by delimiters,
+   such as `(A)`, `[A]` or `{A}`.
+
+Of note, the line separator is an infix that separates statements,
+much like the semi-colon `;`. The comma `,` infix is traditionally
+used to build lists or to separate the argument of
+functions. Indentation forms a special kind of block.
+
+For example, the following code:
+
+    tell "foo",
+        if A < B+C then
+            hello
+        world
+
+parses as a prefix `tell`, with an infix `,` as its right argument. On
+the left of the `,` there is the text `"foo"`. On the right, there is
+an indentation block with a child that is an infix line separator. On
+the left of the line separator is the `if` statement. On the right is
+the name `world`.
+
+This parser is dynamically configurable, with the default priorities
+being defined by the
+[eliot.syntax](https://github.com/c3d/eliot/blob/master/src/eliot.syntax) file.
+
+Parse trees are the fundamendal data structure in ELIoT. Any data or
+program can be represented as a parse tree.
+
+
+### ELIoT as a functional language
+
+ELIoT can be seen as a functional language, where functions are
+first-class entities, i.e. you can manipulate them, pass them around,
+etc:
 
     adder X:integer -> (Y -> Y + X)
 
@@ -337,18 +427,94 @@ entities, i.e. you can manipulate them, pass them around, etc:
     writeln "5+17=", add5 17
     writeln "8+2=", (adder 8) 2
 
-The rewrite operator can also be used for more powerful
-transformations. For example, you can define operators, as in the
-following factorial definition:
+However, it is a bit different in the sense that the core data
+structure is the parse tree. Some specific parse trees, for example
+`A+B`, are not naturally reduced to a function call, although they are
+subject to the same evaluation rules based on tree rewrites.
 
-    0! -> 1
-    N! -> N * (N-1)!
 
-You can also define more complex structures. For instance,
-if-then-else is define in `builtins.eliot` as follows:
+### Subtlety #1: expression vs. statement
 
-    if true  then X else Y      -> X
-    if false then X else Y      -> Y
+The ELIoT parse tree is designed to represent programs in a way that
+is relatively natural for human beings. In that sense, it departs from
+languages such as Lisp or SmallTalk.
 
-Both in the case of factorial or if-then-else, we use pattern
-matching, and we will select the first pattern that matches.
+However, being readable for humans requires a few special rules to
+match the way we read expressions. Consider for example the following:
+
+    write sin X, cos Y
+
+Most human being parse this as meaning `write (sin(X),cos(Y))`,
+i.e. we call `write` with two values resulting from evaluating `sin X`
+and `cos Y`. This is not entirely logical. If `write` takes
+comma-separated arguments, why wouldn't `sin` also take
+comma-separated arguments? In other words, why doesn't this parse as
+`write(sin(X, cos(Y))`?
+
+This shows that humans have a notion of *expressions*
+vs. *statements*. Expressions such as `sin X` have higher priority
+than commas and require parentheses if you want multiple arguments. By
+contrast, statements such as `write` have lower priority, and will
+take comma-separated argument lists. An indent or `{ }` block begins a
+statement, whereas parentheses `()` or square brackets `[]` begin an
+expression.
+
+There are rare cases where the default rule will not achieve the
+desired objective, and you will need additional parentheses.
+
+### Subtlety #2: infix vs. prefix
+
+Another special rule is that ELIoT will use the presence of space on
+only one side of an operator to disambiguate between an infix or a
+prefix. For example:
+
+    write -A    // write (-A)
+    B - A       // (B - A)
+
+### Subtlety #3: Delayed evaluation
+
+When you pass an argument to a function, evaluation happens only when
+necessary. Deferred evaluation may happen multiple times, which is
+necessary in many cases, but awful for performance if you do it by
+mistake.
+
+Consider the following definition of `every`:
+
+    every Duration, Body ->
+        loop
+            Body
+            sleep Duration
+
+In that case, we want the `Body` to be evaluated every iteration,
+since this is typically an operation that we want to execute at each
+loop. Is the same true for `Duration`?
+
+One way to force evaluation is to give a type to the argument. If you
+want to force early evaluation of the argument, and to check that it
+is a real value, you can do it as follows:
+
+    every Duration:real, Body ->
+        loop
+            Body
+            sleep Duration
+    
+### Subtlelty #4: Closures and remote transport
+
+Like many functional languages, ELIoT ensures that the value of
+variables is preserved for the evaluation of a given body. Consider
+for example:
+
+    adder X:integer -> (Y -> Y + X)
+    add3 := adder 3
+
+In that case, `adder 3` will bind `X` to value `3`, but then the
+returned value outlives the scope where `X` was declared. However, `X`
+is referred to in the code. So the returned value is a *closure* which
+integrates the binding `X->3`.
+
+At this point, such closures cannot be sent across a `tell`, `ask`,
+`invoke` or `reply`. Make sure data that is sent over to a remote node
+has been evaluated before being sent.
+
+
+
