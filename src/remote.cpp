@@ -133,7 +133,7 @@ static Tree_p eliot_attach_context(Context *context, Tree *code)
     // Do a clone of the symbol table up to that point
     StopAtGlobalsClone partialClone;
     if (found)
-        partialClone.cutpoint = globals;
+        partialClone.cutpoint = ScopeParent(globals);
     Scope_p symbols = context->CurrentScope();
     Tree_p symbolsToSend = partialClone.Clone(symbols);
 
