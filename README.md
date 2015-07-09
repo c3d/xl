@@ -366,8 +366,8 @@ ELIoT has no keywords. Instead, the syntax relies on a rather simple
 [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser)
 [parser](https://github.com/c3d/eliot/blob/master/src/parser.cpp).
 
-The parser has no keywords, and generates a parse tree made of * node
-types. The first four node types are leaf nodes:
+THe parser generates a parse tree made of 8 node types. The first four
+node types are leaf nodes:
 
  * `Integer` is for integer numbers such as `2` or `16#FFFF_FFFF`.
  * `Real` is for real numbers such as `2.5` or `2#1.001_001_001#e-3`
