@@ -59,6 +59,19 @@ template <typename CloneMode> struct TreeCloneTemplate : CloneMode
 
     typedef Tree *value_type;
 
+public:
+    // Clone configuration code (and main entry point)
+    Tree *  Clone(Tree *t)
+    {
+        return CloneMode::Clone(t, this);
+    }
+    Tree *  Adjust(Tree *from, Tree *to)
+    {
+        return CloneMode::Adjust(from, to, this);
+    }
+
+public:
+    // Do interface
     Tree *DoInteger(Integer *what)
     {
         return Adjust(what, new Integer(what->value, what->Position()));
@@ -101,16 +114,7 @@ template <typename CloneMode> struct TreeCloneTemplate : CloneMode
         return Adjust(what, new Postfix(Clone(what->left), Clone(what->right),
                                         what->Position()));
     }
-protected:
-    // Clone configuration code
-    Tree *  Clone(Tree *t)
-    {
-        return CloneMode::Clone(t, this);
-    }
-    Tree *  Adjust(Tree *from, Tree *to)
-    {
-        return CloneMode::Adjust(from, to, this);
-    }
+
 };
 
 
@@ -163,7 +167,7 @@ inline Tree *eliot_deep_clone(Tree *input)
 // ----------------------------------------------------------------------------
 {
     TreeClone clone;
-    input = input->Do(clone);
+    input = clone.Clone(input);
     return input;
 }
 

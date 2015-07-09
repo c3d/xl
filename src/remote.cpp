@@ -23,6 +23,7 @@
 #include "serializer.h"
 #include "main.h"
 #include "save.h"
+#include "tree-clone.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -89,6 +90,130 @@ static void eliot_write_tree(int sock, Tree *tree)
 
 
 // ============================================================================
+// 
+//    Clone the symbol tables that go with a tree
+// 
+// ============================================================================
+
+struct StopAtGlobalsCloneMode
+// ----------------------------------------------------------------------------
+//   Clone mode where all the children nodes are copied (default)
+// ----------------------------------------------------------------------------
+{
+    Tree_p cutpoint;
+
+    template<typename CloneClass>
+    Tree *Clone(Tree *t, CloneClass *clone)
+    {
+        if (t == cutpoint)
+            return eliot_nil;
+        return t->Do(clone);
+    }
+
+    template<typename CloneClass>
+    Tree *Adjust(Tree * /* from */, Tree *to, CloneClass */* clone */)
+    {
+        return to;
+    }
+};
+typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
+
+
+static Tree_p eliot_attach_context(Context *context, Tree *code)
+// ----------------------------------------------------------------------------
+//   Attach the context for the given code
+// ----------------------------------------------------------------------------
+{
+    // Find first enclosing scope containing a "module_path"
+    Scope_p globals;
+    Rewrite_p rewrite;
+    Name *module_path = new Name("module_path", code->Position());
+    Tree *found = context->Bound(module_path, true, &rewrite, &globals);
+
+    // Do a clone of the symbol table up to that point
+    StopAtGlobalsClone partialClone;
+    if (found)
+        partialClone.cutpoint = globals;
+    Scope_p symbols = context->CurrentScope();
+    Tree_p symbolsToSend = partialClone.Clone(symbols);
+
+    IFTRACE(remote)
+        std::cerr << "Sending context:\n"
+                  << new Context(symbolsToSend->As<Scope>()) << "\n";
+
+    return new Prefix(symbolsToSend, code, code->Position());
+}
+
+
+static Tree *eliot_restore_nil(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Restore 'nil' names in the symbol tables
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = tree->AsName())
+    {
+        if (name->value == "nil")
+            return eliot_nil;
+    }
+    else if (Infix *infix = tree->AsInfix())
+    {
+        infix->left  = eliot_restore_nil(infix->left);
+        infix->right = eliot_restore_nil(infix->right);
+    }
+    else if (Prefix *prefix = tree->AsPrefix())
+    {
+        prefix->left  = eliot_restore_nil(prefix->left);
+        prefix->right = eliot_restore_nil(prefix->right);
+    }
+    else if (Postfix *postfix = tree->AsPostfix())
+    {
+        postfix->left  = eliot_restore_nil(postfix->left);
+        postfix->right = eliot_restore_nil(postfix->right);
+    }
+    else if (Block *block = tree->AsBlock())
+    {
+        block->child = eliot_restore_nil(block->child);
+    }
+    return tree;
+}
+
+
+static Tree_p eliot_merge_context(Context *context, Tree *code)
+// ----------------------------------------------------------------------------
+//    Merge the code into the current running context
+// ----------------------------------------------------------------------------
+{
+    if (code)
+    {
+        if (Prefix *prefix = code->AsPrefix())
+        {
+            Scope *scope = prefix->left->As<Scope>();
+            code = prefix->right;
+
+            // Walk up the chain for incoming symbols, stop at end
+            Context *codeCtx = context;
+            if (scope)
+            {
+                scope = eliot_restore_nil(scope)->As<Scope>();
+                codeCtx = new Context(scope);
+                while (Scope *parent = ScopeParent(scope))
+                    scope = parent;
+                
+                // Reattach that end to current scope
+                scope->left = context->CurrentScope();
+            }
+                
+            // And make the resulting code a closure at that location
+            code = MakeClosure(codeCtx, code);
+        }
+    }
+
+    return code;
+}
+
+
+
+// ============================================================================
 //
 //    Simple program exchange over TCP/IP
 //
@@ -99,9 +224,6 @@ static int eliot_send(Context *context, text host, Tree *code)
 //   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
 {
-    // Process all the escapes inside
-    code = eliot_parse_tree(context, code);
-
     // Compute port number
     int port = ELIOT_DEFAULT_PORT;
     size_t found = host.rfind(':');
@@ -153,6 +275,9 @@ static int eliot_send(Context *context, text host, Tree *code)
         return -1;
     }
 
+    // Attach the running context, i.e. all symbols we might need
+    code = eliot_attach_context(context, code);
+
     // Write program to socket
     eliot_write_tree(sock, code);
 
@@ -189,9 +314,11 @@ Tree_p eliot_ask(Context *context, text host, Tree *code)
         return eliot_nil;
 
     Tree *result = eliot_read_tree(sock);
+    result = eliot_merge_context(context, result);
     IFTRACE(remote)
         std::cerr << "eliot_ask: Response from " << host << " was:\n"
                   << result << "\n";
+    
     close(sock);
 
     return result;
@@ -220,6 +347,7 @@ Tree_p eliot_invoke(Context *context, text host, Tree *code)
         IFTRACE(remote)
             std::cerr << "eliot_invoke: Response from " << host << " was:\n"
                       << response << "\n";
+        result = eliot_merge_context(context, result);
         result = context->Evaluate(response);
         if (result == eliot_nil)
             break;
@@ -391,6 +519,7 @@ int eliot_listen(Context *context, uint forking, uint port)
                 if (hookResult != eliot_nil)
                 {
                     Save<int> saveReply(reply_socket, insock);
+                    code = eliot_merge_context(context, code);
                     Tree_p result = context->Evaluate(code);
                     IFTRACE(remote)
                         std::cerr << "eliot_listen: Evaluated as: "
