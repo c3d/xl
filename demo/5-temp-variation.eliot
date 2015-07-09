@@ -1,0 +1,16 @@
+invoke "pi2.local",
+    last_temperature -> 0.0
+    check_temperature_change T:real ->
+        if abs(T - last_temperature) > 0.01 then
+           reply
+               report_temperature_change T, last_temperature
+           last_temperature := T
+
+    last_temperature := temperature
+    every 2s,
+        writeln "Measuring temperature on ", process_id
+        check_temperature_change temperature
+
+
+report_temperature_change Temp, Last ->
+    writeln "Temperature on Pi2 changed from ", Last, " to ", Temp, ", a variation of ", Temp - Last, " degrees"            

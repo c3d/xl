@@ -1,0 +1,20 @@
+// Configuration: Change this to the target you want to use
+HOST -> "localhost"
+
+// Perform a loop on the target
+// Initiate a loop on the target, which will run for a while
+tell HOST,
+    I := 0
+    while I < process_id mod 100 loop
+        writeln "Hello World from ", process_id, " I=", I,
+                " T=", hours, ":", minutes, ":", seconds
+        I := I + 1
+        sleep 1.5
+    writeln "Goodbye cruel world, ", process_id, " exiting"
+
+// Then perform a synchronous computation on the target
+writeln "Asking time to ", HOST, "=", remote_computation
+remote_computation -> ask HOST,
+    zero N -> if N < 10 then "0" & N else N
+    hours & ":" & zero minutes & ":" & zero seconds
+    

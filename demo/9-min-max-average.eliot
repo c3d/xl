@@ -1,0 +1,20 @@
+invoke "pi.local",
+    min   -> 100.0
+    max   -> 0.0
+    sum   -> 0.0
+    count -> 0
+
+    compute_stats T:real ->
+        min   := min(T, min)
+        max   := max(T, max)
+        sum   := sum + T
+        count := count + 1
+        reply
+            report_stats count, T, min, max, sum/count
+
+    every 2.5s,
+        compute_stats temperature
+
+report_stats Count, T, Min, Max, Avg ->
+    writeln "Sample ", Count, " T=", T,
+            " Min=", Min, " Max=", Max, " Avg=", Avg

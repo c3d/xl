@@ -1,0 +1,12 @@
+invoke "pi2.local",
+    sum_temperatures    -> 0.0
+    count_temperatures  -> 0
+
+    compute_and_report_average T:real ->
+        sum_temperatures := sum_temperatures + T
+        count_temperatures := count_temperatures + 1
+        reply
+            writeln "Sample ", count_temperatures, " is ", T, ", average is ", sum_temperatures / count_temperatures
+
+    every 1.1 s,
+        compute_and_report_average temperature

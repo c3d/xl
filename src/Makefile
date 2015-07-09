@@ -102,7 +102,7 @@ LDFLAGS_llvm360=-lz -lncurses
 CPPFLAGS+=	-DELIOT_BIN='"'$(PREFIX_BIN)'"'	\
 		-DELIOT_LIB='"'$(PREFIX_LIB)'"'
 
-install:
+install: all
 	cp $(PRODUCT) $(PREFIX_BIN)
 	mkdir -p $(PREFIX_LIB)
 	cp builtins.eliot eliot.syntax C.syntax *.stylesheet $(PREFIX_LIB)
