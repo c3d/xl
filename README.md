@@ -371,7 +371,7 @@ node types are leaf nodes:
 
  * `Integer` is for integer numbers such as `2` or `16#FFFF_FFFF`.
  * `Real` is for real numbers such as `2.5` or `2#1.001_001_001#e-3`
- * `Text` is for text values such as `"Hello" or `'World'`. Text can
+ * `Text` is for text values such as `"Hello"` or `'World'`. Text can
    be encoded using UTF-8
  * `Name` is for names and symbols such as `ABC` or `**`
 
