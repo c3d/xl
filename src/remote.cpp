@@ -347,7 +347,7 @@ Tree_p eliot_invoke(Context *context, text host, Tree *code)
         IFTRACE(remote)
             std::cerr << "eliot_invoke: Response from " << host << " was:\n"
                       << response << "\n";
-        result = eliot_merge_context(context, result);
+        response = eliot_merge_context(context, response);
         result = context->Evaluate(response);
         if (result == eliot_nil)
             break;
@@ -563,7 +563,7 @@ int eliot_reply(Context *context, Tree *code)
 
     IFTRACE(remote)
         std::cerr << "eliot_reply: Replying:\n" << code << "\n";
-    code = eliot_parse_tree(context, code);
+    code = eliot_attach_context(context, code);
     IFTRACE(remote)
         std::cerr << "eliot_reply: After replacement:\n" << code << "\n";
     eliot_write_tree(reply_socket, code);
