@@ -72,7 +72,7 @@ temperature, and the controlling node can display a message using
 ### Reporting changes in temperatures since last report
 
 Another application may be interested in how temperature changes over
-time, even if it's gradual. In that case, you want to report
+time, even if the change is gradual. In that case, you want to report
 temperature if it changes by more than one degree since last time it
 was *reported* (instead of measured). You can do that with a slight
 variation in the code above, so that you update `last_temperature`
