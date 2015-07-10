@@ -93,8 +93,9 @@ only after having transmitted the new value, not after having measured it:
 
 In ELIoT, indentation is significant, and defined "blocks" of
 code. Other ways to delimit a block of code include brackets
-`{ code }` (which we used in the first example for `{ temperature }`,
-as well as parentheses `( code )` or square brackets `[ code ]`. The
+`{ code }` (which we used in the first example, where we
+passed the `{ temperature }` block to the remote sensor,
+as well as parentheses `(code)` or square brackets `[code]`. The
 latter two are used for expressions.
 
 
