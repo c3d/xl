@@ -518,9 +518,9 @@ void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
 }
 
 
-Function *Compiler::EnterBuiltin(text name,
-                                 Tree *from, Tree *to,
-                                 eval_fn code)
+llvm::Function *Compiler::EnterBuiltin(text name,
+                                       Tree *from, Tree *to,
+                                       eval_fn code)
 // ----------------------------------------------------------------------------
 //   Declare a built-in function
 // ----------------------------------------------------------------------------
@@ -541,7 +541,7 @@ Function *Compiler::EnterBuiltin(text name,
         std::cerr << "EnterBuiltin " << name
                   << " C" << (void *) code << " T" << (void *) to;
 
-    Function *result = builtins[name];
+    llvm::Function *result = builtins[name];
     if (result)
     {
         IFTRACE(llvm)
@@ -559,8 +559,8 @@ Function *Compiler::EnterBuiltin(text name,
         for (Parameters::iterator p = parms.begin(); p != parms.end(); p++)
             parmTypes.push_back(treePtrTy); // TODO: (*p).type
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
-        result = Function::Create(fnTy, Function::ExternalLinkage,
-                                  name, module);
+        result = llvm::Function::Create(fnTy, llvm::Function::ExternalLinkage,
+                                        name, module);
 
         // Record the runtime symbol address
         sys::DynamicLibrary::AddSymbol(name, (void*) code);
@@ -608,8 +608,10 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
     FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
-    Function *adapter = Function::Create(fnType, Function::InternalLinkage,
-                                        "eliot_adapter", module);
+    llvm::Function *adapter =
+        llvm::Function::Create(fnType,
+                               llvm::Function::InternalLinkage,
+                               "eliot_adapter", module);
 
     // Generate the function type for the called function
     llvm_types called;
@@ -625,7 +627,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     IRBuilder<> code(entry);
 
     // Read the arguments from the function we are generating
-    Function::arg_iterator inArgs = adapter->arg_begin();
+    llvm::Function::arg_iterator inArgs = adapter->arg_begin();
     Value *fnToCall = inArgs++;
     Value *contextPtr = inArgs++;
     Value *sourceTree = inArgs++;
@@ -670,8 +672,8 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 }
 
 
-Function *Compiler::ExternFunction(kstring name, void *address,
-                                   llvm_type retType, int parmCount, ...)
+llvm::Function *Compiler::ExternFunction(kstring name, void *address,
+                                         llvm_type retType, int parmCount, ...)
 // ----------------------------------------------------------------------------
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
@@ -697,8 +699,10 @@ Function *Compiler::ExternFunction(kstring name, void *address,
     }
     va_end(va);
     FunctionType *fnType = FunctionType::get(retType, parms, isVarArg);
-    Function *result = Function::Create(fnType, Function::ExternalLinkage,
-                                        name, module);
+    llvm::Function *result =
+        llvm::Function::Create(fnType,
+                               llvm::Function::ExternalLinkage,
+                               name, module);
     sys::DynamicLibrary::AddSymbol(name, address);
 
     IFTRACE(llvm)
@@ -973,7 +977,7 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
     fn = unit.InitializeFunction(ftype, NULL, "eliot_unbox", false, false);
 
     // Take the first input argument, which is the boxed value.
-    Function::arg_iterator args = fn->arg_begin();
+    llvm::Function::arg_iterator args = fn->arg_begin();
     llvm_value arg = args++;
 
     // Generate code to create the unboxed tree
@@ -1100,7 +1104,7 @@ bool Compiler::FreeResources(Tree *tree)
     else
     {
         // Drop function reference if any
-        if (Function *f = info->function)
+        if (llvm::Function *f = info->function)
         {
             bool inUse = !f->use_empty();
             
@@ -1122,7 +1126,7 @@ bool Compiler::FreeResources(Tree *tree)
         }
         
         // Drop closure function reference if any
-        if (Function *f = info->closure)
+        if (llvm::Function *f = info->closure)
         {
             bool inUse = !f->use_empty();
             

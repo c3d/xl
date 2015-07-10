@@ -53,21 +53,21 @@ ELIOT_BEGIN
 
 #define UNARY(name)                                                     \
 static llvm_value eliot_llvm_##name(CompiledUnit &,                     \
-                                 llvm_builder bld, llvm_value *args)    \
+                                    llvm_builder bld, llvm_value *args) \
 {                                                                       \
-    return bld->Create##name(args[0]);
+    return bld->Create##name(args[0]);                                  \
 }
 
 #define BINARY(name)                                                    \
 static llvm_value eliot_llvm_##name(CompiledUnit &,                     \
-                                 llvm_builder bld, llvm_value *args)    \
+                                    llvm_builder bld, llvm_value *args) \
 {                                                                       \
-    return bld->Create##name(args[0], args[1]);
+    return bld->Create##name(args[0], args[1]);                         \
 }
 
 #define SPECIAL(name, arity, code)                                      \
 static llvm_value eliot_llvm_##name(CompiledUnit &unit,                 \
-                                 llvm_builder bld, llvm_value *args)    \
+                                    llvm_builder bld, llvm_value *args) \
 {                                                                       \
     Compiler &compiler = *unit.compiler;                                \
     llvm::LLVMContext &llvm = unit.llvm;                                \
