@@ -321,7 +321,7 @@ This is the reason why things appear to work as a single program.
 
 ELIoT derives from [XLR](http://xlr.sourceforge.net). It is a
 specially trimmed-down version that does not require LLVM and can work
-in full interpreted mode, making it easier to compiler and use, but
+in full interpreted mode, making it easier to compile and use, but
 also safer, since you cannot call arbitrary C functions.
 
 ### Semantics: One operator to rule them all
