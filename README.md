@@ -1,19 +1,22 @@
-# Elfe
-### Extensible Language for the Internet of Things
+# ELFE
+### Extensible Language for Everyday (and the Internet of Things)
 
-Elfe is a very simple and small programming language specifcally
-designed to facilitate the configuration and control of swarms of
-small devices such as sensors or actuators. It can also be used as a
-powerful, remotely-accessible extension language for larger
-applications.
+ELFE is a very simple and small programming language specifcally
+designed for everyday programming, notably for the Internet of Things.
+
+While ELFE is a general-purpose programming language, it is designed
+to facilitate the configuration and control of swarms of small devices
+such as sensors or actuators. It can also be used as a powerful,
+remotely-accessible extension language for larger applications.
+The examples below will focus on this paritcular domain.
 
 
 ## Example: Measuring temperature
 
-Consider a sensor named `sensor.corp.net` running Elfe and featuring
+Consider a sensor named `sensor.corp.net` running ELFE and featuring
 a temperature measurement through a `temperature` function.
 
-Elfe lets you evaluate programs on this sensor remotely to do all
+ELFE lets you evaluate programs on this sensor remotely to do all
 kinds of interesting temperature measurements. By deferring
 computations to the sensor, we minimize network traffic and energy
 consumption. Examples similar to the ones below can be found in the
@@ -27,7 +30,7 @@ use the following code:
     temperature_on_sensor -> ask "sensor.corp.net", { temperature }
     writeln "Temperature is ", temperature_on_sensor
 
-The `->` rewrite operator reads "transforms into" and is used in Elfe
+The `->` rewrite operator reads "transforms into" and is used in ELFE
 to define variables, functions, macros, and so on. Look into
 [builtins.elfe](https://github.com/c3d/elfe/blob/master/src/builtins.elfe)
 for examples of its use.
@@ -42,7 +45,7 @@ value.
 ### Reporting sudden changes in temperatures
 
 An application may be interested in sudden changes in temperatures,
-e.g. if the sensor suddenly warms up. With Elfe, without changing
+e.g. if the sensor suddenly warms up. With ELFE, without changing
 anything to the temperature API, you can check the temperature every
 second and report if it changed by more than 1 degree since last time
 it was measured with the following program:
@@ -91,7 +94,7 @@ only after having transmitted the new value, not after having measured it:
     temperature_changed new_temp, last_temp ->
         writeln "Temperature changed from ", last_temp, " to ", new_temp
 
-In Elfe, indentation is significant, and defined "blocks" of
+In ELFE, indentation is significant, and defined "blocks" of
 code. Other ways to delimit a block of code include brackets
 `{ code }` (which we used in the first example, where we
 passed the `{ temperature }` block to the remote sensor,
@@ -127,8 +130,8 @@ temperatures from samples taken every 2.5 seconds:
                 " Min=", Min, " Max=", Max, " Avg=", Avg
 
 Notice how the first parameter of `compute_stats`, `T`, has a type
-declaration `T:real`. This tells Elfe that a `real` value is expected
-here. But it also forces Elfe to actually compute the value, in order
+declaration `T:real`. This tells ELFE that a `real` value is expected
+here. But it also forces ELFE to actually compute the value, in order
 to check that it is indeed a real number.
 
 As a result, `temperature` is evaluated only once (to bind it to
@@ -148,7 +151,7 @@ sensors, wouldn't it make sense to minimize the traffic between Canada
 and Australia, and have the two sensors talk to one another locally in
 Australia?
 
-This is very easy with Elfe. The following program will only send a
+This is very easy with ELFE. The following program will only send a
 traffic across the ocean if the temperature between the two sensors
 differs by more than 2 degrees, otherwise all network traffic will
 remain local:
@@ -179,7 +182,7 @@ located hundreds of miles from one another.
 
 ### A very powerful, yet simple API
 
-With these examples, we have demonstrated that using Elfe, we can
+With these examples, we have demonstrated that using ELFE, we can
 answer queries from applications that have very different requirements.
 An application will get exactly the data it needs, when it needs it,
 minimizing network traffic and optimizing energy utilization.
@@ -193,7 +196,7 @@ between nodes, computations, and more.
 
 ## How do we measure the temperature?
 
-It is very simple to add your own functions to Elfe, and to call any
+It is very simple to add your own functions to ELFE, and to call any
 C or C++ function of your choosing. The `temperature` function is
 implemented in a file called
 [temperature.tbl](https://github.com/c3d/elfe/blob/master/src/temperature.tbl).
@@ -214,7 +217,7 @@ Raspberry Pi by reading the system file `/sys/class/thermal/thermal_zone0/temp`.
 This file returns values in 1/1000th of a Celsius, so we multiply the
 value we read by 0.001 to get the actual temperature.
 
-To add the `temperature` module to Elfe, we just need to add it to
+To add the `temperature` module to ELFE, we just need to add it to
 the list of modules in the
 [Makefile](https://github.com/c3d/elfe/blob/master/src/Makefile#L32):
 
@@ -222,7 +225,7 @@ the list of modules in the
     MODULES=basics io math text remote time-functions temperature
 
 This will build at least `temperature.tbl`. That file contains the
-interface between Elfe and your code. In simple cases like our
+interface between ELFE and your code. In simple cases like our
 temperature measurement, it may be sufficient. However, if you have
 files called `temperature.h` or `temperature.cpp`, they will be
 integrated in your `temperature` module. This lets you add supporting
@@ -238,9 +241,9 @@ This may not be the easiest module to study, however. You may find
 to understand.
 
 
-## Compiling Elfe
+## Compiling ELFE
 
-To build Elfe, just use `make`. On a Raspberry Pi, a `make -j3`
+To build ELFE, just use `make`. On a Raspberry Pi, a `make -j3`
 should run in about 10 minutes if you start from scratch. On a version
 2, it's about one minute. On a modern PC, it's may be as low as 3 to 5
 seconds. If `make` works (and it should), then use `sudo make install`
@@ -261,13 +264,13 @@ portable. I will fix that one day. If other tests fail, look into
 file `tests/failures-default.out` for details of what went wrong.
 
 
-### Running an Elfe server
+### Running an ELFE server
 
-To start an Elfe server on a node, simply run `elfe -l`.
+To start an ELFE server on a node, simply run `elfe -l`.
 
     pi% elfe -l
 
-By default, Elfe listens on port 1205. You can change that by using
+By default, ELFE listens on port 1205. You can change that by using
 the `-listen` option:
 
     pi% elfe -listen 42105
@@ -288,9 +291,9 @@ Normally, the console output on `pi` should now look like this:
     pi% elfe -l
     Hello World
 
-What happens behind the scene is that Elfe on `boss` sent the program
+What happens behind the scene is that ELFE on `boss` sent the program
 given as an argument to `tell` to the machine named `pi` (which must
-be running an Elfe in listen mode, i.e. have `elfe -l`
+be running an ELFE in listen mode, i.e. have `elfe -l`
 running). Then, that program executes on the slave. The `tell` command
 is totally asynchronous, it does not wait for completion on the target.
 
@@ -298,7 +301,7 @@ If this example does not work as intended, and if no obvious error
 appears on the console of either system, you can debug things by
 adding `-tremote` (`-t` stands for "trace", and enables specific debug
 traces, in that case any code conditioned by `IFTRACE(remote)` in the
-Elfe source code).
+ELFE source code).
 
 
 ### The magic behind the scene
@@ -311,22 +314,22 @@ There are three key functions to send programs across nodes:
    The node can then use `reply` to execute code back in the caller's
    program
 
-Elfe sends not just the program segments you give it, but also the
+ELFE sends not just the program segments you give it, but also the
 necessary data, notably the symbols required for correct evaluation. 
 This is the reason why things appear to work as a single program.
 
 
 
-## Basics of Elfe syntax and semantics
+## Basics of ELFE syntax and semantics
 
-Elfe derives from [XLR](http://xlr.sourceforge.net). It is a
+ELFE derives from [XLR](http://xlr.sourceforge.net). It is a
 specially trimmed-down version that does not require LLVM and can work
 in full interpreted mode, making it easier to compile and use, but
 also safer, since you cannot call arbitrary C functions.
 
 ### Semantics: One operator to rule them all
 
-Elfe has one fundamental operator, `->`, the "rewrite operator",
+ELFE has one fundamental operator, `->`, the "rewrite operator",
 which reads as *transforms into*. It is used to declare variables:
 
     X -> 0
@@ -363,7 +366,7 @@ For example, if-then-else and infinite loops are defined as follows:
 
 ### Syntax: Look, Ma, no keywords!
 
-Elfe has no keywords. Instead, the syntax relies on a rather simple
+ELFE has no keywords. Instead, the syntax relies on a rather simple
 [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser)
 [parser](https://github.com/c3d/elfe/blob/master/src/parser.cpp).
 
@@ -409,13 +412,13 @@ This parser is dynamically configurable, with the default priorities
 being defined by the
 [elfe.syntax](https://github.com/c3d/elfe/blob/master/src/elfe.syntax) file.
 
-Parse trees are the fundamendal data structure in Elfe. Any data or
+Parse trees are the fundamendal data structure in ELFE. Any data or
 program can be represented as a parse tree.
 
 
-### Elfe as a functional language
+### ELFE as a functional language
 
-Elfe can be seen as a functional language, where functions are
+ELFE can be seen as a functional language, where functions are
 first-class entities, i.e. you can manipulate them, pass them around,
 etc:
 
@@ -436,7 +439,7 @@ subject to the same evaluation rules based on tree rewrites.
 
 ### Subtlety #1: expression vs. statement
 
-The Elfe parse tree is designed to represent programs in a way that
+The ELFE parse tree is designed to represent programs in a way that
 is relatively natural for human beings. In that sense, it departs from
 languages such as Lisp or SmallTalk.
 
@@ -465,7 +468,7 @@ desired objective, and you will need additional parentheses.
 
 ### Subtlety #2: infix vs. prefix
 
-Another special rule is that Elfe will use the presence of space on
+Another special rule is that ELFE will use the presence of space on
 only one side of an operator to disambiguate between an infix or a
 prefix. For example:
 
@@ -501,7 +504,7 @@ is a real value, you can do it as follows:
     
 ### Subtlelty #4: Closures and remote transport
 
-Like many functional languages, Elfe ensures that the value of
+Like many functional languages, ELFE ensures that the value of
 variables is preserved for the evaluation of a given body. Consider
 for example:
 
