@@ -28,5 +28,5 @@ tests/**/expected-*.out
 tests/**/failure-*.out
 tests/**/success-*.out
 src/[a-z].xl
-src/[a-z].eliot
+src/[a-z].elfe
 

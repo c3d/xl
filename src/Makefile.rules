@@ -1,6 +1,6 @@
 #******************************************************************************
-#  Christophe de Dinechin                                       ELIOT PROJECT  
-#  ELIOT: Makefile.rules                 (C) 2003-2015 Christophe de Dinechin
+#  Christophe de Dinechin                                       ELFE PROJECT  
+#  ELFE: Makefile.rules                 (C) 2003-2015 Christophe de Dinechin
 #******************************************************************************
 #
 #  File Description:
@@ -172,7 +172,7 @@ $(OBJDIR)/%.S.d: %.S
 	$D $(AS_DEPEND) $< | $(SED_DEPEND) > $@
 $(OBJDIR)/%.s.d: %.s
 	$D $(AS_DEPEND) $< | $(SED_DEPEND) > $@
-$(OBJDIR)/%.eliot.d: %.eliot
+$(OBJDIR)/%.elfe.d: %.elfe
 	@echo No dependency for $*
 	$H touch $@
 

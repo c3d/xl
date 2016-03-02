@@ -2,12 +2,12 @@
 #define RUNTIME_H
 // ****************************************************************************
 //  runtime.h                       (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                              ELIOT project
+//                                                              ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Functions required for proper run-time execution of ELIOT programs
+//     Functions required for proper run-time execution of ELFE programs
 //
 //
 //
@@ -47,7 +47,7 @@
 #include <cmath>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 // ============================================================================
 //
 //    Forward declarations
@@ -71,20 +71,20 @@ struct SourceFile;
 //
 // ============================================================================
 
-Tree *  eliot_form_error(Context *c, Tree *tree);
-Tree *  eliot_stack_overflow(Tree *tree);
-bool    eliot_same_shape(Tree *t1, Tree *t2);
+Tree *  elfe_form_error(Context *c, Tree *tree);
+Tree *  elfe_stack_overflow(Tree *tree);
+bool    elfe_same_shape(Tree *t1, Tree *t2);
 
-Integer *eliot_new_integer(longlong value);
-Real    *eliot_new_real(double value);
-Text    *eliot_new_character(char value);
-Text    *eliot_new_ctext(kstring value);
-Text    *eliot_new_text(text value);
-Text    *eliot_new_xtext(kstring value, longlong len, kstring open, kstring close);
-Block   *eliot_new_block(Block *source, Tree *child);
-Prefix  *eliot_new_prefix(Prefix *source, Tree *left, Tree *right);
-Postfix *eliot_new_postfix(Postfix *source, Tree *left, Tree *right);
-Infix   *eliot_new_infix(Infix *source, Tree *left, Tree *right);
+Integer *elfe_new_integer(longlong value);
+Real    *elfe_new_real(double value);
+Text    *elfe_new_character(char value);
+Text    *elfe_new_ctext(kstring value);
+Text    *elfe_new_text(text value);
+Text    *elfe_new_xtext(kstring value, longlong len, kstring open, kstring close);
+Block   *elfe_new_block(Block *source, Tree *child);
+Prefix  *elfe_new_prefix(Prefix *source, Tree *left, Tree *right);
+Postfix *elfe_new_postfix(Postfix *source, Tree *left, Tree *right);
+Infix   *elfe_new_infix(Infix *source, Tree *left, Tree *right);
 
 
 
@@ -97,41 +97,41 @@ Infix   *eliot_new_infix(Infix *source, Tree *left, Tree *right);
 extern "C"
 {
 #pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
-integer_t       eliot_text2int(kstring t);
-real_t          eliot_text2real(kstring t);
-text            eliot_int2text(integer_t value);
-text            eliot_real2text(real_t value);
-integer_t       eliot_mod(integer_t x, integer_t y);
-integer_t       eliot_pow(integer_t x, integer_t y);
-real_t          eliot_modf(real_t x, real_t y);
-real_t          eliot_powf(real_t x, integer_t y);
-text            eliot_text_replace(text txt, text before, text after);
-text            eliot_text_repeat(uint count, text data);
+integer_t       elfe_text2int(kstring t);
+real_t          elfe_text2real(kstring t);
+text            elfe_int2text(integer_t value);
+text            elfe_real2text(real_t value);
+integer_t       elfe_mod(integer_t x, integer_t y);
+integer_t       elfe_pow(integer_t x, integer_t y);
+real_t          elfe_modf(real_t x, real_t y);
+real_t          elfe_powf(real_t x, integer_t y);
+text            elfe_text_replace(text txt, text before, text after);
+text            elfe_text_repeat(uint count, text data);
 
-real_t          eliot_time(real_t delay);
-integer_t       eliot_seconds();
-integer_t       eliot_minutes();
-integer_t       eliot_hours();
-integer_t       eliot_month_day();
-integer_t       eliot_mon();
-integer_t       eliot_year();
-integer_t       eliot_week_day();
-integer_t       eliot_year_day();
-integer_t       eliot_summer_time();
-text_t          eliot_timezone();
-integer_t       eliot_GMT_offset();
+real_t          elfe_time(real_t delay);
+integer_t       elfe_seconds();
+integer_t       elfe_minutes();
+integer_t       elfe_hours();
+integer_t       elfe_month_day();
+integer_t       elfe_mon();
+integer_t       elfe_year();
+integer_t       elfe_week_day();
+integer_t       elfe_year_day();
+integer_t       elfe_summer_time();
+text_t          elfe_timezone();
+integer_t       elfe_GMT_offset();
 
-real_t          eliot_random();
-bool            eliot_random_seed(int seed);
+real_t          elfe_random();
+bool            elfe_random_seed(int seed);
 }
 
 template<typename number>
-inline number   eliot_random(number low, number high)
+inline number   elfe_random(number low, number high)
 // ----------------------------------------------------------------------------
 //    Return a pseudo-random number in the low..high range
 // ----------------------------------------------------------------------------
 {
-    return number(eliot_random() * (high-low) + low);
+    return number(elfe_random() * (high-low) + low);
 }
 
 
@@ -144,12 +144,12 @@ inline number   eliot_random(number low, number high)
 
 extern "C"
 {
-    bool      eliot_write_integer(longlong);
-    bool      eliot_write_real(double);
-    bool      eliot_write_text(kstring);
-    bool      eliot_write_character(char c);
-    bool      eliot_write_tree(ELIOT::Tree *t);
-    bool      eliot_write_cr(void);
+    bool      elfe_write_integer(longlong);
+    bool      elfe_write_real(double);
+    bool      elfe_write_text(kstring);
+    bool      elfe_write_character(char c);
+    bool      elfe_write_tree(ELFE::Tree *t);
+    bool      elfe_write_cr(void);
 }
 
 
@@ -162,8 +162,8 @@ extern "C"
 
 extern "C"
 {
-    integer_t eliot_mod(integer_t, integer_t);
-    real_t    eliot_modf(real_t, real_t);
+    integer_t elfe_mod(integer_t, integer_t);
+    real_t    elfe_modf(real_t, real_t);
 }
 
 
@@ -173,8 +173,8 @@ extern "C"
 //
 // ============================================================================
 
-Tree *  eliot_parse_tree(Context *, Tree *tree);
-Tree *  eliot_parse_text(text source);
+Tree *  elfe_parse_tree(Context *, Tree *tree);
+Tree *  elfe_parse_text(text source);
 
 
 
@@ -184,8 +184,8 @@ Tree *  eliot_parse_text(text source);
 // 
 // ============================================================================
 
-Tree *  eliot_list_files(Context *context, Tree *patterns);
-bool    eliot_file_exists(Context *context, Tree_p self, text path);
+Tree *  elfe_list_files(Context *context, Tree *patterns);
+bool    elfe_file_exists(Context *context, Tree_p self, text path);
 
 
 
@@ -195,25 +195,25 @@ bool    eliot_file_exists(Context *context, Tree_p self, text path);
 // 
 // ============================================================================
 
-Tree *  eliot_import(Context *, Tree *self, text name, int phase);
-Tree *  eliot_load_data(Context *, Tree *self,
+Tree *  elfe_import(Context *, Tree *self, text name, int phase);
+Tree *  elfe_load_data(Context *, Tree *self,
                      text name, text prefix,
                      text fieldSeps = ",;", text recordSeps = "\n",
                      Tree *body = NULL);
-Tree *  eliot_load_data(Context *, Tree *self, text inputName,
+Tree *  elfe_load_data(Context *, Tree *self, text inputName,
                      std::istream &source, bool cached, bool statTime,
                      text prefix, text fieldSeps = ",;", text recordSeps = "\n",
                      Tree *body = NULL);
-Tree *  eliot_add_search_path(Context *, text prefix, text dir);
-Text *  eliot_find_in_search_path(Context *, text prefix, text file);
+Tree *  elfe_add_search_path(Context *, text prefix, text dir);
+Text *  elfe_find_in_search_path(Context *, text prefix, text file);
 
 typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
 typedef Tree * (*decl_fn) (Context *, Tree *source, phase_t phase);
-Name *  eliot_set_override_priority(Context *context, Tree *self, float priority);
+Name *  elfe_set_override_priority(Context *context, Tree *self, float priority);
 
-ELIOT_END
+ELFE_END
 
 
-extern uint eliot_recursion_count;
+extern uint elfe_recursion_count;
 
 #endif // RUNTIME_H

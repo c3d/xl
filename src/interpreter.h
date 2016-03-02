@@ -1,12 +1,12 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 // ****************************************************************************
-//  interpreter.h                                                ELIOT project
+//  interpreter.h                                                ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     A fully interpreted mode for ELIOT, that does not rely on LLVM at all
+//     A fully interpreted mode for ELFE, that does not rely on LLVM at all
 //
 //
 //
@@ -24,7 +24,7 @@
 #include "context.h"
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 // 
@@ -152,6 +152,6 @@ inline Tree *Evaluate(Context *context, Tree *what)
 }
 
 
-ELIOT_END
+ELFE_END
 
 #endif // INTERPRETER_H

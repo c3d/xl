@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  unit.cpp                                                      ELIOT project
+//  unit.cpp                                                      ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -60,7 +60,7 @@
 #include <stdio.h>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 using namespace llvm;
 
@@ -98,7 +98,7 @@ CompiledUnit::~CompiledUnit()
 
 Function *CompiledUnit::ExpressionFunction()
 // ----------------------------------------------------------------------------
-//   Create a function to evaluate an ELIOT tree in a given tree
+//   Create a function to evaluate an ELFE tree in a given tree
 // ----------------------------------------------------------------------------
 {
     // We must have verified or at least scanned the types before
@@ -111,7 +111,7 @@ Function *CompiledUnit::ExpressionFunction()
     signature.push_back(compiler->treePtrTy);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     return InitializeFunction(fnTy, &parameters.parameters,
-                              "eliot_eval", true, false);
+                              "elfe_eval", true, false);
 }
 
 
@@ -139,7 +139,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, Types *types)
     Tree *rtype = this->types->Type(expr);
     llvm_type retTy = compiler->MachineType(rtype);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    llvm_function fn = InitializeFunction(fnTy,NULL,"eliot_closure",true,false);
+    llvm_function fn = InitializeFunction(fnTy,NULL,"elfe_closure",true,false);
 
     // Return the function
     return fn;
@@ -184,7 +184,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     else
         retTy = StructureType(signature, source);
 
-    text label = "_ELIOT_" + parameters.name;
+    text label = "_ELFE_" + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
@@ -376,7 +376,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
         {
             rewriteUnit.ImportClosureInfo(this);
             Tree *value = rewrite->right;
-            if (value && value != eliot_self)
+            if (value && value != elfe_self)
             {
                 // Regular function
                 llvm_value returned = rewriteUnit.CompileTopLevel(value);
@@ -541,7 +541,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         right = Unbox(boxed, infix->right, index);
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
-        return code->CreateCall3(compiler->eliot_new_infix, ref, left, right);
+        return code->CreateCall3(compiler->elfe_new_infix, ref, left, right);
     }
 
     case PREFIX:
@@ -555,7 +555,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         right = Unbox(boxed, prefix->right, index);
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
-        return code->CreateCall3(compiler->eliot_new_prefix, ref, left, right);
+        return code->CreateCall3(compiler->elfe_new_prefix, ref, left, right);
     }
 
     case POSTFIX:
@@ -569,7 +569,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
             right = Unbox(boxed, postfix->right, index);
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
-        return code->CreateCall3(compiler->eliot_new_postfix, ref, left, right);
+        return code->CreateCall3(compiler->elfe_new_postfix, ref, left, right);
     }
 
     case BLOCK:
@@ -578,7 +578,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         ref = compiler->EnterConstant(form);
         child = Unbox(boxed, block->child, index);
         child = Autobox(child, ttp);
-        return code->CreateCall2(compiler->eliot_new_block, ref, child);
+        return code->CreateCall2(compiler->elfe_new_block, ref, child);
     }
     }
 
@@ -951,7 +951,7 @@ Value *CompiledUnit::CallFormError(Tree *what)
 {
     Value *ptr = ConstantTree(what); assert(what);
     Value *nullContext = ConstantPointerNull::get(compiler->contextPtrTy);
-    Value *callVal = code->CreateCall2(compiler->eliot_form_error,
+    Value *callVal = code->CreateCall2(compiler->elfe_form_error,
                                        nullContext, ptr);
     return callVal;
 }
@@ -1078,8 +1078,8 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     if (req == compiler->booleanTy)
     {
         assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
-        Value *falsePtr = compiler->TreeGlobal(eliot_false);
-        result = code->CreateLoad(falsePtr, "eliot_false");
+        Value *falsePtr = compiler->TreeGlobal(elfe_false);
+        result = code->CreateLoad(falsePtr, "elfe_false");
         result = code->CreateICmpNE(value, result, "notFalse");
     }
     else if (req->isIntegerTy())
@@ -1124,7 +1124,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     {
         assert(req == compiler->treePtrTy || req == compiler->nameTreePtrTy);
 
-        // Insert code corresponding to value ? eliot_true : eliot_false
+        // Insert code corresponding to value ? elfe_true : elfe_false
         BasicBlock *isTrue = BasicBlock::Create(llvm, "isTrue", function);
         BasicBlock *isFalse = BasicBlock::Create(llvm, "isFalse", function);
         BasicBlock *exit = BasicBlock::Create(llvm, "booleanBoxed", function);
@@ -1133,14 +1133,14 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
 
         // True block
         code->SetInsertPoint(isTrue);
-        Value *truePtr = compiler->TreeGlobal(eliot_true);
+        Value *truePtr = compiler->TreeGlobal(elfe_true);
         result = code->CreateLoad(truePtr);
         result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
-        Value *falsePtr = compiler->TreeGlobal(eliot_false);
+        Value *falsePtr = compiler->TreeGlobal(elfe_false);
         result = code->CreateLoad(falsePtr);
         result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
@@ -1153,31 +1153,31 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     else if (type == compiler->characterTy &&
              (req == compiler->treePtrTy || req == compiler->textTreePtrTy))
     {
-        boxFn = compiler->eliot_new_character;
+        boxFn = compiler->elfe_new_character;
     }
     else if (type->isIntegerTy())
     {
         assert(req == compiler->treePtrTy || req == compiler->integerTreePtrTy);
-        boxFn = compiler->eliot_new_integer;
+        boxFn = compiler->elfe_new_integer;
         if (type != compiler->integerTy)
             result = code->CreateSExt(result, type); // REVISIT: Signed?
     }
     else if (type->isFloatingPointTy())
     {
         assert(req == compiler->treePtrTy || req == compiler->realTreePtrTy);
-        boxFn = compiler->eliot_new_real;
+        boxFn = compiler->elfe_new_real;
         if (type != compiler->realTy)
             result = code->CreateFPExt(result, type);
     }
     else if (type == compiler->textTy)
     {
         assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
-        boxFn = compiler->eliot_new_text;
+        boxFn = compiler->elfe_new_text;
     }
     else if (type == compiler->charPtrTy)
     {
         assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
-        boxFn = compiler->eliot_new_ctext;
+        boxFn = compiler->elfe_new_ctext;
     }
     else if (unboxed.count(type) &&
              (req == compiler->blockTreePtrTy ||
@@ -1271,4 +1271,4 @@ bool CompiledUnit::ValidCName(Tree *tree, text &label)
     return true;
 }
 
-ELIOT_END
+ELFE_END

@@ -1,12 +1,12 @@
 // ****************************************************************************
-//  gc.cpp                                                        ELIOT project
+//  gc.cpp                                                        ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
 //     Garbage collector and memory management
 //
-//     Garbage collection in ELIOT is based on reference counting.
+//     Garbage collection in ELFE is based on reference counting.
 //     The GCPtr class does the reference counting.
 //     The rule is that as soon as you assign an object to a GCPtr,
 //     it becomes "tracked". Objects created during a cycle and not assigned
@@ -54,7 +54,7 @@
 #endif // CONFIG_MINGW
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -102,7 +102,7 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
     gc->Register(this);
 
     // Make sure that we have the correct alignment
-    ELIOT_ASSERT(this == ValidPointer(this));
+    ELFE_ASSERT(this == ValidPointer(this));
 
     // Update allocator addresses
     if (lowestAllocatorAddress > this)
@@ -222,11 +222,11 @@ void TypeAllocator::Delete(void *ptr)
         return;
 
     Chunk_vp chunk = (Chunk_vp) ptr - 1;
-    ELIOT_ASSERT(IsGarbageCollected(ptr) &&
+    ELFE_ASSERT(IsGarbageCollected(ptr) &&
                  "Deleted pointer not managed by GC");
-    ELIOT_ASSERT(IsAllocated(ptr) &&
+    ELFE_ASSERT(IsAllocated(ptr) &&
                  "Deleted GC pointer that was already freed");
-    ELIOT_ASSERT(!chunk->count &&
+    ELFE_ASSERT(!chunk->count &&
                  "Deleted pointer has live references");
 
     // Put the pointer back on the free list
@@ -257,7 +257,7 @@ void TypeAllocator::Finalize(void *ptr)
 // ----------------------------------------------------------------------------
 {
     std::cerr << "No finalizer installed for " << ptr << "\n";
-    ELIOT_ASSERT(!"No finalizer installed");
+    ELFE_ASSERT(!"No finalizer installed");
 }
 
 
@@ -272,7 +272,7 @@ void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
     }
     else
     {
-        ELIOT_ASSERT(ptr->count == 0 && "Deleting referenced object");
+        ELFE_ASSERT(ptr->count == 0 && "Deleting referenced object");
         TypeAllocator *allocator = ValidPointer(ptr->allocator);
 
         if (allocator->finalizing)
@@ -536,7 +536,7 @@ bool GarbageCollector::Collect()
         mustRun &= 0U;
         if (!Atomic<pthread_t>::SetQ(collecting, self, PTHREAD_NULL))
         {
-            ELIOT_ASSERT(!"Someone else stole the collection lock?");
+            ELFE_ASSERT(!"Someone else stole the collection lock?");
         }
 
         RECORD(MEMORY, "Garbage collection", "self", (intptr_t) self);
@@ -637,14 +637,14 @@ void GarbageCollector::Delete()
     }
 }
 
-ELIOT_END
+ELFE_END
 
 void debuggc(void *ptr)
 // ----------------------------------------------------------------------------
 //   Show allocation information about the given pointer
 // ----------------------------------------------------------------------------
 {
-    using namespace ELIOT;
+    using namespace ELFE;
     if (TypeAllocator::IsGarbageCollected(ptr))
     {
         typedef TypeAllocator::Chunk    Chunk;

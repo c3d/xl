@@ -1,12 +1,12 @@
 #ifndef COMPILER_CDECLS_H
 #define COMPILER_CDECLS_H
 // ****************************************************************************
-//  cdecls.h                                                     ELIOT project
+//  cdecls.h                                                     ELFE project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Processing and transforming C declarations into normal ELIOT
+//     Processing and transforming C declarations into normal ELFE
 // 
 // 
 // 
@@ -41,7 +41,7 @@
 
 #include "tree.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct CDeclaration : Info
 // ----------------------------------------------------------------------------
@@ -70,6 +70,6 @@ public:
     uint        parameters;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // COMPILER_CDECLS_H

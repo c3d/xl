@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  compiler-llvm.cpp                                            ELIOT project
+//  compiler-llvm.cpp                                            ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -43,7 +43,7 @@
 
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 // 
@@ -52,21 +52,21 @@ ELIOT_BEGIN
 // ============================================================================
 
 #define UNARY(name)                                                     \
-static llvm_value eliot_llvm_##name(CompiledUnit &,                     \
+static llvm_value elfe_llvm_##name(CompiledUnit &,                     \
                                     llvm_builder bld, llvm_value *args) \
 {                                                                       \
     return bld->Create##name(args[0]);                                  \
 }
 
 #define BINARY(name)                                                    \
-static llvm_value eliot_llvm_##name(CompiledUnit &,                     \
+static llvm_value elfe_llvm_##name(CompiledUnit &,                     \
                                     llvm_builder bld, llvm_value *args) \
 {                                                                       \
     return bld->Create##name(args[0], args[1]);                         \
 }
 
 #define SPECIAL(name, arity, code)                                      \
-static llvm_value eliot_llvm_##name(CompiledUnit &unit,                 \
+static llvm_value elfe_llvm_##name(CompiledUnit &unit,                 \
                                     llvm_builder bld, llvm_value *args) \
 {                                                                       \
     Compiler &compiler = *unit.compiler;                                \
@@ -86,10 +86,10 @@ CompilerLLVMTableEntry CompilerLLVMTable[] =
 //   A table initialized with the various LLVM entry points
 // ----------------------------------------------------------------------------
 {
-#define UNARY(name)                     { #name, eliot_llvm_##name, 1 },
-#define BINARY(name)                    { #name, eliot_llvm_##name, 2 },
-#define SPECIAL(name, arity, code)      { #name, eliot_llvm_##name, arity },
-#define ALIAS(from, arity, to)          { #from, eliot_llvm_##to, arity },
+#define UNARY(name)                     { #name, elfe_llvm_##name, 1 },
+#define BINARY(name)                    { #name, elfe_llvm_##name, 2 },
+#define SPECIAL(name, arity, code)      { #name, elfe_llvm_##name, arity },
+#define ALIAS(from, arity, to)          { #from, elfe_llvm_##to, arity },
     
 #include "llvm.tbl"
 
@@ -97,4 +97,4 @@ CompilerLLVMTableEntry CompilerLLVMTable[] =
     { NULL, NULL, 0 }
 };
 
-ELIOT_END
+ELFE_END

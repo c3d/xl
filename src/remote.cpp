@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  remote.cpp                                                  ELIOT project
+//  remote.cpp                                                  ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Implementation of a simple socket-based transport for ELIOT programs
+//     Implementation of a simple socket-based transport for ELFE programs
 //
 //
 //
@@ -41,7 +41,7 @@
 #include <ext/stdio_filebuf.h>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 
 // ============================================================================
@@ -52,8 +52,8 @@ ELIOT_BEGIN
 
 static uint        active_children = 0;
 static int         reply_socket    = 0;
-static Tree_p      received        = eliot_nil;
-static Tree_p      hook            = eliot_true;
+static Tree_p      received        = elfe_nil;
+static Tree_p      hook            = elfe_true;
 static bool        listening       = true;
 
 
@@ -64,7 +64,7 @@ static bool        listening       = true;
 //
 // ============================================================================
 
-static Tree *eliot_read_tree(int sock)
+static Tree *elfe_read_tree(int sock)
 // ----------------------------------------------------------------------------
 //   Read a tree directly from the socket
 // ----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ static Tree *eliot_read_tree(int sock)
 }
 
 
-static void eliot_write_tree(int sock, Tree *tree)
+static void elfe_write_tree(int sock, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Write a tree directly into the socket
 // ----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ struct StopAtGlobalsCloneMode
     Tree *Clone(Tree *t, CloneClass *clone)
     {
         if (t == cutpoint)
-            return eliot_nil;
+            return elfe_nil;
         return t->Do(clone);
     }
 
@@ -119,7 +119,7 @@ struct StopAtGlobalsCloneMode
 typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
 
 
-static Tree_p eliot_attach_context(Context *context, Tree *code)
+static Tree_p elfe_attach_context(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Attach the context for the given code
 // ----------------------------------------------------------------------------
@@ -145,7 +145,7 @@ static Tree_p eliot_attach_context(Context *context, Tree *code)
 }
 
 
-static Tree *eliot_restore_nil(Tree *tree)
+static Tree *elfe_restore_nil(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Restore 'nil' names in the symbol tables
 // ----------------------------------------------------------------------------
@@ -153,32 +153,32 @@ static Tree *eliot_restore_nil(Tree *tree)
     if (Name *name = tree->AsName())
     {
         if (name->value == "nil")
-            return eliot_nil;
+            return elfe_nil;
     }
     else if (Infix *infix = tree->AsInfix())
     {
-        infix->left  = eliot_restore_nil(infix->left);
-        infix->right = eliot_restore_nil(infix->right);
+        infix->left  = elfe_restore_nil(infix->left);
+        infix->right = elfe_restore_nil(infix->right);
     }
     else if (Prefix *prefix = tree->AsPrefix())
     {
-        prefix->left  = eliot_restore_nil(prefix->left);
-        prefix->right = eliot_restore_nil(prefix->right);
+        prefix->left  = elfe_restore_nil(prefix->left);
+        prefix->right = elfe_restore_nil(prefix->right);
     }
     else if (Postfix *postfix = tree->AsPostfix())
     {
-        postfix->left  = eliot_restore_nil(postfix->left);
-        postfix->right = eliot_restore_nil(postfix->right);
+        postfix->left  = elfe_restore_nil(postfix->left);
+        postfix->right = elfe_restore_nil(postfix->right);
     }
     else if (Block *block = tree->AsBlock())
     {
-        block->child = eliot_restore_nil(block->child);
+        block->child = elfe_restore_nil(block->child);
     }
     return tree;
 }
 
 
-static Tree_p eliot_merge_context(Context *context, Tree *code)
+static Tree_p elfe_merge_context(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //    Merge the code into the current running context
 // ----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ static Tree_p eliot_merge_context(Context *context, Tree *code)
             Context *codeCtx = context;
             if (scope)
             {
-                scope = eliot_restore_nil(scope)->As<Scope>();
+                scope = elfe_restore_nil(scope)->As<Scope>();
                 codeCtx = new Context(scope);
                 while (Scope *parent = ScopeParent(scope))
                     scope = parent;
@@ -219,13 +219,13 @@ static Tree_p eliot_merge_context(Context *context, Tree *code)
 //
 // ============================================================================
 
-static int eliot_send(Context *context, text host, Tree *code)
+static int elfe_send(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
 {
     // Compute port number
-    int port = ELIOT_DEFAULT_PORT;
+    int port = ELFE_DEFAULT_PORT;
     size_t found = host.rfind(':');
     if (found != std::string::npos)
     {
@@ -233,9 +233,9 @@ static int eliot_send(Context *context, text host, Tree *code)
         port = atoi(portText.c_str());
         if (!port)
         {
-            std::cerr << "eliot_tell: Port '" << portText << " is invalid, "
-                      << "using " << ELIOT_DEFAULT_PORT << "\n";
-            port = ELIOT_DEFAULT_PORT;
+            std::cerr << "elfe_tell: Port '" << portText << " is invalid, "
+                      << "using " << ELFE_DEFAULT_PORT << "\n";
+            port = ELFE_DEFAULT_PORT;
         }
         host = host.substr(0, found);
     }
@@ -244,7 +244,7 @@ static int eliot_send(Context *context, text host, Tree *code)
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
-        std::cerr << "eliot_tell: Error opening socket: "
+        std::cerr << "elfe_tell: Error opening socket: "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -253,7 +253,7 @@ static int eliot_send(Context *context, text host, Tree *code)
     struct hostent *server = gethostbyname(host.c_str());
     if (!server)
     {
-        std::cerr << "eliot_tell: Error resolving server '" << host << "': "
+        std::cerr << "elfe_tell: Error resolving server '" << host << "': "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -269,31 +269,31 @@ static int eliot_send(Context *context, text host, Tree *code)
     // Connect
     if (connect(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
     {
-        std::cerr << "eliot_tell: Error connecting to '"
+        std::cerr << "elfe_tell: Error connecting to '"
                   << host << "' port " << port << ": "
                   << strerror(errno) << "\n";
         return -1;
     }
 
     // Attach the running context, i.e. all symbols we might need
-    code = eliot_attach_context(context, code);
+    code = elfe_attach_context(context, code);
 
     // Write program to socket
-    eliot_write_tree(sock, code);
+    elfe_write_tree(sock, code);
 
     return sock;
 }
 
 
-int eliot_tell(Context *context, text host, Tree *code)
+int elfe_tell(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host
 // ----------------------------------------------------------------------------
 {
     IFTRACE(remote)
-        std::cerr << "eliot_tell: Telling " << host << ":\n"
+        std::cerr << "elfe_tell: Telling " << host << ":\n"
                   << code << "\n";
-    int sock = eliot_send(context, host, code);
+    int sock = elfe_send(context, host, code);
     if (sock < 0)
         return sock;
     close(sock);
@@ -301,22 +301,22 @@ int eliot_tell(Context *context, text host, Tree *code)
 }
 
 
-Tree_p eliot_ask(Context *context, text host, Tree *code)
+Tree_p elfe_ask(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for reply
 // ----------------------------------------------------------------------------
 {
     IFTRACE(remote)
-        std::cerr << "eliot_ask: Asking " << host << ":\n"
+        std::cerr << "elfe_ask: Asking " << host << ":\n"
                   << code << "\n";
-    int sock = eliot_send(context, host, code);
+    int sock = elfe_send(context, host, code);
     if (sock < 0)
-        return eliot_nil;
+        return elfe_nil;
 
-    Tree_p result = eliot_read_tree(sock);
-    result = eliot_merge_context(context, result);
+    Tree_p result = elfe_read_tree(sock);
+    result = elfe_merge_context(context, result);
     IFTRACE(remote)
-        std::cerr << "eliot_ask: Response from " << host << " was:\n"
+        std::cerr << "elfe_ask: Response from " << host << " was:\n"
                   << result << "\n";
     
     close(sock);
@@ -325,31 +325,31 @@ Tree_p eliot_ask(Context *context, text host, Tree *code)
 }
 
 
-Tree_p eliot_invoke(Context *context, text host, Tree *code)
+Tree_p elfe_invoke(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for multiple replies
 // ----------------------------------------------------------------------------
 {
     IFTRACE(remote)
-        std::cerr << "eliot_invoke: Invoking " << host << ":\n"
+        std::cerr << "elfe_invoke: Invoking " << host << ":\n"
                   << code << "\n";
-    int sock = eliot_send(context, host, code);
+    int sock = elfe_send(context, host, code);
     if (sock < 0)
-        return eliot_nil;
+        return elfe_nil;
 
-    Tree_p result = eliot_nil;
+    Tree_p result = elfe_nil;
     while (true)
     {
-        Tree_p response = eliot_read_tree(sock);
+        Tree_p response = elfe_read_tree(sock);
         if (response == NULL)
             break;
         
         IFTRACE(remote)
-            std::cerr << "eliot_invoke: Response from " << host << " was:\n"
+            std::cerr << "elfe_invoke: Response from " << host << " was:\n"
                       << response << "\n";
-        response = eliot_merge_context(context, response);
+        response = elfe_merge_context(context, response);
         result = context->Evaluate(response);
-        if (result == eliot_nil)
+        if (result == elfe_nil)
             break;
     }
     close(sock);
@@ -377,7 +377,7 @@ static int child_wait(int flag)
     if (childPID > 0)
     {
         IFTRACE(remote)
-            std::cerr << "eliot_listen: Child PID " << childPID << " died "
+            std::cerr << "elfe_listen: Child PID " << childPID << " died "
                       << (flag ? "nowait" : "wait") << "\n";
         active_children--;
         if (!flag && WIFEXITED(status))
@@ -402,7 +402,7 @@ static void child_died(int)
 
 
 
-Tree_p  eliot_listen_received()
+Tree_p  elfe_listen_received()
 // ----------------------------------------------------------------------------
 //    Return the incoming message before evaluation
 // ----------------------------------------------------------------------------
@@ -411,19 +411,19 @@ Tree_p  eliot_listen_received()
 }
 
 
-Tree_p eliot_listen_hook(Tree *newHook)
+Tree_p elfe_listen_hook(Tree *newHook)
 // ----------------------------------------------------------------------------
 //   Set the listen hook, return the previous one
 // ----------------------------------------------------------------------------
 {
     Tree_p result = hook;
-    if (newHook != eliot_nil)
+    if (newHook != elfe_nil)
         hook = newHook;
     return result;
 }
 
 
-int eliot_listen(Context *context, uint forking, uint port)
+int elfe_listen(Context *context, uint forking, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
 // ----------------------------------------------------------------------------
@@ -432,7 +432,7 @@ int eliot_listen(Context *context, uint forking, uint port)
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
-        std::cerr << "eliot_listen: Error opening socket: "
+        std::cerr << "elfe_listen: Error opening socket: "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -440,7 +440,7 @@ int eliot_listen(Context *context, uint forking, uint port)
     int option = 1;
     if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR,
                     (char *)&option, sizeof (option)) < 0)
-        std::cerr << "eliot_listen: Error setting SO_REUSEADDR: "
+        std::cerr << "elfe_listen: Error setting SO_REUSEADDR: "
                   << strerror(errno) << "\n";
 
     struct sockaddr_in address = { 0 };
@@ -449,7 +449,7 @@ int eliot_listen(Context *context, uint forking, uint port)
     address.sin_port = htons(port);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
     {
-        std::cerr << "eliot_listen: Error binding to port " << port << ": "
+        std::cerr << "elfe_listen: Error binding to port " << port << ": "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -468,68 +468,68 @@ int eliot_listen(Context *context, uint forking, uint port)
         while (forking && active_children >= forking)
         {
             IFTRACE(remote)
-                std::cerr << "eliot_listen: Too many children, waiting\n";
+                std::cerr << "elfe_listen: Too many children, waiting\n";
             int childPID = child_wait(0);
             if (childPID > 0)
                 IFTRACE(remote)
-                    std::cerr << "eliot_listen: Child " << childPID
+                    std::cerr << "elfe_listen: Child " << childPID
                               << " died, resuming\n";
         }
 
         // Accept input
         IFTRACE(remote)
-            std::cerr << "eliot_listen: Accepting input\n";
+            std::cerr << "elfe_listen: Accepting input\n";
         sockaddr_in client = { 0 };
         socklen_t length = sizeof(client);
         int insock = accept(sock, (struct sockaddr *) &client, &length);
         if (insock < 0)
         {
-            std::cerr << "eliot_listen: Error accepting port " << port << ": "
+            std::cerr << "elfe_listen: Error accepting port " << port << ": "
                       << strerror(errno) << "\n";
             continue;
         }
         IFTRACE(remote)
-            std::cerr << "eliot_listen: Got incoming connexion\n";
+            std::cerr << "elfe_listen: Got incoming connexion\n";
 
         // Fork child for incoming connexion
         int pid = forking ? fork() : 0;
         if (pid == -1)
         {
-            std::cerr << "eliot_listen: Error forking child\n";
+            std::cerr << "elfe_listen: Error forking child\n";
         }
         else if (pid)
         {
             IFTRACE(remote)
-                std::cerr << "eliot_listen: Forked pid " << pid << "\n";
+                std::cerr << "elfe_listen: Forked pid " << pid << "\n";
             close(insock);
             active_children++;
         }
         else
         {
             // Read data from client
-            Tree_p code = eliot_read_tree(insock);
+            Tree_p code = elfe_read_tree(insock);
 
             // Evaluate resulting code
             if (code)
             {
                 IFTRACE(remote)
-                    std::cerr << "eliot_listen: Received code: "
+                    std::cerr << "elfe_listen: Received code: "
                               << code << "\n";
                 received = code;
                 Tree_p hookResult = context->Evaluate(hook);
-                if (hookResult != eliot_nil)
+                if (hookResult != elfe_nil)
                 {
                     Save<int> saveReply(reply_socket, insock);
-                    code = eliot_merge_context(context, code);
+                    code = elfe_merge_context(context, code);
                     Tree_p result = context->Evaluate(code);
                     IFTRACE(remote)
-                        std::cerr << "eliot_listen: Evaluated as: "
+                        std::cerr << "elfe_listen: Evaluated as: "
                                   << result << "\n";
-                    eliot_write_tree(insock, result);
+                    elfe_write_tree(insock, result);
                     IFTRACE(remote)
-                        std::cerr << "eliot_listen: Response sent\n";
+                        std::cerr << "elfe_listen: Response sent\n";
                 }
-                if (hookResult == eliot_false || hookResult == eliot_nil)
+                if (hookResult == elfe_false || hookResult == elfe_nil)
                 {
                     listening = false;
                 }
@@ -539,7 +539,7 @@ int eliot_listen(Context *context, uint forking, uint port)
             if (forking)
             {
                 IFTRACE(remote)
-                    std::cerr << "eliot_listen: Exiting PID "
+                    std::cerr << "elfe_listen: Exiting PID "
                               << getpid() << "\n";
                 exit(listening ? 0 : 42);
             }
@@ -551,25 +551,25 @@ int eliot_listen(Context *context, uint forking, uint port)
 }
 
 
-int eliot_reply(Context *context, Tree *code)
+int elfe_reply(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code back to whoever invoked us
 // ----------------------------------------------------------------------------
 {
     if (!reply_socket)
     {
-        std::cerr << "eliot_reply: Not replying to anybody\n";
+        std::cerr << "elfe_reply: Not replying to anybody\n";
         return -1;
     }
 
     IFTRACE(remote)
-        std::cerr << "eliot_reply: Replying:\n" << code << "\n";
-    code = eliot_attach_context(context, code);
+        std::cerr << "elfe_reply: Replying:\n" << code << "\n";
+    code = elfe_attach_context(context, code);
     IFTRACE(remote)
-        std::cerr << "eliot_reply: After replacement:\n" << code << "\n";
-    eliot_write_tree(reply_socket, code);
+        std::cerr << "elfe_reply: After replacement:\n" << code << "\n";
+    elfe_write_tree(reply_socket, code);
     return 0;
 }
 
 
-ELIOT_END
+ELFE_END

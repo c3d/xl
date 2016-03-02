@@ -1,7 +1,7 @@
 #ifndef OPCODES_H
 #define OPCODES_H
 // ****************************************************************************
-//  opcodes.h                                                    ELIOT project
+//  opcodes.h                                                    ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -49,7 +49,7 @@
 #include "bytecode.h"
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -57,7 +57,7 @@ ELIOT_BEGIN
 //
 // ============================================================================
 //
-//  Each ELIOT type defined in opcodes or in .tbl file is represented as:
+//  Each ELFE type defined in opcodes or in .tbl file is represented as:
 //  - A C++ class deriving from one of the parse tree types.
 //    The name is [name]_r, for example class boolean_r derives from Name.
 //  - A pointer type [name]_p, for example boolean_p
@@ -127,9 +127,9 @@ public:
     }
     Opcode(const Opcode &other): Op(other), Info()
     {
-        ELIOT_ASSERT(success == NULL);
-        ELIOT_ASSERT(next == NULL);
-        ELIOT_ASSERT(owner == NULL);
+        ELFE_ASSERT(success == NULL);
+        ELFE_ASSERT(next == NULL);
+        ELFE_ASSERT(owner == NULL);
     }
     
     virtual void                Delete(){ /* Not owned by the tree */ }
@@ -353,7 +353,7 @@ struct FunctionArguments
     uint        size;
 };
 
-ELIOT_END
+ELFE_END
 
 
 
@@ -386,7 +386,7 @@ ELIOT_END
 #define OPTIONS         (MAIN->options)
 #define AS_INT(x)       (new Integer((x), POSITION))
 #define AS_REAL(x)      (new Real((x), POSITION))
-#define AS_BOOL(x)      ((x) ? eliot_true : eliot_false)
+#define AS_BOOL(x)      ((x) ? elfe_true : elfe_false)
 #define AS_TEXT(x)      (new Text(x, POSITION))
 #define R_INT(x)        RESULT(AS_INT(x))
 #define R_REAL(x)       RESULT(AS_REAL(x))
@@ -449,7 +449,7 @@ ELIOT_END
 #define OVERLOAD(Name, Symbol, ResTy, Parms, Code)
 #define FUNCTION(Name, ResTy, Parms, Code)
 #define PARM(Name, Type)
-#define NAME(symbol)            extern Name_p eliot_##symbol;
+#define NAME(symbol)            extern Name_p elfe_##symbol;
 #define NAME_FN(Name, ResTy, Symbol, Code)
 
 
@@ -543,7 +543,7 @@ ELIOT_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELIOT_ASSERT(parms.size() == 1);                            \
+            ELFE_ASSERT(parms.size() == 1);                            \
             argID = parms[0];                                           \
         }                                                               \
                                                                         \
@@ -581,7 +581,7 @@ ELIOT_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELIOT_ASSERT(parms.size() == 2);                            \
+            ELFE_ASSERT(parms.size() == 2);                             \
             leftID = parms[0];                                          \
             rightID = parms[1];                                         \
         }                                                               \
@@ -619,7 +619,7 @@ ELIOT_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELIOT_ASSERT(parms.size() == 2);                            \
+            ELFE_ASSERT(parms.size() == 2);                            \
             leftID = parms[0];                                          \
             rightID = parms[1];                                         \
         }                                                               \
@@ -665,7 +665,7 @@ ELIOT_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELIOT_ASSERT(parms.size() == 1);                            \
+            ELFE_ASSERT(parms.size() == 1);                            \
             argID = parms[0];                                           \
         }                                                               \
         int argID;                                                      \
@@ -731,7 +731,7 @@ ELIOT_END
                                                                         \
         virtual Tree *Shape()                                           \
         {                                                               \
-            Tree *self = eliot_nil;                                     \
+            Tree *self = elfe_nil;                                     \
             Opcode_FC_##FName &_parms = *this;                          \
             _parms.size = 0;                                            \
             Parms;                                                      \
@@ -791,8 +791,8 @@ ELIOT_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a simple name such as 'true', 'false', 'nil', etc   */      \
 /* ------------------------------------------------------------ */      \
-    Name_p eliot_##symbol;                                              \
-    static NameOpcode init_opcode_N_##symbol(#symbol, eliot_##symbol);
+    Name_p elfe_##symbol;                                              \
+    static NameOpcode init_opcode_N_##symbol(#symbol, elfe_##symbol);
 
 
 #define NAME_FN(FName, ResTy, Symbol, Code)                             \
@@ -814,8 +814,8 @@ ELIOT_END
         virtual kstring OpID()  { return #FName; }                      \
     };                                                                  \
                                                                         \
-    Name_p eliot_##FName;                                               \
-    static Opcode_N_##FName init_opcode_N_##FName (eliot_##FName);
+    Name_p elfe_##FName;                                               \
+    static Opcode_N_##FName init_opcode_N_##FName (elfe_##FName);
 
 
 #define TYPE(sym, BaseType, Condition)                                  \

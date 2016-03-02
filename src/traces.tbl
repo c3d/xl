@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  traces.tbl                                                   ELIOT project
+//  traces.tbl                                                   ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     This table defines the debug traces for the ELIOT runtime
+//     This table defines the debug traces for the ELFE runtime
 //
 //
 //
@@ -39,13 +39,13 @@
 // ****************************************************************************
 //
 // Usage:
-// 1. Define the name of the "trace group" by defining the ELIOT_TRACE_GROUP macro.
-//    For the ELIOT runtime, it is 'ELIOT'.
+// 1. Define the name of the "trace group" by defining the ELFE_TRACE_GROUP macro.
+//    For the ELFE runtime, it is 'ELFE'.
 // 2. Define all the trace flags with TRACE(trace_name)
 
-//TRACE_GROUP(ELIOT)
-#ifndef ELIOT_TRACE_GROUP
-#define ELIOT_TRACE_GROUP ELIOT
+//TRACE_GROUP(ELFE)
+#ifndef ELFE_TRACE_GROUP
+#define ELFE_TRACE_GROUP ELFE
 #endif
 
 TRACE(memory)
@@ -65,10 +65,10 @@ TRACE(labels)
 TRACE(builtins)
 TRACE(closure)
 TRACE(diff)
-TRACE(calls2eliot)
+TRACE(calls2elfe)
 TRACE(symbols)
 TRACE(fileload)
-TRACE(eliot2c)
+TRACE(elfe2c)
 TRACE(references)
 TRACE(statictypes)
 TRACE(llvmdump)

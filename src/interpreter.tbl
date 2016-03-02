@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  interpreter.tbl                                              ELIOT project
+//  interpreter.tbl                                              ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -8,7 +8,7 @@
 //
 //     Normally, opcodes defined here should match those in llvm.tbl
 //     although there is strictly speaking no reason other than
-//     the convenience for maintaining builtins.eliot
+//     the convenience for maintaining builtins.elfe
 //
 //
 //
@@ -91,7 +91,7 @@ UNARY(BNot,     Name,    Name,                  R_BOOL(not LEFT_B))
 
 // ============================================================================
 // 
-//   Special opcodes that perform ELIOT-specific operations
+//   Special opcodes that perform ELFE-specific operations
 // 
 // ============================================================================
 

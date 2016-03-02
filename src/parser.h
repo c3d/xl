@@ -7,7 +7,7 @@
 // 
 //   File Description:
 // 
-//      ELIOT language parser
+//      ELFE language parser
 // 
 // 
 // 
@@ -23,7 +23,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 /*
-  Parsing ELIOT is extremely simple. The source code is transformed into
+  Parsing ELFE is extremely simple. The source code is transformed into
   a tree with only three type of nodes and four types of leafs:
 
   The three node types are:
@@ -62,7 +62,7 @@
   for instance in (-A-B), where the first minus is a prefix.
   Any name or symbol is valid to identify a prefix or infix operator.
 
-  Operator precedence is defined by the eliot.syntax file.
+  Operator precedence is defined by the elfe.syntax file.
 
   Comments and extraneous line separators are preserved in CommentsInfo nodes
   attached to the returned parse trees.
@@ -74,7 +74,7 @@
 #include <vector>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 // 
@@ -143,6 +143,6 @@ public:
     CommentsList before, after;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // PARSER_H

@@ -42,7 +42,7 @@
 #include "base.h"
 #include <vector>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 // 
@@ -147,13 +147,13 @@ private:
 
 
 #define RECORD(cond, what, args...)                                     \
-    ((ELIOT::REC_##cond) &                                              \
-      (ELIOT::FlightRecorder::enabled | ELIOT::REC_ALWAYS)              \
-     && ELIOT::FlightRecorder::SRecord(what,                            \
-                                    __builtin_return_address(0),        \
-                                    ##args))
+    ((ELFE::REC_##cond) &                                               \
+     (ELFE::FlightRecorder::enabled | ELFE::REC_ALWAYS)                 \
+     && ELFE::FlightRecorder::SRecord(what,                             \
+                                      __builtin_return_address(0),      \
+                                      ##args))
 
-ELIOT_END
+ELFE_END
 
 // For use within a debugger session
 extern void recorder_dump();

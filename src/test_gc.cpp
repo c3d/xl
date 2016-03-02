@@ -11,7 +11,7 @@ struct Test
     GARBAGE_COLLECT(Test);
 };
 
-typedef ELIOT::GCPtr<Test> Test_p;
+typedef ELFE::GCPtr<Test> Test_p;
 
 struct Derived : Test
 {
@@ -24,7 +24,7 @@ struct Derived : Test
     GARBAGE_COLLECT(Derived);
 };
 
-typedef ELIOT::GCPtr<Derived> Derived_p;
+typedef ELFE::GCPtr<Derived> Derived_p;
 
 
 int main()
@@ -38,8 +38,8 @@ int main()
     {
         new Test();
         if (i > 2000)
-            ELIOT::GarbageCollector::Collect();
+            ELFE::GarbageCollector::Collect();
     }
-    ELIOT::GarbageCollector::Collect(true);
-    ELIOT::GarbageCollector::Collect(true);
+    ELFE::GarbageCollector::Collect(true);
+    ELFE::GarbageCollector::Collect(true);
 }

@@ -1,7 +1,7 @@
 #ifndef POSTORDER_H
 #define POSTORDER_H
 // ****************************************************************************
-//  postorder.h                                                  ELIOT project
+//  postorder.h                                                  ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -43,7 +43,7 @@
 
 #include "tree.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 template <typename Action>
 struct PostOrderTraversal
@@ -107,6 +107,6 @@ struct PostOrderTraversal
     bool fullScan;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // POSTORDER_H

@@ -2,7 +2,7 @@
 #define TREE_H
 // ****************************************************************************
 //  tree.h                          (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELIOT project
+//                                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -10,7 +10,7 @@
 //     Basic representation of parse tree.
 //
 //     See the big comment at the top of parser.h for details about
-//     the basics of ELIOT  tree representation
+//     the basics of ELFE  tree representation
 //
 //
 //
@@ -34,11 +34,11 @@
 #include <iostream>
 #include <cctype>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
-//    The types being defined or used to define ELIOT trees
+//    The types being defined or used to define ELFE trees
 //
 // ============================================================================
 
@@ -87,7 +87,7 @@ typedef Tree *(*eval_fn) (Scope *, Tree *);     // Compiled evaluation code
 
 enum kind
 // ----------------------------------------------------------------------------
-//   The kinds of tree that compose an ELIOT parse tree
+//   The kinds of tree that compose an ELFE parse tree
 // ----------------------------------------------------------------------------
 {
     INTEGER, REAL, TEXT, NAME,                  // Leaf nodes
@@ -108,7 +108,7 @@ const int KIND_COUNT = KIND_LAST+1;
 
 struct Tree
 // ----------------------------------------------------------------------------
-//   The base class for all ELIOT trees
+//   The base class for all ELFE trees
 // ----------------------------------------------------------------------------
 {
     enum { KINDBITS = 3, KINDMASK=7 };
@@ -478,7 +478,7 @@ template <class I> inline void Tree::Set(typename I::data_t data)
 {
     Info *i = new I(data);
     // The info can only be owned by a single tree, should not be linked
-    ELIOT_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
     LinkedListInsert(info, i);
 }
 
@@ -501,8 +501,8 @@ template <class I> inline void Tree::SetInfo(I *i)
 // ----------------------------------------------------------------------------
 {
     // The info can only be owned by a single tree, should not be linked
-    ELIOT_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
-    ELIOT_ASSERT(!i->Info::next);
+    ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    ELFE_ASSERT(!i->Info::next);
     
     Info *asInfo = i;           // For proper deduction if I is a derived class
     LinkedListInsert(info, asInfo);
@@ -539,7 +539,7 @@ retry:
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            ELIOT_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             ic->Delete();
             purged = true;
         }
@@ -568,7 +568,7 @@ retry:
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            ELIOT_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             return ic;
         }
         prev = i;
@@ -594,7 +594,7 @@ retry:
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            ELIOT_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             return ic;
         }
         prev = i;
@@ -602,11 +602,11 @@ retry:
     return NULL;
 }
 
-extern Name_p   eliot_true;
-extern Name_p   eliot_false;
-extern Name_p   eliot_nil;
-extern Name_p   eliot_self;
+extern Name_p   elfe_true;
+extern Name_p   elfe_false;
+extern Name_p   elfe_nil;
+extern Name_p   elfe_self;
 
-ELIOT_END
+ELFE_END
 
 #endif // TREE_H

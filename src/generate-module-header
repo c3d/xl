@@ -6,7 +6,7 @@ echo '#define' $GUARD
 echo '#define TBL_HEADER'
 echo '#include "opcodes.h"'
 [ -f $1'.h' ] && echo '#include "'$1'.h"'
-echo 'ELIOT_BEGIN'
+echo 'ELFE_BEGIN'
 echo '#include "'$1'.tbl"'
-echo 'ELIOT_END'
+echo 'ELFE_END'
 echo '#endif //' $GUARD

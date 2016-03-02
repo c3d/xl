@@ -1,10 +1,10 @@
 #******************************************************************************
-# Makefile<eliot>                                                  Tao project 
+# Makefile<elfe>                                                  Elfe project 
 #******************************************************************************
 #
 #  File Description:
 #
-#     The top-level makefile for ELIOT, the
+#     The top-level makefile for ELFE, the
 #     Extensible Language for the Internet of Things
 #
 #

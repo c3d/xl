@@ -1,12 +1,12 @@
 #ifndef REMOTE_H
 #define REMOTE_H
 // ****************************************************************************
-//  remote.h                                                     ELIOT project
+//  remote.h                                                     ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    The interface for a simple socket-based transport of ELIOT programs
+//    The interface for a simple socket-based transport of ELFE programs
 //
 //
 //
@@ -24,18 +24,18 @@
 #include "tree.h"
 #include "context.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
-const uint ELIOT_DEFAULT_PORT = 1205;
+const uint ELFE_DEFAULT_PORT = 1205;
 
-int     eliot_tell(Context *, text host, Tree *body);
-Tree_p  eliot_ask(Context *, text host, Tree *body);
-Tree_p  eliot_invoke(Context *, text host, Tree *body);
-int     eliot_reply(Context *, Tree *body);
-Tree_p  eliot_listen_received();
-Tree_p  eliot_listen_hook(Tree *body);
-int     eliot_listen(Context *, uint forking, uint port = ELIOT_DEFAULT_PORT);
+int     elfe_tell(Context *, text host, Tree *body);
+Tree_p  elfe_ask(Context *, text host, Tree *body);
+Tree_p  elfe_invoke(Context *, text host, Tree *body);
+int     elfe_reply(Context *, Tree *body);
+Tree_p  elfe_listen_received();
+Tree_p  elfe_listen_hook(Tree *body);
+int     elfe_listen(Context *, uint forking, uint port = ELFE_DEFAULT_PORT);
 
-ELIOT_END
+ELFE_END
 
 #endif // REMOTE_H

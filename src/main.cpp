@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  main.cpp                                                      ELIOT project
+//  main.cpp                                                      ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Main entry point of the ELIOT runtime and compiler
+//    Main entry point of the ELFE runtime and compiler
 //
 //
 //
@@ -75,9 +75,9 @@
 #include <sys/stat.h>
 
 
-ELIOT_DEFINE_TRACES
+ELFE_DEFINE_TRACES
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 Main *MAIN = NULL;
 
@@ -146,7 +146,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
-    ELIOT_INIT_TRACES();
+    ELFE_INIT_TRACES();
     Options::options = &options;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
@@ -197,7 +197,7 @@ int Main::LoadAndRun()
         rc = 1;
 
     if (!rc && options.listen)
-        return eliot_listen(context, options.listen_forks, options.listen);
+        return elfe_listen(context, options.listen_forks, options.listen);
     
 #ifndef INTERPRETER_ONLY
     compiler->Dump();
@@ -422,7 +422,7 @@ int Main::Run()
         return -1;
 
     // Loop over files we will process
-    Tree_p result = eliot_nil;
+    Tree_p result = elfe_nil;
     for (file = file_names.begin(); file != file_names.end(); file++)
     {
         SourceFile &sf = files[*file];
@@ -519,7 +519,7 @@ text Main::ModuleBaseName(text path)
 
 text Main::ModuleName(text path)
 // ----------------------------------------------------------------------------
-//   Return the module name, e.g. turn foo/bar-bi-tu.eliot into bar_bi_tu
+//   Return the module name, e.g. turn foo/bar-bi-tu.elfe into bar_bi_tu
 // ----------------------------------------------------------------------------
 {
     text    result = "";
@@ -583,27 +583,27 @@ Tree *Main::Normalize(Tree *input)
 }
 
 
-ELIOT_END
+ELFE_END
 
 
-#ifndef LIBELIOT
+#ifndef LIBELFE
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    ELIOT::FlightRecorder::Initialize();
+    ELFE::FlightRecorder::Initialize();
     RECORD(ALWAYS, "Compiler starting");
 
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
 #endif
 
-    ELIOT::Main main(argc, argv);
+    ELFE::Main main(argc, argv);
     int rc = main.LoadAndRun();
 
     IFTRACE(gcstats)
-        ELIOT::GarbageCollector::GC()->PrintStatistics();
+        ELFE::GarbageCollector::GC()->PrintStatistics();
 
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
@@ -614,4 +614,4 @@ int main(int argc, char **argv)
     return rc;
 }
 
-#endif // LIBELIOT
+#endif // LIBELFE

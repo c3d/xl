@@ -1,7 +1,7 @@
-# ELIoT
+# Elfe
 ### Extensible Language for the Internet of Things
 
-ELIoT is a very simple and small programming language specifcally
+Elfe is a very simple and small programming language specifcally
 designed to facilitate the configuration and control of swarms of
 small devices such as sensors or actuators. It can also be used as a
 powerful, remotely-accessible extension language for larger
@@ -10,14 +10,14 @@ applications.
 
 ## Example: Measuring temperature
 
-Consider a sensor named `sensor.corp.net` running ELIoT and featuring
+Consider a sensor named `sensor.corp.net` running Elfe and featuring
 a temperature measurement through a `temperature` function.
 
-ELIoT lets you evaluate programs on this sensor remotely to do all
+Elfe lets you evaluate programs on this sensor remotely to do all
 kinds of interesting temperature measurements. By deferring
 computations to the sensor, we minimize network traffic and energy
 consumption. Examples similar to the ones below can be found in the
-[demo directory](https://github.com/c3d/eliot/tree/master/demo).
+[demo directory](https://github.com/c3d/elfe/tree/master/demo).
 
 ### Simple temperature measurement (polling)
 
@@ -27,9 +27,9 @@ use the following code:
     temperature_on_sensor -> ask "sensor.corp.net", { temperature }
     writeln "Temperature is ", temperature_on_sensor
 
-The `->` rewrite operator reads "transforms into" and is used in ELIoT
+The `->` rewrite operator reads "transforms into" and is used in Elfe
 to define variables, functions, macros, and so on. Look into
-[builtins.eliot](https://github.com/c3d/eliot/blob/master/src/builtins.eliot)
+[builtins.elfe](https://github.com/c3d/elfe/blob/master/src/builtins.elfe)
 for examples of its use.
 
 The `ask` function sends a program on a remote node, waits for its
@@ -42,7 +42,7 @@ value.
 ### Reporting sudden changes in temperatures
 
 An application may be interested in sudden changes in temperatures,
-e.g. if the sensor suddenly warms up. With ELIoT, without changing
+e.g. if the sensor suddenly warms up. With Elfe, without changing
 anything to the temperature API, you can check the temperature every
 second and report if it changed by more than 1 degree since last time
 it was measured with the following program:
@@ -91,7 +91,7 @@ only after having transmitted the new value, not after having measured it:
     temperature_changed new_temp, last_temp ->
         writeln "Temperature changed from ", last_temp, " to ", new_temp
 
-In ELIoT, indentation is significant, and defined "blocks" of
+In Elfe, indentation is significant, and defined "blocks" of
 code. Other ways to delimit a block of code include brackets
 `{ code }` (which we used in the first example, where we
 passed the `{ temperature }` block to the remote sensor,
@@ -127,8 +127,8 @@ temperatures from samples taken every 2.5 seconds:
                 " Min=", Min, " Max=", Max, " Avg=", Avg
 
 Notice how the first parameter of `compute_stats`, `T`, has a type
-declaration `T:real`. This tells ELIoT that a `real` value is expected
-here. But it also forces ELIoT to actually compute the value, in order
+declaration `T:real`. This tells Elfe that a `real` value is expected
+here. But it also forces Elfe to actually compute the value, in order
 to check that it is indeed a real number.
 
 As a result, `temperature` is evaluated only once (to bind it to
@@ -148,7 +148,7 @@ sensors, wouldn't it make sense to minimize the traffic between Canada
 and Australia, and have the two sensors talk to one another locally in
 Australia?
 
-This is very easy with ELIoT. The following program will only send a
+This is very easy with Elfe. The following program will only send a
 traffic across the ocean if the temperature between the two sensors
 differs by more than 2 degrees, otherwise all network traffic will
 remain local:
@@ -179,7 +179,7 @@ located hundreds of miles from one another.
 
 ### A very powerful, yet simple API
 
-With these examples, we have demonstrated that using ELIoT, we can
+With these examples, we have demonstrated that using Elfe, we can
 answer queries from applications that have very different requirements.
 An application will get exactly the data it needs, when it needs it,
 minimizing network traffic and optimizing energy utilization.
@@ -193,15 +193,15 @@ between nodes, computations, and more.
 
 ## How do we measure the temperature?
 
-It is very simple to add your own functions to ELIoT, and to call any
+It is very simple to add your own functions to Elfe, and to call any
 C or C++ function of your choosing. The `temperature` function is
 implemented in a file called
-[temperature.tbl](https://github.com/c3d/eliot/blob/master/src/temperature.tbl).
+[temperature.tbl](https://github.com/c3d/elfe/blob/master/src/temperature.tbl).
 It looks like this:
 
     NAME_FN(Temperature,            // Unique internal name
             real,                   // Return value
-            "temperature",          // Name for ELIOT programmers
+            "temperature",          // Name for ELFE programmers
 
             // C++ code to compute the temperature and return it
             std::ifstream is("/sys/class/thermal/thermal_zone0/temp");
@@ -214,15 +214,15 @@ Raspberry Pi by reading the system file `/sys/class/thermal/thermal_zone0/temp`.
 This file returns values in 1/1000th of a Celsius, so we multiply the
 value we read by 0.001 to get the actual temperature.
 
-To add the `temperature` module to ELIoT, we just need to add it to
+To add the `temperature` module to Elfe, we just need to add it to
 the list of modules in the
-[Makefile](https://github.com/c3d/eliot/blob/master/src/Makefile#L32):
+[Makefile](https://github.com/c3d/elfe/blob/master/src/Makefile#L32):
 
     # List of modules to build
     MODULES=basics io math text remote time-functions temperature
 
 This will build at least `temperature.tbl`. That file contains the
-interface between ELIoT and your code. In simple cases like our
+interface between Elfe and your code. In simple cases like our
 temperature measurement, it may be sufficient. However, if you have
 files called `temperature.h` or `temperature.cpp`, they will be
 integrated in your `temperature` module. This lets you add supporting
@@ -230,17 +230,17 @@ classes or functions.
 
 The `tell`, `ask`, `invoke` and `reply` words are implemented in the
 module called `remote`, which consists of
-[remote.tbl](https://github.com/c3d/eliot/blob/master/src/remote.tbl),
-[remote.h](https://github.com/c3d/eliot/blob/master/src/remote.h) and
-[remote.cpp](https://github.com/c3d/eliot/blob/master/src/remote.cpp).
+[remote.tbl](https://github.com/c3d/elfe/blob/master/src/remote.tbl),
+[remote.h](https://github.com/c3d/elfe/blob/master/src/remote.h) and
+[remote.cpp](https://github.com/c3d/elfe/blob/master/src/remote.cpp).
 This may not be the easiest module to study, however. You may find
-[io.tbl](https://github.com/c3d/eliot/blob/master/src/io.tbl) easier
+[io.tbl](https://github.com/c3d/elfe/blob/master/src/io.tbl) easier
 to understand.
 
 
-## Compiling ELIoT
+## Compiling Elfe
 
-To build ELIoT, just use `make`. On a Raspberry Pi, a `make -j3`
+To build Elfe, just use `make`. On a Raspberry Pi, a `make -j3`
 should run in about 10 minutes if you start from scratch. On a version
 2, it's about one minute. On a modern PC, it's may be as low as 3 to 5
 seconds. If `make` works (and it should), then use `sudo make install`
@@ -249,7 +249,7 @@ to install the target. In summary:
       % make
       % sudo make install
 
-The default location is `/usr/local/bin/eliot`, but you can install in
+The default location is `/usr/local/bin/elfe`, but you can install in
 `/opt/local/` for example by building with `make PREFIX=/opt/local/`.
 Don't forget the trailing `/`.
 
@@ -261,19 +261,19 @@ portable. I will fix that one day. If other tests fail, look into
 file `tests/failures-default.out` for details of what went wrong.
 
 
-### Running an ELIoT server
+### Running an Elfe server
 
-To start an ELIoT server on a node, simply run `eliot -l`.
+To start an Elfe server on a node, simply run `elfe -l`.
 
-    pi% eliot -l
+    pi% elfe -l
 
-By default, ELIoT listens on port 1205. You can change that by using
+By default, Elfe listens on port 1205. You can change that by using
 the `-listen` option:
 
-    pi% eliot -listen 42105
+    pi% elfe -listen 42105
 
 Now, let's try a first test program. On `boss`, edit a file called
-`hello.eliot`, and write into it the following code:
+`hello.elfe`, and write into it the following code:
 
     tell "pi",
         writeln "Hello World"
@@ -281,16 +281,16 @@ Now, let's try a first test program. On `boss`, edit a file called
 Replace `"pi"` with the actual Internet name of your target
 machine. Then execute that little program with:
 
-    boss% eliot hello.eliot
+    boss% elfe hello.elfe
 
 Normally, the console output on `pi` should now look like this:
 
-    pi% eliot -l
+    pi% elfe -l
     Hello World
 
-What happens behind the scene is that ELIoT on `boss` sent the program
+What happens behind the scene is that Elfe on `boss` sent the program
 given as an argument to `tell` to the machine named `pi` (which must
-be running an ELIoT in listen mode, i.e. have `eliot -l`
+be running an Elfe in listen mode, i.e. have `elfe -l`
 running). Then, that program executes on the slave. The `tell` command
 is totally asynchronous, it does not wait for completion on the target.
 
@@ -298,7 +298,7 @@ If this example does not work as intended, and if no obvious error
 appears on the console of either system, you can debug things by
 adding `-tremote` (`-t` stands for "trace", and enables specific debug
 traces, in that case any code conditioned by `IFTRACE(remote)` in the
-ELioT source code).
+Elfe source code).
 
 
 ### The magic behind the scene
@@ -311,22 +311,22 @@ There are three key functions to send programs across nodes:
    The node can then use `reply` to execute code back in the caller's
    program
 
-ELIoT sends not just the program segments you give it, but also the
+Elfe sends not just the program segments you give it, but also the
 necessary data, notably the symbols required for correct evaluation. 
 This is the reason why things appear to work as a single program.
 
 
 
-## Basics of ELIoT syntax and semantics
+## Basics of Elfe syntax and semantics
 
-ELIoT derives from [XLR](http://xlr.sourceforge.net). It is a
+Elfe derives from [XLR](http://xlr.sourceforge.net). It is a
 specially trimmed-down version that does not require LLVM and can work
 in full interpreted mode, making it easier to compile and use, but
 also safer, since you cannot call arbitrary C functions.
 
 ### Semantics: One operator to rule them all
 
-ELIoT has one fundamental operator, `->`, the "rewrite operator",
+Elfe has one fundamental operator, `->`, the "rewrite operator",
 which reads as *transforms into*. It is used to declare variables:
 
     X -> 0
@@ -353,7 +353,7 @@ the first one that applies. For example, factorial is defined as follows:
     N! -> N * (N-1)!
 
 Many basic program structures are defined that way in
-[builtins.eliot](https://github.com/c3d/eliot/blob/master/src/builtins.eliot).
+[builtins.elfe](https://github.com/c3d/elfe/blob/master/src/builtins.elfe).
 For example, if-then-else and infinite loops are defined as follows:
 
     if true  then X else Y      -> X
@@ -363,9 +363,9 @@ For example, if-then-else and infinite loops are defined as follows:
 
 ### Syntax: Look, Ma, no keywords!
 
-ELIoT has no keywords. Instead, the syntax relies on a rather simple
+Elfe has no keywords. Instead, the syntax relies on a rather simple
 [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser)
-[parser](https://github.com/c3d/eliot/blob/master/src/parser.cpp).
+[parser](https://github.com/c3d/elfe/blob/master/src/parser.cpp).
 
 THe parser generates a parse tree made of 8 node types. The first four
 node types are leaf nodes:
@@ -407,15 +407,15 @@ the name `world`.
 
 This parser is dynamically configurable, with the default priorities
 being defined by the
-[eliot.syntax](https://github.com/c3d/eliot/blob/master/src/eliot.syntax) file.
+[elfe.syntax](https://github.com/c3d/elfe/blob/master/src/elfe.syntax) file.
 
-Parse trees are the fundamendal data structure in ELIoT. Any data or
+Parse trees are the fundamendal data structure in Elfe. Any data or
 program can be represented as a parse tree.
 
 
-### ELIoT as a functional language
+### Elfe as a functional language
 
-ELIoT can be seen as a functional language, where functions are
+Elfe can be seen as a functional language, where functions are
 first-class entities, i.e. you can manipulate them, pass them around,
 etc:
 
@@ -436,7 +436,7 @@ subject to the same evaluation rules based on tree rewrites.
 
 ### Subtlety #1: expression vs. statement
 
-The ELIoT parse tree is designed to represent programs in a way that
+The Elfe parse tree is designed to represent programs in a way that
 is relatively natural for human beings. In that sense, it departs from
 languages such as Lisp or SmallTalk.
 
@@ -465,7 +465,7 @@ desired objective, and you will need additional parentheses.
 
 ### Subtlety #2: infix vs. prefix
 
-Another special rule is that ELIoT will use the presence of space on
+Another special rule is that Elfe will use the presence of space on
 only one side of an operator to disambiguate between an infix or a
 prefix. For example:
 
@@ -501,7 +501,7 @@ is a real value, you can do it as follows:
     
 ### Subtlelty #4: Closures and remote transport
 
-Like many functional languages, ELIoT ensures that the value of
+Like many functional languages, Elfe ensures that the value of
 variables is preserved for the evaluation of a given body. Consider
 for example:
 

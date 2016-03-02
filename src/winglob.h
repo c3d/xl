@@ -1,7 +1,7 @@
 #ifndef WINGLOB_H
 #define WINGLOB_H
 // ****************************************************************************
-//  winglob.h                                                     ELIOT project
+//  winglob.h                                                     ELFE project
 // ****************************************************************************
 //
 //   File Description:

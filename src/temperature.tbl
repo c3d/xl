@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  temperature.tbl                                              ELIOT project 
+//  temperature.tbl                                              ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
@@ -20,7 +20,7 @@
 
 NAME_FN(Temperature,            // Unique internal name
         real,                   // Return value
-        "temperature",          // Name for ELIOT programmers
+        "temperature",          // Name for ELFE programmers
 // ----------------------------------------------------------------------------
 //    Return the core temperature as reported by the Linux kernel
 // ----------------------------------------------------------------------------

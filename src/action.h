@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Tree;                                    // Base tree
 struct Integer;                                 // Integer: 0, 3, 8
@@ -76,6 +76,6 @@ struct Action
     virtual Tree *DoBlock(Block *what);
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // ACTION_H

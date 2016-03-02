@@ -1,12 +1,12 @@
 #ifndef TYPES_H
 #define TYPES_H
 // ****************************************************************************
-//  types.h                                                       ELIOT project
+//  types.h                                                       ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The type system in ELIOT
+//     The type system in ELFE
 //
 //
 //
@@ -39,7 +39,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 //
-//  The type system in ELIOT is somewhat similar to what is found in Haskell,
+//  The type system in ELFE is somewhat similar to what is found in Haskell,
 //  except that it's based on the shape of trees.
 //
 //  A type form in ELIO can be:
@@ -59,7 +59,7 @@
 #include <map>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 // 
@@ -246,10 +246,10 @@ inline bool IsTreeType(Tree *type)
     return type == tree_type;
 }
 
-ELIOT_END
+ELFE_END
 
-extern "C" void debugt(ELIOT::Types *ti);
-extern "C" void debugu(ELIOT::Types *ti);
-extern "C" void debugr(ELIOT::Types *ti);
+extern "C" void debugt(ELFE::Types *ti);
+extern "C" void debugu(ELFE::Types *ti);
+extern "C" void debugr(ELFE::Types *ti);
 
 #endif // TYPES_H

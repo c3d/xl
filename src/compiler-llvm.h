@@ -1,12 +1,12 @@
 #ifndef COMPILER_LLVM_H
 #define COMPILER_LLVM_H
 // ****************************************************************************
-//  compiler-llvm.h                                               ELIOT project
+//  compiler-llvm.h                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The interface between the ELIOT compiler and the LLVM backend
+//     The interface between the ELFE compiler and the LLVM backend
 //
 //
 //
@@ -41,7 +41,7 @@
 
 #include "compiler.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 typedef llvm_value (*llvm_fn) (CompiledUnit &unit,
                                llvm_builder builder,
@@ -59,6 +59,6 @@ struct CompilerLLVMTableEntry
 
 extern CompilerLLVMTableEntry CompilerLLVMTable[];
 
-ELIOT_END
+ELFE_END
 
 #endif // COMPILER_LLVM_H

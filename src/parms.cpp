@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  parms.cpp                                                    ELIOT project
+//  parms.cpp                                                    ELFE project
 // ****************************************************************************
 // 
 //   File Description:
@@ -43,7 +43,7 @@
 #include "errors.h"
 #include "llvm-crap.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 bool ParameterList::EnterName(Name *what, llvm_type declaredType)
 // ----------------------------------------------------------------------------
@@ -252,4 +252,4 @@ bool ParameterList::DoPostfix(Postfix *what)
     return true;
 }
 
-ELIOT_END
+ELFE_END

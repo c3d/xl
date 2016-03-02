@@ -2,7 +2,7 @@
 #define COMPILER_H
 // ****************************************************************************
 //  compiler.h                       (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               ELIOT project 
+//                                                               ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
@@ -54,7 +54,7 @@
 // 
 // ============================================================================
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct CompiledUnit;
 struct CompilerInfo;
@@ -191,20 +191,20 @@ public:
     llvm::PointerType         *infoPtrTy;
     llvm::PointerType         *contextPtrTy;
     llvm::Function            *strcmp_fn;
-    llvm::Function            *eliot_same_shape;
-    llvm::Function            *eliot_form_error;
-    llvm::Function            *eliot_stack_overflow;
-    llvm::Function            *eliot_new_integer;
-    llvm::Function            *eliot_new_real;
-    llvm::Function            *eliot_new_character;
-    llvm::Function            *eliot_new_text;
-    llvm::Function            *eliot_new_ctext;
-    llvm::Function            *eliot_new_xtext;
-    llvm::Function            *eliot_new_block;
-    llvm::Function            *eliot_new_prefix;
-    llvm::Function            *eliot_new_postfix;
-    llvm::Function            *eliot_new_infix;
-    llvm::Constant            *eliot_recursion_count_ptr;
+    llvm::Function            *elfe_same_shape;
+    llvm::Function            *elfe_form_error;
+    llvm::Function            *elfe_stack_overflow;
+    llvm::Function            *elfe_new_integer;
+    llvm::Function            *elfe_new_real;
+    llvm::Function            *elfe_new_character;
+    llvm::Function            *elfe_new_text;
+    llvm::Function            *elfe_new_ctext;
+    llvm::Function            *elfe_new_xtext;
+    llvm::Function            *elfe_new_block;
+    llvm::Function            *elfe_new_prefix;
+    llvm::Function            *elfe_new_postfix;
+    llvm::Function            *elfe_new_infix;
+    llvm::Constant            *elfe_recursion_count_ptr;
     functions_map              builtins;
     functions_map              functions;
     adapter_map                array_to_args_adapters;
@@ -278,7 +278,7 @@ inline bool Compiler::IsRealType(llvm_type t)
 #define RIGHT_VALUE_INDEX   3
 #define INFIX_NAME_INDEX    4
 
-ELIOT_END
+ELFE_END
 
 extern void debugv(llvm::Value *);
 extern void debugv(llvm::Type *);

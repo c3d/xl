@@ -1,13 +1,13 @@
 #ifndef TRACES_H
 #define TRACES_H
 // ****************************************************************************
-//   traces.h                                                    ELIOT project
+//   traces.h                                                    ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
 //     Traces declarations. This file relies on traces.tbl to build a class
-//     derived from ELIOT::Traces (traces_base.h).
+//     derived from ELFE::Traces (traces_base.h).
 //
 //
 //
@@ -46,24 +46,24 @@
 #include "traces.tbl"
 #undef TRACE
 
-#ifdef ELIOT_TRACE_GROUP
+#ifdef ELFE_TRACE_GROUP
 
-#define _ELIOT_MAKE_TRACE_CLASSNAME(x)    x##Traces
-#define  ELIOT_MAKE_TRACE_CLASSNAME(x)   _ELIOT_MAKE_TRACE_CLASSNAME(x)
-#define  ELIOT_TRACE_CLASSNAME            ELIOT_MAKE_TRACE_CLASSNAME(ELIOT_TRACE_GROUP)
+#define _ELFE_MAKE_TRACE_CLASSNAME(x)    x##Traces
+#define  ELFE_MAKE_TRACE_CLASSNAME(x)   _ELFE_MAKE_TRACE_CLASSNAME(x)
+#define  ELFE_TRACE_CLASSNAME            ELFE_MAKE_TRACE_CLASSNAME(ELFE_TRACE_GROUP)
 
-#define _ELIOT_MAKE_TRACE_INSTNAME(x)     x##TracesInstance
-#define  ELIOT_MAKE_TRACE_INSTNAME(x)    _ELIOT_MAKE_TRACE_INSTNAME(x)
-#define  ELIOT_TRACE_INSTNAME             ELIOT_MAKE_TRACE_INSTNAME(ELIOT_TRACE_GROUP)
+#define _ELFE_MAKE_TRACE_INSTNAME(x)     x##TracesInstance
+#define  ELFE_MAKE_TRACE_INSTNAME(x)    _ELFE_MAKE_TRACE_INSTNAME(x)
+#define  ELFE_TRACE_INSTNAME             ELFE_MAKE_TRACE_INSTNAME(ELFE_TRACE_GROUP)
 
-class ELIOT_TRACE_CLASSNAME : public ELIOT::Traces
+class ELFE_TRACE_CLASSNAME : public ELFE::Traces
 // ----------------------------------------------------------------------------
 //   Wrap all the trace flags for the group
 // ----------------------------------------------------------------------------
 {
 public:
 
-    ELIOT_TRACE_CLASSNAME() :
+    ELFE_TRACE_CLASSNAME() :
 #define TRACE(name)     name(false),
 #include "traces.tbl"
 #undef TRACE
@@ -74,7 +74,7 @@ public:
 #undef  TRACE
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x)  _STRINGIFY(x)
-        addGroup(STRINGIFY(ELIOT_TRACE_GROUP), this);
+        addGroup(STRINGIFY(ELFE_TRACE_GROUP), this);
 #undef  STRINGIFY
     }
 
@@ -84,15 +84,14 @@ public:
     bool unused;
 };
 
-extern ELIOT_TRACE_CLASSNAME *ELIOT_TRACE_INSTNAME;
-
-#define ELIOT_DEFINE_TRACES  ELIOT_TRACE_CLASSNAME *ELIOT_TRACE_INSTNAME = NULL;
-#define ELIOT_INIT_TRACES()                                     \
-    do {                                                        \
-        if (!ELIOT_TRACE_INSTNAME)                              \
-            ELIOT_TRACE_INSTNAME = new ELIOT_TRACE_CLASSNAME(); \
+extern ELFE_TRACE_CLASSNAME *ELFE_TRACE_INSTNAME;
+#define ELFE_DEFINE_TRACES  ELFE_TRACE_CLASSNAME *ELFE_TRACE_INSTNAME = NULL;
+#define ELFE_INIT_TRACES()                                     \
+    do {                                                       \
+        if (!ELFE_TRACE_INSTNAME)                              \
+            ELFE_TRACE_INSTNAME = new ELFE_TRACE_CLASSNAME();  \
     } while(0)
 
-#endif // ELIOT_TRACE_GROUP
+#endif // ELFE_TRACE_GROUP
 
 #endif

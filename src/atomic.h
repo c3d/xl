@@ -1,12 +1,12 @@
 #ifndef ATOMIC_H
 #define ATOMIC_H
 // ****************************************************************************
-//  atomic.h                                                     ELIOT project
+//  atomic.h                                                     ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    The atomic operations we may need in ELIOT
+//    The atomic operations we may need in ELFE
 //
 //
 //
@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -248,6 +248,6 @@ Value Atomic<Value>::Nand(value_v ref, value_t delta)
 
 #endif
 
-ELIOT_END
+ELFE_END
 
 #endif // ATOMIC_H

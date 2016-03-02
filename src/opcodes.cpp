@@ -1,6 +1,6 @@
 // ****************************************************************************
 //  opcodes.cpp                     (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                               ELIOT project
+//                                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -52,7 +52,7 @@
 
 #include <typeinfo>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // List of registered opcodes
 Opcode::Opcodes *Opcode::opcodes = NULL;
@@ -138,4 +138,4 @@ void NameOpcode::Register(Context *context)
 #endif
 }
 
-ELIOT_END
+ELFE_END

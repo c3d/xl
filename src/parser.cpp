@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  parser.cpp                      (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                               ELIOT project 
+//                                                               ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     ELIOT language parser
+//     ELFE language parser
 // 
 //      See detailed description in parser.h
 // 
@@ -33,7 +33,7 @@
 
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 // ============================================================================
 // 
 //    Parser class itself
@@ -261,7 +261,7 @@ Tree *Parser::Parse(text closing)
 // ----------------------------------------------------------------------------
 //   Parse input
 // ----------------------------------------------------------------------------
-/* ELIOT parsing is not very difficult, but a bit unusual, because it is based
+/* ELFE parsing is not very difficult, but a bit unusual, because it is based
    solely on dynamic information and not, for instance, on keywords.
    Consider the following cases, where p is "prefix-op" and i is "infix-op"
      Write A
@@ -272,7 +272,7 @@ Tree *Parser::Parse(text closing)
      Write -A,B
        This parses as (Write-A),B since "-" has a priority.
        I wish I could fix that one...
-       The correct ELIOT syntax is: Write (-A),B
+       The correct ELFE syntax is: Write (-A),B
        We hope that semantic will catch such a case later and let us know...
  */
 {
@@ -673,4 +673,4 @@ Tree *Parser::Parse(text closing)
     return result;
 }
 
-ELIOT_END
+ELFE_END

@@ -2,12 +2,12 @@
 #define RENDERER_H
 // ****************************************************************************
 //  renderer.h                      (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               ELIOT project 
+//                                                               ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Rendering of ELIOT trees
+//     Rendering of ELFE trees
 // 
 // 
 // 
@@ -45,7 +45,7 @@
 #include "tree.h"
 #include <ostream>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Syntax;
 typedef std::map<text,Tree_p>                      formats_table;
@@ -65,7 +65,7 @@ struct Renderer
 
     // Selecting the style sheet file
     void                SelectStyleSheet(text styleFile,
-                                         text syntaxFile = ELIOT_LIB "eliot.syntax");
+                                         text syntaxFile = ELFE_LIB "elfe.syntax");
 
     // Rendering proper
     void                RenderFile (Tree *what);
@@ -106,13 +106,13 @@ public:
     static Renderer *   renderer;
 };
 
-std::ostream& operator<< (std::ostream&out, ELIOT::Tree *t);
-std::ostream& operator<< (std::ostream&out, ELIOT::TreeList &list);
+std::ostream& operator<< (std::ostream&out, ELFE::Tree *t);
+std::ostream& operator<< (std::ostream&out, ELFE::TreeList &list);
 
-ELIOT_END
+ELFE_END
 
 // For use in a debugger
-extern "C" const char *debug(ELIOT::Tree *);
-extern "C" const char *debugp(ELIOT::Tree *);
+extern "C" const char *debug(ELFE::Tree *);
+extern "C" const char *debugp(ELFE::Tree *);
 
 #endif // RENDERER_H

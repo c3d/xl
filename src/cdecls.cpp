@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  cdecls.cpp                                                    ELIOT project
+//  cdecls.cpp                                                    ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Processing and transforming C declarations into normal ELIOT
+//    Processing and transforming C declarations into normal ELFE
 //
 //    We will never get accurate results without a real C parser.
 //    The objective here is only to deal with the most common cases
@@ -43,7 +43,7 @@
 
 #include <sstream>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 CDeclaration::CDeclaration()
 // ----------------------------------------------------------------------------
@@ -420,4 +420,4 @@ Name *CDeclaration::Anonymous()
     return new Name(name);
 }
 
-ELIOT_END
+ELFE_END

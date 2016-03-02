@@ -1,11 +1,11 @@
 // ****************************************************************************
-//   Christophe de Dinechin                                      ELIOT PROJECT
+//   Christophe de Dinechin                                      ELFE PROJECT
 //   options.cpp
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Processing of ELIOT compiler options
+//     Processing of ELFE compiler options
 //
 //
 //
@@ -36,7 +36,7 @@
 #include "flight_recorder.h"
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 /* ========================================================================= */
 /*                                                                           */
@@ -59,9 +59,9 @@ Options::Options(int argc, char **argv):
     args.push_back(argv[0]);
 
     // Check if some options are given from environment
-    if (kstring envopt = getenv("ELIOT_OPT"))
+    if (kstring envopt = getenv("ELFE_OPT"))
     {
-        RECORD(INFO, "Options from ELIOT_OPT", envopt);
+        RECORD(INFO, "Options from ELFE_OPT", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -94,7 +94,7 @@ static void Usage(kstring appName)
     std::cerr << "\t-" << #name ": " descr "\n";
 #include "options.tbl"
 #if DEBUG
-    std::set<std::string> names = ELIOT::Traces::names();
+    std::set<std::string> names = ELFE::Traces::names();
     if (names.size())
     {
         std::cerr << "\t-t<name>: Enable trace <name>. ";
@@ -225,7 +225,7 @@ text Options::ParseNext(bool consumeFiles)
 
             RECORD(INFO, "Parse option", "Index", arg, option);
 
-#if ELIOT_DEBUG
+#if ELFE_DEBUG
             if (argval[0] == 't')
             {
                 kstring trace_name = argval + 1;
@@ -270,8 +270,8 @@ text Options::ParseNext(bool consumeFiles)
     return text("");
 }
 
-ELIOT_END
-ulong eliot_traces = 0;
+ELFE_END
+ulong elfe_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace
 // ----------------------------------------------------------------------------

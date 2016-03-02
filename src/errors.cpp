@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include "errors.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -174,7 +174,7 @@ Error::operator Tree *()
 //    Return the error converted as a prefix form
 // ----------------------------------------------------------------------------
 {
-    return new Prefix(eliot_error, new Text(Message(), position), position);
+    return new Prefix(elfe_error, new Text(Message(), position), position);
 }
 
 
@@ -398,7 +398,7 @@ text FormatTreeForError(Tree *tree)
     return "'" + result + "'";
 }
 
-ELIOT_END
+ELFE_END
 
 
 
@@ -409,7 +409,7 @@ ELIOT_END
 // ============================================================================
 
 
-void eliot_assert_failed(kstring msg, kstring file, uint line)
+void elfe_assert_failed(kstring msg, kstring file, uint line)
 // ----------------------------------------------------------------------------
 //   Report an assertion failure
 // ----------------------------------------------------------------------------

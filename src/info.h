@@ -43,7 +43,7 @@
 #include "atomic.h"
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Tree;
 
@@ -60,7 +60,7 @@ public:
 public:
     friend struct Tree;
     Atomic<Info *>      next;
-#ifdef ELIOT_DEBUG    
+#ifdef ELFE_DEBUG    
     Atomic<Tree *>      owner;
 #endif
 
@@ -69,6 +69,6 @@ private:
                         Info(const Info &)      : next(NULL) {}
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // INFO_H

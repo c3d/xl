@@ -1,13 +1,13 @@
-#ifndef ELIOT_OPTIONS_H
-#define ELIOT_OPTIONS_H
+#ifndef ELFE_OPTIONS_H
+#define ELFE_OPTIONS_H
 // ****************************************************************************
-//  Christophe de Dinechin                                       ELIOT PROJECT
+//  Christophe de Dinechin                                       ELFE PROJECT
 //  options.h
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Processing of ELIOT compiler options
+//     Processing of ELFE compiler options
 // 
 // 
 // 
@@ -27,7 +27,7 @@
 #include <vector>
 #include "base.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Errors;
 
@@ -57,6 +57,6 @@ struct Options
     static Options *    options;
 };
 
-ELIOT_END
+ELFE_END
 
-#endif /* ELIOT_OPTIONS_H */
+#endif /* ELFE_OPTIONS_H */

@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  expred.cpp                                                    ELIOT project
+//  expred.cpp                                                    ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -46,7 +46,7 @@
 #include "renderer.h"
 #include "llvm-crap.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 using namespace llvm;
 
@@ -109,9 +109,9 @@ llvm_value CompileExpression::DoName(Name *what)
             return result;
 
     // Check true and false values
-    if (existing == eliot_true)
+    if (existing == elfe_true)
         return ConstantInt::get(unit->compiler->booleanTy, 1);
-    if (existing == eliot_false)
+    if (existing == elfe_false)
         return ConstantInt::get(unit->compiler->booleanTy, 0);
 
     // Check if it is a global
@@ -298,7 +298,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
         }
     }
 
-    // The final call to eliot_form_error if nothing worked
+    // The final call to elfe_form_error if nothing worked
     unit->CallFormError(call);
     code->CreateBr(isDone);
     code->SetInsertPoint(isDone);
@@ -568,7 +568,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
-        return code->CreateCall2(c.eliot_same_shape, value, test);
+        return code->CreateCall2(c.elfe_same_shape, value, test);
     }
 
     // Other comparisons fail for now
@@ -626,4 +626,4 @@ llvm_value CompileExpression::TopLevelEvaluation(Tree *expr)
     return expr->Do(this);
 }
 
-ELIOT_END
+ELFE_END

@@ -2,12 +2,12 @@
 #define SYNTAX_H
 // ****************************************************************************
 //  syntax.h                        (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               ELIOT project 
+//                                                               ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Description of syntax information used to parse ELIOT trees
+//     Description of syntax information used to parse ELFE trees
 // 
 // 
 // 
@@ -42,7 +42,7 @@
 #include <set>
 #include "base.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Tree;
 struct Scanner;
@@ -87,7 +87,7 @@ public:
     bool                KnownToken(text n);
     bool                KnownPrefix(text n);
 
-    // Read a complete syntax file (eliot.syntax)
+    // Read a complete syntax file (elfe.syntax)
     void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
     void                ReadSyntaxFile (text filename, uint indents = 1);
 
@@ -134,6 +134,6 @@ struct ChildSyntax : Syntax
     delimiter_table     delimiters;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // SYNTAX_H

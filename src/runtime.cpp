@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  runtime.cpp                     (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                              ELIOT project
+//                                                              ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Runtime functions necessary to execute ELIOT programs
+//     Runtime functions necessary to execute ELFE programs
 //
 //
 //
@@ -69,9 +69,9 @@
 #include <sys/time.h>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
-Tree *eliot_form_error(Context *context, Tree *what)
+Tree *elfe_form_error(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 //   Raise an error if we have a form error
 // ----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ Tree *eliot_form_error(Context *context, Tree *what)
     {
         std::cerr << "ABORT - Recursive error during error handling\n"
                   << "Error tree: " << what << "\n";
-        return ELIOT::eliot_false;
+        return ELFE::elfe_false;
     }
     Save<bool> saveRecursive(recursive, true);
 
@@ -94,7 +94,7 @@ Tree *eliot_form_error(Context *context, Tree *what)
 }
 
 
-Tree *eliot_stack_overflow(Tree *what)
+Tree *elfe_stack_overflow(Tree *what)
 // ----------------------------------------------------------------------------
 //   Return an error evaluating a tree
 // ----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ Tree *eliot_stack_overflow(Tree *what)
 }
 
 
-bool eliot_same_shape(Tree *left, Tree *right)
+bool elfe_same_shape(Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ bool eliot_same_shape(Tree *left, Tree *right)
 //
 // ========================================================================
 
-Integer *eliot_new_integer(longlong value)
+Integer *elfe_new_integer(longlong value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Integer
 // ----------------------------------------------------------------------------
@@ -130,7 +130,7 @@ Integer *eliot_new_integer(longlong value)
 }
 
 
-Real *eliot_new_real(double value)
+Real *elfe_new_real(double value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Real
 // ----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ Real *eliot_new_real(double value)
 }
 
 
-Text *eliot_new_character(char value)
+Text *elfe_new_character(char value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new single-quoted Text
 // ----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ Text *eliot_new_character(char value)
 }
 
 
-Text *eliot_new_text(text value)
+Text *elfe_new_text(text value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
@@ -160,7 +160,7 @@ Text *eliot_new_text(text value)
 }
 
 
-Text *eliot_new_ctext(kstring value)
+Text *elfe_new_ctext(kstring value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
@@ -170,7 +170,7 @@ Text *eliot_new_ctext(kstring value)
 }
 
 
-Text *eliot_new_xtext(kstring value, longlong len, kstring open, kstring close)
+Text *elfe_new_xtext(kstring value, longlong len, kstring open, kstring close)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new arbitrarily-quoted Text
 // ----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ Text *eliot_new_xtext(kstring value, longlong len, kstring open, kstring close)
 }
 
 
-Block *eliot_new_block(Block *source, Tree *child)
+Block *elfe_new_block(Block *source, Tree *child)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new block
 // ----------------------------------------------------------------------------
@@ -190,7 +190,7 @@ Block *eliot_new_block(Block *source, Tree *child)
 }
 
 
-Prefix *eliot_new_prefix(Prefix *source, Tree *left, Tree *right)
+Prefix *elfe_new_prefix(Prefix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Prefix
 // ----------------------------------------------------------------------------
@@ -200,7 +200,7 @@ Prefix *eliot_new_prefix(Prefix *source, Tree *left, Tree *right)
 }
 
 
-Postfix *eliot_new_postfix(Postfix *source, Tree *left, Tree *right)
+Postfix *elfe_new_postfix(Postfix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Postfix
 // ----------------------------------------------------------------------------
@@ -210,7 +210,7 @@ Postfix *eliot_new_postfix(Postfix *source, Tree *left, Tree *right)
 }
 
 
-Infix *eliot_new_infix(Infix *source, Tree *left, Tree *right)
+Infix *elfe_new_infix(Infix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Infix
 // ----------------------------------------------------------------------------
@@ -227,7 +227,7 @@ Infix *eliot_new_infix(Infix *source, Tree *left, Tree *right)
 //
 // ============================================================================
 
-Tree *eliot_parse_tree_inner(Context *context, Tree *tree)
+Tree *elfe_parse_tree_inner(Context *context, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Build a parse tree in the current context
 // ----------------------------------------------------------------------------
@@ -242,24 +242,24 @@ Tree *eliot_parse_tree_inner(Context *context, Tree *tree)
     case INFIX:
     {
         Infix *infix = (Infix *) tree;
-        Tree *left = eliot_parse_tree_inner(context, infix->left);
-        Tree *right = eliot_parse_tree_inner(context, infix->right);
+        Tree *left = elfe_parse_tree_inner(context, infix->left);
+        Tree *right = elfe_parse_tree_inner(context, infix->right);
         Infix *result = new Infix(infix, left, right);
         return result;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) tree;
-        Tree *left = eliot_parse_tree_inner(context, prefix->left);
-        Tree *right = eliot_parse_tree_inner(context, prefix->right);
+        Tree *left = elfe_parse_tree_inner(context, prefix->left);
+        Tree *right = elfe_parse_tree_inner(context, prefix->right);
         Prefix *result = new Prefix(prefix, left, right);
         return result;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) tree;
-        Tree *left = eliot_parse_tree_inner(context, postfix->left);
-        Tree *right = eliot_parse_tree_inner(context, postfix->right);
+        Tree *left = elfe_parse_tree_inner(context, postfix->left);
+        Tree *right = elfe_parse_tree_inner(context, postfix->right);
         Postfix *result = new Postfix(postfix, left, right);
         return result;
     }
@@ -273,7 +273,7 @@ Tree *eliot_parse_tree_inner(Context *context, Tree *tree)
             if (child && child->opening == "{" && child->closing == "}")
             {
                 // Case where we have parse_tree {{x}}: Return {x}
-                result = eliot_parse_tree_inner(context, child->child);
+                result = elfe_parse_tree_inner(context, child->child);
                 result = new Block(block, result);
                 return result;
             }
@@ -282,7 +282,7 @@ Tree *eliot_parse_tree_inner(Context *context, Tree *tree)
             result = context->Evaluate(result);
             return result;
         }
-        result = eliot_parse_tree_inner(context, result);
+        result = elfe_parse_tree_inner(context, result);
         result = new Block(block, result);
         return result;
     }
@@ -291,18 +291,18 @@ Tree *eliot_parse_tree_inner(Context *context, Tree *tree)
 }
 
 
-Tree *eliot_parse_tree(Context *context, Tree *code)
+Tree *elfe_parse_tree(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Entry point for parse_tree
 // ----------------------------------------------------------------------------
 {
     if (Block *block = code->AsBlock())
         code = block->child;
-    return eliot_parse_tree_inner(context, code);
+    return elfe_parse_tree_inner(context, code);
 }
 
 
-Tree *eliot_parse_text(text source)
+Tree *elfe_parse_text(text source)
 // ----------------------------------------------------------------------------
 //   Generate a tree from text
 // ----------------------------------------------------------------------------
@@ -339,22 +339,22 @@ static bool isAbsolute(text path)
 }
 
 
-static void eliot_list_files(Context *context, Tree *patterns, Tree_p *&parent)
+static void elfe_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
 // ----------------------------------------------------------------------------
 {
     if (Block *block = patterns->AsBlock())
     {
-        eliot_list_files(context, block->child, parent);
+        elfe_list_files(context, block->child, parent);
         return;
     }
     if (Infix *infix = patterns->AsInfix())
     {
         if (infix->name == "," || infix->name == ";" || infix->name == "\n")
         {
-            eliot_list_files(context, infix->left, parent);
-            eliot_list_files(context, infix->right, parent);
+            elfe_list_files(context, infix->left, parent);
+            elfe_list_files(context, infix->right, parent);
             return;
         }
     }
@@ -394,21 +394,21 @@ static void eliot_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 //
 // ============================================================================
 
-Tree *eliot_list_files(Context *context, Tree *patterns)
+Tree *elfe_list_files(Context *context, Tree *patterns)
 // ----------------------------------------------------------------------------
 //   List all files in the given pattern
 // ----------------------------------------------------------------------------
 {
     Tree_p result = NULL;
     Tree_p *parent = &result;
-    eliot_list_files(context, patterns, parent);
+    elfe_list_files(context, patterns, parent);
     if (!result)
-        result = eliot_nil;
+        result = elfe_nil;
     return result;
 }
 
 
-bool eliot_file_exists(Context *context, Tree_p self, text path)
+bool elfe_file_exists(Context *context, Tree_p self, text path)
 // ----------------------------------------------------------------------------
 //   Check if a file exists
 // ----------------------------------------------------------------------------
@@ -450,7 +450,7 @@ struct ImportedFileInfo : Info
 };
 
 
-Tree *eliot_import(Context *context, Tree *self, text name, int phase)
+Tree *elfe_import(Context *context, Tree *self, text name, int phase)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -483,7 +483,7 @@ Tree *eliot_import(Context *context, Tree *self, text name, int phase)
         if (path == "")
         {
             Ooops("Source file $2 not found for $1", self).Arg(name);
-            return ELIOT::eliot_false;
+            return ELFE::elfe_false;
         }
         info = new ImportedFileInfo(path);
         self->SetInfo<ImportedFileInfo> (info);
@@ -500,7 +500,7 @@ Tree *eliot_import(Context *context, Tree *self, text name, int phase)
         if (hadError)
         {
             Ooops("Unable to load file $2 for $1", self).Arg(path);
-            return ELIOT::eliot_false;
+            return ELFE::elfe_false;
         }
     }
 
@@ -534,7 +534,7 @@ struct LoadDataInfo : Info
 };
 
 
-Tree *eliot_load_data(Context *context, Tree *self,
+Tree *elfe_load_data(Context *context, Tree *self,
                    text name, text prefix, text fieldSeps, text recordSeps,
                    Tree *body)
 // ----------------------------------------------------------------------------
@@ -546,7 +546,7 @@ Tree *eliot_load_data(Context *context, Tree *self,
     if (path == "")
     {
         Ooops("CSV file $2 not found in $1", self).Arg(name);
-        return ELIOT::eliot_false;
+        return ELFE::elfe_false;
     }
 
     utf8_ifstream input(path.c_str(), std::ifstream::in);
@@ -555,17 +555,17 @@ Tree *eliot_load_data(Context *context, Tree *self,
         Ooops("Unable to load data for $1.\n"
                      "(Accessing $2 resulted in the following error: $3)",
               self).Arg(path).Arg(strerror(errno));
-        return ELIOT::eliot_nil;
+        return ELFE::elfe_nil;
     }
 
-    return eliot_load_data(context, self, path,
+    return elfe_load_data(context, self, path,
                         input, true, true,
                         prefix, fieldSeps, recordSeps,
                         body);
 }
 
 
-Tree *eliot_load_data(Context *context, Tree *self, text inputName,
+Tree *elfe_load_data(Context *context, Tree *self, text inputName,
                    std::istream &input, bool cached, bool statTime,
                    text prefix, text fieldSeps, text recordSeps,
                    Tree *body)
@@ -600,7 +600,7 @@ Tree *eliot_load_data(Context *context, Tree *self, text inputName,
 
         if (cached)
         {
-            Tree_p result = eliot_false;
+            Tree_p result = elfe_false;
             if (prefix.size())
             {
                 ulong i, max = perFile.data.size();
@@ -761,7 +761,7 @@ Tree *eliot_load_data(Context *context, Tree *self, text inputName,
         }
     }
     if (!tree)
-        tree = eliot_false;
+        tree = elfe_false;
     perFile.loaded = tree;
 
     return tree;
@@ -771,14 +771,14 @@ Tree *eliot_load_data(Context *context, Tree *self, text inputName,
 
 // ============================================================================
 //
-//    C functions called from builtins.eliot
+//    C functions called from builtins.elfe
 //
 // ============================================================================
 
 extern "C"
 {
 
-bool eliot_write_integer(longlong x)
+bool elfe_write_integer(longlong x)
 // ----------------------------------------------------------------------------
 //   Write an integer value
 // ----------------------------------------------------------------------------
@@ -788,7 +788,7 @@ bool eliot_write_integer(longlong x)
 }
 
 
-bool eliot_write_real(double x)
+bool elfe_write_real(double x)
 // ----------------------------------------------------------------------------
 //   Write a double value
 // ----------------------------------------------------------------------------
@@ -798,7 +798,7 @@ bool eliot_write_real(double x)
 }
 
 
-bool eliot_write_text(kstring x)
+bool elfe_write_text(kstring x)
 // ----------------------------------------------------------------------------
 //   Write a text value
 // ----------------------------------------------------------------------------
@@ -808,7 +808,7 @@ bool eliot_write_text(kstring x)
 }
 
 
-bool eliot_write_tree(Tree *tree)
+bool elfe_write_tree(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Write a text value
 // ----------------------------------------------------------------------------
@@ -818,7 +818,7 @@ bool eliot_write_tree(Tree *tree)
 }
 
 
-bool eliot_write_character(char x)
+bool elfe_write_character(char x)
 // ----------------------------------------------------------------------------
 //   Write a character value
 // ----------------------------------------------------------------------------
@@ -828,7 +828,7 @@ bool eliot_write_character(char x)
 }
 
 
-bool eliot_write_cr()
+bool elfe_write_cr()
 // ----------------------------------------------------------------------------
 //   Write a line separator
 // ----------------------------------------------------------------------------
@@ -838,7 +838,7 @@ bool eliot_write_cr()
 }
 
 
-bool eliot_text_eq(kstring x, kstring y)
+bool elfe_text_eq(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -847,7 +847,7 @@ bool eliot_text_eq(kstring x, kstring y)
 }
 
 
-bool eliot_text_ne(kstring x, kstring y)
+bool elfe_text_ne(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -856,7 +856,7 @@ bool eliot_text_ne(kstring x, kstring y)
 }
 
 
-bool eliot_text_lt(kstring x, kstring y)
+bool elfe_text_lt(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -865,7 +865,7 @@ bool eliot_text_lt(kstring x, kstring y)
 }
 
 
-bool eliot_text_le(kstring x, kstring y)
+bool elfe_text_le(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -874,7 +874,7 @@ bool eliot_text_le(kstring x, kstring y)
 }
 
 
-bool eliot_text_gt(kstring x, kstring y)
+bool elfe_text_gt(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -883,7 +883,7 @@ bool eliot_text_gt(kstring x, kstring y)
 }
 
 
-bool eliot_text_ge(kstring x, kstring y)
+bool elfe_text_ge(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -892,7 +892,7 @@ bool eliot_text_ge(kstring x, kstring y)
 }
 
 
-integer_t eliot_text2int(kstring tval)
+integer_t elfe_text2int(kstring tval)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
@@ -905,7 +905,7 @@ integer_t eliot_text2int(kstring tval)
 }
 
 
-real_t eliot_text2real(kstring tval)
+real_t elfe_text2real(kstring tval)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
@@ -918,7 +918,7 @@ real_t eliot_text2real(kstring tval)
 }
 
 
-text eliot_int2text(integer_t value)
+text elfe_int2text(integer_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -929,7 +929,7 @@ text eliot_int2text(integer_t value)
 }
 
 
-text eliot_real2text(real_t value)
+text elfe_real2text(real_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -940,7 +940,7 @@ text eliot_real2text(real_t value)
 }
 
 
-integer_t eliot_mod(integer_t x, integer_t y)
+integer_t elfe_mod(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
 // ----------------------------------------------------------------------------
@@ -952,7 +952,7 @@ integer_t eliot_mod(integer_t x, integer_t y)
 }
 
 
-integer_t eliot_pow(integer_t x, integer_t y)
+integer_t elfe_pow(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute integer power
 // ----------------------------------------------------------------------------
@@ -973,7 +973,7 @@ integer_t eliot_pow(integer_t x, integer_t y)
 }
 
 
-real_t eliot_modf(real_t x, real_t y)
+real_t elfe_modf(real_t x, real_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from fmod
 // ----------------------------------------------------------------------------
@@ -985,7 +985,7 @@ real_t eliot_modf(real_t x, real_t y)
 }
 
 
-real_t eliot_powf(real_t x, integer_t y)
+real_t elfe_powf(real_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute real power with an integer on the right
 // ----------------------------------------------------------------------------
@@ -1007,7 +1007,7 @@ real_t eliot_powf(real_t x, integer_t y)
 }
 
 
-text eliot_text_replace(text txt, text before, text after)
+text elfe_text_replace(text txt, text before, text after)
 // ----------------------------------------------------------------------------
 //   Return a copy of txt with all occurrences of before replaced with after
 // ----------------------------------------------------------------------------
@@ -1022,7 +1022,7 @@ text eliot_text_replace(text txt, text before, text after)
 }
 
 
-text eliot_text_repeat(uint count, text txt)
+text elfe_text_repeat(uint count, text txt)
 // ----------------------------------------------------------------------------
 //   Return a copy of txt with all occurrences of before replaced with after
 // ----------------------------------------------------------------------------
@@ -1046,7 +1046,7 @@ text eliot_text_repeat(uint count, text txt)
 }
 
 
-real_t eliot_time(real_t delay)
+real_t elfe_time(real_t delay)
 // ----------------------------------------------------------------------------
 //   Return the current system time
 // ----------------------------------------------------------------------------
@@ -1058,7 +1058,7 @@ real_t eliot_time(real_t delay)
 }
 
 
-#define ELIOT_TIME(tmfield, delay)              \
+#define ELFE_TIME(tmfield, delay)              \
     struct tm tm;                               \
     time_t clock;                               \
     time(&clock);                               \
@@ -1079,20 +1079,20 @@ struct tm *localtime_r (const time_t * timep, struct tm * result)
 #endif // CONFIG_MINGW
 
 
-integer_t  eliot_seconds()     { ELIOT_TIME(tm_sec,       1.0); }
-integer_t  eliot_minutes()     { ELIOT_TIME(tm_min,      60.0); }
-integer_t  eliot_hours()       { ELIOT_TIME(tm_hour,    3600.0); }
-integer_t  eliot_month_day()   { ELIOT_TIME(tm_mday,   86400.0); }
-integer_t  eliot_mon()         { ELIOT_TIME(tm_mon,    86400.0); }
-integer_t  eliot_year()        { ELIOT_TIME(tm_year,   86400.0); }
-integer_t  eliot_week_day()    { ELIOT_TIME(tm_wday,   86400.0); }
-integer_t  eliot_year_day()    { ELIOT_TIME(tm_yday,   86400.0); }
-integer_t  eliot_summer_time() { ELIOT_TIME(tm_isdst,  86400.0); }
-text_t     eliot_timezone()    { ELIOT_TIME(tm_zone,   86400.0); }
-integer_t  eliot_GMT_offset()  { ELIOT_TIME(tm_gmtoff, 86400.0); }
+integer_t  elfe_seconds()     { ELFE_TIME(tm_sec,       1.0); }
+integer_t  elfe_minutes()     { ELFE_TIME(tm_min,      60.0); }
+integer_t  elfe_hours()       { ELFE_TIME(tm_hour,    3600.0); }
+integer_t  elfe_month_day()   { ELFE_TIME(tm_mday,   86400.0); }
+integer_t  elfe_mon()         { ELFE_TIME(tm_mon,    86400.0); }
+integer_t  elfe_year()        { ELFE_TIME(tm_year,   86400.0); }
+integer_t  elfe_week_day()    { ELFE_TIME(tm_wday,   86400.0); }
+integer_t  elfe_year_day()    { ELFE_TIME(tm_yday,   86400.0); }
+integer_t  elfe_summer_time() { ELFE_TIME(tm_isdst,  86400.0); }
+text_t     elfe_timezone()    { ELFE_TIME(tm_zone,   86400.0); }
+integer_t  elfe_GMT_offset()  { ELFE_TIME(tm_gmtoff, 86400.0); }
 
 
-real_t eliot_random()
+real_t elfe_random()
 // ----------------------------------------------------------------------------
 //    Return a pseudo-random number in the low..high range
 // ----------------------------------------------------------------------------
@@ -1105,7 +1105,7 @@ real_t eliot_random()
 }
 
 
-bool eliot_random_seed(int seed)
+bool elfe_random_seed(int seed)
 // ----------------------------------------------------------------------------
 //    Initialized random number generator using the argument passed as seed
 // ----------------------------------------------------------------------------
@@ -1122,7 +1122,7 @@ bool eliot_random_seed(int seed)
 } // extern "C"
 
 
-ELIOT_END
+ELFE_END
 
 
-uint eliot_recursion_count = 0;
+uint elfe_recursion_count = 0;

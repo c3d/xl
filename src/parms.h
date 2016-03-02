@@ -1,7 +1,7 @@
 #ifndef COMPILER_PARM_H
 #define COMPILER_PARM_H
 // ****************************************************************************
-//  parms.h                                                       ELIOT project
+//  parms.h                                                       ELFE project
 // ****************************************************************************
 // 
 //   File Description:
@@ -42,7 +42,7 @@
 #include "compiler.h"
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Parameter
 // ----------------------------------------------------------------------------
@@ -87,7 +87,7 @@ public:
     llvm_type       returned;     // Returned type if specified
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // COMPILER_PARM_H
 

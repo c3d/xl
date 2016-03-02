@@ -1,6 +1,6 @@
 #!/bin/bash
 #******************************************************************************
-#  Christophe de Dinechin                                        ELIOT PROJECT
+#  Christophe de Dinechin                                        ELFE PROJECT
 #  alltests
 #******************************************************************************
 #
@@ -9,7 +9,7 @@
 #    Script for testing the compiler
 #
 #    This file runs through every possible test. It looks for all files
-#    ending in .eliot below the current directory, and executes them.
+#    ending in .elfe below the current directory, and executes them.
 #
 #
 #
@@ -24,7 +24,7 @@
 OS=$(uname)
 TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
-ELIOT=eliot
+ELFE=elfe
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z0-9]*'
@@ -44,7 +44,7 @@ MISSING_REFERENCE=0
 EXCLUDED=0
 TOTAL_TESTS=0
 
-if [ "$1" == '-eliot' ]; then ELIOT="$2"; shift; shift; fi
+if [ "$1" == '-elfe' ]; then ELFE="$2"; shift; shift; fi
 if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
     shift; RUNTIME="$1"; shift;
 fi
@@ -72,7 +72,7 @@ FAILURE="$TESTDIR/failure-"$RUNTIME".out"
 EXPECTED="$TESTDIR/expected-"$RUNTIME".out"
 BASEFILE="$TESTDIR/baseline-"$RUNTIME".txt"
 
-export TESTDIR ELIOT SUCCESS FAILURE PASS UPDATE BASELINE
+export TESTDIR ELFE SUCCESS FAILURE PASS UPDATE BASELINE
 
 # Make sure the proper files are linked in place
 # MinGW's unable to follow symlinks, so we have to copy dependencies
@@ -81,7 +81,7 @@ export TESTDIR ELIOT SUCCESS FAILURE PASS UPDATE BASELINE
 echo Tests successfully run on $(date) on $HOSTNAME > "$SUCCESS"
 echo Failed tests on $(date) on $HOSTNAME > "$FAILURE"
 echo Expected test failures on $(date) on $HOSTNAME > "$EXPECTED"
-export ELIOT
+export ELFE
 
 # Clear the baseline if we are updating it
 if [ ! -z "$BASELINE" ]; then
@@ -94,12 +94,12 @@ SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 for SUBDIR in $(find "$TESTDIR" -type d -a -name '*'$SUBDIRS'*')
 do
-for TEST in $(find "$SUBDIR" -name "$PATTERN".eliot -print)
+for TEST in $(find "$SUBDIR" -name "$PATTERN".elfe -print)
 do
     TESTNAME=${TEST/$TESTDIR\/}
 
     # Setup useful variables - These can be set in the test files
-    BASE=${TESTNAME/\.eliot}                           # Basename
+    BASE=${TESTNAME/\.elfe}                           # Basename
     DIR="$(dirname $TEST)"                          # Directory
     REF=$BASE.ref                                   # Reference file
     REFR=$BASE-$RUNTIME.ref                         # Reference file
@@ -107,9 +107,9 @@ do
     CMD=                                            # Command to execute
     EXIT=0                                          # Expected exit code
     RUN=                                            # What to run afterwards
-    OPT=                                            # ELIOT compiler options
-    RT_OPT=                                         # ELIOT options for runtime
-    #INC="-I $DIR -I $TESTDIR/library"              # ELIOT include directory
+    OPT=                                            # ELFE compiler options
+    RT_OPT=                                         # ELFE options for runtime
+    #INC="-I $DIR -I $TESTDIR/library"              # ELFE include directory
     EXCLUDE=                                        # Runtimes to exclude
     CACHED=
     OUTLINE=
@@ -127,11 +127,11 @@ do
     eval $(grep TO_REMOVE alltests_$RUNTIME)
     [ -z "$RT_OPT" ] && { eval $(grep RT_OPT alltests_$RUNTIME); }
     if [ -z "$CMD" ]; then
-        CMD="$ELIOT $RT_OPT $OPT $TESTNAME";
+        CMD="$ELFE $RT_OPT $OPT $TESTNAME";
         [ -z "$RUN" ] && { eval $(grep RUN alltests_$RUNTIME); }
     fi
 
-    # Run the ELIOT compiler on the test
+    # Run the ELFE compiler on the test
     THIS_FAILED=
     TOTAL_TESTS=$(($TOTAL_TESTS+1))
     if (echo $EXCLUDE | grep -q $RUNTIME) then

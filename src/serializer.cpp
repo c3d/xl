@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  serializer.cpp                                                ELIOT project
+//  serializer.cpp                                                ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     A couple of classes used to serialize and deserialize ELIOT trees
+//     A couple of classes used to serialize and deserialize ELFE trees
 //
 //
 //
@@ -51,7 +51,7 @@
 
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -516,5 +516,5 @@ text Deserializer::ReadText()
     return result;
 }
 
-ELIOT_END
+ELFE_END
 

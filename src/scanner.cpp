@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  scanner.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELIOT project
+//                                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     This is the file scanner for the ELIOT project
+//     This is the file scanner for the ELFE project
 //
 //     See detailed documentation in scanner.h
 //
@@ -32,7 +32,7 @@
 #include "utf8_fileutils.h"
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -279,7 +279,7 @@ token_t Scanner::NextToken(bool hungry)
         else if (column < indents.back())
         {
             // Unindenting: remove rightmost indent level
-            ELIOT_ASSERT(indents.size());
+            ELFE_ASSERT(indents.size());
             indents.pop_back();
             indent = column;
 
@@ -750,4 +750,4 @@ void Positions::GetInfo(ulong pos, text *out_file, ulong *out_line,
         *out_source = source;
 }
 
-ELIOT_END
+ELFE_END

@@ -1,12 +1,12 @@
 #ifndef BYTECODE_H
 #define BYTECODE_H
 // ****************************************************************************
-//  bytecode.h                                                   ELIOT project 
+//  bytecode.h                                                   ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Implementation of a bytecode to evaluate ELIOT programs faster
+//     Implementation of a bytecode to evaluate ELFE programs faster
 //     without the need to generate machine code directly
 // 
 // 
@@ -38,7 +38,7 @@
 #include <map>
 #include <iostream>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 
 struct Op;                      // An individual operation
@@ -354,6 +354,6 @@ inline std::ostream &operator<<(std::ostream &out, Ops &instrs)
     return out;
 }
 
-ELIOT_END
+ELFE_END
 
 #endif // BYTECODE_H

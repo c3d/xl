@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 template <class T>
 struct Save
@@ -67,6 +67,6 @@ struct Save
     T   saved;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // SAVE_H

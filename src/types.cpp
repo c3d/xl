@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  types.cpp                                                     ELIOT project
+//  types.cpp                                                     ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The type system in ELIOT
+//     The type system in ELFE
 //
 //
 //
@@ -50,7 +50,7 @@
 
 #include <iostream>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -128,7 +128,7 @@ Tree *Types::Type(Tree *expr)
     {
         if (expr->Kind() == NAME)
         {
-            if (expr == eliot_true || expr == eliot_false)
+            if (expr == elfe_true || expr == elfe_false)
                 AssignType(expr, boolean_type);
             else
                 AssignType(expr);
@@ -303,7 +303,7 @@ bool Types::AssignType(Tree *expr, Tree *type)
     // Generate a unique type name if nothing is given
     if (type == NULL)
     {
-        if (expr == eliot_true || expr == eliot_false)
+        if (expr == elfe_true || expr == elfe_false)
             type = boolean_type;
         else
             type = NewTypeName(expr->Position());
@@ -520,7 +520,7 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
-//  A type form in ELIOT can be:
+//  A type form in ELFE can be:
 //   - A type name              integer
 //   - A generic type name      #ABC
 //   - A litteral value         0       1.5             "Hello"
@@ -528,7 +528,7 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
 //   - The type of a pattern    type (X:integer, Y:integer)
 //
 // Unification happens almost as "usual" for Algorithm W, except for how
-// we deal with ELIOT "shape-based" type constructors, e.g. type(P)
+// we deal with ELFE "shape-based" type constructors, e.g. type(P)
 {
     // Make sure we have the canonical form
     t1 = Base(t1);
@@ -1356,22 +1356,22 @@ Tree *StructuredType(Context *ctx, Tree *value)
     return type;
 }
 
-ELIOT_END
+ELFE_END
 
 
-void debugt(ELIOT::Types *ti)
+void debugt(ELFE::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump a type inference
 // ----------------------------------------------------------------------------
 {
-    if (!ELIOT::Allocator<ELIOT::Types>::IsAllocated(ti))
+    if (!ELFE::Allocator<ELFE::Types>::IsAllocated(ti))
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
 
-    using namespace ELIOT;
+    using namespace ELFE;
     uint i = 0;
 
     TreeMap &map = ti->types;
@@ -1390,19 +1390,19 @@ void debugt(ELIOT::Types *ti)
 }
 
 
-void debugu(ELIOT::Types *ti)
+void debugu(ELFE::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump type unifications in a given inference system
 // ----------------------------------------------------------------------------
 {
-    if (!ELIOT::Allocator<ELIOT::Types>::IsAllocated(ti))
+    if (!ELFE::Allocator<ELFE::Types>::IsAllocated(ti))
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
 
-    using namespace ELIOT;
+    using namespace ELFE;
     uint i = 0;
 
     TreeMap &map = ti->unifications;
@@ -1419,19 +1419,19 @@ void debugu(ELIOT::Types *ti)
 
 
 
-void debugr(ELIOT::Types *ti)
+void debugr(ELFE::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump rewrite calls associated with each tree in this type inference system
 // ----------------------------------------------------------------------------
 {
-    if (!ELIOT::Allocator<ELIOT::Types>::IsAllocated(ti))
+    if (!ELFE::Allocator<ELFE::Types>::IsAllocated(ti))
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
 
-    using namespace ELIOT;
+    using namespace ELFE;
     uint i = 0;
 
     rcall_map &map = ti->rcalls;

@@ -1,5 +1,5 @@
 #******************************************************************************
-# Makefile                                                       ELIOT project 
+# Makefile                                                       ELFE project 
 #******************************************************************************
 #
 #  File Description:
@@ -26,7 +26,7 @@ COMPILER=none
 
 PREFIX=/usr/local/
 PREFIX_BIN=$(PREFIX)bin/
-PREFIX_LIB=$(PREFIX)lib/eliot/
+PREFIX_LIB=$(PREFIX)lib/elfe/
 
 # List of modules to build
 MODULES=basics io math text remote time-functions temperature
@@ -68,7 +68,7 @@ SOURCES_llvm =					\
 	parms.cpp				\
 	unit.cpp				\
 
-PRODUCT=eliot$(EXE)
+PRODUCT=elfe$(EXE)
 
 include $(BROOT)Makefile.config
 
@@ -99,13 +99,13 @@ CPPFLAGS_llvm360=-std=c++11
 LDFLAGS_llvm350=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
 
-CPPFLAGS+=	-DELIOT_BIN='"'$(PREFIX_BIN)'"'	\
-		-DELIOT_LIB='"'$(PREFIX_LIB)'"'
+CPPFLAGS+=	-DELFE_BIN='"'$(PREFIX_BIN)'"'	\
+		-DELFE_LIB='"'$(PREFIX_LIB)'"'
 
 install: all
 	cp $(PRODUCT) $(PREFIX_BIN)
 	mkdir -p $(PREFIX_LIB)
-	cp builtins.eliot eliot.syntax C.syntax *.stylesheet $(PREFIX_LIB)
+	cp builtins.elfe elfe.syntax C.syntax *.stylesheet $(PREFIX_LIB)
 
 test:
 	cd ../tests; ./alltests

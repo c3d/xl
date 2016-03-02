@@ -1,6 +1,6 @@
 // ****************************************************************************
 //  tree.cpp                        (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELIOT project
+//                                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -32,7 +32,7 @@
 #include <cassert>
 #include <iostream>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -52,7 +52,7 @@ Tree::~Tree()
     assert (info != (Info *) 0xD00DEL && "Please report this in bug #922");
     for (Info *i = info; i; i = next)
     {
-        ELIOT_ASSERT(i->owner == this);
+        ELFE_ASSERT(i->owner == this);
         next = i->next;
         i->Delete();
     }
@@ -221,5 +221,5 @@ text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
 
-ELIOT_END
+ELFE_END
 

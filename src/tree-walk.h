@@ -44,7 +44,7 @@
 #include "tree.h"
 #include "action.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct FindParentAction : Action
 // ------------------------------------------------------------------------
@@ -62,7 +62,7 @@ struct FindParentAction : Action
     //   Find the ancestor of a node with the specified depth
     // ------------------------------------------------------------------------
     {}
-    FindParentAction(Tree *self, ELIOT::kind parentKind, bool):
+    FindParentAction(Tree *self, ELFE::kind parentKind, bool):
         child(self), level(1), parentKind(parentKind), path(), fullpath(),
         useKind(true)
     // ------------------------------------------------------------------------
@@ -191,7 +191,7 @@ struct FindParentAction : Action
 
     Tree_p      child;
     int         level;
-    ELIOT::kind parentKind;
+    ELFE::kind parentKind;
     text        path;
     text        fullpath;
     bool        useKind;
@@ -281,6 +281,6 @@ struct FindChildAction : Action
     int    depth;
     text   path;
 };
-ELIOT_END
+ELFE_END
 
 #endif // TREE_WALK_H

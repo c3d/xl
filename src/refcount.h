@@ -1,7 +1,7 @@
 #ifndef REFCOUNT_H
 #define REFCOUNT_H
 // ****************************************************************************
-//  refcount.h                                                    ELIOT project
+//  refcount.h                                                    ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 template<class T>
 struct ReferenceCountPointer
@@ -184,6 +184,6 @@ protected:
     T &target;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // REFCOUNT_H

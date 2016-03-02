@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  context.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELIOT project
+//                                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The execution environment for ELIOT
+//     The execution environment for ELFE
 //
 //     This defines both the compile-time environment (Context), where we
 //     keep symbolic information, e.g. how to rewrite trees, and the
@@ -63,7 +63,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 //
@@ -83,7 +83,7 @@ Context::Context()
 // ----------------------------------------------------------------------------
     : symbols()
 {
-    symbols = new Scope(eliot_nil, eliot_nil);
+    symbols = new Scope(elfe_nil, elfe_nil);
 }
 
 
@@ -132,7 +132,7 @@ void Context::CreateScope(TreePosition pos)
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Scope(symbols, eliot_nil, pos);
+    symbols = new Scope(symbols, elfe_nil, pos);
 }
 
 
@@ -205,11 +205,11 @@ Tree *Context::Evaluate(Tree *what)
 
     default:
         // Compile at O1 for all cases, O2 and O3 in interpreter-only mode
-        result = ELIOT::EvaluateWithBytecode(this, what);
+        result = ELFE::EvaluateWithBytecode(this, what);
         break;
     case 0:
         // Interpreter-only mode
-        result = ELIOT::Evaluate(this, what);
+        result = ELFE::Evaluate(this, what);
         break;
     }
     
@@ -288,16 +288,16 @@ bool Context::ProcessDeclarations(Tree *what)
             {
                 if (pname->value == "data")
                 {
-                    Define(prefix->right, eliot_self);
+                    Define(prefix->right, elfe_self);
                     isInstruction = false;
                 }
                 else if (pname->value == "extern")
                 {
                     CDeclaration *pcd = new CDeclaration;
                     Infix *normalForm = pcd->Declaration(prefix->right);
-                    IFTRACE(eliot2c)
+                    IFTRACE(elfe2c)
                         std::cout << "C:     " << prefix << "\n"
-                                  << "ELIOT: " << normalForm << "\n";
+                                  << "ELFE: " << normalForm << "\n";
                     if (normalForm)
                     {
                         // Process C declarations only in optimized mode
@@ -445,12 +445,12 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     while (!result)
     {
         // If we have found a nil spot, that's where we can insert
-        if (*parent == eliot_nil)
+        if (*parent == elfe_nil)
         {
             // Initialize the local entry with nil children
             RewriteChildren *nil_children =
                 new RewriteChildren(REWRITE_CHILDREN_NAME,
-                                    eliot_nil, eliot_nil,
+                                    elfe_nil, elfe_nil,
                                     rewrite->Position());
 
             // Create the local entry
@@ -647,16 +647,16 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         while (true)
         {
             // If we have found a nil spot, we are done with current scope
-            if (*parent == eliot_nil)
+            if (*parent == elfe_nil)
                 break;
 
             // This should be a rewrite entry, follow it
             Rewrite *entry = (*parent)->AsInfix();
-            ELIOT_ASSERT(entry && entry->name == REWRITE_NAME);
+            ELFE_ASSERT(entry && entry->name == REWRITE_NAME);
             Infix *decl = RewriteDeclaration(entry);
-            ELIOT_ASSERT(!decl || decl->name == "->");
+            ELFE_ASSERT(!decl || decl->name == "->");
             RewriteChildren *children = RewriteNext(entry);
-            ELIOT_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
+            ELFE_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
             // Check that hash matches
             Tree *defined = RewriteDefined(decl->left);
@@ -778,7 +778,7 @@ bool Context::IsEmpty()
 //   Return true if the context has no declaration inside
 // ----------------------------------------------------------------------------
 {
-    return symbols->right == eliot_nil;
+    return symbols->right == elfe_nil;
 }
 
 
@@ -874,7 +874,7 @@ ulong Context::Hash(Tree *what)
         break;
     case REAL:
         {
-            ELIOT_CASSERT(sizeof(Real::value_t) >= sizeof (ulong));
+            ELFE_CASSERT(sizeof(Real::value_t) >= sizeof (ulong));
             h += *((ulong *) &(((Real *) what)->value));
         }
         break;
@@ -916,7 +916,7 @@ void Context::Clear()
 //   Clear the symbol table
 // ----------------------------------------------------------------------------
 {
-    symbols->right = eliot_nil;
+    symbols->right = elfe_nil;
 }
 
 
@@ -960,7 +960,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
             else
                 out << "DECL?" << decl << "\n";
         }
-        else if (rw->left != eliot_nil)
+        else if (rw->left != elfe_nil)
         {
             out << "LEFT?" << rw->left << "\n";
         }
@@ -993,33 +993,33 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
 }
 
 
-ELIOT_END
+ELFE_END
 
 
 extern "C"
 {
-void debugg(ELIOT::Scope *scope)
+void debugg(ELFE::Scope *scope)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scope in a symbol table
 // ----------------------------------------------------------------------------
 {
-    if (ELIOT::Allocator<ELIOT::Scope>::IsAllocated(scope))
-        ELIOT::Context::Dump(std::cerr, scope);
+    if (ELFE::Allocator<ELFE::Scope>::IsAllocated(scope))
+        ELFE::Context::Dump(std::cerr, scope);
     else
         std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
 }
 
 
-void debugl(ELIOT::Rewrite *rw)
+void debugl(ELFE::Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Helper to show an infix as a local symbol table for debugging purpose
 // ----------------------------------------------------------------------------
 //   The infix can be shown using debug(), but it's less convenient
 {
-    if (ELIOT::Allocator<ELIOT::Rewrite>::IsAllocated(rw))
+    if (ELFE::Allocator<ELFE::Rewrite>::IsAllocated(rw))
     {
-        ELIOT::Context::Dump(std::cerr, rw);
+        ELFE::Context::Dump(std::cerr, rw);
     }
     else
     {
@@ -1029,16 +1029,16 @@ void debugl(ELIOT::Rewrite *rw)
 }
 
 
-void debugs(ELIOT::Context *context)
+void debugs(ELFE::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a single context for debugging purpose
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    if (ELIOT::Allocator<ELIOT::Context>::IsAllocated(context))
+    if (ELFE::Allocator<ELFE::Context>::IsAllocated(context))
     {
-        ELIOT::Scope *scope = context->CurrentScope();
-        if (ELIOT::Allocator<ELIOT::Scope>::IsAllocated(scope))
+        ELFE::Scope *scope = context->CurrentScope();
+        if (ELFE::Allocator<ELFE::Scope>::IsAllocated(scope))
         {
             debugl(ScopeRewrites(scope));
         } 
@@ -1057,16 +1057,16 @@ void debugs(ELIOT::Context *context)
 }
 
 
-void debugc(ELIOT::Context *context)
+void debugc(ELFE::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a context for debugging purpose
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    if (ELIOT::Allocator<ELIOT::Context>::IsAllocated(context))
+    if (ELFE::Allocator<ELFE::Context>::IsAllocated(context))
     {
-        ELIOT::Scope *scope = context->CurrentScope();
-        if (ELIOT::Allocator<ELIOT::Scope>::IsAllocated(scope))
+        ELFE::Scope *scope = context->CurrentScope();
+        if (ELFE::Allocator<ELFE::Scope>::IsAllocated(scope))
         {
             ulong depth = 0;
             while (scope)

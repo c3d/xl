@@ -40,7 +40,7 @@
 #include "action.h"
 #include "tree.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 Tree *Action::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
@@ -120,4 +120,4 @@ Tree *Action::DoInfix(Infix *what)
     return Do(what);
 }
 
-ELIOT_END
+ELFE_END

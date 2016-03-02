@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  compiler.cpp                                                  ELIOT project
+//  compiler.cpp                                                  ELFE project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//    Just-in-time (JIT) compilation of ELIOT trees
+//    Just-in-time (JIT) compilation of ELFE trees
 // 
 // 
 // 
@@ -57,7 +57,7 @@
 #include <sstream>
 #include <cstdarg>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 
 // ============================================================================
@@ -68,7 +68,7 @@ ELIOT_BEGIN
 //
 // The Compiler class is where we store all the global information that
 // persists during the lifetime of the program: LLVM data structures,
-// LLVM definitions for frequently used types, ELIOT runtime functions, ...
+// LLVM definitions for frequently used types, ELFE runtime functions, ...
 // 
 
 using namespace llvm;
@@ -109,13 +109,13 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), contextPtrTy(NULL),
       strcmp_fn(NULL),
-      eliot_same_shape(NULL),
-      eliot_form_error(NULL), eliot_stack_overflow(NULL),
-      eliot_new_integer(NULL), eliot_new_real(NULL), eliot_new_character(NULL),
-      eliot_new_text(NULL), eliot_new_ctext(NULL), eliot_new_xtext(NULL),
-      eliot_new_block(NULL),
-      eliot_new_prefix(NULL), eliot_new_postfix(NULL), eliot_new_infix(NULL),
-      eliot_recursion_count_ptr(NULL)
+      elfe_same_shape(NULL),
+      elfe_form_error(NULL), elfe_stack_overflow(NULL),
+      elfe_new_integer(NULL), elfe_new_real(NULL), elfe_new_character(NULL),
+      elfe_new_text(NULL), elfe_new_ctext(NULL), elfe_new_xtext(NULL),
+      elfe_new_block(NULL),
+      elfe_new_prefix(NULL), elfe_new_postfix(NULL), elfe_new_infix(NULL),
+      elfe_recursion_count_ptr(NULL)
 {
     std::vector<char *> llvmArgv;
     llvmArgv.push_back(argv[0]);
@@ -193,10 +193,10 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     {
         LocalTree (const Tree &o): tag(o.tag), info(o.info) {}
         ulong           tag;
-        ELIOT::Info*    info;
+        ELFE::Info*    info;
     };
     // If this assert fails, you changed struct tree and need to modify here
-    ELIOT_CASSERT(sizeof(LocalTree) == sizeof(Tree));
+    ELFE_CASSERT(sizeof(LocalTree) == sizeof(Tree));
                
     // Create the Tree type
     llvm_types treeElements;
@@ -285,38 +285,38 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     LLVMS_SetName(module, contextPtrTy, "Context*");
 
     // Create a reference to the evaluation function
-#define FN(x) #x, (void *) ELIOT::x
+#define FN(x) #x, (void *) ELFE::x
     strcmp_fn = ExternFunction("strcmp", (void *) strcmp,
                                LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
-    eliot_form_error = ExternFunction(FN(eliot_form_error),
+    elfe_form_error = ExternFunction(FN(elfe_form_error),
                                    treePtrTy, 2, contextPtrTy, treePtrTy);
-    eliot_stack_overflow = ExternFunction(FN(eliot_stack_overflow),
+    elfe_stack_overflow = ExternFunction(FN(elfe_stack_overflow),
                                        treePtrTy, 1, treePtrTy);
-    eliot_same_shape = ExternFunction(FN(eliot_same_shape),
+    elfe_same_shape = ExternFunction(FN(elfe_same_shape),
                                    booleanTy, 2, treePtrTy, treePtrTy);
-    eliot_new_integer = ExternFunction(FN(eliot_new_integer),
+    elfe_new_integer = ExternFunction(FN(elfe_new_integer),
                                     integerTreePtrTy, 1, integerTy);
-    eliot_new_real = ExternFunction(FN(eliot_new_real),
+    elfe_new_real = ExternFunction(FN(elfe_new_real),
                                  realTreePtrTy, 1, realTy);
-    eliot_new_character = ExternFunction(FN(eliot_new_character),
+    elfe_new_character = ExternFunction(FN(elfe_new_character),
                                       textTreePtrTy, 1, characterTy);
-    eliot_new_text = ExternFunction(FN(eliot_new_text), textTreePtrTy, 1, textTy);
-    eliot_new_ctext = ExternFunction(FN(eliot_new_ctext), textTreePtrTy, 1,charPtrTy);
-    eliot_new_xtext = ExternFunction(FN(eliot_new_xtext), textTreePtrTy, 4,
+    elfe_new_text = ExternFunction(FN(elfe_new_text), textTreePtrTy, 1, textTy);
+    elfe_new_ctext = ExternFunction(FN(elfe_new_ctext), textTreePtrTy, 1,charPtrTy);
+    elfe_new_xtext = ExternFunction(FN(elfe_new_xtext), textTreePtrTy, 4,
                                   charPtrTy, integerTy, charPtrTy, charPtrTy);
-    eliot_new_block = ExternFunction(FN(eliot_new_block), blockTreePtrTy, 2,
+    elfe_new_block = ExternFunction(FN(elfe_new_block), blockTreePtrTy, 2,
                                   blockTreePtrTy,treePtrTy);
-    eliot_new_prefix = ExternFunction(FN(eliot_new_prefix), prefixTreePtrTy, 3,
+    elfe_new_prefix = ExternFunction(FN(elfe_new_prefix), prefixTreePtrTy, 3,
                                    prefixTreePtrTy, treePtrTy, treePtrTy);
-    eliot_new_postfix = ExternFunction(FN(eliot_new_postfix), postfixTreePtrTy, 3,
+    elfe_new_postfix = ExternFunction(FN(elfe_new_postfix), postfixTreePtrTy, 3,
                                     postfixTreePtrTy, treePtrTy, treePtrTy);
-    eliot_new_infix = ExternFunction(FN(eliot_new_infix), infixTreePtrTy, 3,
+    elfe_new_infix = ExternFunction(FN(elfe_new_infix), infixTreePtrTy, 3,
                                   infixTreePtrTy,treePtrTy,treePtrTy);
 
     // Create a global value used to count recursions
     llvm::PointerType *uintPtrTy = PointerType::get(LLVM_INTTYPE(uint), 0);
-    APInt addr(64, (uint64_t) &eliot_recursion_count);
-    eliot_recursion_count_ptr = Constant::getIntegerValue(uintPtrTy, addr);
+    APInt addr(64, (uint64_t) &elfe_recursion_count);
+    elfe_recursion_count_ptr = Constant::getIntegerValue(uintPtrTy, addr);
 
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
@@ -348,9 +348,9 @@ void Compiler::Dump()
 
 eval_fn Compiler::Compile(Context *context, Tree *program)
 // ----------------------------------------------------------------------------
-//   Compile an ELIOT tree and return the machine function for it
+//   Compile an ELFE tree and return the machine function for it
 // ----------------------------------------------------------------------------
-//   This is the entry point used to compile a top-level ELIOT program.
+//   This is the entry point used to compile a top-level ELFE program.
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
@@ -376,7 +376,7 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
 
 static inline void createCompilerFunctionPasses(PassManagerBase *PM)
 // ----------------------------------------------------------------------------
-//   Add all function passes useful for ELIOT
+//   Add all function passes useful for ELFE
 // ----------------------------------------------------------------------------
 {
      PM->add(createInstructionCombiningPass()); // Clean up after IPCP & DAE
@@ -611,7 +611,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     llvm::Function *adapter =
         llvm::Function::Create(fnType,
                                llvm::Function::InternalLinkage,
-                               "eliot_adapter", module);
+                               "elfe_adapter", module);
 
     // Generate the function type for the called function
     llvm_types called;
@@ -747,7 +747,7 @@ Value *Compiler::EnterConstant(Tree *constant)
            "tree", (intptr_t) constant, "kind", constant->Kind());
 
     bool isConstant = true;
-    text name = "eliotk";
+    text name = "elfek";
     switch(constant->Kind())
     {
     case INTEGER: name = "elint";  break;
@@ -796,7 +796,7 @@ GlobalVariable *Compiler::TextConstant(text value)
 }
 
 
-eval_fn Compiler::MarkAsClosure(ELIOT::Tree *closure, uint ntrees)
+eval_fn Compiler::MarkAsClosure(ELFE::Tree *closure, uint ntrees)
 // ----------------------------------------------------------------------------
 //    Create the closure wrapper for ntrees elements, associate to result
 // ----------------------------------------------------------------------------
@@ -827,7 +827,7 @@ void Compiler::MachineType(Tree *tree, llvm_type mtype)
 
 llvm_type Compiler::MachineType(Tree *tree)
 // ----------------------------------------------------------------------------
-//    Return the LLVM type associated to a given ELIOT type name
+//    Return the LLVM type associated to a given ELFE type name
 // ----------------------------------------------------------------------------
 {
     // Check the special cases, e.g. boxed structs associated to type names
@@ -854,7 +854,7 @@ llvm_type Compiler::MachineType(Tree *tree)
     case NAME:
     {
         // Check all "basic" types in basics.tbl
-        if (tree == boolean_type || tree == eliot_true || tree == eliot_false)
+        if (tree == boolean_type || tree == elfe_true || tree == elfe_false)
             return booleanTy;
         if (tree == integer_type|| tree == integer64_type ||
             tree == unsigned_type || tree == unsigned64_type ||
@@ -909,7 +909,7 @@ llvm_type Compiler::MachineType(Tree *tree)
 
 llvm_type Compiler::TreeMachineType(Tree *tree)
 // ----------------------------------------------------------------------------
-//    Return the LLVM tree type associated to a given ELIOT expression
+//    Return the LLVM tree type associated to a given ELFE expression
 // ----------------------------------------------------------------------------
 {
     switch(tree->Kind())
@@ -974,7 +974,7 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
     signature.push_back(type);
     FunctionType *ftype = FunctionType::get(mtype, signature, false);
     CompiledUnit unit(this, ctx);
-    fn = unit.InitializeFunction(ftype, NULL, "eliot_unbox", false, false);
+    fn = unit.InitializeFunction(ftype, NULL, "elfe_unbox", false, false);
 
     // Take the first input argument, which is the boxed value.
     llvm::Function::arg_iterator args = fn->arg_begin();
@@ -1177,7 +1177,7 @@ bool Compiler::FreeResources(Tree *tree)
     return result;
 }
 
-ELIOT_END
+ELFE_END
 
 
 // ============================================================================
@@ -1186,12 +1186,12 @@ ELIOT_END
 // 
 // ============================================================================
 
-void debugm(ELIOT::value_map &m)
+void debugm(ELFE::value_map &m)
 // ----------------------------------------------------------------------------
 //   Dump a value map from the debugger
 // ----------------------------------------------------------------------------
 {
-    ELIOT::value_map::iterator i;
+    ELFE::value_map::iterator i;
     for (i = m.begin(); i != m.end(); i++)
         llvm::errs() << "map[" << (*i).first << "]=" << *(*i).second << '\n';
 }

@@ -1,12 +1,12 @@
 #ifndef SERIALIZER_H
 #define SERIALIZER_H
 // ****************************************************************************
-//  serializer.h                                                  ELIOT project
+//  serializer.h                                                  ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     A couple of classes used to serialize and read-back ELIOT trees
+//     A couple of classes used to serialize and read-back ELFE trees
 //
 //
 //
@@ -45,7 +45,7 @@
 #include <iostream>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 enum SerializationTag
 // ----------------------------------------------------------------------------
@@ -140,6 +140,6 @@ protected:
     text_ids            texts;
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // SERIALIZE_H

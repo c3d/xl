@@ -1,12 +1,12 @@
 #ifndef TRACES_BASE_H
 #define TRACES_BASE_H
 // ****************************************************************************
-//   traces_base.h                                               ELIOT project
+//   traces_base.h                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Debug trace management. The ELIOT runtime, as well as any other binary
+//     Debug trace management. The ELFE runtime, as well as any other binary
 //     linked against it (when built as a library), can use the Traces class
 //     to define new trace levels.
 //     A trace level has a name and may be enabled through the command line
@@ -54,21 +54,21 @@
 //
 // 3. Using traces in another binary
 //
-//    Suppose you want to write a program or library that depends on ELIOT, and
-//    want to use ELIOT traces. You need to:
+//    Suppose you want to write a program or library that depends on ELFE, and
+//    want to use ELFE traces. You need to:
 //    a. Copy traces.tbl into your project and edit group name / trace names.
 //    You must have a traces.tbl file in your project even if you don't want
 //    to use traces. In this case, just leave traces.tbl empty.
 //    b. Somewhere in one of your source files, define the trace object for
-//    your library (with ELIOT_DEFINE_TRACES) and call the initialization macro
-//    ELIOT_INIT_TRACES(). Typically:
+//    your library (with ELFE_DEFINE_TRACES) and call the initialization macro
+//    ELFE_INIT_TRACES(). Typically:
 //
 //      #include "traces.h"
-//      ELIOT_DEFINE_TRACES
+//      ELFE_DEFINE_TRACES
 //
 //      int main(int argc, char *argv[])
 //      {
-//          ELIOT_INIT_TRACES();
+//          ELFE_INIT_TRACES();
 //          ...
 //      }
 
@@ -76,11 +76,11 @@
 #include <string>
 #include <map>
 
-namespace ELIOT {
+namespace ELFE {
 
 class Traces
 // ----------------------------------------------------------------------------
-//   Manage trace flags for an ELIOT process. Traces are organized in groups.
+//   Manage trace flags for an ELFE process. Traces are organized in groups.
 // ----------------------------------------------------------------------------
 {
 public:

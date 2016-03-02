@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  llvm.tbl                                                      ELIOT project
+//  llvm.tbl                                                      ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -113,7 +113,7 @@ BINARY(FCmpULE)
 
 // ============================================================================
 // 
-//   Special opcodes that perform ELIOT-specific operations
+//   Special opcodes that perform ELFE-specific operations
 // 
 // ============================================================================
 

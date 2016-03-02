@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  options.tbl                                                   ELIOT project
+//  options.tbl                                                   ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -48,7 +48,7 @@
 
 // ============================================================================
 //
-//    ELIOT options
+//    ELFE options
 //
 // ============================================================================
 
@@ -56,11 +56,11 @@
 OPTION(h, "List usage information and exit", Usage(args[0].c_str()); exit(0))
 
 // Rendering control
-OPTVAR(stylesheet, text, "eliot")
+OPTVAR(stylesheet, text, "elfe")
 OPTION(style, "Select the stylesheet",
        stylesheet = STRING;
        if (stylesheet.find("/") == stylesheet.npos)
-           stylesheet = ELIOT_LIB + stylesheet;
+           stylesheet = ELFE_LIB + stylesheet;
        Renderer::renderer->SelectStyleSheet(stylesheet + ".stylesheet"))
 
 // Parse only
@@ -73,7 +73,7 @@ OPTVAR(showSource, bool, false)
 OPTION(show, "Show source file", showSource = true)
 
 // Builtins file
-OPTVAR(builtins, text, "builtins.eliot")
+OPTVAR(builtins, text, "builtins.elfe")
 OPTION(builtins, "Select the builtins file", builtins = STRING)
 
 // Do not load builtins file

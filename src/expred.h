@@ -1,7 +1,7 @@
 #ifndef COMPILER_EXPRED_H
 #define COMPILER_EXPRED_H
 // ****************************************************************************
-//  expred.h                                                      ELIOT project
+//  expred.h                                                      ELFE project
 // ****************************************************************************
 // 
 //   File Description:
@@ -41,7 +41,7 @@
 
 #include "compiler.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct RewriteCandidate;
 
@@ -78,7 +78,7 @@ public:
     value_map       computed;     // Values we already computed
 };
 
-ELIOT_END
+ELFE_END
 
 #endif // COMPILER_EXPRED_H
 

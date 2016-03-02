@@ -44,7 +44,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 static void Write(int fd, const char *buf, size_t size)
 // ----------------------------------------------------------------------------
@@ -115,12 +115,12 @@ void FlightRecorder::Dump(int fd, bool kill)
 FlightRecorder * FlightRecorder::recorder = NULL;
 ulong            FlightRecorder::enabled  = REC_ALWAYS|REC_CRITICAL|REC_DEBUG;
 
-ELIOT_END
+ELFE_END
 
 void recorder_dump()
 // ----------------------------------------------------------------------------
 //   Dump the recorder to standard error (for use in the debugger)
 // ----------------------------------------------------------------------------
 {
-    ELIOT::FlightRecorder::SDump(2);
+    ELFE::FlightRecorder::SDump(2);
 }

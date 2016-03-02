@@ -2,7 +2,7 @@
 #define BASE_H
 /* ************************************************************************* */
 /*   base.h                     (C) 1992-2000 Christophe de Dinechin (ddd)   */
-/*                                                          ELIOT project    */
+/*                                                          ELFE project    */
 /* ************************************************************************* */
 /*                                                                           */
 /*   File Description:                                                       */
@@ -169,25 +169,25 @@ typedef const wchar *   wkstring;
 /*                                                                           */
 /* ========================================================================= */
 /*
-   ELIOT_ASSERT checks for some condition at runtime.
-   ELIOT_CASSERT checks for a condition at compile time
+   ELFE_ASSERT checks for some condition at runtime.
+   ELFE_CASSERT checks for a condition at compile time
 */
 
 
-#if !defined(ELIOT_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
-#define ELIOT_DEBUG        1
+#if !defined(ELFE_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
+#define ELFE_DEBUG        1
 #endif
 
-#ifdef ELIOT_DEBUG
-#define ELIOT_ASSERT(x)   { if (!(x)) eliot_assert_failed(#x, __FILE__, __LINE__); }
-#define ELIOT_CASSERT(x)  struct __dummy { char foo[((int) (x))*2-1]; }
-externc void eliot_assert_failed(kstring msg, kstring file, uint line);
-#define ELIOT_DEBUG_CODE(x)        x
+#ifdef ELFE_DEBUG
+#define ELFE_ASSERT(x)   { if (!(x)) elfe_assert_failed(#x, __FILE__, __LINE__); }
+#define ELFE_CASSERT(x)  struct __dummy { char foo[((int) (x))*2-1]; }
+externc void elfe_assert_failed(kstring msg, kstring file, uint line);
+#define ELFE_DEBUG_CODE(x)        x
 
 #else
-#define ELIOT_ASSERT(x)
-#define ELIOT_CASSERT(x)
-#define ELIOT_DEBUG_CODE(x)
+#define ELFE_ASSERT(x)
+#define ELFE_CASSERT(x)
+#define ELFE_DEBUG_CODE(x)
 #endif
 
 
@@ -197,27 +197,27 @@ externc void eliot_assert_failed(kstring msg, kstring file, uint line);
 // 
 // ============================================================================
 
-#ifdef ELIOT_DEBUG
+#ifdef ELFE_DEBUG
 #  include "traces.h"
-#  ifdef ELIOT_TRACE_INSTNAME
-#    define IFTRACE(x)          if ELIOT_TRACE(x)
-#    define ELIOT_TRACE(x)      (ELIOT_TRACE_INSTNAME &&        \
-                                 ELIOT_TRACE_INSTNAME->x)
-#    define IFTRACE2(x,y)       if ELIOT_TRACE2(x,y)
-#    define ELIOT_TRACE2(x,y)   (ELIOT_TRACE_INSTNAME &&        \
-                                 (ELIOT_TRACE_INSTNAME->x ||    \
-                                  ELIOT_TRACE_INSTNAME->y))
+#  ifdef ELFE_TRACE_INSTNAME
+#    define IFTRACE(x)          if ELFE_TRACE(x)
+#    define ELFE_TRACE(x)      (ELFE_TRACE_INSTNAME &&        \
+                                 ELFE_TRACE_INSTNAME->x)
+#    define IFTRACE2(x,y)       if ELFE_TRACE2(x,y)
+#    define ELFE_TRACE2(x,y)   (ELFE_TRACE_INSTNAME &&        \
+                                 (ELFE_TRACE_INSTNAME->x ||    \
+                                  ELFE_TRACE_INSTNAME->y))
 #  else
 #    define IFTRACE(x)          if(0)
-#    define ELIOT_TRACE(x)      0
+#    define ELFE_TRACE(x)      0
 #    define IFTRACE2(x,y)       if(0)
-#    define ELIOT_TRACE2(x,y)   0
+#    define ELFE_TRACE2(x,y)   0
 #  endif
 #else
 #  define IFTRACE(x)            if(0)
-#  define ELIOT_TRACE(x)        0
+#  define ELFE_TRACE(x)        0
 #  define IFTRACE2(x,y)         if(0)
-#  define ELIOT_TRACE2(x,y)     0
+#  define ELFE_TRACE2(x,y)     0
 #endif
 
 
@@ -229,11 +229,11 @@ externc void eliot_assert_failed(kstring msg, kstring file, uint line);
 /* ========================================================================= */
 
 #if CONFIG_HAS_NAMESPACE
-#define ELIOT_BEGIN                namespace ELIOT {
-#define ELIOT_END                  }
+#define ELFE_BEGIN                namespace ELFE {
+#define ELFE_END                  }
 #else   /* !CONFIG_HAS_NAMESPACE */
-#define ELIOT_BEGIN
-#define ELIOT_END
+#define ELFE_BEGIN
+#define ELFE_END
 #endif  /* ?CONFIG_HAS_NAMESPACE */
 
 

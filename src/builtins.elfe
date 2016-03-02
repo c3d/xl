@@ -4,7 +4,7 @@ x:integer - y:integer           as integer -> opcode Sub
 x:integer * y:integer           as integer -> opcode Mul
 x:integer / y:integer           as integer -> opcode SDiv
 x:integer rem y:integer         as integer -> opcode SRem
-x:integer mod y:integer         as integer -> C eliot_mod
+x:integer mod y:integer         as integer -> C elfe_mod
 x:integer and y:integer         as integer -> opcode And
 x:integer or y:integer          as integer -> opcode Or
 x:integer xor y:integer         as integer -> opcode Xor
@@ -20,7 +20,7 @@ x:real - y:real                 as real -> opcode FSub
 x:real * y:real                 as real -> opcode FMul
 x:real / y:real                 as real -> opcode FDiv
 x:real rem y:real               as real -> C fmod
-x:real mod y:real               as real -> C eliot_modf
+x:real mod y:real               as real -> C elfe_modf
 -x:real                         as real -> opcode FNeg
 
 // Comparison operators
@@ -38,12 +38,12 @@ X:real >= Y:real                as boolean -> opcode FCmpOGE
 X:real < Y:real                 as boolean -> opcode FCmpOLT
 X:real <= Y:real                as boolean -> opcode FCmpOLE
 
-X:text = Y:text                 as boolean -> C eliot_text_eq
-X:text <> Y:text                as boolean -> C eliot_text_ne
-X:text > Y:text                 as boolean -> C eliot_text_gt
-X:text >= Y:text                as boolean -> C eliot_text_ge
-X:text < Y:text                 as boolean -> C eliot_text_lt
-X:text <= Y:text                as boolean -> C eliot_text_le
+X:text = Y:text                 as boolean -> C elfe_text_eq
+X:text <> Y:text                as boolean -> C elfe_text_ne
+X:text > Y:text                 as boolean -> C elfe_text_gt
+X:text >= Y:text                as boolean -> C elfe_text_ge
+X:text < Y:text                 as boolean -> C elfe_text_lt
+X:text <= Y:text                as boolean -> C elfe_text_le
 
 X:boolean = Y:boolean           as boolean -> opcode BCmpEQ
 X:boolean <> Y:boolean          as boolean -> opcode BCmpNE
@@ -81,11 +81,11 @@ if true  then TrueBody                  -> TrueBody
 if false then TrueBody                  -> false
 
 // Console / debugging operations
-write x:text            as boolean      -> C eliot_write_text
-write x:integer         as boolean      -> C eliot_write_integer
-write x:real            as boolean      -> C eliot_write_real
-write x:character       as boolean      -> C eliot_write_character
-writeln                 as boolean      -> C eliot_write_cr
+write x:text            as boolean      -> C elfe_write_text
+write x:integer         as boolean      -> C elfe_write_integer
+write x:real            as boolean      -> C elfe_write_real
+write x:character       as boolean      -> C elfe_write_character
+writeln                 as boolean      -> C elfe_write_cr
 
 write true              -> write "true"
 write false             -> write "false"

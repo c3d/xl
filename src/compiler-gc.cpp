@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  compiler-gc.cpp                                              ELIOT project
+//  compiler-gc.cpp                                              ELFE project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Information connecting the LLVM compiler to the ELIOT garbage collector
+//     Information connecting the LLVM compiler to the ELFE garbage collector
 // 
 // 
 // 
@@ -44,7 +44,7 @@
 #include "compiler-gc.h"
 #include "flight_recorder.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 CompilerInfo::~CompilerInfo()
 // ----------------------------------------------------------------------------
@@ -87,4 +87,4 @@ void CompilerGarbageCollectionListener::EndCollection()
 // ----------------------------------------------------------------------------
 {}
 
-ELIOT_END
+ELFE_END

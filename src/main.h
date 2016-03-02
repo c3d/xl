@@ -2,7 +2,7 @@
 #define MAIN_H
 // ****************************************************************************
 //  main.h                          (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                               ELIOT project
+//                                                               ELFE project
 // ****************************************************************************
 //
 //   File Description:
@@ -55,7 +55,7 @@
 #include <fstream>
 
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Serializer;
 struct Deserializer;
@@ -89,10 +89,10 @@ struct Main
 // ----------------------------------------------------------------------------
 {
     Main(int argc, char **argv,
-         text compiler_name = ELIOT_BIN "eliot",
-         text syntax        = ELIOT_LIB "eliot.syntax",
-         text style         = ELIOT_LIB "eliot.stylesheet",
-         text builtins      = ELIOT_LIB "builtins.eliot");
+         text compiler_name = ELFE_BIN "elfe",
+         text syntax        = ELFE_LIB "elfe.syntax",
+         text style         = ELFE_LIB "elfe.stylesheet",
+         text builtins      = ELFE_LIB "builtins.elfe");
     virtual ~Main();
 
     // Entry point that does everythin
@@ -142,6 +142,6 @@ public:
 
 extern Main *MAIN;
 
-ELIOT_END
+ELFE_END
 
 #endif // MAIN_H

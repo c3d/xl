@@ -1,7 +1,7 @@
-#ifndef ELIOT_ERRORS_H
-#define ELIOT_ERRORS_H
+#ifndef ELFE_ERRORS_H
+#define ELFE_ERRORS_H
 /* ************************************************************************* */
-/*   Christophe de Dinechin                                  ELIOT  PROJECT  */
+/*   Christophe de Dinechin                                  ELFE  PROJECT  */
 /*   errors.h             4                                      UTILITIES    */
 /* ************************************************************************* */
 /*                                                                           */
@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 struct Positions;
 
@@ -111,6 +111,6 @@ Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
 text FormatTreeForError(Tree *tree);
 text ShortTreeForm(Tree *tree, uint maxWidth = 60);
 
-ELIOT_END
+ELFE_END
 
-#endif /* ELIOT_ERRORS_H */
+#endif /* ELFE_ERRORS_H */

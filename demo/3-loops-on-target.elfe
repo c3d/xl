@@ -1,5 +1,5 @@
 // Configuration: Change this to the target you want to use
-HOST -> "localhost"
+HOST -> "pi.local"
 
 // Perform a loop on the target
 // Initiate a loop on the target, which will run for a while

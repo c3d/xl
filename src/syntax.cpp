@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  syntax.cpp                      (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               ELIOT project 
+//                                                               ELFE project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Description of syntax information used to parse ELIOT trees
+//     Description of syntax information used to parse ELFE trees
 // 
 // 
 // 
@@ -43,7 +43,7 @@
 #include "tree.h"
 #include "errors.h"
 
-ELIOT_BEGIN
+ELFE_BEGIN
 
 // ============================================================================
 // 
@@ -387,7 +387,7 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 if (txt.find(".syntax") == txt.npos)
                     txt += ".syntax";
                 if (txt.find("/") == txt.npos)
-                    txt = ELIOT_LIB + txt;
+                    txt = ELFE_LIB + txt;
                 childSyntax = &subsyntax[txt];
                 if (childSyntax->filename == "")
                 {
@@ -426,4 +426,4 @@ void Syntax::ReadSyntaxFile (text filename, uint indents)
     ReadSyntaxFile(scanner, indents);
 }
 
-ELIOT_END
+ELFE_END
