@@ -10,6 +10,11 @@ such as sensors or actuators. It can also be used as a powerful,
 remotely-accessible extension language for larger applications.
 The examples below will focus on this paritcular domain.
 
+ELFE used to be called ELIoT (Extensible Language for the Internet of Things),
+but Legrand complained about it, having a trademark on the name.
+ELFE is for more than just IoT, so we might as well acknowlege
+that in the name also ;-)
+
 
 ## Example: Measuring temperature
 
