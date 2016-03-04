@@ -63,7 +63,7 @@
   programs. In many programming languages, meta-programming is an arcane
   technique best reserved for gurus<\footnote>
     This includes techniques such as template meta-programming in C++, or
-    hiegienic macros in Lisp.
+    hygienic macros in Lisp.
   </footnote>. In ELFE, on the other hand, it is so central that it's just
   the way programs run. An ELFE program execution can be understood as the
   way the program rewrites itself over time. Yet this is done in such a
@@ -5308,8 +5308,8 @@
     <associate|auto-111|<tuple|2.4.1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-112|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-113|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-114|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-115|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-114|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-115|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-116|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-117|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-118|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5328,8 +5328,8 @@
     <associate|auto-13|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-130|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-131|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-132|<tuple|2.5.2|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-133|<tuple|2.5.2|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-132|<tuple|2.5.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-133|<tuple|2.5.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-134|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-135|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-136|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5350,9 +5350,9 @@
     <associate|auto-15|<tuple|1.2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-150|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-151|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-152|<tuple|2.6|12|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-153|<tuple|2.6|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-154|<tuple|15|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-152|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-153|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-154|<tuple|15|12|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-155|<tuple|15|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-156|<tuple|16|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-157|<tuple|16|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5366,10 +5366,10 @@
     <associate|auto-164|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-165|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-166|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-167|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-168|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-167|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-168|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-169|<tuple|17|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-17|<tuple|1.2|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-17|<tuple|1.2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-170|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-171|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-172|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5383,8 +5383,8 @@
     <associate|auto-18|<tuple|1.3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-180|<tuple|18|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-181|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-182|<tuple|19|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-183|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-182|<tuple|19|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-183|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-184|<tuple|20|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-185|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-186|<tuple|21|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5406,8 +5406,8 @@
     <associate|auto-20|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-200|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-201|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-202|<tuple|25|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-203|<tuple|25|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-202|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-203|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-204|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-205|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-206|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5427,8 +5427,8 @@
     <associate|auto-219|<tuple|3.1.3|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-22|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-220|<tuple|3.1.3|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-221|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-222|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-221|<tuple|3.1.3|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-222|<tuple|3.1.3|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-223|<tuple|30|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-224|<tuple|30|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-225|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5450,8 +5450,8 @@
     <associate|auto-24|<tuple|3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-240|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-241|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-242|<tuple|33|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-243|<tuple|3.1.4.2|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-242|<tuple|33|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-243|<tuple|3.1.4.2|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-244|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-245|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-246|<tuple|3.1.4.3|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5463,8 +5463,8 @@
     <associate|auto-251|<tuple|3.1.4.4|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-252|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-253|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-254|<tuple|3.1.5|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-255|<tuple|36|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-254|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-255|<tuple|36|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-256|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-257|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-258|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5483,8 +5483,8 @@
     <associate|auto-27|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-270|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-271|<tuple|38|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-272|<tuple|3.1.7.1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-273|<tuple|<with|mode|<quote|math>|\<bullet\>>|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-272|<tuple|3.1.7.1|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-273|<tuple|<with|mode|<quote|math>|\<bullet\>>|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-274|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-275|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-276|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5501,9 +5501,9 @@
     <associate|auto-286|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-287|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-288|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-289|<tuple|3.2.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-289|<tuple|3.2.1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-29|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-290|<tuple|3.2.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-290|<tuple|3.2.1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-291|<tuple|3.2.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-292|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-293|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5513,7 +5513,7 @@
     <associate|auto-297|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-298|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-299|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-3|<tuple|2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-3|<tuple|2|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-30|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-300|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-301|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5526,14 +5526,14 @@
     <associate|auto-308|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-309|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-31|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-310|<tuple|3.3.1|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-311|<tuple|3.3.1|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-310|<tuple|3.3.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-311|<tuple|3.3.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-312|<tuple|2|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-313|<tuple|3|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-314|<tuple|<with|mode|<quote|math>|\<bullet\>>|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-315|<tuple|<with|mode|<quote|math>|\<bullet\>>|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-316|<tuple|4|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-317|<tuple|5|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-316|<tuple|4|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-317|<tuple|5|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-318|<tuple|<with|mode|<quote|math>|\<bullet\>>|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-319|<tuple|<with|mode|<quote|math>|\<bullet\>>|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-32|<tuple|5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5544,8 +5544,8 @@
     <associate|auto-324|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-325|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-326|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-327|<tuple|3.3.3|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-328|<tuple|41|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-327|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-328|<tuple|41|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-329|<tuple|42|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-33|<tuple|5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-330|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5553,8 +5553,8 @@
     <associate|auto-332|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-333|<tuple|3.3.5|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-334|<tuple|3.3.5|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-335|<tuple|43|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-336|<tuple|43|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-335|<tuple|43|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-336|<tuple|43|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-337|<tuple|5|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-338|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-339|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5586,8 +5586,8 @@
     <associate|auto-362|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-363|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-364|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-365|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-366|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-365|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-366|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-367|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-368|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-369|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5602,10 +5602,10 @@
     <associate|auto-377|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-378|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-379|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-38|<tuple|1.5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-38|<tuple|1.5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-380|<tuple|49|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-381|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-382|<tuple|50|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-381|<tuple|49|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-382|<tuple|50|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-383|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-384|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-385|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5624,12 +5624,12 @@
     <associate|auto-397|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-398|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-399|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-4|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-4|<tuple|1.1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-40|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-400|<tuple|53|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-401|<tuple|53|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-402|<tuple|53|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-403|<tuple|54|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-402|<tuple|53|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-403|<tuple|54|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-404|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-405|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-406|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5651,8 +5651,8 @@
     <associate|auto-420|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-421|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-422|<tuple|58|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-423|<tuple|58|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-424|<tuple|59|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-423|<tuple|58|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-424|<tuple|59|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-425|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-426|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-427|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5671,8 +5671,8 @@
     <associate|auto-439|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-44|<tuple|3|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-440|<tuple|4.1.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-441|<tuple|4.1.1|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-442|<tuple|4.1.1|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-441|<tuple|4.1.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-442|<tuple|4.1.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-443|<tuple|2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-444|<tuple|4.1.2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-445|<tuple|4.1.2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5685,8 +5685,8 @@
     <associate|auto-451|<tuple|4.1.4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-452|<tuple|4.1.4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-453|<tuple|5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-454|<tuple|4.1.5|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-455|<tuple|4.1.5|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-454|<tuple|4.1.5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-455|<tuple|4.1.5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-456|<tuple|6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-457|<tuple|4.1.6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-458|<tuple|4.1.6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5698,8 +5698,8 @@
     <associate|auto-463|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-464|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-465|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-466|<tuple|4.1.8|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-467|<tuple|4.1.8|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-466|<tuple|4.1.8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-467|<tuple|4.1.8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-468|<tuple|9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-469|<tuple|4.1.9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-47|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5718,8 +5718,8 @@
     <associate|auto-481|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-482|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-483|<tuple|11|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-484|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-485|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-484|<tuple|11|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-485|<tuple|11|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-486|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-487|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-488|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5730,28 +5730,28 @@
     <associate|auto-492|<tuple|63|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-493|<tuple|63|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-494|<tuple|64|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-495|<tuple|4.2.2|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-496|<tuple|65|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-495|<tuple|4.2.2|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-496|<tuple|65|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-497|<tuple|4.2.3|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-498|<tuple|66|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-499|<tuple|67|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-5|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-50|<tuple|6|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-50|<tuple|6|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-500|<tuple|4.2.4|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-501|<tuple|68|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-502|<tuple|69|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-503|<tuple|70|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-502|<tuple|69|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-503|<tuple|70|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-504|<tuple|4.2.5|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-505|<tuple|4.2.6|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-506|<tuple|4.3|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-507|<tuple|4.3.1|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-508|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-509|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-51|<tuple|1.6|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-51|<tuple|1.6|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-510|<tuple|72|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-511|<tuple|4.3.2|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-512|<tuple|73|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-513|<tuple|74|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-512|<tuple|73|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-513|<tuple|74|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-514|<tuple|4.3.3|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-515|<tuple|75|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-516|<tuple|4.3.4|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5762,8 +5762,8 @@
     <associate|auto-520|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-521|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-522|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-523|<tuple|77|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-524|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-523|<tuple|77|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-524|<tuple|<with|mode|<quote|math>|\<bullet\>>|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-525|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-526|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-527|<tuple|1|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5775,8 +5775,8 @@
     <associate|auto-532|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-533|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-534|<tuple|78|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-535|<tuple|5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-536|<tuple|5.1|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-535|<tuple|5|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-536|<tuple|5.1|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-537|<tuple|79|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-538|<tuple|5.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-539|<tuple|5.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5798,8 +5798,8 @@
     <associate|auto-553|<tuple|5.7.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-554|<tuple|5.7.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-555|<tuple|5.7.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-556|<tuple|5.7.6|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-557|<tuple|5.7.7|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-556|<tuple|5.7.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-557|<tuple|5.7.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-558|<tuple|80|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-559|<tuple|6|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-56|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5808,30 +5808,30 @@
     <associate|auto-562|<tuple|6.3|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-563|<tuple|6.4|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-564|<tuple|81|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-565|<tuple|12|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-566|<tuple|6.5|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-565|<tuple|12|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-566|<tuple|6.5|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-567|<tuple|6.6|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-568|<tuple|6.7|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-569|<tuple|6.8|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-57|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-570|<tuple|6.9|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-571|<tuple|6.10|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-572|<tuple|6.11|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-573|<tuple|82|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-572|<tuple|6.11|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-573|<tuple|82|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-574|<tuple|6.11.1|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-575|<tuple|6.11.2|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-576|<tuple|83|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-577|<tuple|6.12|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-578|<tuple|6.13|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-579|<tuple|6.14|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-579|<tuple|6.14|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-58|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-580|<tuple|6.15|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-580|<tuple|6.15|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-59|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-6|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-60|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-61|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-62|<tuple|2.1|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-63|<tuple|8|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-62|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-63|<tuple|8|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-64|<tuple|2.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-65|<tuple|2.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-66|<tuple|9|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5865,8 +5865,8 @@
     <associate|auto-91|<tuple|6.15|45|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-92|<tuple|6.15|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-93|<tuple|6.15|50|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-94|<tuple|13|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-95|<tuple|2.3.4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-94|<tuple|13|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-95|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-96|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-97|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-98|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5904,9 +5904,9 @@
     <associate|explicit-vs-lazy-evaluation|<tuple|43|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|expression-vs-statement-section|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|extra-code-for-properties|<tuple|54|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|factorial|<tuple|4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|first-if-then-else|<tuple|1|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|first-simple-test|<tuple|2|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|factorial|<tuple|4|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|first-if-then-else|<tuple|1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|first-simple-test|<tuple|2|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnote-1|<tuple|1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnote-10|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnote-11|<tuple|11|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5972,7 +5972,7 @@
     <associate|nonlocal-assignment|<tuple|6.15|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|object-oriented-programming|<tuple|5.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|odd-type|<tuple|34|16>>
-    <associate|off-side-rule|<tuple|8|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|off-side-rule|<tuple|8|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|opcode-declaration|<tuple|40|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|other-for-loops|<tuple|70|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|out-of-order-declarations|<tuple|27|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -6023,920 +6023,925 @@
 <\auxiliary>
   <\collection>
     <\associate|figure>
-      <tuple|normal|Example of Hello World program in ELFE|<pageref|auto-22>>
+      <tuple|normal|Adding the if-then-else construct to
+      ELSE|<pageref|auto-2>>
 
-      <tuple|normal|Declaration of the factorial function|<pageref|auto-24>>
+      <tuple|normal|A simple test in ELFE|<pageref|auto-3>>
 
-      <tuple|normal|Map, reduce and filter|<pageref|auto-30>>
+      <tuple|normal|Example of Hello World program in ELFE|<pageref|auto-24>>
 
-      <tuple|normal|Declaration of if-then-else|<pageref|auto-32>>
+      <tuple|normal|Declaration of the factorial function|<pageref|auto-26>>
+
+      <tuple|normal|Map, reduce and filter|<pageref|auto-32>>
+
+      <tuple|normal|Declaration of if-then-else|<pageref|auto-34>>
 
       <tuple|normal|Narrow-band <with|font-family|<quote|tt>|language|<quote|verbatim>|min>
-      in C|<pageref|auto-43>>
+      in C|<pageref|auto-45>>
 
       <tuple|normal|Off-side rule: Using indentation to mark program
-      structure.|<pageref|auto-61>>
+      structure.|<pageref|auto-63>>
 
-      <tuple|normal|Single-line and multi-line comments|<pageref|auto-64>>
+      <tuple|normal|Single-line and multi-line comments|<pageref|auto-66>>
 
-      <tuple|normal|Valid integer constants|<pageref|auto-72>>
+      <tuple|normal|Valid integer constants|<pageref|auto-74>>
 
-      <tuple|normal|Valid real constants|<pageref|auto-78>>
+      <tuple|normal|Valid real constants|<pageref|auto-80>>
 
-      <tuple|normal|Valid text constants|<pageref|auto-89>>
+      <tuple|normal|Valid text constants|<pageref|auto-91>>
 
-      <tuple|normal|Long text and indentation|<pageref|auto-91>>
+      <tuple|normal|Long text and indentation|<pageref|auto-93>>
 
       <tuple|normal|Examples of valid operator and name
-      symbols|<pageref|auto-100>>
+      symbols|<pageref|auto-102>>
 
-      <tuple|normal|Default syntax configuration file|<pageref|auto-152>>
+      <tuple|normal|Default syntax configuration file|<pageref|auto-154>>
 
       <tuple|normal|Use of the <with|font-family|<quote|tt>|language|<quote|verbatim>|syntax>
-      specification in a source file|<pageref|auto-154>>
+      specification in a source file|<pageref|auto-156>>
 
-      <tuple|normal|C syntax configuration file|<pageref|auto-167>>
+      <tuple|normal|C syntax configuration file|<pageref|auto-169>>
 
-      <tuple|normal|Example of rewrite declaration|<pageref|auto-178>>
+      <tuple|normal|Example of rewrite declaration|<pageref|auto-180>>
 
-      <tuple|normal|Example of data declaration|<pageref|auto-180>>
+      <tuple|normal|Example of data declaration|<pageref|auto-182>>
 
       <tuple|normal|Example of data declarations containing type
-      declarations|<pageref|auto-182>>
+      declarations|<pageref|auto-184>>
 
       <tuple|normal|Example of guard to build the Syracuse
-      suite|<pageref|auto-184>>
+      suite|<pageref|auto-186>>
 
-      <tuple|normal|Example of assignment|<pageref|auto-187>>
+      <tuple|normal|Example of assignment|<pageref|auto-189>>
 
-      <tuple|normal|Example of sequence|<pageref|auto-191>>
+      <tuple|normal|Example of sequence|<pageref|auto-193>>
 
-      <tuple|normal|Examples of index operators|<pageref|auto-193>>
+      <tuple|normal|Examples of index operators|<pageref|auto-195>>
 
-      <tuple|normal|Examples of tree rewrites|<pageref|auto-198>>
+      <tuple|normal|Examples of tree rewrites|<pageref|auto-200>>
 
-      <tuple|normal|Constants vs. Variable symbols|<pageref|auto-202>>
+      <tuple|normal|Constants vs. Variable symbols|<pageref|auto-204>>
 
       <tuple|normal|Declarations are visible to the entire sequence
-      containing them|<pageref|auto-209>>
+      containing them|<pageref|auto-211>>
 
-      <tuple|normal|Declaring a comma-separated list|<pageref|auto-213>>
+      <tuple|normal|Declaring a comma-separated list|<pageref|auto-215>>
 
       <tuple|normal|Declaring a <with|font-family|<quote|tt>|language|<quote|verbatim>|complex>
-      data type|<pageref|auto-215>>
+      data type|<pageref|auto-217>>
 
-      <tuple|normal|Simple type declarations|<pageref|auto-221>>
+      <tuple|normal|Simple type declarations|<pageref|auto-223>>
 
-      <tuple|normal|Creating a new binding|<pageref|auto-230>>
+      <tuple|normal|Creating a new binding|<pageref|auto-232>>
 
-      <tuple|normal|Assignment to existing binding|<pageref|auto-231>>
+      <tuple|normal|Assignment to existing binding|<pageref|auto-233>>
 
-      <tuple|normal|Assigning to new local variable |<pageref|auto-240>>
+      <tuple|normal|Assigning to new local variable |<pageref|auto-242>>
 
-      <tuple|normal|Assignment to references|<pageref|auto-242>>
+      <tuple|normal|Assignment to references|<pageref|auto-244>>
 
-      <tuple|normal|Assigning to parameter|<pageref|auto-246>>
+      <tuple|normal|Assigning to parameter|<pageref|auto-248>>
 
       <tuple|normal|Guard limit the validity of
-      operations|<pageref|auto-253>>
+      operations|<pageref|auto-255>>
 
       <tuple|normal|Code writing <with|font-family|<quote|tt>|language|<quote|verbatim>|A>,
       then <with|font-family|<quote|tt>|language|<quote|verbatim>|B>, then
-      <with|font-family|<quote|tt>|language|<quote|verbatim>|f(100)+f(200)>|<pageref|auto-258>>
+      <with|font-family|<quote|tt>|language|<quote|verbatim>|f(100)+f(200)>|<pageref|auto-260>>
 
-      <tuple|normal|Structured data|<pageref|auto-269>>
+      <tuple|normal|Structured data|<pageref|auto-271>>
 
       <tuple|normal|Creating an interface for a C
-      function|<pageref|auto-275>>
+      function|<pageref|auto-277>>
 
       <tuple|normal|Generating machine code using opcode
-      declarations|<pageref|auto-283>>
+      declarations|<pageref|auto-285>>
 
-      <tuple|normal|Evaluation for comparison|<pageref|auto-326>>
+      <tuple|normal|Evaluation for comparison|<pageref|auto-328>>
 
-      <tuple|normal|Evaluation for type comparison|<pageref|auto-327>>
+      <tuple|normal|Evaluation for type comparison|<pageref|auto-329>>
 
-      <tuple|normal|Explicit vs. lazy evaluation|<pageref|auto-333>>
+      <tuple|normal|Explicit vs. lazy evaluation|<pageref|auto-335>>
 
-      <tuple|normal|Simple type declaration|<pageref|auto-361>>
+      <tuple|normal|Simple type declaration|<pageref|auto-363>>
 
-      <tuple|normal|Simple type declaration|<pageref|auto-365>>
+      <tuple|normal|Simple type declaration|<pageref|auto-367>>
 
       <tuple|normal|Using the <with|font-family|<quote|tt>|language|<quote|verbatim>|complex>
-      type|<pageref|auto-368>>
+      type|<pageref|auto-370>>
 
       <tuple|normal|Binding for a <with|font-family|<quote|tt>|language|<quote|verbatim>|complex>
-      parameter|<pageref|auto-372>>
+      parameter|<pageref|auto-374>>
 
       <tuple|normal|Making type <with|font-family|<quote|tt>|language|<quote|verbatim>|A>
-      equivalent to type <with|font-family|<quote|tt>|language|<quote|verbatim>|B>|<pageref|auto-373>>
+      equivalent to type <with|font-family|<quote|tt>|language|<quote|verbatim>|B>|<pageref|auto-375>>
 
-      <tuple|normal|Named patterns for <with|font-family|<quote|tt>|language|<quote|verbatim>|complex>|<pageref|auto-378>>
+      <tuple|normal|Named patterns for <with|font-family|<quote|tt>|language|<quote|verbatim>|complex>|<pageref|auto-380>>
 
       <tuple|normal|Creating a normal form for the complex
-      type|<pageref|auto-380>>
+      type|<pageref|auto-382>>
 
-      <tuple|normal|Properties declaration|<pageref|auto-386>>
+      <tuple|normal|Properties declaration|<pageref|auto-388>>
 
-      <tuple|normal|Color properties|<pageref|auto-395>>
+      <tuple|normal|Color properties|<pageref|auto-397>>
 
       <tuple|normal|Setting default arguments from the current
-      context|<pageref|auto-398>>
+      context|<pageref|auto-400>>
 
-      <tuple|normal|Additional code in properties|<pageref|auto-401>>
+      <tuple|normal|Additional code in properties|<pageref|auto-403>>
 
-      <tuple|normal|Data inheritance|<pageref|auto-405>>
+      <tuple|normal|Data inheritance|<pageref|auto-407>>
 
       <tuple|normal|Defining a type identifying an arbitrary AST
-      shape|<pageref|auto-414>>
+      shape|<pageref|auto-416>>
 
-      <tuple|normal|Explicit type check|<pageref|auto-416>>
+      <tuple|normal|Explicit type check|<pageref|auto-418>>
 
-      <tuple|normal|Explicit type conversion|<pageref|auto-420>>
+      <tuple|normal|Explicit type conversion|<pageref|auto-422>>
 
-      <tuple|normal|Automatic type conversion|<pageref|auto-422>>
+      <tuple|normal|Automatic type conversion|<pageref|auto-424>>
 
-      <tuple|normal|Parameterized type|<pageref|auto-426>>
+      <tuple|normal|Parameterized type|<pageref|auto-428>>
 
       <tuple|normal|Declaring a range type using an infix
-      form|<pageref|auto-427>>
+      form|<pageref|auto-429>>
 
-      <tuple|normal|Declaration of a rewrite type|<pageref|auto-431>>
+      <tuple|normal|Declaration of a rewrite type|<pageref|auto-433>>
 
-      <tuple|normal|Library definition of if-then-else|<pageref|auto-490>>
+      <tuple|normal|Library definition of if-then-else|<pageref|auto-492>>
 
       <tuple|normal|The <with|font-family|<quote|tt>|language|<quote|verbatim>|good>
-      function|<pageref|auto-492>>
+      function|<pageref|auto-494>>
 
-      <tuple|normal|Infinite loop|<pageref|auto-494>>
+      <tuple|normal|Infinite loop|<pageref|auto-496>>
 
-      <tuple|normal|While loop|<pageref|auto-496>>
+      <tuple|normal|While loop|<pageref|auto-498>>
 
-      <tuple|normal|Until loop|<pageref|auto-497>>
+      <tuple|normal|Until loop|<pageref|auto-499>>
 
-      <tuple|normal|For loop on an integer range|<pageref|auto-499>>
+      <tuple|normal|For loop on an integer range|<pageref|auto-501>>
 
-      <tuple|normal|For loop on a container|<pageref|auto-500>>
+      <tuple|normal|For loop on a container|<pageref|auto-502>>
 
       <tuple|normal|Other kinds of <with|font-family|<quote|tt>|language|<quote|verbatim>|for>
-      loop|<pageref|auto-501>>
+      loop|<pageref|auto-503>>
 
       <\tuple|normal>
         Range and range type definition
-      </tuple|<pageref|auto-506>>
+      </tuple|<pageref|auto-508>>
 
-      <tuple|normal|Ranges as lists|<pageref|auto-508>>
+      <tuple|normal|Ranges as lists|<pageref|auto-510>>
 
-      <tuple|normal|Union type definition|<pageref|auto-510>>
+      <tuple|normal|Union type definition|<pageref|auto-512>>
 
-      <tuple|normal|Using union types|<pageref|auto-511>>
+      <tuple|normal|Using union types|<pageref|auto-513>>
 
-      <tuple|normal|Enumeration type definition|<pageref|auto-513>>
+      <tuple|normal|Enumeration type definition|<pageref|auto-515>>
 
-      <tuple|normal|Type matching a type declaration|<pageref|auto-515>>
+      <tuple|normal|Type matching a type declaration|<pageref|auto-517>>
 
-      <tuple|normal|Import statements examples|<pageref|auto-521>>
+      <tuple|normal|Import statements examples|<pageref|auto-523>>
 
-      <tuple|normal|Module definition|<pageref|auto-532>>
+      <tuple|normal|Module definition|<pageref|auto-534>>
 
-      <tuple|normal|Computing a minimum and a maximum|<pageref|auto-535>>
+      <tuple|normal|Computing a minimum and a maximum|<pageref|auto-537>>
 
-      <tuple|normal|Lazy evaluation of an infinite list|<pageref|auto-556>>
+      <tuple|normal|Lazy evaluation of an infinite list|<pageref|auto-558>>
 
-      <tuple|normal|Controlled compilation|<pageref|auto-562>>
-
-      <tuple|normal|Signature for rewrite code with two
-      variables.|<pageref|auto-571>>
+      <tuple|normal|Controlled compilation|<pageref|auto-564>>
 
       <tuple|normal|Signature for rewrite code with two
-      variables.|<pageref|auto-574>>
+      variables.|<pageref|auto-573>>
+
+      <tuple|normal|Signature for rewrite code with two
+      variables.|<pageref|auto-576>>
     </associate>
     <\associate|idx>
-      <tuple|<tuple|integer type>|<pageref|auto-3>>
+      <tuple|<tuple|integer type>|<pageref|auto-5>>
 
-      <tuple|<tuple|real type>|<pageref|auto-4>>
+      <tuple|<tuple|real type>|<pageref|auto-6>>
 
-      <tuple|<tuple|text type>|<pageref|auto-5>>
+      <tuple|<tuple|text type>|<pageref|auto-7>>
 
-      <tuple|<tuple|name type>|<pageref|auto-6>>
+      <tuple|<tuple|name type>|<pageref|auto-8>>
 
-      <tuple|<tuple|infix type>|<pageref|auto-7>>
+      <tuple|<tuple|infix type>|<pageref|auto-9>>
 
-      <tuple|<tuple|prefix type>|<pageref|auto-8>>
+      <tuple|<tuple|prefix type>|<pageref|auto-10>>
 
-      <tuple|<tuple|postfix type>|<pageref|auto-9>>
+      <tuple|<tuple|postfix type>|<pageref|auto-11>>
 
-      <tuple|<tuple|block type>|<pageref|auto-10>>
+      <tuple|<tuple|block type>|<pageref|auto-12>>
 
-      <tuple|<tuple|abstract syntax tree>|<pageref|auto-11>>
+      <tuple|<tuple|abstract syntax tree>|<pageref|auto-13>>
 
-      <tuple|<tuple|AST (abstract syntax tree)>|<pageref|auto-12>>
+      <tuple|<tuple|AST (abstract syntax tree)>|<pageref|auto-14>>
 
-      <tuple|<tuple|domain-specific language>|<pageref|auto-14>>
+      <tuple|<tuple|domain-specific language>|<pageref|auto-16>>
 
-      <tuple|<tuple|DSL (domain-specific language)>|<pageref|auto-15>>
+      <tuple|<tuple|DSL (domain-specific language)>|<pageref|auto-17>>
 
-      <tuple|<tuple|programming paradigm>|<pageref|auto-17>>
+      <tuple|<tuple|programming paradigm>|<pageref|auto-19>>
 
-      <tuple|<tuple|functional programming>|<pageref|auto-19>>
+      <tuple|<tuple|functional programming>|<pageref|auto-21>>
 
-      <tuple|<tuple|meta-programming>|<pageref|auto-20>>
+      <tuple|<tuple|meta-programming>|<pageref|auto-22>>
 
-      <tuple|<tuple|map>|<pageref|auto-26>>
+      <tuple|<tuple|map>|<pageref|auto-28>>
 
-      <tuple|<tuple|reduce>|<pageref|auto-27>>
+      <tuple|<tuple|reduce>|<pageref|auto-29>>
 
-      <tuple|<tuple|filter>|<pageref|auto-28>>
+      <tuple|<tuple|filter>|<pageref|auto-30>>
 
-      <tuple|<tuple|functional programming>|<pageref|auto-29>>
+      <tuple|<tuple|functional programming>|<pageref|auto-31>>
 
-      <tuple|<tuple|if-then-else|statement>|<pageref|auto-31>>
+      <tuple|<tuple|if-then-else|statement>|<pageref|auto-33>>
 
-      <tuple|<tuple|concept>|<pageref|auto-34>>
+      <tuple|<tuple|concept>|<pageref|auto-36>>
 
-      <tuple|<tuple|concept space>|<pageref|auto-35>>
+      <tuple|<tuple|concept space>|<pageref|auto-37>>
 
-      <tuple|<tuple|code space>|<pageref|auto-36>>
+      <tuple|<tuple|code space>|<pageref|auto-38>>
 
-      <tuple|<tuple|pseudo-metric>|<pageref|auto-39>>
+      <tuple|<tuple|pseudo-metric>|<pageref|auto-41>>
 
-      <tuple|<tuple|syntactic noise>|<pageref|auto-40>>
+      <tuple|<tuple|syntactic noise>|<pageref|auto-42>>
 
-      <tuple|<tuple|semantic noise>|<pageref|auto-41>>
+      <tuple|<tuple|semantic noise>|<pageref|auto-43>>
 
-      <tuple|<tuple|bandwidth>|<pageref|auto-42>>
+      <tuple|<tuple|bandwidth>|<pageref|auto-44>>
 
-      <tuple|<tuple|signal-noise ratio>|<pageref|auto-44>>
+      <tuple|<tuple|signal-noise ratio>|<pageref|auto-46>>
 
-      <tuple|<tuple|art>|<pageref|auto-45>>
+      <tuple|<tuple|art>|<pageref|auto-47>>
 
-      <tuple|<tuple|noise>|<pageref|auto-46>>
+      <tuple|<tuple|noise>|<pageref|auto-48>>
 
-      <tuple|<tuple|music>|<pageref|auto-47>>
+      <tuple|<tuple|music>|<pageref|auto-49>>
 
-      <tuple|<tuple|abstract syntax tree>|<pageref|auto-51>>
+      <tuple|<tuple|abstract syntax tree>|<pageref|auto-53>>
 
-      <tuple|<tuple|XL0 (abstract syntax tree for ELFE)>|<pageref|auto-52>>
+      <tuple|<tuple|XL0 (abstract syntax tree for ELFE)>|<pageref|auto-54>>
 
-      <tuple|<tuple|xl.syntax>|<pageref|auto-53>>
+      <tuple|<tuple|xl.syntax>|<pageref|auto-55>>
 
-      <tuple|<tuple|syntax configuration>|<pageref|auto-54>>
+      <tuple|<tuple|syntax configuration>|<pageref|auto-56>>
 
-      <tuple|<tuple|normal ELFE>|<pageref|auto-55>>
+      <tuple|<tuple|normal ELFE>|<pageref|auto-57>>
 
-      <tuple|<tuple|off-side rule>|<pageref|auto-57>>
+      <tuple|<tuple|off-side rule>|<pageref|auto-59>>
 
-      <tuple|<tuple|spaces (for indentation)>|<pageref|auto-58>>
+      <tuple|<tuple|spaces (for indentation)>|<pageref|auto-60>>
 
-      <tuple|<tuple|tabs (for indentation)>|<pageref|auto-59>>
+      <tuple|<tuple|tabs (for indentation)>|<pageref|auto-61>>
 
-      <tuple|<tuple|indentation>|<pageref|auto-60>>
+      <tuple|<tuple|indentation>|<pageref|auto-62>>
 
-      <tuple|<tuple|comments>|<pageref|auto-63>>
+      <tuple|<tuple|comments>|<pageref|auto-65>>
 
-      <tuple|<tuple|literal node types>|<pageref|auto-66>>
+      <tuple|<tuple|literal node types>|<pageref|auto-68>>
 
-      <tuple|<tuple|integer constant>|<pageref|auto-68>>
+      <tuple|<tuple|integer constant>|<pageref|auto-70>>
 
-      <tuple|<tuple|radix|in integer numbers>|<pageref|auto-69>>
+      <tuple|<tuple|radix|in integer numbers>|<pageref|auto-71>>
 
-      <tuple|<tuple|hash sign (as a radix delimiter)>|<pageref|auto-70>>
+      <tuple|<tuple|hash sign (as a radix delimiter)>|<pageref|auto-72>>
 
-      <tuple|<tuple|underscore|as digit separator>|<pageref|auto-71>>
+      <tuple|<tuple|underscore|as digit separator>|<pageref|auto-73>>
 
-      <tuple|<tuple|dot|as decimal separator>|<pageref|auto-74>>
+      <tuple|<tuple|dot|as decimal separator>|<pageref|auto-76>>
 
-      <tuple|<tuple|radix|in real numbers>|<pageref|auto-75>>
+      <tuple|<tuple|radix|in real numbers>|<pageref|auto-77>>
 
-      <tuple|<tuple|underscore|as digit separator>|<pageref|auto-76>>
+      <tuple|<tuple|underscore|as digit separator>|<pageref|auto-78>>
 
-      <tuple|<tuple|exponent (for real constants)>|<pageref|auto-77>>
+      <tuple|<tuple|exponent (for real constants)>|<pageref|auto-79>>
 
-      <tuple|<tuple|text literals>|<pageref|auto-80>>
+      <tuple|<tuple|text literals>|<pageref|auto-82>>
 
-      <tuple|<tuple|UTF-8>|<pageref|auto-81>>
+      <tuple|<tuple|UTF-8>|<pageref|auto-83>>
 
-      <tuple|<tuple|line-terminating characters>|<pageref|auto-82>>
+      <tuple|<tuple|line-terminating characters>|<pageref|auto-84>>
 
-      <tuple|<tuple|control characters>|<pageref|auto-83>>
+      <tuple|<tuple|control characters>|<pageref|auto-85>>
 
-      <tuple|<tuple|text delimiters>|<pageref|auto-84>>
+      <tuple|<tuple|text delimiters>|<pageref|auto-86>>
 
-      <tuple|<tuple|quote>|<pageref|auto-85>>
+      <tuple|<tuple|quote>|<pageref|auto-87>>
 
-      <tuple|<tuple|single quote>|<pageref|auto-86>>
+      <tuple|<tuple|single quote>|<pageref|auto-88>>
 
-      <tuple|<tuple|double quote>|<pageref|auto-87>>
+      <tuple|<tuple|double quote>|<pageref|auto-89>>
 
-      <tuple|<tuple|long text>|<pageref|auto-88>>
+      <tuple|<tuple|long text>|<pageref|auto-90>>
 
-      <tuple|<tuple|indentation (in long text)>|<pageref|auto-90>>
+      <tuple|<tuple|indentation (in long text)>|<pageref|auto-92>>
 
-      <tuple|<tuple|value (of text literals)>|<pageref|auto-92>>
+      <tuple|<tuple|value (of text literals)>|<pageref|auto-94>>
 
-      <tuple|<tuple|symbols>|<pageref|auto-96>>
+      <tuple|<tuple|symbols>|<pageref|auto-98>>
 
-      <tuple|<tuple|name>|<pageref|auto-97>>
+      <tuple|<tuple|name>|<pageref|auto-99>>
 
-      <tuple|<tuple|operator symbols>|<pageref|auto-98>>
+      <tuple|<tuple|operator symbols>|<pageref|auto-100>>
 
-      <tuple|<tuple|expression vs. statement>|<pageref|auto-99>>
+      <tuple|<tuple|expression vs. statement>|<pageref|auto-101>>
 
-      <tuple|<tuple|structured node types>|<pageref|auto-102>>
+      <tuple|<tuple|structured node types>|<pageref|auto-104>>
 
-      <tuple|<tuple|infix>|<pageref|auto-103>>
+      <tuple|<tuple|infix>|<pageref|auto-105>>
 
-      <tuple|<tuple|prefix>|<pageref|auto-104>>
+      <tuple|<tuple|prefix>|<pageref|auto-106>>
 
-      <tuple|<tuple|postfix>|<pageref|auto-105>>
+      <tuple|<tuple|postfix>|<pageref|auto-107>>
 
-      <tuple|<tuple|block>|<pageref|auto-106>>
+      <tuple|<tuple|block>|<pageref|auto-108>>
 
-      <tuple|<tuple|child node>|<pageref|auto-107>>
+      <tuple|<tuple|child node>|<pageref|auto-109>>
 
-      <tuple|<tuple|infix>|<pageref|auto-109>>
+      <tuple|<tuple|infix>|<pageref|auto-111>>
 
-      <tuple|<tuple|prefix>|<pageref|auto-111>>
+      <tuple|<tuple|prefix>|<pageref|auto-113>>
 
-      <tuple|<tuple|postfix>|<pageref|auto-112>>
+      <tuple|<tuple|postfix>|<pageref|auto-114>>
 
-      <tuple|<tuple|operand (in prefix and postfix)>|<pageref|auto-113>>
+      <tuple|<tuple|operand (in prefix and postfix)>|<pageref|auto-115>>
 
-      <tuple|<tuple|xl.syntax>|<pageref|auto-114>>
+      <tuple|<tuple|xl.syntax>|<pageref|auto-116>>
 
-      <tuple|<tuple|function precedence>|<pageref|auto-115>>
+      <tuple|<tuple|function precedence>|<pageref|auto-117>>
 
-      <tuple|<tuple|function>|<pageref|auto-116>>
+      <tuple|<tuple|function>|<pageref|auto-118>>
 
-      <tuple|<tuple|block>|<pageref|auto-118>>
+      <tuple|<tuple|block>|<pageref|auto-120>>
 
-      <tuple|<tuple|block delimiters>|<pageref|auto-119>>
+      <tuple|<tuple|block delimiters>|<pageref|auto-121>>
 
-      <tuple|<tuple|parsing>|<pageref|auto-121>>
+      <tuple|<tuple|parsing>|<pageref|auto-123>>
 
-      <tuple|<tuple|precedence>|<pageref|auto-122>>
+      <tuple|<tuple|precedence>|<pageref|auto-124>>
 
-      <tuple|<tuple|associativity>|<pageref|auto-123>>
+      <tuple|<tuple|associativity>|<pageref|auto-125>>
 
-      <tuple|<tuple|infix vs. prefix vs. postfix>|<pageref|auto-124>>
+      <tuple|<tuple|infix vs. prefix vs. postfix>|<pageref|auto-126>>
 
-      <tuple|<tuple|expression vs. statement>|<pageref|auto-125>>
+      <tuple|<tuple|expression vs. statement>|<pageref|auto-127>>
 
-      <tuple|<tuple|precedence>|<pageref|auto-127>>
+      <tuple|<tuple|precedence>|<pageref|auto-129>>
 
-      <tuple|<tuple|xl.syntax>|<pageref|auto-128>>
+      <tuple|<tuple|xl.syntax>|<pageref|auto-130>>
 
-      <tuple|<tuple|syntax statement>|<pageref|auto-129>>
+      <tuple|<tuple|syntax statement>|<pageref|auto-131>>
 
-      <tuple|<tuple|associativity>|<pageref|auto-131>>
+      <tuple|<tuple|associativity>|<pageref|auto-133>>
 
-      <tuple|<tuple|infix vs. prefix vs. postfix>|<pageref|auto-133>>
+      <tuple|<tuple|infix vs. prefix vs. postfix>|<pageref|auto-135>>
 
-      <tuple|<tuple|parsing>|<pageref|auto-134>>
+      <tuple|<tuple|parsing>|<pageref|auto-136>>
 
-      <tuple|<tuple|parsing ambiguities>|<pageref|auto-135>>
+      <tuple|<tuple|parsing ambiguities>|<pageref|auto-137>>
 
-      <tuple|<tuple|default prefix (precedence)>|<pageref|auto-136>>
+      <tuple|<tuple|default prefix (precedence)>|<pageref|auto-138>>
 
-      <tuple|<tuple|function precedence>|<pageref|auto-137>>
+      <tuple|<tuple|function precedence>|<pageref|auto-139>>
 
-      <tuple|<tuple|syntax configuration>|<pageref|auto-138>>
+      <tuple|<tuple|syntax configuration>|<pageref|auto-140>>
 
-      <tuple|<tuple|expression vs. statement>|<pageref|auto-140>>
+      <tuple|<tuple|expression vs. statement>|<pageref|auto-142>>
 
-      <tuple|<tuple|parsing ambiguities>|<pageref|auto-141>>
+      <tuple|<tuple|parsing ambiguities>|<pageref|auto-143>>
 
-      <tuple|<tuple|statement>|<pageref|auto-142>>
+      <tuple|<tuple|statement>|<pageref|auto-144>>
 
-      <tuple|<tuple|expression (as opposed to statement)>|<pageref|auto-143>>
+      <tuple|<tuple|expression (as opposed to statement)>|<pageref|auto-145>>
 
-      <tuple|<tuple|subject and complement>|<pageref|auto-144>>
+      <tuple|<tuple|subject and complement>|<pageref|auto-146>>
 
-      <tuple|<tuple|statement precedence>|<pageref|auto-145>>
+      <tuple|<tuple|statement precedence>|<pageref|auto-147>>
 
-      <tuple|<tuple|syntax configuration>|<pageref|auto-147>>
+      <tuple|<tuple|syntax configuration>|<pageref|auto-149>>
 
-      <tuple|<tuple|xl.syntax>|<pageref|auto-148>>
+      <tuple|<tuple|xl.syntax>|<pageref|auto-150>>
 
-      <tuple|<tuple|operators>|<pageref|auto-149>>
+      <tuple|<tuple|operators>|<pageref|auto-151>>
 
-      <tuple|<tuple|standard operators>|<pageref|auto-150>>
+      <tuple|<tuple|standard operators>|<pageref|auto-152>>
 
-      <tuple|<tuple|precedence>|<pageref|auto-151>>
-
-      <tuple|<tuple|syntax statement>|<pageref|auto-153>>
+      <tuple|<tuple|precedence>|<pageref|auto-153>>
 
       <tuple|<tuple|syntax statement>|<pageref|auto-155>>
 
-      <tuple|<tuple|indentation>|<pageref|auto-157>>
+      <tuple|<tuple|syntax statement>|<pageref|auto-157>>
 
-      <tuple|<tuple|statement precedence>|<pageref|auto-158>>
+      <tuple|<tuple|indentation>|<pageref|auto-159>>
 
-      <tuple|<tuple|default precedence>|<pageref|auto-159>>
+      <tuple|<tuple|statement precedence>|<pageref|auto-160>>
 
-      <tuple|<tuple|function precedence>|<pageref|auto-160>>
+      <tuple|<tuple|default precedence>|<pageref|auto-161>>
 
-      <tuple|<tuple|block delimiters>|<pageref|auto-161>>
+      <tuple|<tuple|function precedence>|<pageref|auto-162>>
 
-      <tuple|<tuple|indentation>|<pageref|auto-162>>
+      <tuple|<tuple|block delimiters>|<pageref|auto-163>>
 
-      <tuple|<tuple|text delimiters>|<pageref|auto-163>>
+      <tuple|<tuple|indentation>|<pageref|auto-164>>
 
-      <tuple|<tuple|external syntax file>|<pageref|auto-164>>
+      <tuple|<tuple|text delimiters>|<pageref|auto-165>>
 
-      <tuple|<tuple|C.syntax file>|<pageref|auto-165>>
+      <tuple|<tuple|external syntax file>|<pageref|auto-166>>
 
-      <tuple|<tuple|C symbols>|<pageref|auto-166>>
+      <tuple|<tuple|C.syntax file>|<pageref|auto-167>>
 
-      <tuple|<tuple|semantics>|<pageref|auto-169>>
+      <tuple|<tuple|C symbols>|<pageref|auto-168>>
 
-      <tuple|<tuple|execution (of programs)>|<pageref|auto-170>>
+      <tuple|<tuple|semantics>|<pageref|auto-171>>
 
-      <tuple|<tuple|evaluation>|<pageref|auto-171>>
+      <tuple|<tuple|execution (of programs)>|<pageref|auto-172>>
 
-      <tuple|<tuple|tree rewrite>|<pageref|auto-173>>
+      <tuple|<tuple|evaluation>|<pageref|auto-173>>
 
-      <tuple|<tuple|tree rewrite operators>|<pageref|auto-174>>
+      <tuple|<tuple|tree rewrite>|<pageref|auto-175>>
 
-      <tuple|<tuple|rewrite declarations>|<pageref|auto-175>>
+      <tuple|<tuple|tree rewrite operators>|<pageref|auto-176>>
 
-      <tuple|<tuple|pattern>|<pageref|auto-176>>
+      <tuple|<tuple|rewrite declarations>|<pageref|auto-177>>
 
-      <tuple|<tuple|implementation>|<pageref|auto-177>>
+      <tuple|<tuple|pattern>|<pageref|auto-178>>
 
-      <tuple|<tuple|data declarations>|<pageref|auto-179>>
+      <tuple|<tuple|implementation>|<pageref|auto-179>>
 
-      <tuple|<tuple|type declarations>|<pageref|auto-181>>
+      <tuple|<tuple|data declarations>|<pageref|auto-181>>
 
-      <tuple|<tuple|guard (in a rewrite declaration)>|<pageref|auto-183>>
+      <tuple|<tuple|type declarations>|<pageref|auto-183>>
 
-      <tuple|<tuple|assignment>|<pageref|auto-185>>
+      <tuple|<tuple|guard (in a rewrite declaration)>|<pageref|auto-185>>
 
-      <tuple|<tuple|binding>|<pageref|auto-186>>
+      <tuple|<tuple|assignment>|<pageref|auto-187>>
 
-      <tuple|<tuple|sequence>|<pageref|auto-188>>
+      <tuple|<tuple|binding>|<pageref|auto-188>>
 
-      <tuple|<tuple|sequence operator>|<pageref|auto-189>>
+      <tuple|<tuple|sequence>|<pageref|auto-190>>
 
-      <tuple|<tuple|evaluation order>|<pageref|auto-190>>
+      <tuple|<tuple|sequence operator>|<pageref|auto-191>>
 
-      <tuple|<tuple|index operator>|<pageref|auto-192>>
+      <tuple|<tuple|evaluation order>|<pageref|auto-192>>
 
-      <tuple|<tuple|declaration|of rewrites>|<pageref|auto-195>>
+      <tuple|<tuple|index operator>|<pageref|auto-194>>
 
-      <tuple|<tuple|rewrite declaration>|<pageref|auto-196>>
+      <tuple|<tuple|declaration|of rewrites>|<pageref|auto-197>>
 
-      <tuple|<tuple|if-then-else|statement>|<pageref|auto-197>>
+      <tuple|<tuple|rewrite declaration>|<pageref|auto-198>>
 
-      <tuple|<tuple|pattern>|<pageref|auto-199>>
+      <tuple|<tuple|if-then-else|statement>|<pageref|auto-199>>
 
-      <tuple|<tuple|constant>|<pageref|auto-200>>
+      <tuple|<tuple|pattern>|<pageref|auto-201>>
 
-      <tuple|<tuple|variable>|<pageref|auto-201>>
+      <tuple|<tuple|constant>|<pageref|auto-202>>
 
-      <tuple|<tuple|constant symbols>|<pageref|auto-203>>
+      <tuple|<tuple|variable>|<pageref|auto-203>>
 
-      <tuple|<tuple|parameter>|<pageref|auto-204>>
+      <tuple|<tuple|constant symbols>|<pageref|auto-205>>
 
-      <tuple|<tuple|argument>|<pageref|auto-205>>
+      <tuple|<tuple|parameter>|<pageref|auto-206>>
 
-      <tuple|<tuple|anonymous function>|<pageref|auto-206>>
+      <tuple|<tuple|argument>|<pageref|auto-207>>
 
-      <tuple|<tuple|lambda function>|<pageref|auto-207>>
+      <tuple|<tuple|anonymous function>|<pageref|auto-208>>
 
-      <tuple|<tuple|context>|<pageref|auto-208>>
+      <tuple|<tuple|lambda function>|<pageref|auto-209>>
 
-      <tuple|<tuple|declaration|of data>|<pageref|auto-211>>
+      <tuple|<tuple|context>|<pageref|auto-210>>
 
-      <tuple|<tuple|data declaration>|<pageref|auto-212>>
+      <tuple|<tuple|declaration|of data>|<pageref|auto-213>>
+
+      <tuple|<tuple|data declaration>|<pageref|auto-214>>
 
       <tuple|<tuple|evaluation|data declaration
-      arguments>|<pageref|auto-214>>
+      arguments>|<pageref|auto-216>>
 
-      <tuple|<tuple|self>|<pageref|auto-216>>
+      <tuple|<tuple|self>|<pageref|auto-218>>
 
-      <tuple|<tuple|declaration|of types>|<pageref|auto-218>>
+      <tuple|<tuple|declaration|of types>|<pageref|auto-220>>
 
-      <tuple|<tuple|type declaration>|<pageref|auto-219>>
+      <tuple|<tuple|type declaration>|<pageref|auto-221>>
 
-      <tuple|<tuple|return type declaration>|<pageref|auto-220>>
+      <tuple|<tuple|return type declaration>|<pageref|auto-222>>
 
-      <tuple|<tuple|overloading>|<pageref|auto-222>>
+      <tuple|<tuple|overloading>|<pageref|auto-224>>
 
-      <tuple|<tuple|type declaration|in assignment>|<pageref|auto-223>>
+      <tuple|<tuple|type declaration|in assignment>|<pageref|auto-225>>
 
-      <tuple|<tuple|assignment|to type declaration>|<pageref|auto-224>>
+      <tuple|<tuple|assignment|to type declaration>|<pageref|auto-226>>
 
-      <tuple|<tuple|assignment>|<pageref|auto-226>>
+      <tuple|<tuple|assignment>|<pageref|auto-228>>
 
-      <tuple|<tuple|:=>|<pageref|auto-227>>
+      <tuple|<tuple|:=>|<pageref|auto-229>>
 
-      <tuple|<tuple|evaluation|in assignment>|<pageref|auto-228>>
+      <tuple|<tuple|evaluation|in assignment>|<pageref|auto-230>>
 
-      <tuple|<tuple|binding|in assignment>|<pageref|auto-229>>
+      <tuple|<tuple|binding|in assignment>|<pageref|auto-231>>
 
-      <tuple|<tuple|assignment|to type declaration>|<pageref|auto-233>>
+      <tuple|<tuple|assignment|to type declaration>|<pageref|auto-235>>
 
-      <tuple|<tuple|type declaration|in assignment>|<pageref|auto-234>>
+      <tuple|<tuple|type declaration|in assignment>|<pageref|auto-236>>
 
-      <tuple|<tuple|binding|local scope>|<pageref|auto-235>>
+      <tuple|<tuple|binding|local scope>|<pageref|auto-237>>
 
-      <tuple|<tuple|local scope>|<pageref|auto-236>>
+      <tuple|<tuple|local scope>|<pageref|auto-238>>
 
-      <tuple|<tuple|scope|local>|<pageref|auto-237>>
+      <tuple|<tuple|scope|local>|<pageref|auto-239>>
 
       <tuple|<tuple|return type declaration|in
-      assignment>|<pageref|auto-238>>
+      assignment>|<pageref|auto-240>>
 
-      <tuple|<tuple|binding|with return type declaration>|<pageref|auto-239>>
+      <tuple|<tuple|binding|with return type declaration>|<pageref|auto-241>>
 
       <tuple|<tuple|expression|allowed on left of
-      assignment>|<pageref|auto-243>>
+      assignment>|<pageref|auto-245>>
 
-      <tuple|<tuple|assignment|to parameter>|<pageref|auto-245>>
+      <tuple|<tuple|assignment|to parameter>|<pageref|auto-247>>
 
-      <tuple|<tuple|assignment|in expression>|<pageref|auto-248>>
+      <tuple|<tuple|assignment|in expression>|<pageref|auto-250>>
 
-      <tuple|<tuple|expression|assignment as expression>|<pageref|auto-249>>
+      <tuple|<tuple|expression|assignment as expression>|<pageref|auto-251>>
 
-      <tuple|<tuple|guard>|<pageref|auto-251>>
+      <tuple|<tuple|guard>|<pageref|auto-253>>
 
-      <tuple|<tuple|when infix operator>|<pageref|auto-252>>
+      <tuple|<tuple|when infix operator>|<pageref|auto-254>>
 
-      <tuple|<tuple|sequence>|<pageref|auto-255>>
+      <tuple|<tuple|sequence>|<pageref|auto-257>>
 
-      <tuple|<tuple|sequence|evaluation order>|<pageref|auto-256>>
+      <tuple|<tuple|sequence|evaluation order>|<pageref|auto-258>>
 
-      <tuple|<tuple|evaluation|order>|<pageref|auto-257>>
+      <tuple|<tuple|evaluation|order>|<pageref|auto-259>>
 
-      <tuple|<tuple|declaration>|<pageref|auto-259>>
+      <tuple|<tuple|declaration>|<pageref|auto-261>>
 
-      <tuple|<tuple|statement>|<pageref|auto-260>>
+      <tuple|<tuple|statement>|<pageref|auto-262>>
 
-      <tuple|<tuple|index operator>|<pageref|auto-262>>
+      <tuple|<tuple|index operator>|<pageref|auto-264>>
 
-      <tuple|<tuple|dot|as index operator>|<pageref|auto-263>>
+      <tuple|<tuple|dot|as index operator>|<pageref|auto-265>>
 
-      <tuple|<tuple|array|index>|<pageref|auto-264>>
+      <tuple|<tuple|array|index>|<pageref|auto-266>>
 
-      <tuple|<tuple|array index>|<pageref|auto-265>>
+      <tuple|<tuple|array index>|<pageref|auto-267>>
 
-      <tuple|<tuple|index|array>|<pageref|auto-266>>
+      <tuple|<tuple|index|array>|<pageref|auto-268>>
 
-      <tuple|<tuple|field index>|<pageref|auto-267>>
+      <tuple|<tuple|field index>|<pageref|auto-269>>
 
-      <tuple|<tuple|index|field>|<pageref|auto-268>>
+      <tuple|<tuple|index|field>|<pageref|auto-270>>
 
-      <tuple|<tuple|array|as function>|<pageref|auto-271>>
+      <tuple|<tuple|array|as function>|<pageref|auto-273>>
 
-      <tuple|<tuple|C interface>|<pageref|auto-273>>
+      <tuple|<tuple|C interface>|<pageref|auto-275>>
 
-      <tuple|<tuple|extern syntax>|<pageref|auto-274>>
+      <tuple|<tuple|extern syntax>|<pageref|auto-276>>
 
-      <tuple|<tuple|C.syntax>|<pageref|auto-276>>
+      <tuple|<tuple|C.syntax>|<pageref|auto-278>>
 
-      <tuple|<tuple|xl.syntax|connexion to C.syntax>|<pageref|auto-277>>
+      <tuple|<tuple|xl.syntax|connexion to C.syntax>|<pageref|auto-279>>
 
-      <tuple|<tuple|C.syntax|connexion to xl.syntax>|<pageref|auto-278>>
+      <tuple|<tuple|C.syntax|connexion to xl.syntax>|<pageref|auto-280>>
 
-      <tuple|<tuple|machine interface>|<pageref|auto-281>>
+      <tuple|<tuple|machine interface>|<pageref|auto-283>>
 
-      <tuple|<tuple|opcode>|<pageref|auto-282>>
+      <tuple|<tuple|opcode>|<pageref|auto-284>>
 
-      <tuple|<tuple|binding>|<pageref|auto-285>>
+      <tuple|<tuple|binding>|<pageref|auto-287>>
 
-      <tuple|<tuple|context>|<pageref|auto-286>>
+      <tuple|<tuple|context>|<pageref|auto-288>>
 
-      <tuple|<tuple|context order>|<pageref|auto-288>>
+      <tuple|<tuple|context order>|<pageref|auto-290>>
 
-      <tuple|<tuple|shadowed binding>|<pageref|auto-289>>
+      <tuple|<tuple|shadowed binding>|<pageref|auto-291>>
 
-      <tuple|<tuple|scope>|<pageref|auto-291>>
+      <tuple|<tuple|scope>|<pageref|auto-293>>
 
-      <tuple|<tuple|scope|local>|<pageref|auto-292>>
+      <tuple|<tuple|scope|local>|<pageref|auto-294>>
 
-      <tuple|<tuple|context|enclosing>|<pageref|auto-293>>
+      <tuple|<tuple|context|enclosing>|<pageref|auto-295>>
 
-      <tuple|<tuple|scope|enclosing>|<pageref|auto-294>>
+      <tuple|<tuple|scope|enclosing>|<pageref|auto-296>>
 
-      <tuple|<tuple|scope|global>|<pageref|auto-295>>
+      <tuple|<tuple|scope|global>|<pageref|auto-297>>
 
-      <tuple|<tuple|catch-all rewrite>|<pageref|auto-296>>
+      <tuple|<tuple|catch-all rewrite>|<pageref|auto-298>>
 
-      <tuple|<tuple|undefined form>|<pageref|auto-297>>
+      <tuple|<tuple|undefined form>|<pageref|auto-299>>
 
-      <tuple|<tuple|current context>|<pageref|auto-299>>
+      <tuple|<tuple|current context>|<pageref|auto-301>>
 
-      <tuple|<tuple|context|current>|<pageref|auto-300>>
+      <tuple|<tuple|context|current>|<pageref|auto-302>>
 
-      <tuple|<tuple|scope|creation>|<pageref|auto-301>>
+      <tuple|<tuple|scope|creation>|<pageref|auto-303>>
 
-      <tuple|<tuple|assignment>|<pageref|auto-302>>
+      <tuple|<tuple|assignment>|<pageref|auto-304>>
 
-      <tuple|<tuple|reference>|<pageref|auto-304>>
+      <tuple|<tuple|reference>|<pageref|auto-306>>
 
-      <tuple|<tuple|index operator>|<pageref|auto-305>>
+      <tuple|<tuple|index operator>|<pageref|auto-307>>
 
-      <tuple|<tuple|evaluation>|<pageref|auto-307>>
+      <tuple|<tuple|evaluation>|<pageref|auto-309>>
 
-      <tuple|<tuple|evaluation|standard case>|<pageref|auto-309>>
+      <tuple|<tuple|evaluation|standard case>|<pageref|auto-311>>
 
-      <tuple|<tuple|context order>|<pageref|auto-310>>
+      <tuple|<tuple|context order>|<pageref|auto-312>>
 
-      <tuple|<tuple|pattern|matching>|<pageref|auto-311>>
+      <tuple|<tuple|pattern|matching>|<pageref|auto-313>>
 
-      <tuple|<tuple|evaluation|of arguments>|<pageref|auto-312>>
+      <tuple|<tuple|evaluation|of arguments>|<pageref|auto-314>>
 
-      <tuple|<tuple|memoization|of arguments>|<pageref|auto-313>>
+      <tuple|<tuple|memoization|of arguments>|<pageref|auto-315>>
 
-      <tuple|<tuple|evaluation|mismatch>|<pageref|auto-314>>
+      <tuple|<tuple|evaluation|mismatch>|<pageref|auto-316>>
 
-      <tuple|<tuple|binding|parameters>|<pageref|auto-315>>
+      <tuple|<tuple|binding|parameters>|<pageref|auto-317>>
 
-      <tuple|<tuple|context|passed with arguments>|<pageref|auto-316>>
+      <tuple|<tuple|context|passed with arguments>|<pageref|auto-318>>
 
-      <tuple|<tuple|closure>|<pageref|auto-317>>
+      <tuple|<tuple|closure>|<pageref|auto-319>>
 
-      <tuple|<tuple|context|parameter context>|<pageref|auto-318>>
+      <tuple|<tuple|context|parameter context>|<pageref|auto-320>>
 
-      <tuple|<tuple|special forms>|<pageref|auto-320>>
+      <tuple|<tuple|special forms>|<pageref|auto-322>>
 
-      <tuple|<tuple|evaluation|special forms>|<pageref|auto-321>>
+      <tuple|<tuple|evaluation|special forms>|<pageref|auto-323>>
 
-      <tuple|<tuple|lazy evaluation>|<pageref|auto-323>>
+      <tuple|<tuple|lazy evaluation>|<pageref|auto-325>>
 
-      <tuple|<tuple|evaluation|lazy>|<pageref|auto-324>>
+      <tuple|<tuple|evaluation|lazy>|<pageref|auto-326>>
 
-      <tuple|<tuple|evaluation|demand-based>|<pageref|auto-325>>
+      <tuple|<tuple|evaluation|demand-based>|<pageref|auto-327>>
 
-      <tuple|<tuple|explicit evaluation>|<pageref|auto-329>>
+      <tuple|<tuple|explicit evaluation>|<pageref|auto-331>>
 
-      <tuple|<tuple|evaluation|explicit>|<pageref|auto-330>>
+      <tuple|<tuple|evaluation|explicit>|<pageref|auto-332>>
 
-      <tuple|<tuple|memoization|of parameters>|<pageref|auto-332>>
+      <tuple|<tuple|memoization|of parameters>|<pageref|auto-334>>
 
-      <tuple|<tuple|evaluation|explicit vs. lazy>|<pageref|auto-334>>
+      <tuple|<tuple|evaluation|explicit vs. lazy>|<pageref|auto-336>>
 
       <tuple|<tuple|evaluation|forcing explicit
-      evaluation>|<pageref|auto-335>>
+      evaluation>|<pageref|auto-337>>
 
-      <tuple|<tuple|type>|<pageref|auto-337>>
+      <tuple|<tuple|type>|<pageref|auto-339>>
 
-      <tuple|<tuple|type declaration>|<pageref|auto-338>>
+      <tuple|<tuple|type declaration>|<pageref|auto-340>>
 
-      <tuple|<tuple|type|declaration>|<pageref|auto-339>>
+      <tuple|<tuple|type|declaration>|<pageref|auto-341>>
 
-      <tuple|<tuple|type|belonging to a type>|<pageref|auto-340>>
+      <tuple|<tuple|type|belonging to a type>|<pageref|auto-342>>
 
-      <tuple|<tuple|type|predefined>|<pageref|auto-342>>
+      <tuple|<tuple|type|predefined>|<pageref|auto-344>>
 
-      <tuple|<tuple|predefined types>|<pageref|auto-343>>
+      <tuple|<tuple|predefined types>|<pageref|auto-345>>
 
-      <tuple|<tuple|integer>|<pageref|auto-344>>
+      <tuple|<tuple|integer>|<pageref|auto-346>>
 
-      <tuple|<tuple|real>|<pageref|auto-345>>
+      <tuple|<tuple|real>|<pageref|auto-347>>
 
-      <tuple|<tuple|text>|<pageref|auto-346>>
+      <tuple|<tuple|text>|<pageref|auto-348>>
 
-      <tuple|<tuple|symbol>|<pageref|auto-347>>
+      <tuple|<tuple|symbol>|<pageref|auto-349>>
 
-      <tuple|<tuple|name>|<pageref|auto-348>>
+      <tuple|<tuple|name>|<pageref|auto-350>>
 
-      <tuple|<tuple|operator>|<pageref|auto-349>>
+      <tuple|<tuple|operator>|<pageref|auto-351>>
 
-      <tuple|<tuple|infix>|<pageref|auto-350>>
+      <tuple|<tuple|infix>|<pageref|auto-352>>
 
-      <tuple|<tuple|prefix>|<pageref|auto-351>>
+      <tuple|<tuple|prefix>|<pageref|auto-353>>
 
-      <tuple|<tuple|postfix>|<pageref|auto-352>>
+      <tuple|<tuple|postfix>|<pageref|auto-354>>
 
-      <tuple|<tuple|block>|<pageref|auto-353>>
+      <tuple|<tuple|block>|<pageref|auto-355>>
 
-      <tuple|<tuple|tree>|<pageref|auto-354>>
+      <tuple|<tuple|tree>|<pageref|auto-356>>
 
-      <tuple|<tuple|boolean>|<pageref|auto-355>>
+      <tuple|<tuple|boolean>|<pageref|auto-357>>
 
-      <tuple|<tuple|type definition>|<pageref|auto-357>>
+      <tuple|<tuple|type definition>|<pageref|auto-359>>
 
-      <tuple|<tuple|type|definition>|<pageref|auto-358>>
+      <tuple|<tuple|type|definition>|<pageref|auto-360>>
 
-      <tuple|<tuple|definition|of types>|<pageref|auto-359>>
+      <tuple|<tuple|definition|of types>|<pageref|auto-361>>
 
-      <tuple|<tuple|if-then-else|type>|<pageref|auto-360>>
+      <tuple|<tuple|if-then-else|type>|<pageref|auto-362>>
 
-      <tuple|<tuple|type pattern>|<pageref|auto-362>>
+      <tuple|<tuple|type pattern>|<pageref|auto-364>>
 
-      <tuple|<tuple|type|pattern>|<pageref|auto-363>>
+      <tuple|<tuple|type|pattern>|<pageref|auto-365>>
 
-      <tuple|<tuple|pattern|in type>|<pageref|auto-364>>
+      <tuple|<tuple|pattern|in type>|<pageref|auto-366>>
 
-      <tuple|<tuple|type declaration|vs. type definition>|<pageref|auto-366>>
+      <tuple|<tuple|type declaration|vs. type definition>|<pageref|auto-368>>
 
-      <tuple|<tuple|type definition|vs. type declaration>|<pageref|auto-367>>
+      <tuple|<tuple|type definition|vs. type declaration>|<pageref|auto-369>>
 
-      <tuple|<tuple|parameters|of types>|<pageref|auto-369>>
+      <tuple|<tuple|parameters|of types>|<pageref|auto-371>>
 
-      <tuple|<tuple|bindings|in type definitions>|<pageref|auto-370>>
+      <tuple|<tuple|bindings|in type definitions>|<pageref|auto-372>>
 
-      <tuple|<tuple|index|for user-defined types>|<pageref|auto-371>>
+      <tuple|<tuple|index|for user-defined types>|<pageref|auto-373>>
 
-      <tuple|<tuple|normal form>|<pageref|auto-375>>
+      <tuple|<tuple|normal form>|<pageref|auto-377>>
 
-      <tuple|<tuple|type|normal form>|<pageref|auto-376>>
+      <tuple|<tuple|type|normal form>|<pageref|auto-378>>
 
-      <tuple|<tuple|pattern|making type pattern specific>|<pageref|auto-377>>
+      <tuple|<tuple|pattern|making type pattern specific>|<pageref|auto-379>>
 
-      <tuple|<tuple|type|multiple notations>|<pageref|auto-379>>
+      <tuple|<tuple|type|multiple notations>|<pageref|auto-381>>
 
-      <tuple|<tuple|properties>|<pageref|auto-382>>
+      <tuple|<tuple|properties>|<pageref|auto-384>>
 
-      <tuple|<tuple|type|properties>|<pageref|auto-383>>
+      <tuple|<tuple|type|properties>|<pageref|auto-385>>
 
-      <tuple|<tuple|property>|<pageref|auto-384>>
+      <tuple|<tuple|property>|<pageref|auto-386>>
 
-      <tuple|<tuple|inherit>|<pageref|auto-385>>
+      <tuple|<tuple|inherit>|<pageref|auto-387>>
 
-      <tuple|<tuple|parameters|with properties types>|<pageref|auto-387>>
+      <tuple|<tuple|parameters|with properties types>|<pageref|auto-389>>
 
-      <tuple|<tuple|property definition>|<pageref|auto-388>>
+      <tuple|<tuple|property definition>|<pageref|auto-390>>
 
-      <tuple|<tuple|definition|of properties>|<pageref|auto-389>>
+      <tuple|<tuple|definition|of properties>|<pageref|auto-391>>
 
-      <tuple|<tuple|default value>|<pageref|auto-390>>
+      <tuple|<tuple|default value>|<pageref|auto-392>>
 
-      <tuple|<tuple|property|default value>|<pageref|auto-391>>
+      <tuple|<tuple|property|default value>|<pageref|auto-393>>
 
-      <tuple|<tuple|property|setting>|<pageref|auto-392>>
+      <tuple|<tuple|property|setting>|<pageref|auto-394>>
 
-      <tuple|<tuple|properties|as parameter types>|<pageref|auto-393>>
+      <tuple|<tuple|properties|as parameter types>|<pageref|auto-395>>
 
-      <tuple|<tuple|properties|arguments>|<pageref|auto-394>>
+      <tuple|<tuple|properties|arguments>|<pageref|auto-396>>
 
-      <tuple|<tuple|getter>|<pageref|auto-396>>
+      <tuple|<tuple|getter>|<pageref|auto-398>>
 
-      <tuple|<tuple|setter>|<pageref|auto-397>>
+      <tuple|<tuple|setter>|<pageref|auto-399>>
 
-      <tuple|<tuple|required property>|<pageref|auto-399>>
+      <tuple|<tuple|required property>|<pageref|auto-401>>
 
-      <tuple|<tuple|property|required>|<pageref|auto-400>>
+      <tuple|<tuple|property|required>|<pageref|auto-402>>
 
-      <tuple|<tuple|inherit>|<pageref|auto-403>>
+      <tuple|<tuple|inherit>|<pageref|auto-405>>
 
-      <tuple|<tuple|data inheritance>|<pageref|auto-404>>
+      <tuple|<tuple|data inheritance>|<pageref|auto-406>>
 
-      <tuple|<tuple|automatic type conversion>|<pageref|auto-406>>
+      <tuple|<tuple|automatic type conversion>|<pageref|auto-408>>
 
-      <tuple|<tuple|explicit type check>|<pageref|auto-408>>
+      <tuple|<tuple|explicit type check>|<pageref|auto-410>>
 
-      <tuple|<tuple|type|explicit type check>|<pageref|auto-409>>
+      <tuple|<tuple|type|explicit type check>|<pageref|auto-411>>
 
-      <tuple|<tuple|type check>|<pageref|auto-410>>
+      <tuple|<tuple|type check>|<pageref|auto-412>>
 
-      <tuple|<tuple|type|check>|<pageref|auto-411>>
+      <tuple|<tuple|type|check>|<pageref|auto-413>>
 
-      <tuple|<tuple|contains>|<pageref|auto-412>>
+      <tuple|<tuple|contains>|<pageref|auto-414>>
 
       <tuple|<tuple|type|identifying arbitrary tree
-      shapes>|<pageref|auto-413>>
+      shapes>|<pageref|auto-415>>
 
-      <tuple|<tuple|is_a>|<pageref|auto-415>>
+      <tuple|<tuple|is_a>|<pageref|auto-417>>
 
-      <tuple|<tuple|explicit type conversion>|<pageref|auto-418>>
+      <tuple|<tuple|explicit type conversion>|<pageref|auto-420>>
 
-      <tuple|<tuple|type|conversions>|<pageref|auto-419>>
+      <tuple|<tuple|type|conversions>|<pageref|auto-421>>
 
-      <tuple|<tuple|automatic type conversion>|<pageref|auto-421>>
+      <tuple|<tuple|automatic type conversion>|<pageref|auto-423>>
 
-      <tuple|<tuple|parameterized types>|<pageref|auto-424>>
+      <tuple|<tuple|parameterized types>|<pageref|auto-426>>
 
-      <tuple|<tuple|type|parameterized type>|<pageref|auto-425>>
+      <tuple|<tuple|type|parameterized type>|<pageref|auto-427>>
 
-      <tuple|<tuple|rewrite type>|<pageref|auto-429>>
+      <tuple|<tuple|rewrite type>|<pageref|auto-431>>
 
-      <tuple|<tuple|type|rewrite type>|<pageref|auto-430>>
+      <tuple|<tuple|type|rewrite type>|<pageref|auto-432>>
 
-      <tuple|<tuple|library>|<pageref|auto-433>>
+      <tuple|<tuple|library>|<pageref|auto-435>>
 
-      <tuple|<tuple|built-in operations>|<pageref|auto-435>>
+      <tuple|<tuple|built-in operations>|<pageref|auto-437>>
 
-      <tuple|<tuple|xl.syntax>|<pageref|auto-436>>
+      <tuple|<tuple|xl.syntax>|<pageref|auto-438>>
 
-      <tuple|<tuple|builtins.xl>|<pageref|auto-437>>
+      <tuple|<tuple|builtins.xl>|<pageref|auto-439>>
 
-      <tuple|<tuple|arithmetic>|<pageref|auto-439>>
+      <tuple|<tuple|arithmetic>|<pageref|auto-441>>
 
-      <tuple|<tuple|power operator>|<pageref|auto-440>>
+      <tuple|<tuple|power operator>|<pageref|auto-442>>
 
-      <tuple|<tuple|comparisons>|<pageref|auto-443>>
+      <tuple|<tuple|comparisons>|<pageref|auto-445>>
 
-      <tuple|<tuple|bitwise arithmetic>|<pageref|auto-446>>
+      <tuple|<tuple|bitwise arithmetic>|<pageref|auto-448>>
 
-      <tuple|<tuple|arithmetic|bitwise>|<pageref|auto-447>>
+      <tuple|<tuple|arithmetic|bitwise>|<pageref|auto-449>>
 
-      <tuple|<tuple|boolean>|<pageref|auto-450>>
+      <tuple|<tuple|boolean>|<pageref|auto-452>>
 
-      <tuple|<tuple|mathematical functions>|<pageref|auto-453>>
+      <tuple|<tuple|mathematical functions>|<pageref|auto-455>>
 
-      <tuple|<tuple|text functions>|<pageref|auto-456>>
+      <tuple|<tuple|text functions>|<pageref|auto-458>>
 
-      <tuple|<tuple|conversions>|<pageref|auto-459>>
+      <tuple|<tuple|conversions>|<pageref|auto-461>>
 
-      <tuple|<tuple|type|conversions>|<pageref|auto-460>>
+      <tuple|<tuple|type|conversions>|<pageref|auto-462>>
 
-      <tuple|<tuple|conversion|from text to number>|<pageref|auto-462>>
+      <tuple|<tuple|conversion|from text to number>|<pageref|auto-464>>
 
-      <tuple|<tuple|conversion|from number to text>|<pageref|auto-463>>
+      <tuple|<tuple|conversion|from number to text>|<pageref|auto-465>>
 
-      <tuple|<tuple|date and time>|<pageref|auto-465>>
+      <tuple|<tuple|date and time>|<pageref|auto-467>>
 
-      <tuple|<tuple|tree|operations>|<pageref|auto-468>>
+      <tuple|<tuple|tree|operations>|<pageref|auto-470>>
 
-      <tuple|<tuple|AST|manipulations>|<pageref|auto-469>>
+      <tuple|<tuple|AST|manipulations>|<pageref|auto-471>>
 
-      <tuple|<tuple|left>|<pageref|auto-471>>
+      <tuple|<tuple|left>|<pageref|auto-473>>
 
-      <tuple|<tuple|right>|<pageref|auto-472>>
+      <tuple|<tuple|right>|<pageref|auto-474>>
 
-      <tuple|<tuple|child>|<pageref|auto-473>>
+      <tuple|<tuple|child>|<pageref|auto-475>>
 
-      <tuple|<tuple|symbol>|<pageref|auto-474>>
+      <tuple|<tuple|symbol>|<pageref|auto-476>>
 
-      <tuple|<tuple|opening>|<pageref|auto-475>>
+      <tuple|<tuple|opening>|<pageref|auto-477>>
 
-      <tuple|<tuple|closing>|<pageref|auto-476>>
+      <tuple|<tuple|closing>|<pageref|auto-478>>
 
-      <tuple|<tuple|list operations>|<pageref|auto-478>>
+      <tuple|<tuple|list operations>|<pageref|auto-480>>
 
-      <tuple|<tuple|list|operations on lists>|<pageref|auto-479>>
+      <tuple|<tuple|list|operations on lists>|<pageref|auto-481>>
 
-      <tuple|<tuple|list|comma-separated>|<pageref|auto-480>>
+      <tuple|<tuple|list|comma-separated>|<pageref|auto-482>>
 
-      <tuple|<tuple|map operation>|<pageref|auto-482>>
+      <tuple|<tuple|map operation>|<pageref|auto-484>>
 
-      <tuple|<tuple|reduce operation>|<pageref|auto-483>>
+      <tuple|<tuple|reduce operation>|<pageref|auto-485>>
 
-      <tuple|<tuple|filter operation>|<pageref|auto-484>>
+      <tuple|<tuple|filter operation>|<pageref|auto-486>>
 
-      <tuple|<tuple|predicate>|<pageref|auto-485>>
+      <tuple|<tuple|predicate>|<pageref|auto-487>>
 
-      <tuple|<tuple|range>|<pageref|auto-486>>
+      <tuple|<tuple|range>|<pageref|auto-488>>
 
-      <tuple|<tuple|if-then-else|library definition>|<pageref|auto-489>>
+      <tuple|<tuple|if-then-else|library definition>|<pageref|auto-491>>
 
-      <tuple|<tuple|good (function)>|<pageref|auto-491>>
+      <tuple|<tuple|good (function)>|<pageref|auto-493>>
 
-      <tuple|<tuple|interval arithmetic>|<pageref|auto-507>>
+      <tuple|<tuple|interval arithmetic>|<pageref|auto-509>>
 
-      <tuple|<tuple|module>|<pageref|auto-518>>
+      <tuple|<tuple|module>|<pageref|auto-520>>
 
-      <tuple|<tuple|import>|<pageref|auto-519>>
+      <tuple|<tuple|import>|<pageref|auto-521>>
 
-      <tuple|<tuple|module|import>|<pageref|auto-520>>
+      <tuple|<tuple|module|import>|<pageref|auto-522>>
 
-      <tuple|<tuple|module path>|<pageref|auto-522>>
+      <tuple|<tuple|module path>|<pageref|auto-524>>
 
-      <tuple|<tuple|short module name>|<pageref|auto-523>>
+      <tuple|<tuple|short module name>|<pageref|auto-525>>
 
-      <tuple|<tuple|import|with a short name>|<pageref|auto-524>>
+      <tuple|<tuple|import|with a short name>|<pageref|auto-526>>
 
-      <tuple|<tuple|syntax|in modules>|<pageref|auto-525>>
+      <tuple|<tuple|syntax|in modules>|<pageref|auto-527>>
 
-      <tuple|<tuple|scope|for modules>|<pageref|auto-526>>
+      <tuple|<tuple|scope|for modules>|<pageref|auto-528>>
 
-      <tuple|<tuple|shadowing|in modules>|<pageref|auto-527>>
+      <tuple|<tuple|shadowing|in modules>|<pageref|auto-529>>
 
-      <tuple|<tuple|binding|of module names>|<pageref|auto-528>>
+      <tuple|<tuple|binding|of module names>|<pageref|auto-530>>
 
-      <tuple|<tuple|module description>|<pageref|auto-530>>
+      <tuple|<tuple|module description>|<pageref|auto-532>>
 
-      <tuple|<tuple|module|description>|<pageref|auto-531>>
+      <tuple|<tuple|module|description>|<pageref|auto-533>>
 
       <tuple|<tuple|symbols>|<pageref|auto-90>>
     </associate>
     <\associate|table>
-      <tuple|normal|Type correspondances in a C interface|<pageref|auto-279>>
+      <tuple|normal|Type correspondances in a C interface|<pageref|auto-281>>
 
-      <tuple|normal|Arithmetic operations|<pageref|auto-441>>
+      <tuple|normal|Arithmetic operations|<pageref|auto-443>>
 
-      <tuple|normal|Comparisons|<pageref|auto-444>>
+      <tuple|normal|Comparisons|<pageref|auto-446>>
 
-      <tuple|normal|Bitwise arithmetic operations|<pageref|auto-448>>
+      <tuple|normal|Bitwise arithmetic operations|<pageref|auto-450>>
 
-      <tuple|normal|Boolean operations|<pageref|auto-451>>
+      <tuple|normal|Boolean operations|<pageref|auto-453>>
 
-      <tuple|normal|Mathematical operations|<pageref|auto-454>>
+      <tuple|normal|Mathematical operations|<pageref|auto-456>>
 
-      <tuple|normal|Text operations|<pageref|auto-457>>
+      <tuple|normal|Text operations|<pageref|auto-459>>
 
-      <tuple|normal|Conversions|<pageref|auto-461>>
+      <tuple|normal|Conversions|<pageref|auto-463>>
 
-      <tuple|normal|Date and time|<pageref|auto-466>>
+      <tuple|normal|Date and time|<pageref|auto-468>>
 
-      <tuple|normal|Tree operations|<pageref|auto-470>>
+      <tuple|normal|Tree operations|<pageref|auto-472>>
 
-      <tuple|normal|List operations|<pageref|auto-481>>
+      <tuple|normal|List operations|<pageref|auto-483>>
 
-      <tuple|normal|LLVM operations|<pageref|auto-563>>
+      <tuple|normal|LLVM operations|<pageref|auto-565>>
     </associate>
     <\associate|toc>
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|1<space|2spc>Introduction>
@@ -6945,547 +6950,547 @@
 
       <with|par-left|<quote|1tab>|1.1<space|2spc>Keeping it simple
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-2>>
+      <no-break><pageref|auto-4>>
 
       <with|par-left|<quote|1tab>|1.2<space|2spc>Extending the programming
       language to suit your needs <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-13>>
+      <no-break><pageref|auto-15>>
 
       <with|par-left|<quote|1tab>|1.3<space|2spc>Using Moore's law instead of
       fighting it <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-16>>
+      <no-break><pageref|auto-18>>
 
       <with|par-left|<quote|1tab>|1.4<space|2spc>Examples
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-18>>
+      <no-break><pageref|auto-20>>
 
       <with|par-left|<quote|4tab>|Hello World
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-21><vspace|0.15fn>>
+      <no-break><pageref|auto-23><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Factorial function
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-23><vspace|0.15fn>>
+      <no-break><pageref|auto-25><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Map, reduce, filter
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-25><vspace|0.15fn>>
+      <no-break><pageref|auto-27><vspace|0.15fn>>
 
       <with|par-left|<quote|1tab>|1.5<space|2spc>Concept programming
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-33>>
+      <no-break><pageref|auto-35>>
 
       <with|par-left|<quote|4tab>|From concept to code: a lossy conversion
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-37><vspace|0.15fn>>
+      <no-break><pageref|auto-39><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Pseudo-metrics
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-38><vspace|0.15fn>>
+      <no-break><pageref|auto-40><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Influence on ELFE
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-48><vspace|0.15fn>>
+      <no-break><pageref|auto-50><vspace|0.15fn>>
 
       <with|par-left|<quote|1tab>|1.6<space|2spc>State of the implementation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-49>>
+      <no-break><pageref|auto-51>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|2<space|2spc>Syntax>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-50><vspace|0.5fn>
+      <no-break><pageref|auto-52><vspace|0.5fn>
 
       <with|par-left|<quote|1tab>|2.1<space|2spc>Spaces and indentation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-56>>
+      <no-break><pageref|auto-58>>
 
       <with|par-left|<quote|1tab>|2.2<space|2spc>Comments and spaces
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-62>>
+      <no-break><pageref|auto-64>>
 
       <with|par-left|<quote|1tab>|2.3<space|2spc>Literals
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-65>>
+      <no-break><pageref|auto-67>>
 
       <with|par-left|<quote|2tab>|2.3.1<space|2spc>Integer constants
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-67>>
+      <no-break><pageref|auto-69>>
 
       <with|par-left|<quote|2tab>|2.3.2<space|2spc>Real constants
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-73>>
+      <no-break><pageref|auto-75>>
 
       <with|par-left|<quote|2tab>|2.3.3<space|2spc>Text literals
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-79>>
+      <no-break><pageref|auto-81>>
 
       <with|par-left|<quote|2tab>|2.3.4<space|2spc>Name and operator
-      symbols<flag|index|dark green|key><assign|auto-nr|94><write|idx|<tuple|<tuple|symbols>|<pageref|auto-94>>>
+      symbols<flag|index|dark green|key><assign|auto-nr|96><write|idx|<tuple|<tuple|symbols>|<pageref|auto-96>>>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-94>>
+      <no-break><pageref|auto-96>>
 
       <with|par-left|<quote|1tab>|2.4<space|2spc>Structured nodes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-101>>
+      <no-break><pageref|auto-103>>
 
       <with|par-left|<quote|2tab>|2.4.1<space|2spc>Infix nodes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-108>>
+      <no-break><pageref|auto-110>>
 
       <with|par-left|<quote|2tab>|2.4.2<space|2spc>Prefix and postfix nodes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-110>>
+      <no-break><pageref|auto-112>>
 
       <with|par-left|<quote|2tab>|2.4.3<space|2spc>Block nodes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-117>>
+      <no-break><pageref|auto-119>>
 
       <with|par-left|<quote|1tab>|2.5<space|2spc>Parsing rules
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-120>>
+      <no-break><pageref|auto-122>>
 
       <with|par-left|<quote|2tab>|2.5.1<space|2spc>Precedence
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-126>>
+      <no-break><pageref|auto-128>>
 
       <with|par-left|<quote|2tab>|2.5.2<space|2spc>Associativity
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-130>>
+      <no-break><pageref|auto-132>>
 
       <with|par-left|<quote|2tab>|2.5.3<space|2spc>Infix versus Prefix versus
       Postfix <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-132>>
+      <no-break><pageref|auto-134>>
 
       <with|par-left|<quote|2tab>|2.5.4<space|2spc>Expression versus
       statement <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-139>>
+      <no-break><pageref|auto-141>>
 
       <with|par-left|<quote|1tab>|2.6<space|2spc>Syntax configuration
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-146>>
+      <no-break><pageref|auto-148>>
 
       <with|par-left|<quote|4tab>|Format of syntax configuration
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-156><vspace|0.15fn>>
+      <no-break><pageref|auto-158><vspace|0.15fn>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|3<space|2spc>Language
       semantics> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-168><vspace|0.5fn>
+      <no-break><pageref|auto-170><vspace|0.5fn>
 
       <with|par-left|<quote|1tab>|3.1<space|2spc>Tree rewrite operators
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-172>>
+      <no-break><pageref|auto-174>>
 
       <with|par-left|<quote|2tab>|3.1.1<space|2spc>Rewrite declarations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-194>>
+      <no-break><pageref|auto-196>>
 
       <with|par-left|<quote|2tab>|3.1.2<space|2spc>Data declaration
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-210>>
+      <no-break><pageref|auto-212>>
 
       <with|par-left|<quote|2tab>|3.1.3<space|2spc>Type declaration
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-217>>
+      <no-break><pageref|auto-219>>
 
       <with|par-left|<quote|2tab>|3.1.4<space|2spc>Assignment
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-225>>
+      <no-break><pageref|auto-227>>
 
       <with|par-left|<quote|4tab>|Local variables
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-232><vspace|0.15fn>>
+      <no-break><pageref|auto-234><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Assigning to references
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-241><vspace|0.15fn>>
+      <no-break><pageref|auto-243><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Assigning to parameters
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-244><vspace|0.15fn>>
+      <no-break><pageref|auto-246><vspace|0.15fn>>
 
       <with|par-left|<quote|4tab>|Assignments as expressions
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-247><vspace|0.15fn>>
+      <no-break><pageref|auto-249><vspace|0.15fn>>
 
       <with|par-left|<quote|2tab>|3.1.5<space|2spc>Guards
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-250>>
+      <no-break><pageref|auto-252>>
 
       <with|par-left|<quote|2tab>|3.1.6<space|2spc>Sequences
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-254>>
+      <no-break><pageref|auto-256>>
 
       <with|par-left|<quote|2tab>|3.1.7<space|2spc>Index operators
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-261>>
+      <no-break><pageref|auto-263>>
 
       <with|par-left|<quote|4tab>|Comparison with C
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-270><vspace|0.15fn>>
+      <no-break><pageref|auto-272><vspace|0.15fn>>
 
       <with|par-left|<quote|2tab>|3.1.8<space|2spc>C interface
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-272>>
+      <no-break><pageref|auto-274>>
 
       <with|par-left|<quote|2tab>|3.1.9<space|2spc>Machine Interface
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-280>>
+      <no-break><pageref|auto-282>>
 
       <with|par-left|<quote|1tab>|3.2<space|2spc>Binding References to Values
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-284>>
+      <no-break><pageref|auto-286>>
 
       <with|par-left|<quote|2tab>|3.2.1<space|2spc>Context Order
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-287>>
+      <no-break><pageref|auto-289>>
 
       <with|par-left|<quote|2tab>|3.2.2<space|2spc>Scoping
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-290>>
+      <no-break><pageref|auto-292>>
 
       <with|par-left|<quote|2tab>|3.2.3<space|2spc>Current context
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-298>>
+      <no-break><pageref|auto-300>>
 
       <with|par-left|<quote|2tab>|3.2.4<space|2spc>References
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-303>>
+      <no-break><pageref|auto-305>>
 
       <with|par-left|<quote|1tab>|3.3<space|2spc>Evaluation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-306>>
+      <no-break><pageref|auto-308>>
 
       <with|par-left|<quote|2tab>|3.3.1<space|2spc>Standard evaluation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-308>>
+      <no-break><pageref|auto-310>>
 
       <with|par-left|<quote|2tab>|3.3.2<space|2spc>Special forms
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-319>>
+      <no-break><pageref|auto-321>>
 
       <with|par-left|<quote|2tab>|3.3.3<space|2spc>Lazy evaluation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-322>>
+      <no-break><pageref|auto-324>>
 
       <with|par-left|<quote|2tab>|3.3.4<space|2spc>Explicit evaluation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-328>>
+      <no-break><pageref|auto-330>>
 
       <with|par-left|<quote|2tab>|3.3.5<space|2spc>Memoization
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-331>>
+      <no-break><pageref|auto-333>>
 
       <with|par-left|<quote|1tab>|3.4<space|2spc>Types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-336>>
+      <no-break><pageref|auto-338>>
 
       <with|par-left|<quote|2tab>|3.4.1<space|2spc>Predefined types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-341>>
+      <no-break><pageref|auto-343>>
 
       <with|par-left|<quote|2tab>|3.4.2<space|2spc>Type definition
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-356>>
+      <no-break><pageref|auto-358>>
 
       <with|par-left|<quote|2tab>|3.4.3<space|2spc>Normal form for a type
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-374>>
+      <no-break><pageref|auto-376>>
 
       <with|par-left|<quote|2tab>|3.4.4<space|2spc>Properties
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-381>>
+      <no-break><pageref|auto-383>>
 
       <with|par-left|<quote|2tab>|3.4.5<space|2spc>Data inheritance
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-402>>
+      <no-break><pageref|auto-404>>
 
       <with|par-left|<quote|2tab>|3.4.6<space|2spc>Explicit type check
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-407>>
+      <no-break><pageref|auto-409>>
 
       <with|par-left|<quote|2tab>|3.4.7<space|2spc>Explicit and automatic
       type conversions <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-417>>
+      <no-break><pageref|auto-419>>
 
       <with|par-left|<quote|2tab>|3.4.8<space|2spc>Parameterized types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-423>>
+      <no-break><pageref|auto-425>>
 
       <with|par-left|<quote|2tab>|3.4.9<space|2spc>Rewrite types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-428>>
+      <no-break><pageref|auto-430>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|4<space|2spc>Standard
       ELFE library> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-432><vspace|0.5fn>
+      <no-break><pageref|auto-434><vspace|0.5fn>
 
       <with|par-left|<quote|1tab>|4.1<space|2spc>Built-in operations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-434>>
+      <no-break><pageref|auto-436>>
 
       <with|par-left|<quote|2tab>|4.1.1<space|2spc>Arithmetic
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-438>>
+      <no-break><pageref|auto-440>>
 
       <with|par-left|<quote|2tab>|4.1.2<space|2spc>Comparison
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-442>>
+      <no-break><pageref|auto-444>>
 
       <with|par-left|<quote|2tab>|4.1.3<space|2spc>Bitwise arithmetic
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-445>>
+      <no-break><pageref|auto-447>>
 
       <with|par-left|<quote|2tab>|4.1.4<space|2spc>Boolean operations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-449>>
+      <no-break><pageref|auto-451>>
 
       <with|par-left|<quote|2tab>|4.1.5<space|2spc>Mathematical functions
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-452>>
+      <no-break><pageref|auto-454>>
 
       <with|par-left|<quote|2tab>|4.1.6<space|2spc>Text functions
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-455>>
+      <no-break><pageref|auto-457>>
 
       <with|par-left|<quote|2tab>|4.1.7<space|2spc>Conversions
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-458>>
+      <no-break><pageref|auto-460>>
 
       <with|par-left|<quote|2tab>|4.1.8<space|2spc>Date and time
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-464>>
+      <no-break><pageref|auto-466>>
 
       <with|par-left|<quote|2tab>|4.1.9<space|2spc>Tree operations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-467>>
+      <no-break><pageref|auto-469>>
 
       <with|par-left|<quote|2tab>|4.1.10<space|2spc>List operations, map,
       reduce and filter <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-477>>
+      <no-break><pageref|auto-479>>
 
       <with|par-left|<quote|1tab>|4.2<space|2spc>Control structures
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-487>>
+      <no-break><pageref|auto-489>>
 
       <with|par-left|<quote|2tab>|4.2.1<space|2spc>Tests
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-488>>
+      <no-break><pageref|auto-490>>
 
       <with|par-left|<quote|2tab>|4.2.2<space|2spc>Infinite Loops
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-493>>
+      <no-break><pageref|auto-495>>
 
       <with|par-left|<quote|2tab>|4.2.3<space|2spc>Conditional Loops
       (<with|font-family|<quote|tt>|language|<quote|verbatim>|while> and
       <with|font-family|<quote|tt>|language|<quote|verbatim>|until> loops)
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-495>>
+      <no-break><pageref|auto-497>>
 
       <with|par-left|<quote|2tab>|4.2.4<space|2spc>Controlled Loops
       (<with|font-family|<quote|tt>|language|<quote|verbatim>|for> loops)
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-498>>
+      <no-break><pageref|auto-500>>
 
       <with|par-left|<quote|2tab>|4.2.5<space|2spc>Excursions<with|font-series|<quote|bold>|math-font-series|<quote|bold>|>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-502>>
+      <no-break><pageref|auto-504>>
 
       <with|par-left|<quote|2tab>|4.2.6<space|2spc>Error handling
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-503>>
+      <no-break><pageref|auto-505>>
 
       <with|par-left|<quote|1tab>|4.3<space|2spc>Library-defined types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-504>>
+      <no-break><pageref|auto-506>>
 
       <with|par-left|<quote|2tab>|4.3.1<space|2spc>Range and range types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-505>>
+      <no-break><pageref|auto-507>>
 
       <with|par-left|<quote|2tab>|4.3.2<space|2spc>Union types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-509>>
+      <no-break><pageref|auto-511>>
 
       <with|par-left|<quote|2tab>|4.3.3<space|2spc>Enumeration types
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-512>>
+      <no-break><pageref|auto-514>>
 
       <with|par-left|<quote|2tab>|4.3.4<space|2spc>A type matching type
       declarations <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-514>>
+      <no-break><pageref|auto-516>>
 
       <with|par-left|<quote|1tab>|4.4<space|2spc>Modules
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-516>>
+      <no-break><pageref|auto-518>>
 
       <with|par-left|<quote|2tab>|4.4.1<space|2spc>Import statement
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-517>>
+      <no-break><pageref|auto-519>>
 
       <with|par-left|<quote|2tab>|4.4.2<space|2spc>Declaring a module
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-529>>
+      <no-break><pageref|auto-531>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|5<space|2spc>Example
       code> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-533><vspace|0.5fn>
+      <no-break><pageref|auto-535><vspace|0.5fn>
 
       <with|par-left|<quote|1tab>|5.1<space|2spc>Minimum and maximum
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-534>>
+      <no-break><pageref|auto-536>>
 
       <with|par-left|<quote|1tab>|5.2<space|2spc>Complex numbers
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-536>>
+      <no-break><pageref|auto-538>>
 
       <with|par-left|<quote|1tab>|5.3<space|2spc>Vector and Matrix
       computations <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-537>>
+      <no-break><pageref|auto-539>>
 
       <with|par-left|<quote|1tab>|5.4<space|2spc>Linked lists with dynamic
       allocation <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-538>>
+      <no-break><pageref|auto-540>>
 
       <with|par-left|<quote|1tab>|5.5<space|2spc>Input / Output
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-539>>
+      <no-break><pageref|auto-541>>
 
       <with|par-left|<quote|1tab>|5.6<space|2spc>Object-Oriented Programming
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-540>>
+      <no-break><pageref|auto-542>>
 
       <with|par-left|<quote|2tab>|5.6.1<space|2spc>Classes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-541>>
+      <no-break><pageref|auto-543>>
 
       <with|par-left|<quote|2tab>|5.6.2<space|2spc>Methods
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-542>>
+      <no-break><pageref|auto-544>>
 
       <with|par-left|<quote|2tab>|5.6.3<space|2spc>Dynamic dispatch
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-543>>
+      <no-break><pageref|auto-545>>
 
       <with|par-left|<quote|2tab>|5.6.4<space|2spc>Polymorphism
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-544>>
+      <no-break><pageref|auto-546>>
 
       <with|par-left|<quote|2tab>|5.6.5<space|2spc>Inheritance
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-545>>
+      <no-break><pageref|auto-547>>
 
       <with|par-left|<quote|2tab>|5.6.6<space|2spc>Multi-methods
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-546>>
+      <no-break><pageref|auto-548>>
 
       <with|par-left|<quote|2tab>|5.6.7<space|2spc>Object prototypes
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-547>>
+      <no-break><pageref|auto-549>>
 
       <with|par-left|<quote|1tab>|5.7<space|2spc>Functional-Programming
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-548>>
+      <no-break><pageref|auto-550>>
 
       <with|par-left|<quote|2tab>|5.7.1<space|2spc>Map
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-549>>
+      <no-break><pageref|auto-551>>
 
       <with|par-left|<quote|2tab>|5.7.2<space|2spc>Reduce
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-550>>
+      <no-break><pageref|auto-552>>
 
       <with|par-left|<quote|2tab>|5.7.3<space|2spc>Filter
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-551>>
+      <no-break><pageref|auto-553>>
 
       <with|par-left|<quote|2tab>|5.7.4<space|2spc>Functions as first-class
       objects <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-552>>
+      <no-break><pageref|auto-554>>
 
       <with|par-left|<quote|2tab>|5.7.5<space|2spc>Anonymous functions
       (Lambda) <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-553>>
+      <no-break><pageref|auto-555>>
 
       <with|par-left|<quote|2tab>|5.7.6<space|2spc>Y-Combinator
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-554>>
+      <no-break><pageref|auto-556>>
 
       <with|par-left|<quote|2tab>|5.7.7<space|2spc>Infinite data structures
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-555>>
+      <no-break><pageref|auto-557>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|6<space|2spc>Implementation
       notes> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-557><vspace|0.5fn>
+      <no-break><pageref|auto-559><vspace|0.5fn>
 
       <with|par-left|<quote|1tab>|6.1<space|2spc>Lazy evaluation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-558>>
+      <no-break><pageref|auto-560>>
 
       <with|par-left|<quote|1tab>|6.2<space|2spc>Type inference
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-559>>
+      <no-break><pageref|auto-561>>
 
       <with|par-left|<quote|1tab>|6.3<space|2spc>Built-in operations
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-560>>
+      <no-break><pageref|auto-562>>
 
       <with|par-left|<quote|1tab>|6.4<space|2spc>Controlled compilation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-561>>
+      <no-break><pageref|auto-563>>
 
       <with|par-left|<quote|1tab>|6.5<space|2spc>Tree representation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-564>>
+      <no-break><pageref|auto-566>>
 
       <with|par-left|<quote|1tab>|6.6<space|2spc>Evaluation of trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-565>>
+      <no-break><pageref|auto-567>>
 
       <with|par-left|<quote|1tab>|6.7<space|2spc>Tree position
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-566>>
+      <no-break><pageref|auto-568>>
 
       <with|par-left|<quote|1tab>|6.8<space|2spc>Actions on trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-567>>
+      <no-break><pageref|auto-569>>
 
       <with|par-left|<quote|1tab>|6.9<space|2spc>Symbols
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-568>>
+      <no-break><pageref|auto-570>>
 
       <with|par-left|<quote|1tab>|6.10<space|2spc>Evaluating trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-569>>
+      <no-break><pageref|auto-571>>
 
       <with|par-left|<quote|1tab>|6.11<space|2spc>Code generation for trees
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-570>>
+      <no-break><pageref|auto-572>>
 
       <with|par-left|<quote|2tab>|6.11.1<space|2spc>Right side of a rewrite
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-572>>
+      <no-break><pageref|auto-574>>
 
       <with|par-left|<quote|2tab>|6.11.2<space|2spc>Closures
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-573>>
+      <no-break><pageref|auto-575>>
 
       <with|par-left|<quote|1tab>|6.12<space|2spc>Tail recursion
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-575>>
+      <no-break><pageref|auto-577>>
 
       <with|par-left|<quote|1tab>|6.13<space|2spc>Partial recompilation
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-576>>
+      <no-break><pageref|auto-578>>
 
       <with|par-left|<quote|1tab>|6.14<space|2spc>Machine Interface
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-577>>
+      <no-break><pageref|auto-579>>
 
       <with|par-left|<quote|1tab>|6.15<space|2spc>Machine Types and Normal
       Types <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-578>>
+      <no-break><pageref|auto-580>>
 
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|Index>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
