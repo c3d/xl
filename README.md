@@ -8,7 +8,9 @@ While ELFE is a general-purpose programming language, it is designed
 to facilitate the configuration and control of swarms of small devices
 such as sensors or actuators. It can also be used as a powerful,
 remotely-accessible extension language for larger applications.
-The examples below will focus on this paritcular domain.
+The examples below will focus on this particular domain. For more
+information about the language, please read the [reference manual]
+(https://github.com/c3d/elfe/blob/master/doc/ELFE_Reference_Manual.pdf)
 
 ELFE used to be called ELIoT (Extensible Language for the Internet of Things),
 but Legrand complained about it, having a trademark on the name.
