@@ -21,10 +21,41 @@
   <\itemize>
     <item>It is <with|font-shape|italic|extensible>. One of the defining
     characteristics of ELFE is that you add new language constructs as easily
-    as classes or functions in other programming languages.
+    as classes or functions in other programming languages. For example, the
+    <verbatim|if>-<verbatim|then>-<verbatim|else> construct is specified in
+    the ELFE core library using a definition similar to what is shown in
+    Figure<nbsp><reference|first-if-then-else> below:
+
+    <\big-figure>
+      <\code>
+        if true \ then X else Y -\<gtr\> X
+
+        if false then X else Y -\<gtr\> Y
+      </code>
+    </big-figure|<label|first-if-then-else>Adding the if-then-else construct
+    to ELSE>
 
     <item>ELFE is intended for <with|font-shape|italic|everyday programming>,
-    making simple, everyday things easy to write, express and comprehend.
+    making simple, everyday things easy to write, express and comprehend. For
+    example, in ELFE, using the definition from
+    Figure<nbsp><reference|first-if-then-else> you can write a condition as
+    shown in Figure<nbsp><reference|first-simple-test> below:
+
+    <\big-figure>
+      <\code>
+        if BankAccount \<less\> 0 then
+
+        \ \ \ \ writeln "Warning shots fired"
+
+        else
+
+        \ \ \ \ writeln "Round of cakes and applause"
+      </code>
+
+      <\code>
+        \;
+      </code>
+    </big-figure|<label|first-simple-test>A simple test in ELFE>
   </itemize>
 
   To achieve the highest degree of extensibility, ELFE builds on
@@ -5247,293 +5278,293 @@
 <\references>
   <\collection>
     <associate|Binding|<tuple|3.5|?>>
-    <associate|C-interface|<tuple|37|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|C-interface|<tuple|39|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|C-library|<tuple|4.4|27>>
-    <associate|C-syntax-file|<tuple|15|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|C-syntax-file|<tuple|17|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|C-types-conversion|<tuple|1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|arbitrary-type|<tuple|54|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|arbitrary-type|<tuple|56|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|arithmetic|<tuple|2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|array-assign|<tuple|22|?>>
-    <associate|assign-to-new-local|<tuple|31|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|assign-to-parameter|<tuple|33|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|assign-to-new-local|<tuple|6.15|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|assign-to-parameter|<tuple|35|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|assign-to-reference|<tuple|6.15|?>>
-    <associate|assign-to-reference-example|<tuple|32|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|assign-to-reference-example|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|assignment|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|assignments-cant-override-patterns|<tuple|24|14>>
     <associate|auto-1|<tuple|1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-10|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-100|<tuple|12|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-101|<tuple|2.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-102|<tuple|2.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-103|<tuple|1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-104|<tuple|2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-105|<tuple|3|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-106|<tuple|4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-107|<tuple|4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-108|<tuple|2.4.1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-109|<tuple|2.4.1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-100|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-101|<tuple|6|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-102|<tuple|14|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-103|<tuple|2.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-104|<tuple|2.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-105|<tuple|1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-106|<tuple|2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-107|<tuple|3|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-108|<tuple|4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-109|<tuple|4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-11|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-110|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-111|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-110|<tuple|2.4.1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-111|<tuple|2.4.1|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-112|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-113|<tuple|2.4.2|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-114|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-115|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-116|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-117|<tuple|2.4.3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-118|<tuple|2.4.3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-117|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-118|<tuple|2.4.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-119|<tuple|2.4.3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-12|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-120|<tuple|2.5|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-121|<tuple|2.5|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-122|<tuple|1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-123|<tuple|2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-124|<tuple|3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-125|<tuple|4|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-126|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-127|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-120|<tuple|2.4.3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-121|<tuple|2.4.3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-122|<tuple|2.5|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-123|<tuple|2.5|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-124|<tuple|1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-125|<tuple|2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-126|<tuple|3|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-127|<tuple|4|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-128|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-129|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-13|<tuple|1.2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-130|<tuple|2.5.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-131|<tuple|2.5.2|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-132|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-133|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-13|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-130|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-131|<tuple|2.5.1|10|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-132|<tuple|2.5.2|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-133|<tuple|2.5.2|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-134|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-135|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-136|<tuple|<with|mode|<quote|math>|\<bullet\>>|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-137|<tuple|<with|mode|<quote|math>|\<bullet\>>|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-136|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-137|<tuple|2.5.3|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-138|<tuple|<with|mode|<quote|math>|\<bullet\>>|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-139|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-14|<tuple|1.2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-140|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-139|<tuple|<with|mode|<quote|math>|\<bullet\>>|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-14|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-140|<tuple|<with|mode|<quote|math>|\<bullet\>>|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-141|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-142|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-143|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-144|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-145|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-146|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-147|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-146|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-147|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-148|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-149|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-15|<tuple|1.2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-150|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-151|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-152|<tuple|13|12|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-153|<tuple|13|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-154|<tuple|14|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-155|<tuple|14|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-156|<tuple|2.6.0.1|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-157|<tuple|2.6.0.1|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-158|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-159|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-16|<tuple|1.3|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-152|<tuple|2.6|12|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-153|<tuple|2.6|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-154|<tuple|15|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-155|<tuple|15|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-156|<tuple|16|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-157|<tuple|16|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-158|<tuple|2.6.0.1|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-159|<tuple|2.6.0.1|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-16|<tuple|1.2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-160|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-161|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-161|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-162|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-163|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-164|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-164|<tuple|<with|mode|<quote|math>|<rigid|\<circ\>>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-165|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-166|<tuple|<with|mode|<quote|math>|\<bullet\>>|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-167|<tuple|15|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-168|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-169|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-17|<tuple|1.3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-167|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-168|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-169|<tuple|17|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-17|<tuple|1.2|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-170|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-171|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-172|<tuple|3.1|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-173|<tuple|3.1|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-172|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-173|<tuple|3|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-174|<tuple|3.1|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-175|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-176|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-175|<tuple|3.1|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-176|<tuple|3.1|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-177|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-178|<tuple|16|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-178|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-179|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-18|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-180|<tuple|17|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-18|<tuple|1.3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-180|<tuple|18|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-181|<tuple|<with|mode|<quote|math>|\<bullet\>>|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-182|<tuple|18|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-182|<tuple|19|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-183|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-184|<tuple|19|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-184|<tuple|20|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-185|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-186|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-187|<tuple|20|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-186|<tuple|21|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-187|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-188|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-189|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-19|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-189|<tuple|22|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-19|<tuple|1.3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-190|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-191|<tuple|21|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-191|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-192|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-193|<tuple|22|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-194|<tuple|3.1.1|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-195|<tuple|3.1.1|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-193|<tuple|23|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-194|<tuple|<with|mode|<quote|math>|\<bullet\>>|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-195|<tuple|24|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-196|<tuple|3.1.1|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-197|<tuple|3.1.1|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-198|<tuple|23|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-199|<tuple|23|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-2|<tuple|1.1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-198|<tuple|3.1.1|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-199|<tuple|3.1.1|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-2|<tuple|1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-20|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-200|<tuple|23|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-201|<tuple|23|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-202|<tuple|24|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-203|<tuple|24|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-204|<tuple|24|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-205|<tuple|24|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-206|<tuple|24|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-207|<tuple|8|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-208|<tuple|8|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-209|<tuple|25|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-21|<tuple|1|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-210|<tuple|3.1.2|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-211|<tuple|3.1.2|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-200|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-201|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-202|<tuple|25|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-203|<tuple|25|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-204|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-205|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-206|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-207|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-208|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-209|<tuple|8|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-21|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-210|<tuple|8|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-211|<tuple|27|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-212|<tuple|3.1.2|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-213|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-214|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-215|<tuple|27|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-216|<tuple|27|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-217|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-218|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-219|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-22|<tuple|1|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-220|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-221|<tuple|28|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-222|<tuple|28|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-223|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-224|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-225|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-226|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-213|<tuple|3.1.2|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-214|<tuple|3.1.2|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-215|<tuple|28|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-216|<tuple|28|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-217|<tuple|29|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-218|<tuple|29|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-219|<tuple|3.1.3|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-22|<tuple|1.4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-220|<tuple|3.1.3|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-221|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-222|<tuple|3.1.3|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-223|<tuple|30|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-224|<tuple|30|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-225|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-226|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-227|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-228|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-229|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-23|<tuple|2|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-230|<tuple|29|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-231|<tuple|30|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-232|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-233|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-23|<tuple|1|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-230|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-231|<tuple|3.1.4|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-232|<tuple|31|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-233|<tuple|32|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-234|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-235|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-236|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-237|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-238|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-239|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-24|<tuple|2|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-240|<tuple|31|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-241|<tuple|3.1.4.2|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-242|<tuple|32|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-243|<tuple|32|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-244|<tuple|3.1.4.3|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-245|<tuple|3.1.4.3|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-246|<tuple|33|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-247|<tuple|3.1.4.4|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-248|<tuple|3.1.4.4|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-24|<tuple|3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-240|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-241|<tuple|3.1.4.1|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-242|<tuple|33|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-243|<tuple|3.1.4.2|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-244|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-245|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-246|<tuple|3.1.4.3|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-247|<tuple|3.1.4.3|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-248|<tuple|35|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-249|<tuple|3.1.4.4|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-25|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-250|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-251|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-25|<tuple|2|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-250|<tuple|3.1.4.4|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-251|<tuple|3.1.4.4|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-252|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-253|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-254|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-255|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-253|<tuple|3.1.5|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-254|<tuple|3.1.5|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-255|<tuple|36|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-256|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-257|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-258|<tuple|35|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-259|<tuple|35|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-26|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-260|<tuple|35|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-261|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-262|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-258|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-259|<tuple|3.1.6|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-26|<tuple|4|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-260|<tuple|37|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-261|<tuple|37|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-262|<tuple|37|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-263|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-264|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-265|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-266|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-267|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-268|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-269|<tuple|36|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-269|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-27|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-270|<tuple|3.1.7.1|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-271|<tuple|<with|mode|<quote|math>|\<bullet\>>|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-272|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-273|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-270|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-271|<tuple|38|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-272|<tuple|3.1.7.1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-273|<tuple|<with|mode|<quote|math>|\<bullet\>>|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-274|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-275|<tuple|37|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-276|<tuple|37|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-277|<tuple|37|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-278|<tuple|37|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-279|<tuple|1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-275|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-276|<tuple|3.1.8|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-277|<tuple|39|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-278|<tuple|39|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-279|<tuple|39|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-28|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-280|<tuple|3.1.9|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-281|<tuple|3.1.9|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-280|<tuple|39|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-281|<tuple|1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-282|<tuple|3.1.9|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-283|<tuple|38|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-284|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-285|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-283|<tuple|3.1.9|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-284|<tuple|3.1.9|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-285|<tuple|40|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-286|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-287|<tuple|3.2.1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-288|<tuple|3.2.1|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-287|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-288|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-289|<tuple|3.2.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-29|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-290|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-291|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-290|<tuple|3.2.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-291|<tuple|3.2.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-292|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-293|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-294|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-295|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-296|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-297|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-298|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-299|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-3|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-298|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-299|<tuple|3.2.2|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-3|<tuple|2|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-30|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-300|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-301|<tuple|1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-302|<tuple|3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-303|<tuple|3.2.4|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-304|<tuple|3.2.4|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-301|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-302|<tuple|3.2.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-303|<tuple|1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-304|<tuple|3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-305|<tuple|3.2.4|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-306|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-307|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-308|<tuple|3.3.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-309|<tuple|3.3.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-306|<tuple|3.2.4|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-307|<tuple|3.2.4|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-308|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-309|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-31|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-310|<tuple|2|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-311|<tuple|3|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-312|<tuple|<with|mode|<quote|math>|\<bullet\>>|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-313|<tuple|<with|mode|<quote|math>|\<bullet\>>|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-314|<tuple|4|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-315|<tuple|5|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-316|<tuple|<with|mode|<quote|math>|\<bullet\>>|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-317|<tuple|<with|mode|<quote|math>|\<bullet\>>|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-318|<tuple|6|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-319|<tuple|3.3.2|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-32|<tuple|4|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-320|<tuple|3.3.2|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-310|<tuple|3.3.1|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-311|<tuple|3.3.1|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-312|<tuple|2|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-313|<tuple|3|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-314|<tuple|<with|mode|<quote|math>|\<bullet\>>|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-315|<tuple|<with|mode|<quote|math>|\<bullet\>>|22|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-316|<tuple|4|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-317|<tuple|5|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-318|<tuple|<with|mode|<quote|math>|\<bullet\>>|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-319|<tuple|<with|mode|<quote|math>|\<bullet\>>|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-32|<tuple|5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-320|<tuple|6|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-321|<tuple|3.3.2|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-322|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-323|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-322|<tuple|3.3.2|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-323|<tuple|3.3.2|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-324|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-325|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-326|<tuple|39|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-327|<tuple|40|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-328|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-329|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-33|<tuple|1.5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-326|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-327|<tuple|3.3.3|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-328|<tuple|41|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-329|<tuple|42|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-33|<tuple|5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-330|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-331|<tuple|3.3.5|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-332|<tuple|3.3.5|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-333|<tuple|41|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-334|<tuple|41|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-335|<tuple|5|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-336|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-337|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-331|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-332|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-333|<tuple|3.3.5|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-334|<tuple|3.3.5|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-335|<tuple|43|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-336|<tuple|43|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-337|<tuple|5|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-338|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-339|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-34|<tuple|1.5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-34|<tuple|6|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-340|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-341|<tuple|3.4.1|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-342|<tuple|3.4.1|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-341|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-342|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-343|<tuple|3.4.1|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-344|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-345|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-344|<tuple|3.4.1|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-345|<tuple|3.4.1|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-346|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-347|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-348|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5545,279 +5576,281 @@
     <associate|auto-353|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-354|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-355|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-356|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-357|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-356|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-357|<tuple|<with|mode|<quote|math>|\<bullet\>>|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-358|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-359|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-36|<tuple|1.5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-360|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-361|<tuple|42|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-362|<tuple|42|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-363|<tuple|42|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-364|<tuple|42|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-365|<tuple|43|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-366|<tuple|43|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-367|<tuple|43|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-368|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-369|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-37|<tuple|4|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-370|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-371|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-372|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-361|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-362|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-363|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-364|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-365|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-366|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-367|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-368|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-369|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-37|<tuple|1.5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-370|<tuple|46|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-371|<tuple|46|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-372|<tuple|46|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-373|<tuple|46|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-374|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-375|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-374|<tuple|47|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-375|<tuple|48|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-376|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-377|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-378|<tuple|47|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-379|<tuple|47|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-38|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-380|<tuple|48|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-381|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-382|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-378|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-379|<tuple|3.4.3|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-38|<tuple|1.5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-380|<tuple|49|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-381|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-382|<tuple|50|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-383|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-384|<tuple|2|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-385|<tuple|3|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-386|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-387|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-388|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-389|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-39|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-390|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-391|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-392|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-393|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-394|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-395|<tuple|50|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-396|<tuple|50|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-397|<tuple|50|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-398|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-399|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-384|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-385|<tuple|3.4.4|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-386|<tuple|2|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-387|<tuple|3|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-388|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-389|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-39|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-390|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-391|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-392|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-393|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-394|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-395|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-396|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-397|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-398|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-399|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-4|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-40|<tuple|1|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-400|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-401|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-402|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-403|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-40|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-400|<tuple|53|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-401|<tuple|53|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-402|<tuple|53|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-403|<tuple|54|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-404|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-405|<tuple|53|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-406|<tuple|53|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-407|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-408|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-405|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-406|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-407|<tuple|55|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-408|<tuple|55|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-409|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-41|<tuple|2|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-41|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-410|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-411|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-412|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-413|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-414|<tuple|54|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-415|<tuple|54|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-416|<tuple|55|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-417|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-418|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-414|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-415|<tuple|3.4.6|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-416|<tuple|56|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-417|<tuple|56|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-418|<tuple|57|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-419|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-42|<tuple|3|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-420|<tuple|56|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-421|<tuple|56|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-422|<tuple|57|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-423|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-424|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-42|<tuple|1|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-420|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-421|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-422|<tuple|58|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-423|<tuple|58|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-424|<tuple|59|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-425|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-426|<tuple|58|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-427|<tuple|59|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-428|<tuple|3.4.9|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-429|<tuple|3.4.9|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-43|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-426|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-427|<tuple|3.4.8|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-428|<tuple|60|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-429|<tuple|61|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-43|<tuple|2|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-430|<tuple|3.4.9|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-431|<tuple|60|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-432|<tuple|4|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-433|<tuple|4|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-434|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-435|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-431|<tuple|3.4.9|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-432|<tuple|3.4.9|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-433|<tuple|62|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-434|<tuple|4|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-435|<tuple|4|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-436|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-437|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-438|<tuple|4.1.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-439|<tuple|4.1.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-44|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-438|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-439|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-44|<tuple|3|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-440|<tuple|4.1.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-441|<tuple|2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-442|<tuple|4.1.2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-443|<tuple|4.1.2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-444|<tuple|3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-445|<tuple|4.1.3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-446|<tuple|4.1.3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-441|<tuple|4.1.1|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-442|<tuple|4.1.1|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-443|<tuple|2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-444|<tuple|4.1.2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-445|<tuple|4.1.2|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-446|<tuple|3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-447|<tuple|4.1.3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-448|<tuple|4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-449|<tuple|4.1.4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-45|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-450|<tuple|4.1.4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-451|<tuple|5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-452|<tuple|4.1.5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-453|<tuple|4.1.5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-454|<tuple|6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-455|<tuple|4.1.6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-456|<tuple|4.1.6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-457|<tuple|7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-458|<tuple|4.1.7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-459|<tuple|4.1.7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-448|<tuple|4.1.3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-449|<tuple|4.1.3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-45|<tuple|7|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-450|<tuple|4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-451|<tuple|4.1.4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-452|<tuple|4.1.4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-453|<tuple|5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-454|<tuple|4.1.5|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-455|<tuple|4.1.5|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-456|<tuple|6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-457|<tuple|4.1.6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-458|<tuple|4.1.6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-459|<tuple|7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-46|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-460|<tuple|4.1.7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-461|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-462|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-461|<tuple|4.1.7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-462|<tuple|4.1.7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-463|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-464|<tuple|4.1.8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-465|<tuple|4.1.8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-466|<tuple|9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-467|<tuple|4.1.9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-468|<tuple|4.1.9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-464|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-465|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-466|<tuple|4.1.8|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-467|<tuple|4.1.8|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-468|<tuple|9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-469|<tuple|4.1.9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-47|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-470|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-471|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-470|<tuple|4.1.9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-471|<tuple|4.1.9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-472|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-473|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-474|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-475|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-476|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-477|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-478|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-477|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-478|<tuple|10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-479|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-48|<tuple|6|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-48|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-480|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-481|<tuple|11|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-482|<tuple|11|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-481|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-482|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-483|<tuple|11|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-484|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-485|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-486|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-487|<tuple|4.2|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-488|<tuple|4.2.1|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-489|<tuple|4.2.1|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-49|<tuple|1.6|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-490|<tuple|61|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-491|<tuple|61|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-492|<tuple|62|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-493|<tuple|4.2.2|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-494|<tuple|63|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-495|<tuple|4.2.3|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-496|<tuple|64|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-497|<tuple|65|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-498|<tuple|4.2.4|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-499|<tuple|66|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-487|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-488|<tuple|11|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-489|<tuple|4.2|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-49|<tuple|4|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-490|<tuple|4.2.1|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-491|<tuple|4.2.1|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-492|<tuple|63|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-493|<tuple|63|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-494|<tuple|64|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-495|<tuple|4.2.2|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-496|<tuple|65|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-497|<tuple|4.2.3|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-498|<tuple|66|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-499|<tuple|67|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-5|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-50|<tuple|2|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-500|<tuple|67|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-50|<tuple|6|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-500|<tuple|4.2.4|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-501|<tuple|68|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-502|<tuple|4.2.5|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-503|<tuple|4.2.6|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-504|<tuple|4.3|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-505|<tuple|4.3.1|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-506|<tuple|69|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-507|<tuple|69|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-508|<tuple|70|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-509|<tuple|4.3.2|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-51|<tuple|2|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-510|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-511|<tuple|72|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-512|<tuple|4.3.3|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-513|<tuple|73|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-514|<tuple|4.3.4|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-515|<tuple|74|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-516|<tuple|4.4|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-517|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-518|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-502|<tuple|69|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-503|<tuple|70|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-504|<tuple|4.2.5|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-505|<tuple|4.2.6|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-506|<tuple|4.3|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-507|<tuple|4.3.1|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-508|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-509|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-51|<tuple|1.6|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-510|<tuple|72|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-511|<tuple|4.3.2|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-512|<tuple|73|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-513|<tuple|74|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-514|<tuple|4.3.3|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-515|<tuple|75|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-516|<tuple|4.3.4|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-517|<tuple|76|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-518|<tuple|4.4|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-519|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-52|<tuple|2|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-520|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-521|<tuple|75|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-522|<tuple|<with|mode|<quote|math>|\<bullet\>>|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-523|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-521|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-522|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-523|<tuple|77|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-524|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-525|<tuple|1|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-526|<tuple|2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-527|<tuple|3|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-528|<tuple|4|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-529|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-53|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-530|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-525|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-526|<tuple|<with|mode|<quote|math>|\<bullet\>>|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-527|<tuple|1|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-528|<tuple|2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-529|<tuple|3|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-53|<tuple|2|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-530|<tuple|4|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-531|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-532|<tuple|76|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-533|<tuple|5|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-534|<tuple|5.1|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-535|<tuple|77|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-536|<tuple|5.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-537|<tuple|5.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-538|<tuple|5.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-539|<tuple|5.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-54|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-540|<tuple|5.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-541|<tuple|5.6.1|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-542|<tuple|5.6.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-543|<tuple|5.6.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-544|<tuple|5.6.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-545|<tuple|5.6.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-546|<tuple|5.6.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-547|<tuple|5.6.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-548|<tuple|5.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-549|<tuple|5.7.1|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-532|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-533|<tuple|4.4.2|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-534|<tuple|78|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-535|<tuple|5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-536|<tuple|5.1|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-537|<tuple|79|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-538|<tuple|5.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-539|<tuple|5.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-54|<tuple|2|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-540|<tuple|5.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-541|<tuple|5.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-542|<tuple|5.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-543|<tuple|5.6.1|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-544|<tuple|5.6.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-545|<tuple|5.6.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-546|<tuple|5.6.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-547|<tuple|5.6.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-548|<tuple|5.6.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-549|<tuple|5.6.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-55|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-550|<tuple|5.7.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-551|<tuple|5.7.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-552|<tuple|5.7.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-553|<tuple|5.7.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-554|<tuple|5.7.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-555|<tuple|5.7.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-556|<tuple|78|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-557|<tuple|6|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-558|<tuple|6.1|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-559|<tuple|6.2|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-56|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-560|<tuple|6.3|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-561|<tuple|6.4|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-562|<tuple|79|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-563|<tuple|12|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-564|<tuple|6.5|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-565|<tuple|6.6|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-566|<tuple|6.7|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-567|<tuple|6.8|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-568|<tuple|6.9|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-569|<tuple|6.10|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-57|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-570|<tuple|6.11|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-571|<tuple|80|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-572|<tuple|6.11.1|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-573|<tuple|6.11.2|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-574|<tuple|81|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-575|<tuple|6.12|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-576|<tuple|6.13|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-577|<tuple|6.14|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-578|<tuple|6.15|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-550|<tuple|5.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-551|<tuple|5.7.1|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-552|<tuple|5.7.2|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-553|<tuple|5.7.3|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-554|<tuple|5.7.4|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-555|<tuple|5.7.5|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-556|<tuple|5.7.6|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-557|<tuple|5.7.7|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-558|<tuple|80|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-559|<tuple|6|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-56|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-560|<tuple|6.1|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-561|<tuple|6.2|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-562|<tuple|6.3|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-563|<tuple|6.4|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-564|<tuple|81|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-565|<tuple|12|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-566|<tuple|6.5|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-567|<tuple|6.6|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-568|<tuple|6.7|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-569|<tuple|6.8|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-57|<tuple|<with|mode|<quote|math>|\<bullet\>>|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-570|<tuple|6.9|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-571|<tuple|6.10|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-572|<tuple|6.11|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-573|<tuple|82|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-574|<tuple|6.11.1|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-575|<tuple|6.11.2|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-576|<tuple|83|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-577|<tuple|6.12|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-578|<tuple|6.13|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-579|<tuple|6.14|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-58|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-580|<tuple|6.15|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-59|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-6|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-60|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-61|<tuple|6|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-62|<tuple|2.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-63|<tuple|2.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-64|<tuple|7|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-65|<tuple|2.3|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-66|<tuple|2.3|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-67|<tuple|2.3.1|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-68|<tuple|2.3.1|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-69|<tuple|4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-61|<tuple|2.1|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-62|<tuple|2.1|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-63|<tuple|8|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-64|<tuple|2.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-65|<tuple|2.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-66|<tuple|9|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-67|<tuple|2.3|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-68|<tuple|2.3|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-69|<tuple|2.3.1|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-7|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-70|<tuple|4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-70|<tuple|2.3.1|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-71|<tuple|4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-72|<tuple|8|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-73|<tuple|2.3.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-74|<tuple|2.3.2|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-72|<tuple|4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-73|<tuple|4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-74|<tuple|10|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-75|<tuple|2.3.2|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-76|<tuple|2.3.2|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-77|<tuple|2.3.2|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-78|<tuple|9|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-79|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-78|<tuple|2.3.2|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-79|<tuple|2.3.2|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-8|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-80|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-80|<tuple|11|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-81|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-82|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-83|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5826,52 +5859,54 @@
     <associate|auto-86|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-87|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-88|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-89|<tuple|10|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-89|<tuple|2.3.3|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-9|<tuple|1.1|2|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-90|<tuple|6.15|42|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-91|<tuple|6.15|45|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-92|<tuple|6.15|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-93|<tuple|6.15|50|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-94|<tuple|2.3.4|7>>
-    <associate|auto-95|<tuple|2.3.4|7>>
+    <associate|auto-94|<tuple|13|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-95|<tuple|2.3.4|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-96|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-97|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|auto-98|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|auto-99|<tuple|6|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|automatic-type-conversion|<tuple|57|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|auto-99|<tuple|2.3.4|9|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|automatic-type-conversion|<tuple|59|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|binding|<tuple|3.2|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|binding-for-complex-parameter|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|binding-for-complex-parameter|<tuple|47|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|bitwise-arithmetic|<tuple|4|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|block-type-declaration|<tuple|43|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|block-type-declaration|<tuple|45|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|boolean-operations|<tuple|5|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|built-ins|<tuple|4.1|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|class-like-data|<tuple|22|?>>
-    <associate|closure-code|<tuple|81|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|color-properties|<tuple|50|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|closure-code|<tuple|83|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|color-properties|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|comma-separated-list|<tuple|6.13|11>>
-    <associate|comma-separated-list-data-declaration|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|comments|<tuple|7|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|comma-separated-list-data-declaration|<tuple|28|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|comments|<tuple|9|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|comparisons|<tuple|3|30|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|complex-normal-form|<tuple|48|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|complex-type|<tuple|27|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|complex-normal-form|<tuple|50|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|complex-type|<tuple|29|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|concept-programming|<tuple|1.5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|contains-tests|<tuple|55|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|contains-tests|<tuple|57|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|conversions|<tuple|8|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|creating-a-new-binding|<tuple|29|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|data-inheritance|<tuple|53|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|creating-a-new-binding|<tuple|6.15|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|data-inheritance|<tuple|55|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|data-inheritance-section|<tuple|3.4.5|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|data-loading-operations|<tuple|11|26>>
-    <associate|enum-type-definition|<tuple|73|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|enum-type-definition|<tuple|75|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|evaluation|<tuple|3.3|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|evaluation-for-comparison|<tuple|39|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|evaluation-for-type-comparison|<tuple|40|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|evaluation-for-comparison|<tuple|41|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|evaluation-for-type-comparison|<tuple|42|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|explicit-and-automatic-type-conversions|<tuple|3.4.7|?>>
     <associate|explicit-evaluation|<tuple|3.3.4|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|explicit-type-conversion|<tuple|56|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|explicit-vs-lazy-evaluation|<tuple|41|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|explicit-type-conversion|<tuple|58|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|explicit-vs-lazy-evaluation|<tuple|43|24|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|expression-vs-statement-section|<tuple|2.5.4|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|extra-code-for-properties|<tuple|52|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|factorial|<tuple|2|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|extra-code-for-properties|<tuple|54|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|factorial|<tuple|4|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|first-if-then-else|<tuple|1|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|first-simple-test|<tuple|2|?|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnote-1|<tuple|1|1|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnote-10|<tuple|10|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnote-11|<tuple|11|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5900,23 +5935,23 @@
     <associate|footnr-7|<tuple|7|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnr-8|<tuple|8|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|footnr-9|<tuple|9|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|for-loop-container|<tuple|67|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|for-loop-integer-range|<tuple|66|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|good-function|<tuple|62|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|guard|<tuple|34|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|hello-world|<tuple|1|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|if-then|<tuple|4|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|if-then-else|<tuple|23|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|if-then-else-colorized|<tuple|24|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|if-then-else-definition|<tuple|61|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|for-loop-container|<tuple|69|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|for-loop-integer-range|<tuple|68|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|good-function|<tuple|64|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|guard|<tuple|36|18|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|hello-world|<tuple|3|3|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|if-then|<tuple|6|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|if-then-else|<tuple|25|15|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|if-then-else-colorized|<tuple|26|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|if-then-else-definition|<tuple|63|33|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|implementation-notes|<tuple|6|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|import-statement|<tuple|4.4.1|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|import-statement-example|<tuple|75|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|import-statement-example|<tuple|77|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|index-operators|<tuple|3.1.7|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|infinite-data-structures|<tuple|5.7.7|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|infinite-list|<tuple|78|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|infinite-list|<tuple|80|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|infinite-loop|<tuple|4.2.3|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|infix-type|<tuple|59|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|infix-type|<tuple|61|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|iterations|<tuple|3|?>>
     <associate|lazy-evaluation|<tuple|3.3.3|23|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|list-operations|<tuple|4.1.10|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5924,44 +5959,44 @@
     <associate|literals|<tuple|2.3|7|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|llvm-operations|<tuple|12|39|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|local-and-nonlocal-assignment|<tuple|21|13>>
-    <associate|long-text-indent|<tuple|11|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|long-text-indent|<tuple|13|8|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|machine-interface|<tuple|6.14|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|machine-types|<tuple|6.15|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|making-two-types-equivalent|<tuple|46|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|map-reduce-filter|<tuple|3|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|making-two-types-equivalent|<tuple|48|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|map-reduce-filter|<tuple|5|4|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|math-operations|<tuple|6|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|mathematical-functions|<tuple|5|?>>
-    <associate|module-definition|<tuple|76|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|more-specific-complex-types|<tuple|47|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|narrow-band-C|<tuple|5|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|nonlocal-assignment|<tuple|30|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|module-definition|<tuple|78|37|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|more-specific-complex-types|<tuple|49|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|narrow-band-C|<tuple|7|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|nonlocal-assignment|<tuple|6.15|48|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|object-oriented-programming|<tuple|5.6|38|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|odd-type|<tuple|34|16>>
-    <associate|off-side-rule|<tuple|6|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|opcode-declaration|<tuple|38|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|other-for-loops|<tuple|68|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|out-of-order-declarations|<tuple|25|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|parameterized-type|<tuple|58|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|off-side-rule|<tuple|8|6|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|opcode-declaration|<tuple|40|20|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|other-for-loops|<tuple|70|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|out-of-order-declarations|<tuple|27|16|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|parameterized-type|<tuple|60|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|person-properties|<tuple|26|?>>
     <associate|precedence|<tuple|2.6|11|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|properties-declaration|<tuple|49|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|properties-declaration|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|range-type-definitino|<tuple|48|?>>
-    <associate|range-type-definition|<tuple|69|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|ranges-as-lists|<tuple|70|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|range-type-definition|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|ranges-as-lists|<tuple|72|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|references|<tuple|3.4|?>>
     <associate|return-type-declaration|<tuple|20|?>>
-    <associate|rewrite-code|<tuple|80|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|rewrite-type|<tuple|60|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|sequence|<tuple|35|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|setting-default-arguments|<tuple|51|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|simple-type|<tuple|42|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|rewrite-code|<tuple|82|40|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|rewrite-type|<tuple|62|29|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|sequence|<tuple|37|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|setting-default-arguments|<tuple|53|27|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|simple-type|<tuple|44|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|simpleprog|<tuple|8|3>>
     <associate|simultaneously-type-and-data|<tuple|47|?>>
-    <associate|source-syntax|<tuple|14|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|source-syntax|<tuple|16|13|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|standard-evaluation|<tuple|3.3.1|21|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|state-of-implementation|<tuple|1.6|5|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|structured-data|<tuple|36|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|syntax-file|<tuple|13|12|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|structured-data|<tuple|38|19|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|syntax-file|<tuple|15|12|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|tail-recursion|<tuple|6.12|41|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|text-operations|<tuple|7|31|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|time-operations|<tuple|9|32|../../eliot/doc/ELFE_Reference_Manual.tm>>
@@ -5970,17 +6005,17 @@
     <associate|tree-rewrite-operators|<tuple|3.1|14|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|type-conversion|<tuple|34|17>>
     <associate|type-conversions|<tuple|3.4.7|28|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|type-declaration|<tuple|28|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|type-declaration-type|<tuple|74|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|type-declaration|<tuple|30|17|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|type-declaration-type|<tuple|76|36|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|type-definition|<tuple|3.4.2|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|type-name|<tuple|34|17>>
     <associate|types|<tuple|3.4|25|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|union-type-definition|<tuple|71|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|union-type-definition|<tuple|73|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|until-loop|<tuple|4.2.4|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|using-automatic-type-conversion|<tuple|35|?>>
-    <associate|using-complex|<tuple|44|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|using-union-types|<tuple|72|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
-    <associate|while-loop|<tuple|64|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|using-complex|<tuple|46|26|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|using-union-types|<tuple|74|35|../../eliot/doc/ELFE_Reference_Manual.tm>>
+    <associate|while-loop|<tuple|66|34|../../eliot/doc/ELFE_Reference_Manual.tm>>
     <associate|xlsyntax|<tuple|2.1|?>>
   </collection>
 </references>
