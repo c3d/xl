@@ -75,10 +75,10 @@
   years, due to the design and limitations of existing programming languages.
   This includes input and output<\footnote>
     Various programming languages have implemented I/Os using built-in
-    functions (<verbatim|writeln> in Pascal), variadic functions with special
-    runtime conventions (<verbatim|printf> in C), operator overloading
-    (<verbatim|\<less\>\<less\>> \ in C++), monads (Haskell). All these
-    approaches suffer from various issues.
+    functions (<verbatim|PRINT> in Basic, <verbatim|writeln> in Pascal),
+    variadic functions with special runtime conventions (<verbatim|printf> in
+    C), operator overloading (<verbatim|\<less\>\<less\>> \ in C++), monads
+    (Haskell). Each approach has its own set of limitations.
   </footnote>, complex data structures, program optimizations, and more.
   Thanks to meta-programming, ELFE can offer solutions to these problems that
   are elegant, efficient and easy to understand.
@@ -94,9 +94,8 @@
   semantics are deliberately very simple. As Saint-Exupery once said,
   perfection is achieved, not when there's nothing to add, but when there's
   nothing left to take away. And in ELFE, there isn't much left to be
-  removed. It's often hard to think how you could erase a single character
-  from an ELFE program, but that terseness does not come at the price of
-  obfuscation.
+  removed. It's often hard to find a single character you could erase from an
+  ELFE program, but that terseness does not come at the price of obfuscation.
 
   Indeed, the ELFE syntax will seem very natural to most programmers, except
   for what it's missing: ELFE makes little use of parentheses and other
