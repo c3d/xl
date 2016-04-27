@@ -439,7 +439,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     // A->B is the local declaration, L and R are the possible children.
     // Children are initially nil.
     Scope   *scope  = symbols;
-    Tree_p  &locals = scope->right;
+    Tree_p  &locals = ScopeLocals(scope);
     Tree_p  *parent = &locals;
     Rewrite *result = NULL;
     while (!result)
@@ -639,7 +639,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
     while (scope)
     {
         // Initialize local scope
-        Tree_p &locals = scope->right;
+        Tree_p &locals = ScopeLocals(scope);
         Tree_p *parent = &locals;
         Tree *result = NULL;
         ulong h = h0;

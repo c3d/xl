@@ -320,6 +320,15 @@ inline Scope *ScopeParent(Scope *scope)
 }
 
 
+inline Tree_p &ScopeLocals(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Return the place where we store the parent for a scope
+// ----------------------------------------------------------------------------
+{
+    return scope->right;
+}
+
+
 inline Rewrite *ScopeRewrites(Scope *scope)
 // ----------------------------------------------------------------------------
 //   Find top rewrite for a given scope
