@@ -230,5 +230,15 @@ void recorder_dump()
 //   Dump the recorder to standard error (for use in the debugger)
 // ----------------------------------------------------------------------------
 {
-    ELFE::FlightRecorderBase::DumpAll(std::cout, "");
+    recorder_dump_one("");
+}
+
+
+
+void recorder_dump_one(kstring select)
+// ----------------------------------------------------------------------------
+//   Dump one specific recorder to standard error
+// ----------------------------------------------------------------------------
+{
+    ELFE::FlightRecorderBase::DumpAll(std::cout, select);
 }
