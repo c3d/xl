@@ -139,14 +139,6 @@ OPTION(o, "Select output file", output_file = STRING)
 OPTVAR(debugPrefix, text, "")
 OPTION(debug_prefix, "Select the prefix to debug", debugPrefix = STRING)
 
-OPTVAR(flightRecorderSize, uint, 8192)
-OPTION(frs, "Select the flight recorder size",
-       flightRecorderSize=INTEGER(128, 131072))
-OPTVAR(flightRecorderFlags, uint, 0)
-OPTION(frf, "Select the flight recorder flags",
-       flightRecorderFlags=INTEGER(0, ~0UL))
-
-
 // Listen for input programs
 OPTVAR(listen, int, 0)
 OPTION(listen, "Listen to given port", listen = INTEGER(1, 99999999))

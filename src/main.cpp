@@ -153,9 +153,6 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     MAIN = this;
     options.builtins = builtinsName;
     ParseOptions();
-    FlightRecorder::SResize(options.flightRecorderSize);
-    if (options.flightRecorderFlags)
-        FlightRecorder::SFlags(options.flightRecorderFlags);
 
     // Once all options have been read, enter symbols and setup compiler
 #ifndef INTERPRETER_ONLY
@@ -592,8 +589,7 @@ int main(int argc, char **argv)
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    ELFE::FlightRecorder::Initialize();
-    RECORD(ALWAYS, "Compiler starting");
+    ELFE::COMPILER_RECORD("Compiler starting");
 
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
@@ -610,6 +606,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "Total memory usage: %ldK\n",
                 long ((char *) malloc(1) - low_water) / 1024);
 #endif
+
+    ELFE::COMPILER_RECORD("Compiler exit code %d", rc);
+
+    IFTRACE(recorder_dump)
+        recorder_dump();
 
     return rc;
 }

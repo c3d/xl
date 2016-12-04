@@ -61,7 +61,7 @@ Options::Options(int argc, char **argv):
     // Check if some options are given from environment
     if (kstring envopt = getenv("ELFE_OPT"))
     {
-        RECORD(INFO, "Options from ELFE_OPT", envopt);
+        OPTIONS_RECORD("Environment variable ELFE_OPT='%s'", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -70,12 +70,16 @@ Options::Options(int argc, char **argv):
                   std::istream_iterator<text> (),
                   std::back_inserter< std::vector<text> > (args));
     }
+    else
+    {
+        OPTIONS_RECORD("Environment variable ELFE_OPT is not set");
+    }
 
     // Add options from the command-line
-    RECORD(INFO, "Options list", "Count", argc);
+    OPTIONS_RECORD("Command line has %d options", argc-1);
     for (int a = 1; a < argc; a++)
     {
-        RECORD(INFO, "Option", "Index", a, argv[a]);
+        OPTIONS_RECORD("  Option #%d is '%s'", a, argv[a]);
         args.push_back(argv[a]);
     }
 }
@@ -223,7 +227,7 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
 
-            RECORD(INFO, "Parse option", "Index", arg, option);
+            OPTIONS_RECORD("Parse option #%d, '%s'", arg, option);
 
 #if ELFE_DEBUG
             if (argval[0] == 't')

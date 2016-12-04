@@ -40,122 +40,206 @@
 // ****************************************************************************
 
 #include "base.h"
+#include "ring.h"
 #include <vector>
+#include <iostream>
 
 ELFE_BEGIN
 
 // ============================================================================
-// 
+//
 //    Higher-evel interface
-// 
+//
 // ============================================================================
 
-enum FlightRecorderChannels
+struct FlightRecorderBase
 // ----------------------------------------------------------------------------
-//   Different channels that can be recorded
-// ----------------------------------------------------------------------------
-{
-    // General enablers
-    REC_ALWAYS             = 1<<0,
-    REC_CRITICAL           = 1<<1,
-    REC_DEBUG              = 1<<2,
-    REC_INFO               = 1<<3,
-
-    // Domain-specific enablers
-    REC_MEMORY_DETAILS     = 1<<8,
-    REC_COMPILER_DETAILS   = 1<<9,
-    REC_EVAL_DETAILS       = 1<<10,
-    REC_PRIMITIVES_DETAILS = 1<<11,
-
-    // High-level enablers
-    REC_MEMORY             = REC_DEBUG | REC_MEMORY_DETAILS,
-    REC_COMPILER           = REC_DEBUG | REC_COMPILER_DETAILS,
-    REC_EVAL               = REC_DEBUG | REC_EVAL_DETAILS,
-    REC_PRIMITIVES         = REC_DEBUG | REC_PRIMITIVES_DETAILS,
-};
-
-
-struct FlightRecorder
-// ----------------------------------------------------------------------------
-//    Record events 
+//    A base for all flight recorders, to store them in a linked list
 // ----------------------------------------------------------------------------
 {
+    // The following struct is where we keep the data.
+    // Should be a power-of-two size on all regular architectures
     struct Entry
     {
-        Entry(kstring what = "", void *caller = NULL,
-              kstring l1="", intptr_t a1=0,
-              kstring l2="", intptr_t a2=0,
-              kstring l3="", intptr_t a3=0):
-            what(what), caller(caller),
-            label1(l1), label2(l2), label3(l3),
-            arg1(a1), arg2(a2), arg3(a3) {}
-        kstring  what;
-        void *   caller;
-        kstring  label1, label2, label3;
-        intptr_t arg1, arg2, arg3;
+        kstring     what;
+        intptr_t    order;
+        intptr_t    timestamp;
+        void *      caller;
+        intptr_t    args[4];
     };
 
-    FlightRecorder(uint size=4096) : windex(0), rindex(0),
-                                     records(size) {}
+public:
+    FlightRecorderBase(): next(NULL) {}
+
+    virtual kstring             Name()                      = 0;
+    virtual unsigned            Size()                      = 0;
+    virtual unsigned            Readable()                  = 0;
+    virtual unsigned            Writeable()                 = 0;
+    virtual bool                Read(Entry &entry)          = 0;
+    virtual unsigned            Write(const Entry &entry)   = 0;
+    void                        Link();
+    FlightRecorderBase *        Next()  { return next; }
+
+    typedef std::ostream        ostream;
+    ostream &                   Dump(ostream &out);
 
 public:
-    // Interface for a given recorder
-    ulong Record(kstring what, void *caller = NULL,
-                 kstring l1="", intptr_t a1=0,
-                 kstring l2="", intptr_t a2=0,
-                 kstring l3="", intptr_t a3=0)
-    {
-        Entry &e = records[windex++ % records.size()];
-        e.what = what;
-        e.caller = caller;
-        e.label1 = l1;
-        e.arg1 = a1;
-        e.label2 = l2;
-        e.arg2 = a2;
-        e.label3 = l3;
-        e.arg3 = a3;
-        return enabled;
-    }
+    static FlightRecorderBase * Head()  { return head; }
+    static ostream &            DumpAll(ostream &out, kstring pattern = "");
+    static intptr_t             Order();
+    static intptr_t             Now();
+    static void *               Here();
 
-    void Dump(int fd, bool consume = false);
-    void Resize(uint size) { records.resize(size); }
-
-public:
-    // Static interface
-    static void Initialize()   { if (!recorder) recorder = new FlightRecorder; }
-    static ulong SRecord(kstring what, void *caller = NULL,
-                         kstring l1="", intptr_t a1=0,
-                         kstring l2="", intptr_t a2=0,
-                         kstring l3="", intptr_t a3=0)
-    {
-        Initialize();
-        return recorder->Record(what, caller, l1, a1, l2, a2, l3, a3);
-    }
-    static void SDump(int fd, bool kill=false) { recorder->Dump(fd,kill); }
-    static void SResize(uint size) { recorder->Resize(size); }
-    static void SFlags(ulong en) { enabled = en | REC_ALWAYS; }
-
-public:
-    uint               windex, rindex;
-    std::vector<Entry> records;
-
-    static ulong            enabled;
+    static void                 Block()     { blocked++; }
+    static void                 Unblock()   { blocked--; }
+    static bool                 Blocked()   { return blocked > 0; }
 
 private:
-    static FlightRecorder * recorder;
+    static Atomic<FlightRecorderBase *> head;
+    static Atomic<intptr_t>     order;
+    static Atomic<unsigned>     blocked;
+
+private:
+    FlightRecorderBase *        next;
+
+    template <class Link>
+    friend void LinkedListInsert(Atomic<Link> &list, Link link);
 };
 
 
-#define RECORD(cond, what, args...)                                     \
-    ((ELFE::REC_##cond) &                                               \
-     (ELFE::FlightRecorder::enabled | ELFE::REC_ALWAYS)                 \
-     && ELFE::FlightRecorder::SRecord(what,                             \
-                                      __builtin_return_address(0),      \
-                                      ##args))
+inline std::ostream &operator<< (std::ostream &out, FlightRecorderBase &fr)
+// ----------------------------------------------------------------------------
+//   Dump a single flight recorder entry on the given ostream
+// ----------------------------------------------------------------------------
+{
+    return fr.Dump(out);
+}
+
+
+template <unsigned RecSize = 128>
+struct FlightRecorder : private FlightRecorderBase,
+                        private Ring<FlightRecorderBase::Entry, RecSize>
+// ----------------------------------------------------------------------------
+//    Record events in a circular buffer, up to Size events recorded
+// ----------------------------------------------------------------------------
+{
+    typedef FlightRecorderBase  List;
+    typedef List::Entry         Entry;
+    typedef Ring<Entry, RecSize>Base;
+
+    FlightRecorder(kstring name): FlightRecorderBase(), Base(name) {}
+
+    virtual kstring             Name()              { return Base::Name(); }
+    virtual unsigned            Size()              { return Base::size; }
+    virtual unsigned            Readable()          { return Base::Readable(); }
+    virtual unsigned            Writeable()         { return Base::Writable(); }
+    virtual bool                Read(Entry &e)      { return Base::Read(e); }
+    virtual unsigned            Write(const Entry&e){ return Base::Write(e); }
+
+public:
+    struct Arg
+    {
+        Arg(float f):           value(f2i(f))               {}
+        Arg(double d):          value(f2i(d))               {}
+        template<class T>
+        Arg(T t):               value(intptr_t(t))          {}
+
+        operator intptr_t()     { return value; }
+
+    private:
+        template <typename float_type>
+        static intptr_t f2i(float_type f)
+        {
+            if (sizeof(float) == sizeof(intptr_t))
+            {
+                union { float f; intptr_t i; } u;
+                u.f = f;
+                return u.i;
+            }
+            else
+            {
+                union { double d; intptr_t i; } u;
+                u.d = f;
+                return u.i;
+            }
+        }
+
+    private:
+        intptr_t                value;
+    };
+
+    void Record(kstring what, Arg a1 = 0, Arg a2 = 0, Arg a3 = 0, Arg a4 = 0)
+    {
+        if (List::Blocked())
+            return;
+        Entry e = {
+            what, List::Order(), List::Now(), List::Here(),
+            { a1, a2, a3, a4 }
+        };
+        unsigned writeIndex = Base::Write(e);
+        if (!writeIndex)
+            List::Link();
+    }
+
+    void operator()(kstring what, Arg a1=0, Arg a2=0, Arg a3=0, Arg a4=0)
+    {
+        Record(what, a1, a2, a3, a4);
+    }
+};
+
+
+
+// ============================================================================
+//
+//   Inline functions for FlightRecorderBase
+//
+// ============================================================================
+
+inline void FlightRecorderBase::Link()
+// ----------------------------------------------------------------------------
+//    Link a flight recorder that was activated into the list
+// ----------------------------------------------------------------------------
+{
+    LinkedListInsert(head, this);
+}
+
+
+inline intptr_t FlightRecorderBase::Order()
+// ----------------------------------------------------------------------------
+//   Generate a unique sequence number for ordering entries in recorders
+// ----------------------------------------------------------------------------
+{
+    return order++;
+}
+
+
+inline void *FlightRecorderBase::Here()
+// ----------------------------------------------------------------------------
+//   Get the location where Here() is called from
+// ----------------------------------------------------------------------------
+{
+    return (void *) (__builtin_return_address(0));
+}
+
+
+// ============================================================================
+//
+//    Available recorders
+//
+// ============================================================================
+
+extern FlightRecorder<>  ERROR_RECORD;
+extern FlightRecorder<>  DEBUG_RECORD;
+extern FlightRecorder<>  OPTIONS_RECORD;
+extern FlightRecorder<>  MEMORY_RECORD;
+extern FlightRecorder<>  COMPILER_RECORD;
+extern FlightRecorder<>  EVAL_RECORD;
+extern FlightRecorder<>  PRIMITIVES_RECORD;
 
 ELFE_END
 
 // For use within a debugger session
-extern void recorder_dump();
+extern "C" void recorder_dump();
+extern "C" void recorder_dump_one(kstring select);
 
 #endif // FLIGHT_RECORDER_H

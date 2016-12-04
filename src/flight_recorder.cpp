@@ -43,77 +43,185 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <sys/time.h>
 
 ELFE_BEGIN
 
-static void Write(int fd, const char *buf, size_t size)
+FlightRecorder<>  ERROR_RECORD("Errors");
+FlightRecorder<>  DEBUG_RECORD("Debug");
+FlightRecorder<>  OPTIONS_RECORD("Options");
+FlightRecorder<>  MEMORY_RECORD("Memory");
+FlightRecorder<>  COMPILER_RECORD("Compiler");
+FlightRecorder<>  EVAL_RECORD("Evaluation");
+FlightRecorder<>  PRIMITIVES_RECORD("Primitives");
+
+
+Atomic<FlightRecorderBase *> FlightRecorderBase::head = NULL;
+Atomic<intptr_t>             FlightRecorderBase::order = 0;
+Atomic<unsigned>             FlightRecorderBase::blocked = 0;
+
+intptr_t FlightRecorderBase::Now()
 // ----------------------------------------------------------------------------
-//   write() wrapper
+//    Give a high-resolution timer for the flight recorder
 // ----------------------------------------------------------------------------
 {
-    size_t left = size;
-    while (left)
-    {
-        size_t s = write(fd, buf + size - left, left);
-        if (s > 0)
-            left -= s;
-    }
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    intptr_t tick = t.tv_sec * 1000ULL + t.tv_usec / 1000;
+    static intptr_t initialTick = 0;
+    if (!initialTick)
+        initialTick = tick;
+    return tick - initialTick;
 }
 
 
-void FlightRecorder::Dump(int fd, bool kill)
+std::ostream &FlightRecorderBase::Dump(ostream &out)
 // ----------------------------------------------------------------------------
-//   Dump the contents of the flight recorder to given stream
+//   Dump current flight recorder into given stream
 // ----------------------------------------------------------------------------
-//   We use the lowest-possible sytem-level I/O facility to make it
-//   easier to invoke Dump() from a variety of contexts
 {
-    using namespace std;
-    static char buffer[512];
+    static char buffer[1024];
+    static char format_buffer[32];
 
-    // Write recorder time stamp
+    Block();
+
+    kstring name = Name();
+    out << "DUMPING " << name
+        << " SIZE " << Size()
+        << ", " << Readable() << " ENTRIES\n";
+        
+    Entry entry;
+    while (Readable() > 0)
+    {
+        // The read function may return 0 if we had to catch-up
+        if (Read(entry))
+        {
+            out << entry.order
+                << "[" << entry.timestamp << ":" << entry.caller << "] "
+                << name << ": ";
+
+            const char *fmt = entry.what;
+            char *dst = buffer;
+            unsigned argIndex = 0;
+
+            // Apply formatting. This complicated loop is because
+            // we need to detect floating-point formats, which are passed
+            // differently on many architectures such as x86 or ARM
+            // (passed in different registers), and so we need to cast here.
+            kstring end = buffer + sizeof buffer;
+            while (dst < end)
+            {
+                char c = *fmt++;
+                if (c != '%')
+                {
+                    *dst++ = c;
+                    if (!c)
+                        break;
+                }
+                else
+                {
+                    char *fmtCopy = format_buffer;
+                    int floatingPoint = 0;
+                    int done = 0;
+                    *fmtCopy++ = c;
+                    char *fmt_end = format_buffer + sizeof format_buffer - 1;
+                    while (!done && fmt < fmt_end)
+                    {
+                        c = *fmt++;
+                        *fmtCopy++ = c;
+                        switch(c)
+                        {
+                        case 'f': case 'F':  // Floating point formatting
+                        case 'g': case 'G':
+                        case 'e': case 'E':
+                        case 'a': case 'A':
+                            floatingPoint = 1;
+                            // Fall through here on purpose
+                        case 'b':           // Integer formatting
+                        case 'c': case 'C':
+                        case 's': case 'S':
+                        case 'd': case 'D':
+                        case 'i':
+                        case 'o': case 'O':
+                        case 'u': case 'U':
+                        case 'x':
+                        case 'X':
+                        case 'p':
+                        case '%':
+                        case 'n':           // Does not make sense here, but hey
+                        case 0:             // End of string
+                            done = 1;
+                            break;
+                        case '0' ... '9':
+                        case '+':
+                        case '-':
+                        case 'l': case 'L':
+                        case 'h':
+                        case 'j':
+                        case 't':
+                        case 'z':
+                        case 'q':
+                        case 'v':
+                            break;
+                        }
+                    }
+                    if (!c)
+                        break;
+                    *fmtCopy++ = 0;
+                    if (floatingPoint)
+                    {
+                        double floatArg;
+                        if (sizeof(intptr_t) == sizeof(float))
+                        {
+                            union { float f; intptr_t i; } u;
+                            u.i = entry.args[argIndex++];
+                            floatArg = u.f;
+                        }
+                        else
+                        {
+                            union { double d; intptr_t i; } u;
+                            u.i = entry.args[argIndex++];
+                            floatArg = u.d;
+                        }
+                        dst += snprintf(dst, end-dst, format_buffer, floatArg);
+                    }
+                    else
+                    {
+                        intptr_t intArg = entry.args[argIndex++];
+                        dst += snprintf(dst, end-dst, format_buffer, intArg);
+                    }
+                }
+            }
+            out << buffer << "\n";
+        }
+        else
+        {
+            // Indicate we skipped some entries
+            out << "... " << Readable() << " more entries\n";
+        }
+    }
+    Unblock();
+
+    return out;
+}
+
+
+std::ostream &FlightRecorderBase::DumpAll(ostream &out, kstring pattern)
+// ----------------------------------------------------------------------------
+//   Dump all recorders matching the pattern
+// ----------------------------------------------------------------------------
+{
+    Block();
+
     time_t now = time(NULL);
-    size_t size = snprintf(buffer, sizeof buffer,
-                           "FLIGHT RECORDER DUMP AT %s\n",
-                           asctime(localtime(&now)));
-    Write(fd, buffer, size);
-
-    // Can't have more events than the size of the buffer
-    uint rindex = this->rindex;
-    if (rindex + records.size() <= windex)
-        rindex = windex - records.size() + 1;
-
-    // Write all elements that remain to be shown
-    while (rindex < windex)
-    {
-        Entry &e = records[rindex % records.size()];
-        size = snprintf(buffer, sizeof buffer,
-                        "%4d: %16s %8p ", windex - rindex, e.what, e.caller);
-
-        if (e.label1[0])
-            size += snprintf(buffer + size, sizeof buffer - size,
-                             "%8s=%10p", e.label1, (void *) e.arg1);
-        if (e.label2[0])
-            size += snprintf(buffer + size, sizeof buffer - size,
-                             "%8s=%10p", e.label2, (void *) e.arg2);
-        if (e.label3[0])
-            size += snprintf(buffer + size, sizeof buffer - size,
-                             "%8s=%10p", e.label3, (void *) e.arg3);
-        if (size < sizeof buffer)
-            buffer[size++] = '\n';
-        Write(fd, buffer, size);
-
-        // Next step
-        rindex++;
-    }
-
-    if (kill)
-        this->rindex = rindex;
+    out << "FLIGHT RECORDER DUMP " << pattern
+        << " AT " << asctime(localtime(&now));
+    
+    for (FlightRecorderBase *rec = Head(); rec; rec = rec->Next())
+        rec->Dump(out);
+    Unblock();
+    return out;
 }
-
-
-FlightRecorder * FlightRecorder::recorder = NULL;
-ulong            FlightRecorder::enabled  = REC_ALWAYS|REC_CRITICAL|REC_DEBUG;
 
 ELFE_END
 
@@ -122,5 +230,5 @@ void recorder_dump()
 //   Dump the recorder to standard error (for use in the debugger)
 // ----------------------------------------------------------------------------
 {
-    ELFE::FlightRecorder::SDump(2);
+    ELFE::FlightRecorderBase::DumpAll(std::cout, "");
 }

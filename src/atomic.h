@@ -8,9 +8,9 @@
 //
 //    The atomic operations we may need in ELFE
 //
-//
-//
-//
+//    Note that with C++ 11, all this is largely obsolete,
+//    but this allows code to support older compilers, which is still
+//    useful in this day and age. Will change it someday.
 //
 //
 //

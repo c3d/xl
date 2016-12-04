@@ -83,8 +83,8 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
       chunkSize(1022), objectSize(os), alignedSize(os),
       allocatedCount(0), scannedCount(0), collectedCount(0), totalCount(0)
 {
-    RECORD(MEMORY, "New type allocator",
-           tn, os, "this", (intptr_t) this);
+    MEMORY_RECORD("New type allocator %p name '%s' object size %u",
+                  this, tn, os);
 
     // Make sure we align everything on Chunk boundaries
     if ((alignedSize + sizeof (Chunk)) & CHUNKALIGN_MASK)
@@ -120,7 +120,7 @@ TypeAllocator::~TypeAllocator()
 //   Delete all the chunks we allocated
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY, "Destroy type allocator", "this", (intptr_t) this);
+    MEMORY_RECORD("Destroy type allocator %p '%s'", this, this->name);
 
     VALGRIND_DESTROY_MEMPOOL(this);
 
@@ -134,7 +134,7 @@ void *TypeAllocator::Allocate()
 //   Allocate a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Allocate", "free", (intptr_t) freeList.Get());
+    MEMORY_RECORD("Allocate in '%s', free list %p", this->name, freeList.Get());
 
     Chunk_vp result;
     do
@@ -158,7 +158,7 @@ void *TypeAllocator::Allocate()
             void   *allocated = malloc(allocSize);
             (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
 
-            RECORD(MEMORY_DETAILS, "New Chunk", "addr", (intptr_t) allocated);
+            MEMORY_RECORD("New chunk %p in '%s'", allocated, this->name);
 
             char *chunkBase = (char *) allocated + alignedSize;
             Chunk_vp last = (Chunk_vp) chunkBase;
@@ -207,6 +207,8 @@ void *TypeAllocator::Allocate()
 
     void *ret =  (void *) &result[1];
     VALGRIND_MEMPOOL_ALLOC(this, ret, objectSize);
+
+    MEMORY_RECORD("Allocated %p from %s", ret, name);
     return ret;
 }
 
@@ -216,7 +218,7 @@ void TypeAllocator::Delete(void *ptr)
 //   Free a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Delete", "ptr", (intptr_t) ptr);
+    MEMORY_RECORD("Delete %p in '%s'", ptr, this->name);
 
     if (!ptr)
         return;
@@ -297,7 +299,7 @@ bool TypeAllocator::CheckLeakedPointers()
 //   Check if any pointers were allocated and not captured between safe points
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "CheckLeaks");
+    MEMORY_RECORD("CheckLeaks in '%s'", name);
 
     char *lo = (char *) lowestInUse.Get();
     char *hi = (char *) highestInUse.Get();
@@ -342,8 +344,8 @@ bool TypeAllocator::CheckLeakedPointers()
     }
 
     collectedCount += collected;
-    RECORD(MEMORY_DETAILS, "CheckLeaks done",
-           "scanned", scannedCount, "collect", collected);
+    MEMORY_RECORD("CheckLeaks in '%s' done, scanned %u, collected %u",
+                  name, scannedCount, collected);
     return collected;
 }
 
@@ -353,8 +355,7 @@ bool TypeAllocator::Sweep()
 //    Remove all the things that we have pushed on the toDelete list
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Sweep");
-
+    MEMORY_RECORD("Sweep '%s'", name);
     bool result = false;
     while (toDelete)
     {
@@ -363,6 +364,8 @@ bool TypeAllocator::Sweep()
         Finalize((void *) (next+1));
         result = true;
     }
+    MEMORY_RECORD("Swept '%s' %s objects deleted",
+                  name, result ? "with" : "without");
     return result;
 }
 
@@ -423,8 +426,8 @@ bool TypeAllocator::CanDelete(void *obj)
     for (i = listeners.begin(); i != listeners.end(); i++)
         if (!(*i)->CanDelete(obj))
             result = false;
-    RECORD(MEMORY_DETAILS, "Can delete",
-           "addr", (intptr_t) obj, "ok", result);
+    MEMORY_RECORD("%s delete %p in '%s'",
+                  result ? "Can" : "Cannot", obj, name);
     return result;
 }
 
@@ -499,7 +502,7 @@ bool GarbageCollector::Collect()
     // Only one thread enters collecting, the others spin and wait
     if (Atomic<pthread_t>::SetQ(collecting, PTHREAD_NULL, self))
     {
-        RECORD(MEMORY, "Garbage collection", "self", (intptr_t) self);
+        MEMORY_RECORD("Garbage collection in thread %p", self);
 
         Allocators::iterator a;
         Listeners listeners;
@@ -539,10 +542,10 @@ bool GarbageCollector::Collect()
             ELFE_ASSERT(!"Someone else stole the collection lock?");
         }
 
-        RECORD(MEMORY, "Garbage collection", "self", (intptr_t) self);
-
+        MEMORY_RECORD("Finished garbage collection in thread %p", self);
         return true;
     }
+    MEMORY_RECORD("Garbage collection for thread %p was blocked", self);
     return false;
 }
 
