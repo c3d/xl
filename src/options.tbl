@@ -138,6 +138,8 @@ OPTION(o, "Select output file", output_file = STRING)
 // Debug controlling options
 OPTVAR(debugPrefix, text, "")
 OPTION(debug_prefix, "Select the prefix to debug", debugPrefix = STRING)
+OPTVAR(dumpRecorder, bool, false)
+OPTION(dump, "Dump the flight recorder on exit", dumpRecorder = true)
 
 // Listen for input programs
 OPTVAR(listen, int, 0)

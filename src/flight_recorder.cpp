@@ -75,6 +75,15 @@ intptr_t FlightRecorderBase::Now()
 }
 
 
+void FlightRecorderBase::Link()
+// ----------------------------------------------------------------------------
+//    Link a flight recorder that was activated into the list
+// ----------------------------------------------------------------------------
+{
+    LinkedListInsert(head, this);
+}
+
+
 std::ostream &FlightRecorderBase::Dump(ostream &out)
 // ----------------------------------------------------------------------------
 //   Dump current flight recorder into given stream

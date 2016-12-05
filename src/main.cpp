@@ -609,7 +609,7 @@ int main(int argc, char **argv)
 
     ELFE::COMPILER_RECORD("Compiler exit code %d", rc);
 
-    IFTRACE(recorder_dump)
+    if (main.options.dumpRecorder)
         recorder_dump();
 
     return rc;

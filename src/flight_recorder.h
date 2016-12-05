@@ -88,7 +88,6 @@ public:
     static ostream &            DumpAll(ostream &out, kstring pattern = "");
     static intptr_t             Order();
     static intptr_t             Now();
-    static void *               Here();
 
     static void                 Block()     { blocked++; }
     static void                 Unblock()   { blocked--; }
@@ -168,22 +167,18 @@ public:
         intptr_t                value;
     };
 
-    void Record(kstring what, Arg a1 = 0, Arg a2 = 0, Arg a3 = 0, Arg a4 = 0)
+    void operator()(kstring what, Arg a1=0, Arg a2=0, Arg a3=0, Arg a4=0)
     {
         if (List::Blocked())
             return;
+        void *caller = __builtin_return_address(0);
         Entry e = {
-            what, List::Order(), List::Now(), List::Here(),
+            what, List::Order(), List::Now(), caller,
             { a1, a2, a3, a4 }
         };
         unsigned writeIndex = Base::Write(e);
         if (!writeIndex)
             List::Link();
-    }
-
-    void operator()(kstring what, Arg a1=0, Arg a2=0, Arg a3=0, Arg a4=0)
-    {
-        Record(what, a1, a2, a3, a4);
     }
 };
 
@@ -195,15 +190,6 @@ public:
 //
 // ============================================================================
 
-inline void FlightRecorderBase::Link()
-// ----------------------------------------------------------------------------
-//    Link a flight recorder that was activated into the list
-// ----------------------------------------------------------------------------
-{
-    LinkedListInsert(head, this);
-}
-
-
 inline intptr_t FlightRecorderBase::Order()
 // ----------------------------------------------------------------------------
 //   Generate a unique sequence number for ordering entries in recorders
@@ -212,14 +198,6 @@ inline intptr_t FlightRecorderBase::Order()
     return order++;
 }
 
-
-inline void *FlightRecorderBase::Here()
-// ----------------------------------------------------------------------------
-//   Get the location where Here() is called from
-// ----------------------------------------------------------------------------
-{
-    return (void *) (__builtin_return_address(0));
-}
 
 
 // ============================================================================
