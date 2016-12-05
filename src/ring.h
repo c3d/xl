@@ -292,7 +292,6 @@ unsigned Ring<Type, Size>::Read(Iterator begin,
 // ----------------------------------------------------------------------------
 {
     Iterator current = begin;
-    unsigned count = 0;
     while (current != end)
     {
         unsigned reader = this->reader; // Keep local copy for consistency
@@ -310,12 +309,11 @@ unsigned Ring<Type, Size>::Read(Iterator begin,
                 break;
 
         // Read data from current position
-        reader = this->reader++;
         *current = this->data[reader % size];
-        current++;
-        count++;
+        if (reader == this->reader++)
+            current++;
     }
-    return count;
+    return current - begin;
 }
 
 
