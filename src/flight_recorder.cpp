@@ -164,6 +164,7 @@ std::ostream &FlightRecorderBase::Dump(ostream &out)
                         case '0' ... '9':
                         case '+':
                         case '-':
+                        case '.':
                         case 'l': case 'L':
                         case 'h':
                         case 'j':
