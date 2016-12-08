@@ -67,7 +67,10 @@ intptr_t FlightRecorderBase::Now()
 {
     struct timeval t;
     gettimeofday(&t, NULL);
-    intptr_t tick = t.tv_sec * 1000ULL + t.tv_usec / 1000;
+    intptr_t tick = 
+        (sizeof(uintptr_t) == 8)
+        ? t.tv_sec * 1000000ULL + t.tv_usec
+        : t.tv_sec * 1000ULL + t.tv_usec / 1000; // Wraps around in 49 days
     static intptr_t initialTick = 0;
     if (!initialTick)
         initialTick = tick;
@@ -105,9 +108,29 @@ std::ostream &FlightRecorderBase::Dump(ostream &out)
         // The read function may return 0 if we had to catch-up
         if (Read(entry))
         {
-            out << entry.order
-                << "[" << entry.timestamp << ":" << entry.caller << "] "
-                << name << ": ";
+            if (sizeof(uintptr_t) == 8)
+            {
+                // Time stamp in us, show in seconds
+                snprintf(buffer, sizeof(buffer),
+                         "%lu [%lu.%06lu:%p] %s: ",
+                         entry.order,
+                         entry.timestamp / 1000000,
+                         entry.timestamp % 1000000,
+                         entry.caller,
+                         name);
+                out << buffer;
+            }
+            else
+            {
+                // Time stamp  in ms, show in seconds
+                snprintf(buffer, sizeof(buffer),
+                         "%lu [%lu.%03lu:%p] %s: ",
+                         (ulong) entry.order,
+                         (ulong) entry.timestamp / 1000,
+                         (ulong) entry.timestamp % 1000,
+                         entry.caller,
+                         name);
+            }
 
             const char *fmt = entry.what;
             char *dst = buffer;
