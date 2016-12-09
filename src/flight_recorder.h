@@ -206,13 +206,15 @@ inline intptr_t FlightRecorderBase::Order()
 //
 // ============================================================================
 
-extern FlightRecorder<>  ERROR_RECORD;
-extern FlightRecorder<>  DEBUG_RECORD;
-extern FlightRecorder<>  OPTIONS_RECORD;
-extern FlightRecorder<>  MEMORY_RECORD;
-extern FlightRecorder<>  COMPILER_RECORD;
-extern FlightRecorder<>  EVAL_RECORD;
-extern FlightRecorder<>  PRIMITIVES_RECORD;
+typedef FlightRecorder<> Recorder;
+
+extern Recorder ERROR_RECORD;
+extern Recorder DEBUG_RECORD;
+extern Recorder OPTIONS_RECORD;
+extern Recorder MEMORY_RECORD;
+extern Recorder COMPILER_RECORD;
+extern Recorder EVAL_RECORD;
+extern Recorder PRIMITIVES_RECORD;
 
 ELFE_END
 
