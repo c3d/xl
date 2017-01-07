@@ -683,10 +683,10 @@ text Code::Ref(Op *op, text sep, text set, text null)
     uint max = currentDump ? currentDump->size() : 0;
 
     if (op == NULL)
-        found = (out << sep << null);
+        found = bool(out << sep << null);
     for (uint o = 0; o < max; o++)
         if ((*currentDump)[o] == op)
-            found = (out << sep << set << "\t#" << o);
+            found = bool(out << sep << set << "\t#" << o);
     if (!found)
         out << sep << set << "\t" << (void *) op;
     return out.str();
