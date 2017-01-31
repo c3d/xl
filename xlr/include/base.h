@@ -217,6 +217,39 @@ externc void xl_assert_failed(kstring msg, kstring file, uint line);
 
 
 
+// ============================================================================
+// 
+//   Other utilities
+// 
+// ============================================================================
+
+#if defined(__GNUC__)
+#define XL_MAYBE_UNUSED     __attribute((unused))
+#elif __cplusplus > 201103L
+#define XL_MAYBE_UNUSED     [[maybe_unused]]
+#else
+#define XL_MAYBE_UNUSED
+#endif
+
+
+#ifdef __cplusplus
+template<class T>
+inline bool IsNull(T ptr)
+// ----------------------------------------------------------------------------
+//   Check that a pointer is null in a way that avoids warnings
+// ----------------------------------------------------------------------------
+//   There are some cases where I want to check if a pointer is NULL, and
+//   I don't want to get a warning just because the compiler knows that the
+//   value is non-null statically (which may vary from platform to platform)
+//   Two use cases include Tree static casts (foo->AsInfix()) and
+//   GL capabilities testing on Windows by testing pointers that are static
+//   function addresses on non-Windows platforms.
+{
+    return ptr != 0;
+}
+#endif // __cplusplus
+
+
 /* ========================================================================= */
 /*                                                                           */
 /*   Namespace support                                                       */

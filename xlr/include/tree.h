@@ -131,6 +131,7 @@ struct Tree
     // Attributes
     kind                Kind()                { return kind(tag & KINDMASK); }
     TreePosition        Position()            { return (long) tag>>KINDBITS; }
+    bool                IsValid()             { return IsNull(this); }
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
     void                SetPosition(TreePosition pos, bool recurse = true);
@@ -354,7 +355,7 @@ inline Integer *Tree::AsInteger()
 //    Return a pointer to an Integer or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == INTEGER)
+    if (IsValid() && Kind() == INTEGER)
         return (Integer *) this;
     return NULL;
 }
@@ -365,7 +366,7 @@ inline Real *Tree::AsReal()
 //    Return a pointer to an Real or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == REAL)
+    if (IsValid() && Kind() == REAL)
         return (Real *) this;
     return NULL;
 }
@@ -376,7 +377,7 @@ inline Text *Tree::AsText()
 //    Return a pointer to an Text or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == TEXT)
+    if (IsValid() && Kind() == TEXT)
         return (Text *) this;
     return NULL;
 }
@@ -387,7 +388,7 @@ inline Name *Tree::AsName()
 //    Return a pointer to an Name or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == NAME)
+    if (IsValid() && Kind() == NAME)
         return (Name *) this;
     return NULL;
 }
@@ -398,7 +399,7 @@ inline Block *Tree::AsBlock()
 //    Return a pointer to an Block or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == BLOCK)
+    if (IsValid() && Kind() == BLOCK)
         return (Block *) this;
     return NULL;
 }
@@ -409,7 +410,7 @@ inline Infix *Tree::AsInfix()
 //    Return a pointer to an Infix or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == INFIX)
+    if (IsValid() && Kind() == INFIX)
         return (Infix *) this;
     return NULL;
 }
@@ -420,7 +421,7 @@ inline Prefix *Tree::AsPrefix()
 //    Return a pointer to an Prefix or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == PREFIX)
+    if (IsValid() && Kind() == PREFIX)
         return (Prefix *) this;
     return NULL;
 }
@@ -431,7 +432,7 @@ inline Postfix *Tree::AsPostfix()
 //    Return a pointer to an Postfix or NULL
 // ----------------------------------------------------------------------------
 {
-    if ((void *) this && Kind() == POSTFIX)
+    if (IsValid() && Kind() == POSTFIX)
         return (Postfix *) this;
     return NULL;
 }

@@ -219,7 +219,8 @@ inline llvm::Constant *LLVMS_TextConstant(llvm::LLVMContext &llvm, text value)
 }
 
 
-inline void LLVMS_SetName(llvm::Module *module, llvm_type type, text name)
+inline void LLVMS_SetName(llvm::Module *module XL_MAYBE_UNUSED,
+                          llvm_type type, text name)
 // ----------------------------------------------------------------------------
 //   Setting the name for a type
 // ----------------------------------------------------------------------------
@@ -238,7 +239,7 @@ inline void LLVMS_SetName(llvm::Module *module, llvm_type type, text name)
 }
 
 
-inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm,
+inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm XL_MAYBE_UNUSED,
                                       llvm_struct old,
                                       std::vector<llvm_type> &elements)
 // ----------------------------------------------------------------------------
