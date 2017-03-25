@@ -58,9 +58,10 @@ SOURCES     =					\
 	opcodes.cpp				\
 	winglob.cpp
 
-PRODUCT=xlr$(EXE)
+PRODUCT=xlr.exe
 
-include $(BROOT)Makefile.config
+BUILD=../build/
+include $(BUILD)rules.mk
 
 LLVM_CONFIG=llvm-config
 LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
