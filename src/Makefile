@@ -20,18 +20,17 @@
 #  (C) 2010-2015 Taodyne SAS
 #******************************************************************************
 
+# Define where the build files are located (needs the trailing /)
+BUILD=../build/
+
 # Set to 'none' to disable LLVM
 COMPILER=none
 #COMPILER=llvm
 
-PREFIX=/usr/local/
-PREFIX_BIN=$(PREFIX)bin/
-PREFIX_LIB=$(PREFIX)lib/elfe/
-
 # List of modules to build
-MODULES=basics io math text remote time-functions temperature
-MODULES_SOURCES=$(MODULES:%=%-module.cpp)
-MODULES_HEADERS=$(MODULES:%=%-module.h)
+MODULES=basics io math text remote time_functions temperature
+MODULES_SOURCES=$(MODULES:%=%_module.cpp)
+MODULES_HEADERS=$(MODULES:%=%_module.h)
 
 # List of source files to process
 SOURCES     =					\
@@ -68,9 +67,12 @@ SOURCES_llvm =					\
 	parms.cpp				\
 	unit.cpp				\
 
-PRODUCT=elfe$(EXE)
+PRODUCTS=elfe.exe
 
-include $(BROOT)Makefile.config
+PREFIX_LIB=$(PREFIX)lib/elfe/
+LIB_INSTALL=builtins.elfe elfe.syntax C.syntax *.stylesheet
+
+include $(BUILD)rules.mk
 
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
 LLVM_CONFIG=llvm-config
@@ -102,19 +104,13 @@ LDFLAGS_llvm360=-lz -lncurses
 CPPFLAGS+=	-DELFE_BIN='"'$(PREFIX_BIN)'"'	\
 		-DELFE_LIB='"'$(PREFIX_LIB)'"'
 
-install: all
-	cp $(PRODUCT) $(PREFIX_BIN)
-	mkdir -p $(PREFIX_LIB)
-	cp builtins.elfe elfe.syntax C.syntax *.stylesheet $(PREFIX_LIB)
-
 test:
 	cd ../tests; ./alltests
 hello: show_$(COMPILER)_version
 show_llvm_version:
-	@echo Building with LLVM version $(LLVM_VERSION)
+	@$(INFO) "[INFO]" Building with LLVM version $(LLVM_VERSION)
 show_none_version:
-	@echo Building in interpreter-only mode
-
+	@$(INFO) "[INFO]" Building in interpreter-only mode
 
 opt_tests opt-tests:
 	cd ../tests;		\
@@ -135,11 +131,10 @@ interp-%:
 ionly-%:
 	$(MAKE) COMPILER=none $*
 
+%_module.cpp: %.tbl %_module.h Makefile
+	$(PRINT_GENERATE) ./generate-module-body $* > $@
 
-%-module.cpp: %.tbl %-module.h Makefile
-	@echo Generating $@ from $<
-	./generate-module-body $* > $@
+%_module.h: %.tbl Makefile
+	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-%-module.h: %.tbl Makefile
-	@echo Generating $@ from $<
-	./generate-module-header $* >  $@
+$(DEPENDENCIES)	: $(MODULES_HEADERS)

@@ -4,7 +4,7 @@
 // 
 //   File Description:
 // 
-//    Define the headers required for time-functions.tbl
+//    Define the headers required for time.tbl
 // 
 // 
 // 

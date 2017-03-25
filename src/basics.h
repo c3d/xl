@@ -51,6 +51,6 @@
 #include "main.h"
 #include "save.h"
 #include "interpreter.h"
-#include "basics-module.h"
+#include "basics_module.h"
 
 #endif // BASICS_H
