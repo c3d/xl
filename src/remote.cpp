@@ -24,6 +24,7 @@
 #include "main.h"
 #include "save.h"
 #include "tree-clone.h"
+#include "fdstream.hpp"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -38,7 +39,6 @@
 
 #include <string>
 #include <sstream>
-#include <ext/stdio_filebuf.h>
 
 
 ELFE_BEGIN
@@ -70,8 +70,7 @@ static Tree *elfe_read_tree(int sock)
 // ----------------------------------------------------------------------------
 {
     int fd = dup(sock);         // stdio_filebuf closes its fd in dtor
-    __gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::in);
-    std::istream is(&filebuf);
+    boost::fdistream is(fd);
     return Deserializer::Read(is);
 }
 
@@ -82,8 +81,7 @@ static void elfe_write_tree(int sock, Tree *tree)
 // ----------------------------------------------------------------------------
 {
     int fd = dup(sock);         // stdio_filebuf closes its fd in dtor
-    __gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::out);
-    std::ostream os(&filebuf);
+    boost::fdostream os(fd);
     Serializer::Write(os, tree);
 }
 
