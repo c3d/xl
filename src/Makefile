@@ -138,3 +138,6 @@ ionly-%:
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
 $(DEPENDENCIES)	: $(MODULES_HEADERS)
+
+$(BUILD)rules.mk:
+	cd .. && git submodule update --init --recursive
