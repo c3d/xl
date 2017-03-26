@@ -94,3 +94,6 @@ unit_tests: sha1_test lcs_test
 
 xl_tests:
 	cd tests; ./alltests
+
+$(BUILD)rules.mk:
+	cd .. && git submodule update --init --recursive
