@@ -7,6 +7,9 @@ src/cscope.files
 src/cscope.out
 src/*-module.cpp
 src/*-module.h
+src/recorder.h
+src/recorder.cpp
+src/ring.h
 src/obj/**/Makefile.depend
 src/obj/**/created
 tests/builtins.xl
