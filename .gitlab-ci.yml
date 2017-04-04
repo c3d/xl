@@ -1,0 +1,15 @@
+before_script:
+  - git submodule update --init --recursive
+
+test:
+  script:
+  - make PREFIX=/tmp/elfe install
+  - export PATH=$PATH:/tmp/elfe/bin
+  - make test
+
+make_only:
+  script:
+  - make
+  - make opt
+  - make release
+  - make debug
