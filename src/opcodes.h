@@ -383,7 +383,6 @@ ELFE_END
 #define POSITION        (DataSelf(data)->Position())
 #define SCOPE           (DataScope(data))
 #define CONTEXT         (Context(SCOPE).Pointer())
-#define OPTIONS         (MAIN->options)
 #define AS_INT(x)       (new Integer((x), POSITION))
 #define AS_REAL(x)      (new Real((x), POSITION))
 #define AS_BOOL(x)      ((x) ? elfe_true : elfe_false)

@@ -33,7 +33,7 @@
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
-#include "flight_recorder.h"
+#include "recorder.h"
 
 
 ELFE_BEGIN
@@ -61,7 +61,7 @@ Options::Options(int argc, char **argv):
     // Check if some options are given from environment
     if (kstring envopt = getenv("ELFE_OPT"))
     {
-        OPTIONS_RECORD("Environment variable ELFE_OPT='%s'", envopt);
+        OPTIONS("Environment variable ELFE_OPT='%s'", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -72,14 +72,14 @@ Options::Options(int argc, char **argv):
     }
     else
     {
-        OPTIONS_RECORD("Environment variable ELFE_OPT is not set");
+        OPTIONS("Environment variable ELFE_OPT is not set");
     }
 
     // Add options from the command-line
-    OPTIONS_RECORD("Command line has %d options", argc-1);
+    OPTIONS("Command line has %d options", argc-1);
     for (int a = 1; a < argc; a++)
     {
-        OPTIONS_RECORD("  Option #%d is '%s'", a, argv[a]);
+        OPTIONS("  Option #%d is '%s'", a, argv[a]);
         args.push_back(argv[a]);
     }
 }
@@ -227,7 +227,7 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
 
-            OPTIONS_RECORD("Parse option #%d, '%s'", arg, option);
+            OPTIONS("Parse option #%d, '%s'", arg, option);
 
 #if ELFE_DEBUG
             if (argval[0] == 't')

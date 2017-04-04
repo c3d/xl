@@ -41,6 +41,14 @@ ELFE_BEGIN
 // ============================================================================
 
 TreePosition Tree::NOWHERE = Tree::UNKNOWN_POSITION;
+kstring Tree::kindName[KIND_COUNT] =
+// ----------------------------------------------------------------------------
+//   The names of the tree kinds for debugging purpose
+// ----------------------------------------------------------------------------
+{
+    "INTEGER", "REAL", "TEXT", "NAME",   
+    "BLOCK", "PREFIX", "POSTFIX", "INFIX"
+};
 
 
 Tree::~Tree()

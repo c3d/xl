@@ -42,7 +42,7 @@
 //
 
 #include "compiler-gc.h"
-#include "flight_recorder.h"
+#include "recorder.h"
 
 ELFE_BEGIN
 
@@ -51,10 +51,8 @@ CompilerInfo::~CompilerInfo()
 //   Notice when we lose a compiler info
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER_DETAILS, "Compiler info deleted",
-           "function", (intptr_t) function,
-           "global", (intptr_t) global,
-           "tree", (intptr_t) tree);
+    COMPILER("Compiler info deleted: function %p global %p tree %p",
+             function, global, tree);
 
     IFTRACE(llvm)
         std::cerr << "CompilerInfo deleted F" << (void *) function

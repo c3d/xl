@@ -69,7 +69,7 @@ FUNCTION(listen, integer, ,
          R_INT(rc));
 
 FUNCTION(listen_forking, integer, ,
-         int rc = elfe_listen(CONTEXT, OPTIONS.listen_forks);
+         int rc = elfe_listen(CONTEXT, MAIN->options.listen_forks);
          R_INT(rc));
 
 FUNCTION(listen_hook, tree,

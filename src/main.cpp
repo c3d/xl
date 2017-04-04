@@ -53,7 +53,7 @@
 #include "serializer.h"
 #include "runtime.h"
 #include "traces.h"
-#include "flight_recorder.h"
+#include "recorder.h"
 #include "utf8_fileutils.h"
 #include "interpreter.h"
 #include "opcodes.h"
@@ -589,7 +589,7 @@ int main(int argc, char **argv)
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    ELFE::COMPILER_RECORD("Compiler starting");
+    COMPILER("ELFE Compiler version %s starting", ELFE_VERSION);
 
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
@@ -607,7 +607,7 @@ int main(int argc, char **argv)
                 long ((char *) malloc(1) - low_water) / 1024);
 #endif
 
-    ELFE::COMPILER_RECORD("Compiler exit code %d", rc);
+    COMPILER("Compiler exit code %d", rc);
 
     if (main.options.dumpRecorder)
         recorder_dump();

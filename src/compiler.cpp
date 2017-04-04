@@ -50,7 +50,7 @@
 #include "runtime.h"
 #include "errors.h"
 #include "types.h"
-#include "flight_recorder.h"
+#include "recorder.h"
 #include "llvm-crap.h"
 
 #include <iostream>
@@ -128,7 +128,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
 #endif
-    RECORD(COMPILER, "Creating compiler");
+    COMPILER("Creating compiler");
 
     // Register a listener with the garbage collector
     CompilerGarbageCollectionListener *cgcl =
@@ -354,7 +354,7 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
-    RECORD(COMPILER, "CompileProgram", "program", (intptr_t) program);
+    COMPILER("Compile program %p", program);
 
     if (!program)
         return NULL;
@@ -424,7 +424,7 @@ void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 {
     uint optLevel = options.optimize_level;
-    RECORD(COMPILER, "Compiler setup", "opt", optLevel);
+    COMPILER("Setup optimization level %d", optLevel);
     LLVMS_SetupOpts(moduleOptimizer, optimizer, optLevel);
     createCompilerFunctionPasses(optimizer);
 
@@ -532,11 +532,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
     from->Do(plist);
     Parameters &parms = plist.parameters;
 
-    RECORD(COMPILER, "Enter Builtin",
-           "parms", parms.size(),
-           "src", (intptr_t) to,
-           "code", (intptr_t) code);
-
+    COMPILER("Builtin %d parms, source %p, code %p", parms.size(), to, code);
     IFTRACE(llvm)
         std::cerr << "EnterBuiltin " << name
                   << " C" << (void *) code << " T" << (void *) to;
@@ -678,8 +674,8 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER, "Extern Function",
-           name, parmCount, "addr", (intptr_t) address);
+    BUILTINS("Extern function %s, %d parameters, address %p",
+             name, parmCount, address);
     IFTRACE(llvm)
         std::cerr << "ExternFunction " << name
                   << " has " << parmCount << " parameters "
@@ -717,8 +713,7 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 //   Enter a global variable in the symbol table
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER_DETAILS, "Enter Global",
-           name->value.c_str(), (intptr_t) address);
+    BUILTINS("Global %s address %p", name->value.c_str(), address);
 
     Constant *null = ConstantPointerNull::get(treePtrTy);
     bool isConstant = false;
@@ -743,8 +738,7 @@ Value *Compiler::EnterConstant(Tree *constant)
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER_DETAILS, "Enter Constant",
-           "tree", (intptr_t) constant, "kind", constant->Kind());
+    BUILTINS("Constant %p kind %s", constant, Tree::kindName[constant->Kind()]);
 
     bool isConstant = true;
     text name = "elfek";

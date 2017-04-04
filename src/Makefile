@@ -40,7 +40,7 @@ SOURCES     =					\
 	options.cpp				\
 	scanner.cpp				\
 	parser.cpp				\
-	flight_recorder.cpp			\
+	recorder.cpp				\
 	errors.cpp				\
 	gc.cpp					\
 	syntax.cpp				\
@@ -71,6 +71,8 @@ PRODUCTS=elfe.exe
 
 PREFIX_LIB=$(PREFIX)lib/elfe/
 LIB_INSTALL=builtins.elfe elfe.syntax C.syntax *.stylesheet
+
+DEFINES=ELFE_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
 
 include $(BUILD)rules.mk
 
@@ -137,7 +139,14 @@ ionly-%:
 %_module.h: %.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-$(DEPENDENCIES)	: $(MODULES_HEADERS)
+$(DEPENDENCIES)	: $(MODULES_HEADERS) recorder.h ring.h
 
-$(BUILD)rules.mk:
+recorder.cpp: ../recorder/recorder.cpp
+	$(PRINT_COPY) cp $< $@
+recorder.h: ../recorder/recorder.h
+	$(PRINT_COPY) cp $< $@
+ring.h: ../recorder/ring.h
+	$(PRINT_COPY) cp $< $@
+
+$(BUILD)rules.mk ../recorder/recorder.cpp ../recorder/recorder.h:
 	cd .. && git submodule update --init --recursive

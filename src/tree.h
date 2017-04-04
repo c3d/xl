@@ -176,6 +176,7 @@ public:
 
     static TreePosition NOWHERE;
     GARBAGE_COLLECT(Tree);
+    static kstring      kindName[KIND_COUNT];
 
 private:
     Tree (const Tree &);
