@@ -1,0 +1,29 @@
+// ****************************************************************************
+//  recorder.tbl                                                 ELFE project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Name of the recorders we use in the ELFE project
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+//  (C) 2017 Christophe de Dinechin <christophe@dinechin.org>
+// This software is licensed under the GNU General Public License v3
+// See file COPYING for details.
+// ****************************************************************************
+
+RECORDER(ERROR,          256)
+RECORDER(OPTIONS,         64)
+RECORDER(MEMORY,         128)
+RECORDER(COMPILER,       128)
+RECORDER(EVAL,           256)
+RECORDER(BUILTINS,       128)
+
+#undef RECORDER
