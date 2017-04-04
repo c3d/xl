@@ -108,7 +108,8 @@ LDFLAGS_llvm360=-lz -lncurses
 CPPFLAGS+=	-DELFE_BIN='"'$(PREFIX_BIN)'"'	\
 		-DELFE_LIB='"'$(PREFIX_LIB)'"'
 
-test:
+test: run-all-elfe-tests
+run-all-elfe-tests:
 	cd ../tests; ./alltests
 hello: show_$(COMPILER)_version
 show_llvm_version:
