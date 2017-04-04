@@ -857,6 +857,17 @@ static inline ulong HashText(const text &t)
         h = (h * 0x301) ^ *ptr++;
     return h;
 }
+
+
+static inline longlong hashRealToInteger(double value)
+// ----------------------------------------------------------------------------
+//   Force a static conversion without "breaking strict aliasing rules"
+// ----------------------------------------------------------------------------
+{
+    union { double d; longlong i; } u;
+    u.d = value;
+    return u.i;
+}
     
 
 ulong Context::Hash(Tree *what)
@@ -873,10 +884,7 @@ ulong Context::Hash(Tree *what)
         h += ((Integer *) what)->value;
         break;
     case REAL:
-        {
-            ELFE_CASSERT(sizeof(Real::value_t) >= sizeof (ulong));
-            h += *((ulong *) &(((Real *) what)->value));
-        }
+        h += hashRealToInteger(((Real *) what)->value);
         break;
     case TEXT:
         h += HashText(((Text *) what)->value);

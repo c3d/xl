@@ -88,7 +88,7 @@ LLVM_LDFLAGS=$(LLVM_LDFLAGS_$(COMPILER))
 LLVM_VERSION_llvm=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
 LLVM_FLAGS_llvm=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
 		  -DLLVM_VERSION=$(LLVM_VERSION)
-LLVM_LIBS_llvm=$(shell $(LLVM_CONFIG) --libs)
+LLVM_LIBS_llvm=$(shell $(LLVM_CONFIG) --libs --system-libs)
 LLVM_LDFLAGS_llvm=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION))
 
 # When LLVM is not enabled
@@ -99,8 +99,10 @@ LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 CPPFLAGS_llvm350=-std=c++11
+CPPFLAGS_llvm352=-std=c++11
 CPPFLAGS_llvm360=-std=c++11
 LDFLAGS_llvm350=-lz -lncurses
+LDFLAGS_llvm352=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
 
 CPPFLAGS+=	-DELFE_BIN='"'$(PREFIX_BIN)'"'	\

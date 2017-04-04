@@ -70,13 +70,18 @@
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetOptions.h>
-#include <llvm/Target/TargetSelect.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Signals.h>
+
+// Ignore badly indented 'if' in 3.52
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include <llvm/Support/CommandLine.h>
+#pragma GCC diagnostic pop
+
 #include <llvm/ADT/Statistic.h>
 
 // Sometimes, headers magically disappear
@@ -146,6 +151,14 @@
 #else
 #include <llvm/IR/Verifier.h>
 #endif
+
+// This is perfectly logical, trust me!
+#if LLVM_VERSION < 352
+#include <llvm/Target/TargetSelect.h>
+#else
+#include <llvm/Support/TargetSelect.h>
+#endif
+
 
 
 // ============================================================================

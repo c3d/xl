@@ -41,14 +41,8 @@
 
 #include "serializer.h"
 #include "renderer.h"
-#ifdef CONFIG_MINGW
+#include <sys/types.h> // Get BYTE_ORDER in a portable way
 #include <sys/param.h>
-#elif CONFIG_MACOSX
-#include <machine/endian.h>
-#else
-#include <endian.h>
-#endif
-
 
 
 ELFE_BEGIN

@@ -96,6 +96,9 @@ Infix   *elfe_new_infix(Infix *source, Tree *left, Tree *right);
 
 extern "C"
 {
+#pragma GCC diagnostic push
+// You first have to ignore the fact that the following pragma may be ignored!
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
 integer_t       elfe_text2int(kstring t);
 real_t          elfe_text2real(kstring t);
@@ -123,6 +126,7 @@ integer_t       elfe_GMT_offset();
 
 real_t          elfe_random();
 bool            elfe_random_seed(int seed);
+#pragma GCC diagnostic pop
 }
 
 template<typename number>

@@ -53,7 +53,6 @@ CompilerInfo::~CompilerInfo()
 {
     COMPILER("Compiler info deleted: function %p global %p tree %p",
              function, global, tree);
-
     IFTRACE(llvm)
         std::cerr << "CompilerInfo deleted F" << (void *) function
                   << " G" << (void *) global

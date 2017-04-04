@@ -382,6 +382,16 @@ struct Infix : Tree
 //
 // ============================================================================
 
+template <class T>
+bool IsNotNull(T *ptr)
+// ----------------------------------------------------------------------------
+//   Workaround overly capable compilers that "know" this can't be NULL
+// ----------------------------------------------------------------------------
+{
+    return ptr != 0;
+}
+
+
 template<class T>
 inline T * Tree::As(Context *)
 // ----------------------------------------------------------------------------
@@ -389,7 +399,7 @@ inline T * Tree::As(Context *)
 // ----------------------------------------------------------------------------
 //   By default, we only check the kind, see opcode.h for specializations
 {
-    if ((void *) this && Kind() == T::KIND)
+    if (IsNotNull(this) && Kind() == T::KIND)
         return (T *) this;
     return NULL;
 }
