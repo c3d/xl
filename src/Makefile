@@ -53,6 +53,7 @@ SOURCES     =					\
 	cdecls.cpp				\
 	serializer.cpp				\
         traces_base.cpp                         \
+	utf8_fileutils.cpp			\
 	winglob.cpp				\
 	$(MODULES_SOURCES)			\
 	$(SOURCES_$(COMPILER))
