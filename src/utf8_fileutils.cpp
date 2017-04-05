@@ -22,7 +22,6 @@
 #ifdef MINGW_CONFIG
 #include "utf8_fileutils.h"
 
-#include <ext/stdio_filebuf.h>
 #include <windows.h>
 #include <fcntl.h>
 
@@ -43,12 +42,18 @@ std::wstring utf8_decode(const std::string &str)
 
 utf8_ifstream::utf8_ifstream(const char* s,
                              std::ios::openmode mode = std::ios::in)
+// ----------------------------------------------------------------------------
+//   Configuration when opening a steam
+// ----------------------------------------------------------------------------
     : istream_type(&b),
       b(_wopen(utf8_decode(s).c_str(), wflags(mode)), mode)
 {}
 
 
 int utf8_ifstream::wflags(std::ios::openmode)
+// ----------------------------------------------------------------------------
+//   Need ot patch flags for correct behavior
+// ----------------------------------------------------------------------------
 {
     int flags = _O_RDONLY;
     // Experience shows that some versions of GCC misbehave on input.unget()
@@ -58,7 +63,7 @@ int utf8_ifstream::wflags(std::ios::openmode)
 }
 
 
-time_t fileTimeToTime_t(FILETIME ft)
+static time_t fileTimeToTime_t(FILETIME ft)
 // ----------------------------------------------------------------------------
 //   Conversion to more portable file time
 // ----------------------------------------------------------------------------

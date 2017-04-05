@@ -45,6 +45,8 @@
 
 #ifdef CONFIG_MINGW
 
+#include <ext/stdio_filebuf.h>
+
 typedef struct _stat utf8_filestat_t;
 
 std::wstring utf8_decode(const std::string &str);
@@ -74,7 +76,6 @@ protected:
 };
 
 
-extern time_t   fileTimeToTime_t(FILETIME ft);
 extern int      utf8_stat(const char *path, struct _stat *buffer);
 extern int      utf8_access(const char *path, int mode);
 
