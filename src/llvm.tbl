@@ -122,8 +122,9 @@ SPECIAL(TreeKind, 1,
 //   Return the kind for the input tree
 // ----------------------------------------------------------------------------
         llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(treeValue, 0,
-                                             TAG_INDEX, "tagPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  treeValue,
+                                                  TAG_INDEX, "tagPtr");
         llvm_value tag = bld->CreateLoad(ptr, "tag");
         llvm_value mask = llvm::ConstantInt::get(tag->getType(),
                                                  Tree::KINDMASK);
@@ -139,8 +140,9 @@ SPECIAL(TreeLeft, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
         llvm_value prefixValue = bld->CreateBitCast(treeValue,
                                                     compiler.prefixTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(prefixValue, 0,
-                                                 LEFT_VALUE_INDEX, "leftPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  prefixValue,
+                                                  LEFT_VALUE_INDEX, "leftPtr");
         llvm_value result = bld->CreateLoad(ptr, "left");
         return result;
     )
@@ -153,8 +155,9 @@ SPECIAL(TreeRight, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
         llvm_value prefixValue = bld->CreateBitCast(treeValue,
                                                     compiler.prefixTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(prefixValue, 0,
-                                                 RIGHT_VALUE_INDEX, "rightPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  prefixValue,
+                                                  RIGHT_VALUE_INDEX,"rightPtr");
         llvm_value result = bld->CreateLoad(ptr, "right");
         return result;
     )
@@ -167,8 +170,9 @@ SPECIAL(InfixName, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
         llvm_value infixValue = bld->CreateBitCast(treeValue,
                                                     compiler.infixTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(infixValue, 0,
-                                                 INFIX_NAME_INDEX, "namePtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  infixValue,
+                                                  INFIX_NAME_INDEX,"namePtr");
         llvm_value result = bld->CreateLoad(ptr, "name");
         return result;
     )
@@ -181,8 +185,9 @@ SPECIAL(TextOpening, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
         llvm_value textValue = bld->CreateBitCast(treeValue,
                                                   compiler.textTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(textValue, 0,
-                                                 TEXT_OPENING_INDEX, "opPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  textValue,
+                                                  TEXT_OPENING_INDEX, "opPtr");
         llvm_value result = bld->CreateLoad(ptr, "opening");
         return result;
     )
@@ -195,8 +200,9 @@ SPECIAL(TextClosing, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.treePtrTy);
         llvm_value textValue = bld->CreateBitCast(treeValue,
                                                   compiler.textTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(textValue, 0,
-                                                 TEXT_CLOSING_INDEX, "clPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  textValue,
+                                                  TEXT_CLOSING_INDEX, "clPtr");
         llvm_value result = bld->CreateLoad(ptr, "closing");
         return result;
     )
@@ -209,8 +215,9 @@ SPECIAL(BlockChild, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
         llvm_value blockValue = bld->CreateBitCast(treeValue,
                                                    compiler.blockTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(blockValue, 0,
-                                                 BLOCK_CHILD_INDEX, "childPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  blockValue,
+                                                  BLOCK_CHILD_INDEX, "chPtr");
         llvm_value result = bld->CreateLoad(ptr, "child");
         return result;
     )
@@ -223,8 +230,9 @@ SPECIAL(BlockOpening, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
         llvm_value blockValue = bld->CreateBitCast(treeValue,
                                                    compiler.blockTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(blockValue, 0,
-                                             BLOCK_OPENING_INDEX, "bloPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  blockValue,
+                                                  BLOCK_OPENING_INDEX,"bloPtr");
         llvm_value result = bld->CreateLoad(ptr, "blockOpen");
         return result;
     )
@@ -237,8 +245,9 @@ SPECIAL(BlockClosing, 1,
         llvm_value treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
         llvm_value blockValue = bld->CreateBitCast(treeValue,
                                                    compiler.blockTreePtrTy);
-        llvm_value ptr = bld->CreateConstGEP2_32(blockValue, 0,
-                                                 BLOCK_CLOSING_INDEX, "blcPtr");
+        llvm_value ptr = LLVMCrap_CreateStructGEP(bld,
+                                                  blockValue,
+                                                  BLOCK_CLOSING_INDEX,"blcPtr");
         llvm_value result = bld->CreateLoad(ptr, "blockClose");
         return result;
     )

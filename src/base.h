@@ -56,7 +56,6 @@
 /*                                                                           */
 /* ========================================================================= */
 
-
 #ifndef NULL
 #  ifdef __cplusplus
 #    define NULL        0
@@ -95,6 +94,13 @@
 #endif
 
 
+#if defined(__GNUC__)
+#define MAYBE_UNUSED     __attribute((unused))
+#elif __cplusplus > 201103L
+#define MAYBE_UNUSED     [[maybe_unused]]
+#else
+#define MAYBE_UNUSED
+#endif
 
 /*===========================================================================*/
 /*                                                                           */

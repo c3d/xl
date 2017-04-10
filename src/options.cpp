@@ -97,7 +97,7 @@ static void Usage(kstring appName)
 #define OPTION(name, descr, code)                                       \
     std::cerr << "\t-" << #name ": " descr "\n";
 #include "options.tbl"
-#if DEBUG
+#if ELFE_DEBUG
     std::set<std::string> names = ELFE::Traces::names();
     if (names.size())
     {

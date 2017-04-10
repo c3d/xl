@@ -499,7 +499,7 @@ ELFE_END
 /* ------------------------------------------------------------ */      \
     template<>                                                          \
     Allocator<type> *Allocator<type>::allocator =                       \
-        Allocator<type>::CreateSingleton();
+               Allocator<type>::CreateSingleton();
 
 
 #define ARG(Name, Type, Value)                                          \

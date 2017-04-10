@@ -88,7 +88,8 @@ llvm_value CompileExpression::DoText(Text *what)
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    return unit->code->CreateConstGEP2_32(global, 0U, 0U);
+    return LLVMCrap_CreateStructGEP(unit->code,
+                                    global, 0U);
 }
 
 
@@ -478,7 +479,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
         }
         if (valueType != c.charPtrTy)
             return ConstantInt::get(c.booleanTy, 0);
-        value = code->CreateCall2(c.strcmp_fn, test, value);
+        value = LLVMCrap_CreateCall(code, c.strcmp_fn, test, value);
         test = ConstantInt::get(value->getType(), 0);
         value = code->CreateICmpEQ(value, test);
         return value;
@@ -568,7 +569,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
-        return code->CreateCall2(c.elfe_same_shape, value, test);
+        return LLVMCrap_CreateCall(code, c.elfe_same_shape, value, test);
     }
 
     // Other comparisons fail for now
@@ -588,7 +589,8 @@ llvm_value CompileExpression::KindTest(Tree *valueTree, kind test)
     llvm_value value = Value(valueTree);
 
     llvm_value treeValue = u.Autobox(value, c.treePtrTy);
-    llvm_value ptr = code->CreateConstGEP2_32(treeValue, 0,
+    llvm_value ptr = LLVMCrap_CreateStructGEP(code,
+                                              treeValue,
                                               TAG_INDEX, "tagPtr");
     llvm_value tag = code->CreateLoad(ptr, "tag");
     llvm_value mask = llvm::ConstantInt::get(tag->getType(), Tree::KINDMASK);

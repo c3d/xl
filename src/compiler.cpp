@@ -90,7 +90,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : llvm(llvm::getGlobalContext()),
+    : llvm(LLVMCrap_GlobalContext()),
       module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
@@ -147,8 +147,8 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     runtime = LLVMS_InitializeJIT(llvm, moduleName, &module);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
-    optimizer = new FunctionPassManager(module);
-    moduleOptimizer = new PassManager;
+    optimizer = new LLVMCrap_FunctionPassManager(module);
+    moduleOptimizer = new LLVMCrap_PassManager;
 
     // Install a fallback mechanism to resolve references to the runtime, on
     // systems which do not allow the program to dlopen itself.
@@ -164,6 +164,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     realTy = Type::getDoubleTy(llvm);
     real32Ty = Type::getFloatTy(llvm);
     charPtrTy = PointerType::get(LLVM_INTTYPE(char), 0);
+    charPtrPtrTy = PointerType::get(charPtrTy, 0);
 
     // Create the 'text' type, assume it contains a single char *
     llvm_types textElements;
@@ -384,7 +385,11 @@ static inline void createCompilerFunctionPasses(PassManagerBase *PM)
      
     // Start of function pass.
     // Break up aggregate allocas, using SSAUpdater.
+#if LLVM_VERSION < 391
      PM->add(createScalarReplAggregatesPass(-1, false));
+#else // >= 391
+     PM->add(createScalarizerPass());
+#endif // 391
      PM->add(createEarlyCSEPass());              // Catch trivial redundancies
 #if LLVM_VERSION < 342
      PM->add(createSimplifyLibCallsPass());      // Library Call Optimizations
@@ -403,7 +408,7 @@ static inline void createCompilerFunctionPasses(PassManagerBase *PM)
      PM->add(createLoopDeletionPass());          // Delete dead loops
      PM->add(createLoopUnrollPass());            // Unroll small loops
      PM->add(createInstructionCombiningPass());  // Clean up after the unroller
-     PM->add(createGVNPass());                 // Remove redundancies
+     PM->add(createGVNPass());                   // Remove redundancies
      PM->add(createMemCpyOptPass());             // Remove memcpy / form memset
      PM->add(createSCCPPass());                  // Constant prop with SCCP
 
@@ -624,10 +629,10 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 
     // Read the arguments from the function we are generating
     llvm::Function::arg_iterator inArgs = adapter->arg_begin();
-    Value *fnToCall = inArgs++;
-    Value *contextPtr = inArgs++;
-    Value *sourceTree = inArgs++;
-    Value *treeArray = inArgs++;
+    Value *fnToCall = &*inArgs++;
+    Value *contextPtr = &*inArgs++;
+    Value *sourceTree = &*inArgs++;
+    Value *treeArray = &*inArgs++;
 
     // Cast the input function pointer to right type
     Value *fnTyped = code.CreateBitCast(fnToCall, calledPtrType, "fnCast");
@@ -972,7 +977,7 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
 
     // Take the first input argument, which is the boxed value.
     llvm::Function::arg_iterator args = fn->arg_begin();
-    llvm_value arg = args++;
+    llvm_value arg = &*args++;
 
     // Generate code to create the unboxed tree
     uint index = 0;
