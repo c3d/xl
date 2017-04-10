@@ -498,6 +498,10 @@ inline void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
 //
 // ============================================================================
 
+template <class Object>
+Allocator<Object> *Allocator<Object>::allocator;
+
+
 template<class Object> inline
 Allocator<Object>::Allocator()
 // ----------------------------------------------------------------------------
