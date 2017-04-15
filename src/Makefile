@@ -95,13 +95,10 @@ LLVM_LDFLAGS_llvm=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION
 # When LLVM is not enabled
 LLVM_FLAGS_none=-DINTERPRETER_ONLY
 
-CPPFLAGS+=$(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
+CPPFLAGS+=-std=c++11 $(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
-CPPFLAGS_llvm350=-std=c++11
-CPPFLAGS_llvm352=-std=c++11
-CPPFLAGS_llvm360=-std=c++11
 LDFLAGS_llvm350=-lz -lncurses
 LDFLAGS_llvm352=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
