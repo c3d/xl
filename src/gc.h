@@ -498,8 +498,12 @@ inline void TypeAllocator::UpdateInUseRange(Chunk_vp chunk)
 //
 // ============================================================================
 
+#if __clang__ && __clang_major__ >= 8
+// Unfortunately, this is required for recent clang, but
+// gives duplicate symbols with GCC 6.3.1
 template <class Object>
 Allocator<Object> *Allocator<Object>::allocator;
+#endif
 
 
 template<class Object> inline
