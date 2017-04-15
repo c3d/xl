@@ -58,7 +58,7 @@ SOURCES     =					\
 	opcodes.cpp				\
 	winglob.cpp
 
-PRODUCT=xlr.exe
+PRODUCTS=xlr.exe
 
 BUILD=../build/
 include $(BUILD)rules.mk
@@ -81,6 +81,11 @@ CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 LDFLAGS_llvm342=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
 LDFLAGS_llvm350=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
 LDFLAGS_llvm360=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
+
+# LLVM 3.9 has the good idea of defining DEBUG!!!
+DEFINES_debug=      XL_DEBUG
+DEFINES_opt=        XL_DEBUG OPTIMIZED
+DEFINES_release=    NDEBUG OPTIMIZED RELEASE
 
 LDFLAGS_CPPLIB_macosx=-stdlib=libc++ -mmacosx-version-min=10.7
 LDFLAGS_CPPLIB_macosx-clang=-stdlib=libc++ -mmacosx-version-min=10.7
