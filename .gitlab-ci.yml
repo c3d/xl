@@ -1,0 +1,16 @@
+before_script:
+  - git submodule update --init --recursive
+
+test:
+  script:
+  - make PREFIX=/tmp/xlr/
+  - make PREFIX=/tmp/xlr/ install
+  - export PATH=$PATH:/tmp/xlr/bin
+  - make test
+
+make_only:
+  script:
+  - make
+  - make opt
+  - make release
+  - make debug
