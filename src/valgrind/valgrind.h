@@ -247,11 +247,11 @@ typedef
   ({volatile unsigned int _zzq_args[6];                           \
     volatile unsigned int _zzq_result;                            \
     _zzq_args[0] = (unsigned int)(_zzq_request);                  \
-    _zzq_args[1] = (unsigned int)(_zzq_arg1);                     \
-    _zzq_args[2] = (unsigned int)(_zzq_arg2);                     \
-    _zzq_args[3] = (unsigned int)(_zzq_arg3);                     \
-    _zzq_args[4] = (unsigned int)(_zzq_arg4);                     \
-    _zzq_args[5] = (unsigned int)(_zzq_arg5);                     \
+    _zzq_args[1] = (unsigned int)(uintptr_t)(_zzq_arg1);          \
+    _zzq_args[2] = (unsigned int)(uintptr_t)(_zzq_arg2);          \
+    _zzq_args[3] = (unsigned int)(uintptr_t)(_zzq_arg3);          \
+    _zzq_args[4] = (unsigned int)(uintptr_t)(_zzq_arg4);          \
+    _zzq_args[5] = (unsigned int)(uintptr_t)(_zzq_arg5);          \
     __asm__ volatile(__SPECIAL_INSTRUCTION_PREAMBLE               \
                      /* %EDX = client_request ( %EAX ) */         \
                      "xchgl %%ebx,%%ebx"                          \
@@ -3732,8 +3732,8 @@ VALGRIND_PRINTF(const char *format, ...)
 #else
    _qzz_res = VALGRIND_DO_CLIENT_REQUEST_EXPR(0,
                               VG_USERREQ__PRINTF_VALIST_BY_REF,
-                              (unsigned long)format,
-                              (unsigned long)&vargs, 
+                              (unsigned long)(uintptr_t)format,
+                              (unsigned long)(uintptr_t)&vargs, 
                               0, 0, 0);
 #endif
    va_end(vargs);
@@ -3770,8 +3770,8 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 #else
    _qzz_res = VALGRIND_DO_CLIENT_REQUEST_EXPR(0,
                               VG_USERREQ__PRINTF_BACKTRACE_VALIST_BY_REF,
-                              (unsigned long)format,
-                              (unsigned long)&vargs, 
+                              (unsigned long)(uintptr_t)format,
+                              (unsigned long)(uintptr_t)&vargs, 
                               0, 0, 0);
 #endif
    va_end(vargs);
