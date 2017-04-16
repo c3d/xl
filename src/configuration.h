@@ -144,7 +144,7 @@
 /* ========================================================================= */
 
 #define CONFIG_HAS_UCHAR                1
-#define CONFIG_HAS_UINT                 0
+#define CONFIG_HAS_UINT                 1
 #define CONFIG_HAS_ULONG                1
 #define CONFIG_HAS_USHORT               0
 #define CONFIG_HAS_LONGLONG             1
