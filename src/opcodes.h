@@ -489,9 +489,11 @@ ELFE_END
 /* ------------------------------------------------------------ */      \
 /*  Initialize the garbage collector                            */      \
 /* ------------------------------------------------------------ */      \
-    static void *init_allocator_for_##type =                            \
-        (void *) GarbageCollector::CreateSingleton();
-
+    static void *init_global_allocator =                                \
+               (void *) (GarbageCollector::CreateSingleton()            \
+                         /* Remove warning about unused variable */     \
+                         + 0 * sizeof(init_global_allocator));
+             
 
 #define INIT_ALLOCATOR(type)                                            \
 /* ------------------------------------------------------------ */      \
