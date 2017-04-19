@@ -2,5 +2,5 @@
 	path = build
 	url = https://github.com/c3d/build.git
 [submodule "recorder"]
-	path = recorder
+	path = src/recorder
 	url = https://github.com/c3d/recorder.git

@@ -40,7 +40,7 @@ SOURCES     =					\
 	options.cpp				\
 	scanner.cpp				\
 	parser.cpp				\
-	recorder.cpp				\
+	recorder/recorder.cpp			\
 	errors.cpp				\
 	gc.cpp					\
 	syntax.cpp				\
@@ -74,6 +74,7 @@ PREFIX_LIB=$(PREFIX)lib/elfe/
 LIB_INSTALL=builtins.elfe elfe.syntax C.syntax *.stylesheet
 
 DEFINES=ELFE_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
+INCLUDES=. includes recorder
 
 include $(BUILD)rules.mk
 
@@ -98,7 +99,7 @@ LLVM_FLAGS_none=-DINTERPRETER_ONLY
 # For the recorder, we need C++11
 CXX=$(CXX11)
 
-CPPFLAGS+=$(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
+CPPFLAGS+=$(LLVM_FLAGS)  $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
@@ -145,12 +146,5 @@ ionly-%:
 
 $(DEPENDENCIES)	: $(MODULES_HEADERS) recorder.h ring.h
 
-recorder.cpp: ../recorder/recorder.cpp
-	$(PRINT_COPY) cp $< $@
-recorder.h: ../recorder/recorder.h
-	$(PRINT_COPY) cp $< $@
-ring.h: ../recorder/ring.h
-	$(PRINT_COPY) cp $< $@
-
-$(BUILD)rules.mk ../recorder/recorder.cpp ../recorder/recorder.h:
+$(BUILD)rules.mk recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
