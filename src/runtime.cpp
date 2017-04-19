@@ -1058,25 +1058,13 @@ real_t elfe_time(real_t delay)
 }
 
 
-#define ELFE_TIME(tmfield, delay)              \
+#define ELFE_TIME(tmfield, delay)               \
     struct tm tm;                               \
     time_t clock;                               \
     time(&clock);                               \
     localtime_r(&clock, &tm);                   \
     MAIN->Refresh(delay);                       \
     return tm.tmfield
-
-
-#ifdef CONFIG_MINGW
-struct tm *localtime_r (const time_t * timep, struct tm * result)
-// ----------------------------------------------------------------------------
-//   MinGW doesn't have localtime_r, but its localtime is thread-local storage
-// ----------------------------------------------------------------------------
-{
-    *result = *localtime (timep);
-    return result;
-}
-#endif // CONFIG_MINGW
 
 
 integer_t  elfe_seconds()     { ELFE_TIME(tm_sec,       1.0); }
