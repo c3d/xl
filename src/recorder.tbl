@@ -19,6 +19,7 @@
 // See file COPYING for details.
 // ****************************************************************************
 
+RECORDER(MAIN,            32)
 RECORDER(ERROR,          256)
 RECORDER(OPTIONS,         64)
 RECORDER(MEMORY,         128)
