@@ -19,7 +19,7 @@
 //   See file LICENSE for details.
 // ****************************************************************************
 
-#ifdef MINGW_CONFIG
+#ifdef CONFIG_MINGW
 #include "utf8_fileutils.h"
 
 #include <windows.h>
@@ -40,8 +40,7 @@ std::wstring utf8_decode(const std::string &str)
 }
 
 
-utf8_ifstream::utf8_ifstream(const char* s,
-                             std::ios::openmode mode = std::ios::in)
+utf8_ifstream::utf8_ifstream(const char* s, std::ios::openmode mode)
 // ----------------------------------------------------------------------------
 //   Configuration when opening a steam
 // ----------------------------------------------------------------------------
@@ -85,7 +84,7 @@ int utf8_stat(const char *path, struct _stat *buffer)
     if (status < 0)
         return status;
 
-    // Bug#1567: _wsat returns bogus file times when daylight saving
+    // Bug#1567: _wstat returns bogus file times when daylight saving
     // time setting changes
     // By using GetFileAttributesEx we are consistent with
     // QFileInfo::lastModified().toTime_t().

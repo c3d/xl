@@ -100,12 +100,13 @@ LLVM_FLAGS_none=-DINTERPRETER_ONLY
 CXX=$(CXX11)
 
 CPPFLAGS+=$(LLVM_FLAGS)  $(CPPFLAGS_llvm$(LLVM_VERSION))
-LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
+LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS) $(MINGW_LIBS_$(BUILDENV))
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 LDFLAGS_llvm350=-lz -lncurses
 LDFLAGS_llvm352=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
+MINGW_LIBS_mingw=-lws2_32
 
 CPPFLAGS+=	-DELFE_BIN='"'$(PREFIX_BIN)'"'	\
 		-DELFE_LIB='"'$(PREFIX_LIB)'"'

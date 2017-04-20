@@ -26,7 +26,7 @@ FUNCTION(sleep, integer,
          R_INT(nanosleep(&ts, NULL)));
 
 #define R_TIME(tmfield)                         \
-    struct tm tm;                               \
+    struct tm tm = { 0 };                       \
     time_t clock;                               \
     time(&clock);                               \
     localtime_r(&clock, &tm);                   \

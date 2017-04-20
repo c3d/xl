@@ -27,11 +27,16 @@
 #include "fdstream.hpp"
 
 #include <sys/types.h>
+#ifdef CONFIG_MINGW
+#include "winsock2.h"
+#undef Context
+#else // CONFIG_MINGW
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif // CONFIG_MINGW
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -109,7 +114,7 @@ struct StopAtGlobalsCloneMode
     }
 
     template<typename CloneClass>
-    Tree *Adjust(Tree * /* from */, Tree *to, CloneClass */* clone */)
+    Tree *Adjust(Tree * /* from */, Tree *to, CloneClass * /* clone */)
     {
         return to;
     }
@@ -363,6 +368,16 @@ Tree_p elfe_invoke(Context *context, text host, Tree *code)
 //
 // ============================================================================
 
+#ifdef CONFIG_MINGW
+#define waitpid(a,b,c)        0
+#define WIFEXITED(status)     0
+#define WEXITSTATUS(status)   0
+#define WNOHANG               0
+#define SIGCHLD               0
+#define fork()                0
+typedef int socklen_t;
+#endif // CONFIG_MINGW
+
 static int child_wait(int flag)
 // ----------------------------------------------------------------------------
 //   Wait for a child to die
@@ -372,11 +387,14 @@ static int child_wait(int flag)
     int childPID = waitpid(-1, &status, flag);
     if (childPID < 0)
         return childPID;
+
     if (childPID > 0)
     {
         IFTRACE(remote)
             std::cerr << "elfe_listen: Child PID " << childPID << " died "
-                      << (flag ? "nowait" : "wait") << "\n";
+                      << (flag ? "nowait" : "wait")
+		      << " status " << status
+		      << "\n";
         active_children--;
         if (!flag && WIFEXITED(status))
         {

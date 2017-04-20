@@ -1059,8 +1059,8 @@ real_t elfe_time(real_t delay)
 
 
 #define ELFE_TIME(tmfield, delay)               \
-    struct tm tm;                               \
-    time_t clock;                               \
+    struct tm tm = { 0 };                       \
+    time_t clock = { 0 };                       \
     time(&clock);                               \
     localtime_r(&clock, &tm);                   \
     MAIN->Refresh(delay);                       \
@@ -1076,8 +1076,10 @@ integer_t  elfe_year()        { ELFE_TIME(tm_year,   86400.0); }
 integer_t  elfe_week_day()    { ELFE_TIME(tm_wday,   86400.0); }
 integer_t  elfe_year_day()    { ELFE_TIME(tm_yday,   86400.0); }
 integer_t  elfe_summer_time() { ELFE_TIME(tm_isdst,  86400.0); }
+#ifndef CONFIG_MINGW
 text_t     elfe_timezone()    { ELFE_TIME(tm_zone,   86400.0); }
 integer_t  elfe_GMT_offset()  { ELFE_TIME(tm_gmtoff, 86400.0); }
+#endif // CONFIG_MINGW
 
 
 real_t elfe_random()
