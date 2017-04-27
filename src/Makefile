@@ -40,6 +40,7 @@ SOURCES     =					\
 	options.cpp				\
 	scanner.cpp				\
 	parser.cpp				\
+	recorder/recorder.c			\
 	recorder/recorder.cpp			\
 	errors.cpp				\
 	gc.cpp					\
@@ -145,7 +146,7 @@ ionly-%:
 %_module.h: %.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-$(DEPENDENCIES)	: $(MODULES_HEADERS) recorder.h ring.h
+$(DEPENDENCIES)	: $(MODULES_HEADERS) recorder/recorder.h recorder/ring.h
 
 $(BUILD)rules.mk recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
