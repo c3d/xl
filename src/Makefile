@@ -40,8 +40,6 @@ SOURCES     =					\
 	options.cpp				\
 	scanner.cpp				\
 	parser.cpp				\
-	recorder/recorder.c			\
-	recorder/recorder.cpp			\
 	errors.cpp				\
 	gc.cpp					\
 	syntax.cpp				\
@@ -56,6 +54,8 @@ SOURCES     =					\
         traces_base.cpp                         \
 	utf8_fileutils.cpp			\
 	winglob.cpp				\
+	recorder/recorder.c			\
+	recorder/recorder.cpp			\
 	$(MODULES_SOURCES)			\
 	$(SOURCES_$(COMPILER))
 
