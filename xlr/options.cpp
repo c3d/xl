@@ -93,7 +93,7 @@ static void Usage(kstring appName)
 #define OPTION(name, descr, code)                                       \
     std::cerr << "\t-" << #name ": " descr "\n";
 #include "options.tbl"
-#if DEBUG
+#if XL_DEBUG
     std::set<std::string> names = XL::Traces::names();
     if (names.size())
     {

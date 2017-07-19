@@ -1,21 +1,21 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 // ****************************************************************************
-//  compiler.h                       (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  compiler.h                       (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Just-in-time compiler for the trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -49,9 +49,9 @@
 
 
 // ============================================================================
-// 
+//
 //    Forward declarations
-// 
+//
 // ============================================================================
 
 XL_BEGIN
@@ -65,11 +65,9 @@ struct RewriteCandidate;
 
 // llvm_type defined in llvm-crap.h, 3.0 API breakage
 typedef std::vector<llvm_type>                 llvm_types;
-typedef llvm::Value *                          llvm_value;
 typedef std::vector<llvm_value>                llvm_values;
 typedef llvm::Constant *                       llvm_constant;
 typedef std::vector<llvm_constant>             llvm_constants;
-typedef llvm::IRBuilder<> *                    llvm_builder;
 typedef llvm::Function *                       llvm_function;
 typedef llvm::BasicBlock *                     llvm_block;
 
@@ -91,9 +89,9 @@ typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 
 
 // ============================================================================
-// 
+//
 //    Global structures to access the LLVM just-in-time compiler
-// 
+//
 // ============================================================================
 
 struct Compiler
@@ -135,7 +133,8 @@ struct Compiler
     llvm_type                 TreeMachineType(Tree *tree);
     llvm_function             UnboxFunction(Context_p ctx, llvm_type type,
                                             Tree *form);
-    llvm_value                Primitive(llvm_builder builder, text name,
+    llvm_value                Primitive(CompiledUnit &unit,
+                                        llvm_builder builder, text name,
                                         uint arity, llvm_value *args);
     bool                      MarkAsClosureType(llvm_type type);
     bool                      IsClosureType(llvm_type type);
@@ -149,89 +148,89 @@ struct Compiler
 
 
 public:
-    llvm::LLVMContext         &llvm;
-    llvm::Module              *module;
-    llvm::ExecutionEngine     *runtime;
-    llvm::FunctionPassManager *optimizer;
-    llvm::PassManager         *moduleOptimizer;
-    llvm_integer_type          booleanTy;
-    llvm_integer_type          integerTy;
-    llvm_integer_type          integer8Ty;
-    llvm_integer_type          integer16Ty;
-    llvm_integer_type          integer32Ty;
-    llvm_type                  realTy;
-    llvm_type                  real32Ty;
-    llvm_integer_type          characterTy;
-    llvm::PointerType         *charPtrTy;
-    llvm::StructType          *textTy;
-    llvm::StructType          *treeTy;
-    llvm::PointerType         *treePtrTy;
-    llvm::PointerType         *treePtrPtrTy;
-    llvm::StructType          *integerTreeTy;
-    llvm::PointerType         *integerTreePtrTy;
-    llvm::StructType          *realTreeTy;
-    llvm::PointerType         *realTreePtrTy;
-    llvm::StructType          *textTreeTy;
-    llvm::PointerType         *textTreePtrTy;
-    llvm::StructType          *nameTreeTy;
-    llvm::PointerType         *nameTreePtrTy;
-    llvm::StructType          *blockTreeTy;
-    llvm::PointerType         *blockTreePtrTy;
-    llvm::StructType          *prefixTreeTy;
-    llvm::PointerType         *prefixTreePtrTy;
-    llvm::StructType          *postfixTreeTy;
-    llvm::PointerType         *postfixTreePtrTy;
-    llvm::StructType          *infixTreeTy;
-    llvm::PointerType         *infixTreePtrTy;
-    llvm::FunctionType        *nativeTy;
-    llvm::PointerType         *nativeFnTy;
-    llvm::FunctionType        *evalTy;
-    llvm::PointerType         *evalFnTy;
-    llvm::PointerType         *infoPtrTy;
-    llvm::PointerType         *contextPtrTy;
-    llvm::PointerType         *symbolsPtrTy;
-    llvm::Function            *strcmp_fn;
-    llvm::Function            *xl_evaluate;
-    llvm::Function            *xl_same_text;
-    llvm::Function            *xl_same_shape;
-    llvm::Function            *xl_infix_match_check;
-    llvm::Function            *xl_type_check;
-    llvm::Function            *xl_form_error;
-    llvm::Function            *xl_stack_overflow;
-    llvm::Function            *xl_new_integer;
-    llvm::Function            *xl_new_real;
-    llvm::Function            *xl_new_character;
-    llvm::Function            *xl_new_text;
-    llvm::Function            *xl_new_ctext;
-    llvm::Function            *xl_new_xtext;
-    llvm::Function            *xl_new_block;
-    llvm::Function            *xl_new_prefix;
-    llvm::Function            *xl_new_postfix;
-    llvm::Function            *xl_new_infix;
-    llvm::Function            *xl_fill_block;
-    llvm::Function            *xl_fill_prefix;
-    llvm::Function            *xl_fill_postfix;
-    llvm::Function            *xl_fill_infix;
-    llvm::Function            *xl_integer2real;
-    llvm::Function            *xl_array_index;
-    llvm::Function            *xl_new_closure;
-    llvm::Constant            *xl_recursion_count_ptr;
-    functions_map              builtins;
-    functions_map              functions;
-    adapter_map                array_to_args_adapters;
-    closure_map                closures;
-    text_constants_map         text_constants;
-    llvm_entry_table           llvm_primitives;
-    llvm_types                 closure_types;
-    type_map                   machineTypes;
+    llvm::LLVMContext            &llvm;
+    llvm::Module                 *module;
+    llvm::ExecutionEngine        *runtime;
+    LLVMCrap_FunctionPassManager *optimizer;
+    LLVMCrap_PassManager         *moduleOptimizer;
+    llvm_integer_type             booleanTy;
+    llvm_integer_type             integerTy;
+    llvm_integer_type             integer8Ty;
+    llvm_integer_type             integer16Ty;
+    llvm_integer_type             integer32Ty;
+    llvm_type                     realTy;
+    llvm_type                     real32Ty;
+    llvm_integer_type             characterTy;
+    llvm::PointerType            *charPtrTy;
+    llvm::StructType             *textTy;
+    llvm::StructType             *treeTy;
+    llvm::PointerType            *treePtrTy;
+    llvm::PointerType            *treePtrPtrTy;
+    llvm::StructType             *integerTreeTy;
+    llvm::PointerType            *integerTreePtrTy;
+    llvm::StructType             *realTreeTy;
+    llvm::PointerType            *realTreePtrTy;
+    llvm::StructType             *textTreeTy;
+    llvm::PointerType            *textTreePtrTy;
+    llvm::StructType             *nameTreeTy;
+    llvm::PointerType            *nameTreePtrTy;
+    llvm::StructType             *blockTreeTy;
+    llvm::PointerType            *blockTreePtrTy;
+    llvm::StructType             *prefixTreeTy;
+    llvm::PointerType            *prefixTreePtrTy;
+    llvm::StructType             *postfixTreeTy;
+    llvm::PointerType            *postfixTreePtrTy;
+    llvm::StructType             *infixTreeTy;
+    llvm::PointerType            *infixTreePtrTy;
+    llvm::FunctionType           *nativeTy;
+    llvm::PointerType            *nativeFnTy;
+    llvm::FunctionType           *evalTy;
+    llvm::PointerType            *evalFnTy;
+    llvm::PointerType            *infoPtrTy;
+    llvm::PointerType            *contextPtrTy;
+    llvm::PointerType            *symbolsPtrTy;
+    llvm::Function               *strcmp_fn;
+    llvm::Function               *xl_evaluate;
+    llvm::Function               *xl_same_text;
+    llvm::Function               *xl_same_shape;
+    llvm::Function               *xl_infix_match_check;
+    llvm::Function               *xl_type_check;
+    llvm::Function               *xl_form_error;
+    llvm::Function               *xl_stack_overflow;
+    llvm::Function               *xl_new_integer;
+    llvm::Function               *xl_new_real;
+    llvm::Function               *xl_new_character;
+    llvm::Function               *xl_new_text;
+    llvm::Function               *xl_new_ctext;
+    llvm::Function               *xl_new_xtext;
+    llvm::Function               *xl_new_block;
+    llvm::Function               *xl_new_prefix;
+    llvm::Function               *xl_new_postfix;
+    llvm::Function               *xl_new_infix;
+    llvm::Function               *xl_fill_block;
+    llvm::Function               *xl_fill_prefix;
+    llvm::Function               *xl_fill_postfix;
+    llvm::Function               *xl_fill_infix;
+    llvm::Function               *xl_integer2real;
+    llvm::Function               *xl_array_index;
+    llvm::Function               *xl_new_closure;
+    llvm::Constant               *xl_recursion_count_ptr;
+    functions_map                 builtins;
+    functions_map                 functions;
+    adapter_map                   array_to_args_adapters;
+    closure_map                   closures;
+    text_constants_map            text_constants;
+    llvm_entry_table              llvm_primitives;
+    llvm_types                    closure_types;
+    type_map                      machineTypes;
 };
 
 
 
 // ============================================================================
-// 
+//
 //   Useful macros
-// 
+//
 // ============================================================================
 
 #define LLVM_INTTYPE(t)         llvm::IntegerType::get(llvm, sizeof(t) * 8)

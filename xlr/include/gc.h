@@ -229,7 +229,7 @@ struct GCPtr
     bool operator CMP(const GCPtr<U,V> &o) const        \
     {                                                   \
         return pointer CMP o.ConstPointer();            \
-    }                                           
+    }
 
     DEFINE_CMP(==)
     DEFINE_CMP(!=)
@@ -445,6 +445,8 @@ inline bool TypeAllocator::DeleteAll()
 //   Definitions for template Allocator
 //
 // ============================================================================
+
+template <class Object> Allocator<Object> *Allocator<Object>::allocator;
 
 template<class Object> inline
 Allocator<Object>::Allocator()

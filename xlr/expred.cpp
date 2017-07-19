@@ -42,6 +42,9 @@
 #include "args.h"
 #include "types.h"
 #include "save.h"
+#include "errors.h"
+#include "renderer.h"
+#include "llvm-crap.h"
 
 XL_BEGIN
 
@@ -85,7 +88,8 @@ llvm_value CompileExpression::DoText(Text *what)
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    return unit->code->CreateConstGEP2_32(global, 0U, 0U);
+    return LLVMCrap_CreateStructGEP(unit->code,
+                                    global, 0U);
 }
 
 
@@ -130,12 +134,17 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
     // Sequences
     if (infix->name == "\n" || infix->name == ";")
     {
-        ForceEvaluation(infix->left);
-        return ForceEvaluation(infix->right);
+        llvm_value left = ForceEvaluation(infix->left);
+        llvm_value right = ForceEvaluation(infix->right);
+        if (right)
+            return right;
+        if (left)
+            return left;
+        return NULL;
     }
 
     // Type casts - REVISIT: may need to do some actual conversion
-    if (infix->name == ":")
+    if (infix->name == ":" || infix->name == "as")
     {
         return infix->left->Do(this);
     }
@@ -184,7 +193,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
             Function::arg_iterator arg = function->arg_begin();
             for (i = 0; i < max; i++)
             {
-                llvm_value inputArg = arg++;
+                llvm_value inputArg = &*arg++;
                 args.push_back(inputArg);
             }
 
@@ -195,7 +204,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
             text op = name->value;
             uint sz = args.size();
             llvm_value *a = &args[0];
-            return compiler->Primitive(bld, op, sz, a);
+            return compiler->Primitive(*unit, bld, op, sz, a);
         }
     }
     return DoCall(what);
@@ -369,7 +378,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         text op = name->value;
         uint sz = args.size();
         llvm_value *a = &args[0];
-        result = compiler->Primitive(bld, op, sz, a);
+        result = compiler->Primitive(*unit, bld, op, sz, a);
     }
     else
     {
@@ -452,7 +461,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
         }
         if (valueType != c.charPtrTy)
             return ConstantInt::get(c.booleanTy, 0);
-        value = code->CreateCall2(c.strcmp_fn, test, value);
+        value = LLVMCrap_CreateCall(code, c.strcmp_fn, test, value);
         test = ConstantInt::get(value->getType(), 0);
         value = code->CreateICmpEQ(value, test);
         return value;
@@ -542,7 +551,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
-        return code->CreateCall2(c.xl_same_shape, value, test);
+        return LLVMCrap_CreateCall(code, c.xl_same_shape, value, test);
     }
 
     // Other comparisons fail for now

@@ -1,10 +1,12 @@
 #ifndef LLVM_CRAP_H
 #define LLVM_CRAP_H
 // ****************************************************************************
-//  llvm-crap.h                                                    Tao project
+//  llvm-crap.h                                      ELFE / Tao / XL projects
 // ****************************************************************************
 //
 //   File Description:
+//
+//     LLVM Compatibility Recovery Adaptive Protocol
 //
 //     LLVM keeps breaking the API from release to release.
 //     Of course, none of the choices are documented anywhere, and
@@ -50,9 +52,25 @@
 
 
 // ============================================================================
-// 
-//                          HEADER FILE ADJUSTMENTS 
-// 
+//
+//   Diagnostic we see in the new headers
+//
+// ============================================================================
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+#ifdef DEBUG
+#define OLD_DEBUG       DEBUG
+#undef DEBUG
+#endif // DEBUG
+
+
+
+// ============================================================================
+//
+//                          HEADER FILE ADJUSTMENTS
+//
 // ============================================================================
 
 // Where any sane library would offer something like #include <llvm.h>,
@@ -63,11 +81,17 @@
 //
 // SURGEON GENERAL WARNING: Do not read the code below, or else.
 
-#include "llvm/ExecutionEngine/JIT.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
+// Apparently, nobody complained loudly enough that LLVM would stop moving
+// headers around. This is the most recent damage.
+#if LLVM_VERSION < 390
+#include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/PassManager.h>
-#include "llvm/Support/raw_ostream.h"
+#else
+#include <llvm/IR/LegacyPassManager.h>
+#endif
+#include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/Scalar.h>
@@ -75,7 +99,21 @@
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Signals.h>
+
+#if LLVM_VERSION < 391
+#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/PassManager.h>
+#else // >= 391
+#include <llvm/Transforms/Scalar/GVN.h>
+#endif
+
+// Ignore badly indented 'if' in 3.52
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include <llvm/Support/CommandLine.h>
+#pragma GCC diagnostic pop
+
 #include <llvm/ADT/Statistic.h>
 
 // Sometimes, headers magically disappear
@@ -108,14 +146,12 @@
 #include <llvm/DerivedTypes.h>
 #include <llvm/Module.h>
 #include <llvm/GlobalValue.h>
-#include "llvm/Instructions.h"
-#include <llvm/Target/TargetSelect.h>
+#include <llvm/Instructions.h>
 #else
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/GlobalValue.h>
-#include "llvm/IR/Instructions.h"
-#include <llvm/Support/TargetSelect.h>
+#include <llvm/IR/Instructions.h>
 #endif
 
 // While we are at it, why not also change the name of headers providing a
@@ -148,11 +184,19 @@
 #include <llvm/IR/Verifier.h>
 #endif
 
+// This is perfectly logical, trust me!
+#if LLVM_VERSION < 352
+#include <llvm/Target/TargetSelect.h>
+#else
+#include <llvm/Support/TargetSelect.h>
+#endif
+
+
 
 // ============================================================================
-// 
+//
 //               WORKAROUNDS FOR GRATUITOUS API BREAKAGE
-// 
+//
 // ============================================================================
 
 // It is not enough to break header files. It's also important to make
@@ -178,6 +222,10 @@ typedef llvm::IntegerType *             llvm_integer_type;
 #define LLVMS_ARGS(args)                llvm::ArrayRef<llvm::Value *> (args)
 #endif
 
+// Other stuff that we need here. I'm waiting for the time they rename Value.
+typedef llvm::Value *                          llvm_value;
+typedef llvm::IRBuilder<> *                    llvm_builder;
+
 
 // The opaque type went away in LLVM 3.0, although it still seems to be
 // present in the textual form of the IR (if you trust the doc, which I don't)
@@ -198,9 +246,9 @@ typedef llvm::StructType *llvm_struct;
 
 
 // ============================================================================
-// 
+//
 //                      API STABILIZATION FUNCTIONS
-// 
+//
 // ============================================================================
 
 // All the functions below have a single purpose: to build an API that
@@ -270,8 +318,8 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     // Create module where we will build the code
     *module = new Module(moduleName, llvm);
 #else
-    // WTF version of the above
-    std::unique_ptr<Module> moduleOwner = make_unique<Module>(moduleName, llvm);
+    // WTF version of the above.
+    std::unique_ptr<Module> moduleOwner = llvm::make_unique<Module>(moduleName, llvm);
     *module = moduleOwner.get();
 #endif
 
@@ -314,9 +362,17 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     return runtime;
 }
 
+// The pass manager became a template.
+#if LLVM_VERSION < 390
+typedef llvm::PassManager         LLVMCrap_PassManager;
+typedef llvm::FunctionPassManager LLVMCrap_FunctionPassManager;
+#else
+typedef llvm::legacy::PassManager         LLVMCrap_PassManager;
+typedef llvm::legacy::FunctionPassManager LLVMCrap_FunctionPassManager;
+#endif
 
-inline void LLVMS_SetupOpts(llvm::PassManager *moduleOptimizer,
-                            llvm::FunctionPassManager *optimizer,
+inline void LLVMS_SetupOpts(LLVMCrap_PassManager *moduleOptimizer,
+                            LLVMCrap_FunctionPassManager *optimizer,
                             uint optLevel)
 // ----------------------------------------------------------------------------
 //   Setup the optimizations depending on the optimization level
@@ -346,5 +402,94 @@ inline void LLVMS_SetupOpts(llvm::PassManager *moduleOptimizer,
     Builder.populateModulePassManager(*moduleOptimizer);
 #endif // LLVM_VERSION
 }
+
+
+inline llvm::LLVMContext &LLVMCrap_GlobalContext()
+// ----------------------------------------------------------------------------
+//  There used to be a global context, now you should roll out your own
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 391
+    return llvm::getGlobalContext();
+#else // >= 391
+    static llvm::LLVMContext llvmContext;
+    return llvmContext;
+#endif // 391
+}
+
+
+inline llvm_value LLVMCrap_CreateStructGEP(llvm_builder bld,
+                                           llvm_value ptr, unsigned idx,
+                                           const llvm::Twine &name = "")
+// ----------------------------------------------------------------------------
+//   Accessing a struct element used to be complicated. Now it's incompatible.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 391
+    return bld->CreateConstGEP2_32(ptr, 0, idx, name);
+#else // >= 391
+    return bld->CreateStructGEP(nullptr, ptr, idx, name);
+#endif // 391
+}
+
+
+inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
+                                      llvm_value callee,
+                                      llvm_value arg1)
+// ----------------------------------------------------------------------------
+//   Why not change the 'call' instruction, nobody uses it.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 391
+    return bld->CreateCall(callee, arg1);
+#else // >= 391
+    return bld->CreateCall(callee, {arg1});
+#endif // 391
+
+}
+
+inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
+                                      llvm_value callee,
+                                      llvm_value arg1, llvm_value arg2)
+// ----------------------------------------------------------------------------
+//   Why not change the 'call' instruction, nobody uses it.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 391
+    return bld->CreateCall2(callee, arg1, arg2);
+#else // >= 391
+    return bld->CreateCall(callee, {arg1, arg2});
+#endif // 391
+
+}
+
+inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
+                                      llvm_value callee,
+                                      llvm_value arg1,
+                                      llvm_value arg2,
+                                      llvm_value arg3)
+// ----------------------------------------------------------------------------
+//   Why not change the 'call' instruction, nobody uses it.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 391
+    return bld->CreateCall3(callee, arg1, arg2, arg3);
+#else // >= 391
+    return bld->CreateCall(callee, {arg1, arg2, arg3});
+#endif // 391
+
+}
+
+
+
+// ============================================================================
+//
+//    Cleanup
+//
+// ============================================================================
+
+#pragma GCC diagnostic pop
+#undef DEBUG
+#define DEBUG OLD_DEBUG
 
 #endif // LLVM_CRAP_H

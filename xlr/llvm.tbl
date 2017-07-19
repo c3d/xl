@@ -94,3 +94,5 @@ BINARY(FCmpULE)
 
 #undef UNARY
 #undef BINARY
+#undef SPECIAL
+#undef ALIAS

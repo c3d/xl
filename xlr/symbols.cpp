@@ -205,7 +205,7 @@ void Symbols::ExtendName(text name, Tree *value)
 {
     if (!parent->Named(name))
     {
-        Rewrite *found = Entry(name, true); 
+        Rewrite *found = Entry(name, true);
         found->kind = Rewrite::FORM;
         if (Tree *entry = found->to)
         {
@@ -890,7 +890,7 @@ Tree *Symbols::TypeOf(Tree *what)
     value_table::iterator found = types.find(what);
     if (found != types.end())
         return (*found).second;
-    return NULL;    
+    return NULL;
 }
 
 
@@ -1549,7 +1549,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                     namedType == code_type ||
                     namedType == lazy_type)
                     return DoName(varName);
-                
+
                 bool isConstantType = (namedType == text_type ||
                                        namedType == integer_type ||
                                        namedType == real_type);
@@ -1592,7 +1592,7 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                             std::cerr << "Types: Structure type mismatch\n";
                         return NULL;
                     }
-                            
+
                 }
 
                 // Check special cases of symbol and operator
@@ -1763,12 +1763,12 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
                 if (exprType && exprType != tree_type &&
                     typeExpr && typeExpr != exprType)
                 {
-                    
+
                     IFTRACE(statictypes)
                         std::cerr << "Types: Static type mismatch\n";
                     return NULL;
                 }
-                
+
                 if (exprType != typeExpr)
                 {
                     IFTRACE(statictypes)
@@ -2984,8 +2984,8 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
 
     // Associate the value for the input tree
     Function::arg_iterator args = function->arg_begin();
-    contextPtr = args++;
-    Value *inputArg = args++;
+    contextPtr = &*args++;
+    Value *inputArg = &*args++;
     Value *resultStorage = data->CreateAlloca(treePtrTy, 0, "result");
     data->CreateStore(inputArg, resultStorage);
     storage[src] = resultStorage;
@@ -2995,7 +2995,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     ulong parmsCount = 0;
     for (parm = parms.begin(); parm != parms.end(); parm++)
     {
-        inputArg = args++;
+        inputArg = &*args++;
         value[*parm] = inputArg;
         parmsCount++;
     }
@@ -3064,7 +3064,7 @@ eval_fn OCompiledUnit::Finalize()
     data->CreateStore(increased, compiler->xl_recursion_count_ptr);
     uint maxDepthOption = Options::options->stack_depth;
     Constant *maxDepth = ConstantInt::get(LLVM_INTTYPE(uint), maxDepthOption);
- 
+
     // If overflowing, connect directly to exit, otherwise to entry
     Value *isOverflow = data->CreateICmpUGT(increased, maxDepth, "stackCheck");
     data->CreateCondBr(isOverflow, overflow, entrybb);
@@ -3438,8 +3438,7 @@ Value *OCompiledUnit::Left(Tree *tree)
         // WARNING: This relies on the layout of all nodes beginning the same
         Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                           "pfxl");
-        result = code->CreateConstGEP2_32(pptr, 0,
-                                          LEFT_VALUE_INDEX, "lptr");
+        result = LLVMCrap_CreateStructGEP(code, pptr, LEFT_VALUE_INDEX, "lptr");
         result = code->CreateLoad(result, "left");
         code->CreateStore(result, ptr);
     }
@@ -3477,8 +3476,7 @@ Value *OCompiledUnit::Right(Tree *tree)
         // WARNING: This relies on the layout of all nodes beginning the same
         Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                           "pfxr");
-        result = code->CreateConstGEP2_32(pptr, 0,
-                                          RIGHT_VALUE_INDEX, "rptr");
+        result = LLVMCrap_CreateStructGEP(code, pptr,RIGHT_VALUE_INDEX, "rptr");
         result = code->CreateLoad(result, "right");
         code->CreateStore(result, ptr);
     }
@@ -3527,8 +3525,8 @@ Value *OCompiledUnit::CallEvaluate(Tree *tree)
     if (dataForm.count(tree))
         return treeValue;
 
-    Value *evaluated = code->CreateCall2(compiler->xl_evaluate,
-                                         contextPtr, treeValue);
+    Value *evaluated = LLVMCrap_CreateCall(code, compiler->xl_evaluate,
+                                           contextPtr, treeValue);
     MarkComputed(tree, evaluated);
     return evaluated;
 }
@@ -3542,8 +3540,8 @@ Value *OCompiledUnit::CallFillBlock(Block *block)
     Value *blockValue = ConstantTree(block);
     Value *childValue = Known(block->child);
     blockValue = code->CreateBitCast(blockValue, compiler->blockTreePtrTy);
-    Value *result = code->CreateCall2(compiler->xl_fill_block,
-                                      blockValue, childValue);
+    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_block,
+                                        blockValue, childValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(block, result);
     return result;
@@ -3559,8 +3557,8 @@ Value *OCompiledUnit::CallFillPrefix(Prefix *prefix)
     Value *leftValue = Known(prefix->left);
     Value *rightValue = Known(prefix->right);
     prefixValue = code->CreateBitCast(prefixValue, compiler->prefixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_fill_prefix,
-                                      prefixValue, leftValue, rightValue);
+    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_prefix,
+                                        prefixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(prefix, result);
     return result;
@@ -3576,8 +3574,8 @@ Value *OCompiledUnit::CallFillPostfix(Postfix *postfix)
     Value *leftValue = Known(postfix->left);
     Value *rightValue = Known(postfix->right);
     postfixValue = code->CreateBitCast(postfixValue,compiler->postfixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_fill_postfix,
-                                      postfixValue, leftValue, rightValue);
+    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_postfix,
+                                        postfixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(postfix, result);
     return result;
@@ -3593,8 +3591,8 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
     Value *leftValue = Known(infix->left);
     Value *rightValue = Known(infix->right);
     infixValue = code->CreateBitCast(infixValue, compiler->infixTreePtrTy);
-    Value *result = code->CreateCall3(compiler->xl_fill_infix,
-                                      infixValue, leftValue, rightValue);
+    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_infix,
+                                        infixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);
     return result;
@@ -3621,8 +3619,8 @@ Value *OCompiledUnit::CallArrayIndex(Tree *self, Tree *left, Tree *right)
 {
     Value *leftValue = Known(left);
     Value *rightValue = Known(right);
-    Value *result = code->CreateCall3(compiler->xl_array_index,
-                                      contextPtr, leftValue, rightValue);
+    Value *result = LLVMCrap_CreateCall(code, compiler->xl_array_index,
+                                        contextPtr, leftValue, rightValue);
     NeedStorage(self);
     MarkComputed(self, result);
     return result;
@@ -3710,7 +3708,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 
     // Extract child of surrounding block
     Value *block = code->CreateBitCast(ptr, blockTy);
-    ptr = code->CreateConstGEP2_32(block, 0, BLOCK_CHILD_INDEX);
+    ptr = LLVMCrap_CreateStructGEP(code, block, BLOCK_CHILD_INDEX);
     ptr = code->CreateLoad(ptr);
 
     // Build additional arguments
@@ -3718,23 +3716,23 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     {
         // Load the left of the \n which is a decl of the form P->V
         Value *infix = code->CreateBitCast(ptr, infixTy);
-        Value *lf = code->CreateConstGEP2_32(infix, 0, LEFT_VALUE_INDEX);
+        Value *lf = LLVMCrap_CreateStructGEP(code, infix, LEFT_VALUE_INDEX);
         decl = code->CreateLoad(lf);
         decl = code->CreateBitCast(decl, infixTy);
 
         // Load the value V out of P->V and pass it as an argument
-        Value *arg = code->CreateConstGEP2_32(decl, 0, RIGHT_VALUE_INDEX);
+        Value *arg = LLVMCrap_CreateStructGEP(code, decl, RIGHT_VALUE_INDEX);
         arg = code->CreateLoad(arg);
         argV.push_back(arg);
         signature.push_back(treeTy);
 
         // Load the next element in the list
-        Value *rt = code->CreateConstGEP2_32(infix, 0, RIGHT_VALUE_INDEX);
+        Value *rt = LLVMCrap_CreateStructGEP(code, infix, RIGHT_VALUE_INDEX);
         ptr = code->CreateLoad(rt);
     }
 
     // Load the target code
-    Value *callCode = code->CreateConstGEP2_32(decl, 0, CODE_INDEX);
+    Value *callCode = LLVMCrap_CreateStructGEP(code, decl, CODE_INDEX);
     callCode = code->CreateLoad(callCode);
 
     // Replace the 'self' argument with the expression sans closure
@@ -3759,7 +3757,7 @@ Value *OCompiledUnit::CallTypeError(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Value *ptr = ConstantTree(what); assert(what);
-    Value *callVal = code->CreateCall2(compiler->xl_form_error,
+    Value *callVal = LLVMCrap_CreateCall(code, compiler->xl_form_error,
                                        contextPtr, ptr);
     MarkComputed(what, callVal);
     return callVal;
@@ -3781,7 +3779,7 @@ BasicBlock *OCompiledUnit::TagTest(Tree *tree, ulong tagValue)
         Ooops("No value for $1", tree);
         return NULL;
     }
-    Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");
+    Value *tagPtr = LLVMCrap_CreateStructGEP(code, treeValue, 0, "tagPtr");
     Value *tag = code->CreateLoad(tagPtr, "tag");
     Value *mask = ConstantInt::get(tag->getType(), Tree::KINDMASK);
     Value *kind = code->CreateAnd(tag, mask, "tagAndMask");
@@ -3813,7 +3811,7 @@ BasicBlock *OCompiledUnit::IntegerTest(Tree *tree, longlong value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->integerTreePtrTy);
-    Value *valueFieldPtr = code->CreateConstGEP2_32(treeValue, 0,
+    Value *valueFieldPtr = LLVMCrap_CreateStructGEP(code, treeValue,
                                                     INTEGER_VALUE_INDEX);
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
@@ -3845,7 +3843,7 @@ BasicBlock *OCompiledUnit::RealTest(Tree *tree, double value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->realTreePtrTy);
-    Value *valueFieldPtr = code->CreateConstGEP2_32(treeValue, 0,
+    Value *valueFieldPtr = LLVMCrap_CreateStructGEP(code, treeValue,
                                                     REAL_VALUE_INDEX);
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
@@ -3880,8 +3878,8 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     GlobalVariable *gvar = new GlobalVariable(*compiler->module, refValTy, true,
                                               GlobalValue::InternalLinkage,
                                               refVal, "str");
-    Value *refPtr = code->CreateConstGEP2_32(gvar, 0, 0);
-    Value *isGood = code->CreateCall2(compiler->xl_same_text,
+    Value *refPtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
+    Value *isGood = LLVMCrap_CreateCall(code, compiler->xl_same_text,
                                       treeValue, refPtr);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
@@ -3906,7 +3904,7 @@ BasicBlock *OCompiledUnit::ShapeTest(Tree *left, Tree *right)
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *isGood = code->CreateCall2(compiler->xl_same_shape,
+    Value *isGood = LLVMCrap_CreateCall(code, compiler->xl_same_shape,
                                       leftVal, rightVal);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
@@ -3932,11 +3930,11 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     GlobalVariable *gvar = new GlobalVariable(*compiler->module,refNameTy,true,
                                               GlobalValue::InternalLinkage,
                                               refNameVal, "infix_name");
-    Value *refNamePtr = code->CreateConstGEP2_32(gvar, 0, 0);
+    Value *refNamePtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *afterExtract = code->CreateCall3(compiler->xl_infix_match_check,
+    Value *afterExtract = LLVMCrap_CreateCall(code, compiler->xl_infix_match_check,
                                             contextPtr, actualVal, refNamePtr);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
@@ -3975,7 +3973,7 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
     Value *treeValue = Known(value);     assert(treeValue);
 
     // Quick inline check with the tag to see if need runtime test
-    Value *tagPtr = code->CreateConstGEP2_32(treeValue, 0, 0, "tagPtr");
+    Value *tagPtr = LLVMCrap_CreateStructGEP(code, treeValue, 0, "tagPtr");
     Value *tag = code->CreateLoad(tagPtr, "tag");
     Value *mask = ConstantInt::get(tag->getType(), Tree::KINDMASK);
     Value *kindValue = code->CreateAnd(tag, mask, "tagAndMask");
@@ -4017,12 +4015,12 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
         code->SetInsertPoint(isIntBad);
         treeValue = Known(value);
     }
-    
+
     Value *typeVal = Known(type);       assert(typeVal);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *afterCast = code->CreateCall3(compiler->xl_type_check,
+    Value *afterCast = LLVMCrap_CreateCall(code, compiler->xl_type_check,
                                          contextPtr, treeValue, typeVal);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
