@@ -87,7 +87,9 @@
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/PassManager.h>
 #else
+#include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 #endif
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -100,12 +102,6 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Signals.h>
 
-#if LLVM_VERSION < 391
-#include <llvm/ExecutionEngine/JIT.h>
-#include <llvm/PassManager.h>
-#else // >= 391
-#include <llvm/Transforms/Scalar/GVN.h>
-#endif
 
 // Ignore badly indented 'if' in 3.52
 #pragma GCC diagnostic push
@@ -328,8 +324,12 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     // I get a crash on Linux if I don't do that. Unclear why.
     LLVMInitializeAllTargetMCs();
 #endif
+
     // Initialize native target (new features)
     InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+    InitializeNativeTargetDisassembler();
 
 #if LLVM_VERSION < 31
     JITExceptionHandling = false;  // Bug #1026
@@ -346,6 +346,8 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 #else
     // WTF version of the above
     EngineBuilder engineBuilder(std::move(moduleOwner));
+    text errorString;
+    engineBuilder.setErrorStr(&errorString);
 #endif
 
 #if LLVM_VERSION >= 31
@@ -356,8 +358,21 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 #endif
     ExecutionEngine *runtime = engineBuilder.create();
 
+    // Check if we were successful in the creation of the runtime
+    if (!runtime)
+    {
+        std::cerr << "ERROR: Unable to initialize LLVM\n"
+#if LLVM_VERSION >= 360
+                  << "LLVM error: " << errorString
+#endif
+                  << "\n";
+        exit(1);
+    }
+
+#if LLVM_VERSION <= 390
     // Make sure that code is generated as early as possible
     runtime->DisableLazyCompilation(true);
+#endif
 
     return runtime;
 }

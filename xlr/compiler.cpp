@@ -409,7 +409,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
 }
 
 
-static inline void createXLFunctionPasses(PassManagerBase *PM)
+static inline void createXLFunctionPasses(LLVMCrap_FunctionPassManager *PM)
 // ----------------------------------------------------------------------------
 //   Add XL function passes
 // ----------------------------------------------------------------------------
@@ -454,6 +454,10 @@ static inline void createXLFunctionPasses(PassManagerBase *PM)
      PM->add(createDeadStoreEliminationPass());  // Delete dead stores
      PM->add(createAggressiveDCEPass());         // Delete dead instructions
      PM->add(createCFGSimplificationPass());     // Merge & remove BBs
+
+#if LLVM_VERSION >= 390
+     PM->doInitialization();
+#endif
 }
 
 
@@ -464,6 +468,8 @@ void Compiler::Setup(Options &options)
 {
     uint optLevel = options.optimize_level;
     RECORD(COMPILER, "Compiler setup", "opt", optLevel);
+
+    LLVMLinkInMCJIT();
     LLVMS_SetupOpts(moduleOptimizer, optimizer, optLevel);
     createXLFunctionPasses(optimizer);
 
