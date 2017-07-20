@@ -71,7 +71,6 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 # MinGW's unable to follow symlinks, so we have to copy dependencies
 LN="ln -sf"
 if (echo "$OS" | grep -iq "mingw"); then LN="cp"; fi
-$LN ../xlr ./xl
 $LN ../*.stylesheet .
 $LN ../xl.syntax .
 $LN ../builtins.xl .

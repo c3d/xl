@@ -88,6 +88,7 @@ DEFINES_debug=      XL_DEBUG
 DEFINES_opt=        XL_DEBUG OPTIMIZED
 DEFINES_release=    NDEBUG OPTIMIZED RELEASE
 
+$(info TARGET=$(TARGET) GOALS=$(MAKECMDGOALS))
 test: unit_tests xl_tests
 
 unit_tests: sha1_test lcs_test
@@ -95,8 +96,11 @@ unit_tests: sha1_test lcs_test
 %_test: %.cpp
 	$(CXX) -DUNIT_TEST -Iinclude $(CXXFLAGS) -o $*.exe $*.cpp && ./$*.exe && rm ./$*.exe
 
-xl_tests:
+xl_tests: tests/xl
 	cd tests; ./alltests
+
+tests/xl: $(TARGET)
+	$(PRINT_COPY) cp $(OBJROOT_EXE) $@
 
 $(BUILD)rules.mk:
 	cd .. && git submodule update --init --recursive
