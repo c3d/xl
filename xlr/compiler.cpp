@@ -702,7 +702,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
         optimizer->run(*adapter);
 
     // Enter the result in the map
-    result = (adapter_fn) runtime->getPointerToFunction(adapter);
+    result = (adapter_fn) LLVMCrap_functionPointer(runtime, adapter);
     array_to_args_adapters[numargs] = result;
 
     IFTRACE(llvm)

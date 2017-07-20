@@ -745,7 +745,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     if (createCode)
     {
         compiler->moduleOptimizer->run(*compiler->module);
-        result = compiler->runtime->getPointerToFunction(function);
+        result = LLVMCrap_functionPointer(compiler->runtime, function);
         IFTRACE(code)
         {
             errs() << "AFTER GLOBAL OPTIMIZATIONS:\n";

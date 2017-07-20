@@ -3086,7 +3086,7 @@ eval_fn OCompiledUnit::Finalize()
         function->print(errs());
     }
 
-    void *result = compiler->runtime->getPointerToFunction(function);
+    void *result = LLVMCrap_functionPointer(compiler->runtime, function);
     IFTRACE(llvm)
         std::cerr << " C" << (void *) result << "\n";
     IFTRACE(compile_progress)

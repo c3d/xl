@@ -496,6 +496,20 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 }
 
 
+inline void * LLVMCrap_functionPointer(llvm::ExecutionEngine *runtime,
+                                       llvm::Function *fn)
+// ----------------------------------------------------------------------------
+//  Sometimes you need to finalize module
+// ----------------------------------------------------------------------------
+{
+    void *result = runtime->getPointerToFunction(fn);
+#if LLVM_VERSION >= 390
+    runtime->finalizeObject();
+#endif // 3.90
+    return result;
+}
+
+
 
 // ============================================================================
 //
