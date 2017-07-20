@@ -88,7 +88,6 @@ DEFINES_debug=      XL_DEBUG
 DEFINES_opt=        XL_DEBUG OPTIMIZED
 DEFINES_release=    NDEBUG OPTIMIZED RELEASE
 
-$(info TARGET=$(TARGET) GOALS=$(MAKECMDGOALS))
 test: unit_tests xl_tests
 
 unit_tests: sha1_test lcs_test
