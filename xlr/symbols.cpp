@@ -2926,7 +2926,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
 //   OCompiledUnit constructor
 // ----------------------------------------------------------------------------
     : compiler(comp), llvm(comp->llvm), source(src),
-      code(NULL), data(NULL), function(NULL),
+      code(NULL), data(NULL), function(NULL), module(NULL),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
       contextPtr(NULL)
 {
@@ -2953,6 +2953,17 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
         return;
     }
 
+    text label = "xl_eval";
+#if LLVM_VERSION >= 390
+    // In recent versions of LLVM, generated code is not executable until we
+    // finalize the module, which means we need one module per function
+    std::unique_ptr<Module> mod = llvm::make_unique<Module>(label, llvm);
+    module = mod.get();
+    compiler->runtime->addModule(std::move(mod));
+#else
+    module = compiler->module;
+#endif // 3.90
+
     // Create the function signature, one entry per parameter + one for source
     llvm_types signature;
     signature.push_back(compiler->contextPtrTy);
@@ -2960,11 +2971,10 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     for (ulong p = 0; p <= parms.size(); p++)
         signature.push_back(treePtrTy);
     FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);
-    text label = "xl_eval";
     IFTRACE(labels)
         label += "[" + text(*src) + "]";
     function = Function::Create(fnTy, Function::InternalLinkage,
-                                label.c_str(), compiler->module);
+                                label.c_str(), module);
 
     // Save it in the compiler
     if (closure)

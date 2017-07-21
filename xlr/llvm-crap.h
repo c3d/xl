@@ -88,6 +88,7 @@
 #include <llvm/PassManager.h>
 #else
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 #endif
@@ -219,9 +220,9 @@ typedef llvm::IntegerType *             llvm_integer_type;
 #endif
 
 // Other stuff that we need here. I'm waiting for the time they rename Value.
-typedef llvm::Value *                          llvm_value;
-typedef llvm::IRBuilder<> *                    llvm_builder;
-
+typedef llvm::Value *                   llvm_value;
+typedef llvm::IRBuilder<> *             llvm_builder;
+typedef llvm::Module *                  llvm_module;
 
 // The opaque type went away in LLVM 3.0, although it still seems to be
 // present in the textual form of the IR (if you trust the doc, which I don't)
@@ -301,6 +302,9 @@ inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm XL_MAYBE_UNUSED,
 }
 
 
+extern text llvm_crap_error_string;
+
+
 inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
                                                   text moduleName,
                                                   llvm::Module **module)
@@ -346,8 +350,7 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 #else
     // WTF version of the above
     EngineBuilder engineBuilder(std::move(moduleOwner));
-    text errorString;
-    engineBuilder.setErrorStr(&errorString);
+    engineBuilder.setErrorStr(&llvm_crap_error_string);
 #endif
 
 #if LLVM_VERSION >= 31
@@ -355,6 +358,7 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     // targetOpts.JITEmitDebugInfo = true;
     engineBuilder.setEngineKind(EngineKind::JIT);
     engineBuilder.setTargetOptions(targetOpts);
+    engineBuilder.setUseOrcMCJITReplacement(true);
 #endif
     ExecutionEngine *runtime = engineBuilder.create();
 
@@ -363,16 +367,14 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     {
         std::cerr << "ERROR: Unable to initialize LLVM\n"
 #if LLVM_VERSION >= 360
-                  << "LLVM error: " << errorString
+                  << "LLVM error: " << llvm_crap_error_string
 #endif
                   << "\n";
         exit(1);
     }
 
-#if LLVM_VERSION <= 390
     // Make sure that code is generated as early as possible
     runtime->DisableLazyCompilation(true);
-#endif
 
     return runtime;
 }
@@ -424,12 +426,12 @@ inline llvm::LLVMContext &LLVMCrap_GlobalContext()
 //  There used to be a global context, now you should roll out your own
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return llvm::getGlobalContext();
-#else // >= 391
+#else // >= 390
     static llvm::LLVMContext llvmContext;
     return llvmContext;
-#endif // 391
+#endif // 390
 }
 
 
@@ -440,11 +442,11 @@ inline llvm_value LLVMCrap_CreateStructGEP(llvm_builder bld,
 //   Accessing a struct element used to be complicated. Now it's incompatible.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateConstGEP2_32(ptr, 0, idx, name);
-#else // >= 391
+#else // >= 390
     return bld->CreateStructGEP(nullptr, ptr, idx, name);
-#endif // 391
+#endif // 390
 }
 
 
@@ -455,11 +457,11 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateCall(callee, arg1);
-#else // >= 391
+#else // >= 390
     return bld->CreateCall(callee, {arg1});
-#endif // 391
+#endif // 390
 
 }
 
@@ -470,11 +472,11 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateCall2(callee, arg1, arg2);
-#else // >= 391
+#else // >= 390
     return bld->CreateCall(callee, {arg1, arg2});
-#endif // 391
+#endif // 390
 
 }
 
@@ -487,11 +489,11 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateCall3(callee, arg1, arg2, arg3);
-#else // >= 391
+#else // >= 390
     return bld->CreateCall(callee, {arg1, arg2, arg3});
-#endif // 391
+#endif // 390
 
 }
 
@@ -504,8 +506,15 @@ inline void * LLVMCrap_functionPointer(llvm::ExecutionEngine *runtime,
 {
     void *result = runtime->getPointerToFunction(fn);
 #if LLVM_VERSION >= 390
+    // Need to finalize object to get an executable mapping for the code
     runtime->finalizeObject();
 #endif // 3.90
+#if LLVM_VERSION >= 360
+    if (!result)
+        std::cerr << "ERROR: Unable to get function pointer\n"
+                  << "LLVM error: " << llvm_crap_error_string
+                  << "\n";
+#endif
     return result;
 }
 

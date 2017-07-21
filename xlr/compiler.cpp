@@ -77,6 +77,9 @@ static void* unresolved_external(const std::string& name)
 // ----------------------------------------------------------------------------
 // This is really just to print a fancy error message
 {
+    if (auto SymAddr = RTDyldMemoryManager::getSymbolAddressInProcess(name))
+        return (void *) SymAddr;
+
     std::cout.flush();
     std::cerr << "Unable to resolve external: " << name << std::endl;
     assert(0);
@@ -89,6 +92,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
     : llvm(LLVMCrap_GlobalContext()),
+
       module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
@@ -1179,6 +1183,16 @@ bool Compiler::FreeResources(Tree *tree)
 }
 
 XL_END
+
+
+// ============================================================================
+//
+//    Global variables
+//
+// ============================================================================
+
+text llvm_crap_error_string;
+
 
 
 // ============================================================================

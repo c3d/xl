@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  symbols.h                                                       XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     The "older" compiler technology
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -53,9 +53,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Forward type declarations
-// 
+//
 // ============================================================================
 
 struct Rewrite;                                 // Tree rewrite data
@@ -65,7 +65,7 @@ struct Compiler;                                // JIT compiler
 struct OCompiledUnit;                           // Compilation unit (old style)
 
 typedef GCPtr<Rewrite>             Rewrite_p;
-  
+
 typedef std::map<text, Tree_p>     symbol_table; // Symbol table in context
 typedef std::set<Tree_p>           active_set;   // Not to be garbage collected
 typedef std::set<Symbols_p>        symbols_set;  // Set of symbol tables
@@ -80,9 +80,9 @@ typedef std::map<text, decl_fn>    declarator_table; // To call at decl time
 
 
 // ============================================================================
-// 
+//
 //    Compile-time symbols and rewrites management
-// 
+//
 // ============================================================================
 
 struct Symbols
@@ -175,9 +175,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //   Inline functions
-// 
+//
 // ============================================================================
 
 inline Symbols::Symbols(Symbols *s)
@@ -199,9 +199,9 @@ inline Symbols::~Symbols()
 
 
 // ============================================================================
-// 
+//
 //    Old compilation unit
-// 
+//
 // ============================================================================
 
 struct OCompiledUnit
@@ -266,6 +266,7 @@ public:
     llvm::IRBuilder<> * code;           // Instruction builder for code
     llvm::IRBuilder<> * data;           // Instruction builder for data
     llvm::Function *    function;       // Function we generate
+    llvm::Module *      module;         // Module in which we generate code
 
     llvm::BasicBlock *  allocabb;       // Function entry point, allocas
     llvm::BasicBlock *  entrybb;        // Entry point for that code
@@ -312,9 +313,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //   Stack depth management
-// 
+//
 // ============================================================================
 
 struct StackDepthCheck
@@ -350,9 +351,9 @@ protected:
 
 
 // ============================================================================
-// 
+//
 //    Compilation actions
-// 
+//
 // ============================================================================
 
 struct DeclarationAction : Action
