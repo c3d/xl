@@ -1,11 +1,10 @@
 #******************************************************************************
-# Makefile<elfe>                                                  Elfe project 
+# Makefile<xl>                                                      XL project
 #******************************************************************************
 #
 #  File Description:
 #
-#     The top-level makefile for ELFE, the
-#     Extensible Language for the Internet of Things
+#     The top-level makefile for XL, the eXtensible Language
 #
 #
 #

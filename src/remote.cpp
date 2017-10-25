@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  remote.cpp                                                  ELFE project
+//  remote.cpp                                                  XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Implementation of a simple socket-based transport for ELFE programs
+//     Implementation of a simple socket-based transport for XL programs
 //
 //
 //
@@ -46,7 +46,7 @@
 #include <sstream>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 
 // ============================================================================
@@ -57,8 +57,8 @@ ELFE_BEGIN
 
 static uint        active_children = 0;
 static int         reply_socket    = 0;
-static Tree_p      received        = elfe_nil;
-static Tree_p      hook            = elfe_true;
+static Tree_p      received        = xl_nil;
+static Tree_p      hook            = xl_true;
 static bool        listening       = true;
 
 
@@ -69,7 +69,7 @@ static bool        listening       = true;
 //
 // ============================================================================
 
-static Tree *elfe_read_tree(int sock)
+static Tree *xl_read_tree(int sock)
 // ----------------------------------------------------------------------------
 //   Read a tree directly from the socket
 // ----------------------------------------------------------------------------
@@ -80,7 +80,7 @@ static Tree *elfe_read_tree(int sock)
 }
 
 
-static void elfe_write_tree(int sock, Tree *tree)
+static void xl_write_tree(int sock, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Write a tree directly into the socket
 // ----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ struct StopAtGlobalsCloneMode
     Tree *Clone(Tree *t, CloneClass *clone)
     {
         if (t == cutpoint)
-            return elfe_nil;
+            return xl_nil;
         return t->Do(clone);
     }
 
@@ -122,7 +122,7 @@ struct StopAtGlobalsCloneMode
 typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
 
 
-static Tree_p elfe_attach_context(Context *context, Tree *code)
+static Tree_p xl_attach_context(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Attach the context for the given code
 // ----------------------------------------------------------------------------
@@ -148,7 +148,7 @@ static Tree_p elfe_attach_context(Context *context, Tree *code)
 }
 
 
-static Tree *elfe_restore_nil(Tree *tree)
+static Tree *xl_restore_nil(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Restore 'nil' names in the symbol tables
 // ----------------------------------------------------------------------------
@@ -156,32 +156,32 @@ static Tree *elfe_restore_nil(Tree *tree)
     if (Name *name = tree->AsName())
     {
         if (name->value == "nil")
-            return elfe_nil;
+            return xl_nil;
     }
     else if (Infix *infix = tree->AsInfix())
     {
-        infix->left  = elfe_restore_nil(infix->left);
-        infix->right = elfe_restore_nil(infix->right);
+        infix->left  = xl_restore_nil(infix->left);
+        infix->right = xl_restore_nil(infix->right);
     }
     else if (Prefix *prefix = tree->AsPrefix())
     {
-        prefix->left  = elfe_restore_nil(prefix->left);
-        prefix->right = elfe_restore_nil(prefix->right);
+        prefix->left  = xl_restore_nil(prefix->left);
+        prefix->right = xl_restore_nil(prefix->right);
     }
     else if (Postfix *postfix = tree->AsPostfix())
     {
-        postfix->left  = elfe_restore_nil(postfix->left);
-        postfix->right = elfe_restore_nil(postfix->right);
+        postfix->left  = xl_restore_nil(postfix->left);
+        postfix->right = xl_restore_nil(postfix->right);
     }
     else if (Block *block = tree->AsBlock())
     {
-        block->child = elfe_restore_nil(block->child);
+        block->child = xl_restore_nil(block->child);
     }
     return tree;
 }
 
 
-static Tree_p elfe_merge_context(Context *context, Tree *code)
+static Tree_p xl_merge_context(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //    Merge the code into the current running context
 // ----------------------------------------------------------------------------
@@ -197,7 +197,7 @@ static Tree_p elfe_merge_context(Context *context, Tree *code)
             Context *codeCtx = context;
             if (scope)
             {
-                scope = elfe_restore_nil(scope)->As<Scope>();
+                scope = xl_restore_nil(scope)->As<Scope>();
                 codeCtx = new Context(scope);
                 while (Scope *parent = ScopeParent(scope))
                     scope = parent;
@@ -222,13 +222,13 @@ static Tree_p elfe_merge_context(Context *context, Tree *code)
 //
 // ============================================================================
 
-static int elfe_send(Context *context, text host, Tree *code)
+static int xl_send(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
 {
     // Compute port number
-    int port = ELFE_DEFAULT_PORT;
+    int port = XL_DEFAULT_PORT;
     size_t found = host.rfind(':');
     if (found != std::string::npos)
     {
@@ -236,9 +236,9 @@ static int elfe_send(Context *context, text host, Tree *code)
         port = atoi(portText.c_str());
         if (!port)
         {
-            std::cerr << "elfe_tell: Port '" << portText << " is invalid, "
-                      << "using " << ELFE_DEFAULT_PORT << "\n";
-            port = ELFE_DEFAULT_PORT;
+            std::cerr << "xl_tell: Port '" << portText << " is invalid, "
+                      << "using " << XL_DEFAULT_PORT << "\n";
+            port = XL_DEFAULT_PORT;
         }
         host = host.substr(0, found);
     }
@@ -247,7 +247,7 @@ static int elfe_send(Context *context, text host, Tree *code)
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
-        std::cerr << "elfe_tell: Error opening socket: "
+        std::cerr << "xl_tell: Error opening socket: "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -256,7 +256,7 @@ static int elfe_send(Context *context, text host, Tree *code)
     struct hostent *server = gethostbyname(host.c_str());
     if (!server)
     {
-        std::cerr << "elfe_tell: Error resolving server '" << host << "': "
+        std::cerr << "xl_tell: Error resolving server '" << host << "': "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -272,31 +272,31 @@ static int elfe_send(Context *context, text host, Tree *code)
     // Connect
     if (connect(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
     {
-        std::cerr << "elfe_tell: Error connecting to '"
+        std::cerr << "xl_tell: Error connecting to '"
                   << host << "' port " << port << ": "
                   << strerror(errno) << "\n";
         return -1;
     }
 
     // Attach the running context, i.e. all symbols we might need
-    code = elfe_attach_context(context, code);
+    code = xl_attach_context(context, code);
 
     // Write program to socket
-    elfe_write_tree(sock, code);
+    xl_write_tree(sock, code);
 
     return sock;
 }
 
 
-int elfe_tell(Context *context, text host, Tree *code)
+int xl_tell(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host
 // ----------------------------------------------------------------------------
 {
     IFTRACE(remote)
-        std::cerr << "elfe_tell: Telling " << host << ":\n"
+        std::cerr << "xl_tell: Telling " << host << ":\n"
                   << code << "\n";
-    int sock = elfe_send(context, host, code);
+    int sock = xl_send(context, host, code);
     if (sock < 0)
         return sock;
     close(sock);
@@ -304,22 +304,22 @@ int elfe_tell(Context *context, text host, Tree *code)
 }
 
 
-Tree_p elfe_ask(Context *context, text host, Tree *code)
+Tree_p xl_ask(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for reply
 // ----------------------------------------------------------------------------
 {
     IFTRACE(remote)
-        std::cerr << "elfe_ask: Asking " << host << ":\n"
+        std::cerr << "xl_ask: Asking " << host << ":\n"
                   << code << "\n";
-    int sock = elfe_send(context, host, code);
+    int sock = xl_send(context, host, code);
     if (sock < 0)
-        return elfe_nil;
+        return xl_nil;
 
-    Tree_p result = elfe_read_tree(sock);
-    result = elfe_merge_context(context, result);
+    Tree_p result = xl_read_tree(sock);
+    result = xl_merge_context(context, result);
     IFTRACE(remote)
-        std::cerr << "elfe_ask: Response from " << host << " was:\n"
+        std::cerr << "xl_ask: Response from " << host << " was:\n"
                   << result << "\n";
     
     close(sock);
@@ -328,31 +328,31 @@ Tree_p elfe_ask(Context *context, text host, Tree *code)
 }
 
 
-Tree_p elfe_invoke(Context *context, text host, Tree *code)
+Tree_p xl_invoke(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for multiple replies
 // ----------------------------------------------------------------------------
 {
     IFTRACE(remote)
-        std::cerr << "elfe_invoke: Invoking " << host << ":\n"
+        std::cerr << "xl_invoke: Invoking " << host << ":\n"
                   << code << "\n";
-    int sock = elfe_send(context, host, code);
+    int sock = xl_send(context, host, code);
     if (sock < 0)
-        return elfe_nil;
+        return xl_nil;
 
-    Tree_p result = elfe_nil;
+    Tree_p result = xl_nil;
     while (true)
     {
-        Tree_p response = elfe_read_tree(sock);
+        Tree_p response = xl_read_tree(sock);
         if (response == NULL)
             break;
         
         IFTRACE(remote)
-            std::cerr << "elfe_invoke: Response from " << host << " was:\n"
+            std::cerr << "xl_invoke: Response from " << host << " was:\n"
                       << response << "\n";
-        response = elfe_merge_context(context, response);
+        response = xl_merge_context(context, response);
         result = context->Evaluate(response);
-        if (result == elfe_nil)
+        if (result == xl_nil)
             break;
     }
     close(sock);
@@ -391,7 +391,7 @@ static int child_wait(int flag)
     if (childPID > 0)
     {
         IFTRACE(remote)
-            std::cerr << "elfe_listen: Child PID " << childPID << " died "
+            std::cerr << "xl_listen: Child PID " << childPID << " died "
                       << (flag ? "nowait" : "wait")
 		      << " status " << status
 		      << "\n";
@@ -418,7 +418,7 @@ static void child_died(int)
 
 
 
-Tree_p  elfe_listen_received()
+Tree_p  xl_listen_received()
 // ----------------------------------------------------------------------------
 //    Return the incoming message before evaluation
 // ----------------------------------------------------------------------------
@@ -427,19 +427,19 @@ Tree_p  elfe_listen_received()
 }
 
 
-Tree_p elfe_listen_hook(Tree *newHook)
+Tree_p xl_listen_hook(Tree *newHook)
 // ----------------------------------------------------------------------------
 //   Set the listen hook, return the previous one
 // ----------------------------------------------------------------------------
 {
     Tree_p result = hook;
-    if (newHook != elfe_nil)
+    if (newHook != xl_nil)
         hook = newHook;
     return result;
 }
 
 
-int elfe_listen(Context *context, uint forking, uint port)
+int xl_listen(Context *context, uint forking, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
 // ----------------------------------------------------------------------------
@@ -448,7 +448,7 @@ int elfe_listen(Context *context, uint forking, uint port)
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
-        std::cerr << "elfe_listen: Error opening socket: "
+        std::cerr << "xl_listen: Error opening socket: "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -456,7 +456,7 @@ int elfe_listen(Context *context, uint forking, uint port)
     int option = 1;
     if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR,
                     (char *)&option, sizeof (option)) < 0)
-        std::cerr << "elfe_listen: Error setting SO_REUSEADDR: "
+        std::cerr << "xl_listen: Error setting SO_REUSEADDR: "
                   << strerror(errno) << "\n";
 
     struct sockaddr_in address = { 0 };
@@ -465,7 +465,7 @@ int elfe_listen(Context *context, uint forking, uint port)
     address.sin_port = htons(port);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
     {
-        std::cerr << "elfe_listen: Error binding to port " << port << ": "
+        std::cerr << "xl_listen: Error binding to port " << port << ": "
                   << strerror(errno) << "\n";
         return -1;
     }
@@ -484,68 +484,68 @@ int elfe_listen(Context *context, uint forking, uint port)
         while (forking && active_children >= forking)
         {
             IFTRACE(remote)
-                std::cerr << "elfe_listen: Too many children, waiting\n";
+                std::cerr << "xl_listen: Too many children, waiting\n";
             int childPID = child_wait(0);
             if (childPID > 0)
                 IFTRACE(remote)
-                    std::cerr << "elfe_listen: Child " << childPID
+                    std::cerr << "xl_listen: Child " << childPID
                               << " died, resuming\n";
         }
 
         // Accept input
         IFTRACE(remote)
-            std::cerr << "elfe_listen: Accepting input\n";
+            std::cerr << "xl_listen: Accepting input\n";
         sockaddr_in client = { 0 };
         socklen_t length = sizeof(client);
         int insock = accept(sock, (struct sockaddr *) &client, &length);
         if (insock < 0)
         {
-            std::cerr << "elfe_listen: Error accepting port " << port << ": "
+            std::cerr << "xl_listen: Error accepting port " << port << ": "
                       << strerror(errno) << "\n";
             continue;
         }
         IFTRACE(remote)
-            std::cerr << "elfe_listen: Got incoming connexion\n";
+            std::cerr << "xl_listen: Got incoming connexion\n";
 
         // Fork child for incoming connexion
         int pid = forking ? fork() : 0;
         if (pid == -1)
         {
-            std::cerr << "elfe_listen: Error forking child\n";
+            std::cerr << "xl_listen: Error forking child\n";
         }
         else if (pid)
         {
             IFTRACE(remote)
-                std::cerr << "elfe_listen: Forked pid " << pid << "\n";
+                std::cerr << "xl_listen: Forked pid " << pid << "\n";
             close(insock);
             active_children++;
         }
         else
         {
             // Read data from client
-            Tree_p code = elfe_read_tree(insock);
+            Tree_p code = xl_read_tree(insock);
 
             // Evaluate resulting code
             if (code)
             {
                 IFTRACE(remote)
-                    std::cerr << "elfe_listen: Received code: "
+                    std::cerr << "xl_listen: Received code: "
                               << code << "\n";
                 received = code;
                 Tree_p hookResult = context->Evaluate(hook);
-                if (hookResult != elfe_nil)
+                if (hookResult != xl_nil)
                 {
                     Save<int> saveReply(reply_socket, insock);
-                    code = elfe_merge_context(context, code);
+                    code = xl_merge_context(context, code);
                     Tree_p result = context->Evaluate(code);
                     IFTRACE(remote)
-                        std::cerr << "elfe_listen: Evaluated as: "
+                        std::cerr << "xl_listen: Evaluated as: "
                                   << result << "\n";
-                    elfe_write_tree(insock, result);
+                    xl_write_tree(insock, result);
                     IFTRACE(remote)
-                        std::cerr << "elfe_listen: Response sent\n";
+                        std::cerr << "xl_listen: Response sent\n";
                 }
-                if (hookResult == elfe_false || hookResult == elfe_nil)
+                if (hookResult == xl_false || hookResult == xl_nil)
                 {
                     listening = false;
                 }
@@ -555,7 +555,7 @@ int elfe_listen(Context *context, uint forking, uint port)
             if (forking)
             {
                 IFTRACE(remote)
-                    std::cerr << "elfe_listen: Exiting PID "
+                    std::cerr << "xl_listen: Exiting PID "
                               << getpid() << "\n";
                 exit(listening ? 0 : 42);
             }
@@ -567,25 +567,25 @@ int elfe_listen(Context *context, uint forking, uint port)
 }
 
 
-int elfe_reply(Context *context, Tree *code)
+int xl_reply(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code back to whoever invoked us
 // ----------------------------------------------------------------------------
 {
     if (!reply_socket)
     {
-        std::cerr << "elfe_reply: Not replying to anybody\n";
+        std::cerr << "xl_reply: Not replying to anybody\n";
         return -1;
     }
 
     IFTRACE(remote)
-        std::cerr << "elfe_reply: Replying:\n" << code << "\n";
-    code = elfe_attach_context(context, code);
+        std::cerr << "xl_reply: Replying:\n" << code << "\n";
+    code = xl_attach_context(context, code);
     IFTRACE(remote)
-        std::cerr << "elfe_reply: After replacement:\n" << code << "\n";
-    elfe_write_tree(reply_socket, code);
+        std::cerr << "xl_reply: After replacement:\n" << code << "\n";
+    xl_write_tree(reply_socket, code);
     return 0;
 }
 
 
-ELFE_END
+XL_END

@@ -1,12 +1,12 @@
 #ifndef SERIALIZER_H
 #define SERIALIZER_H
 // ****************************************************************************
-//  serializer.h                                                  ELFE project
+//  serializer.h                                                  XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     A couple of classes used to serialize and read-back ELFE trees
+//     A couple of classes used to serialize and read-back XL trees
 //
 //
 //
@@ -45,7 +45,7 @@
 #include <iostream>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 enum SerializationTag
 // ----------------------------------------------------------------------------
@@ -140,6 +140,6 @@ protected:
     text_ids            texts;
 };
 
-ELFE_END
+XL_END
 
 #endif // SERIALIZE_H

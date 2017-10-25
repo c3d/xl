@@ -1,12 +1,12 @@
 #ifndef TYPES_H
 #define TYPES_H
 // ****************************************************************************
-//  types.h                                                       ELFE project
+//  types.h                                                       XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The type system in ELFE
+//     The type system in XL
 //
 //
 //
@@ -39,7 +39,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 //
-//  The type system in ELFE is somewhat similar to what is found in Haskell,
+//  The type system in XL is somewhat similar to what is found in Haskell,
 //  except that it's based on the shape of trees.
 //
 //  A type form in ELIO can be:
@@ -59,7 +59,7 @@
 #include <map>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 // 
@@ -246,10 +246,10 @@ inline bool IsTreeType(Tree *type)
     return type == tree_type;
 }
 
-ELFE_END
+XL_END
 
-extern "C" void debugt(ELFE::Types *ti);
-extern "C" void debugu(ELFE::Types *ti);
-extern "C" void debugr(ELFE::Types *ti);
+extern "C" void debugt(XL::Types *ti);
+extern "C" void debugu(XL::Types *ti);
+extern "C" void debugr(XL::Types *ti);
 
 #endif // TYPES_H

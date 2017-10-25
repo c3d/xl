@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  expred.cpp                                                    ELFE project
+//  expred.cpp                                                    XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -46,7 +46,7 @@
 #include "renderer.h"
 #include "llvm-crap.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 using namespace llvm;
 
@@ -110,9 +110,9 @@ llvm_value CompileExpression::DoName(Name *what)
             return result;
 
     // Check true and false values
-    if (existing == elfe_true)
+    if (existing == xl_true)
         return ConstantInt::get(unit->compiler->booleanTy, 1);
-    if (existing == elfe_false)
+    if (existing == xl_false)
         return ConstantInt::get(unit->compiler->booleanTy, 0);
 
     // Check if it is a global
@@ -299,7 +299,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
         }
     }
 
-    // The final call to elfe_form_error if nothing worked
+    // The final call to xl_form_error if nothing worked
     unit->CallFormError(call);
     code->CreateBr(isDone);
     code->SetInsertPoint(isDone);
@@ -569,7 +569,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
-        return LLVMCrap_CreateCall(code, c.elfe_same_shape, value, test);
+        return LLVMCrap_CreateCall(code, c.xl_same_shape, value, test);
     }
 
     // Other comparisons fail for now
@@ -628,4 +628,4 @@ llvm_value CompileExpression::TopLevelEvaluation(Tree *expr)
     return expr->Do(this);
 }
 
-ELFE_END
+XL_END

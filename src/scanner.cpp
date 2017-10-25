@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  scanner.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     This is the file scanner for the ELFE project
+//     This is the file scanner for the XL project
 //
 //     See detailed documentation in scanner.h
 //
@@ -32,7 +32,7 @@
 #include "utf8_fileutils.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -279,7 +279,7 @@ token_t Scanner::NextToken(bool hungry)
         else if (column < indents.back())
         {
             // Unindenting: remove rightmost indent level
-            ELFE_ASSERT(indents.size());
+            XL_ASSERT(indents.size());
             indents.pop_back();
             indent = column;
 
@@ -750,4 +750,4 @@ void Positions::GetInfo(ulong pos, text *out_file, ulong *out_line,
         *out_source = source;
 }
 
-ELFE_END
+XL_END

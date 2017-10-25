@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  context.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The execution environment for ELFE
+//     The execution environment for XL
 //
 //     This defines both the compile-time environment (Context), where we
 //     keep symbolic information, e.g. how to rewrite trees, and the
@@ -63,7 +63,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -83,7 +83,7 @@ Context::Context()
 // ----------------------------------------------------------------------------
     : symbols()
 {
-    symbols = new Scope(elfe_nil, elfe_nil);
+    symbols = new Scope(xl_nil, xl_nil);
 }
 
 
@@ -132,7 +132,7 @@ void Context::CreateScope(TreePosition pos)
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Scope(symbols, elfe_nil, pos);
+    symbols = new Scope(symbols, xl_nil, pos);
 }
 
 
@@ -205,11 +205,11 @@ Tree *Context::Evaluate(Tree *what)
 
     default:
         // Compile at O1 for all cases, O2 and O3 in interpreter-only mode
-        result = ELFE::EvaluateWithBytecode(this, what);
+        result = XL::EvaluateWithBytecode(this, what);
         break;
     case 0:
         // Interpreter-only mode
-        result = ELFE::Evaluate(this, what);
+        result = XL::Evaluate(this, what);
         break;
     }
     
@@ -288,16 +288,16 @@ bool Context::ProcessDeclarations(Tree *what)
             {
                 if (pname->value == "data")
                 {
-                    Define(prefix->right, elfe_self);
+                    Define(prefix->right, xl_self);
                     isInstruction = false;
                 }
                 else if (pname->value == "extern")
                 {
                     CDeclaration *pcd = new CDeclaration;
                     Infix *normalForm = pcd->Declaration(prefix->right);
-                    IFTRACE(elfe2c)
+                    IFTRACE(xl2c)
                         std::cout << "C:     " << prefix << "\n"
-                                  << "ELFE: " << normalForm << "\n";
+                                  << "XL: " << normalForm << "\n";
                     if (normalForm)
                     {
                         // Process C declarations only in optimized mode
@@ -445,12 +445,12 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     while (!result)
     {
         // If we have found a nil spot, that's where we can insert
-        if (*parent == elfe_nil)
+        if (*parent == xl_nil)
         {
             // Initialize the local entry with nil children
             RewriteChildren *nil_children =
                 new RewriteChildren(REWRITE_CHILDREN_NAME,
-                                    elfe_nil, elfe_nil,
+                                    xl_nil, xl_nil,
                                     rewrite->Position());
 
             // Create the local entry
@@ -647,16 +647,16 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         while (true)
         {
             // If we have found a nil spot, we are done with current scope
-            if (*parent == elfe_nil)
+            if (*parent == xl_nil)
                 break;
 
             // This should be a rewrite entry, follow it
             Rewrite *entry = (*parent)->AsInfix();
-            ELFE_ASSERT(entry && entry->name == REWRITE_NAME);
+            XL_ASSERT(entry && entry->name == REWRITE_NAME);
             Infix *decl = RewriteDeclaration(entry);
-            ELFE_ASSERT(!decl || decl->name == "->");
+            XL_ASSERT(!decl || decl->name == "->");
             RewriteChildren *children = RewriteNext(entry);
-            ELFE_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
+            XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
             // Check that hash matches
             Tree *defined = RewriteDefined(decl->left);
@@ -778,7 +778,7 @@ bool Context::IsEmpty()
 //   Return true if the context has no declaration inside
 // ----------------------------------------------------------------------------
 {
-    return symbols->right == elfe_nil;
+    return symbols->right == xl_nil;
 }
 
 
@@ -924,7 +924,7 @@ void Context::Clear()
 //   Clear the symbol table
 // ----------------------------------------------------------------------------
 {
-    symbols->right = elfe_nil;
+    symbols->right = xl_nil;
 }
 
 
@@ -968,7 +968,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
             else
                 out << "DECL?" << decl << "\n";
         }
-        else if (rw->left != elfe_nil)
+        else if (rw->left != xl_nil)
         {
             out << "LEFT?" << rw->left << "\n";
         }
@@ -1001,33 +1001,33 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
 }
 
 
-ELFE_END
+XL_END
 
 
 extern "C"
 {
-void debugg(ELFE::Scope *scope)
+void debugg(XL::Scope *scope)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scope in a symbol table
 // ----------------------------------------------------------------------------
 {
-    if (ELFE::Allocator<ELFE::Scope>::IsAllocated(scope))
-        ELFE::Context::Dump(std::cerr, scope);
+    if (XL::Allocator<XL::Scope>::IsAllocated(scope))
+        XL::Context::Dump(std::cerr, scope);
     else
         std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
 }
 
 
-void debugl(ELFE::Rewrite *rw)
+void debugl(XL::Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Helper to show an infix as a local symbol table for debugging purpose
 // ----------------------------------------------------------------------------
 //   The infix can be shown using debug(), but it's less convenient
 {
-    if (ELFE::Allocator<ELFE::Rewrite>::IsAllocated(rw))
+    if (XL::Allocator<XL::Rewrite>::IsAllocated(rw))
     {
-        ELFE::Context::Dump(std::cerr, rw);
+        XL::Context::Dump(std::cerr, rw);
     }
     else
     {
@@ -1037,16 +1037,16 @@ void debugl(ELFE::Rewrite *rw)
 }
 
 
-void debugs(ELFE::Context *context)
+void debugs(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a single context for debugging purpose
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    if (ELFE::Allocator<ELFE::Context>::IsAllocated(context))
+    if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        ELFE::Scope *scope = context->CurrentScope();
-        if (ELFE::Allocator<ELFE::Scope>::IsAllocated(scope))
+        XL::Scope *scope = context->CurrentScope();
+        if (XL::Allocator<XL::Scope>::IsAllocated(scope))
         {
             debugl(ScopeRewrites(scope));
         } 
@@ -1065,16 +1065,16 @@ void debugs(ELFE::Context *context)
 }
 
 
-void debugc(ELFE::Context *context)
+void debugc(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a context for debugging purpose
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
-    if (ELFE::Allocator<ELFE::Context>::IsAllocated(context))
+    if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        ELFE::Scope *scope = context->CurrentScope();
-        if (ELFE::Allocator<ELFE::Scope>::IsAllocated(scope))
+        XL::Scope *scope = context->CurrentScope();
+        if (XL::Allocator<XL::Scope>::IsAllocated(scope))
         {
             ulong depth = 0;
             while (scope)

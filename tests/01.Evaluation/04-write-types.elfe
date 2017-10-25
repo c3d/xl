@@ -1,9 +1,0 @@
-writeln "Hello"
-writeln 'C'
-writeln 12
-writeln 5.5
-writeln pi
-writeln true
-writeln false
-writeln 1=0
-writeln 0<1

@@ -1,7 +1,7 @@
 #ifndef OPCODES_H
 #define OPCODES_H
 // ****************************************************************************
-//  opcodes.h                                                    ELFE project
+//  opcodes.h                                                    XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -49,7 +49,7 @@
 #include "bytecode.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -57,7 +57,7 @@ ELFE_BEGIN
 //
 // ============================================================================
 //
-//  Each ELFE type defined in opcodes or in .tbl file is represented as:
+//  Each XL type defined in opcodes or in .tbl file is represented as:
 //  - A C++ class deriving from one of the parse tree types.
 //    The name is [name]_r, for example class boolean_r derives from Name.
 //  - A pointer type [name]_p, for example boolean_p
@@ -127,11 +127,11 @@ public:
     }
     Opcode(const Opcode &other): Op(other), Info()
     {
-        ELFE_ASSERT(success == NULL);
-        ELFE_ASSERT(next == NULL);
-        ELFE_ASSERT(owner == NULL);
+        XL_ASSERT(success == NULL);
+        XL_ASSERT(next == NULL);
+        XL_ASSERT(owner == NULL);
     }
-    
+
     virtual void                Delete(){ /* Not owned by the tree */ }
     virtual void                Register(Context *);
     virtual Tree *              Shape() { return NULL; }
@@ -162,7 +162,7 @@ struct NameOpcode : Opcode
         DataResult(data, toDefine);
         return success;
     }
-    
+
     virtual Tree *              Shape() { return toDefine; }
     virtual void                Register(Context *);
     virtual Opcode *            Clone() { return new NameOpcode(*this); }
@@ -353,7 +353,7 @@ struct FunctionArguments
     uint        size;
 };
 
-ELFE_END
+XL_END
 
 
 
@@ -381,10 +381,10 @@ ELFE_END
 #define LEFT_B          (left.value == "true")
 #define RIGHT_B         (right.value == "true")
 #define POSITION        (DataSelf(data)->Position())
-#define ELFE_CONTEXT    (Context(DataScope(data)).Pointer())
+#define XL_CONTEXT    (Context(DataScope(data)).Pointer())
 #define AS_INT(x)       (new Integer((x), POSITION))
 #define AS_REAL(x)      (new Real((x), POSITION))
-#define AS_BOOL(x)      ((x) ? elfe_true : elfe_false)
+#define AS_BOOL(x)      ((x) ? xl_true : xl_false)
 #define AS_TEXT(x)      (new Text(x, POSITION))
 #define R_INT(x)        RESULT(AS_INT(x))
 #define R_REAL(x)       RESULT(AS_REAL(x))
@@ -447,7 +447,7 @@ ELFE_END
 #define OVERLOAD(Name, Symbol, ResTy, Parms, Code)
 #define FUNCTION(Name, ResTy, Parms, Code)
 #define PARM(Name, Type)
-#define NAME(symbol)            extern Name_p elfe_##symbol;
+#define NAME(symbol)            extern Name_p xl_##symbol;
 #define NAME_FN(Name, ResTy, Symbol, Code)
 
 
@@ -492,7 +492,7 @@ ELFE_END
                (void *) (GarbageCollector::CreateSingleton()            \
                          /* Remove warning about unused variable */     \
                          + 0 * sizeof(init_global_allocator));
-             
+
 
 #define INIT_ALLOCATOR(type)                                            \
 /* ------------------------------------------------------------ */      \
@@ -543,7 +543,7 @@ ELFE_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELFE_ASSERT(parms.size() == 1);                            \
+            XL_ASSERT(parms.size() == 1);                               \
             argID = parms[0];                                           \
         }                                                               \
                                                                         \
@@ -581,7 +581,7 @@ ELFE_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELFE_ASSERT(parms.size() == 2);                             \
+            XL_ASSERT(parms.size() == 2);                               \
             leftID = parms[0];                                          \
             rightID = parms[1];                                         \
         }                                                               \
@@ -619,7 +619,7 @@ ELFE_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELFE_ASSERT(parms.size() == 2);                            \
+            XL_ASSERT(parms.size() == 2);                               \
             leftID = parms[0];                                          \
             rightID = parms[1];                                         \
         }                                                               \
@@ -665,7 +665,7 @@ ELFE_END
         }                                                               \
         virtual void SetParms(ParmOrder &parms)                         \
         {                                                               \
-            ELFE_ASSERT(parms.size() == 1);                            \
+            XL_ASSERT(parms.size() == 1);                               \
             argID = parms[0];                                           \
         }                                                               \
         int argID;                                                      \
@@ -731,7 +731,7 @@ ELFE_END
                                                                         \
         virtual Tree *Shape()                                           \
         {                                                               \
-            Tree *self = elfe_nil;                                     \
+            Tree *self = xl_nil;                                        \
             Opcode_FC_##FName &_parms = *this;                          \
             _parms.size = 0;                                            \
             Parms;                                                      \
@@ -791,8 +791,8 @@ ELFE_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a simple name such as 'true', 'false', 'nil', etc   */      \
 /* ------------------------------------------------------------ */      \
-    Name_p elfe_##symbol;                                              \
-    static NameOpcode init_opcode_N_##symbol(#symbol, elfe_##symbol);
+    Name_p xl_##symbol;                                                 \
+    static NameOpcode init_opcode_N_##symbol(#symbol, xl_##symbol);
 
 
 #define NAME_FN(FName, ResTy, Symbol, Code)                             \
@@ -814,8 +814,8 @@ ELFE_END
         virtual kstring OpID()  { return #FName; }                      \
     };                                                                  \
                                                                         \
-    Name_p elfe_##FName;                                               \
-    static Opcode_N_##FName init_opcode_N_##FName (elfe_##FName);
+    Name_p xl_##FName;                                                  \
+    static Opcode_N_##FName init_opcode_N_##FName (xl_##FName);
 
 
 #define TYPE(sym, BaseType, Condition)                                  \

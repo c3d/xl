@@ -1,4 +1,0 @@
-// EXIT=1
-// Patterns can only contain names, not symbols
-@ - ` -> @ + `
-3 - 5

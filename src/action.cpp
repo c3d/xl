@@ -40,7 +40,7 @@
 #include "action.h"
 #include "tree.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 Tree *Action::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
@@ -120,4 +120,4 @@ Tree *Action::DoInfix(Infix *what)
     return Do(what);
 }
 
-ELFE_END
+XL_END

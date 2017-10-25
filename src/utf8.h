@@ -1,7 +1,7 @@
 #ifndef UTF8_H
 #define UTF8_H
 // ****************************************************************************
-//  utf8.h                                                        ELFE project
+//  utf8.h                                                        XL project
 // ****************************************************************************
 // 
 //   File Description:
@@ -42,7 +42,7 @@
 #include "base.h"
 #include <ctype.h>
 
-ELFE_BEGIN
+XL_BEGIN
 
 #define IS_UTF8_FIRST(x)        (uchar(x) >= 0xC0 && uchar(x) <= 0xFD)
 #define IS_UTF8_NEXT(x)         (uchar(x) >= 0x80 && uchar(x) <= 0xBF)
@@ -188,6 +188,6 @@ inline uint Utf8Length(text value)
     return result;
 }
 
-ELFE_END
+XL_END
 
 #endif // UTF8_H

@@ -2,7 +2,7 @@
 #define TREE_H
 // ****************************************************************************
 //  tree.h                          (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -10,7 +10,7 @@
 //     Basic representation of parse tree.
 //
 //     See the big comment at the top of parser.h for details about
-//     the basics of ELFE  tree representation
+//     the basics of XL  tree representation
 //
 //
 //
@@ -34,11 +34,11 @@
 #include <iostream>
 #include <cctype>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
-//    The types being defined or used to define ELFE trees
+//    The types being defined or used to define XL trees
 //
 // ============================================================================
 
@@ -87,7 +87,7 @@ typedef Tree *(*eval_fn) (Scope *, Tree *);     // Compiled evaluation code
 
 enum kind
 // ----------------------------------------------------------------------------
-//   The kinds of tree that compose an ELFE parse tree
+//   The kinds of tree that compose an XL parse tree
 // ----------------------------------------------------------------------------
 {
     INTEGER, REAL, TEXT, NAME,                  // Leaf nodes
@@ -108,7 +108,7 @@ const int KIND_COUNT = KIND_LAST+1;
 
 struct Tree
 // ----------------------------------------------------------------------------
-//   The base class for all ELFE trees
+//   The base class for all XL trees
 // ----------------------------------------------------------------------------
 {
     enum { KINDBITS = 3, KINDMASK=7 };
@@ -489,7 +489,7 @@ template <class I> inline void Tree::Set(typename I::data_t data)
 {
     Info *i = new I(data);
     // The info can only be owned by a single tree, should not be linked
-    ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
     LinkedListInsert(info, i);
 }
 
@@ -512,8 +512,8 @@ template <class I> inline void Tree::SetInfo(I *i)
 // ----------------------------------------------------------------------------
 {
     // The info can only be owned by a single tree, should not be linked
-    ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
-    ELFE_ASSERT(!i->Info::next);
+    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    XL_ASSERT(!i->Info::next);
     
     Info *asInfo = i;           // For proper deduction if I is a derived class
     LinkedListInsert(info, asInfo);
@@ -550,7 +550,7 @@ retry:
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             ic->Delete();
             purged = true;
         }
@@ -579,7 +579,7 @@ retry:
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             return ic;
         }
         prev = i;
@@ -605,7 +605,7 @@ retry:
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            ELFE_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
             return ic;
         }
         prev = i;
@@ -613,11 +613,11 @@ retry:
     return NULL;
 }
 
-extern Name_p   elfe_true;
-extern Name_p   elfe_false;
-extern Name_p   elfe_nil;
-extern Name_p   elfe_self;
+extern Name_p   xl_true;
+extern Name_p   xl_false;
+extern Name_p   xl_nil;
+extern Name_p   xl_self;
 
-ELFE_END
+XL_END
 
 #endif // TREE_H

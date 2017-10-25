@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  types.cpp                                                     ELFE project
+//  types.cpp                                                     XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The type system in ELFE
+//     The type system in XL
 //
 //
 //
@@ -50,7 +50,7 @@
 
 #include <iostream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -128,7 +128,7 @@ Tree *Types::Type(Tree *expr)
     {
         if (expr->Kind() == NAME)
         {
-            if (expr == elfe_true || expr == elfe_false)
+            if (expr == xl_true || expr == xl_false)
                 AssignType(expr, boolean_type);
             else
                 AssignType(expr);
@@ -303,7 +303,7 @@ bool Types::AssignType(Tree *expr, Tree *type)
     // Generate a unique type name if nothing is given
     if (type == NULL)
     {
-        if (expr == elfe_true || expr == elfe_false)
+        if (expr == xl_true || expr == xl_false)
             type = boolean_type;
         else
             type = NewTypeName(expr->Position());
@@ -520,7 +520,7 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
-//  A type form in ELFE can be:
+//  A type form in XL can be:
 //   - A type name              integer
 //   - A generic type name      #ABC
 //   - A litteral value         0       1.5             "Hello"
@@ -528,7 +528,7 @@ bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
 //   - The type of a pattern    type (X:integer, Y:integer)
 //
 // Unification happens almost as "usual" for Algorithm W, except for how
-// we deal with ELFE "shape-based" type constructors, e.g. type(P)
+// we deal with XL "shape-based" type constructors, e.g. type(P)
 {
     // Make sure we have the canonical form
     t1 = Base(t1);
@@ -1356,22 +1356,22 @@ Tree *StructuredType(Context *ctx, Tree *value)
     return type;
 }
 
-ELFE_END
+XL_END
 
 
-void debugt(ELFE::Types *ti)
+void debugt(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump a type inference
 // ----------------------------------------------------------------------------
 {
-    if (!ELFE::Allocator<ELFE::Types>::IsAllocated(ti))
+    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
 
-    using namespace ELFE;
+    using namespace XL;
     uint i = 0;
 
     TreeMap &map = ti->types;
@@ -1390,19 +1390,19 @@ void debugt(ELFE::Types *ti)
 }
 
 
-void debugu(ELFE::Types *ti)
+void debugu(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump type unifications in a given inference system
 // ----------------------------------------------------------------------------
 {
-    if (!ELFE::Allocator<ELFE::Types>::IsAllocated(ti))
+    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
 
-    using namespace ELFE;
+    using namespace XL;
     uint i = 0;
 
     TreeMap &map = ti->unifications;
@@ -1419,19 +1419,19 @@ void debugu(ELFE::Types *ti)
 
 
 
-void debugr(ELFE::Types *ti)
+void debugr(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump rewrite calls associated with each tree in this type inference system
 // ----------------------------------------------------------------------------
 {
-    if (!ELFE::Allocator<ELFE::Types>::IsAllocated(ti))
+    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
         return;
     }
 
-    using namespace ELFE;
+    using namespace XL;
     uint i = 0;
 
     rcall_map &map = ti->rcalls;

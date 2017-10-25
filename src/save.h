@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 template <class T>
 struct Save
@@ -67,6 +67,6 @@ struct Save
     T   saved;
 };
 
-ELFE_END
+XL_END
 
 #endif // SAVE_H

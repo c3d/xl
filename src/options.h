@@ -1,13 +1,13 @@
-#ifndef ELFE_OPTIONS_H
-#define ELFE_OPTIONS_H
+#ifndef XL_OPTIONS_H
+#define XL_OPTIONS_H
 // ****************************************************************************
-//  Christophe de Dinechin                                       ELFE PROJECT
+//  Christophe de Dinechin                                       XL PROJECT
 //  options.h
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Processing of ELFE compiler options
+//     Processing of XL compiler options
 // 
 // 
 // 
@@ -27,7 +27,7 @@
 #include <vector>
 #include "base.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Errors;
 
@@ -57,6 +57,6 @@ struct Options
     static Options *    options;
 };
 
-ELFE_END
+XL_END
 
-#endif /* ELFE_OPTIONS_H */
+#endif /* XL_OPTIONS_H */

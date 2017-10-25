@@ -1,5 +1,5 @@
 #******************************************************************************
-# Makefile                                                       ELFE project 
+# Makefile                                                       XL project 
 #******************************************************************************
 #
 #  File Description:
@@ -69,12 +69,12 @@ SOURCES_llvm =					\
 	parms.cpp				\
 	unit.cpp				\
 
-PRODUCTS=elfe.exe
+PRODUCTS=xl.exe
 
-PREFIX_LIB=$(PREFIX)lib/elfe/
-LIB_INSTALL=builtins.elfe elfe.syntax C.syntax *.stylesheet
+PREFIX_LIB=$(PREFIX)lib/xl/
+LIB_INSTALL=builtins.xl xl.syntax C.syntax *.stylesheet
 
-DEFINES=ELFE_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
+DEFINES=XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
 INCLUDES=. includes recorder
 
 include $(BUILD)rules.mk
@@ -109,11 +109,11 @@ LDFLAGS_llvm352=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
 MINGW_LIBS_mingw=-lws2_32
 
-CPPFLAGS+=	-DELFE_BIN='"'$(PREFIX_BIN)'"'	\
-		-DELFE_LIB='"'$(PREFIX_LIB)'"'
+CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
+		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
-test: run-all-elfe-tests
-run-all-elfe-tests:
+test: run-all-xl-tests
+run-all-xl-tests:
 	cd ../tests; ./alltests
 hello: show_$(COMPILER)_version
 show_llvm_version:

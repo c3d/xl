@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  compiler-gc.cpp                                              ELFE project
+//  compiler-gc.cpp                                              XL project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Information connecting the LLVM compiler to the ELFE garbage collector
+//     Information connecting the LLVM compiler to the XL garbage collector
 // 
 // 
 // 
@@ -44,7 +44,7 @@
 #include "compiler-gc.h"
 #include "recorder.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 CompilerInfo::~CompilerInfo()
 // ----------------------------------------------------------------------------
@@ -84,4 +84,4 @@ void CompilerGarbageCollectionListener::EndCollection()
 // ----------------------------------------------------------------------------
 {}
 
-ELFE_END
+XL_END

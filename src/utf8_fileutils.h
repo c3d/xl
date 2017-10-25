@@ -1,7 +1,7 @@
 #ifndef UTF8_IFSTREAM_H
 #define UTF8_IFSTREAM_H
 // ****************************************************************************
-//  utf8_ifstream.h                                              ELFE project
+//  utf8_ifstream.h                                              XL project
 // ****************************************************************************
 //
 //   File Description:

@@ -1,7 +1,7 @@
 #ifndef COMPILER_EXPRED_H
 #define COMPILER_EXPRED_H
 // ****************************************************************************
-//  expred.h                                                      ELFE project
+//  expred.h                                                      XL project
 // ****************************************************************************
 // 
 //   File Description:
@@ -41,7 +41,7 @@
 
 #include "compiler.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct RewriteCandidate;
 
@@ -78,7 +78,7 @@ public:
     value_map       computed;     // Values we already computed
 };
 
-ELFE_END
+XL_END
 
 #endif // COMPILER_EXPRED_H
 

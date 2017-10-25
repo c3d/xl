@@ -1,6 +1,6 @@
 // ****************************************************************************
 //  opcodes.cpp                     (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -52,7 +52,7 @@
 
 #include <typeinfo>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // List of registered opcodes
 Opcode::Opcodes *Opcode::opcodes = NULL;
@@ -138,4 +138,4 @@ void NameOpcode::Register(Context *context)
 #endif
 }
 
-ELFE_END
+XL_END

@@ -1,13 +1,13 @@
 #ifndef TRACES_H
 #define TRACES_H
 // ****************************************************************************
-//   traces.h                                                    ELFE project
+//   traces.h                                                    XL project
 // ****************************************************************************
 //
 //   File Description:
 //
 //     Traces declarations. This file relies on traces.tbl to build a class
-//     derived from ELFE::Traces (traces_base.h).
+//     derived from XL::Traces (traces_base.h).
 //
 //
 //
@@ -46,24 +46,24 @@
 #include "traces.tbl"
 #undef TRACE
 
-#ifdef ELFE_TRACE_GROUP
+#ifdef XL_TRACE_GROUP
 
-#define _ELFE_MAKE_TRACE_CLASSNAME(x)    x##Traces
-#define  ELFE_MAKE_TRACE_CLASSNAME(x)   _ELFE_MAKE_TRACE_CLASSNAME(x)
-#define  ELFE_TRACE_CLASSNAME            ELFE_MAKE_TRACE_CLASSNAME(ELFE_TRACE_GROUP)
+#define _XL_MAKE_TRACE_CLASSNAME(x)    x##Traces
+#define  XL_MAKE_TRACE_CLASSNAME(x)   _XL_MAKE_TRACE_CLASSNAME(x)
+#define  XL_TRACE_CLASSNAME            XL_MAKE_TRACE_CLASSNAME(XL_TRACE_GROUP)
 
-#define _ELFE_MAKE_TRACE_INSTNAME(x)     x##TracesInstance
-#define  ELFE_MAKE_TRACE_INSTNAME(x)    _ELFE_MAKE_TRACE_INSTNAME(x)
-#define  ELFE_TRACE_INSTNAME             ELFE_MAKE_TRACE_INSTNAME(ELFE_TRACE_GROUP)
+#define _XL_MAKE_TRACE_INSTNAME(x)     x##TracesInstance
+#define  XL_MAKE_TRACE_INSTNAME(x)    _XL_MAKE_TRACE_INSTNAME(x)
+#define  XL_TRACE_INSTNAME             XL_MAKE_TRACE_INSTNAME(XL_TRACE_GROUP)
 
-class ELFE_TRACE_CLASSNAME : public ELFE::Traces
+class XL_TRACE_CLASSNAME : public XL::Traces
 // ----------------------------------------------------------------------------
 //   Wrap all the trace flags for the group
 // ----------------------------------------------------------------------------
 {
 public:
 
-    ELFE_TRACE_CLASSNAME() :
+    XL_TRACE_CLASSNAME() :
 #define TRACE(name)     name(false),
 #include "traces.tbl"
 #undef TRACE
@@ -74,7 +74,7 @@ public:
 #undef  TRACE
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x)  _STRINGIFY(x)
-        addGroup(STRINGIFY(ELFE_TRACE_GROUP), this);
+        addGroup(STRINGIFY(XL_TRACE_GROUP), this);
 #undef  STRINGIFY
     }
 
@@ -84,14 +84,14 @@ public:
     bool unused;
 };
 
-extern ELFE_TRACE_CLASSNAME *ELFE_TRACE_INSTNAME;
-#define ELFE_DEFINE_TRACES  ELFE_TRACE_CLASSNAME *ELFE_TRACE_INSTNAME = NULL;
-#define ELFE_INIT_TRACES()                                     \
+extern XL_TRACE_CLASSNAME *XL_TRACE_INSTNAME;
+#define XL_DEFINE_TRACES  XL_TRACE_CLASSNAME *XL_TRACE_INSTNAME = NULL;
+#define XL_INIT_TRACES()                                       \
     do {                                                       \
-        if (!ELFE_TRACE_INSTNAME)                              \
-            ELFE_TRACE_INSTNAME = new ELFE_TRACE_CLASSNAME();  \
+        if (!XL_TRACE_INSTNAME)                                \
+            XL_TRACE_INSTNAME = new XL_TRACE_CLASSNAME();      \
     } while(0)
 
-#endif // ELFE_TRACE_GROUP
+#endif // XL_TRACE_GROUP
 
 #endif

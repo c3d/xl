@@ -1,7 +1,7 @@
 #ifndef REFCOUNT_H
 #define REFCOUNT_H
 // ****************************************************************************
-//  refcount.h                                                    ELFE project
+//  refcount.h                                                    XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 template<class T>
 struct ReferenceCountPointer
@@ -184,6 +184,6 @@ protected:
     T &target;
 };
 
-ELFE_END
+XL_END
 
 #endif // REFCOUNT_H

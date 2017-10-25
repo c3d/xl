@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  text.tbl                                                      ELFE project
+//  text.tbl                                                      XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -22,10 +22,10 @@ TYPE(text_or_number, text,
      if (Text *tval = this->AsText())
          return (text_or_number_p) tval;
      if (Integer *ival = this->AsInteger())
-         return (text_or_number_p) new Text(elfe_int2text(ival->value),
+         return (text_or_number_p) new Text(xl_int2text(ival->value),
                                             this->Position());
      if (Real *rval = this->AsReal())
-         return (text_or_number_p) new Text(elfe_real2text(rval->value),
+         return (text_or_number_p) new Text(xl_real2text(rval->value),
                                             this->Position());
     );
 
@@ -37,9 +37,9 @@ INFIX(ConcatTN, text,   text,           "&",    text_or_number,
 INFIX(ConcatNT, text,   text_or_number, "&",    text,
       R_TEXT(LEFT + RIGHT));
 INFIX(RepeatTL, text,   integer,        "*",    text,
-      R_TEXT(elfe_text_repeat(LEFT, RIGHT)));
+      R_TEXT(xl_text_repeat(LEFT, RIGHT)));
 INFIX(RepeatTR, text,   text,           "*",    integer,
-      R_TEXT(elfe_text_repeat(RIGHT, LEFT)));
+      R_TEXT(xl_text_repeat(RIGHT, LEFT)));
 
 INFIX(Contains, boolean, text,          "contains", text,
       R_BOOL(LEFT.find(RIGHT) != text::npos));
@@ -53,4 +53,4 @@ FUNCTION(text_replace, text,
          PARM(left,   text)
          PARM(from,   text)
          PARM(to,     text),
-         R_TEXT(elfe_text_replace(LEFT, from, to)));
+         R_TEXT(xl_text_replace(LEFT, from, to)));

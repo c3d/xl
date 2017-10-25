@@ -1,12 +1,12 @@
 #ifndef REMOTE_H
 #define REMOTE_H
 // ****************************************************************************
-//  remote.h                                                     ELFE project
+//  remote.h                                                     XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    The interface for a simple socket-based transport of ELFE programs
+//    The interface for a simple socket-based transport of XL programs
 //
 //
 //
@@ -24,18 +24,18 @@
 #include "tree.h"
 #include "context.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
-const uint ELFE_DEFAULT_PORT = 1205;
+const uint XL_DEFAULT_PORT = 1205;
 
-int     elfe_tell(Context *, text host, Tree *body);
-Tree_p  elfe_ask(Context *, text host, Tree *body);
-Tree_p  elfe_invoke(Context *, text host, Tree *body);
-int     elfe_reply(Context *, Tree *body);
-Tree_p  elfe_listen_received();
-Tree_p  elfe_listen_hook(Tree *body);
-int     elfe_listen(Context *, uint forking, uint port = ELFE_DEFAULT_PORT);
+int     xl_tell(Context *, text host, Tree *body);
+Tree_p  xl_ask(Context *, text host, Tree *body);
+Tree_p  xl_invoke(Context *, text host, Tree *body);
+int     xl_reply(Context *, Tree *body);
+Tree_p  xl_listen_received();
+Tree_p  xl_listen_hook(Tree *body);
+int     xl_listen(Context *, uint forking, uint port = XL_DEFAULT_PORT);
 
-ELFE_END
+XL_END
 
 #endif // REMOTE_H

@@ -1,7 +1,7 @@
 #ifndef LLVM_CRAP_H
 #define LLVM_CRAP_H
 // ****************************************************************************
-//  llvm-crap.h                                      ELFE / Tao / XL projects
+//  llvm-crap.h                                      XL / Tao / XL projects
 // ****************************************************************************
 //
 //   File Description:
@@ -58,7 +58,7 @@
 // ============================================================================
 
 // Recent versions of LLVM define DEBUG(x) in Debug.h. Ooops.
-#include "base.h" // Make sure we have ELFE_DEBUG if needed
+#include "base.h" // Make sure we have XL_DEBUG if needed
 #undef DEBUG
 
 

@@ -1,3 +1,0 @@
-if true  then X else Y -> X
-if false then X else Y -> Y
-

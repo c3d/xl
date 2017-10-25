@@ -2,7 +2,7 @@
 #define MAIN_H
 // ****************************************************************************
 //  main.h                          (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -55,7 +55,7 @@
 #include <fstream>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Serializer;
 struct Deserializer;
@@ -89,10 +89,10 @@ struct Main
 // ----------------------------------------------------------------------------
 {
     Main(int argc, char **argv,
-         text compiler_name = ELFE_BIN "elfe",
-         text syntax        = ELFE_LIB "elfe.syntax",
-         text style         = ELFE_LIB "elfe.stylesheet",
-         text builtins      = ELFE_LIB "builtins.elfe");
+         text compiler_name = XL_BIN "xl",
+         text syntax        = XL_LIB "xl.syntax",
+         text style         = XL_LIB "xl.stylesheet",
+         text builtins      = XL_LIB "builtins.xl");
     virtual ~Main();
 
     // Entry point that does everythin
@@ -142,6 +142,6 @@ public:
 
 extern Main *MAIN;
 
-ELFE_END
+XL_END
 
 #endif // MAIN_H

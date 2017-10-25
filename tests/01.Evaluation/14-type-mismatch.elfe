@@ -1,4 +1,0 @@
-// EXIT=1
-foo X:integer as integer -> 1.55
-
-foo 3

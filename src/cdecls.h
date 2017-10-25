@@ -1,12 +1,12 @@
 #ifndef COMPILER_CDECLS_H
 #define COMPILER_CDECLS_H
 // ****************************************************************************
-//  cdecls.h                                                     ELFE project
+//  cdecls.h                                                     XL project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Processing and transforming C declarations into normal ELFE
+//     Processing and transforming C declarations into normal XL
 // 
 // 
 // 
@@ -41,7 +41,7 @@
 
 #include "tree.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct CDeclaration : Info
 // ----------------------------------------------------------------------------
@@ -70,6 +70,6 @@ public:
     uint        parameters;
 };
 
-ELFE_END
+XL_END
 
 #endif // COMPILER_CDECLS_H

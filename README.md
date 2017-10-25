@@ -1,33 +1,33 @@
-# ELFE
-### Extensible Language for Everyday (and the Internet of Things)
+# XL
+### Extensible Language
 
-ELFE is a very simple and small programming language specifcally
-designed for everyday programming, notably for the Internet of Things.
+XL is a very simple and small programming language specifcally
+designed for everyday programming.
 
-While ELFE is a general-purpose programming language, it is designed
+While XL is a general-purpose programming language, it is designed
 to facilitate the configuration and control of swarms of small devices
 such as sensors or actuators. It can also be used as a powerful,
 remotely-accessible extension language for larger applications.
 The examples below will focus on this particular domain. For more
 information about the language, please read the [reference manual]
-(https://github.com/c3d/elfe/blob/master/doc/ELFE_Reference_Manual.pdf)
+(https://github.com/c3d/xl/blob/master/doc/XL_Reference_Manual.pdf)
 
-ELFE used to be called ELIoT (Extensible Language for the Internet of Things),
+XL used to be called ELIoT (Extensible Language for the Internet of Things),
 but Legrand complained about it, having a trademark on the name.
-ELFE is for more than just IoT, so we might as well acknowlege
+XL is for more than just IoT, so we might as well acknowlege
 that in the name also ;-)
 
 
 ## Example: Measuring temperature
 
-Consider a sensor named `sensor.corp.net` running ELFE and featuring
+Consider a sensor named `sensor.corp.net` running XL and featuring
 a temperature measurement through a `temperature` function.
 
-ELFE lets you evaluate programs on this sensor remotely to do all
+XL lets you evaluate programs on this sensor remotely to do all
 kinds of interesting temperature measurements. By deferring
 computations to the sensor, we minimize network traffic and energy
 consumption. Examples similar to the ones below can be found in the
-[demo directory](https://github.com/c3d/elfe/tree/master/demo).
+[demo directory](https://github.com/c3d/xl/tree/master/demo).
 
 ### Simple temperature measurement (polling)
 
@@ -37,9 +37,9 @@ use the following code:
     temperature_on_sensor -> ask "sensor.corp.net", { temperature }
     writeln "Temperature is ", temperature_on_sensor
 
-The `->` rewrite operator reads "transforms into" and is used in ELFE
+The `->` rewrite operator reads "transforms into" and is used in XL
 to define variables, functions, macros, and so on. Look into
-[builtins.elfe](https://github.com/c3d/elfe/blob/master/src/builtins.elfe)
+[builtins.xl](https://github.com/c3d/xl/blob/master/src/builtins.xl)
 for examples of its use.
 
 The `ask` function sends a program on a remote node, waits for its
@@ -52,7 +52,7 @@ value.
 ### Reporting sudden changes in temperatures
 
 An application may be interested in sudden changes in temperatures,
-e.g. if the sensor suddenly warms up. With ELFE, without changing
+e.g. if the sensor suddenly warms up. With XL, without changing
 anything to the temperature API, you can check the temperature every
 second and report if it changed by more than 1 degree since last time
 it was measured with the following program:
@@ -101,7 +101,7 @@ only after having transmitted the new value, not after having measured it:
     temperature_changed new_temp, last_temp ->
         writeln "Temperature changed from ", last_temp, " to ", new_temp
 
-In ELFE, indentation is significant, and defined "blocks" of
+In XL, indentation is significant, and defined "blocks" of
 code. Other ways to delimit a block of code include brackets
 `{ code }` (which we used in the first example, where we
 passed the `{ temperature }` block to the remote sensor,
@@ -114,7 +114,7 @@ latter two are used for expressions.
 Again using the same sensor, and again without any code or API change
 on the sensor, you can also have it compute min, max and average
 temperatures from samples taken every 2.5 seconds:
-             
+
     invoke "sensor.corp.net",
         min   -> 100.0
         max   -> 0.0
@@ -137,8 +137,8 @@ temperatures from samples taken every 2.5 seconds:
                 " Min=", Min, " Max=", Max, " Avg=", Avg
 
 Notice how the first parameter of `compute_stats`, `T`, has a type
-declaration `T:real`. This tells ELFE that a `real` value is expected
-here. But it also forces ELFE to actually compute the value, in order
+declaration `T:real`. This tells XL that a `real` value is expected
+here. But it also forces XL to actually compute the value, in order
 to check that it is indeed a real number.
 
 As a result, `temperature` is evaluated only once (to bind it to
@@ -158,7 +158,7 @@ sensors, wouldn't it make sense to minimize the traffic between Canada
 and Australia, and have the two sensors talk to one another locally in
 Australia?
 
-This is very easy with ELFE. The following program will only send a
+This is very easy with XL. The following program will only send a
 traffic across the ocean if the temperature between the two sensors
 differs by more than 2 degrees, otherwise all network traffic will
 remain local:
@@ -189,7 +189,7 @@ located hundreds of miles from one another.
 
 ### A very powerful, yet simple API
 
-With these examples, we have demonstrated that using ELFE, we can
+With these examples, we have demonstrated that using XL, we can
 answer queries from applications that have very different requirements.
 An application will get exactly the data it needs, when it needs it,
 minimizing network traffic and optimizing energy utilization.
@@ -203,15 +203,15 @@ between nodes, computations, and more.
 
 ## How do we measure the temperature?
 
-It is very simple to add your own functions to ELFE, and to call any
+It is very simple to add your own functions to XL, and to call any
 C or C++ function of your choosing. The `temperature` function is
 implemented in a file called
-[temperature.tbl](https://github.com/c3d/elfe/blob/master/src/temperature.tbl).
+[temperature.tbl](https://github.com/c3d/xl/blob/master/src/temperature.tbl).
 It looks like this:
 
     NAME_FN(Temperature,            // Unique internal name
             real,                   // Return value
-            "temperature",          // Name for ELFE programmers
+            "temperature",          // Name for XL programmers
 
             // C++ code to compute the temperature and return it
             std::ifstream is("/sys/class/thermal/thermal_zone0/temp");
@@ -224,15 +224,15 @@ Raspberry Pi by reading the system file `/sys/class/thermal/thermal_zone0/temp`.
 This file returns values in 1/1000th of a Celsius, so we multiply the
 value we read by 0.001 to get the actual temperature.
 
-To add the `temperature` module to ELFE, we just need to add it to
+To add the `temperature` module to XL, we just need to add it to
 the list of modules in the
-[Makefile](https://github.com/c3d/elfe/blob/master/src/Makefile#L32):
+[Makefile](https://github.com/c3d/xl/blob/master/src/Makefile#L32):
 
     # List of modules to build
     MODULES=basics io math text remote time-functions temperature
 
 This will build at least `temperature.tbl`. That file contains the
-interface between ELFE and your code. In simple cases like our
+interface between XL and your code. In simple cases like our
 temperature measurement, it may be sufficient. However, if you have
 files called `temperature.h` or `temperature.cpp`, they will be
 integrated in your `temperature` module. This lets you add supporting
@@ -240,17 +240,17 @@ classes or functions.
 
 The `tell`, `ask`, `invoke` and `reply` words are implemented in the
 module called `remote`, which consists of
-[remote.tbl](https://github.com/c3d/elfe/blob/master/src/remote.tbl),
-[remote.h](https://github.com/c3d/elfe/blob/master/src/remote.h) and
-[remote.cpp](https://github.com/c3d/elfe/blob/master/src/remote.cpp).
+[remote.tbl](https://github.com/c3d/xl/blob/master/src/remote.tbl),
+[remote.h](https://github.com/c3d/xl/blob/master/src/remote.h) and
+[remote.cpp](https://github.com/c3d/xl/blob/master/src/remote.cpp).
 This may not be the easiest module to study, however. You may find
-[io.tbl](https://github.com/c3d/elfe/blob/master/src/io.tbl) easier
+[io.tbl](https://github.com/c3d/xl/blob/master/src/io.tbl) easier
 to understand.
 
 
-## Compiling ELFE
+## Compiling XL
 
-To build ELFE, just use `make`. On a Raspberry Pi, a `make -j3`
+To build XL, just use `make`. On a Raspberry Pi, a `make -j3`
 should run in about 10 minutes if you start from scratch. On a version
 2, it's about one minute. On a modern PC, it's may be as low as 3 to 5
 seconds. If `make` works (and it should), then use `sudo make install`
@@ -259,7 +259,7 @@ to install the target. In summary:
       % make
       % sudo make install
 
-The default location is `/usr/local/bin/elfe`, but you can install in
+The default location is `/usr/local/bin/xl`, but you can install in
 `/opt/local/` for example by building with `make PREFIX=/opt/local/`.
 Don't forget the trailing `/`.
 
@@ -271,19 +271,19 @@ portable. I will fix that one day. If other tests fail, look into
 file `tests/failures-default.out` for details of what went wrong.
 
 
-### Running an ELFE server
+### Running an XL server
 
-To start an ELFE server on a node, simply run `elfe -l`.
+To start an XL server on a node, simply run `xl -l`.
 
-    pi% elfe -l
+    pi% xl -l
 
-By default, ELFE listens on port 1205. You can change that by using
+By default, XL listens on port 1205. You can change that by using
 the `-listen` option:
 
-    pi% elfe -listen 42105
+    pi% xl -listen 42105
 
 Now, let's try a first test program. On `boss`, edit a file called
-`hello.elfe`, and write into it the following code:
+`hello.xl`, and write into it the following code:
 
     tell "pi",
         writeln "Hello World"
@@ -291,16 +291,16 @@ Now, let's try a first test program. On `boss`, edit a file called
 Replace `"pi"` with the actual Internet name of your target
 machine. Then execute that little program with:
 
-    boss% elfe hello.elfe
+    boss% xl hello.xl
 
 Normally, the console output on `pi` should now look like this:
 
-    pi% elfe -l
+    pi% xl -l
     Hello World
 
-What happens behind the scene is that ELFE on `boss` sent the program
+What happens behind the scene is that XL on `boss` sent the program
 given as an argument to `tell` to the machine named `pi` (which must
-be running an ELFE in listen mode, i.e. have `elfe -l`
+be running an XL in listen mode, i.e. have `xl -l`
 running). Then, that program executes on the slave. The `tell` command
 is totally asynchronous, it does not wait for completion on the target.
 
@@ -308,7 +308,7 @@ If this example does not work as intended, and if no obvious error
 appears on the console of either system, you can debug things by
 adding `-tremote` (`-t` stands for "trace", and enables specific debug
 traces, in that case any code conditioned by `IFTRACE(remote)` in the
-ELFE source code).
+XL source code).
 
 
 ### The magic behind the scene
@@ -321,22 +321,22 @@ There are three key functions to send programs across nodes:
    The node can then use `reply` to execute code back in the caller's
    program
 
-ELFE sends not just the program segments you give it, but also the
-necessary data, notably the symbols required for correct evaluation. 
+XL sends not just the program segments you give it, but also the
+necessary data, notably the symbols required for correct evaluation.
 This is the reason why things appear to work as a single program.
 
 
 
-## Basics of ELFE syntax and semantics
+## Basics of XL syntax and semantics
 
-ELFE derives from [XLR](http://xlr.sourceforge.net). It is a
+XL derives from [XLR](http://xlr.sourceforge.net). It is a
 specially trimmed-down version that does not require LLVM and can work
 in full interpreted mode, making it easier to compile and use, but
 also safer, since you cannot call arbitrary C functions.
 
 ### Semantics: One operator to rule them all
 
-ELFE has one fundamental operator, `->`, the "rewrite operator",
+XL has one fundamental operator, `->`, the "rewrite operator",
 which reads as *transforms into*. It is used to declare variables:
 
     X -> 0
@@ -363,7 +363,7 @@ the first one that applies. For example, factorial is defined as follows:
     N! -> N * (N-1)!
 
 Many basic program structures are defined that way in
-[builtins.elfe](https://github.com/c3d/elfe/blob/master/src/builtins.elfe).
+[builtins.xl](https://github.com/c3d/xl/blob/master/src/builtins.xl).
 For example, if-then-else and infinite loops are defined as follows:
 
     if true  then X else Y      -> X
@@ -373,9 +373,9 @@ For example, if-then-else and infinite loops are defined as follows:
 
 ### Syntax: Look, Ma, no keywords!
 
-ELFE has no keywords. Instead, the syntax relies on a rather simple
+XL has no keywords. Instead, the syntax relies on a rather simple
 [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser)
-[parser](https://github.com/c3d/elfe/blob/master/src/parser.cpp).
+[parser](https://github.com/c3d/xl/blob/master/src/parser.cpp).
 
 THe parser generates a parse tree made of 8 node types. The first four
 node types are leaf nodes:
@@ -417,15 +417,15 @@ the name `world`.
 
 This parser is dynamically configurable, with the default priorities
 being defined by the
-[elfe.syntax](https://github.com/c3d/elfe/blob/master/src/elfe.syntax) file.
+[xl.syntax](https://github.com/c3d/xl/blob/master/src/xl.syntax) file.
 
-Parse trees are the fundamendal data structure in ELFE. Any data or
+Parse trees are the fundamendal data structure in XL. Any data or
 program can be represented as a parse tree.
 
 
-### ELFE as a functional language
+### XL as a functional language
 
-ELFE can be seen as a functional language, where functions are
+XL can be seen as a functional language, where functions are
 first-class entities, i.e. you can manipulate them, pass them around,
 etc:
 
@@ -446,7 +446,7 @@ subject to the same evaluation rules based on tree rewrites.
 
 ### Subtlety #1: expression vs. statement
 
-The ELFE parse tree is designed to represent programs in a way that
+The XL parse tree is designed to represent programs in a way that
 is relatively natural for human beings. In that sense, it departs from
 languages such as Lisp or SmallTalk.
 
@@ -475,7 +475,7 @@ desired objective, and you will need additional parentheses.
 
 ### Subtlety #2: infix vs. prefix
 
-Another special rule is that ELFE will use the presence of space on
+Another special rule is that XL will use the presence of space on
 only one side of an operator to disambiguate between an infix or a
 prefix. For example:
 
@@ -508,10 +508,10 @@ is a real value, you can do it as follows:
         loop
             Body
             sleep Duration
-    
+
 ### Subtlelty #4: Closures and remote transport
 
-Like many functional languages, ELFE ensures that the value of
+Like many functional languages, XL ensures that the value of
 variables is preserved for the evaluation of a given body. Consider
 for example:
 
@@ -526,6 +526,3 @@ integrates the binding `X->3`.
 At this point, such closures cannot be sent across a `tell`, `ask`,
 `invoke` or `reply`. Make sure data that is sent over to a remote node
 has been evaluated before being sent.
-
-
-

@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  cdecls.cpp                                                    ELFE project
+//  cdecls.cpp                                                    XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Processing and transforming C declarations into normal ELFE
+//    Processing and transforming C declarations into normal XL
 //
 //    We will never get accurate results without a real C parser.
 //    The objective here is only to deal with the most common cases
@@ -43,7 +43,7 @@
 
 #include <sstream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 CDeclaration::CDeclaration()
 // ----------------------------------------------------------------------------
@@ -420,4 +420,4 @@ Name *CDeclaration::Anonymous()
     return new Name(name);
 }
 
-ELFE_END
+XL_END

@@ -31,5 +31,5 @@ tests/**/expected-*.out
 tests/**/failure-*.out
 tests/**/success-*.out
 src/[a-z].xl
-src/[a-z].elfe
+src/[a-z].xl
 

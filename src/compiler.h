@@ -2,7 +2,7 @@
 #define COMPILER_H
 // ****************************************************************************
 //  compiler.h                       (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               ELFE project 
+//                                                               XL project 
 // ****************************************************************************
 // 
 //   File Description:
@@ -54,7 +54,7 @@
 // 
 // ============================================================================
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct CompiledUnit;
 struct CompilerInfo;
@@ -190,20 +190,20 @@ public:
     llvm::PointerType            *infoPtrTy;
     llvm::PointerType            *contextPtrTy;
     llvm::Function               *strcmp_fn;
-    llvm::Function               *elfe_same_shape;
-    llvm::Function               *elfe_form_error;
-    llvm::Function               *elfe_stack_overflow;
-    llvm::Function               *elfe_new_integer;
-    llvm::Function               *elfe_new_real;
-    llvm::Function               *elfe_new_character;
-    llvm::Function               *elfe_new_text;
-    llvm::Function               *elfe_new_ctext;
-    llvm::Function               *elfe_new_xtext;
-    llvm::Function               *elfe_new_block;
-    llvm::Function               *elfe_new_prefix;
-    llvm::Function               *elfe_new_postfix;
-    llvm::Function               *elfe_new_infix;
-    llvm::Constant               *elfe_recursion_count_ptr;
+    llvm::Function               *xl_same_shape;
+    llvm::Function               *xl_form_error;
+    llvm::Function               *xl_stack_overflow;
+    llvm::Function               *xl_new_integer;
+    llvm::Function               *xl_new_real;
+    llvm::Function               *xl_new_character;
+    llvm::Function               *xl_new_text;
+    llvm::Function               *xl_new_ctext;
+    llvm::Function               *xl_new_xtext;
+    llvm::Function               *xl_new_block;
+    llvm::Function               *xl_new_prefix;
+    llvm::Function               *xl_new_postfix;
+    llvm::Function               *xl_new_infix;
+    llvm::Constant               *xl_recursion_count_ptr;
     functions_map                 builtins;
     functions_map                 functions;
     adapter_map                   array_to_args_adapters;
@@ -277,7 +277,7 @@ inline bool Compiler::IsRealType(llvm_type t)
 #define RIGHT_VALUE_INDEX   3
 #define INFIX_NAME_INDEX    4
 
-ELFE_END
+XL_END
 
 extern void debugv(llvm::Value *);
 extern void debugv(llvm::Type *);

@@ -2,12 +2,12 @@
 #define RENDERER_H
 // ****************************************************************************
 //  renderer.h                      (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               ELFE project 
+//                                                               XL project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Rendering of ELFE trees
+//     Rendering of XL trees
 // 
 // 
 // 
@@ -45,7 +45,7 @@
 #include "tree.h"
 #include <ostream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Syntax;
 typedef std::map<text,Tree_p>                      formats_table;
@@ -65,7 +65,7 @@ struct Renderer
 
     // Selecting the style sheet file
     void                SelectStyleSheet(text styleFile,
-                                         text syntaxFile = ELFE_LIB "elfe.syntax");
+                                         text syntaxFile = XL_LIB "xl.syntax");
 
     // Rendering proper
     void                RenderFile (Tree *what);
@@ -106,13 +106,13 @@ public:
     static Renderer *   renderer;
 };
 
-std::ostream& operator<< (std::ostream&out, ELFE::Tree *t);
-std::ostream& operator<< (std::ostream&out, ELFE::TreeList &list);
+std::ostream& operator<< (std::ostream&out, XL::Tree *t);
+std::ostream& operator<< (std::ostream&out, XL::TreeList &list);
 
-ELFE_END
+XL_END
 
 // For use in a debugger
-extern "C" const char *debug(ELFE::Tree *);
-extern "C" const char *debugp(ELFE::Tree *);
+extern "C" const char *debug(XL::Tree *);
+extern "C" const char *debugp(XL::Tree *);
 
 #endif // RENDERER_H

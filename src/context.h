@@ -2,12 +2,12 @@
 #define CONTEXT_H
 // ****************************************************************************
 //  context.h                       (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The execution environment for ELFE
+//     The execution environment for XL
 //
 //     This defines both the compile-time environment (Context), where we
 //     keep symbolic information, e.g. how to rewrite trees, and the
@@ -25,9 +25,9 @@
 /*
   COMPILATION STRATEGY:
 
-  The version of ELFE implemented here is a very simple language based
+  The version of XL implemented here is a very simple language based
   on tree rewrites, designed to serve as a dynamic document description
-  language (DDD), as well as a tool to implement the "larger" ELFE in a more
+  language (DDD), as well as a tool to implement the "larger" XL in a more
   dynamic way. Both usage models imply that the language is compiled on the
   fly, not statically. We use LLVM as a back-end, see compiler.h.
 
@@ -41,7 +41,7 @@
 
   PREDEFINED FORMS:
 
-  ELFE is really built on a very small number of predefined forms recognized by
+  XL is really built on a very small number of predefined forms recognized by
   the compilation phase.
 
     "A->B" defines a rewrite rule, rewriting A as B. The form A can be
@@ -54,7 +54,7 @@
     "data A" declares A as a form that cannot be reduced further.
           This can be used to declare data structures.
 
-  The ELFE type system is itself based on tree shapes. For example,
+  The XL type system is itself based on tree shapes. For example,
   "integer" is a type that covers all Integer trees. Verifying if X
   has type Y is performed by evaluting the value X:Y.
 
@@ -168,7 +168,7 @@
 #include "base.h"
 #include "tree.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -491,6 +491,6 @@ inline std::ostream &operator<< (std::ostream &out, Context *c)
 }
 
 
-ELFE_END
+XL_END
 
 #endif // CONTEXT_H

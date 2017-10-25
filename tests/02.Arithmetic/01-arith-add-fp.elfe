@@ -1,4 +1,0 @@
-foo -> 1.5
-bar -> 2.3
-writeln foo+bar
-

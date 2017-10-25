@@ -1,4 +1,0 @@
-complex -> type((re:real, im:real))
-Z1:complex + Z2:complex as complex -> (Z1.re + Z2.re, Z1.im + Z2.im)
-
-(3,4) + (5, 6)

@@ -179,6 +179,6 @@ INFIX(TextGT, boolean, text, ">",  text, R_BOOL(LEFT >  RIGHT));
 INFIX(TextLE, boolean, text, "<=", text, R_BOOL(LEFT <= RIGHT));
 INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 
-PREFIX_CTX(quote, tree, "quote", tree,  RESULT(elfe_parse_tree(context,leftPtr)));
-PREFIX_FN(parse, tree, text,            RESULT(elfe_parse_text(left)));
+PREFIX_CTX(quote, tree, "quote", tree,  RESULT(xl_parse_tree(context,leftPtr)));
+PREFIX_FN(parse, tree, text,            RESULT(xl_parse_text(left)));
 PREFIX_FN(exit,  tree, integer,         exit(left); R_INT(0))

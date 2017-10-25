@@ -2,11 +2,11 @@
 BEGIN {
     FS="=";
     file=ARGV[1];
-    xl=ENVIRON["ELFE"];
+    xl=ENVIRON["XL"];
     base=file;
-    sub("[.]elfe", "", base);
+    sub("[.]xl", "", base);
     csource=file;
-    sub("[.]elfe", ".c", csource);
+    sub("[.]xl", ".c", csource);
     subdir=file;
     sub("/[^/]*$", "", subdir);
 }

@@ -1,9 +1,0 @@
-// Send many requests to the remote target.
-// Note that this sends a local variable (defined here) over to target
-I -> 0
-while I < 100 loop
-    writeln "Sent request ", I
-    tell "localhost",
-        writeln "Hello world from PID ", process_id, " request #", I
-    I := I + 1
-        

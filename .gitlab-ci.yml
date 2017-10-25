@@ -3,9 +3,9 @@ before_script:
 
 test:
   script:
-  - make PREFIX=/tmp/elfe/
-  - make PREFIX=/tmp/elfe/ install
-  - export PATH=$PATH:/tmp/elfe/bin
+  - make PREFIX=/tmp/xl/
+  - make PREFIX=/tmp/xl/ install
+  - export PATH=$PATH:/tmp/xl/bin
   - make test
 
 make_only:

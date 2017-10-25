@@ -1,7 +1,0 @@
-writeln "ABCDEF=", "ABC" & "DEF"
-writeln "DEFABC=", "DEF" & "ABC"
-writeln "ABC123=", "ABC" & 123
-writeln "123ABC123=", 123 & "ABC" & 123
-writeln "1.23ABC12.3=", 1.23 & "ABC" & 12.3
-writeln "With multiply=", 123 & 10 * "ABC"
-writeln "With two multiplies=", "X"*3 & 6 * "B"

@@ -1,8 +1,8 @@
 #ifndef BASICS_H
 #define BASICS_H
 // ****************************************************************************
-//  basics.h                        (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//  basics.h                        (C) 1992-2017 Christophe de Dinechin (ddd)
+//                                                                  XL project
 // ****************************************************************************
 //
 //   File Description:

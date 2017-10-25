@@ -1,9 +1,0 @@
-foo X:integer ->
-    bar Z:integer -> writeln "For ", Z, " bar=", X+2*Z
-    bar 2
-    bar 4
-    bar 6
-
-foo 1
-foo 2
-foo 4

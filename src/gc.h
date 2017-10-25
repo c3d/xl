@@ -8,7 +8,7 @@
 //
 //     Garbage collector managing memory for us
 //
-//     Garbage collectio in ELFE is based on reference counting.
+//     Garbage collectio in XL is based on reference counting.
 //     The GCPtr class does the reference counting.
 //     The rule is that as soon as you assign an object to a GCPtr,
 //     it becomes "tracked". Objects created during a cycle and not assigned
@@ -52,7 +52,7 @@
 
 extern void debuggc(void *);
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct GarbageCollector;
 template <class Object, typename ValueType=void> struct GCPtr;
@@ -255,7 +255,7 @@ struct GCPtr
     {
         return Assign(pointer, (Object *) o.ConstPointer());
     }
-            
+
     template<class U, typename V>
     GCPtr& operator=(const GCPtr<U,V> &o)
     {
@@ -283,9 +283,9 @@ protected:
 
 
 // ****************************************************************************
-// 
+//
 //    The GarbageCollector class
-// 
+//
 // ****************************************************************************
 
 struct GarbageCollector
@@ -304,7 +304,7 @@ struct GarbageCollector
     static bool                 Running()       { return gc->running; }
     static bool                 SafePoint();
     static bool                 Sweep();
-    
+
     void                        Statistics(uint &totalBytes,
                                            uint &allocBytes,
                                            uint &availableBytes,
@@ -347,12 +347,12 @@ private:
 /* ------------------------------------------------------------ */      \
     void *operator new(size_t size)                                     \
     {                                                                   \
-        return ELFE::Allocator<type>::Allocate(size);                  \
+        return XL::Allocator<type>::Allocate(size);                     \
     }                                                                   \
                                                                         \
     void operator delete(void *ptr)                                     \
     {                                                                   \
-        ELFE::Allocator<type>::Delete((type *) ptr);                   \
+        XL::Allocator<type>::Delete((type *) ptr);                      \
     }
 
 
@@ -369,7 +369,7 @@ inline TypeAllocator *TypeAllocator::ValidPointer(TypeAllocator *ptr)
 // ----------------------------------------------------------------------------
 {
     TypeAllocator *result = (TypeAllocator *) (((uintptr_t) ptr) & ~PTR_MASK);
-    ELFE_ASSERT(result && result->gc == GarbageCollector::GC());
+    XL_ASSERT(result && result->gc == GarbageCollector::GC());
     return result;
 }
 
@@ -420,8 +420,8 @@ inline void TypeAllocator::Acquire(void *pointer)
 {
     if (IsGarbageCollected(pointer))
     {
-        ELFE_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
-        ELFE_ASSERT (IsAllocated(pointer));
+        XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+        XL_ASSERT (IsAllocated(pointer));
 
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
         ++chunk->count;
@@ -436,11 +436,11 @@ inline void TypeAllocator::Release(void *pointer)
 {
     if (IsGarbageCollected(pointer))
     {
-        ELFE_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
-        ELFE_ASSERT (IsAllocated(pointer));
+        XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+        XL_ASSERT (IsAllocated(pointer));
 
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
-        ELFE_ASSERT(chunk->count);
+        XL_ASSERT(chunk->count);
         uint count = --chunk->count;
         if (!count)
             ScheduleDelete(chunk);
@@ -453,7 +453,7 @@ inline uint TypeAllocator::RefCount(void *pointer)
 //   Return reference count for given pointer
 // ----------------------------------------------------------------------------
 {
-    ELFE_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+    XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
     if (IsAllocated(pointer))
     {
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
@@ -470,7 +470,7 @@ inline void *TypeAllocator::InUse(void *pointer)
 {
     if (IsGarbageCollected(pointer))
     {
-        ELFE_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
+        XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
         uint bits = Atomic<uintptr_t>::Or(chunk->bits, IN_USE);
         if (!chunk->count && (~bits & IN_USE))
@@ -535,7 +535,7 @@ Object *Allocator<Object>::Allocate(size_t size)
 //   Allocate an object (invoked by operator new)
 // ----------------------------------------------------------------------------
 {
-    ELFE_ASSERT(size == allocator->TypeAllocator::objectSize); (void) size;
+    XL_ASSERT(size == allocator->TypeAllocator::objectSize); (void) size;
     return (Object *) allocator->TypeAllocator::Allocate();
 }
 
@@ -611,6 +611,6 @@ inline bool GarbageCollector::SafePoint()
     return false;
 }
 
-ELFE_END
+XL_END
 
 #endif // GC_H

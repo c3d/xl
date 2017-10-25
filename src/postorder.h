@@ -1,7 +1,7 @@
 #ifndef POSTORDER_H
 #define POSTORDER_H
 // ****************************************************************************
-//  postorder.h                                                  ELFE project
+//  postorder.h                                                  XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -43,7 +43,7 @@
 
 #include "tree.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 template <typename Action>
 struct PostOrderTraversal
@@ -107,6 +107,6 @@ struct PostOrderTraversal
     bool fullScan;
 };
 
-ELFE_END
+XL_END
 
 #endif // POSTORDER_H

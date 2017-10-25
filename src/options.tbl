@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  options.tbl                                                   ELFE project
+//  options.tbl                                                   XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -48,7 +48,7 @@
 
 // ============================================================================
 //
-//    ELFE options
+//    XL options
 //
 // ============================================================================
 
@@ -56,11 +56,11 @@
 OPTION(h, "List usage information and exit", Usage(args[0].c_str()); exit(0))
 
 // Rendering control
-OPTVAR(stylesheet, text, "elfe")
+OPTVAR(stylesheet, text, "xl")
 OPTION(style, "Select the stylesheet",
        stylesheet = STRING;
        if (stylesheet.find("/") == stylesheet.npos)
-           stylesheet = ELFE_LIB + stylesheet;
+           stylesheet = XL_LIB + stylesheet;
        Renderer::renderer->SelectStyleSheet(stylesheet + ".stylesheet"))
 
 // Parse only
@@ -73,7 +73,7 @@ OPTVAR(showSource, bool, false)
 OPTION(show, "Show source file", showSource = true)
 
 // Builtins file
-OPTVAR(builtins, text, "builtins.elfe")
+OPTVAR(builtins, text, "builtins.xl")
 OPTION(builtins, "Select the builtins file", builtins = STRING)
 
 // Do not load builtins file

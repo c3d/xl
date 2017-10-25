@@ -1,7 +1,7 @@
 #ifndef COMPILER_UNIT_H
 #define COMPILER_UNIT_H
 // ****************************************************************************
-//  unit.h                                                        ELFE project
+//  unit.h                                                        XL project
 // ****************************************************************************
 // 
 //   File Description:
@@ -43,7 +43,7 @@
 #include "parms.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Types;
 typedef GCPtr<Types> Types_p;
@@ -134,6 +134,6 @@ public:
     unboxing_map        unboxed;        // Unboxed source for a boxed type
 };
 
-ELFE_END
+XL_END
 
 #endif // COMPILER_UNIT_H

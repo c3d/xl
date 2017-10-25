@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  unit.cpp                                                      ELFE project
+//  unit.cpp                                                      XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -60,7 +60,7 @@
 #include <stdio.h>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 using namespace llvm;
 
@@ -98,7 +98,7 @@ CompiledUnit::~CompiledUnit()
 
 Function *CompiledUnit::ExpressionFunction()
 // ----------------------------------------------------------------------------
-//   Create a function to evaluate an ELFE tree in a given tree
+//   Create a function to evaluate an XL tree in a given tree
 // ----------------------------------------------------------------------------
 {
     // We must have verified or at least scanned the types before
@@ -111,7 +111,7 @@ Function *CompiledUnit::ExpressionFunction()
     signature.push_back(compiler->treePtrTy);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     return InitializeFunction(fnTy, &parameters.parameters,
-                              "elfe_eval", true, false);
+                              "xl_eval", true, false);
 }
 
 
@@ -139,7 +139,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, Types *types)
     Tree *rtype = this->types->Type(expr);
     llvm_type retTy = compiler->MachineType(rtype);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    llvm_function fn = InitializeFunction(fnTy,NULL,"elfe_closure",true,false);
+    llvm_function fn = InitializeFunction(fnTy,NULL,"xl_closure",true,false);
 
     // Return the function
     return fn;
@@ -184,7 +184,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     else
         retTy = StructureType(signature, source);
 
-    text label = "_ELFE_" + parameters.name;
+    text label = "_XL_" + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
@@ -376,7 +376,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
         {
             rewriteUnit.ImportClosureInfo(this);
             Tree *value = rewrite->right;
-            if (value && value != elfe_self)
+            if (value && value != xl_self)
             {
                 // Regular function
                 llvm_value returned = rewriteUnit.CompileTopLevel(value);
@@ -544,7 +544,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
         return LLVMCrap_CreateCall(code,
-                                   compiler->elfe_new_infix,
+                                   compiler->xl_new_infix,
                                    ref, left, right);
     }
 
@@ -560,7 +560,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
         return LLVMCrap_CreateCall(code,
-                                   compiler->elfe_new_prefix,
+                                   compiler->xl_new_prefix,
                                    ref, left, right);
     }
 
@@ -576,7 +576,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
         return LLVMCrap_CreateCall(code,
-                                   compiler->elfe_new_postfix,
+                                   compiler->xl_new_postfix,
                                    ref, left, right);
     }
 
@@ -587,7 +587,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         child = Unbox(boxed, block->child, index);
         child = Autobox(child, ttp);
         return LLVMCrap_CreateCall(code,
-                                   compiler->elfe_new_block,
+                                   compiler->xl_new_block,
                                    ref, child);
     }
     }
@@ -963,7 +963,7 @@ Value *CompiledUnit::CallFormError(Tree *what)
     Value *ptr = ConstantTree(what); assert(what);
     Value *nullContext = ConstantPointerNull::get(compiler->contextPtrTy);
     Value *callVal = LLVMCrap_CreateCall(code,
-                                         compiler->elfe_form_error,
+                                         compiler->xl_form_error,
                                          nullContext, ptr);
     return callVal;
 }
@@ -1090,8 +1090,8 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     if (req == compiler->booleanTy)
     {
         assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
-        Value *falsePtr = compiler->TreeGlobal(elfe_false);
-        result = code->CreateLoad(falsePtr, "elfe_false");
+        Value *falsePtr = compiler->TreeGlobal(xl_false);
+        result = code->CreateLoad(falsePtr, "xl_false");
         result = code->CreateICmpNE(value, result, "notFalse");
     }
     else if (req->isIntegerTy())
@@ -1136,7 +1136,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     {
         assert(req == compiler->treePtrTy || req == compiler->nameTreePtrTy);
 
-        // Insert code corresponding to value ? elfe_true : elfe_false
+        // Insert code corresponding to value ? xl_true : xl_false
         BasicBlock *isTrue = BasicBlock::Create(llvm, "isTrue", function);
         BasicBlock *isFalse = BasicBlock::Create(llvm, "isFalse", function);
         BasicBlock *exit = BasicBlock::Create(llvm, "booleanBoxed", function);
@@ -1145,14 +1145,14 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
 
         // True block
         code->SetInsertPoint(isTrue);
-        Value *truePtr = compiler->TreeGlobal(elfe_true);
+        Value *truePtr = compiler->TreeGlobal(xl_true);
         result = code->CreateLoad(truePtr);
         result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
-        Value *falsePtr = compiler->TreeGlobal(elfe_false);
+        Value *falsePtr = compiler->TreeGlobal(xl_false);
         result = code->CreateLoad(falsePtr);
         result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
@@ -1165,31 +1165,31 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     else if (type == compiler->characterTy &&
              (req == compiler->treePtrTy || req == compiler->textTreePtrTy))
     {
-        boxFn = compiler->elfe_new_character;
+        boxFn = compiler->xl_new_character;
     }
     else if (type->isIntegerTy())
     {
         assert(req == compiler->treePtrTy || req == compiler->integerTreePtrTy);
-        boxFn = compiler->elfe_new_integer;
+        boxFn = compiler->xl_new_integer;
         if (type != compiler->integerTy)
             result = code->CreateSExt(result, type); // REVISIT: Signed?
     }
     else if (type->isFloatingPointTy())
     {
         assert(req == compiler->treePtrTy || req == compiler->realTreePtrTy);
-        boxFn = compiler->elfe_new_real;
+        boxFn = compiler->xl_new_real;
         if (type != compiler->realTy)
             result = code->CreateFPExt(result, type);
     }
     else if (type == compiler->textTy)
     {
         assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
-        boxFn = compiler->elfe_new_text;
+        boxFn = compiler->xl_new_text;
     }
     else if (type == compiler->charPtrTy)
     {
         assert(req == compiler->treePtrTy || req == compiler->textTreePtrTy);
-        boxFn = compiler->elfe_new_ctext;
+        boxFn = compiler->xl_new_ctext;
     }
     else if (unboxed.count(type) &&
              (req == compiler->blockTreePtrTy ||
@@ -1283,4 +1283,4 @@ bool CompiledUnit::ValidCName(Tree *tree, text &label)
     return true;
 }
 
-ELFE_END
+XL_END

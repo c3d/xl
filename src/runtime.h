@@ -2,12 +2,12 @@
 #define RUNTIME_H
 // ****************************************************************************
 //  runtime.h                       (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                              ELFE project
+//                                                              XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Functions required for proper run-time execution of ELFE programs
+//     Functions required for proper run-time execution of XL programs
 //
 //
 //
@@ -47,7 +47,7 @@
 #include <cmath>
 
 
-ELFE_BEGIN
+XL_BEGIN
 // ============================================================================
 //
 //    Forward declarations
@@ -71,27 +71,27 @@ struct SourceFile;
 //
 // ============================================================================
 
-Tree *  elfe_form_error(Context *c, Tree *tree);
-Tree *  elfe_stack_overflow(Tree *tree);
-bool    elfe_same_shape(Tree *t1, Tree *t2);
+Tree *  xl_form_error(Context *c, Tree *tree);
+Tree *  xl_stack_overflow(Tree *tree);
+bool    xl_same_shape(Tree *t1, Tree *t2);
 
-Integer *elfe_new_integer(longlong value);
-Real    *elfe_new_real(double value);
-Text    *elfe_new_character(char value);
-Text    *elfe_new_ctext(kstring value);
-Text    *elfe_new_text(text value);
-Text    *elfe_new_xtext(kstring value, longlong len, kstring open, kstring close);
-Block   *elfe_new_block(Block *source, Tree *child);
-Prefix  *elfe_new_prefix(Prefix *source, Tree *left, Tree *right);
-Postfix *elfe_new_postfix(Postfix *source, Tree *left, Tree *right);
-Infix   *elfe_new_infix(Infix *source, Tree *left, Tree *right);
+Integer *xl_new_integer(longlong value);
+Real    *xl_new_real(double value);
+Text    *xl_new_character(char value);
+Text    *xl_new_ctext(kstring value);
+Text    *xl_new_text(text value);
+Text    *xl_new_xtext(kstring value, longlong len, kstring open, kstring close);
+Block   *xl_new_block(Block *source, Tree *child);
+Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
+Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
+Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
 
 
 
 // ============================================================================
-// 
+//
 //    Some utility functions used in basics.tbl
-// 
+//
 // ============================================================================
 
 extern "C"
@@ -100,42 +100,42 @@ extern "C"
 // You first have to ignore the fact that the following pragma may be ignored!
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
-integer_t       elfe_text2int(kstring t);
-real_t          elfe_text2real(kstring t);
-text            elfe_int2text(integer_t value);
-text            elfe_real2text(real_t value);
-integer_t       elfe_mod(integer_t x, integer_t y);
-integer_t       elfe_pow(integer_t x, integer_t y);
-real_t          elfe_modf(real_t x, real_t y);
-real_t          elfe_powf(real_t x, integer_t y);
-text            elfe_text_replace(text txt, text before, text after);
-text            elfe_text_repeat(uint count, text data);
+integer_t       xl_text2int(kstring t);
+real_t          xl_text2real(kstring t);
+text            xl_int2text(integer_t value);
+text            xl_real2text(real_t value);
+integer_t       xl_mod(integer_t x, integer_t y);
+integer_t       xl_pow(integer_t x, integer_t y);
+real_t          xl_modf(real_t x, real_t y);
+real_t          xl_powf(real_t x, integer_t y);
+text            xl_text_replace(text txt, text before, text after);
+text            xl_text_repeat(uint count, text data);
 
-real_t          elfe_time(real_t delay);
-integer_t       elfe_seconds();
-integer_t       elfe_minutes();
-integer_t       elfe_hours();
-integer_t       elfe_month_day();
-integer_t       elfe_mon();
-integer_t       elfe_year();
-integer_t       elfe_week_day();
-integer_t       elfe_year_day();
-integer_t       elfe_summer_time();
-text_t          elfe_timezone();
-integer_t       elfe_GMT_offset();
+real_t          xl_time(real_t delay);
+integer_t       xl_seconds();
+integer_t       xl_minutes();
+integer_t       xl_hours();
+integer_t       xl_month_day();
+integer_t       xl_mon();
+integer_t       xl_year();
+integer_t       xl_week_day();
+integer_t       xl_year_day();
+integer_t       xl_summer_time();
+text_t          xl_timezone();
+integer_t       xl_GMT_offset();
 
-real_t          elfe_random();
-bool            elfe_random_seed(int seed);
+real_t          xl_random();
+bool            xl_random_seed(int seed);
 #pragma GCC diagnostic pop
 }
 
 template<typename number>
-inline number   elfe_random(number low, number high)
+inline number   xl_random(number low, number high)
 // ----------------------------------------------------------------------------
 //    Return a pseudo-random number in the low..high range
 // ----------------------------------------------------------------------------
 {
-    return number(elfe_random() * (high-low) + low);
+    return number(xl_random() * (high-low) + low);
 }
 
 
@@ -148,26 +148,26 @@ inline number   elfe_random(number low, number high)
 
 extern "C"
 {
-    bool      elfe_write_integer(longlong);
-    bool      elfe_write_real(double);
-    bool      elfe_write_text(kstring);
-    bool      elfe_write_character(char c);
-    bool      elfe_write_tree(ELFE::Tree *t);
-    bool      elfe_write_cr(void);
+    bool      xl_write_integer(longlong);
+    bool      xl_write_real(double);
+    bool      xl_write_text(kstring);
+    bool      xl_write_character(char c);
+    bool      xl_write_tree(XL::Tree *t);
+    bool      xl_write_cr(void);
 }
 
 
 
 // ============================================================================
-// 
+//
 //    Basic runtime functions callable from generated code or opcodes
-// 
+//
 // ============================================================================
 
 extern "C"
 {
-    integer_t elfe_mod(integer_t, integer_t);
-    real_t    elfe_modf(real_t, real_t);
+    integer_t xl_mod(integer_t, integer_t);
+    real_t    xl_modf(real_t, real_t);
 }
 
 
@@ -177,47 +177,47 @@ extern "C"
 //
 // ============================================================================
 
-Tree *  elfe_parse_tree(Context *, Tree *tree);
-Tree *  elfe_parse_text(text source);
+Tree *  xl_parse_tree(Context *, Tree *tree);
+Tree *  xl_parse_text(text source);
 
 
 
 // ============================================================================
-// 
+//
 //   File utilities
-// 
+//
 // ============================================================================
 
-Tree *  elfe_list_files(Context *context, Tree *patterns);
-bool    elfe_file_exists(Context *context, Tree_p self, text path);
+Tree *  xl_list_files(Context *context, Tree *patterns);
+bool    xl_file_exists(Context *context, Tree_p self, text path);
 
 
 
 // ============================================================================
-// 
+//
 //   Loading trees from external files
-// 
+//
 // ============================================================================
 
-Tree *  elfe_import(Context *, Tree *self, text name, int phase);
-Tree *  elfe_load_data(Context *, Tree *self,
+Tree *  xl_import(Context *, Tree *self, text name, int phase);
+Tree *  xl_load_data(Context *, Tree *self,
                      text name, text prefix,
                      text fieldSeps = ",;", text recordSeps = "\n",
                      Tree *body = NULL);
-Tree *  elfe_load_data(Context *, Tree *self, text inputName,
+Tree *  xl_load_data(Context *, Tree *self, text inputName,
                      std::istream &source, bool cached, bool statTime,
                      text prefix, text fieldSeps = ",;", text recordSeps = "\n",
                      Tree *body = NULL);
-Tree *  elfe_add_search_path(Context *, text prefix, text dir);
-Text *  elfe_find_in_search_path(Context *, text prefix, text file);
+Tree *  xl_add_search_path(Context *, text prefix, text dir);
+Text *  xl_find_in_search_path(Context *, text prefix, text file);
 
 typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
 typedef Tree * (*decl_fn) (Context *, Tree *source, phase_t phase);
-Name *  elfe_set_override_priority(Context *context, Tree *self, float priority);
+Name *  xl_set_override_priority(Context *context, Tree *self, float priority);
 
-ELFE_END
+XL_END
 
 
-extern uint elfe_recursion_count;
+extern uint xl_recursion_count;
 
 #endif // RUNTIME_H

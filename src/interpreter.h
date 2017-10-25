@@ -1,12 +1,12 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 // ****************************************************************************
-//  interpreter.h                                                ELFE project
+//  interpreter.h                                                XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     A fully interpreted mode for ELFE, that does not rely on LLVM at all
+//     A fully interpreted mode for XL, that does not rely on LLVM at all
 //
 //
 //
@@ -24,7 +24,7 @@
 #include "context.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 // 
@@ -152,6 +152,6 @@ inline Tree *Evaluate(Context *context, Tree *what)
 }
 
 
-ELFE_END
+XL_END
 
 #endif // INTERPRETER_H

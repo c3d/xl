@@ -2,7 +2,7 @@
 #define CONFIGURATION_H
 /* ************************************************************************* */
 /*   configuration.h            (C) 1992-2000 Christophe de Dinechin (ddd)   */
-/*                                                         ELFE project      */
+/*                                                         XL project      */
 /* ************************************************************************* */
 /*                                                                           */
 /*   File Description:                                                       */

@@ -1,12 +1,12 @@
 #ifndef PARSER_H
 #define PARSER_H
 // ****************************************************************************
-//  parser.h                                                      ELFE project
+//  parser.h                                                        XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//      ELFE language parser
+//      XL language parser
 //
 //      The parser turns a sequence of tokens produced by the scanner into
 //      a parse tree (aka abstract syntax tree).
@@ -22,7 +22,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 /*
-  Parsing ELFE is extremely simple. The source code is transformed into
+  Parsing XL is extremely simple. The source code is transformed into
   a tree with only three type of nodes and four types of leafs:
 
   The three node types are:
@@ -61,7 +61,7 @@
   for instance in (-A-B), where the first minus is a prefix.
   Any name or symbol is valid to identify a prefix or infix operator.
 
-  Operator precedence is defined by the elfe.syntax file.
+  Operator precedence is defined by the xl.syntax file.
 
   Comments and extraneous line separators are preserved in CommentsInfo nodes
   attached to the returned parse trees.
@@ -73,7 +73,7 @@
 #include <vector>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -142,6 +142,6 @@ public:
     CommentsList before, after;
 };
 
-ELFE_END
+XL_END
 
 #endif // PARSER_H

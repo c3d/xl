@@ -1,7 +1,7 @@
 #ifndef TREE_CLONE_H
 #define TREE_CLONE_H
 // ****************************************************************************
-//  tree-clone.h                                                  ELFE project
+//  tree-clone.h                                                  XL project
 // ****************************************************************************
 // 
 //   File Description:
@@ -41,7 +41,7 @@
 
 #include "tree.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -161,7 +161,7 @@ typedef struct TreeCloneTemplate<DeepCloneMode>         TreeClone;
 typedef struct TreeCloneTemplate<ShallowCloneMode>      ShallowClone;
 typedef struct TreeCloneTemplate<NullCloneMode>         NullClone;
 
-inline Tree *elfe_deep_clone(Tree *input)
+inline Tree *xl_deep_clone(Tree *input)
 // ----------------------------------------------------------------------------
 //   Perform a deep clone of a tree
 // ----------------------------------------------------------------------------
@@ -332,6 +332,6 @@ template <CopyMode mode> struct TreeCopyTemplate
     Tree *dest;
 };
 
-ELFE_END
+XL_END
 
 #endif // TREE_CLONE_H

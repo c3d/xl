@@ -1,7 +1,0 @@
-foo -> 1
-bar -> 2*3
-if foo < bar then
-    writeln "Foo less than bar (GOOD)"
-else
-    writeln "Foo more than bar (FAIL)"
-writeln "Finished"

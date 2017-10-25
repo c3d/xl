@@ -4,7 +4,7 @@
 //
 //   File Description:
 //
-//     Implementation of a bytecode to evaluate ELFE programs faster
+//     Implementation of a bytecode to evaluate XL programs faster
 //     without the need to generate machine code directly
 //
 //
@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <sstream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -47,7 +47,7 @@ Tree *EvaluateWithBytecode(Context *ctx, Tree *what)
     Tree_p result = what;
     if (function)
     {
-        ELFE_ASSERT(function->Inputs() == 0);
+        XL_ASSERT(function->Inputs() == 0);
         uint size = captured.size();
         Scope *scope = ctx->CurrentScope();
         captured.push_back(what);
@@ -346,7 +346,7 @@ struct CallOp : Op
             out[~p] = data[parmId];
         }
         Op *remaining = target->Run(out);
-        ELFE_ASSERT(!remaining);
+        XL_ASSERT(!remaining);
         if (remaining)
             return remaining;
 
@@ -418,7 +418,7 @@ struct IndexOp : FailOp
                 // If no arguments, evaluate as new callee
                 Tree_p args[2] = { data[0], data[1] };
                 Op *remaining = code->Run(args);
-                ELFE_ASSERT(!remaining);
+                XL_ASSERT(!remaining);
                 if (remaining)
                     return remaining;
                 callee = DataResult(args);
@@ -428,7 +428,7 @@ struct IndexOp : FailOp
                 // Looks like a prefix, use it as an argument
                 Tree_p args[3] = { arg, data[0], data[1] };
                 Op *remaining = code->Run(&args[1]);
-                ELFE_ASSERT(!remaining);
+                XL_ASSERT(!remaining);
                 if (remaining)
                     return remaining;
                 return success;
@@ -573,7 +573,7 @@ void Code::SetOps(Op **newOps, Ops *instrsToTakeOver, uint outId)
 {
     ops = *newOps;
     *newOps = NULL;
-    ELFE_ASSERT(instrs.size() == 0);
+    XL_ASSERT(instrs.size() == 0);
     std::swap(instrs, *instrsToTakeOver);
 
     // A few post-generation optimizations:
@@ -856,11 +856,11 @@ void CodeBuilder::Add(Op *op)
 //    Add an instruction in the generated code
 // ----------------------------------------------------------------------------
 {
-    ELFE_ASSERT(count(instrs.begin(), instrs.end(), op) == 0);
+    XL_ASSERT(count(instrs.begin(), instrs.end(), op) == 0);
     instrs.push_back(op);
     *lastOp = op;
     lastOp = &op->success;
-    ELFE_ASSERT(!op->success && "Adding an instruction that has kids");
+    XL_ASSERT(!op->success && "Adding an instruction that has kids");
 }
 
 
@@ -916,8 +916,8 @@ void CodeBuilder::Success()
 //    Success at the end of a declaration
 // ----------------------------------------------------------------------------
 {
-    ELFE_ASSERT(successOp && failOp);
-    ELFE_ASSERT(count(instrs.begin(), instrs.end(), failOp) == 0);
+    XL_ASSERT(successOp && failOp);
+    XL_ASSERT(count(instrs.begin(), instrs.end(), failOp) == 0);
 
     IFTRACE(compile)
         std::cerr << "SUCCESS:\t" << successOp << "\n"
@@ -925,13 +925,13 @@ void CodeBuilder::Success()
 
     // End current stream to the success exit, restart code gen at failure exit
     *lastOp = successOp;
-    ELFE_ASSERT(failOp && "Success without a failure exit");
+    XL_ASSERT(failOp && "Success without a failure exit");
 
     lastOp = &failOp->success;
     instrs.push_back(failOp);
     failOp = NULL;
 
-    ELFE_ASSERT(!*lastOp);
+    XL_ASSERT(!*lastOp);
 }
 
 
@@ -1045,7 +1045,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     CodeBuilder::strength strength = CodeBuilder::ALWAYS;
     if (isLeaf)
     {
-        if (defined != elfe_self && !Tree::Equal(defined, self))
+        if (defined != xl_self && !Tree::Equal(defined, self))
         {
             IFTRACE(compile)
                 std::cerr << "COMPILE" << depth << ":" << cindex
@@ -1093,7 +1093,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     }
 
     // Check if we have builtins (opcode or C bindings)
-    if (decl->right == elfe_self)
+    if (decl->right == xl_self)
     {
         // If the right is "self", just return the input
         IFTRACE(compile)
@@ -1105,7 +1105,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     else if (Opcode *opcode = OpcodeInfo(decl))
     {
         // Cached callback - Make a copy
-        ELFE_ASSERT(!opcode->success);
+        XL_ASSERT(!opcode->success);
         Opcode *clone = opcode->Clone();
         clone->SetParms(builder->parms);
         builder->Add(clone);
@@ -1255,7 +1255,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         if (candidates)
         {
             // We found candidates. Join the failOp to the successOp
-            ELFE_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
+            XL_ASSERT(!*lastOp && "Built code that is not NULL-terminated");
 
             Add(new FormErrorOp(what));
             *lastOp = success;
@@ -1532,7 +1532,7 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
             case PARAMETER:
             {
                 TreeIDs::iterator found = inputs.find(rw);
-                ELFE_ASSERT(found != inputs.end() && "Parameter not bound?");
+                XL_ASSERT(found != inputs.end() && "Parameter not bound?");
                 int inputId = (*found).second;
 
                 // Don't evaluate if already evaluated during argument passing
@@ -1731,7 +1731,7 @@ struct WhenClauseOp : FailOp
 
     virtual Op *        Run(Data data)
     {
-        if (data[whenID] != elfe_true)
+        if (data[whenID] != xl_true)
             return fail;
         return success;
     }
@@ -2095,7 +2095,7 @@ int CodeBuilder::Bind(Name *name, Tree *value, Tree *type)
 //   Enter a new binding in the current context
 // ----------------------------------------------------------------------------
 {
-    ELFE_ASSERT(inputs.find(name) == inputs.end() && "Binding name twice");
+    XL_ASSERT(inputs.find(name) == inputs.end() && "Binding name twice");
 
     Tree *defined = name;
     if (type)
@@ -2115,10 +2115,10 @@ int CodeBuilder::Bind(Name *name, Tree *value, Tree *type)
     return parmId;
 }
 
-ELFE_END
+XL_END
 
 
-extern "C" void debugo(ELFE::Op *op)
+extern "C" void debugo(XL::Op *op)
 // ----------------------------------------------------------------------------
 //   Show an opcode alone
 // ----------------------------------------------------------------------------
@@ -2127,7 +2127,7 @@ extern "C" void debugo(ELFE::Op *op)
 }
 
 
-extern "C" void debugop(ELFE::Op *op)
+extern "C" void debugop(XL::Op *op)
 // ----------------------------------------------------------------------------
 //   Show an opcode and all children
 // ----------------------------------------------------------------------------
@@ -2136,7 +2136,7 @@ extern "C" void debugop(ELFE::Op *op)
 }
 
 
-extern "C" void debugob(ELFE::CodeBuilder *cb)
+extern "C" void debugob(XL::CodeBuilder *cb)
 // ----------------------------------------------------------------------------
 //   Show an opcode and all children as a listing
 // ----------------------------------------------------------------------------
@@ -2145,11 +2145,11 @@ extern "C" void debugob(ELFE::CodeBuilder *cb)
 }
 
 
-extern "C" void debugti(ELFE::TreeIDs &tids)
+extern "C" void debugti(XL::TreeIDs &tids)
 // ----------------------------------------------------------------------------
 //   Show the contents of a tree IDs map
 // ----------------------------------------------------------------------------
 {
-    for (ELFE::TreeIDs::iterator i = tids.begin(); i != tids.end(); i++)
+    for (XL::TreeIDs::iterator i = tids.begin(); i != tids.end(); i++)
         std::cerr << (*i).first << " @index " << (*i).second << "\n";
 }

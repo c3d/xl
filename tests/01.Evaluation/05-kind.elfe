@@ -1,7 +1,0 @@
-writeln kind 1
-writeln kind 1.21
-writeln kind "Hello"
-writeln kind false
-
-
-

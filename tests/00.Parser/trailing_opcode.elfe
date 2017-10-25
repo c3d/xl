@@ -1,2 +1,0 @@
-// CMD=%x -nobuiltins -parse %f -show
-return 0;

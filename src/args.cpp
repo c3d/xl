@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  args.cpp                                                     ELFE project
+//  args.cpp                                                     XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -48,7 +48,7 @@
 #include "basics.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 bool RewriteBinding::IsDeferred()
 // ----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
     childTypes->context = childContext;
     Tree *value = candidate->right;
     bool builtin = false;
-    if (value && value != elfe_self)
+    if (value && value != xl_self)
     {
         // Check if we have a type to match
         if (defType)
@@ -314,7 +314,7 @@ RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Add the guard condition
-            rc.Condition(fi->right, elfe_true);
+            rc.Condition(fi->right, xl_true);
 
             // The guard makes the binding weak
             return POSSIBLE;
@@ -498,4 +498,4 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
 }
 
 
-ELFE_END
+XL_END

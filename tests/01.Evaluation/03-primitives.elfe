@@ -1,4 +1,0 @@
-// EXIT=1
-foo X:integer as integer -> opcode Nonexistent
-
-foo 3

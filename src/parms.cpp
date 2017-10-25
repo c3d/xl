@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  parms.cpp                                                    ELFE project
+//  parms.cpp                                                    XL project
 // ****************************************************************************
 // 
 //   File Description:
@@ -43,7 +43,7 @@
 #include "errors.h"
 #include "llvm-crap.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 bool ParameterList::EnterName(Name *what, llvm_type declaredType)
 // ----------------------------------------------------------------------------
@@ -252,4 +252,4 @@ bool ParameterList::DoPostfix(Postfix *what)
     return true;
 }
 
-ELFE_END
+XL_END

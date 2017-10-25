@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  interpreter.cpp                                              ELFE project
+//  interpreter.cpp                                              XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    An interpreter for ELFE that does not rely on LLVM at all
+//    An interpreter for XL that does not rely on LLVM at all
 //
 //
 //
@@ -30,7 +30,7 @@
 #include <algorithm>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 
 
@@ -326,9 +326,9 @@ bool Bindings::DoInfix(Infix *what)
         // Typed name: evaluate type and check match
         Tree *type = MustEvaluate(context, what->right);
         Tree *checked = TypeCheck(context, type, test);
-        if (!checked || type == ELFE::value_type)
+        if (!checked || type == XL::value_type)
         {
-            MustEvaluate(type != ELFE::value_type);
+            MustEvaluate(type != XL::value_type);
             checked = TypeCheck(context, type, test);
         }
         if (checked)
@@ -363,9 +363,9 @@ bool Bindings::DoInfix(Infix *what)
 
         // Here, we need to evaluate in the local context, not eval one
         Tree *check = MustEvaluate(locals, what->right);
-        if (check == elfe_true)
+        if (check == xl_true)
             return true;
-        else if (check != elfe_false)
+        else if (check != xl_false)
             Ooops ("Invalid guard clause, $1 is not a boolean", check);
         else
             Ooops("Guard clause $1 is not verified", what->right);
@@ -504,7 +504,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (depth > MAIN->options.stack_depth)
     {
         Ooops("Stack depth exceeded evaluating $1", self);
-        return error_result = elfe_error;
+        return error_result = xl_error;
     }
     else if (error_result)
     {
@@ -564,7 +564,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     }
 
     // Check if the right is "self"
-    if (result == elfe_self)
+    if (result == xl_self)
     {
         IFTRACE(eval)
             std::cerr << "EVAL" << depth << "(" << self
@@ -634,7 +634,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
         EvalCache cache;
         if (Tree *eval = context->Lookup(what, evalLookup, &cache))
         {
-            if (eval == elfe_error)
+            if (eval == xl_error)
                 return eval;
             MAIN->errors->Clear();
             result = eval;
@@ -1006,4 +1006,4 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 #include "opcodes.h"
 #include "interpreter.tbl"
 
-ELFE_END
+XL_END

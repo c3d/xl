@@ -1,12 +1,12 @@
 #ifndef ATOMIC_H
 #define ATOMIC_H
 // ****************************************************************************
-//  atomic.h                                                     ELFE project
+//  atomic.h                                                     XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    The atomic operations we may need in ELFE
+//    The atomic operations we may need in XL
 //
 //    Note that with C++ 11, all this is largely obsolete,
 //    but this allows code to support older compilers, which is still
@@ -41,7 +41,7 @@
 
 #include "base.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -248,6 +248,6 @@ Value Atomic<Value>::Nand(value_v ref, value_t delta)
 
 #endif
 
-ELFE_END
+XL_END
 
 #endif // ATOMIC_H

@@ -1,7 +1,0 @@
-"ABCD" / "BC" / "DE"
-"ABCD" ("BC"=>"DE")
-
-// Another notation that I did not retain ultimately because it slowed down
-// all prefix lookup significantly
-(Source:text) (From:text => To:text)    -> text_replace Source, From, To
-

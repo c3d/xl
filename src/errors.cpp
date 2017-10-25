@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include "errors.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -174,7 +174,7 @@ Error::operator Tree *()
 //    Return the error converted as a prefix form
 // ----------------------------------------------------------------------------
 {
-    return new Prefix(elfe_error, new Text(Message(), position), position);
+    return new Prefix(xl_error, new Text(Message(), position), position);
 }
 
 
@@ -398,7 +398,7 @@ text FormatTreeForError(Tree *tree)
     return "'" + result + "'";
 }
 
-ELFE_END
+XL_END
 
 
 
@@ -409,7 +409,7 @@ ELFE_END
 // ============================================================================
 
 
-void elfe_assert_failed(kstring msg, kstring file, uint line)
+void xl_assert_failed(kstring msg, kstring file, uint line)
 // ----------------------------------------------------------------------------
 //   Report an assertion failure
 // ----------------------------------------------------------------------------

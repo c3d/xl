@@ -1,7 +1,7 @@
 #ifndef COMPILER_PARM_H
 #define COMPILER_PARM_H
 // ****************************************************************************
-//  parms.h                                                       ELFE project
+//  parms.h                                                       XL project
 // ****************************************************************************
 // 
 //   File Description:
@@ -42,7 +42,7 @@
 #include "compiler.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Parameter
 // ----------------------------------------------------------------------------
@@ -87,7 +87,7 @@ public:
     llvm_type       returned;     // Returned type if specified
 };
 
-ELFE_END
+XL_END
 
 #endif // COMPILER_PARM_H
 

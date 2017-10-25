@@ -1,7 +1,7 @@
 #ifndef COMPILER_ARG_H
 #define COMPILER_ARG_H
 // ****************************************************************************
-//  args.h                                                        ELFE project
+//  args.h                                                        XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -42,7 +42,7 @@
 #include "compiler.h"
 #include "renderer.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Types;
 typedef GCPtr<Types> Types_p;
@@ -152,7 +152,7 @@ public:
 typedef GCPtr<RewriteCalls> RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 
-ELFE_END
+XL_END
 
 #endif // COMPILER_ARG_H
 

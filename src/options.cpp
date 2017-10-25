@@ -1,11 +1,11 @@
 // ****************************************************************************
-//   Christophe de Dinechin                                      ELFE PROJECT
+//   Christophe de Dinechin                                      XL PROJECT
 //   options.cpp
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Processing of ELFE compiler options
+//     Processing of XL compiler options
 //
 //
 //
@@ -36,7 +36,7 @@
 #include "recorder.h"
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 /* ========================================================================= */
 /*                                                                           */
@@ -59,9 +59,9 @@ Options::Options(int argc, char **argv):
     args.push_back(argv[0]);
 
     // Check if some options are given from environment
-    if (kstring envopt = getenv("ELFE_OPT"))
+    if (kstring envopt = getenv("XL_OPT"))
     {
-        OPTIONS("Environment variable ELFE_OPT='%s'", envopt);
+        OPTIONS("Environment variable XL_OPT='%s'", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -72,7 +72,7 @@ Options::Options(int argc, char **argv):
     }
     else
     {
-        OPTIONS("Environment variable ELFE_OPT is not set");
+        OPTIONS("Environment variable XL_OPT is not set");
     }
 
     // Add options from the command-line
@@ -97,8 +97,8 @@ static void Usage(kstring appName)
 #define OPTION(name, descr, code)                                       \
     std::cerr << "\t-" << #name ": " descr "\n";
 #include "options.tbl"
-#if ELFE_DEBUG
-    std::set<std::string> names = ELFE::Traces::names();
+#if XL_DEBUG
+    std::set<std::string> names = XL::Traces::names();
     if (names.size())
     {
         std::cerr << "\t-t<name>: Enable trace <name>. ";
@@ -229,7 +229,7 @@ text Options::ParseNext(bool consumeFiles)
 
             OPTIONS("Parse option #%d, '%s'", arg, option);
 
-#if ELFE_DEBUG
+#if XL_DEBUG
             if (argval[0] == 't')
             {
                 kstring trace_name = argval + 1;
@@ -274,8 +274,8 @@ text Options::ParseNext(bool consumeFiles)
     return text("");
 }
 
-ELFE_END
-ulong elfe_traces = 0;
+XL_END
+ulong xl_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace
 // ----------------------------------------------------------------------------

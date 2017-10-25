@@ -1,12 +1,12 @@
 #ifndef COMPILER_GC_H
 #define COMPILER_GC_H
 // ****************************************************************************
-//  compiler-gc.h                                                 ELFE project
+//  compiler-gc.h                                                 XL project
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Information connecting the ELFE/LLVM compiler to the garbage collector
+//     Information connecting the XL/LLVM compiler to the garbage collector
 // 
 //
 // 
@@ -41,7 +41,7 @@
 
 #include "compiler.h"
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct CompilerGarbageCollectionListener : TypeAllocator::Listener
 // ----------------------------------------------------------------------------
@@ -75,7 +75,7 @@ struct CompilerInfo : Info
     bool        IsBuiltin()     { return function && function == closure; }
 };
 
-ELFE_END
+XL_END
 
 #endif // COMPILER_GC_H
 

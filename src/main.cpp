@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  main.cpp                                                      ELFE project
+//  main.cpp                                                      XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Main entry point of the ELFE runtime and compiler
+//    Main entry point of the XL runtime and compiler
 //
 //
 //
@@ -75,9 +75,9 @@
 #include <sys/stat.h>
 
 
-ELFE_DEFINE_TRACES
+XL_DEFINE_TRACES
 
-ELFE_BEGIN
+XL_BEGIN
 
 Main *MAIN = NULL;
 
@@ -146,7 +146,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
-    ELFE_INIT_TRACES();
+    XL_INIT_TRACES();
     Options::options = &options;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
@@ -176,7 +176,7 @@ Main::~Main()
         topLevelErrors.Display();
         topLevelErrors.Clear();
     }
-    
+
     delete reader;
     delete writer;
 }
@@ -194,8 +194,8 @@ int Main::LoadAndRun()
         rc = 1;
 
     if (!rc && options.listen)
-        return elfe_listen(context, options.listen_forks, options.listen);
-    
+        return xl_listen(context, options.listen_forks, options.listen);
+
 #ifndef INTERPRETER_ONLY
     compiler->Dump();
 #endif // INTERPRETER_ONLY
@@ -237,7 +237,7 @@ int Main::ParseOptions()
     // Load builtins before the rest (only after parsing options for builtins)
     if (!options.builtins.empty())
         file_names.insert(file_names.begin(), options.builtins);
-    
+
     return false;
 }
 
@@ -419,7 +419,7 @@ int Main::Run()
         return -1;
 
     // Loop over files we will process
-    Tree_p result = elfe_nil;
+    Tree_p result = xl_nil;
     for (file = file_names.begin(); file != file_names.end(); file++)
     {
         SourceFile &sf = files[*file];
@@ -516,7 +516,7 @@ text Main::ModuleBaseName(text path)
 
 text Main::ModuleName(text path)
 // ----------------------------------------------------------------------------
-//   Return the module name, e.g. turn foo/bar-bi-tu.elfe into bar_bi_tu
+//   Return the module name, e.g. turn foo/bar-bi-tu.xl into bar_bi_tu
 // ----------------------------------------------------------------------------
 {
     text    result = "";
@@ -580,26 +580,26 @@ Tree *Main::Normalize(Tree *input)
 }
 
 
-ELFE_END
+XL_END
 
 
-#ifndef LIBELFE
+#ifndef LIBXL
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    COMPILER("ELFE Compiler version %s starting", ELFE_VERSION);
+    COMPILER("XL Compiler version %s starting", XL_VERSION);
 
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
 #endif
 
-    ELFE::Main main(argc, argv);
+    XL::Main main(argc, argv);
     int rc = main.LoadAndRun();
 
     IFTRACE(gcstats)
-        ELFE::GarbageCollector::GC()->PrintStatistics();
+        XL::GarbageCollector::GC()->PrintStatistics();
 
 #if CONFIG_USE_SBRK
     IFTRACE(memory)
@@ -615,4 +615,4 @@ int main(int argc, char **argv)
     return rc;
 }
 
-#endif // LIBELFE
+#endif // LIBXL

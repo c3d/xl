@@ -1,6 +1,0 @@
-writeln 3.1+4.71
-writeln 3.1-4.71
-writeln 3.1*4.71
-writeln 3.1/4.71
-writeln 3.1 mod 4.71
-writeln -3.1

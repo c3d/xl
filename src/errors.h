@@ -1,7 +1,7 @@
-#ifndef ELFE_ERRORS_H
-#define ELFE_ERRORS_H
+#ifndef XL_ERRORS_H
+#define XL_ERRORS_H
 /* ************************************************************************* */
-/*   Christophe de Dinechin                                  ELFE  PROJECT  */
+/*   Christophe de Dinechin                                  XL  PROJECT  */
 /*   errors.h             4                                      UTILITIES    */
 /* ************************************************************************* */
 /*                                                                           */
@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Positions;
 
@@ -111,6 +111,6 @@ Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
 text FormatTreeForError(Tree *tree);
 text ShortTreeForm(Tree *tree, uint maxWidth = 60);
 
-ELFE_END
+XL_END
 
-#endif /* ELFE_ERRORS_H */
+#endif /* XL_ERRORS_H */

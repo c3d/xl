@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  renderer.cpp                    (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Rendering of ELFE trees
+//     Rendering of XL trees
 //
 //
 //
@@ -52,7 +52,7 @@
 #include <sstream>
 #include <cctype>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -816,24 +816,24 @@ void Renderer::RenderFile(Tree *what)
 }
 
 
-std::ostream& operator<< (std::ostream &out, ELFE::Tree *t)
+std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 // ----------------------------------------------------------------------------
 //   Just in case you want to emit a tree using normal ostream interface
 // ----------------------------------------------------------------------------
 {
-    ELFE::Renderer render(out);
+    XL::Renderer render(out);
     render.RenderFile(t);
     return out;
 }
 
 
-std::ostream& operator<< (std::ostream &out, ELFE::TreeList &list)
+std::ostream& operator<< (std::ostream &out, XL::TreeList &list)
 // ----------------------------------------------------------------------------
 //   Just in case you want to emit a tree using normal ostream interface
 // ----------------------------------------------------------------------------
 {
     bool separator = false;
-    for (ELFE::TreeList::iterator it = list.begin(); it != list.end(); it++)
+    for (XL::TreeList::iterator it = list.begin(); it != list.end(); it++)
     {
         if (separator)
             out << ",";
@@ -844,27 +844,27 @@ std::ostream& operator<< (std::ostream &out, ELFE::TreeList &list)
     return out;
 }
 
-ELFE_END
+XL_END
 
 
 static text debugBuffer;
 
-const char *debug(ELFE::Tree *tree)
+const char *debug(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
     std::ostringstream out;
-    if (ELFE::Allocator<ELFE::Integer>::IsAllocated(tree)   ||
-        ELFE::Allocator<ELFE::Real>::IsAllocated(tree)      ||
-        ELFE::Allocator<ELFE::Text>::IsAllocated(tree)      ||
-        ELFE::Allocator<ELFE::Name>::IsAllocated(tree)      ||
-        ELFE::Allocator<ELFE::Infix>::IsAllocated(tree)     ||
-        ELFE::Allocator<ELFE::Prefix>::IsAllocated(tree)    ||
-        ELFE::Allocator<ELFE::Postfix>::IsAllocated(tree)   ||
-        ELFE::Allocator<ELFE::Block>::IsAllocated(tree))
+    if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Real>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Text>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Name>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Infix>::IsAllocated(tree)     ||
+        XL::Allocator<XL::Prefix>::IsAllocated(tree)    ||
+        XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Block>::IsAllocated(tree))
     {
-        ELFE::Renderer render(out);
+        XL::Renderer render(out);
         render.RenderFile(tree);
         out << "\n";
 
@@ -885,26 +885,26 @@ const char *debugx(void *tree)
 //    Avoid ambiguities in name lookup in the debugger
 // ----------------------------------------------------------------------------
 {
-    return debug((ELFE::Tree *) tree);
+    return debug((XL::Tree *) tree);
 }
 
 
-const char *debugp(ELFE::Tree *tree)
+const char *debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
     std::ostringstream out;
-    if (ELFE::Allocator<ELFE::Integer>::IsAllocated(tree)   ||
-        ELFE::Allocator<ELFE::Real>::IsAllocated(tree)      ||
-        ELFE::Allocator<ELFE::Text>::IsAllocated(tree)      ||
-        ELFE::Allocator<ELFE::Name>::IsAllocated(tree)      ||
-        ELFE::Allocator<ELFE::Infix>::IsAllocated(tree)     ||
-        ELFE::Allocator<ELFE::Prefix>::IsAllocated(tree)    ||
-        ELFE::Allocator<ELFE::Postfix>::IsAllocated(tree)   ||
-        ELFE::Allocator<ELFE::Block>::IsAllocated(tree))
+    if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Real>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Text>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Name>::IsAllocated(tree)      ||
+        XL::Allocator<XL::Infix>::IsAllocated(tree)     ||
+        XL::Allocator<XL::Prefix>::IsAllocated(tree)    ||
+        XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Block>::IsAllocated(tree))
     {
-        ELFE::Renderer render(out);
+        XL::Renderer render(out);
         render.SelectStyleSheet("debug.stylesheet");
         render.RenderFile(tree);
     }

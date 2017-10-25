@@ -2,12 +2,12 @@
 #define SCANNER_H
 // ****************************************************************************
 //  scanner.h                       (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                               ELFE project 
+//                                                               XL project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Interface for the ELFE scanner
+//     Interface for the XL scanner
 // 
 // 
 // 
@@ -23,7 +23,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 /*
-  ELFE scanning is quite simple. There are only five types of tokens:
+  XL scanning is quite simple. There are only five types of tokens:
 
   - Integer or real numbers, beginning with a digit
   - Names, beginning with a letter
@@ -76,7 +76,7 @@
 
   BLANKS:
 
-  In ELFE, indentation is significant, and represented internally by two
+  In XL, indentation is significant, and represented internally by two
   special forms of parentheses, denoted as 'indent' and 'end'.
   Indentation can use space or tabs, but not both in the same source file.
 
@@ -85,7 +85,7 @@
 
   The scanner doesn't decide what is a comment. This decision is taken by
   the caller (normally the parser). The "Comment" function can be called,
-  and skips until an 'end of comment' token is found. For ELFE, this is
+  and skips until an 'end of comment' token is found. For XL, this is
   under-utilized, since an end-of-comment is always an end of line.
   XL doesn't in the current definition feature multi-line comment. Because
   multi-line comments are evil, that's why. See this comment for example.
@@ -97,7 +97,7 @@
 #include <iostream>
 #include <fstream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 struct Syntax;
 struct Errors;
@@ -227,6 +227,6 @@ private:
     bool           mustDeleteInput;
 };
 
-ELFE_END
+XL_END
 
 #endif // SCANNER_H

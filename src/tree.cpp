@@ -1,6 +1,6 @@
 // ****************************************************************************
 //  tree.cpp                        (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                               ELFE project
+//                                                               XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -32,7 +32,7 @@
 #include <cassert>
 #include <iostream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -60,7 +60,7 @@ Tree::~Tree()
     assert (info != (Info *) 0xD00DEL && "Please report this in bug #922");
     for (Info *i = info; i; i = next)
     {
-        ELFE_ASSERT(i->owner == this);
+        XL_ASSERT(i->owner == this);
         next = i->next;
         i->Delete();
     }
@@ -229,5 +229,5 @@ text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
 
-ELFE_END
+XL_END
 

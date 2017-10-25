@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  serializer.cpp                                                ELFE project
+//  serializer.cpp                                                XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     A couple of classes used to serialize and deserialize ELFE trees
+//     A couple of classes used to serialize and deserialize XL trees
 //
 //
 //
@@ -45,7 +45,7 @@
 #include <sys/param.h>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
 // ============================================================================
 //
@@ -510,5 +510,5 @@ text Deserializer::ReadText()
     return result;
 }
 
-ELFE_END
+XL_END
 

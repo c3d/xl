@@ -1,11 +1,11 @@
 // ****************************************************************************
 //  runtime.cpp                     (C) 1992-2009 Christophe de Dinechin (ddd)
-//                                                              ELFE project
+//                                                              XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Runtime functions necessary to execute ELFE programs
+//     Runtime functions necessary to execute XL programs
 //
 //
 //
@@ -69,9 +69,9 @@
 #include <sys/time.h>
 
 
-ELFE_BEGIN
+XL_BEGIN
 
-Tree *elfe_form_error(Context *context, Tree *what)
+Tree *xl_form_error(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 //   Raise an error if we have a form error
 // ----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ Tree *elfe_form_error(Context *context, Tree *what)
     {
         std::cerr << "ABORT - Recursive error during error handling\n"
                   << "Error tree: " << what << "\n";
-        return ELFE::elfe_false;
+        return XL::xl_false;
     }
     Save<bool> saveRecursive(recursive, true);
 
@@ -94,7 +94,7 @@ Tree *elfe_form_error(Context *context, Tree *what)
 }
 
 
-Tree *elfe_stack_overflow(Tree *what)
+Tree *xl_stack_overflow(Tree *what)
 // ----------------------------------------------------------------------------
 //   Return an error evaluating a tree
 // ----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ Tree *elfe_stack_overflow(Tree *what)
 }
 
 
-bool elfe_same_shape(Tree *left, Tree *right)
+bool xl_same_shape(Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Check equality of two trees
 // ----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ bool elfe_same_shape(Tree *left, Tree *right)
 //
 // ========================================================================
 
-Integer *elfe_new_integer(longlong value)
+Integer *xl_new_integer(longlong value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Integer
 // ----------------------------------------------------------------------------
@@ -130,7 +130,7 @@ Integer *elfe_new_integer(longlong value)
 }
 
 
-Real *elfe_new_real(double value)
+Real *xl_new_real(double value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Real
 // ----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ Real *elfe_new_real(double value)
 }
 
 
-Text *elfe_new_character(char value)
+Text *xl_new_character(char value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new single-quoted Text
 // ----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ Text *elfe_new_character(char value)
 }
 
 
-Text *elfe_new_text(text value)
+Text *xl_new_text(text value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
@@ -160,7 +160,7 @@ Text *elfe_new_text(text value)
 }
 
 
-Text *elfe_new_ctext(kstring value)
+Text *xl_new_ctext(kstring value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
@@ -170,7 +170,7 @@ Text *elfe_new_ctext(kstring value)
 }
 
 
-Text *elfe_new_xtext(kstring value, longlong len, kstring open, kstring close)
+Text *xl_new_xtext(kstring value, longlong len, kstring open, kstring close)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new arbitrarily-quoted Text
 // ----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ Text *elfe_new_xtext(kstring value, longlong len, kstring open, kstring close)
 }
 
 
-Block *elfe_new_block(Block *source, Tree *child)
+Block *xl_new_block(Block *source, Tree *child)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new block
 // ----------------------------------------------------------------------------
@@ -190,7 +190,7 @@ Block *elfe_new_block(Block *source, Tree *child)
 }
 
 
-Prefix *elfe_new_prefix(Prefix *source, Tree *left, Tree *right)
+Prefix *xl_new_prefix(Prefix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Prefix
 // ----------------------------------------------------------------------------
@@ -200,7 +200,7 @@ Prefix *elfe_new_prefix(Prefix *source, Tree *left, Tree *right)
 }
 
 
-Postfix *elfe_new_postfix(Postfix *source, Tree *left, Tree *right)
+Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Postfix
 // ----------------------------------------------------------------------------
@@ -210,7 +210,7 @@ Postfix *elfe_new_postfix(Postfix *source, Tree *left, Tree *right)
 }
 
 
-Infix *elfe_new_infix(Infix *source, Tree *left, Tree *right)
+Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Infix
 // ----------------------------------------------------------------------------
@@ -227,7 +227,7 @@ Infix *elfe_new_infix(Infix *source, Tree *left, Tree *right)
 //
 // ============================================================================
 
-Tree *elfe_parse_tree_inner(Context *context, Tree *tree)
+Tree *xl_parse_tree_inner(Context *context, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Build a parse tree in the current context
 // ----------------------------------------------------------------------------
@@ -242,24 +242,24 @@ Tree *elfe_parse_tree_inner(Context *context, Tree *tree)
     case INFIX:
     {
         Infix *infix = (Infix *) tree;
-        Tree *left = elfe_parse_tree_inner(context, infix->left);
-        Tree *right = elfe_parse_tree_inner(context, infix->right);
+        Tree *left = xl_parse_tree_inner(context, infix->left);
+        Tree *right = xl_parse_tree_inner(context, infix->right);
         Infix *result = new Infix(infix, left, right);
         return result;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) tree;
-        Tree *left = elfe_parse_tree_inner(context, prefix->left);
-        Tree *right = elfe_parse_tree_inner(context, prefix->right);
+        Tree *left = xl_parse_tree_inner(context, prefix->left);
+        Tree *right = xl_parse_tree_inner(context, prefix->right);
         Prefix *result = new Prefix(prefix, left, right);
         return result;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) tree;
-        Tree *left = elfe_parse_tree_inner(context, postfix->left);
-        Tree *right = elfe_parse_tree_inner(context, postfix->right);
+        Tree *left = xl_parse_tree_inner(context, postfix->left);
+        Tree *right = xl_parse_tree_inner(context, postfix->right);
         Postfix *result = new Postfix(postfix, left, right);
         return result;
     }
@@ -273,7 +273,7 @@ Tree *elfe_parse_tree_inner(Context *context, Tree *tree)
             if (child && child->opening == "{" && child->closing == "}")
             {
                 // Case where we have parse_tree {{x}}: Return {x}
-                result = elfe_parse_tree_inner(context, child->child);
+                result = xl_parse_tree_inner(context, child->child);
                 result = new Block(block, result);
                 return result;
             }
@@ -282,7 +282,7 @@ Tree *elfe_parse_tree_inner(Context *context, Tree *tree)
             result = context->Evaluate(result);
             return result;
         }
-        result = elfe_parse_tree_inner(context, result);
+        result = xl_parse_tree_inner(context, result);
         result = new Block(block, result);
         return result;
     }
@@ -291,18 +291,18 @@ Tree *elfe_parse_tree_inner(Context *context, Tree *tree)
 }
 
 
-Tree *elfe_parse_tree(Context *context, Tree *code)
+Tree *xl_parse_tree(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Entry point for parse_tree
 // ----------------------------------------------------------------------------
 {
     if (Block *block = code->AsBlock())
         code = block->child;
-    return elfe_parse_tree_inner(context, code);
+    return xl_parse_tree_inner(context, code);
 }
 
 
-Tree *elfe_parse_text(text source)
+Tree *xl_parse_text(text source)
 // ----------------------------------------------------------------------------
 //   Generate a tree from text
 // ----------------------------------------------------------------------------
@@ -339,22 +339,22 @@ static bool isAbsolute(text path)
 }
 
 
-static void elfe_list_files(Context *context, Tree *patterns, Tree_p *&parent)
+static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
 // ----------------------------------------------------------------------------
 {
     if (Block *block = patterns->AsBlock())
     {
-        elfe_list_files(context, block->child, parent);
+        xl_list_files(context, block->child, parent);
         return;
     }
     if (Infix *infix = patterns->AsInfix())
     {
         if (infix->name == "," || infix->name == ";" || infix->name == "\n")
         {
-            elfe_list_files(context, infix->left, parent);
-            elfe_list_files(context, infix->right, parent);
+            xl_list_files(context, infix->left, parent);
+            xl_list_files(context, infix->right, parent);
             return;
         }
     }
@@ -394,21 +394,21 @@ static void elfe_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 //
 // ============================================================================
 
-Tree *elfe_list_files(Context *context, Tree *patterns)
+Tree *xl_list_files(Context *context, Tree *patterns)
 // ----------------------------------------------------------------------------
 //   List all files in the given pattern
 // ----------------------------------------------------------------------------
 {
     Tree_p result = NULL;
     Tree_p *parent = &result;
-    elfe_list_files(context, patterns, parent);
+    xl_list_files(context, patterns, parent);
     if (!result)
-        result = elfe_nil;
+        result = xl_nil;
     return result;
 }
 
 
-bool elfe_file_exists(Context *context, Tree_p self, text path)
+bool xl_file_exists(Context *context, Tree_p self, text path)
 // ----------------------------------------------------------------------------
 //   Check if a file exists
 // ----------------------------------------------------------------------------
@@ -450,7 +450,7 @@ struct ImportedFileInfo : Info
 };
 
 
-Tree *elfe_import(Context *context, Tree *self, text name, int phase)
+Tree *xl_import(Context *context, Tree *self, text name, int phase)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -483,7 +483,7 @@ Tree *elfe_import(Context *context, Tree *self, text name, int phase)
         if (path == "")
         {
             Ooops("Source file $2 not found for $1", self).Arg(name);
-            return ELFE::elfe_false;
+            return XL::xl_false;
         }
         info = new ImportedFileInfo(path);
         self->SetInfo<ImportedFileInfo> (info);
@@ -500,7 +500,7 @@ Tree *elfe_import(Context *context, Tree *self, text name, int phase)
         if (hadError)
         {
             Ooops("Unable to load file $2 for $1", self).Arg(path);
-            return ELFE::elfe_false;
+            return XL::xl_false;
         }
     }
 
@@ -534,7 +534,7 @@ struct LoadDataInfo : Info
 };
 
 
-Tree *elfe_load_data(Context *context, Tree *self,
+Tree *xl_load_data(Context *context, Tree *self,
                    text name, text prefix, text fieldSeps, text recordSeps,
                    Tree *body)
 // ----------------------------------------------------------------------------
@@ -546,7 +546,7 @@ Tree *elfe_load_data(Context *context, Tree *self,
     if (path == "")
     {
         Ooops("CSV file $2 not found in $1", self).Arg(name);
-        return ELFE::elfe_false;
+        return XL::xl_false;
     }
 
     utf8_ifstream input(path.c_str(), std::ifstream::in);
@@ -555,17 +555,17 @@ Tree *elfe_load_data(Context *context, Tree *self,
         Ooops("Unable to load data for $1.\n"
                      "(Accessing $2 resulted in the following error: $3)",
               self).Arg(path).Arg(strerror(errno));
-        return ELFE::elfe_nil;
+        return XL::xl_nil;
     }
 
-    return elfe_load_data(context, self, path,
+    return xl_load_data(context, self, path,
                         input, true, true,
                         prefix, fieldSeps, recordSeps,
                         body);
 }
 
 
-Tree *elfe_load_data(Context *context, Tree *self, text inputName,
+Tree *xl_load_data(Context *context, Tree *self, text inputName,
                    std::istream &input, bool cached, bool statTime,
                    text prefix, text fieldSeps, text recordSeps,
                    Tree *body)
@@ -600,7 +600,7 @@ Tree *elfe_load_data(Context *context, Tree *self, text inputName,
 
         if (cached)
         {
-            Tree_p result = elfe_false;
+            Tree_p result = xl_false;
             if (prefix.size())
             {
                 ulong i, max = perFile.data.size();
@@ -761,7 +761,7 @@ Tree *elfe_load_data(Context *context, Tree *self, text inputName,
         }
     }
     if (!tree)
-        tree = elfe_false;
+        tree = xl_false;
     perFile.loaded = tree;
 
     return tree;
@@ -771,14 +771,14 @@ Tree *elfe_load_data(Context *context, Tree *self, text inputName,
 
 // ============================================================================
 //
-//    C functions called from builtins.elfe
+//    C functions called from builtins.xl
 //
 // ============================================================================
 
 extern "C"
 {
 
-bool elfe_write_integer(longlong x)
+bool xl_write_integer(longlong x)
 // ----------------------------------------------------------------------------
 //   Write an integer value
 // ----------------------------------------------------------------------------
@@ -788,7 +788,7 @@ bool elfe_write_integer(longlong x)
 }
 
 
-bool elfe_write_real(double x)
+bool xl_write_real(double x)
 // ----------------------------------------------------------------------------
 //   Write a double value
 // ----------------------------------------------------------------------------
@@ -798,7 +798,7 @@ bool elfe_write_real(double x)
 }
 
 
-bool elfe_write_text(kstring x)
+bool xl_write_text(kstring x)
 // ----------------------------------------------------------------------------
 //   Write a text value
 // ----------------------------------------------------------------------------
@@ -808,7 +808,7 @@ bool elfe_write_text(kstring x)
 }
 
 
-bool elfe_write_tree(Tree *tree)
+bool xl_write_tree(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Write a text value
 // ----------------------------------------------------------------------------
@@ -818,7 +818,7 @@ bool elfe_write_tree(Tree *tree)
 }
 
 
-bool elfe_write_character(char x)
+bool xl_write_character(char x)
 // ----------------------------------------------------------------------------
 //   Write a character value
 // ----------------------------------------------------------------------------
@@ -828,7 +828,7 @@ bool elfe_write_character(char x)
 }
 
 
-bool elfe_write_cr()
+bool xl_write_cr()
 // ----------------------------------------------------------------------------
 //   Write a line separator
 // ----------------------------------------------------------------------------
@@ -838,7 +838,7 @@ bool elfe_write_cr()
 }
 
 
-bool elfe_text_eq(kstring x, kstring y)
+bool xl_text_eq(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -847,7 +847,7 @@ bool elfe_text_eq(kstring x, kstring y)
 }
 
 
-bool elfe_text_ne(kstring x, kstring y)
+bool xl_text_ne(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -856,7 +856,7 @@ bool elfe_text_ne(kstring x, kstring y)
 }
 
 
-bool elfe_text_lt(kstring x, kstring y)
+bool xl_text_lt(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -865,7 +865,7 @@ bool elfe_text_lt(kstring x, kstring y)
 }
 
 
-bool elfe_text_le(kstring x, kstring y)
+bool xl_text_le(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -874,7 +874,7 @@ bool elfe_text_le(kstring x, kstring y)
 }
 
 
-bool elfe_text_gt(kstring x, kstring y)
+bool xl_text_gt(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -883,7 +883,7 @@ bool elfe_text_gt(kstring x, kstring y)
 }
 
 
-bool elfe_text_ge(kstring x, kstring y)
+bool xl_text_ge(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts
 // ----------------------------------------------------------------------------
@@ -892,7 +892,7 @@ bool elfe_text_ge(kstring x, kstring y)
 }
 
 
-integer_t elfe_text2int(kstring tval)
+integer_t xl_text2int(kstring tval)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
@@ -905,7 +905,7 @@ integer_t elfe_text2int(kstring tval)
 }
 
 
-real_t elfe_text2real(kstring tval)
+real_t xl_text2real(kstring tval)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
@@ -918,7 +918,7 @@ real_t elfe_text2real(kstring tval)
 }
 
 
-text elfe_int2text(integer_t value)
+text xl_int2text(integer_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -929,7 +929,7 @@ text elfe_int2text(integer_t value)
 }
 
 
-text elfe_real2text(real_t value)
+text xl_real2text(real_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -940,7 +940,7 @@ text elfe_real2text(real_t value)
 }
 
 
-integer_t elfe_mod(integer_t x, integer_t y)
+integer_t xl_mod(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
 // ----------------------------------------------------------------------------
@@ -952,7 +952,7 @@ integer_t elfe_mod(integer_t x, integer_t y)
 }
 
 
-integer_t elfe_pow(integer_t x, integer_t y)
+integer_t xl_pow(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute integer power
 // ----------------------------------------------------------------------------
@@ -973,7 +973,7 @@ integer_t elfe_pow(integer_t x, integer_t y)
 }
 
 
-real_t elfe_modf(real_t x, real_t y)
+real_t xl_modf(real_t x, real_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from fmod
 // ----------------------------------------------------------------------------
@@ -985,7 +985,7 @@ real_t elfe_modf(real_t x, real_t y)
 }
 
 
-real_t elfe_powf(real_t x, integer_t y)
+real_t xl_powf(real_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute real power with an integer on the right
 // ----------------------------------------------------------------------------
@@ -1007,7 +1007,7 @@ real_t elfe_powf(real_t x, integer_t y)
 }
 
 
-text elfe_text_replace(text txt, text before, text after)
+text xl_text_replace(text txt, text before, text after)
 // ----------------------------------------------------------------------------
 //   Return a copy of txt with all occurrences of before replaced with after
 // ----------------------------------------------------------------------------
@@ -1022,7 +1022,7 @@ text elfe_text_replace(text txt, text before, text after)
 }
 
 
-text elfe_text_repeat(uint count, text txt)
+text xl_text_repeat(uint count, text txt)
 // ----------------------------------------------------------------------------
 //   Return a copy of txt with all occurrences of before replaced with after
 // ----------------------------------------------------------------------------
@@ -1046,7 +1046,7 @@ text elfe_text_repeat(uint count, text txt)
 }
 
 
-real_t elfe_time(real_t delay)
+real_t xl_time(real_t delay)
 // ----------------------------------------------------------------------------
 //   Return the current system time
 // ----------------------------------------------------------------------------
@@ -1058,7 +1058,7 @@ real_t elfe_time(real_t delay)
 }
 
 
-#define ELFE_TIME(tmfield, delay)               \
+#define XL_TIME(tmfield, delay)               \
     struct tm tm = { 0 };                       \
     time_t clock = { 0 };                       \
     time(&clock);                               \
@@ -1067,22 +1067,22 @@ real_t elfe_time(real_t delay)
     return tm.tmfield
 
 
-integer_t  elfe_seconds()     { ELFE_TIME(tm_sec,       1.0); }
-integer_t  elfe_minutes()     { ELFE_TIME(tm_min,      60.0); }
-integer_t  elfe_hours()       { ELFE_TIME(tm_hour,    3600.0); }
-integer_t  elfe_month_day()   { ELFE_TIME(tm_mday,   86400.0); }
-integer_t  elfe_mon()         { ELFE_TIME(tm_mon,    86400.0); }
-integer_t  elfe_year()        { ELFE_TIME(tm_year,   86400.0); }
-integer_t  elfe_week_day()    { ELFE_TIME(tm_wday,   86400.0); }
-integer_t  elfe_year_day()    { ELFE_TIME(tm_yday,   86400.0); }
-integer_t  elfe_summer_time() { ELFE_TIME(tm_isdst,  86400.0); }
+integer_t  xl_seconds()     { XL_TIME(tm_sec,       1.0); }
+integer_t  xl_minutes()     { XL_TIME(tm_min,      60.0); }
+integer_t  xl_hours()       { XL_TIME(tm_hour,    3600.0); }
+integer_t  xl_month_day()   { XL_TIME(tm_mday,   86400.0); }
+integer_t  xl_mon()         { XL_TIME(tm_mon,    86400.0); }
+integer_t  xl_year()        { XL_TIME(tm_year,   86400.0); }
+integer_t  xl_week_day()    { XL_TIME(tm_wday,   86400.0); }
+integer_t  xl_year_day()    { XL_TIME(tm_yday,   86400.0); }
+integer_t  xl_summer_time() { XL_TIME(tm_isdst,  86400.0); }
 #ifndef CONFIG_MINGW
-text_t     elfe_timezone()    { ELFE_TIME(tm_zone,   86400.0); }
-integer_t  elfe_GMT_offset()  { ELFE_TIME(tm_gmtoff, 86400.0); }
+text_t     xl_timezone()    { XL_TIME(tm_zone,   86400.0); }
+integer_t  xl_GMT_offset()  { XL_TIME(tm_gmtoff, 86400.0); }
 #endif // CONFIG_MINGW
 
 
-real_t elfe_random()
+real_t xl_random()
 // ----------------------------------------------------------------------------
 //    Return a pseudo-random number in the low..high range
 // ----------------------------------------------------------------------------
@@ -1095,7 +1095,7 @@ real_t elfe_random()
 }
 
 
-bool elfe_random_seed(int seed)
+bool xl_random_seed(int seed)
 // ----------------------------------------------------------------------------
 //    Initialized random number generator using the argument passed as seed
 // ----------------------------------------------------------------------------
@@ -1112,7 +1112,7 @@ bool elfe_random_seed(int seed)
 } // extern "C"
 
 
-ELFE_END
+XL_END
 
 
-uint elfe_recursion_count = 0;
+uint xl_recursion_count = 0;

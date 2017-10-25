@@ -2,7 +2,7 @@
 #define BASE_H
 /* ************************************************************************* */
 /*   base.h                     (C) 1992-2000 Christophe de Dinechin (ddd)   */
-/*                                                          ELFE project    */
+/*                                                          XL project    */
 /* ************************************************************************* */
 /*                                                                           */
 /*   File Description:                                                       */
@@ -175,55 +175,55 @@ typedef const wchar *   wkstring;
 /*                                                                           */
 /* ========================================================================= */
 /*
-   ELFE_ASSERT checks for some condition at runtime.
-   ELFE_CASSERT checks for a condition at compile time
+   XL_ASSERT checks for some condition at runtime.
+   XL_CASSERT checks for a condition at compile time
 */
 
 
-#if !defined(ELFE_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
-#define ELFE_DEBUG        1
+#if !defined(XL_DEBUG) && (defined(DEBUG) || defined(_DEBUG))
+#define XL_DEBUG        1
 #endif
 
-#ifdef ELFE_DEBUG
-#define ELFE_ASSERT(x)   { if (!(x)) elfe_assert_failed(#x, __FILE__, __LINE__); }
-#define ELFE_CASSERT(x)  struct __dummy { char foo[((int) (x))*2-1]; }
-externc void elfe_assert_failed(kstring msg, kstring file, uint line);
-#define ELFE_DEBUG_CODE(x)        x
+#ifdef XL_DEBUG
+#define XL_ASSERT(x)   { if (!(x)) xl_assert_failed(#x, __FILE__, __LINE__); }
+#define XL_CASSERT(x)  struct __dummy { char foo[((int) (x))*2-1]; }
+externc void xl_assert_failed(kstring msg, kstring file, uint line);
+#define XL_DEBUG_CODE(x)        x
 
 #else
-#define ELFE_ASSERT(x)
-#define ELFE_CASSERT(x)
-#define ELFE_DEBUG_CODE(x)
+#define XL_ASSERT(x)
+#define XL_CASSERT(x)
+#define XL_DEBUG_CODE(x)
 #endif
 
 
 // ============================================================================
-// 
+//
 //   Tracing information
-// 
+//
 // ============================================================================
 
-#ifdef ELFE_DEBUG
+#ifdef XL_DEBUG
 #  include "traces.h"
-#  ifdef ELFE_TRACE_INSTNAME
-#    define IFTRACE(x)          if ELFE_TRACE(x)
-#    define ELFE_TRACE(x)      (ELFE_TRACE_INSTNAME &&        \
-                                 ELFE_TRACE_INSTNAME->x)
-#    define IFTRACE2(x,y)       if ELFE_TRACE2(x,y)
-#    define ELFE_TRACE2(x,y)   (ELFE_TRACE_INSTNAME &&        \
-                                 (ELFE_TRACE_INSTNAME->x ||    \
-                                  ELFE_TRACE_INSTNAME->y))
+#  ifdef XL_TRACE_INSTNAME
+#    define IFTRACE(x)          if XL_TRACE(x)
+#    define XL_TRACE(x)         (XL_TRACE_INSTNAME &&   \
+                                 XL_TRACE_INSTNAME->x)
+#    define IFTRACE2(x,y)       if XL_TRACE2(x,y)
+#    define XL_TRACE2(x,y)      (XL_TRACE_INSTNAME &&        \
+                                 (XL_TRACE_INSTNAME->x ||    \
+                                  XL_TRACE_INSTNAME->y))
 #  else
 #    define IFTRACE(x)          if(0)
-#    define ELFE_TRACE(x)      0
+#    define XL_TRACE(x)      0
 #    define IFTRACE2(x,y)       if(0)
-#    define ELFE_TRACE2(x,y)   0
+#    define XL_TRACE2(x,y)   0
 #  endif
 #else
 #  define IFTRACE(x)            if(0)
-#  define ELFE_TRACE(x)        0
+#  define XL_TRACE(x)        0
 #  define IFTRACE2(x,y)         if(0)
-#  define ELFE_TRACE2(x,y)     0
+#  define XL_TRACE2(x,y)     0
 #endif
 
 
@@ -235,11 +235,11 @@ externc void elfe_assert_failed(kstring msg, kstring file, uint line);
 /* ========================================================================= */
 
 #if CONFIG_HAS_NAMESPACE
-#define ELFE_BEGIN                namespace ELFE {
-#define ELFE_END                  }
+#define XL_BEGIN                namespace XL {
+#define XL_END                  }
 #else   /* !CONFIG_HAS_NAMESPACE */
-#define ELFE_BEGIN
-#define ELFE_END
+#define XL_BEGIN
+#define XL_END
 #endif  /* ?CONFIG_HAS_NAMESPACE */
 
 

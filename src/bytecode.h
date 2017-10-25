@@ -1,12 +1,12 @@
 #ifndef BYTECODE_H
 #define BYTECODE_H
 // ****************************************************************************
-//  bytecode.h                                                   ELFE project 
+//  bytecode.h                                                   XL project 
 // ****************************************************************************
 // 
 //   File Description:
 // 
-//     Implementation of a bytecode to evaluate ELFE programs faster
+//     Implementation of a bytecode to evaluate XL programs faster
 //     without the need to generate machine code directly
 // 
 // 
@@ -38,7 +38,7 @@
 #include <map>
 #include <iostream>
 
-ELFE_BEGIN
+XL_BEGIN
 
 
 struct Op;                      // An individual operation
@@ -354,6 +354,6 @@ inline std::ostream &operator<<(std::ostream &out, Ops &instrs)
     return out;
 }
 
-ELFE_END
+XL_END
 
 #endif // BYTECODE_H

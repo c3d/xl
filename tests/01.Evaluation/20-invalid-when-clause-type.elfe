@@ -1,7 +1,0 @@
-// EXIT=1
-// Errors when the 
-
-collatz N when "glop"   -> 0
-collatz N when "glap"   -> 1
-
-collatz 10
