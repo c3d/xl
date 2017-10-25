@@ -1,22 +1,61 @@
 # XL
-### Extensible Language
+### An eXtensible Language
 
-XL is a very simple and small programming language specifcally
-designed for everyday programming.
+XL is a very simple and small programming language designed around
+the idea that programmers should be able to extend the language as
+easily as they add functions or classes in more traditional languages.
 
-While XL is a general-purpose programming language, it is designed
-to facilitate the configuration and control of swarms of small devices
-such as sensors or actuators. It can also be used as a powerful,
-remotely-accessible extension language for larger applications.
-The examples below will focus on this particular domain. For more
-information about the language, please read the [reference manual]
-(https://github.com/c3d/xl/blob/master/doc/XL_Reference_Manual.pdf)
+Two dialects of XL exist that demonstrate this extensibility:
 
-XL used to be called ELIoT (Extensible Language for the Internet of Things),
-but Legrand complained about it, having a trademark on the name.
-XL is for more than just IoT, so we might as well acknowlege
-that in the name also ;-)
+* [Tao3D](http://tao3d.sf.net) focuses on real-time 3D animations
+  and can be used as a scriptable presentation software.
+  Languages extensions in Tao3D are used to make it easy to describe
+  slides, as in the following code:
 
+          import Slides
+
+          slide "This is a slide example",
+              * "This is a first bullet point"
+              * "This is a second bullet point"
+              anchor
+                  color "red"
+                  circle 50 * sin time, 50 * cos time, 20
+
+* [ELFE](http://github.com/c3d/elfe) focuses on controlling swarms of
+  devices in the context of the Internet of Things. It features simple
+  extensions to send programs to a remote device and wait for
+  responses from it. A demo ELFE program that measures temperatures on
+  two devices under the control of a third one looks like:
+
+        invoke "pi2.local",
+           every 1.1s,
+                rasp1_temp ->
+                    ask "pi.local",
+                        temperature
+                send_temps rasp1_temp, temperature
+
+           send_temps T1:real, T2:real ->
+               if abs(T1-T2) > 2.0 then
+                   reply
+                       show_temps T1, T2
+
+        show_temps T1:real, T2:real ->
+            write "Temperature on pi is ", T1, " and on pi2 ", T2, ". "
+            if T1>T2 then
+                writeln "Pi is hotter by ", T1-T2, " degrees"
+            else
+                writeln "Pi2 is hotter by ", T2-T1, " degrees"
+
+While at one point it seemed like a good idea to fork the dialects
+into separate repositories for size reasons, I am now in the process
+of "reconverging" these different code bases. This is expected to take
+a little while as they diverged somewhat significantly.
+
+For more information about the language, please read the
+[reference manual](https://github.com/c3d/xl/blob/master/doc/XL_Reference_Manual.pdf)
+
+The examples below are derived from the ELFE documentation.
+You can also look at [Examples of Tao3D code](http://tao3d.sf.net).
 
 ## Example: Measuring temperature
 
