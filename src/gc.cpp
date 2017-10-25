@@ -72,6 +72,8 @@ Atomic<uint> TypeAllocator::finalizing = 0;
 #define PTHREAD_NULL ((pthread_t) 0)
 static pthread_t collecting = PTHREAD_NULL;
 
+RECORDER(memory, 256, "Memory related events and garbage collection");
+
 
 TypeAllocator::TypeAllocator(kstring tn, uint os)
 // ----------------------------------------------------------------------------
@@ -83,7 +85,7 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
       chunkSize(1022), objectSize(os), alignedSize(os),
       allocatedCount(0), scannedCount(0), collectedCount(0), totalCount(0)
 {
-    MEMORY("New type allocator %p name '%s' object size %u", this, tn, os);
+    RECORD(memory, "New type allocator %p name '%s' object size %u", this, tn, os);
 
     // Make sure we align everything on Chunk boundaries
     if ((alignedSize + sizeof (Chunk)) & CHUNKALIGN_MASK)
@@ -119,7 +121,7 @@ TypeAllocator::~TypeAllocator()
 //   Delete all the chunks we allocated
 // ----------------------------------------------------------------------------
 {
-    MEMORY("Destroy type allocator %p '%s'", this, this->name);
+    RECORD(memory, "Destroy type allocator %p '%s'", this, this->name);
 
     VALGRIND_DESTROY_MEMPOOL(this);
 
@@ -133,7 +135,8 @@ void *TypeAllocator::Allocate()
 //   Allocate a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    MEMORY("Allocate in '%s', free list %p", this->name, freeList.Get());
+    RECORD(memory, "Allocate in '%s', free list %p",
+           this->name, (void *) freeList.Get());
 
     Chunk_vp result;
     do
@@ -149,7 +152,7 @@ void *TypeAllocator::Allocate()
                 result = freeList;
                 continue;
             }
-        
+
             // Nothing free: allocate a big enough chunk
             size_t  itemSize  = alignedSize + sizeof(Chunk);
             size_t  allocSize = (chunkSize + 1) * itemSize;
@@ -157,7 +160,7 @@ void *TypeAllocator::Allocate()
             void   *allocated = malloc(allocSize);
             (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
 
-            MEMORY("New chunk %p in '%s'", allocated, this->name);
+            RECORD(memory, "New chunk %p in '%s'", allocated, this->name);
 
             char *chunkBase = (char *) allocated + alignedSize;
             Chunk_vp last = (Chunk_vp) chunkBase;
@@ -207,7 +210,7 @@ void *TypeAllocator::Allocate()
     void *ret =  (void *) &result[1];
     VALGRIND_MEMPOOL_ALLOC(this, ret, objectSize);
 
-    MEMORY("Allocated %p from %s", ret, name);
+    RECORD(memory, "Allocated %p from %s", ret, name);
     return ret;
 }
 
@@ -217,7 +220,7 @@ void TypeAllocator::Delete(void *ptr)
 //   Free a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    MEMORY("Delete %p in '%s'", ptr, this->name);
+    RECORD(memory, "Delete %p in '%s'", ptr, this->name);
 
     if (!ptr)
         return;
@@ -285,7 +288,7 @@ void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
         {
             // Delete current object immediately
             allocator->Finalize((void *) (ptr + 1));
-            
+
             // Delete the children put on the toDelete list
             GarbageCollector::Sweep();
         }
@@ -298,7 +301,7 @@ bool TypeAllocator::CheckLeakedPointers()
 //   Check if any pointers were allocated and not captured between safe points
 // ----------------------------------------------------------------------------
 {
-    MEMORY("CheckLeaks in '%s'", name);
+    RECORD(memory, "CheckLeaks in '%s'", name);
 
     char *lo = (char *) lowestInUse.Get();
     char *hi = (char *) highestInUse.Get();
@@ -314,7 +317,7 @@ bool TypeAllocator::CheckLeakedPointers()
         size_t  itemSize  = alignedSize + sizeof(Chunk);
         char   *chunkEnd = chunkBase + itemSize * chunkSize;
         totalCount += chunkSize;
-        
+
         if (chunkBase <= hi && chunkEnd  >= lo)
         {
             char *start = (char *) chunkBase;
@@ -343,7 +346,7 @@ bool TypeAllocator::CheckLeakedPointers()
     }
 
     collectedCount += collected;
-    MEMORY("CheckLeaks in '%s' done, scanned %u, collected %u",
+    RECORD(memory, "CheckLeaks in '%s' done, scanned %u, collected %u",
            name, scannedCount, collected);
     return collected;
 }
@@ -354,7 +357,7 @@ bool TypeAllocator::Sweep()
 //    Remove all the things that we have pushed on the toDelete list
 // ----------------------------------------------------------------------------
 {
-    MEMORY("Sweep '%s'", name);
+    RECORD(memory, "Sweep '%s'", name);
     bool result = false;
     while (toDelete)
     {
@@ -363,7 +366,7 @@ bool TypeAllocator::Sweep()
         Finalize((void *) (next+1));
         result = true;
     }
-    MEMORY("Swept '%s' %s objects deleted", name, result ? "with" : "without");
+    RECORD(memory, "Swept '%s' %s objects deleted", name, result ? "with" : "without");
     return result;
 }
 
@@ -424,7 +427,7 @@ bool TypeAllocator::CanDelete(void *obj)
     for (i = listeners.begin(); i != listeners.end(); i++)
         if (!(*i)->CanDelete(obj))
             result = false;
-    MEMORY("%s delete %p in '%s'", result ? "Can" : "Cannot", obj, name);
+    RECORD(memory, "%s delete %p in '%s'", result ? "Can" : "Cannot", obj, name);
     return result;
 }
 
@@ -499,7 +502,7 @@ bool GarbageCollector::Collect()
     // Only one thread enters collecting, the others spin and wait
     if (Atomic<pthread_t>::SetQ(collecting, PTHREAD_NULL, self))
     {
-        MEMORY("Garbage collection in thread %p", self);
+        RECORD(memory, "Garbage collection in thread %p", self);
 
         Allocators::iterator a;
         Listeners listeners;
@@ -539,10 +542,10 @@ bool GarbageCollector::Collect()
             XL_ASSERT(!"Someone else stole the collection lock?");
         }
 
-        MEMORY("Finished garbage collection in thread %p", self);
+        RECORD(memory, "Finished garbage collection in thread %p", self);
         return true;
     }
-    MEMORY("Garbage collection for thread %p was blocked", self);
+    RECORD(memory, "Garbage collection for thread %p was blocked", self);
     return false;
 }
 
@@ -571,7 +574,7 @@ void GarbageCollector::PrintStatistics()
         scan    += ta->scannedCount   * ta->alignedSize;
         collect += ta->collectedCount * ta->alignedSize;
 
-        ta->ResetStatistics();            
+        ta->ResetStatistics();
     }
     printf("%24s %8s %8s %8s %8s %8s %8s\n",
            "=====", "=====", "=====", "=====", "=====", "=====", "=====");
@@ -755,7 +758,7 @@ void debuggc(void *ptr)
                 }
             }
         }
-        
+
         // Check how many times we found the item
         if (allocated)
         {

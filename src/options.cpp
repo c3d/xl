@@ -45,6 +45,7 @@ XL_BEGIN
 /* ========================================================================= */
 
 Options *Options::options = NULL;
+RECORDER(options, 128, "Options passed to the compiler");
 
 Options::Options(int argc, char **argv):
 /*---------------------------------------------------------------------------*/
@@ -61,7 +62,7 @@ Options::Options(int argc, char **argv):
     // Check if some options are given from environment
     if (kstring envopt = getenv("XL_OPT"))
     {
-        OPTIONS("Environment variable XL_OPT='%s'", envopt);
+        RECORD(options, "Environment variable XL_OPT='%s'", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -72,14 +73,14 @@ Options::Options(int argc, char **argv):
     }
     else
     {
-        OPTIONS("Environment variable XL_OPT is not set");
+        RECORD(options, "Environment variable XL_OPT is not set");
     }
 
     // Add options from the command-line
-    OPTIONS("Command line has %d options", argc-1);
+    RECORD(options, "Command line has %d options", argc-1);
     for (int a = 1; a < argc; a++)
     {
-        OPTIONS("  Option #%d is '%s'", a, argv[a]);
+        RECORD(options, "  Option #%d is '%s'", a, argv[a]);
         args.push_back(argv[a]);
     }
 }
@@ -227,7 +228,7 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
 
-            OPTIONS("Parse option #%d, '%s'", arg, option);
+            RECORD(options, "Parse option #%d, '%s'", arg, option);
 
 #if XL_DEBUG
             if (argval[0] == 't')
@@ -279,4 +280,3 @@ ulong xl_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace
 // ----------------------------------------------------------------------------
-

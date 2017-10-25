@@ -584,12 +584,15 @@ XL_END
 
 
 #ifndef LIBXL
+
+RECORDER(compiler, 32, "Compiler main entry point");
+
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    COMPILER("XL Compiler version %s starting", XL_VERSION);
+    RECORD(compiler, "XL Compiler version %s starting", XL_VERSION);
 
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
@@ -607,7 +610,7 @@ int main(int argc, char **argv)
                 long ((char *) malloc(1) - low_water) / 1024);
 #endif
 
-    COMPILER("Compiler exit code %d", rc);
+    RECORD(compiler, "Compiler exit code %d", rc);
 
     if (main.options.dumpRecorder)
         recorder_dump();

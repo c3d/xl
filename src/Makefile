@@ -1,5 +1,5 @@
 #******************************************************************************
-# Makefile                                                       XL project 
+# Makefile                                                       XL project
 #******************************************************************************
 #
 #  File Description:
@@ -55,7 +55,7 @@ SOURCES     =					\
 	utf8_fileutils.cpp			\
 	winglob.cpp				\
 	recorder/recorder.c			\
-	recorder/recorder.cpp			\
+	recorder/recorder_ring.c		\
 	$(MODULES_SOURCES)			\
 	$(SOURCES_$(COMPILER))
 
@@ -146,7 +146,10 @@ ionly-%:
 %_module.h: %.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-$(DEPENDENCIES)	: $(MODULES_HEADERS) recorder/recorder.h recorder/ring.h
+$(DEPENDENCIES)	: 			\
+	$(MODULES_HEADERS) 		\
+	recorder/recorder.h 		\
+	recorder/recorder_ring.h
 
 $(BUILD)rules.mk recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
