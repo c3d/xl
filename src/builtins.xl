@@ -1,0 +1,161 @@
+// Binary operations on integers
+x:integer + y:integer           as integer -> opcode Add
+x:integer - y:integer           as integer -> opcode Sub
+x:integer * y:integer           as integer -> opcode Mul
+x:integer / y:integer           as integer -> opcode SDiv
+x:integer rem y:integer         as integer -> opcode SRem
+x:integer mod y:integer         as integer -> C elfe_mod
+x:integer and y:integer         as integer -> opcode And
+x:integer or y:integer          as integer -> opcode Or
+x:integer xor y:integer         as integer -> opcode Xor
+x:integer shl y:integer         as integer -> opcode Shl
+x:integer ashr y:integer        as integer -> opcode AShr
+x:integer lshr y:integer        as integer -> opcode LShr
+-x:integer                      as integer -> opcode Neg
+not x:integer                   as integer -> opcode Not
+
+// Binary operation on real numbers
+x:real + y:real                 as real -> opcode FAdd
+x:real - y:real                 as real -> opcode FSub
+x:real * y:real                 as real -> opcode FMul
+x:real / y:real                 as real -> opcode FDiv
+x:real rem y:real               as real -> C fmod
+x:real mod y:real               as real -> C elfe_modf
+-x:real                         as real -> opcode FNeg
+
+// Comparison operators
+X:integer = Y:integer           as boolean -> opcode ICmpEQ
+X:integer <> Y:integer          as boolean -> opcode ICmpNE
+X:integer > Y:integer           as boolean -> opcode ICmpSGT
+X:integer >= Y:integer          as boolean -> opcode ICmpSGE
+X:integer < Y:integer           as boolean -> opcode ICmpSLT
+X:integer <= Y:integer          as boolean -> opcode ICmpSLE
+
+X:real = Y:real                 as boolean -> opcode FCmpOEQ
+X:real <> Y:real                as boolean -> opcode FCmpONE
+X:real > Y:real                 as boolean -> opcode FCmpOGT
+X:real >= Y:real                as boolean -> opcode FCmpOGE
+X:real < Y:real                 as boolean -> opcode FCmpOLT
+X:real <= Y:real                as boolean -> opcode FCmpOLE
+
+X:text = Y:text                 as boolean -> C elfe_text_eq
+X:text <> Y:text                as boolean -> C elfe_text_ne
+X:text > Y:text                 as boolean -> C elfe_text_gt
+X:text >= Y:text                as boolean -> C elfe_text_ge
+X:text < Y:text                 as boolean -> C elfe_text_lt
+X:text <= Y:text                as boolean -> C elfe_text_le
+
+X:boolean = Y:boolean           as boolean -> opcode BCmpEQ
+X:boolean <> Y:boolean          as boolean -> opcode BCmpNE
+X:boolean > Y:boolean           as boolean -> opcode BCmpGT
+X:boolean >= Y:boolean          as boolean -> opcode BCmpGE
+X:boolean < Y:boolean           as boolean -> opcode BCmpLT
+X:boolean <= Y:boolean          as boolean -> opcode BCmpLE
+X:boolean and Y:boolean         as boolean -> opcode BAnd
+X:boolean or  Y:boolean         as boolean -> opcode BOr
+X:boolean xor Y:boolean         as boolean -> opcode BXor
+not X:boolean                   as boolean -> opcode BNot
+
+// Basic math functions
+abs X:real                      as real -> C fabs
+extern real sqrt(real);
+extern real sin(real);
+extern real cos(real);
+extern real tan(real);
+extern real asin(real);
+extern real acos(real);
+extern real atan(real);
+extern real exp(real);
+extern real expm1(real);
+extern real log(real);
+extern real log10(real);
+extern real log2(real);
+extern real log1p(real);
+pi -> 3.1415926535897932384626433
+
+// If-then-else statement
+if true  then TrueBody else FalseBody   -> TrueBody
+if false then TrueBody else FalseBody   -> FalseBody
+
+if true  then TrueBody                  -> TrueBody
+if false then TrueBody                  -> false
+
+// Console / debugging operations
+write x:text            as boolean      -> C elfe_write_text
+write x:integer         as boolean      -> C elfe_write_integer
+write x:real            as boolean      -> C elfe_write_real
+write x:character       as boolean      -> C elfe_write_character
+writeln                 as boolean      -> C elfe_write_cr
+
+write true              -> write "true"
+write false             -> write "false"
+write head, rest        -> write head; write rest
+writeln a               -> write a; writeln
+
+// Tree shape and attributes
+kind  X:tree            as integer      -> opcode TreeKind
+left  X:prefix          as tree         -> opcode TreeLeft
+right X:prefix          as tree         -> opcode TreeRight
+left  X:postfix         as tree         -> opcode TreeLeft
+right X:postfix         as tree         -> opcode TreeRight
+left  X:infix           as tree         -> opcode TreeLeft
+right X:infix           as tree         -> opcode TreeRight
+name  X:infix           as text         -> opcode InfixName
+opening X:text          as text         -> opcode TextOpening
+closing X:text          as text         -> opcode TextClosing
+child X:block           as tree         -> opcode BlockChild
+opening X:block         as text         -> opcode BlockOpening
+closing X:block         as text         -> opcode BlockClosing
+
+// Min and max functions
+min x, y -> if x < min y then x else min y
+min y    -> y
+max x, y -> if x > max y then x else max y
+max y    -> y
+
+// Interval test
+X:real in A:real..B:real -> X >= A and X <= B
+
+// Factorial function
+0! -> 1
+N:integer! -> N * (N-1)!
+
+// Boolean to text conversion
+text true  -> "true"
+text false -> "false"
+
+// A few additional text notations
+Source:text / From:text /  To:text      -> text_replace Source, From, To
+Pat:text in Src:text                    -> text_index Src, Pat, 0
+Pat:text in Src:text from Idx:integer   -> text_index Src, Pat, Idx
+
+// A utility function for C-style testing
+good false -> false
+good 0     -> false
+good 0.0   -> false
+good ""    -> false
+good nil   -> false
+good Other -> true
+
+bad X      -> not good X
+
+// Loops
+while Condition loop Body ->
+    if Condition then
+        Body
+        while Condition loop Body
+until Condition loop Body               -> while not Condition loop Body
+loop Body                               -> Body; loop Body
+for Var in Low..High loop Body ->
+    Var := Low
+    while Var < High loop
+        Body
+        Var := Var + 1
+
+every Duration, Body -> loop { Body; sleep Duration}
+Duration:real h  -> Duration * 3600
+Duration:real m  -> Duration * 60
+Duration:real s  -> Duration
+Duration:real ms -> Duration * 0.001
+
+        
