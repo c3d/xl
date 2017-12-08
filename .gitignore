@@ -5,8 +5,8 @@
 .DS_Store
 src/cscope.files
 src/cscope.out
-src/*-module.cpp
-src/*-module.h
+src/*_module.cpp
+src/*_module.h
 src/recorder.h
 src/recorder.cpp
 src/ring.h
@@ -32,4 +32,3 @@ tests/**/failure-*.out
 tests/**/success-*.out
 src/[a-z].xl
 src/[a-z].xl
-
