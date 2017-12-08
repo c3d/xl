@@ -46,14 +46,14 @@ kstring Tree::kindName[KIND_COUNT] =
 //   The names of the tree kinds for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    "INTEGER", "REAL", "TEXT", "NAME",   
+    "INTEGER", "REAL", "TEXT", "NAME",
     "BLOCK", "PREFIX", "POSTFIX", "INFIX"
 };
 
 
 Tree::~Tree()
 // ----------------------------------------------------------------------------
-//   Delete the hash if we have one
+//   Delete the tree and associated data
 // ----------------------------------------------------------------------------
 {
     Info *next = NULL;
@@ -69,7 +69,7 @@ Tree::~Tree()
 
 Tree::operator text()
 // ----------------------------------------------------------------------------
-//   Conversion of a tree to text
+//   Conversion of a tree to standard text representation
 // ----------------------------------------------------------------------------
 {
     std::ostringstream out;
@@ -80,7 +80,7 @@ Tree::operator text()
 
 int Tree::Compare(Tree *left, Tree *right, bool recurse)
 // ----------------------------------------------------------------------------
-//   Return true if two trees are equal
+//   Compare trees and return negative, null or positive relative order
 // ----------------------------------------------------------------------------
 {
     if (left == right)
@@ -230,4 +230,3 @@ text Text::textQuote = "\"";
 text Text::charQuote = "'";
 
 XL_END
-
