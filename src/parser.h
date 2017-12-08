@@ -1,21 +1,20 @@
 #ifndef PARSER_H
 #define PARSER_H
 // ****************************************************************************
-//  parser.h                        (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                            Activity project 
+//  parser.h                                                      ELFE project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //      ELFE language parser
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//      The parser turns a sequence of tokens produced by the scanner into
+//      a parse tree (aka abstract syntax tree).
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -77,9 +76,9 @@
 ELFE_BEGIN
 
 // ============================================================================
-// 
+//
 //    The parser itself
-// 
+//
 // ============================================================================
 
 struct Errors;
