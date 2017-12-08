@@ -1,0 +1,7 @@
+// EXIT=42
+X := 0
+loop
+    writeln "Almost infinite loop"
+    X := X + 1
+    if X > 41 then
+        exit X

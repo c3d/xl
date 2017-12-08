@@ -1,0 +1,6 @@
+A := true
+writeln "A (true)=", A
+A := not A
+writeln "A (false)=", A
+A := not A
+writeln "A (true)=", A
