@@ -1,17 +1,17 @@
 // ****************************************************************************
 //  compiler-gc.cpp                                              XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Information connecting the LLVM compiler to the XL garbage collector
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -46,12 +46,15 @@
 
 XL_BEGIN
 
+RECORDER(compiler_gc, 128, "Compiler garbage collection");
+
+
 CompilerInfo::~CompilerInfo()
 // ----------------------------------------------------------------------------
 //   Notice when we lose a compiler info
 // ----------------------------------------------------------------------------
 {
-    COMPILER("Compiler info deleted: function %p global %p tree %p",
+    RECORD(compiler_gc, "Compiler info deleted: function %p global %p tree %p",
              function, global, tree);
     IFTRACE(llvm)
         std::cerr << "CompilerInfo deleted F" << (void *) function

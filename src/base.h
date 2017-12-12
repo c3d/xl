@@ -95,11 +95,11 @@
 
 
 #if defined(__GNUC__)
-#define MAYBE_UNUSED     __attribute((unused))
+#define XL_MAYBE_UNUSED     __attribute((unused))
 #elif __cplusplus > 201103L
-#define MAYBE_UNUSED     [[maybe_unused]]
+#define XL_MAYBE_UNUSED     [[maybe_unused]]
 #else
-#define MAYBE_UNUSED
+#define XL_MAYBE_UNUSED
 #endif
 
 /*===========================================================================*/

@@ -1,18 +1,18 @@
 // ****************************************************************************
 //  compiler.cpp                                                  XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Just-in-time (JIT) compilation of XL trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -61,15 +61,17 @@ XL_BEGIN
 
 
 // ============================================================================
-// 
+//
 //    Compiler - Global information about the LLVM compiler
-// 
+//
 // ============================================================================
 //
 // The Compiler class is where we store all the global information that
 // persists during the lifetime of the program: LLVM data structures,
 // LLVM definitions for frequently used types, XL runtime functions, ...
-// 
+//
+
+RECORDER(compiler, 128, "Global information about the LLVM compiler");
 
 using namespace llvm;
 
@@ -122,13 +124,13 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     for (int arg = 1; arg < argc; arg++)
         if (strncmp(argv[arg], "-llvm", 5) == 0)
             llvmArgv.push_back(argv[arg] + 5);
-        
+
     llvm::cl::ParseCommandLineOptions(llvmArgv.size(), &llvmArgv[0]);
 
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
 #endif
-    COMPILER("Creating compiler");
+    RECORD(compiler, "Creating compiler");
 
     // Register a listener with the garbage collector
     CompilerGarbageCollectionListener *cgcl =
@@ -198,7 +200,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     };
     // If this assert fails, you changed struct tree and need to modify here
     XL_CASSERT(sizeof(LocalTree) == sizeof(Tree));
-               
+
     // Create the Tree type
     llvm_types treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
@@ -355,7 +357,7 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
-    COMPILER("Compile program %p", program);
+    RECORD(compiler, "Compile program %p", program);
 
     if (!program)
         return NULL;
@@ -382,7 +384,7 @@ static inline void createCompilerFunctionPasses(PassManagerBase *PM)
 {
      PM->add(createInstructionCombiningPass()); // Clean up after IPCP & DAE
      PM->add(createCFGSimplificationPass()); // Clean up after IPCP & DAE
-     
+
     // Start of function pass.
     // Break up aggregate allocas, using SSAUpdater.
 #if LLVM_VERSION < 391
@@ -402,7 +404,7 @@ static inline void createCompilerFunctionPasses(PassManagerBase *PM)
      PM->add(createReassociatePass());           // Reassociate expressions
      PM->add(createLoopRotatePass());            // Rotate Loop
      PM->add(createLICMPass());                  // Hoist loop invariants
-     PM->add(createInstructionCombiningPass());  
+     PM->add(createInstructionCombiningPass());
      PM->add(createIndVarSimplifyPass());        // Canonicalize indvars
      PM->add(createLoopIdiomPass());             // Recognize idioms like memset
      PM->add(createLoopDeletionPass());          // Delete dead loops
@@ -429,7 +431,7 @@ void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 {
     uint optLevel = options.optimize_level;
-    COMPILER("Setup optimization level %d", optLevel);
+    RECORD(compiler, "Setup optimization level %d", optLevel);
     LLVMS_SetupOpts(moduleOptimizer, optimizer, optLevel);
     createCompilerFunctionPasses(optimizer);
 
@@ -537,7 +539,8 @@ llvm::Function *Compiler::EnterBuiltin(text name,
     from->Do(plist);
     Parameters &parms = plist.parameters;
 
-    COMPILER("Builtin %d parms, source %p, code %p", parms.size(), to, code);
+    RECORD(compiler, "Builtin %d parms, source %p, code %p",
+           parms.size(), to, (void *) code);
     IFTRACE(llvm)
         std::cerr << "EnterBuiltin " << name
                   << " C" << (void *) code << " T" << (void *) to;
@@ -576,7 +579,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
         builtins[name] = result;
     }
 
-    return result;    
+    return result;
 }
 
 
@@ -673,13 +676,15 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 }
 
 
+RECORDER(builtins, 128, "Builtins");
+
 llvm::Function *Compiler::ExternFunction(kstring name, void *address,
                                          llvm_type retType, int parmCount, ...)
 // ----------------------------------------------------------------------------
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
 {
-    BUILTINS("Extern function %s, %d parameters, address %p",
+    RECORD(builtins, "Extern function %s, %d parameters, address %p",
              name, parmCount, address);
     IFTRACE(llvm)
         std::cerr << "ExternFunction " << name
@@ -718,7 +723,8 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 //   Enter a global variable in the symbol table
 // ----------------------------------------------------------------------------
 {
-    BUILTINS("Global %s address %p", name->value.c_str(), address);
+    RECORD(builtins, "Global %s address %p",
+           name->value.c_str(), address);
 
     Constant *null = ConstantPointerNull::get(treePtrTy);
     bool isConstant = false;
@@ -743,7 +749,8 @@ Value *Compiler::EnterConstant(Tree *constant)
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
-    BUILTINS("Constant %p kind %s", constant, Tree::kindName[constant->Kind()]);
+    RECORD(builtins, "Constant %p kind %s",
+           constant, Tree::kindName[constant->Kind()]);
 
     bool isConstant = true;
     text name = "xlk";
@@ -875,7 +882,7 @@ llvm_type Compiler::MachineType(Tree *tree)
             return integer32Ty;
         if (tree == real32_type)
             return real32Ty;
-    
+
         // Check special tree types in basics.tbl
         if (tree == symbol_type || tree == name_type || tree == operator_type)
             return nameTreePtrTy;
@@ -1106,11 +1113,11 @@ bool Compiler::FreeResources(Tree *tree)
         if (llvm::Function *f = info->function)
         {
             bool inUse = !f->use_empty();
-            
+
             IFTRACE(llvm)
                 std::cerr << " function F" << f
                           << (inUse ? " in use" : " unused");
-            
+
             if (inUse)
             {
                 // Defer deletion until later
@@ -1123,16 +1130,16 @@ bool Compiler::FreeResources(Tree *tree)
                 info->function = NULL;
             }
         }
-        
+
         // Drop closure function reference if any
         if (llvm::Function *f = info->closure)
         {
             bool inUse = !f->use_empty();
-            
+
             IFTRACE(llvm)
                 std::cerr << " closure F" << f
                           << (inUse ? " in use" : " unused");
-            
+
             if (inUse)
             {
                 // Defer deletion until later
@@ -1146,16 +1153,16 @@ bool Compiler::FreeResources(Tree *tree)
             }
         }
     }
-    
+
     // Drop any global reference
     if (GlobalValue *v = info->global)
     {
         bool inUse = !v->use_empty();
-        
+
         IFTRACE(llvm)
             std::cerr << " global V" << v
                       << (inUse ? " in use" : " unused");
-        
+
         if (inUse)
         {
             // Defer deletion until later
@@ -1180,9 +1187,19 @@ XL_END
 
 
 // ============================================================================
-// 
+//
+//    Global variables
+//
+// ============================================================================
+
+text llvm_crap_error_string;
+
+
+
+// ============================================================================
+//
 //    Debug helpers
-// 
+//
 // ============================================================================
 
 void debugm(XL::value_map &m)
@@ -1221,4 +1238,3 @@ void debugv(const llvm_type *t)
 {
     llvm::errs() << *t << "\n";
 }
-

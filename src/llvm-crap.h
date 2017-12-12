@@ -83,15 +83,17 @@
 
 // Apparently, nobody complained loudly enough that LLVM would stop moving
 // headers around. This is the most recent damage.
-#if LLVM_VERSION < 390
+#if LLVM_VERSION < 370
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/PassManager.h>
-#else
+#else // >= 370
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/IR/LegacyPassManager.h>
+#if LLVM_VERSION > 371
 #include <llvm/Transforms/Scalar/GVN.h>
-#endif
+#endif // > 371
+#endif // >= 370
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/Support/raw_ostream.h>
@@ -107,6 +109,7 @@
 // Ignore badly indented 'if' in 3.52
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include <llvm/Support/CommandLine.h>
 #pragma GCC diagnostic pop
@@ -379,7 +382,7 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 }
 
 // The pass manager became a template.
-#if LLVM_VERSION < 390
+#if LLVM_VERSION < 371
 typedef llvm::PassManager         LLVMCrap_PassManager;
 typedef llvm::FunctionPassManager LLVMCrap_FunctionPassManager;
 #else
@@ -441,11 +444,11 @@ inline llvm_value LLVMCrap_CreateStructGEP(llvm_builder bld,
 //   Accessing a struct element used to be complicated. Now it's incompatible.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 390
+#if LLVM_VERSION < 371
     return bld->CreateConstGEP2_32(ptr, 0, idx, name);
-#else // >= 390
+#else // >= 371
     return bld->CreateStructGEP(nullptr, ptr, idx, name);
-#endif // 390
+#endif // 371
 }
 
 
@@ -471,11 +474,11 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 390
+#if LLVM_VERSION < 371
     return bld->CreateCall2(callee, arg1, arg2);
-#else // >= 390
+#else // >= 371
     return bld->CreateCall(callee, {arg1, arg2});
-#endif // 390
+#endif // 371
 
 }
 
@@ -488,11 +491,11 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 390
+#if LLVM_VERSION < 371
     return bld->CreateCall3(callee, arg1, arg2, arg3);
-#else // >= 390
+#else // >= 371
     return bld->CreateCall(callee, {arg1, arg2, arg3});
-#endif // 390
+#endif // 371
 
 }
 
