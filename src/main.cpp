@@ -594,7 +594,7 @@ int main(int argc, char **argv)
 {
     RECORD(compiler, "XL Compiler version %s starting", XL_VERSION);
 
-#if CONFIG_USE_SBRK
+#if HAVE_SBRK
     char *low_water = (char *) sbrk(0);
 #endif
 
@@ -604,7 +604,7 @@ int main(int argc, char **argv)
     IFTRACE(gcstats)
         XL::GarbageCollector::GC()->PrintStatistics();
 
-#if CONFIG_USE_SBRK
+#if HAVE_SBRK
     IFTRACE(memory)
         fprintf(stderr, "Total memory usage: %ldK\n",
                 long ((char *) malloc(1) - low_water) / 1024);
