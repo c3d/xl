@@ -21,7 +21,8 @@
 #******************************************************************************
 
 # Define where the build files are located (needs the trailing /)
-BUILD=../build/
+TOP=../
+BUILD=$(TOP)build/
 
 # Set to 'none' to disable LLVM
 COMPILER=none
@@ -77,6 +78,10 @@ LIB_INSTALL=builtins.xl xl.syntax C.syntax *.stylesheet
 DEFINES=XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
 INCLUDES=. includes recorder
 
+CONFIG=		struct_sigaction		\
+		<regex.h>			\
+		<sys/mman.h>
+
 include $(BUILD)rules.mk
 
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
@@ -97,9 +102,6 @@ LLVM_LDFLAGS_llvm=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION
 # When LLVM is not enabled
 LLVM_FLAGS_none=-DINTERPRETER_ONLY
 
-# For the recorder, we need C++11
-CXX=$(CXX11)
-
 CPPFLAGS+=$(LLVM_FLAGS)  $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS) $(MINGW_LIBS_$(BUILDENV))
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
@@ -113,7 +115,7 @@ CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
 test: run-all-xl-tests
-run-all-xl-tests:
+run-all-xl-tests: $(TARGET)
 	cd ../tests; ./alltests
 hello: show_$(COMPILER)_version
 show_llvm_version:
@@ -146,10 +148,12 @@ ionly-%:
 %_module.h: %.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-$(DEPENDENCIES)	: 			\
+prebuild: 				\
 	$(MODULES_HEADERS) 		\
+	$(MODULES_SOURCES) 		\
 	recorder/recorder.h 		\
 	recorder/recorder_ring.h
+.PRECIOUS: $(MODULE_HEADERS) $(MODULE_SOURCES)
 
 $(BUILD)rules.mk recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
