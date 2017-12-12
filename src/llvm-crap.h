@@ -9,7 +9,7 @@
 //     LLVM Compatibility Recovery Adaptive Protocol
 //
 //     LLVM keeps breaking the API from release to release.
-//     Of course, none of the choices are documented aneywhere, and
+//     Of course, none of the choices are documented anywhere, and
 //     the documentation is left out of date for years.
 //
 //     So this file is an attempt at reverse engineering all the API
@@ -52,21 +52,25 @@
 
 
 // ============================================================================
-// 
-//   Build environment adjustments
-// 
+//
+//   Diagnostic we see in the new headers
+//
 // ============================================================================
 
-// Recent versions of LLVM define DEBUG(x) in Debug.h. Ooops.
-#include "base.h" // Make sure we have XL_DEBUG if needed
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+#ifdef DEBUG
+#define OLD_DEBUG       DEBUG
 #undef DEBUG
+#endif // DEBUG
 
 
 
 // ============================================================================
-// 
-//                          HEADER FILE ADJUSTMENTS 
-// 
+//
+//                          HEADER FILE ADJUSTMENTS
+//
 // ============================================================================
 
 // Where any sane library would offer something like #include <llvm.h>,
@@ -83,7 +87,10 @@
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/PassManager.h>
 #else
+#include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 #endif
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -96,12 +103,6 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Signals.h>
 
-#if LLVM_VERSION < 391
-#include <llvm/ExecutionEngine/JIT.h>
-#include <llvm/PassManager.h>
-#else // >= 391
-#include <llvm/Transforms/Scalar/GVN.h>
-#endif
 
 // Ignore badly indented 'if' in 3.52
 #pragma GCC diagnostic push
@@ -190,9 +191,9 @@
 
 
 // ============================================================================
-// 
+//
 //               WORKAROUNDS FOR GRATUITOUS API BREAKAGE
-// 
+//
 // ============================================================================
 
 // It is not enough to break header files. It's also important to make
@@ -218,11 +219,10 @@ typedef llvm::IntegerType *             llvm_integer_type;
 #define LLVMS_ARGS(args)                llvm::ArrayRef<llvm::Value *> (args)
 #endif
 
-// Other stuff that we need here.
-typedef llvm::Value *                          llvm_value;
-typedef llvm::IRBuilder<> *                    llvm_builder;
-
-
+// Other stuff that we need here. I'm waiting for the time they rename Value.
+typedef llvm::Value *                   llvm_value;
+typedef llvm::IRBuilder<> *             llvm_builder;
+typedef llvm::Module *                  llvm_module;
 
 // The opaque type went away in LLVM 3.0, although it still seems to be
 // present in the textual form of the IR (if you trust the doc, which I don't)
@@ -243,9 +243,9 @@ typedef llvm::StructType *llvm_struct;
 
 
 // ============================================================================
-// 
+//
 //                      API STABILIZATION FUNCTIONS
-// 
+//
 // ============================================================================
 
 // All the functions below have a single purpose: to build an API that
@@ -264,7 +264,7 @@ inline llvm::Constant *LLVMS_TextConstant(llvm::LLVMContext &llvm, text value)
 }
 
 
-inline void LLVMS_SetName(llvm::Module *module MAYBE_UNUSED,
+inline void LLVMS_SetName(llvm::Module *module XL_MAYBE_UNUSED,
                           llvm_type type, text name)
 // ----------------------------------------------------------------------------
 //   Setting the name for a type
@@ -284,7 +284,7 @@ inline void LLVMS_SetName(llvm::Module *module MAYBE_UNUSED,
 }
 
 
-inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm MAYBE_UNUSED,
+inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm XL_MAYBE_UNUSED,
                                       llvm_struct old,
                                       std::vector<llvm_type> &elements)
 // ----------------------------------------------------------------------------
@@ -302,6 +302,9 @@ inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm MAYBE_UNUSED,
 }
 
 
+extern text llvm_crap_error_string;
+
+
 inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
                                                   text moduleName,
                                                   llvm::Module **module)
@@ -315,8 +318,8 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     // Create module where we will build the code
     *module = new Module(moduleName, llvm);
 #else
-    // WTF version of the above
-    std::unique_ptr<Module> moduleOwner = make_unique<Module>(moduleName, llvm);
+    // WTF version of the above.
+    std::unique_ptr<Module> moduleOwner = llvm::make_unique<Module>(moduleName, llvm);
     *module = moduleOwner.get();
 #endif
 
@@ -327,6 +330,9 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 #endif
     // Initialize native target (new features)
     InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+    InitializeNativeTargetDisassembler();
 
 #if LLVM_VERSION < 31
     JITExceptionHandling = false;  // Bug #1026
@@ -343,6 +349,7 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 #else
     // WTF version of the above
     EngineBuilder engineBuilder(std::move(moduleOwner));
+    engineBuilder.setErrorStr(&llvm_crap_error_string);
 #endif
 
 #if LLVM_VERSION >= 31
@@ -350,8 +357,20 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
     // targetOpts.JITEmitDebugInfo = true;
     engineBuilder.setEngineKind(EngineKind::JIT);
     engineBuilder.setTargetOptions(targetOpts);
+    engineBuilder.setUseOrcMCJITReplacement(true);
 #endif
     ExecutionEngine *runtime = engineBuilder.create();
+
+    // Check if we were successful in the creation of the runtime
+    if (!runtime)
+    {
+        std::cerr << "ERROR: Unable to initialize LLVM\n"
+#if LLVM_VERSION >= 360
+                  << "LLVM error: " << llvm_crap_error_string
+#endif
+                  << "\n";
+        exit(1);
+    }
 
     // Make sure that code is generated as early as possible
     runtime->DisableLazyCompilation(true);
@@ -360,12 +379,12 @@ inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
 }
 
 // The pass manager became a template.
-#if LLVM_VERSION < 391
-typedef llvm::PassManager                       LLVMCrap_PassManager;
-typedef llvm::FunctionPassManager               LLVMCrap_FunctionPassManager;
+#if LLVM_VERSION < 390
+typedef llvm::PassManager         LLVMCrap_PassManager;
+typedef llvm::FunctionPassManager LLVMCrap_FunctionPassManager;
 #else
-typedef llvm::legacy::PassManager               LLVMCrap_PassManager;
-typedef llvm::legacy::FunctionPassManager       LLVMCrap_FunctionPassManager;
+typedef llvm::legacy::PassManager         LLVMCrap_PassManager;
+typedef llvm::legacy::FunctionPassManager LLVMCrap_FunctionPassManager;
 #endif
 
 inline void LLVMS_SetupOpts(LLVMCrap_PassManager *moduleOptimizer,
@@ -406,12 +425,12 @@ inline llvm::LLVMContext &LLVMCrap_GlobalContext()
 //  There used to be a global context, now you should roll out your own
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return llvm::getGlobalContext();
-#else // >= 391
+#else // >= 390
     static llvm::LLVMContext llvmContext;
     return llvmContext;
-#endif // 391
+#endif // 390
 }
 
 
@@ -422,11 +441,11 @@ inline llvm_value LLVMCrap_CreateStructGEP(llvm_builder bld,
 //   Accessing a struct element used to be complicated. Now it's incompatible.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateConstGEP2_32(ptr, 0, idx, name);
-#else // >= 391
+#else // >= 390
     return bld->CreateStructGEP(nullptr, ptr, idx, name);
-#endif // 391
+#endif // 390
 }
 
 
@@ -437,14 +456,14 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateCall(callee, arg1);
-#else // >= 391
+#else // >= 390
     return bld->CreateCall(callee, {arg1});
-#endif // 391
-    
+#endif // 390
+
 }
-                              
+
 inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
                                       llvm_value callee,
                                       llvm_value arg1, llvm_value arg2)
@@ -452,14 +471,14 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateCall2(callee, arg1, arg2);
-#else // >= 391
+#else // >= 390
     return bld->CreateCall(callee, {arg1, arg2});
-#endif // 391
-    
+#endif // 390
+
 }
-                              
+
 inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
                                       llvm_value callee,
                                       llvm_value arg1,
@@ -469,13 +488,45 @@ inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION < 391
+#if LLVM_VERSION < 390
     return bld->CreateCall3(callee, arg1, arg2, arg3);
-#else // >= 391
+#else // >= 390
     return bld->CreateCall(callee, {arg1, arg2, arg3});
-#endif // 391
-    
+#endif // 390
+
 }
-                              
+
+
+inline void * LLVMCrap_functionPointer(llvm::ExecutionEngine *runtime,
+                                       llvm::Function *fn)
+// ----------------------------------------------------------------------------
+//  Sometimes you need to finalize module
+// ----------------------------------------------------------------------------
+{
+    void *result = runtime->getPointerToFunction(fn);
+#if LLVM_VERSION >= 390
+    // Need to finalize object to get an executable mapping for the code
+    runtime->finalizeObject();
+#endif // 3.90
+#if LLVM_VERSION >= 360
+    if (!result)
+        std::cerr << "ERROR: Unable to get function pointer\n"
+                  << "LLVM error: " << llvm_crap_error_string
+                  << "\n";
+#endif
+    return result;
+}
+
+
+
+// ============================================================================
+//
+//    Cleanup
+//
+// ============================================================================
+
+#pragma GCC diagnostic pop
+#undef DEBUG
+#define DEBUG OLD_DEBUG
 
 #endif // LLVM_CRAP_H
