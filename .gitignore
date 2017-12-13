@@ -7,11 +7,8 @@ src/cscope.files
 src/cscope.out
 src/*_module.cpp
 src/*_module.h
-src/recorder.h
-src/recorder.cpp
-src/ring.h
-src/obj/**/Makefile.depend
-src/obj/**/created
+.objects
+.logs
 tests/builtins.xl
 tests/bytecode.stylesheet
 tests/comments.stylesheet
