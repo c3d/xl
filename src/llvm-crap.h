@@ -90,7 +90,7 @@
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/IR/LegacyPassManager.h>
-#if LLVM_VERSION > 371
+#if LLVM_VERSION > 381
 #include <llvm/Transforms/Scalar/GVN.h>
 #endif // > 371
 #endif // >= 370
