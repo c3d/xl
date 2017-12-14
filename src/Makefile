@@ -104,13 +104,15 @@ LLVM_LDFLAGS_llvm=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION
 LLVM_FLAGS_none=-DINTERPRETER_ONLY
 
 CPPFLAGS+=$(LLVM_FLAGS)  $(CPPFLAGS_llvm$(LLVM_VERSION))
-LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS) $(MINGW_LIBS_$(BUILDENV))
+LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 LDFLAGS_llvm350=-lz -lncurses
 LDFLAGS_llvm352=-lz -lncurses
 LDFLAGS_llvm360=-lz -lncurses
-MINGW_LIBS_mingw=-lws2_32
+LDFLAGS_linux  = -lpthread -lm
+LDFLAGS_cygwin = -lpthread -lm
+LDFLAGS_mingw  = -lpthread -lm -lws2_32
 
 CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
