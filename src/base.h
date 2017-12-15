@@ -111,37 +111,15 @@
 /* Used for some byte manipulation, where it is more explicit that uchar */
 typedef unsigned char   byte;
 
-
 /* Shortcuts for unsigned numbers - Quite uneasy to figure out in general */
-#if CONFIG_HAS_UCHAR
 typedef unsigned char   uchar;
-#endif
-
-#if CONFIG_HAS_USHORT
 typedef unsigned short  ushort;
-#endif
-
-#if CONFIG_HAS_UINT
 typedef unsigned int    uint;
-#endif
-
-#if CONFIG_HAS_ULONG
 typedef unsigned long   ulong;
-#endif
-
-/* The largest available integer type */
-#if CONFIG_HAS_LONGLONG
+ /* The largest available integer type */
 typedef long long          longlong;
 typedef unsigned long long ulonglong;
-#elif CONFIG_HAS_INT64
-typedef __int64          longlong;
-typedef unsigned __int64 ulonglong;
-#else
-typedef long            longlong;
-typedef unsigned long   ulonglong;
-#endif
-
-/* Sized integers (dependent on the compiler...) - Only when needed */
+ /* Sized integers (dependent on the compiler...) - Only when needed */
 typedef int8_t          int8;
 typedef int16_t         int16;
 typedef int32_t         int32;

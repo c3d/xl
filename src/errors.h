@@ -47,11 +47,12 @@ struct Error
     Error (kstring m, Tree *a, Tree *b, Tree *c);
     ~Error() {}
 
-    // Adding arguments to an error message    
+    // Adding arguments to an error message
     Error &             Arg(int x)      { return Arg(Integer::value_t(x)); }
     Error &             Arg(uint x)     { return Arg(Integer::value_t(x)); }
     Error &             Arg(long x)     { return Arg(Integer::value_t(x)); }
     Error &             Arg(ulong x)    { return Arg(Integer::value_t(x)); }
+    Error &             Arg(ulonglong x){ return Arg(Integer::value_t(x)); }
     Error &             Arg(Integer::value_t value);
     Error &             Arg(Real::value_t value);
     Error &             Arg(Text::value_t t);
@@ -64,7 +65,7 @@ struct Error
 
     // Converting to a prefix form for error evaluation
                         operator Tree *();
-    
+
 
 public:
     text                message;
