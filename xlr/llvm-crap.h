@@ -107,7 +107,9 @@
 
 
 // Ignore badly indented 'if' in 3.52
+// (and it's getting harder and harder to ignore a warning)
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wunknown-warning-option"
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
