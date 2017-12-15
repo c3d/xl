@@ -39,11 +39,12 @@
 //  (C) 2011 Taodyne SAS
 // ****************************************************************************
 
+#include "config.h"
 #include <fstream>
 #include <sys/stat.h>
 
 
-#ifdef CONFIG_MINGW
+#ifndef HAVE_STRUCT_STAT
 
 #include <ext/stdio_filebuf.h>
 
@@ -104,6 +105,6 @@ inline bool isDirectorySeparator(int c)
     return c == '/';
 }
 
-#endif
+#endif // HAVE_STRUCT_STAT
 
 #endif // UTF8_FSTREAM_H

@@ -27,16 +27,11 @@
 #include "fdstream.hpp"
 
 #include <sys/types.h>
-#ifdef CONFIG_MINGW
-#include "winsock2.h"
-#undef Context
-#else // CONFIG_MINGW
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#endif // CONFIG_MINGW
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -93,9 +88,9 @@ static void xl_write_tree(int sock, Tree *tree)
 
 
 // ============================================================================
-// 
+//
 //    Clone the symbol tables that go with a tree
-// 
+//
 // ============================================================================
 
 struct StopAtGlobalsCloneMode
@@ -201,11 +196,11 @@ static Tree_p xl_merge_context(Context *context, Tree *code)
                 codeCtx = new Context(scope);
                 while (Scope *parent = ScopeParent(scope))
                     scope = parent;
-                
+
                 // Reattach that end to current scope
                 scope->left = context->CurrentScope();
             }
-                
+
             // And make the resulting code a closure at that location
             code = MakeClosure(codeCtx, code);
         }
@@ -321,7 +316,7 @@ Tree_p xl_ask(Context *context, text host, Tree *code)
     IFTRACE(remote)
         std::cerr << "xl_ask: Response from " << host << " was:\n"
                   << result << "\n";
-    
+
     close(sock);
 
     return result;
@@ -346,7 +341,7 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
         Tree_p response = xl_read_tree(sock);
         if (response == NULL)
             break;
-        
+
         IFTRACE(remote)
             std::cerr << "xl_invoke: Response from " << host << " was:\n"
                       << response << "\n";
@@ -367,16 +362,6 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
 //   Listening side
 //
 // ============================================================================
-
-#ifdef CONFIG_MINGW
-#define waitpid(a,b,c)        0
-#define WIFEXITED(status)     0
-#define WEXITSTATUS(status)   0
-#define WNOHANG               0
-#define SIGCHLD               0
-#define fork()                0
-typedef int socklen_t;
-#endif // CONFIG_MINGW
 
 static int child_wait(int flag)
 // ----------------------------------------------------------------------------

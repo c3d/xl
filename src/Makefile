@@ -79,7 +79,10 @@ DEFINES=XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
 INCLUDES=. includes recorder
 
 CONFIG=		struct_sigaction		\
+		struct_stat			\
 		sbrk				\
+		posix_memalign			\
+		mingw_aligned_malloc		\
 		<regex.h>			\
 		<sys/mman.h>
 

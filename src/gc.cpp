@@ -39,6 +39,7 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
+#include "config.h"
 #include "gc.h"
 #include "options.h"
 #include "recorder.h"
@@ -49,9 +50,10 @@
 #include <cstdlib>
 #include <pthread.h>
 
-#ifdef CONFIG_MINGW // Windows: When getting in the way becomes an art form...
+ // Windows: When getting in the way becomes an art form...
+#ifndef HAVE_POSIX_MEMALIGN
 #include <malloc.h>
-#endif // CONFIG_MINGW
+#endif // !HAVE_POSIX_MEMALIGN
 
 
 XL_BEGIN
@@ -390,14 +392,17 @@ void *TypeAllocator::operator new(size_t size)
 // ----------------------------------------------------------------------------
 {
     void *result = NULL;
-#ifdef CONFIG_MINGW // Windows. Enough said
+#ifdef HAVE_POSIX_MEMALIGN
+ // Real operating systems
+    if (posix_memalign(&result, PTR_MASK+1, size))
+        throw std::bad_alloc();
+#elif defined(HAVE_MINGW_ALIGNED_MALLOC)
     result = __mingw_aligned_malloc(size, PTR_MASK+1);
     if (!result)
         throw std::bad_alloc();
-#else // Real operating systems
-    if (posix_memalign(&result, PTR_MASK+1, size))
-        throw std::bad_alloc();
-#endif // WINDOWS or real operating system
+#else
+    #error "No available aligned free"
+#endif // WINDOWS + MinGW or real operating system
     return result;
 }
 
@@ -407,11 +412,13 @@ void TypeAllocator::operator delete(void *ptr)
 //    Matching deallocation
 // ----------------------------------------------------------------------------
 {
-#ifdef CONFIG_MINGW // Aka MS-DOS NT.
+#ifdef HAVE_POSIX_MEMALIGN
+    free(ptr);
+#elif defined(HAVE_MINGW_ALIGNED_MALLOC)
     // Brain damaged?
     __mingw_aligned_free(ptr);
 #else // No brain-damage
-    free(ptr);
+#error "No available aligned free"
 #endif // WINDOWS vs. rest of the world
 
 }
