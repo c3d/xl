@@ -1,5 +1,7 @@
+image: fedora:latest
+
 before_script:
-  - apt-get install -y llvm-dev
+  - dnf install -y llvm-devel
   - git submodule update --init --recursive
 
 test:
