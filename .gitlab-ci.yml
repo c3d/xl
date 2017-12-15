@@ -1,4 +1,5 @@
 before_script:
+  - apt-get install -y llvm-dev
   - git submodule update --init --recursive
 
 test:
