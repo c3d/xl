@@ -68,8 +68,8 @@ LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
 
 LLVM_FLAGS=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
 	   -DLLVM_VERSION=$(LLVM_VERSION)
-LLVM_LIBS=$(shell $(LLVM_CONFIG) --libs)
-LLVM_LDFLAGS=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION))
+LLVM_LIBS=$(shell $(LLVM_CONFIG) --libs --system-libs)
+LLVM_LDFLAGS=$(shell $(LLVM_CONFIG) --ldflags)
 
 CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
@@ -78,10 +78,6 @@ CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 CPPFLAGS_llvm342=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm350=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
-LDFLAGS_llvm342=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
-LDFLAGS_llvm350=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
-LDFLAGS_llvm360=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
-LDFLAGS_llvm391=-lz -lncurses $(LDFLAGS_CPPLIB_$(BUILDENV))
 
 # LLVM 3.9 has the good idea of defining DEBUG!!!
 DEFINES_debug=      XL_DEBUG
