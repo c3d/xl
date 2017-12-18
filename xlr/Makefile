@@ -95,7 +95,7 @@ xl_tests: tests/xl
 	cd tests; ./alltests
 
 tests/xl: $(TARGET)
-	$(PRINT_COPY) cp $(OBJROOT_EXE) $@
+	$(PRINT_COPY) cp $(OUTPUT_EXE) $@
 
 $(BUILD)rules.mk:
 	cd .. && git submodule update --init --recursive
