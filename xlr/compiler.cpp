@@ -167,17 +167,17 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     textTy = StructType::get(llvm, textElements); // text
 
     // Create the Info and Symbol pointer types
-    OpaqueType *structInfoTy = LLVMS_getOpaqueType(llvm);// struct Info
-    infoPtrTy = PointerType::get(structInfoTy, 0);      // Info *
-    OpaqueType *structCtxTy = LLVMS_getOpaqueType(llvm);// struct Context
-    contextPtrTy = PointerType::get(structCtxTy, 0);    // Context *
-    OpaqueType *structSymTy = LLVMS_getOpaqueType(llvm);// struct Symbols
-    symbolsPtrTy = PointerType::get(structSymTy, 0);    // Symbols *
+    llvm_struct structInfoTy = llvm.OpaqueType();    // struct Info
+    infoPtrTy = PointerType::get(structInfoTy, 0);   // Info *
+    llvm_struct structCtxTy = llvm.OpaqueType();     // struct Context
+    contextPtrTy = PointerType::get(structCtxTy, 0); // Context *
+    llvm_struct structSymTy = llvm.OpaqueType();     // struct Symbols
+    symbolsPtrTy = PointerType::get(structSymTy, 0); // Symbols *
 
     // Create the Tree and Tree pointer types
-    llvm_struct structTreeTy = LLVMS_getOpaqueType(llvm);// struct Tree
-    treePtrTy = PointerType::get(structTreeTy, 0);      // Tree *
-    treePtrPtrTy = PointerType::get(treePtrTy, 0);      // Tree **
+    llvm_struct structTreeTy = llvm.OpaqueType();    // struct Tree
+    treePtrTy = PointerType::get(structTreeTy, 0);   // Tree *
+    treePtrPtrTy = PointerType::get(treePtrTy, 0);   // Tree **
 
     // Create the native_fn type
     llvm_types nativeParms;
@@ -288,7 +288,10 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     LLVMS_SetName(module, contextPtrTy, "Context*");
 #endif
 
-    // Create a reference to the evaluation function
+    // Create one module for all extern function declarations
+    llvm.CreateModule();
+
+    // Create references to the various runtime functions
 #define FN(x) #x, (void *) XL::x
     strcmp_fn = ExternFunction("strcmp", (void *) strcmp,
                                LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
@@ -627,6 +630,12 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     // Return the result
     code.CreateRet(retVal);
 
+    if (XLTRACE(unoptimized_code) || XLTRACE(code))
+    {
+        errs() << "UNOPTIMIZED (ArrayToArgs):\n";
+        adapter->print(errs());
+    }
+
     // Enter the result in the map
     result = (adapter_fn) llvm.PointerToFunction(adapter);
     array_to_args_adapters[numargs] = result;
@@ -666,7 +675,7 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
     }
     va_end(va);
     FunctionType *fnType = FunctionType::get(retType, parms, isVarArg);
-    llvm::Function *result = llvm.CreateFunction(fnType, name);
+    llvm::Function *result = llvm.CreateExternFunction(fnType, name);
     sys::DynamicLibrary::AddSymbol(name, address);
 
     IFTRACE(llvm)

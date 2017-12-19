@@ -3043,7 +3043,7 @@ eval_fn OCompiledUnit::Finalize()
 {
     IFTRACE(llvm)
         std::cerr << "OCompiledUnit Finalize T" << (void *) source
-                  << " F" << function;
+                  << " F" << function << "\n";
     IFTRACE(compile_progress)
         std::cerr << " Verify ";
 
@@ -3069,14 +3069,10 @@ eval_fn OCompiledUnit::Finalize()
     Value *isOverflow = data->CreateICmpUGT(increased, maxDepth, "stackCheck");
     data->CreateCondBr(isOverflow, overflow, entrybb);
 
-    // Verify the function we built
-    IFTRACE(unoptimized_code)
+    // Generate the code
+    if (XLTRACE(unoptimized_code) || XLTRACE(code))
     {
-        errs() << "UNOPTIMIZED:\n";
-        function->print(errs());
-    }
-    IFTRACE(code)
-    {
+        errs() << "UNOPTIMIZED (OCompileUnit):\n";
         function->print(errs());
     }
 

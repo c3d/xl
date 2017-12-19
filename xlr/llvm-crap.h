@@ -238,13 +238,8 @@ typedef llvm::Module *                  llvm_module;
 // So here are the typedefs or macros you need.
 #if LLVM_VERSION < 30
 typedef llvm::PATypeHolder llvm_struct;
-#define LLVMS_getOpaqueType(llvm)       llvm::OpaqueType::get(llvm)
 #else // LLVM_VERSION >= 30
-
 typedef llvm::StructType *llvm_struct;
-#define OpaqueType                      llvm::StructType
-#define LLVMS_getOpaqueType(llvm)       llvm::StructType::create(llvm)
-
 #endif // LLVM_VERSION
 
 
@@ -395,15 +390,19 @@ class JIT
     typedef void *(*resolver_fn) (const std::string &name);
 
 public:
-    JIT(llvm::LLVMContext &c, kstring moduleName);
+    JIT(llvm::LLVMContext &c, kstring moduleBaseName);
     ~JIT();
 
     operator llvm::LLVMContext &();
     llvm::Module *      Module();
 
-    llvm::Module *      ModuleForNewFunction();
+    llvm_struct         OpaqueType();
+
+    llvm::Module *      CreateModule();
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
                                        std::string name);
+    llvm::Function *    CreateExternFunction(llvm::FunctionType *type,
+                                             std::string name);
     llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
                                        std::string name,
                                        bool isConstant = false,
@@ -419,7 +418,7 @@ public:
 
 private:
     llvm::LLVMContext &                         context;
-    kstring                                     moduleName;
+    kstring                                     moduleBaseName;
     llvm::Module *                              module;
     resolver_fn                                 resolver;
     LLVMCrap_PassManager *                      moduleOptimizer;
@@ -438,11 +437,11 @@ private:
 };
 
 
-inline JIT::JIT(llvm::LLVMContext &context, kstring moduleName)
+inline JIT::JIT(llvm::LLVMContext &context, kstring moduleBaseName)
 // ----------------------------------------------------------------------------
 //   Constructor for JIT helper
 // ----------------------------------------------------------------------------
-    : context(context), moduleName(moduleName),
+    : context(context), moduleBaseName(moduleBaseName),
       module(), resolver(), moduleOptimizer()
 #ifndef LLVM_CRAP_MCJIT
     , runtime(), optimizer()
@@ -527,7 +526,20 @@ inline llvm::Module * JIT::Module()
 }
 
 
-inline llvm::Module *JIT::ModuleForNewFunction()
+inline llvm_struct JIT::OpaqueType()
+// ----------------------------------------------------------------------------
+//   Create an opaque type (i.e. a struct without a content)
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 30
+    return llvm::OpaqueType::get(context);
+#else // LLVM_VERSION >= 30
+    return llvm::StructType::create(context);
+#endif // LLVM_VERSION
+}
+
+
+inline llvm::Module *JIT::CreateModule()
 // ----------------------------------------------------------------------------
 //   Create a new module applicable to the current function
 // ----------------------------------------------------------------------------
@@ -537,7 +549,7 @@ inline llvm::Module *JIT::ModuleForNewFunction()
     if (module)
         return module;          // Not JITed yet
     static unsigned index = 0;
-    std::string name = std::string(moduleName) + std::to_string(++index);
+    std::string name = std::string(moduleBaseName) + std::to_string(++index);
     llvm::Module *m = new llvm::Module(name, context);
     modules.push_back(m);
     module = m;
@@ -561,8 +573,19 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
 //    Create a function with the given name and type
 // ----------------------------------------------------------------------------
 {
-    if (!module)
-        ModuleForNewFunction();
+    CreateModule();
+    return llvm::Function::Create(type, llvm::Function::ExternalLinkage,
+                                  name, module);
+}
+
+
+inline llvm::Function *JIT::CreateExternFunction(llvm::FunctionType *type,
+                                                 std::string name)
+// ----------------------------------------------------------------------------
+//    Create a function with the given name and type
+// ----------------------------------------------------------------------------
+{
+    assert(module);
     return llvm::Function::Create(type, llvm::Function::ExternalLinkage,
                                   name, module);
 }

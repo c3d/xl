@@ -123,7 +123,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
     inference = types;
 
     // We have a closure type that we will build as we evaluate expression
-    closureTy = LLVMS_getOpaqueType(llvm);
+    closureTy = llvm.OpaqueType();
     static char buffer[80]; static int count = 0;
     snprintf(buffer, 80, "closure%d", count++);
     llvm.SetName(closureTy, buffer);
@@ -684,7 +684,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
 // ----------------------------------------------------------------------------
 {
     IFTRACE(llvm)
-        std::cerr << "CompiledUnit Finalize F" << function;
+        std::cerr << "CompiledUnit Finalize F" << function << "\n";
 
     // If we had closure information, finish building the closure type
     if (closureTy)
@@ -729,8 +729,11 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     // Connect the "allocas" to the actual entry point
     data->CreateBr(entrybb);
 
-    IFTRACE(code)
+    if (XLTRACE(unoptimized_code) || XLTRACE(code))
+    {
+        errs() << "UNOPTIMIZED (CompiledUnit):\n";
         function->print(errs());
+    }
 
     void *result = NULL;
     if (createCode)
