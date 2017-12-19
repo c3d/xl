@@ -558,33 +558,28 @@ inline llvm::Function *JIT::Prototype(llvm_value callee)
 #else // LLVM_CRAP_MCJIT
     llvm::Function *function = (llvm::Function *) callee;
     assert(function);
+    assert(module);
     text name = function->getName();
+
+    // First check if we don't already have it in the current module
+    if (module)
+        if (llvm::Function *f = module->getFunction(name))
+            return f;
+
+    // Otherwise search in other modules
     for (auto m : modules)
     {
         llvm::Function *f = m->getFunction(name);
         if (f)
         {
-            if (m == module)
-                return f;
-            assert(module != nullptr);
-            llvm::Function *proto = module->getFunction(name);
-            if (proto)
-            {
-                if (!proto->empty())
-                {
-                    std::cerr << "Redefinition of function " << name
-                              << " across modules\n";
-                    return nullptr;
-                }
-            }
-            else
-            {
-                // Create prototype based on original module
-                proto = llvm::Function::Create(f->getFunctionType(),
-                                               llvm::Function::ExternalLinkage,
-                                               name,
-                                               module);
-            }
+            assert(m != module);
+
+            // Create prototype based on original function type
+            llvm::Function *proto =
+                llvm::Function::Create(f->getFunctionType(),
+                                       llvm::Function::ExternalLinkage,
+                                       name,
+                                       module);
             return proto;
         }
     }
