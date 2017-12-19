@@ -253,24 +253,6 @@ typedef llvm::StructType *llvm_struct;
 // All the functions below have a single purpose: to build an API that
 // is semi-stable despite LLVM changing things underneath.
 
-inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm XL_MAYBE_UNUSED,
-                                      llvm_struct old,
-                                      std::vector<llvm_type> &elements)
-// ----------------------------------------------------------------------------
-//    Refine a forward-declared structure type
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 30
-    llvm::StructType *stype = llvm::StructType::get(llvm, elements);
-    llvm::cast<llvm::OpaqueType>(old.get())->refineAbstractTypeTo(stype);
-    return llvm::cast<llvm::StructType> (old.get());
-#else
-    old->setBody(elements);
-    return old;
-#endif
-}
-
-
 // The pass manager became a template.
 #if LLVM_VERSION < 371
 typedef llvm::PassManager                       LLVMCrap_PassManager;
@@ -384,6 +366,8 @@ public:
     llvm::Module *      Module();
 
     llvm_struct         OpaqueType();
+    llvm::StructType *  Struct(llvm_struct old,
+                               std::vector<llvm_type> &elements);
     llvm::Constant *    TextConstant(text value);
 
     llvm::Module *      CreateModule();
@@ -511,6 +495,23 @@ inline llvm::Module * JIT::Module()
 // ----------------------------------------------------------------------------
 {
     return module;
+}
+
+
+inline llvm::StructType *JIT::Struct(llvm_struct old,
+                                     std::vector<llvm_type> &elements)
+// ----------------------------------------------------------------------------
+//    Refine a forward-declared structure type
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 30
+    llvm::StructType *stype = llvm::StructType::get(context, elements);
+    llvm::cast<llvm::OpaqueType>(old.get())->refineAbstractTypeTo(stype);
+    return llvm::cast<llvm::StructType> (old.get());
+#else
+    old->setBody(elements);
+    return old;
+#endif
 }
 
 

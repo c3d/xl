@@ -211,7 +211,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     treeElements.push_back(infoPtrTy);                     // info
     treeElements.push_back(evalFnTy);                      // code
     treeElements.push_back(symbolsPtrTy);                  // symbols
-    treeTy = LLVMS_Struct(llvm, structTreeTy, treeElements);
+    treeTy = llvm.Struct(structTreeTy, treeElements);
 
     // Create the Integer type
     llvm_types integerElements = treeElements;

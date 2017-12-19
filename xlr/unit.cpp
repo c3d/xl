@@ -706,7 +706,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         }
 
         // Build the structure type and unify it with opaque type used in decl
-        closureTy = LLVMS_Struct(llvm, closureTy, sig);
+        closureTy = llvm.Struct(closureTy, sig);
 
         // Load the elements from the closure
         Function::arg_iterator args = function->arg_begin();
