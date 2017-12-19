@@ -745,7 +745,7 @@ GlobalVariable *Compiler::TextConstant(text value)
     text_constants_map::iterator found = text_constants.find(value);
     if (found == text_constants.end())
     {
-        Constant *refVal = LLVMS_TextConstant(llvm, value);
+        Constant *refVal = llvm.TextConstant(value);
         llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
         global = llvm.CreateGlobal(refValTy, "text", true, refVal);
         text_constants[value] = global;

@@ -253,19 +253,6 @@ typedef llvm::StructType *llvm_struct;
 // All the functions below have a single purpose: to build an API that
 // is semi-stable despite LLVM changing things underneath.
 
-inline llvm::Constant *LLVMS_TextConstant(llvm::LLVMContext &llvm, text value)
-// ----------------------------------------------------------------------------
-//    Return a constant array of characters for the input text
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 31
-    return llvm::ConstantArray::get(llvm, value);
-#else
-    return llvm::ConstantDataArray::getString(llvm, value);
-#endif
-}
-
-
 inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm XL_MAYBE_UNUSED,
                                       llvm_struct old,
                                       std::vector<llvm_type> &elements)
@@ -397,6 +384,7 @@ public:
     llvm::Module *      Module();
 
     llvm_struct         OpaqueType();
+    llvm::Constant *    TextConstant(text value);
 
     llvm::Module *      CreateModule();
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
@@ -536,6 +524,19 @@ inline llvm_struct JIT::OpaqueType()
 #else // LLVM_VERSION >= 30
     return llvm::StructType::create(context);
 #endif // LLVM_VERSION
+}
+
+
+inline llvm::Constant *JIT::TextConstant(text value)
+// ----------------------------------------------------------------------------
+//    Return a constant array of characters for the input text
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 31
+    return llvm::ConstantArray::get(context, value);
+#else
+    return llvm::ConstantDataArray::getString(context, value);
+#endif
 }
 
 

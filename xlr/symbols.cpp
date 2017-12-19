@@ -3863,7 +3863,7 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     // Check if the value is the same, call xl_same_text
     Value *treeValue = Known(tree);
     assert(treeValue);
-    Constant *refVal = LLVMS_TextConstant(llvm, value);
+    Constant *refVal = llvm.TextConstant(value);
     llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
     GlobalVariable *gvar = llvm.CreateGlobal(refValTy, "str", true, refVal);
     Value *refPtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
@@ -3913,7 +3913,7 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     Value *refVal = NeedStorage(reference);     assert (refVal);
 
     // Extract the name of the reference
-    Constant *refNameVal = LLVMS_TextConstant(llvm, reference->name);
+    Constant *refNameVal = llvm.TextConstant(reference->name);
     llvm::PointerType *refNameTy = (llvm::PointerType *) refNameVal->getType();
     GlobalVariable *gvar = llvm.CreateGlobal(refNameTy,
                                              "infix_name", true,
