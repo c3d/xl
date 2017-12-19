@@ -374,7 +374,7 @@ class JIT
 //  Keep track of JIT information for MCJIT versions after 3.5
 // ----------------------------------------------------------------------------
 {
-    typedef void *(*resolver_fn) (const std::string &name);
+    typedef void *(*resolver_fn) (const text &name);
 
 public:
     JIT(llvm::LLVMContext &c, kstring moduleBaseName);
@@ -388,18 +388,18 @@ public:
 
     llvm::Module *      CreateModule();
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
-                                       std::string name);
+                                       text name);
     llvm::Function *    CreateExternFunction(llvm::FunctionType *type,
-                                             std::string name);
+                                             text name);
     llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
-                                       std::string name,
+                                       text name,
                                        bool isConstant = false,
                                        llvm::Constant *value = NULL);
     llvm::Function *    FunctionByName(text name);
     void *              PointerToFunction(llvm::Function *f);
     void                SetResolver(resolver_fn resolver);
     void                SetOptimizationLevel(uint opt);
-    void                SetName(llvm::Type *type, std::string name);
+    void                SetName(llvm::Type *type, text name);
     void                AddGlobalMapping(llvm::GlobalValue *global, void *addr);
     void                EraseGlobalMapping(llvm::GlobalValue *global);
     void                Dump();
@@ -550,7 +550,7 @@ inline llvm::Module *JIT::CreateModule()
     if (module)
         return module;          // Not JITed yet
     static unsigned index = 0;
-    std::string name = std::string(moduleBaseName) + std::to_string(++index);
+    text name = text(moduleBaseName) + std::to_string(++index);
     llvm::Module *m = new llvm::Module(name, context);
     modules.push_back(m);
     module = m;
@@ -569,7 +569,7 @@ inline llvm::Module *JIT::CreateModule()
 
 
 inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
-                                           std::string name)
+                                           text name)
 // ----------------------------------------------------------------------------
 //    Create a function with the given name and type
 // ----------------------------------------------------------------------------
@@ -581,7 +581,7 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
 
 
 inline llvm::Function *JIT::CreateExternFunction(llvm::FunctionType *type,
-                                                 std::string name)
+                                                 text name)
 // ----------------------------------------------------------------------------
 //    Create a function with the given name and type
 // ----------------------------------------------------------------------------
@@ -593,7 +593,7 @@ inline llvm::Function *JIT::CreateExternFunction(llvm::FunctionType *type,
 
 
 inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
-                                               std::string name,
+                                               text name,
                                                bool isConstant,
                                                llvm::Constant *value)
 // ----------------------------------------------------------------------------
@@ -609,7 +609,7 @@ inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
 }
 
 
-inline llvm::Function *JIT::FunctionByName(const std::string name)
+inline llvm::Function *JIT::FunctionByName(const text name)
 // ----------------------------------------------------------------------------
 //   Return a function acceptable for this module
 // ----------------------------------------------------------------------------
@@ -673,7 +673,7 @@ inline void *JIT::PointerToFunction(llvm::Function* f)
     {
         llvm::verifyFunction(*f);
 
-        std::string error;
+        text error;
         llvm::EngineBuilder builder((std::unique_ptr<llvm::Module>(module)));
 #if LLVM_VERSION >= 360
         builder.setErrorStr(&error);
@@ -796,7 +796,7 @@ inline void JIT::SetOptimizationLevel(uint opt)
 }
 
 
-inline void JIT::SetName(llvm::Type *type, std::string name)
+inline void JIT::SetName(llvm::Type *type, text name)
 // ----------------------------------------------------------------------------
 //   Set the name for a type (for debugging purpose)
 // ----------------------------------------------------------------------------
