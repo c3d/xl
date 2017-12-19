@@ -260,7 +260,7 @@ struct OCompiledUnit
 
 public:
     Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext & llvm;           // The LLVM context we got from compiler
+    LLVMCrap::JIT &     llvm;           // The LLVM context we got from compiler
     Tree_p              source;         // The original source we compile
 
     llvm::IRBuilder<> * code;           // Instruction builder for code

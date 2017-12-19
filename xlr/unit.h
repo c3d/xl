@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  unit.h                                                          XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Information about a single compilation unit, i.e. the code generated
 //     for a particular tree rerite.
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -113,7 +113,7 @@ public:
     TypeInference_p     inference;      // Type inferences for this unit
 
     Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext & llvm;           // The LLVM context we got from compiler
+    LLVMCrap::JIT &     llvm;           // The LLVM context we got from compiler
 
     llvm_builder        code;           // Instruction builder for code
     llvm_builder        data;           // Instruction builder for data

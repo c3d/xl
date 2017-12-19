@@ -88,6 +88,7 @@ typedef std::set<Tree *>                       data_set;
 typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 
 
+
 // ============================================================================
 //
 //    Global structures to access the LLVM just-in-time compiler
@@ -148,11 +149,15 @@ struct Compiler
 
 
 public:
+#if LLVM_CRAP_MCJIT
+    LLVMCrap::JIT                llvm;
+#else // !LLVM_CRAP_JIT
     llvm::LLVMContext            &llvm;
     llvm::Module                 *module;
     llvm::ExecutionEngine        *runtime;
     LLVMCrap_FunctionPassManager *optimizer;
     LLVMCrap_PassManager         *moduleOptimizer;
+#endif // LLVM_CRAP_JIT
     llvm_integer_type             booleanTy;
     llvm_integer_type             integerTy;
     llvm_integer_type             integer8Ty;

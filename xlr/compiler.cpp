@@ -91,9 +91,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : llvm(LLVMCrap_GlobalContext()),
-
-      module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
+    : llvm(LLVMCrap_GlobalContext(), moduleName),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
       realTy(NULL), real32Ty(NULL),
@@ -151,16 +149,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     Allocator<Postfix>  ::Singleton()->AddListener(cgcl);
     Allocator<Block>    ::Singleton()->AddListener(cgcl);
 
-    // Create the runtime environment for just-in-time compilation
-    runtime = LLVMS_InitializeJIT(llvm, moduleName, &module);
-
-    // Setup the optimizer - REVISIT: Adjust with optimization level
-    optimizer = new LLVMCrap_FunctionPassManager(module);
-    moduleOptimizer = new LLVMCrap_PassManager;
-
-    // Install a fallback mechanism to resolve references to the runtime, on
-    // systems which do not allow the program to dlopen itself.
-    runtime->InstallLazyFunctionCreator(unresolved_external);
+    llvm.SetResolver(unresolved_external);
 
     // Get the basic types
     booleanTy = Type::getInt1Ty(llvm);
@@ -276,6 +265,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     infixTreeTy = StructType::get(llvm, infixElements);     // Infix
     infixTreePtrTy = PointerType::get(infixTreeTy, 0);      // Infix *
 
+#ifndef LLVM_CRAP_MCJIT
     // Record the type names
     LLVMS_SetName(module, booleanTy, "boolean");
     LLVMS_SetName(module, integerTy, "integer");
@@ -296,6 +286,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     LLVMS_SetName(module, nativeTy, "native_fn");
     LLVMS_SetName(module, infoPtrTy, "Info*");
     LLVMS_SetName(module, contextPtrTy, "Context*");
+#endif
 
     // Create a reference to the evaluation function
 #define FN(x) #x, (void *) XL::x
@@ -366,10 +357,7 @@ Compiler::~Compiler()
 // ----------------------------------------------------------------------------
 //    Destructor deletes the various things we had created
 // ----------------------------------------------------------------------------
-{
-    delete optimizer;
-    delete moduleOptimizer;
-}
+{}
 
 
 void Compiler::Dump()
@@ -378,7 +366,7 @@ void Compiler::Dump()
 // ----------------------------------------------------------------------------
 {
     IFTRACE(llvmdump)
-        llvm::errs() << "; MODULE:\n" << *module << "\n";
+        llvm.Dump();
     IFTRACE(llvmstats)
         llvm::PrintStatistics(llvm::errs());
 }
@@ -413,58 +401,6 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
 }
 
 
-static inline void createXLFunctionPasses(LLVMCrap_FunctionPassManager *PM)
-// ----------------------------------------------------------------------------
-//   Add XL function passes
-// ----------------------------------------------------------------------------
-{
-     PM->add(createInstructionCombiningPass()); // Clean up after IPCP & DAE
-     PM->add(createCFGSimplificationPass()); // Clean up after IPCP & DAE
-
-    // Start of function pass.
-    // Break up aggregate allocas, using SSAUpdater.
-#if LLVM_VERSION < 391
-     PM->add(createScalarReplAggregatesPass(-1, false));
-#else // >= 391
-     PM->add(createScalarizerPass());
-#endif // 391
-     PM->add(createEarlyCSEPass());              // Catch trivial redundancies
-#if LLVM_VERSION < 342
-     PM->add(createSimplifyLibCallsPass());      // Library Call Optimizations
-#endif
-     PM->add(createJumpThreadingPass());         // Thread jumps.
-     PM->add(createCorrelatedValuePropagationPass()); // Propagate conditionals
-     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
-     PM->add(createInstructionCombiningPass());  // Combine silly seq's
-     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
-     PM->add(createReassociatePass());           // Reassociate expressions
-     PM->add(createLoopRotatePass());            // Rotate Loop
-     PM->add(createLICMPass());                  // Hoist loop invariants
-     PM->add(createInstructionCombiningPass());
-     PM->add(createIndVarSimplifyPass());        // Canonicalize indvars
-     PM->add(createLoopIdiomPass());             // Recognize idioms like memset
-     PM->add(createLoopDeletionPass());          // Delete dead loops
-     PM->add(createLoopUnrollPass());            // Unroll small loops
-     PM->add(createInstructionCombiningPass());  // Clean up after the unroller
-     PM->add(createGVNPass());                   // Remove redundancies
-     PM->add(createMemCpyOptPass());             // Remove memcpy / form memset
-     PM->add(createSCCPPass());                  // Constant prop with SCCP
-
-     // Run instcombine after redundancy elimination to exploit opportunities
-     // opened up by them.
-     PM->add(createInstructionCombiningPass());
-     PM->add(createJumpThreadingPass());         // Thread jumps
-     PM->add(createCorrelatedValuePropagationPass());
-     PM->add(createDeadStoreEliminationPass());  // Delete dead stores
-     PM->add(createAggressiveDCEPass());         // Delete dead instructions
-     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
-
-#if LLVM_VERSION >= 390
-     PM->doInitialization();
-#endif
-}
-
-
 void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 //   Setup the compiler after we have parsed the options
@@ -474,12 +410,7 @@ void Compiler::Setup(Options &options)
     RECORD(COMPILER, "Compiler setup", "opt", optLevel);
 
     LLVMLinkInMCJIT();
-    LLVMS_SetupOpts(moduleOptimizer, optimizer, optLevel);
-    createXLFunctionPasses(optimizer);
-
-    // If we use the old compiler, we need lazy compilation, see bug #718
-    if (optLevel == 1)
-        runtime->DisableLazyCompilation(false);
+    llvm.SetOptimizationLevel(optLevel);
 }
 
 
@@ -563,7 +494,7 @@ void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
 {
     CompilerInfo *info = Info(tree, true);
     info->global = global;
-    runtime->addGlobalMapping(global, addr ? addr : &info->tree);
+    llvm.AddGlobalMapping(global, addr ? addr : &info->tree);
 }
 
 
@@ -604,8 +535,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
         for (TreeList::iterator p = parms.begin(); p != parms.end(); p++)
             parmTypes.push_back(treePtrTy);
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
-        result = llvm::Function::Create(fnTy, llvm::Function::ExternalLinkage,
-                                        name, module);
+        result = llvm.CreateFunction(fnTy, name);
 
         // Record the runtime symbol address
         sys::DynamicLibrary::AddSymbol(name, (void*) code);
@@ -653,10 +583,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
     FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
-    llvm::Function *adapter =
-        llvm::Function::Create(fnType,
-                               llvm::Function::InternalLinkage,
-                               "elfe_adapter", module);
+    llvm::Function *adapter = llvm.CreateFunction(fnType, "xl_adapter");
 
     // Generate the function type for the called function
     llvm_types called;
@@ -700,13 +627,8 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     // Return the result
     code.CreateRet(retVal);
 
-    // Verify the function and optimize it.
-    verifyFunction (*adapter);
-    if (optimizer)
-        optimizer->run(*adapter);
-
     // Enter the result in the map
-    result = (adapter_fn) LLVMCrap_functionPointer(runtime, adapter);
+    result = (adapter_fn) llvm.PointerToFunction(adapter);
     array_to_args_adapters[numargs] = result;
 
     IFTRACE(llvm)
@@ -744,10 +666,7 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
     }
     va_end(va);
     FunctionType *fnType = FunctionType::get(retType, parms, isVarArg);
-    llvm::Function *result =
-        llvm::Function::Create(fnType,
-                               llvm::Function::ExternalLinkage,
-                               name, module);
+    llvm::Function *result = llvm.CreateFunction(fnType, name);
     sys::DynamicLibrary::AddSymbol(name, address);
 
     IFTRACE(llvm)
@@ -764,12 +683,7 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 {
     RECORD(COMPILER_DETAILS, "Enter Global",
            name->value.c_str(), (intptr_t) address);
-
-    Constant *null = ConstantPointerNull::get(treePtrTy);
-    bool isConstant = false;
-    GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
-                                              GlobalVariable::ExternalLinkage,
-                                              null, name->value);
+    GlobalValue *result = llvm.CreateGlobal(treePtrTy, name->value);
     SetTreeGlobal(name, result, address);
 
     IFTRACE(llvm)
@@ -791,7 +705,6 @@ Value *Compiler::EnterConstant(Tree *constant)
     RECORD(COMPILER_DETAILS, "Enter Constant",
            "tree", (intptr_t) constant, "kind", constant->Kind());
 
-    bool isConstant = true;
     text name = "xlcst";
     switch(constant->Kind())
     {
@@ -802,9 +715,7 @@ Value *Compiler::EnterConstant(Tree *constant)
     }
     IFTRACE(labels)
         name += "[" + text(*constant) + "]";
-    GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
-                                              GlobalVariable::ExternalLinkage,
-                                              NULL, name);
+    GlobalValue *result = llvm.CreateGlobal(treePtrTy, name, true);
     SetTreeGlobal(constant, result, NULL);
 
     IFTRACE(llvm)
@@ -826,10 +737,8 @@ GlobalVariable *Compiler::TextConstant(text value)
     if (found == text_constants.end())
     {
         Constant *refVal = LLVMS_TextConstant(llvm, value);
-        llvm_type refValTy = refVal->getType();
-        global = new GlobalVariable(*module, refValTy, true,
-                                    GlobalValue::InternalLinkage,
-                                    refVal, "text");
+        llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
+        global = llvm.CreateGlobal(refValTy, "text", true, refVal);
         text_constants[value] = global;
     }
     else
@@ -1170,7 +1079,7 @@ bool Compiler::FreeResources(Tree *tree)
         else
         {
             // Delete the LLVM value immediately if it's safe to do it.
-            runtime->updateGlobalMapping(v, NULL);
+            llvm.EraseGlobalMapping(v);
             v->eraseFromParent();
             info->global = NULL;
         }

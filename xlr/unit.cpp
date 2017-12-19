@@ -126,7 +126,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
     closureTy = LLVMS_getOpaqueType(llvm);
     static char buffer[80]; static int count = 0;
     snprintf(buffer, 80, "closure%d", count++);
-    LLVMS_SetName(compiler->module, closureTy, buffer);
+    llvm.SetName(closureTy, buffer);
 
     // Add a single parameter to the signature
     llvm_types signature;
@@ -231,11 +231,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     assert (!function || !"LLVM function was already built");
 
     // Create function and save it in the CompiledUnit
-    function = Function::Create(fnTy,
-                                global
-                                ? Function::ExternalLinkage
-                                : Function::InternalLinkage,
-                                label, compiler->module);
+    function = llvm.CreateFunction(fnTy, label);
     IFTRACE(llvm)
         std::cerr << " new F" << function << "\n";
 
@@ -733,19 +729,13 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     // Connect the "allocas" to the actual entry point
     data->CreateBr(entrybb);
 
-    // Verify the function we built
-    verifyFunction(*function);
-    if (compiler->optimizer)
-        compiler->optimizer->run(*function);
-
     IFTRACE(code)
         function->print(errs());
 
     void *result = NULL;
     if (createCode)
     {
-        compiler->moduleOptimizer->run(*compiler->module);
-        result = LLVMCrap_functionPointer(compiler->runtime, function);
+        result = llvm.PointerToFunction(function);
         IFTRACE(code)
         {
             errs() << "AFTER GLOBAL OPTIMIZATIONS:\n";
@@ -974,7 +964,7 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature, Tree *source)
     text tname = "boxed";
     IFTRACE(labels)
         tname += "[" + text(*source) + "]";
-    LLVMS_SetName(compiler->module, stype, tname);
+    llvm.SetName(stype, tname);
 
     // Record boxing and unboxing for that particular tree
     machineType[source] = stype;

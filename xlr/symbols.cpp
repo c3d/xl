@@ -2926,7 +2926,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
 //   OCompiledUnit constructor
 // ----------------------------------------------------------------------------
     : compiler(comp), llvm(comp->llvm), source(src),
-      code(NULL), data(NULL), function(NULL), module(NULL),
+      code(NULL), data(NULL), function(NULL), module(llvm.Module()),
       allocabb(NULL), entrybb(NULL), exitbb(NULL), failbb(NULL),
       contextPtr(NULL)
 {
@@ -2954,15 +2954,6 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     }
 
     text label = "xl_eval";
-#if LLVM_VERSION >= 390
-    // In recent versions of LLVM, generated code is not executable until we
-    // finalize the module, which means we need one module per function
-    std::unique_ptr<Module> mod = llvm::make_unique<Module>(label, llvm);
-    module = mod.get();
-    compiler->runtime->addModule(std::move(mod));
-#else
-    module = compiler->module;
-#endif // 3.90
 
     // Create the function signature, one entry per parameter + one for source
     llvm_types signature;
@@ -2973,8 +2964,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     FunctionType *fnTy = FunctionType::get(treePtrTy, signature, false);
     IFTRACE(labels)
         label += "[" + text(*src) + "]";
-    function = Function::Create(fnTy, Function::InternalLinkage,
-                                label.c_str(), module);
+    function = llvm.CreateFunction(fnTy, label);
 
     // Save it in the compiler
     if (closure)
@@ -3085,18 +3075,12 @@ eval_fn OCompiledUnit::Finalize()
         errs() << "UNOPTIMIZED:\n";
         function->print(errs());
     }
-    verifyFunction(*function);
-    IFTRACE(compile_progress)
-        std::cerr << "Optimize ";
-    if (compiler->optimizer)
-        compiler->optimizer->run(*function);
-
     IFTRACE(code)
     {
         function->print(errs());
     }
 
-    void *result = LLVMCrap_functionPointer(compiler->runtime, function);
+    void *result = llvm.PointerToFunction(function);
     IFTRACE(llvm)
         std::cerr << " C" << (void *) result << "\n";
     IFTRACE(compile_progress)
@@ -3884,10 +3868,8 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     Constant *refVal = LLVMS_TextConstant(llvm, value);
-    llvm_type refValTy = refVal->getType();
-    GlobalVariable *gvar = new GlobalVariable(*compiler->module, refValTy, true,
-                                              GlobalValue::InternalLinkage,
-                                              refVal, "str");
+    llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
+    GlobalVariable *gvar = llvm.CreateGlobal(refValTy, "str", true, refVal);
     Value *refPtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
     Value *isGood = LLVMCrap_CreateCall(code, compiler->xl_same_text,
                                       treeValue, refPtr);
@@ -3936,10 +3918,10 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
 
     // Extract the name of the reference
     Constant *refNameVal = LLVMS_TextConstant(llvm, reference->name);
-    llvm_type refNameTy = refNameVal->getType();
-    GlobalVariable *gvar = new GlobalVariable(*compiler->module,refNameTy,true,
-                                              GlobalValue::InternalLinkage,
-                                              refNameVal, "infix_name");
+    llvm::PointerType *refNameTy = (llvm::PointerType *) refNameVal->getType();
+    GlobalVariable *gvar = llvm.CreateGlobal(refNameTy,
+                                             "infix_name", true,
+                                             refNameVal);
     Value *refNamePtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
 
     // Where we go if the tests fail
