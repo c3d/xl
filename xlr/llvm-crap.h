@@ -289,81 +289,6 @@ inline llvm::StructType *LLVMS_Struct(llvm::LLVMContext &llvm XL_MAYBE_UNUSED,
 }
 
 
-extern text llvm_crap_error_string;
-
-inline llvm::ExecutionEngine *LLVMS_InitializeJIT(llvm::LLVMContext &llvm,
-                                                  text moduleName,
-                                                  llvm::Module **module)
-// ----------------------------------------------------------------------------
-//    Initialization of LLVM parameters
-// ----------------------------------------------------------------------------
-{
-    using namespace llvm;
-
-#if LLVM_VERSION < 360
-    // Create module where we will build the code
-    *module = new Module(moduleName, llvm);
-#else
-    // WTF version of the above.
-    std::unique_ptr<Module> moduleOwner = llvm::make_unique<Module>(moduleName, llvm);
-    *module = moduleOwner.get();
-#endif
-
-
-#if LLVM_VERSION >= 33
-    // I get a crash on Linux if I don't do that. Unclear why.
-    LLVMInitializeAllTargetMCs();
-#endif
-    // Initialize native target (new features)
-    InitializeNativeTarget();
-    InitializeNativeTargetAsmPrinter();
-    InitializeNativeTargetAsmParser();
-    InitializeNativeTargetDisassembler();
-
-#if LLVM_VERSION < 31
-    JITExceptionHandling = false;  // Bug #1026
-    JITEmitDebugInfo = true;
-    NoFramePointerElim = true;
-#endif
-#if LLVM_VERSION < 30
-    UnwindTablesMandatory = true;
-#endif
-
-#if LLVM_VERSION < 360
-    // Select the fast JIT
-    EngineBuilder engineBuilder(*module);
-#else
-    // WTF version of the above
-    EngineBuilder engineBuilder(std::move(moduleOwner));
-    engineBuilder.setErrorStr(&llvm_crap_error_string);
-#endif
-
-#if LLVM_VERSION >= 31
-    TargetOptions targetOpts;
-    // targetOpts.JITEmitDebugInfo = true;
-    engineBuilder.setEngineKind(EngineKind::JIT);
-    engineBuilder.setTargetOptions(targetOpts);
-    engineBuilder.setUseOrcMCJITReplacement(true);
-#endif
-    ExecutionEngine *runtime = engineBuilder.create();
-
-    // Check if we were successful in the creation of the runtime
-    if (!runtime)
-    {
-        std::cerr << "ERROR: Unable to initialize LLVM\n"
-#if LLVM_VERSION >= 360
-                  << "LLVM error: " << llvm_crap_error_string
-#endif
-                  << "\n";
-        exit(1);
-    }
-
-    // Make sure that code is generated as early as possible
-    runtime->DisableLazyCompilation(true);
-
-    return runtime;
-}
-
 // The pass manager became a template.
 #if LLVM_VERSION < 371
 typedef llvm::PassManager                       LLVMCrap_PassManager;
@@ -476,6 +401,7 @@ public:
     operator llvm::LLVMContext &();
     llvm::Module *      Module();
 
+    llvm::Module *      ModuleForNewFunction();
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
                                        std::string name);
     llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
@@ -483,7 +409,6 @@ public:
                                        bool isConstant = false,
                                        llvm::Constant *value = NULL);
     llvm::Function *    FunctionByName(text name);
-    llvm::Module *      ModuleForNewFunction();
     void *              PointerToFunction(llvm::Function *f);
     void                SetResolver(resolver_fn resolver);
     void                SetOptimizationLevel(uint opt);
@@ -523,9 +448,43 @@ inline JIT::JIT(llvm::LLVMContext &context, kstring moduleName)
     , runtime(), optimizer()
 #endif // LLVM_CRAP_MCJIT
 {
+    using namespace llvm;
+
+#if LLVM_VERSION >= 33
+    // I get a crash on Linux if I don't do that. Unclear why.
+    LLVMInitializeAllTargetMCs();
+#endif
+    // Initialize native target (new features)
+    InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+    InitializeNativeTargetDisassembler();
+
+#if LLVM_VERSION < 31
+    JITExceptionHandling = false;  // Bug #1026
+    JITEmitDebugInfo = true;
+    NoFramePointerElim = true;
+#endif
+#if LLVM_VERSION < 30
+    UnwindTablesMandatory = true;
+#endif
+
 #ifndef LLVM_CRAP_MCJIT
-    // Create the runtime environment for just-in-time compilation
-    runtime = LLVMS_InitializeJIT(llvm, moduleName, &module);
+    ExecutionEngine *runtime = engineBuilder.create();
+
+    // Check if we were successful in the creation of the runtime
+    if (!runtime)
+    {
+        std::cerr << "ERROR: Unable to initialize LLVM\n"
+#if LLVM_VERSION >= 360
+                  << "LLVM error: " << llvm_crap_error_string
+#endif
+                  << "\n";
+        exit(1);
+    }
+
+    // Make sure that code is generated as early as possible
+    runtime->DisableLazyCompilation(true);
 
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new LLVMCrap_FunctionPassManager(module);
@@ -568,13 +527,42 @@ inline llvm::Module * JIT::Module()
 }
 
 
+inline llvm::Module *JIT::ModuleForNewFunction()
+// ----------------------------------------------------------------------------
+//   Create a new module applicable to the current function
+// ----------------------------------------------------------------------------
+//   If the current module has been JITed already, we need to create a new one
+//   as the MCJIT will have "closed" all relocations
+{
+    if (module)
+        return module;          // Not JITed yet
+    static unsigned index = 0;
+    std::string name = std::string(moduleName) + std::to_string(++index);
+    llvm::Module *m = new llvm::Module(name, context);
+    modules.push_back(m);
+    module = m;
+
+#if 0 && LLVM_VERSION >= 30
+    llvm::PassManagerBuilder opts;
+    opts.OptLevel = optimizeLevel;
+    unsigned Threshold = optimizeLevel > 2 ? 275 : 225;
+    opts.Inliner = llvm::createFunctionInliningPass(Threshold);
+    opts.populateFunctionPassManager(*optimizer);
+    opts.populateModulePassManager(*moduleOptimizer);
+#endif // LLVM_VERSION 3.0
+
+    return m;
+}
+
+
 inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
                                            std::string name)
 // ----------------------------------------------------------------------------
 //    Create a function with the given name and type
 // ----------------------------------------------------------------------------
 {
-    assert(module);
+    if (!module)
+        ModuleForNewFunction();
     return llvm::Function::Create(type, llvm::Function::ExternalLinkage,
                                   name, module);
 }
@@ -640,34 +628,6 @@ inline llvm::Function *JIT::FunctionByName(const std::string name)
 }
 
 
-inline llvm::Module *JIT::ModuleForNewFunction()
-// ----------------------------------------------------------------------------
-//   Create a new module applicable to the current function
-// ----------------------------------------------------------------------------
-//   If the current module has been JITed already, we need to create a new one
-//   as the MCJIT will have "closed" all relocations
-{
-    if (module)
-        return module;          // Not JITed yet
-    static unsigned index = 0;
-    std::string name = std::string(moduleName) + std::to_string(++index);
-    llvm::Module *m = new llvm::Module(name, context);
-    modules.push_back(m);
-    module = m;
-
-#if 0 && LLVM_VERSION >= 30
-    llvm::PassManagerBuilder opts;
-    opts.OptLevel = optimizeLevel;
-    unsigned Threshold = optimizeLevel > 2 ? 275 : 225;
-    opts.Inliner = llvm::createFunctionInliningPass(Threshold);
-    opts.populateFunctionPassManager(*optimizer);
-    opts.populateModulePassManager(*moduleOptimizer);
-#endif // LLVM_VERSION 3.0
-
-    return m;
-}
-
-
 inline void *JIT::PointerToFunction(llvm::Function* f)
 // ----------------------------------------------------------------------------
 //   Return an executable pointer to the function
@@ -690,10 +650,16 @@ inline void *JIT::PointerToFunction(llvm::Function* f)
         llvm::verifyFunction(*f);
 
         std::string error;
-        llvm::ExecutionEngine *engine =
-            llvm::EngineBuilder(std::unique_ptr<llvm::Module>(module))
-            .setErrorStr(&error)
-            .create();
+        llvm::EngineBuilder builder((std::unique_ptr<llvm::Module>(module)));
+#if LLVM_VERSION >= 360
+        builder.setErrorStr(&error);
+#endif // LLVM_VERSION >= 360
+#if LLVM_VERSION >= 31
+        builder.setEngineKind(llvm::EngineKind::JIT);
+        builder.setUseOrcMCJITReplacement(true);
+#endif // LLVM_VERSION >= 31
+
+        llvm::ExecutionEngine *engine = builder.create();
         if (!engine)
         {
             std::cerr << "Error creating ExecutionEngine: " << error << "\n";
