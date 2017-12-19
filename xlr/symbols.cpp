@@ -337,7 +337,7 @@ Rewrite *Symbols::EnterRewrite(Rewrite *rw)
         rw->parameters = parms.order;
     }
 
-     // If no symbols entered, use parent symbol table (#1885)
+    // If no symbols entered, use parent symbol table (#1885)
     if (rw->parameters.size() == 0)
     {
         rw->from->SetSymbols(this);
@@ -1719,15 +1719,15 @@ Tree *ArgumentMatch::DoInfix(Infix *what)
             switch(tk)
             {
             case INTEGER:       exprType = integer_type;
-                                if (typeExpr == real_type)
-                                {
-                                    IFTRACE(statictypes)
-                                        std::cerr << "Types: Promote to real\n";
-                                    compiled = new Prefix(real_type, compiled,
-                                                          compiled->Position());
-                                    unit.CallInteger2Real(compiled, test);
-                                }
-                                break;
+                if (typeExpr == real_type)
+                {
+                    IFTRACE(statictypes)
+                        std::cerr << "Types: Promote to real\n";
+                    compiled = new Prefix(real_type, compiled,
+                                          compiled->Position());
+                    unit.CallInteger2Real(compiled, test);
+                }
+                break;
             case REAL:          exprType = real_type;    break;
             case TEXT:          exprType = text_type;    break;
             case NAME:          exprType = name_type;    break;
@@ -3317,7 +3317,7 @@ BasicBlock *OCompiledUnit::BeginLazy(Tree *subexpr)
 
 
 void OCompiledUnit::EndLazy(Tree *subexpr,
-                           llvm::BasicBlock *skip)
+                            llvm::BasicBlock *skip)
 // ----------------------------------------------------------------------------
 //   Finish lazy evaluation of a block of code
 // ----------------------------------------------------------------------------
@@ -3428,7 +3428,7 @@ Value *OCompiledUnit::Left(Tree *tree)
         // WARNING: This relies on the layout of all nodes beginning the same
         Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                           "pfxl");
-        result = LLVMCrap_CreateStructGEP(code, pptr, LEFT_VALUE_INDEX, "lptr");
+        result = llvm.CreateStructGEP(code, pptr, LEFT_VALUE_INDEX, "lptr");
         result = code->CreateLoad(result, "left");
         code->CreateStore(result, ptr);
     }
@@ -3466,7 +3466,7 @@ Value *OCompiledUnit::Right(Tree *tree)
         // WARNING: This relies on the layout of all nodes beginning the same
         Value *pptr = code->CreateBitCast(parent, compiler->prefixTreePtrTy,
                                           "pfxr");
-        result = LLVMCrap_CreateStructGEP(code, pptr,RIGHT_VALUE_INDEX, "rptr");
+        result = llvm.CreateStructGEP(code, pptr,RIGHT_VALUE_INDEX, "rptr");
         result = code->CreateLoad(result, "right");
         code->CreateStore(result, ptr);
     }
@@ -3515,8 +3515,8 @@ Value *OCompiledUnit::CallEvaluate(Tree *tree)
     if (dataForm.count(tree))
         return treeValue;
 
-    Value *evaluated = LLVMCrap_CreateCall(code, compiler->xl_evaluate,
-                                           contextPtr, treeValue);
+    Value *evaluated = llvm.CreateCall(code, compiler->xl_evaluate,
+                                       contextPtr, treeValue);
     MarkComputed(tree, evaluated);
     return evaluated;
 }
@@ -3530,8 +3530,8 @@ Value *OCompiledUnit::CallFillBlock(Block *block)
     Value *blockValue = ConstantTree(block);
     Value *childValue = Known(block->child);
     blockValue = code->CreateBitCast(blockValue, compiler->blockTreePtrTy);
-    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_block,
-                                        blockValue, childValue);
+    Value *result = llvm.CreateCall(code, compiler->xl_fill_block,
+                                    blockValue, childValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(block, result);
     return result;
@@ -3547,8 +3547,8 @@ Value *OCompiledUnit::CallFillPrefix(Prefix *prefix)
     Value *leftValue = Known(prefix->left);
     Value *rightValue = Known(prefix->right);
     prefixValue = code->CreateBitCast(prefixValue, compiler->prefixTreePtrTy);
-    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_prefix,
-                                        prefixValue, leftValue, rightValue);
+    Value *result = llvm.CreateCall(code, compiler->xl_fill_prefix,
+                                    prefixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(prefix, result);
     return result;
@@ -3564,8 +3564,8 @@ Value *OCompiledUnit::CallFillPostfix(Postfix *postfix)
     Value *leftValue = Known(postfix->left);
     Value *rightValue = Known(postfix->right);
     postfixValue = code->CreateBitCast(postfixValue,compiler->postfixTreePtrTy);
-    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_postfix,
-                                        postfixValue, leftValue, rightValue);
+    Value *result = llvm.CreateCall(code, compiler->xl_fill_postfix,
+                                    postfixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(postfix, result);
     return result;
@@ -3581,8 +3581,8 @@ Value *OCompiledUnit::CallFillInfix(Infix *infix)
     Value *leftValue = Known(infix->left);
     Value *rightValue = Known(infix->right);
     infixValue = code->CreateBitCast(infixValue, compiler->infixTreePtrTy);
-    Value *result = LLVMCrap_CreateCall(code, compiler->xl_fill_infix,
-                                        infixValue, leftValue, rightValue);
+    Value *result = llvm.CreateCall(code, compiler->xl_fill_infix,
+                                    infixValue, leftValue, rightValue);
     result = code->CreateBitCast(result, compiler->treePtrTy);
     MarkComputed(infix, result);
     return result;
@@ -3609,8 +3609,8 @@ Value *OCompiledUnit::CallArrayIndex(Tree *self, Tree *left, Tree *right)
 {
     Value *leftValue = Known(left);
     Value *rightValue = Known(right);
-    Value *result = LLVMCrap_CreateCall(code, compiler->xl_array_index,
-                                        contextPtr, leftValue, rightValue);
+    Value *result = llvm.CreateCall(code, compiler->xl_array_index,
+                                    contextPtr, leftValue, rightValue);
     NeedStorage(self);
     MarkComputed(self, result);
     return result;
@@ -3698,7 +3698,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 
     // Extract child of surrounding block
     Value *block = code->CreateBitCast(ptr, blockTy);
-    ptr = LLVMCrap_CreateStructGEP(code, block, BLOCK_CHILD_INDEX);
+    ptr = llvm.CreateStructGEP(code, block, BLOCK_CHILD_INDEX);
     ptr = code->CreateLoad(ptr);
 
     // Build additional arguments
@@ -3706,23 +3706,23 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     {
         // Load the left of the \n which is a decl of the form P->V
         Value *infix = code->CreateBitCast(ptr, infixTy);
-        Value *lf = LLVMCrap_CreateStructGEP(code, infix, LEFT_VALUE_INDEX);
+        Value *lf = llvm.CreateStructGEP(code, infix, LEFT_VALUE_INDEX);
         decl = code->CreateLoad(lf);
         decl = code->CreateBitCast(decl, infixTy);
 
         // Load the value V out of P->V and pass it as an argument
-        Value *arg = LLVMCrap_CreateStructGEP(code, decl, RIGHT_VALUE_INDEX);
+        Value *arg = llvm.CreateStructGEP(code, decl, RIGHT_VALUE_INDEX);
         arg = code->CreateLoad(arg);
         argV.push_back(arg);
         signature.push_back(treeTy);
 
         // Load the next element in the list
-        Value *rt = LLVMCrap_CreateStructGEP(code, infix, RIGHT_VALUE_INDEX);
+        Value *rt = llvm.CreateStructGEP(code, infix, RIGHT_VALUE_INDEX);
         ptr = code->CreateLoad(rt);
     }
 
     // Load the target code
-    Value *callCode = LLVMCrap_CreateStructGEP(code, decl, CODE_INDEX);
+    Value *callCode = llvm.CreateStructGEP(code, decl, CODE_INDEX);
     callCode = code->CreateLoad(callCode);
 
     // Replace the 'self' argument with the expression sans closure
@@ -3747,8 +3747,8 @@ Value *OCompiledUnit::CallTypeError(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Value *ptr = ConstantTree(what); assert(what);
-    Value *callVal = LLVMCrap_CreateCall(code, compiler->xl_form_error,
-                                       contextPtr, ptr);
+    Value *callVal = llvm.CreateCall(code, compiler->xl_form_error,
+                                     contextPtr, ptr);
     MarkComputed(what, callVal);
     return callVal;
 }
@@ -3769,7 +3769,7 @@ BasicBlock *OCompiledUnit::TagTest(Tree *tree, ulong tagValue)
         Ooops("No value for $1", tree);
         return NULL;
     }
-    Value *tagPtr = LLVMCrap_CreateStructGEP(code, treeValue, 0, "tagPtr");
+    Value *tagPtr = llvm.CreateStructGEP(code, treeValue, 0, "tagPtr");
     Value *tag = code->CreateLoad(tagPtr, "tag");
     Value *mask = ConstantInt::get(tag->getType(), Tree::KINDMASK);
     Value *kind = code->CreateAnd(tag, mask, "tagAndMask");
@@ -3801,8 +3801,8 @@ BasicBlock *OCompiledUnit::IntegerTest(Tree *tree, longlong value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->integerTreePtrTy);
-    Value *valueFieldPtr = LLVMCrap_CreateStructGEP(code, treeValue,
-                                                    INTEGER_VALUE_INDEX);
+    Value *valueFieldPtr = llvm.CreateStructGEP(code, treeValue,
+                                                INTEGER_VALUE_INDEX);
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
     Value *isGood = code->CreateICmpEQ(tval, rval, "isGood");
@@ -3833,8 +3833,8 @@ BasicBlock *OCompiledUnit::RealTest(Tree *tree, double value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->realTreePtrTy);
-    Value *valueFieldPtr = LLVMCrap_CreateStructGEP(code, treeValue,
-                                                    REAL_VALUE_INDEX);
+    Value *valueFieldPtr = llvm.CreateStructGEP(code, treeValue,
+                                                REAL_VALUE_INDEX);
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
@@ -3866,9 +3866,9 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     Constant *refVal = llvm.TextConstant(value);
     llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
     GlobalVariable *gvar = llvm.CreateGlobal(refValTy, "str", true, refVal);
-    Value *refPtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
-    Value *isGood = LLVMCrap_CreateCall(code, compiler->xl_same_text,
-                                      treeValue, refPtr);
+    Value *refPtr = llvm.CreateStructGEP(code, gvar, 0, 0);
+    Value *isGood = llvm.CreateCall(code, compiler->xl_same_text,
+                                    treeValue, refPtr);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
@@ -3892,8 +3892,8 @@ BasicBlock *OCompiledUnit::ShapeTest(Tree *left, Tree *right)
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *isGood = LLVMCrap_CreateCall(code, compiler->xl_same_shape,
-                                      leftVal, rightVal);
+    Value *isGood = llvm.CreateCall(code, compiler->xl_same_shape,
+                                    leftVal, rightVal);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
@@ -3918,12 +3918,12 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     GlobalVariable *gvar = llvm.CreateGlobal(refNameTy,
                                              "infix_name", true,
                                              refNameVal);
-    Value *refNamePtr = LLVMCrap_CreateStructGEP(code, gvar, 0, 0);
+    Value *refNamePtr = llvm.CreateStructGEP(code, gvar, 0, 0);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *afterExtract = LLVMCrap_CreateCall(code, compiler->xl_infix_match_check,
-                                            contextPtr, actualVal, refNamePtr);
+    Value *afterExtract = llvm.CreateCall(code, compiler->xl_infix_match_check,
+                                          contextPtr, actualVal, refNamePtr);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
@@ -3961,7 +3961,7 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
     Value *treeValue = Known(value);     assert(treeValue);
 
     // Quick inline check with the tag to see if need runtime test
-    Value *tagPtr = LLVMCrap_CreateStructGEP(code, treeValue, 0, "tagPtr");
+    Value *tagPtr = llvm.CreateStructGEP(code, treeValue, 0, "tagPtr");
     Value *tag = code->CreateLoad(tagPtr, "tag");
     Value *mask = ConstantInt::get(tag->getType(), Tree::KINDMASK);
     Value *kindValue = code->CreateAnd(tag, mask, "tagAndMask");
@@ -4008,8 +4008,8 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
-    Value *afterCast = LLVMCrap_CreateCall(code, compiler->xl_type_check,
-                                         contextPtr, treeValue, typeVal);
+    Value *afterCast = llvm.CreateCall(code, compiler->xl_type_check,
+                                       contextPtr, treeValue, typeVal);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterCast, null, "isGoodType");
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);

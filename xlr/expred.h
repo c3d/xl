@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  expred.h                                                        XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Information required by the compiler for expression reduction
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -51,9 +51,9 @@ struct CompileExpression
 // ----------------------------------------------------------------------------
 {
     typedef llvm_value value_type;
-    
+
 public:
-    CompileExpression(CompiledUnit *unit) : unit(unit) {}
+    CompileExpression(CompiledUnit *unit);
 
 public:
     llvm_value DoInteger(Integer *what);
@@ -74,10 +74,10 @@ public:
 
 public:
     CompiledUnit *  unit;         // Current compilation unit
+    LLVMCrap::JIT & llvm;         // JIT compiler being used
     value_map       computed;     // Values we already computed
 };
 
 XL_END
 
 #endif // COMPILER_EXPRED_H
-

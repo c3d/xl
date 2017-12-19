@@ -263,67 +263,6 @@ typedef llvm::legacy::FunctionPassManager       LLVMCrap_FunctionPassManager;
 #endif
 
 
-inline llvm_value LLVMCrap_CreateStructGEP(llvm_builder bld,
-                                           llvm_value ptr, unsigned idx,
-                                           const llvm::Twine &name = "")
-// ----------------------------------------------------------------------------
-//   Accessing a struct element used to be complicated. Now it's incompatible.
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 371
-    return bld->CreateConstGEP2_32(ptr, 0, idx, name);
-#else // >= 371
-    return bld->CreateStructGEP(nullptr, ptr, idx, name);
-#endif // 371
-}
-
-
-inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
-                                      llvm_value callee,
-                                      llvm_value arg1)
-// ----------------------------------------------------------------------------
-//   Why not change the 'call' instruction, nobody uses it.
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 390
-    return bld->CreateCall(callee, arg1);
-#else // >= 390
-    return bld->CreateCall(callee, {arg1});
-#endif // 390
-
-}
-
-inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
-                                      llvm_value callee,
-                                      llvm_value arg1, llvm_value arg2)
-// ----------------------------------------------------------------------------
-//   Why not change the 'call' instruction, nobody uses it.
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 371
-    return bld->CreateCall2(callee, arg1, arg2);
-#else // >= 371
-    return bld->CreateCall(callee, {arg1, arg2});
-#endif // 371
-
-}
-
-inline llvm_value LLVMCrap_CreateCall(llvm_builder bld,
-                                      llvm_value callee,
-                                      llvm_value arg1,
-                                      llvm_value arg2,
-                                      llvm_value arg3)
-// ----------------------------------------------------------------------------
-//   Why not change the 'call' instruction, nobody uses it.
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 371
-    return bld->CreateCall3(callee, arg1, arg2, arg3);
-#else // >= 371
-    return bld->CreateCall(callee, {arg1, arg2, arg3});
-#endif // 371
-
-}
 
 // ============================================================================
 //
@@ -375,6 +314,20 @@ public:
     void                SetName(llvm::Type *type, text name);
     void                AddGlobalMapping(llvm::GlobalValue *global, void *addr);
     void                EraseGlobalMapping(llvm::GlobalValue *global);
+
+    llvm_value          CreateStructGEP(llvm_builder bld,
+                                        llvm_value ptr, unsigned idx,
+                                        const llvm::Twine &name = "");
+    llvm_value          CreateCall(llvm_builder bld,
+                                   llvm_value callee,
+                                   llvm_value arg1);
+    llvm_value          CreateCall(llvm_builder bld,
+                                   llvm_value callee,
+                                   llvm_value arg1, llvm_value arg2);
+    llvm_value          CreateCall(llvm_builder bld,
+                                   llvm_value callee,
+                                   llvm_value a1, llvm_value a2, llvm_value a3);
+
     void                Dump();
 
 private:
@@ -843,6 +796,68 @@ inline void JIT::EraseGlobalMapping(llvm::GlobalValue *value)
     for (auto ei : engines)
         ei->updateGlobalMapping(value, NULL);
 #endif // LLVM_CRAP_MCJIT
+}
+
+
+inline llvm_value JIT::CreateStructGEP(llvm_builder bld,
+                                       llvm_value ptr, unsigned idx,
+                                       const llvm::Twine &name)
+// ----------------------------------------------------------------------------
+//   Accessing a struct element used to be complicated. Now it's incompatible.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 371
+    return bld->CreateConstGEP2_32(ptr, 0, idx, name);
+#else // >= 371
+    return bld->CreateStructGEP(nullptr, ptr, idx, name);
+#endif // 371
+}
+
+
+inline llvm_value JIT::CreateCall(llvm_builder bld,
+                                  llvm_value callee,
+                                  llvm_value arg1)
+// ----------------------------------------------------------------------------
+//   Why not change the 'call' instruction, nobody uses it.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 390
+    return bld->CreateCall(callee, arg1);
+#else // >= 390
+    return bld->CreateCall(callee, {arg1});
+#endif // 390
+
+}
+
+inline llvm_value JIT::CreateCall(llvm_builder bld,
+                                  llvm_value callee,
+                                  llvm_value arg1, llvm_value arg2)
+// ----------------------------------------------------------------------------
+//   Why not change the 'call' instruction, nobody uses it.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 371
+    return bld->CreateCall2(callee, arg1, arg2);
+#else // >= 371
+    return bld->CreateCall(callee, {arg1, arg2});
+#endif // 371
+
+}
+
+inline llvm_value JIT::CreateCall(llvm_builder bld,
+                                  llvm_value callee,
+                                  llvm_value arg1,
+                                  llvm_value arg2,
+                                  llvm_value arg3)
+// ----------------------------------------------------------------------------
+//   Why not change the 'call' instruction, nobody uses it.
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 371
+    return bld->CreateCall3(callee, arg1, arg2, arg3);
+#else // >= 371
+    return bld->CreateCall(callee, {arg1, arg2, arg3});
+#endif // 371
 }
 
 

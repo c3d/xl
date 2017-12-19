@@ -58,6 +58,14 @@ using namespace llvm;
 //
 // ============================================================================
 
+CompileExpression::CompileExpression(CompiledUnit *unit)
+// ----------------------------------------------------------------------------
+//   Constructor for a compiler expression
+// ----------------------------------------------------------------------------
+    : unit(unit), llvm(unit->compiler->llvm)
+{}
+
+
 llvm_value CompileExpression::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Compile an integer constant
@@ -88,8 +96,7 @@ llvm_value CompileExpression::DoText(Text *what)
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    return LLVMCrap_CreateStructGEP(unit->code,
-                                    global, 0U);
+    return compiler->llvm.CreateStructGEP(unit->code, global, 0U);
 }
 
 
@@ -461,7 +468,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
         }
         if (valueType != c.charPtrTy)
             return ConstantInt::get(c.booleanTy, 0);
-        value = LLVMCrap_CreateCall(code, c.strcmp_fn, test, value);
+        value = llvm.CreateCall(code, c.strcmp_fn, test, value);
         test = ConstantInt::get(value->getType(), 0);
         value = code->CreateICmpEQ(value, test);
         return value;
@@ -551,7 +558,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
-        return LLVMCrap_CreateCall(code, c.xl_same_shape, value, test);
+        return llvm.CreateCall(code, c.xl_same_shape, value, test);
     }
 
     // Other comparisons fail for now
