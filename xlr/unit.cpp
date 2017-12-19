@@ -738,7 +738,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     void *result = NULL;
     if (createCode)
     {
-        result = llvm.PointerToFunction(function);
+        result = llvm.FinalizeFunction(function);
         IFTRACE(code)
         {
             errs() << "AFTER GLOBAL OPTIMIZATIONS:\n";

@@ -219,11 +219,9 @@
 #if LLVM_VERSION < 30
 typedef const llvm::Type *              llvm_type;
 typedef const llvm::IntegerType *       llvm_integer_type;
-#define LLVMS_ARGS(args)                args.begin(), args.end()
 #else // 3.0 or later
 typedef llvm::Type *                    llvm_type;
 typedef llvm::IntegerType *             llvm_integer_type;
-#define LLVMS_ARGS(args)                llvm::ArrayRef<llvm::Value *> (args)
 #endif
 
 // Other stuff that we need here. I'm waiting for the time they rename Value.
@@ -242,17 +240,6 @@ typedef llvm::PATypeHolder llvm_struct;
 typedef llvm::StructType *llvm_struct;
 #endif // LLVM_VERSION
 
-
-
-// ============================================================================
-//
-//                      API STABILIZATION FUNCTIONS
-//
-// ============================================================================
-
-// All the functions below have a single purpose: to build an API that
-// is semi-stable despite LLVM changing things underneath.
-
 // The pass manager became a template.
 #if LLVM_VERSION < 371
 typedef llvm::PassManager                       LLVMCrap_PassManager;
@@ -261,8 +248,6 @@ typedef llvm::FunctionPassManager               LLVMCrap_FunctionPassManager;
 typedef llvm::legacy::PassManager               LLVMCrap_PassManager;
 typedef llvm::legacy::FunctionPassManager       LLVMCrap_FunctionPassManager;
 #endif
-
-
 
 // ============================================================================
 //
@@ -273,6 +258,8 @@ typedef llvm::legacy::FunctionPassManager       LLVMCrap_FunctionPassManager;
 // MCJIT requires one module per function. How helpful!
 // This is inspired by code found at
 // http://blog.llvm.org/2013/07/using-mcjit-with-kaleidoscope-tutorial.html
+// All the functions below have a single purpose: to build an API that
+// is semi-stable despite LLVM changing things underneath.
 
 namespace LLVMCrap {
 
@@ -287,7 +274,7 @@ public:
     static llvm::LLVMContext &GlobalContext();
 
 public:
-    JIT(kstring moduleBaseName);
+    JIT();
     ~JIT();
 
     operator llvm::LLVMContext &();
@@ -298,23 +285,28 @@ public:
                                std::vector<llvm_type> &elements);
     llvm::Constant *    TextConstant(text value);
 
-    llvm::Module *      CreateModule();
+    llvm::Module *      CreateModule(text name);
+
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
                                        text name);
+    void *              FinalizeFunction(llvm::Function *f);
+
     llvm::Function *    CreateExternFunction(llvm::FunctionType *type,
                                              text name);
     llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
                                        text name,
                                        bool isConstant = false,
                                        llvm::Constant *value = NULL);
-    llvm::Function *    FunctionByName(text name);
-    void *              PointerToFunction(llvm::Function *f);
+    llvm::Function *    Prototype(llvm_value callee);
+
+    // Attributes
     void                SetResolver(resolver_fn resolver);
     void                SetOptimizationLevel(uint opt);
     void                SetName(llvm::Type *type, text name);
     void                AddGlobalMapping(llvm::GlobalValue *global, void *addr);
     void                EraseGlobalMapping(llvm::GlobalValue *global);
 
+    // Code generation
     llvm_value          CreateStructGEP(llvm_builder bld,
                                         llvm_value ptr, unsigned idx,
                                         const llvm::Twine &name = "");
@@ -327,12 +319,14 @@ public:
     llvm_value          CreateCall(llvm_builder bld,
                                    llvm_value callee,
                                    llvm_value a1, llvm_value a2, llvm_value a3);
+    llvm_value          CreateCall(llvm_builder bld,
+                                   llvm_value callee,
+                                   std::vector<llvm::Value *> &args);
 
     void                Dump();
 
 private:
     llvm::LLVMContext &                         context;
-    kstring                                     moduleBaseName;
     llvm::Module *                              module;
     resolver_fn                                 resolver;
     LLVMCrap_PassManager *                      moduleOptimizer;
@@ -340,7 +334,7 @@ private:
 #if LLVM_CRAP_MCJIT
     typedef std::pair<llvm::GlobalValue *, void *> global_t;
 
-    std::vector<llvm::Module *>                 modules;
+    std::vector<llvm::Module *>                 modules, pending;
     std::vector<llvm::ExecutionEngine *>        engines;
     std::vector<global_t>                       globals;
 #else // !LLVM_CRAP_MCJIT
@@ -365,11 +359,11 @@ inline llvm::LLVMContext &JIT::GlobalContext()
 }
 
 
-inline JIT::JIT(kstring moduleBaseName)
+inline JIT::JIT()
 // ----------------------------------------------------------------------------
 //   Constructor for JIT helper
 // ----------------------------------------------------------------------------
-    : context(GlobalContext()), moduleBaseName(moduleBaseName),
+    : context(GlobalContext()),
       module(), resolver(), moduleOptimizer()
 #ifndef LLVM_CRAP_MCJIT
     , runtime(), optimizer()
@@ -497,20 +491,19 @@ inline llvm::Constant *JIT::TextConstant(text value)
 }
 
 
-inline llvm::Module *JIT::CreateModule()
+inline llvm::Module *JIT::CreateModule(text name)
 // ----------------------------------------------------------------------------
 //   Create a new module applicable to the current function
 // ----------------------------------------------------------------------------
 //   If the current module has been JITed already, we need to create a new one
 //   as the MCJIT will have "closed" all relocations
 {
-    if (module)
-        return module;          // Not JITed yet
-    static unsigned index = 0;
-    text name = text(moduleBaseName) + std::to_string(++index);
     llvm::Module *m = new llvm::Module(name, context);
-    modules.push_back(m);
     module = m;
+
+#if LLVM_CRAP_MCJIT
+    modules.push_back(m);
+#endif
 
 #if 0 && LLVM_VERSION >= 30
     llvm::PassManagerBuilder opts;
@@ -522,18 +515,6 @@ inline llvm::Module *JIT::CreateModule()
 #endif // LLVM_VERSION 3.0
 
     return m;
-}
-
-
-inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
-                                           text name)
-// ----------------------------------------------------------------------------
-//    Create a function with the given name and type
-// ----------------------------------------------------------------------------
-{
-    CreateModule();
-    return llvm::Function::Create(type, llvm::Function::ExternalLinkage,
-                                  name, module);
 }
 
 
@@ -566,15 +547,18 @@ inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
 }
 
 
-inline llvm::Function *JIT::FunctionByName(const text name)
+inline llvm::Function *JIT::Prototype(llvm_value callee)
 // ----------------------------------------------------------------------------
 //   Return a function acceptable for this module
 // ----------------------------------------------------------------------------
 //   If the function is in this module, return it, else return prototype for it
 {
 #ifndef LLVM_CRAP_MCJIT
-    return module->getFunction(name);
+    return (llvm::Function *) callee;
 #else // LLVM_CRAP_MCJIT
+    llvm::Function *function = (llvm::Function *) callee;
+    assert(function);
+    text name = function->getName();
     for (auto m : modules)
     {
         llvm::Function *f = m->getFunction(name);
@@ -609,13 +593,35 @@ inline llvm::Function *JIT::FunctionByName(const text name)
 }
 
 
-inline void *JIT::PointerToFunction(llvm::Function* f)
+inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
+                                           text name)
+// ----------------------------------------------------------------------------
+//    Create a function with the given name and type
+// ----------------------------------------------------------------------------
+{
+#if LLVM_CRAP_MCJIT
+    static unsigned index = 0;
+    text unique = name + std::to_string(++index);
+    if (module)
+        pending.push_back(module);
+    CreateModule(name);
+#endif
+    llvm::Function *result =
+        llvm::Function::Create(type, llvm::Function::ExternalLinkage,
+                               unique, module);
+    llvm::errs() << "Creating " << result->getName() << "\n";
+    return result;
+}
+
+
+inline void *JIT::FinalizeFunction(llvm::Function* f)
 // ----------------------------------------------------------------------------
 //   Return an executable pointer to the function
 // ----------------------------------------------------------------------------
 //   In the MCJIT implementation, things are a bit more complicated,
 //   since we can't just incremently add functions to modules.
 {
+    llvm::errs() << "Finalizing " << f->getName() << "\n";
 #ifndef LLVM_CRAP_MCJIT
     llvm::verifyFunction(*f);
     if (optimizer)
@@ -646,14 +652,23 @@ inline void *JIT::PointerToFunction(llvm::Function* f)
             std::cerr << "Error creating ExecutionEngine: " << error << "\n";
             return nullptr;
         }
-        module = nullptr;
         engines.push_back(engine);
+
+        module = nullptr;
+        if (pending.size())
+        {
+            module = pending.back();
+            pending.pop_back();
+        }
 
         if (resolver)
             engine->InstallLazyFunctionCreator(resolver);
         for (auto const &global : globals)
+        {
+            llvm::errs() << "Global " << *global.first << "=" << global.second << "\n";
             engine->addGlobalMapping(global.first, global.second);
-
+        }
+        globals.clear();
         engine->finalizeObject();
         return engine->getPointerToFunction(f);
     }
@@ -821,10 +836,11 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
+    llvm::Function *proto = Prototype(callee);
 #if LLVM_VERSION < 390
-    return bld->CreateCall(callee, arg1);
+    return bld->CreateCall(proto, arg1);
 #else // >= 390
-    return bld->CreateCall(callee, {arg1});
+    return bld->CreateCall(proto, {arg1});
 #endif // 390
 
 }
@@ -836,10 +852,11 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
+    llvm::Function *proto = Prototype(callee);
 #if LLVM_VERSION < 371
-    return bld->CreateCall2(callee, arg1, arg2);
+    return bld->CreateCall2(proto, arg1, arg2);
 #else // >= 371
-    return bld->CreateCall(callee, {arg1, arg2});
+    return bld->CreateCall(proto, {arg1, arg2});
 #endif // 371
 
 }
@@ -853,11 +870,28 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
+    llvm::Function *proto = Prototype(callee);
 #if LLVM_VERSION < 371
-    return bld->CreateCall3(callee, arg1, arg2, arg3);
+    return bld->CreateCall3(proto, arg1, arg2, arg3);
 #else // >= 371
-    return bld->CreateCall(callee, {arg1, arg2, arg3});
+    return bld->CreateCall(proto, {arg1, arg2, arg3});
 #endif // 371
+}
+
+
+inline llvm_value JIT::CreateCall(llvm_builder bld,
+                                  llvm_value callee,
+                                  std::vector<llvm::Value *> &args)
+// ----------------------------------------------------------------------------
+//   Create a call from arguments
+// ----------------------------------------------------------------------------
+{
+    llvm::Function *proto = Prototype(callee);
+#if LLVM_VERSION < 30
+    return bld->CreateCall(proto, args.begin(), args.end());
+#else // LLVM_VERSION >= 30
+    return bld->CreateCall(proto, llvm::ArrayRef<llvm::Value *> (args));
+#endif // LLVM_VERSION
 }
 
 

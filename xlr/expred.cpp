@@ -391,7 +391,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     {
         llvm_value function = unit->Compile(cand, args);
         if (function)
-            result = unit->code->CreateCall(function, LLVMS_ARGS(args));
+            result = llvm.CreateCall(unit->code, function, args);
     }
 
     return result;

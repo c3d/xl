@@ -91,7 +91,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : llvm(moduleName),
+    : llvm(),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
       realTy(NULL), real32Ty(NULL),
@@ -289,7 +289,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 #endif
 
     // Create one module for all extern function declarations
-    llvm.CreateModule();
+    llvm.CreateModule(moduleName);
 
     // Create references to the various runtime functions
 #define FN(x) #x, (void *) XL::x
@@ -538,7 +538,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
         for (TreeList::iterator p = parms.begin(); p != parms.end(); p++)
             parmTypes.push_back(treePtrTy);
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
-        result = llvm.CreateFunction(fnTy, name);
+        result = llvm.CreateExternFunction(fnTy, name);
 
         // Record the runtime symbol address
         sys::DynamicLibrary::AddSymbol(name, (void*) code);
@@ -625,7 +625,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     }
 
     // Call the function
-    Value *retVal = code.CreateCall(fnTyped, LLVMS_ARGS(outArgs));
+    Value *retVal = llvm.CreateCall(&code, fnTyped, outArgs);
 
     // Return the result
     code.CreateRet(retVal);
@@ -637,7 +637,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     }
 
     // Enter the result in the map
-    result = (adapter_fn) llvm.PointerToFunction(adapter);
+    result = (adapter_fn) llvm.FinalizeFunction(adapter);
     array_to_args_adapters[numargs] = result;
 
     IFTRACE(llvm)
@@ -717,10 +717,15 @@ Value *Compiler::EnterConstant(Tree *constant)
     text name = "xlcst";
     switch(constant->Kind())
     {
-    case INTEGER: name = "xlint";  break;
-    case REAL:    name = "xlreal"; break;
-    case TEXT:    name = "xltext"; break;
-    default:                       break;
+    case INTEGER: name = "xlint";       break;
+    case REAL:    name = "xlreal";      break;
+    case TEXT:    name = "xltext";      break;
+    case NAME:    name = "xlname";      break;
+    case INFIX:   name = "xlinfix";     break;
+    case PREFIX:  name = "xlprefix";    break;
+    case POSTFIX: name = "xlpostfix";   break;
+    case BLOCK:   name = "xlblock";     break;
+    default:                            break;
     }
     IFTRACE(labels)
         name += "[" + text(*constant) + "]";

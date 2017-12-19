@@ -3054,7 +3054,7 @@ eval_fn OCompiledUnit::Finalize()
     BasicBlock *overflow = BasicBlock::Create(llvm, "overflow", function);
     IRBuilder<> ovcode(overflow);
     Value *ptr = ovcode.CreateLoad(storage[source]);
-    ovcode.CreateCall(compiler->xl_stack_overflow, ptr);
+    llvm.CreateCall(&ovcode, compiler->xl_stack_overflow, ptr);
     ovcode.CreateBr(exitbb);
 
     // Check that we are not in some infinite recursion
@@ -3076,7 +3076,7 @@ eval_fn OCompiledUnit::Finalize()
         function->print(errs());
     }
 
-    void *result = llvm.PointerToFunction(function);
+    void *result = llvm.FinalizeFunction(function);
     IFTRACE(llvm)
         std::cerr << " C" << (void *) result << "\n";
     IFTRACE(compile_progress)
@@ -3367,7 +3367,7 @@ llvm::Value *OCompiledUnit::Invoke(Tree *subexpr, Tree *callee, TreeList args)
         argV.push_back(value);
     }
 
-    Value *callVal = code->CreateCall(toCall, LLVMS_ARGS(argV));
+    Value *callVal = llvm.CreateCall(code, toCall, argV);
 
     // Store the flags indicating that we computed the value
     MarkComputed(subexpr, callVal);
@@ -3595,7 +3595,7 @@ Value *OCompiledUnit::CallInteger2Real(Tree *compiled, Tree *value)
 // ----------------------------------------------------------------------------
 {
     Value *result = Known(value);
-    result = code->CreateCall(compiler->xl_integer2real, result);
+    result = llvm.CreateCall(code, compiler->xl_integer2real, result);
     NeedStorage(compiled);
     MarkComputed(compiled, result);
     return result;
@@ -3650,8 +3650,7 @@ Value *OCompiledUnit::CreateClosure(Tree *callee,
         argV.push_back(llvmValue);
     }
 
-    Value *callVal = code->CreateCall(compiler->xl_new_closure,
-                                      LLVMS_ARGS(argV));
+    Value *callVal = llvm.CreateCall(code, compiler->xl_new_closure, argV);
 
     // Need to store result, but not mark it as evaluated
     NeedStorage(callee);
@@ -3732,7 +3731,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     FunctionType *fnTy = FunctionType::get(treeTy, signature, false);
     PointerType *fnPtrTy = PointerType::get(fnTy, 0);
     Value *toCall = code->CreateBitCast(callCode, fnPtrTy);
-    Value *callVal = code->CreateCall(toCall, LLVMS_ARGS(argV));
+    Value *callVal = llvm.CreateCall(code, toCall, argV);
 
     // Store the flags indicating that we computed the value
     MarkComputed(callee, callVal);
