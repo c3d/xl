@@ -298,6 +298,7 @@ public:
                                        bool isConstant = false,
                                        llvm::Constant *value = NULL);
     llvm::Function *    Prototype(llvm_value callee);
+    llvm_value          GlobalExtern(llvm_value global);
 
     // Attributes
     void                SetResolver(resolver_fn resolver);
@@ -538,12 +539,21 @@ inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
 //   Create a global variable
 // ----------------------------------------------------------------------------
 {
+#ifdef LLVM_CRAP_MCJIT
+    static unsigned index = 0;
+    name += '.';
+    name += std::to_string(++index);
+#endif
     assert(module);
     if (value == nullptr)
         value = llvm::ConstantPointerNull::get(type);
-    return new llvm::GlobalVariable (*module, type, isConstant,
-                                     llvm::GlobalVariable::ExternalLinkage,
-                                     value, name);
+    llvm::GlobalVariable *global =
+        new llvm::GlobalVariable (*module, type, isConstant,
+                                  llvm::GlobalVariable::ExternalLinkage,
+                                  value, name);
+    llvm::errs() << "Create global " << global->getName()
+                 << " in " << module->getName() << "\n";
+    return global;
 }
 
 
@@ -569,18 +579,63 @@ inline llvm::Function *JIT::Prototype(llvm_value callee)
     // Otherwise search in other modules
     for (auto m : modules)
     {
-        llvm::Function *f = m->getFunction(name);
-        if (f)
+        if (m != module)
         {
-            assert(m != module);
+            if (llvm::Function *f = m->getFunction(name))
+            {
+                // Create prototype based on original function type
+                llvm::Function *proto =
+                    llvm::Function::Create(f->getFunctionType(),
+                                           llvm::Function::ExternalLinkage,
+                                           name,
+                                           module);
+                return proto;
+            }
+        }
+    }
+    return nullptr;
+#endif // LLVM_CRAP_MCJIT
+}
 
-            // Create prototype based on original function type
-            llvm::Function *proto =
-                llvm::Function::Create(f->getFunctionType(),
-                                       llvm::Function::ExternalLinkage,
-                                       name,
-                                       module);
-            return proto;
+
+inline llvm_value JIT::GlobalExtern(llvm_value global)
+// ----------------------------------------------------------------------------
+//   Return a function acceptable for this module
+// ----------------------------------------------------------------------------
+//   If the function is in this module, return it, else return prototype for it
+{
+#ifndef LLVM_CRAP_MCJIT
+    return bld ? global : global;
+#else // LLVM_CRAP_MCJIT
+    assert(global);
+    assert(module);
+    text name = global->getName();
+
+    // First check if we don't already have it in the current module
+    if (module)
+        if (llvm::GlobalVariable *g = module->getGlobalVariable(name))
+            return g;
+
+    // Otherwise search in other modules
+    for (auto m : modules)
+    {
+        if (m != module)
+        {
+            if (llvm::GlobalVariable *g = m->getGlobalVariable(name))
+            {
+                // Create extern declarationbased on original function type
+                auto linkage = llvm::GlobalVariable::ExternalLinkage;
+                llvm::PointerType *pt = (llvm::PointerType *) g->getType();
+                llvm::GlobalVariable *decl =
+                    new llvm::GlobalVariable(*module, pt->getElementType(),
+                                             false, linkage, NULL, name);
+                llvm::errs() << "Extern " << *decl
+                             << "\n   (" << *decl->getType() << ")"
+                             << "\ncreated from " << *g
+                             << "\n   (" << *g->getType() << ")\n";
+
+                return decl;
+            }
         }
     }
     return nullptr;
@@ -596,14 +651,15 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
 {
 #if LLVM_CRAP_MCJIT
     static unsigned index = 0;
-    text unique = name + std::to_string(++index);
+    name += '.';
+    name += std::to_string(++index);
     if (module)
         pending.push_back(module);
     CreateModule(name);
 #endif
     llvm::Function *result =
         llvm::Function::Create(type, llvm::Function::ExternalLinkage,
-                               unique, module);
+                               name, module);
     llvm::errs() << "Creating " << result->getName() << "\n";
     return result;
 }
@@ -648,6 +704,7 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
             return nullptr;
         }
         engines.push_back(engine);
+        llvm::Module *old = module;
 
         module = nullptr;
         if (pending.size())
@@ -660,7 +717,10 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
             engine->InstallLazyFunctionCreator(resolver);
         for (auto const &global : globals)
         {
-            llvm::errs() << "Global " << *global.first << "=" << global.second << "\n";
+            llvm::errs() << "Global " << global.first->getName()
+                         << "=" << global.second
+                         <<  " in " << old->getName()
+                         << "\n";
             engine->addGlobalMapping(global.first, global.second);
         }
         globals.clear();

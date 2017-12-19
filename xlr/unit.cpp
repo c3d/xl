@@ -777,9 +777,14 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         // If this started with a value or global, initialize on function entry
         llvm_value initializer = NULL;
         if (value.count(tree))
+        {
             initializer = value[tree];
+        }
         else if (Value *global = compiler->TreeGlobal(tree))
+        {
+            global = llvm.GlobalExtern(global);
             initializer = data->CreateLoad(global);
+        }
         if (initializer && initializer->getType() == mtype)
             data->CreateStore(initializer, result);
     }
@@ -845,6 +850,7 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
             text label = "glob";
             IFTRACE(labels)
                 label += "[" + text(*tree) + "]";
+            result = llvm.GlobalExtern(result);
             result = code->CreateLoad(result, label);
         }
     }
@@ -1062,6 +1068,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     {
         assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
         Value *falsePtr = compiler->TreeGlobal(xl_false);
+        falsePtr = llvm.GlobalExtern(falsePtr);
         result = code->CreateLoad(falsePtr, "xl_false");
         result = code->CreateICmpNE(value, result, "notFalse");
     }
@@ -1117,6 +1124,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         // True block
         code->SetInsertPoint(isTrue);
         Value *truePtr = compiler->TreeGlobal(xl_true);
+        truePtr = llvm.GlobalExtern(truePtr);
         result = code->CreateLoad(truePtr);
         result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
@@ -1124,6 +1132,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         // False block
         code->SetInsertPoint(isFalse);
         Value *falsePtr = compiler->TreeGlobal(xl_false);
+        falsePtr = llvm.GlobalExtern(falsePtr);
         result = code->CreateLoad(falsePtr);
         result = code->CreateStore(result, ptr);
         code->CreateBr(exit);
@@ -1211,6 +1220,7 @@ Value *CompiledUnit::Global(Tree *tree)
         text label = "glob";
         IFTRACE(labels)
             label += "[" + text(*tree) + "]";
+        result = llvm.GlobalExtern(result);
         result = code->CreateLoad(result, label);
     }
     return result;

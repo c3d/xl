@@ -485,8 +485,9 @@ llvm::GlobalValue * Compiler::TreeGlobal(Tree *tree)
 //   Return the global value associated to the tree, if any
 // ----------------------------------------------------------------------------
 {
-    CompilerInfo *info = Info(tree);
-    return info ? info->global : NULL;
+    if (CompilerInfo *info = Info(tree))
+        return info->global;
+    return NULL;
 }
 
 
