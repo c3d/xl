@@ -91,7 +91,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : llvm(LLVMCrap_GlobalContext(), moduleName),
+    : llvm(moduleName),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
       realTy(NULL), real32Ty(NULL),

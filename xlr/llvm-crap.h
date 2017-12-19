@@ -263,20 +263,6 @@ typedef llvm::legacy::FunctionPassManager       LLVMCrap_FunctionPassManager;
 #endif
 
 
-inline llvm::LLVMContext &LLVMCrap_GlobalContext()
-// ----------------------------------------------------------------------------
-//  There used to be a global context, now you should roll out your own
-// ----------------------------------------------------------------------------
-{
-#if LLVM_VERSION < 390
-    return llvm::getGlobalContext();
-#else // >= 390
-    static llvm::LLVMContext llvmContext;
-    return llvmContext;
-#endif // 390
-}
-
-
 inline llvm_value LLVMCrap_CreateStructGEP(llvm_builder bld,
                                            llvm_value ptr, unsigned idx,
                                            const llvm::Twine &name = "")
@@ -359,7 +345,10 @@ class JIT
     typedef void *(*resolver_fn) (const text &name);
 
 public:
-    JIT(llvm::LLVMContext &c, kstring moduleBaseName);
+    static llvm::LLVMContext &GlobalContext();
+
+public:
+    JIT(kstring moduleBaseName);
     ~JIT();
 
     operator llvm::LLVMContext &();
@@ -409,11 +398,25 @@ private:
 };
 
 
-inline JIT::JIT(llvm::LLVMContext &context, kstring moduleBaseName)
+inline llvm::LLVMContext &JIT::GlobalContext()
+// ----------------------------------------------------------------------------
+//  There used to be a global context, now you should roll out your own
+// ----------------------------------------------------------------------------
+{
+#if LLVM_VERSION < 390
+    return llvm::getGlobalContext();
+#else // >= 390
+    static llvm::LLVMContext llvmContext;
+    return llvmContext;
+#endif // 390
+}
+
+
+inline JIT::JIT(kstring moduleBaseName)
 // ----------------------------------------------------------------------------
 //   Constructor for JIT helper
 // ----------------------------------------------------------------------------
-    : context(context), moduleBaseName(moduleBaseName),
+    : context(GlobalContext()), moduleBaseName(moduleBaseName),
       module(), resolver(), moduleOptimizer()
 #ifndef LLVM_CRAP_MCJIT
     , runtime(), optimizer()
