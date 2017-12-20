@@ -4002,7 +4002,8 @@ BasicBlock *OCompiledUnit::TypeTest(Tree *value, Tree *type)
         code->CreateCondBr(isInt, isIntOK, isIntBad);
 
         code->SetInsertPoint(isIntOK);
-        Value *asReal = code->CreateCall(compiler->xl_integer2real, treeValue);
+        Value *asReal = llvm.CreateCall(code,
+                                        compiler->xl_integer2real, treeValue);
         Value *realPtr = NeedStorage(value);
         code->CreateStore(asReal, realPtr);
         code->CreateBr(isKindOK);
