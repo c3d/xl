@@ -96,7 +96,7 @@ llvm_value CompileExpression::DoText(Text *what)
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    return compiler->llvm.CreateStructGEP(unit->code, global, 0U);
+    return compiler->llvm.CreateStructGEP(unit->code, global, 0U, "text");
 }
 
 

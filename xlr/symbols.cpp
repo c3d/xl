@@ -3699,7 +3699,7 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
 
     // Extract child of surrounding block
     Value *block = code->CreateBitCast(ptr, blockTy);
-    ptr = llvm.CreateStructGEP(code, block, BLOCK_CHILD_INDEX);
+    ptr = llvm.CreateStructGEP(code, block, BLOCK_CHILD_INDEX, "closure_child");
     ptr = code->CreateLoad(ptr);
 
     // Build additional arguments
@@ -3707,23 +3707,27 @@ Value *OCompiledUnit::CallClosure(Tree *callee, uint ntrees)
     {
         // Load the left of the \n which is a decl of the form P->V
         Value *infix = code->CreateBitCast(ptr, infixTy);
-        Value *lf = llvm.CreateStructGEP(code, infix, LEFT_VALUE_INDEX);
+        Value *lf = llvm.CreateStructGEP(code, infix, LEFT_VALUE_INDEX,
+                                         "closure_left");
         decl = code->CreateLoad(lf);
         decl = code->CreateBitCast(decl, infixTy);
 
         // Load the value V out of P->V and pass it as an argument
-        Value *arg = llvm.CreateStructGEP(code, decl, RIGHT_VALUE_INDEX);
+        Value *arg = llvm.CreateStructGEP(code, decl, RIGHT_VALUE_INDEX,
+                                          "closure_right");
         arg = code->CreateLoad(arg);
         argV.push_back(arg);
         signature.push_back(treeTy);
 
         // Load the next element in the list
-        Value *rt = llvm.CreateStructGEP(code, infix, RIGHT_VALUE_INDEX);
+        Value *rt = llvm.CreateStructGEP(code, infix, RIGHT_VALUE_INDEX,
+                                         "closure_next");
         ptr = code->CreateLoad(rt);
     }
 
     // Load the target code
-    Value *callCode = llvm.CreateStructGEP(code, decl, CODE_INDEX);
+    Value *callCode = llvm.CreateStructGEP(code, decl, CODE_INDEX,
+                                           "closure_code");
     callCode = code->CreateLoad(callCode);
 
     // Replace the 'self' argument with the expression sans closure
@@ -3803,7 +3807,8 @@ BasicBlock *OCompiledUnit::IntegerTest(Tree *tree, longlong value)
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->integerTreePtrTy);
     Value *valueFieldPtr = llvm.CreateStructGEP(code, treeValue,
-                                                INTEGER_VALUE_INDEX);
+                                                INTEGER_VALUE_INDEX,
+                                                "valuePtr");
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantInt::get(tval->getType(), value, "refValue");
     Value *isGood = code->CreateICmpEQ(tval, rval, "isGood");
@@ -3835,7 +3840,8 @@ BasicBlock *OCompiledUnit::RealTest(Tree *tree, double value)
     assert(treeValue);
     treeValue = code->CreateBitCast(treeValue, compiler->realTreePtrTy);
     Value *valueFieldPtr = llvm.CreateStructGEP(code, treeValue,
-                                                REAL_VALUE_INDEX);
+                                                REAL_VALUE_INDEX,
+                                                "valuePtr");
     Value *tval = code->CreateLoad(valueFieldPtr, "treeValue");
     Constant *rval = ConstantFP::get(tval->getType(), value);
     Value *isGood = code->CreateFCmpOEQ(tval, rval, "isGood");
@@ -3867,7 +3873,7 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     Constant *refVal = llvm.TextConstant(value);
     llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
     GlobalVariable *gvar = llvm.CreateGlobal(refValTy, "str", true, refVal);
-    Value *refPtr = llvm.CreateStructGEP(code, gvar, 0, 0);
+    Value *refPtr = llvm.CreateStructGEP(code, gvar, 0, "strRef");
     Value *isGood = llvm.CreateCall(code, compiler->xl_same_text,
                                     treeValue, refPtr);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
@@ -3919,7 +3925,7 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     GlobalVariable *gvar = llvm.CreateGlobal(refNameTy,
                                              "infix_name", true,
                                              refNameVal);
-    Value *refNamePtr = llvm.CreateStructGEP(code, gvar, 0, 0);
+    Value *refNamePtr = llvm.CreateStructGEP(code, gvar, 0, "refPtr");
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();

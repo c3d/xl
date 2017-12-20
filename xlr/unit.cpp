@@ -434,7 +434,8 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
             {
                 // Store that in the result tree
                 llvm_value ptr = llvm.CreateStructGEP(code,
-                                                      returned, index++);
+                                                      returned, index++,
+                                                      "resultPtr");
                 result = code->CreateStore(result, ptr);
                 return result;
             }
@@ -517,7 +518,8 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         if (where == context)
         {
             // Get element from input argument
-            llvm_value ptr = llvm.CreateStructGEP(code, boxed, index++);
+            llvm_value ptr = llvm.CreateStructGEP(code, boxed, index++,
+                                                  "inputPtr");
             return code->CreateLoad(ptr);
         }
 
@@ -614,7 +616,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
 
     // First, store the function pointer
     uint field = 0;
-    llvm_value fptr = llvm.CreateStructGEP(code, stackPtr, field++);
+    llvm_value fptr = llvm.CreateStructGEP(code, stackPtr, field++, "fnPtr");
     code->CreateStore(function, fptr);
 
     // Then loop over all values that were detected while evaluating expr
@@ -623,7 +625,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     {
         Tree *subexpr = (*v).first;
         llvm_value subval = Compile(subexpr);
-        fptr = llvm.CreateStructGEP(code, stackPtr, field++);
+        fptr = llvm.CreateStructGEP(code, stackPtr, field++, "itemPtr");
         code->CreateStore(subval, fptr);
     }
 
@@ -652,7 +654,7 @@ llvm_value CompiledUnit::InvokeClosure(llvm_value result)
 // ----------------------------------------------------------------------------
 {
     // Get function pointer and argument
-    llvm_value fnPtrPtr = llvm.CreateStructGEP(data, result, 0);
+    llvm_value fnPtrPtr = llvm.CreateStructGEP(data, result, 0, "fnPtrPtr");
     llvm_value fnPtr = data->CreateLoad(fnPtrPtr);
 
     // Call the closure callback
@@ -716,7 +718,8 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         {
             Tree *value = (*v).first;
             llvm_value storage = NeedStorage(value);
-            llvm_value ptr = llvm.CreateStructGEP(data,closureArg,field++);
+            llvm_value ptr = llvm.CreateStructGEP(data, closureArg, field++,
+                                                  "closure_input_ptr");
             llvm_value input = data->CreateLoad(ptr);
             data->CreateStore(input, storage);
         }
@@ -1077,16 +1080,20 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         if (req == compiler->characterTy && type == compiler->textTreePtrTy)
         {
             // Convert text constant to character
-            result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX);
-            result = llvm.CreateStructGEP(code, result, 0);
-            result = llvm.CreateStructGEP(code, result, 0);
-            result = code->CreateLoad(result);
+            result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX,
+                                          "unbox_char_tree_ptr");
+            result = llvm.CreateStructGEP(code, result, 0,
+                                          "unbox_char_ptr_ptr");
+            result = llvm.CreateStructGEP(code, result, 0,
+                                          "unbox_char_ptr");
+            result = code->CreateLoad(result, "unbox_char");
         }
         else
         {
             // Convert integer constants
             assert (type == compiler->integerTreePtrTy);
-            result = llvm.CreateStructGEP(code, value, INTEGER_VALUE_INDEX);
+            result = llvm.CreateStructGEP(code, value, INTEGER_VALUE_INDEX,
+                                          "unbox_integer");
             if (req != compiler->integerTy)
                 result = code->CreateTrunc(result, req);
         }
@@ -1094,21 +1101,25 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     else if (req->isFloatingPointTy())
     {
         assert(type == compiler->realTreePtrTy);
-        result = llvm.CreateStructGEP(code, value, REAL_VALUE_INDEX, "rval");
+        result = llvm.CreateStructGEP(code, value, REAL_VALUE_INDEX,
+                                      "unbox_real");
         if (req != compiler->realTy)
             result = code->CreateFPTrunc(result, req);
     }
     else if (req == compiler->charPtrTy)
     {
         assert(type == compiler->textTreePtrTy);
-        result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX);
-        result = llvm.CreateStructGEP(code, result, 0);
-        result = code->CreateLoad(result);
+        result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX,
+                                      "unbox_text_ptr");
+        result = llvm.CreateStructGEP(code, result, 0,
+                                      "unbox_char_ptr_ptr");
+        result = code->CreateLoad(result, "unbox_char_ptr");
     }
     else if (req == compiler->textTy)
     {
         assert (type == compiler->textTreePtrTy);
-        result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX, "tval");
+        result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX,
+                                      "unbox_text_ptr");
     }
     else if (type == compiler->booleanTy)
     {
