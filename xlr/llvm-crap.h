@@ -298,7 +298,7 @@ public:
                                        bool isConstant = false,
                                        llvm::Constant *value = NULL,
                                        bool makeUnique = false);
-    llvm::Function *    Prototype(llvm_value callee);
+    llvm_value          Prototype(llvm_value callee);
     llvm_value          GlobalExtern(llvm_value global);
 
     // Attributes
@@ -558,7 +558,7 @@ inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
 }
 
 
-inline llvm::Function *JIT::Prototype(llvm_value callee)
+inline llvm_value JIT::Prototype(llvm_value callee)
 // ----------------------------------------------------------------------------
 //   Return a function acceptable for this module
 // ----------------------------------------------------------------------------
@@ -594,7 +594,13 @@ inline llvm::Function *JIT::Prototype(llvm_value callee)
             }
         }
     }
-    return nullptr;
+
+    IFTRACE(llvm)
+        llvm::errs() << "No function found for " << *callee
+                     << " (" << (void *) callee << ", " << name << ")"
+                     << " probably a pointer\n";
+
+    return callee;
 #endif // LLVM_CRAP_MCJIT
 }
 
@@ -884,7 +890,7 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-    llvm::Function *proto = Prototype(callee);
+    llvm_value proto = Prototype(callee);
 #if LLVM_VERSION < 390
     return bld->CreateCall(proto, arg1);
 #else // >= 390
@@ -900,7 +906,7 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-    llvm::Function *proto = Prototype(callee);
+    llvm_value proto = Prototype(callee);
 #if LLVM_VERSION < 371
     return bld->CreateCall2(proto, arg1, arg2);
 #else // >= 371
@@ -918,7 +924,7 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Why not change the 'call' instruction, nobody uses it.
 // ----------------------------------------------------------------------------
 {
-    llvm::Function *proto = Prototype(callee);
+    llvm_value proto = Prototype(callee);
 #if LLVM_VERSION < 371
     return bld->CreateCall3(proto, arg1, arg2, arg3);
 #else // >= 371
@@ -934,7 +940,7 @@ inline llvm_value JIT::CreateCall(llvm_builder bld,
 //   Create a call from arguments
 // ----------------------------------------------------------------------------
 {
-    llvm::Function *proto = Prototype(callee);
+    llvm_value proto = Prototype(callee);
 #if LLVM_VERSION < 30
     return bld->CreateCall(proto, args.begin(), args.end());
 #else // LLVM_VERSION >= 30
