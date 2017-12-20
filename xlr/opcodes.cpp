@@ -302,8 +302,9 @@ void xl_enter_form(Context *context, text name, native_fn fn,
     ulong sz = parameters.size();
     if (sz != rw2->parameters.size())
     {
-        std::cerr << "WARNING: Internal error on parameter count for\n"
-                  << "         " << form << "(" << name << ")\n";
+        std::cerr << "WARNING: Internal error on parameter count for "
+                  << name << "\n"
+                  << "         " << form << "\n";
         ulong sz2 = rw2->parameters.size();
         for (ulong i = 0; i < sz || i < sz2; i++)
         {
