@@ -283,8 +283,9 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     llvm.SetName(infixTreeTy, "Infix");
     llvm.SetName(evalTy, "eval_fn");
     llvm.SetName(nativeTy, "native_fn");
-    llvm.SetName(infoPtrTy, "Info*");
-    llvm.SetName(contextPtrTy, "Context*");
+    llvm.SetName(structInfoTy, "Info");
+    llvm.SetName(structCtxTy, "Context");
+    llvm.SetName(structSymTy, "Symbols");
 
     // Create one module for all extern function declarations
     llvm.CreateModule(moduleName);
