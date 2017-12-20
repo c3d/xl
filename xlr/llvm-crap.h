@@ -656,7 +656,8 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
     llvm::Function *result =
         llvm::Function::Create(type, llvm::Function::ExternalLinkage,
                                name, module);
-    llvm::errs() << "Creating " << result->getName() << "\n";
+    IFTRACE(llvm)
+        llvm::errs() << "Creating " << result->getName() << "\n";
     return result;
 }
 
@@ -668,7 +669,8 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
 //   In the MCJIT implementation, things are a bit more complicated,
 //   since we can't just incremently add functions to modules.
 {
-    llvm::errs() << "Finalizing " << f->getName() << "\n";
+    IFTRACE(llvm)
+        llvm::errs() << "Finalizing " << f->getName() << "\n";
 #ifndef LLVM_CRAP_MCJIT
     llvm::verifyFunction(*f);
     if (optimizer)
