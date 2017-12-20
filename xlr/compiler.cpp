@@ -265,28 +265,26 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     infixTreeTy = StructType::get(llvm, infixElements);     // Infix
     infixTreePtrTy = PointerType::get(infixTreeTy, 0);      // Infix *
 
-#ifndef LLVM_CRAP_MCJIT
     // Record the type names
-    LLVMS_SetName(module, booleanTy, "boolean");
-    LLVMS_SetName(module, integerTy, "integer");
-    LLVMS_SetName(module, characterTy, "character");
-    LLVMS_SetName(module, realTy, "real");
-    LLVMS_SetName(module, charPtrTy, "text");
+    llvm.SetName(booleanTy, "boolean");
+    llvm.SetName(integerTy, "integer");
+    llvm.SetName(characterTy, "character");
+    llvm.SetName(realTy, "real");
+    llvm.SetName(charPtrTy, "text");
 
-    LLVMS_SetName(module, treeTy, "Tree");
-    LLVMS_SetName(module, integerTreeTy, "Integer");
-    LLVMS_SetName(module, realTreeTy, "Real");
-    LLVMS_SetName(module, textTreeTy, "Text");
-    LLVMS_SetName(module, blockTreeTy, "Block");
-    LLVMS_SetName(module, nameTreeTy, "Name");
-    LLVMS_SetName(module, prefixTreeTy, "Prefix");
-    LLVMS_SetName(module, postfixTreeTy, "Postfix");
-    LLVMS_SetName(module, infixTreeTy, "Infix");
-    LLVMS_SetName(module, evalTy, "eval_fn");
-    LLVMS_SetName(module, nativeTy, "native_fn");
-    LLVMS_SetName(module, infoPtrTy, "Info*");
-    LLVMS_SetName(module, contextPtrTy, "Context*");
-#endif
+    llvm.SetName(treeTy, "Tree");
+    llvm.SetName(integerTreeTy, "Integer");
+    llvm.SetName(realTreeTy, "Real");
+    llvm.SetName(textTreeTy, "Text");
+    llvm.SetName(blockTreeTy, "Block");
+    llvm.SetName(nameTreeTy, "Name");
+    llvm.SetName(prefixTreeTy, "Prefix");
+    llvm.SetName(postfixTreeTy, "Postfix");
+    llvm.SetName(infixTreeTy, "Infix");
+    llvm.SetName(evalTy, "eval_fn");
+    llvm.SetName(nativeTy, "native_fn");
+    llvm.SetName(infoPtrTy, "Info*");
+    llvm.SetName(contextPtrTy, "Context*");
 
     // Create one module for all extern function declarations
     llvm.CreateModule(moduleName);
