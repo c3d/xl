@@ -554,8 +554,6 @@ inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
         new llvm::GlobalVariable (*module, type, isConstant,
                                   llvm::GlobalVariable::ExternalLinkage,
                                   value, name);
-    llvm::errs() << "Create global " << global->getName()
-                 << " in " << module->getName() << "\n";
     return global;
 }
 
@@ -632,11 +630,6 @@ inline llvm_value JIT::GlobalExtern(llvm_value global)
                 llvm::GlobalVariable *decl =
                     new llvm::GlobalVariable(*module, pt->getElementType(),
                                              false, linkage, NULL, name);
-                llvm::errs() << "Extern " << *decl
-                             << "\n   (" << *decl->getType() << ")"
-                             << "\ncreated from " << *g
-                             << "\n   (" << *g->getType() << ")\n";
-
                 return decl;
             }
         }
@@ -707,7 +700,6 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
             return nullptr;
         }
         engines.push_back(engine);
-        llvm::Module *old = module;
 
         module = nullptr;
         if (pending.size())
@@ -720,16 +712,11 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
             engine->InstallLazyFunctionCreator(resolver);
         engine->clearAllGlobalMappings();
         for (auto const &global : globals)
-        {
-            llvm::errs() << "Global " << global.first->getName()
-                         << " (" << (void *) global.first << ")"
-                         << "=" << global.second
-                         <<  " in " << old->getName()
-                         << "\n";
             engine->addGlobalMapping(global.first, global.second);
-        }
         engine->finalizeObject();
-        return engine->getPointerToFunction(f);
+        void *result = engine->getPointerToFunction(f);
+        globals.push_back(global_t(f, result));
+        return result;
     }
     return nullptr;
 #endif // LLVM_CRAP_MCJIT
