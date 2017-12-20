@@ -296,7 +296,8 @@ public:
     llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
                                        text name,
                                        bool isConstant = false,
-                                       llvm::Constant *value = NULL);
+                                       llvm::Constant *value = NULL,
+                                       bool makeUnique = false);
     llvm::Function *    Prototype(llvm_value callee);
     llvm_value          GlobalExtern(llvm_value global);
 
@@ -534,16 +535,18 @@ inline llvm::Function *JIT::CreateExternFunction(llvm::FunctionType *type,
 inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
                                                text name,
                                                bool isConstant,
-                                               llvm::Constant *value)
+                                               llvm::Constant *value,
+                                               bool makeUnique)
 // ----------------------------------------------------------------------------
 //   Create a global variable
 // ----------------------------------------------------------------------------
 {
-#ifdef LLVM_CRAP_MCJIT
-    static unsigned index = 0;
-    name += '.';
-    name += std::to_string(++index);
-#endif
+    if (makeUnique)
+    {
+        static unsigned index = 0;
+        name += '.';
+        name += std::to_string(++index);
+    }
     assert(module);
     if (value == nullptr)
         value = llvm::ConstantPointerNull::get(type);
@@ -715,15 +718,16 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
 
         if (resolver)
             engine->InstallLazyFunctionCreator(resolver);
+        engine->clearAllGlobalMappings();
         for (auto const &global : globals)
         {
             llvm::errs() << "Global " << global.first->getName()
+                         << " (" << (void *) global.first << ")"
                          << "=" << global.second
                          <<  " in " << old->getName()
                          << "\n";
             engine->addGlobalMapping(global.first, global.second);
         }
-        globals.clear();
         engine->finalizeObject();
         return engine->getPointerToFunction(f);
     }

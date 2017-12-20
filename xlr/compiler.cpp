@@ -718,19 +718,19 @@ Value *Compiler::EnterConstant(Tree *constant)
     text name = "xlcst";
     switch(constant->Kind())
     {
-    case INTEGER: name = "xlint";       break;
-    case REAL:    name = "xlreal";      break;
-    case TEXT:    name = "xltext";      break;
-    case NAME:    name = "xlname";      break;
-    case INFIX:   name = "xlinfix";     break;
-    case PREFIX:  name = "xlprefix";    break;
-    case POSTFIX: name = "xlpostfix";   break;
-    case BLOCK:   name = "xlblock";     break;
+    case INTEGER: name = "integer";     break;
+    case REAL:    name = "real";        break;
+    case TEXT:    name = "text";        break;
+    case NAME:    name = "name";        break;
+    case INFIX:   name = "infix";       break;
+    case PREFIX:  name = "prefix";      break;
+    case POSTFIX: name = "postfix";     break;
+    case BLOCK:   name = "block";       break;
     default:                            break;
     }
     IFTRACE(labels)
         name += "[" + text(*constant) + "]";
-    GlobalValue *result = llvm.CreateGlobal(treePtrTy, name, true);
+    GlobalValue *result = llvm.CreateGlobal(treePtrTy, name, true, NULL, true);
     SetTreeGlobal(constant, result, NULL);
 
     IFTRACE(llvm)
