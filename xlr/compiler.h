@@ -124,7 +124,7 @@ struct Compiler
                                              int parmCount, ...);
     adapter_fn                ArrayToArgsAdapter(uint numtrees);
     llvm::Value *             EnterGlobal(Name *name, Name_p *address);
-    llvm::Value *             EnterConstant(Tree *constant);
+    llvm::Constant *          EnterConstant(Tree *constant);
     llvm::GlobalVariable *    TextConstant(text value);
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);

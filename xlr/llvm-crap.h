@@ -293,6 +293,7 @@ public:
 
     llvm::Function *    CreateExternFunction(llvm::FunctionType *type,
                                              text name);
+    llvm::Constant *    CreateConstant(llvm::PointerType *type, void *pointer);
     llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
                                        text name,
                                        bool isConstant = false,
@@ -532,6 +533,18 @@ inline llvm::Function *JIT::CreateExternFunction(llvm::FunctionType *type,
 }
 
 
+inline llvm::Constant *JIT::CreateConstant(llvm::PointerType *type,
+                                           void *pointer)
+// ----------------------------------------------------------------------------
+//    Create a constant pointer
+// ----------------------------------------------------------------------------
+{
+    llvm::APInt addr(8 * sizeof(void*), (uintptr_t) pointer);
+    llvm::Constant *result = llvm::Constant::getIntegerValue(type, addr);
+    return result;
+}
+
+
 inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
                                                text name,
                                                bool isConstant,
@@ -720,7 +733,13 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
             engine->InstallLazyFunctionCreator(resolver);
         engine->clearAllGlobalMappings();
         for (auto const &global : globals)
+        {
+            IFTRACE(globals)
+                std::cerr << "Global " << global.first
+                          << "=" << global.second
+                          << "\n";
             engine->addGlobalMapping(global.first, global.second);
+        }
         engine->finalizeObject();
         void *result = engine->getPointerToFunction(f);
         globals.push_back(global_t(f, result));

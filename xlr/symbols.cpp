@@ -3189,7 +3189,6 @@ Value *OCompiledUnit::ConstantInteger(Integer *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "intk");
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -3206,7 +3205,6 @@ Value *OCompiledUnit::ConstantReal(Real *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "realk");
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -3223,7 +3221,6 @@ Value *OCompiledUnit::ConstantText(Text *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "textk");
     }
     if (storage.count(what))
         code->CreateStore(result, storage[what]);
@@ -3240,7 +3237,6 @@ Value *OCompiledUnit::ConstantTree(Tree *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = data->CreateLoad(result, "treek");
         if (storage.count(what))
             data->CreateStore(result, storage[what]);
     }

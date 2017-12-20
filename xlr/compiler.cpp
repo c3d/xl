@@ -706,37 +706,17 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 }
 
 
-Value *Compiler::EnterConstant(Tree *constant)
+Constant *Compiler::EnterConstant(Tree *constant)
 // ----------------------------------------------------------------------------
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
     RECORD(COMPILER_DETAILS, "Enter Constant",
            "tree", (intptr_t) constant, "kind", constant->Kind());
-
-    text name = "xlcst";
-    switch(constant->Kind())
-    {
-    case INTEGER: name = "integer";     break;
-    case REAL:    name = "real";        break;
-    case TEXT:    name = "text";        break;
-    case NAME:    name = "name";        break;
-    case INFIX:   name = "infix";       break;
-    case PREFIX:  name = "prefix";      break;
-    case POSTFIX: name = "postfix";     break;
-    case BLOCK:   name = "block";       break;
-    default:                            break;
-    }
-    IFTRACE(labels)
-        name += "[" + text(*constant) + "]";
-    GlobalValue *result = llvm.CreateGlobal(treePtrTy, name, true, NULL, true);
-    SetTreeGlobal(constant, result, NULL);
-
     IFTRACE(llvm)
-        std::cerr << "EnterConstant T" << (void *) constant
-                  << " A" << (void *) &Info(constant)->tree << "\n";
-
-    return result;
+        std::cerr << "EnterConstant "
+                  << "[" << constant << "]=" << (void *) constant << "\n";
+    return llvm.CreateConstant(treePtrTy, constant);
 }
 
 

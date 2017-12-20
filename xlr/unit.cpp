@@ -879,7 +879,6 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "intk");
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -896,7 +895,6 @@ Value *CompiledUnit::ConstantReal(Real *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "realk");
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -913,7 +911,6 @@ Value *CompiledUnit::ConstantText(Text *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "textk");
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -930,7 +927,6 @@ Value *CompiledUnit::ConstantTree(Tree *what)
     if (!result)
     {
         result = compiler->EnterConstant(what);
-        result = data->CreateLoad(result, "treek");
     }
     return result;
 }
