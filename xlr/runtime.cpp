@@ -1157,16 +1157,6 @@ void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms,
 }
 
 
-void xl_enter_global(Main *main, Name *name, Name_p *address)
-// ----------------------------------------------------------------------------
-//   Add a new global
-// ----------------------------------------------------------------------------
-{
-    main->compiler->EnterGlobal(name, address);
-}
-
-
-
 // ============================================================================
 //
 //   Write a tree to standard output (temporary hack)

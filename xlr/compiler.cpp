@@ -685,27 +685,6 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
 }
 
 
-Value *Compiler::EnterGlobal(Name *name, Name_p *address)
-// ----------------------------------------------------------------------------
-//   Enter a global variable in the symbol table
-// ----------------------------------------------------------------------------
-{
-    RECORD(COMPILER_DETAILS, "Enter Global",
-           name->value.c_str(), (intptr_t) address);
-    GlobalValue *result = llvm.CreateGlobal(treePtrTy, name->value);
-    SetTreeGlobal(name, result, address);
-
-    IFTRACE(llvm)
-        std::cerr << "EnterGlobal " << name->value
-                  << " name T" << (void *) name
-                  << " A" << address
-                  << " address T" << (void *) address->Pointer()
-                  << "\n";
-
-    return result;
-}
-
-
 Constant *Compiler::TreeConstant(Tree *constant)
 // ----------------------------------------------------------------------------
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
@@ -720,27 +699,13 @@ Constant *Compiler::TreeConstant(Tree *constant)
 }
 
 
-GlobalVariable *Compiler::TextConstant(text value)
+Constant *Compiler::TextConstant(text value)
 // ----------------------------------------------------------------------------
 //   Return a C-style string pointer for a string constant
 // ----------------------------------------------------------------------------
 {
-    GlobalVariable *global;
-
-    text_constants_map::iterator found = text_constants.find(value);
-    if (found == text_constants.end())
-    {
-        Constant *refVal = llvm.TextConstant(value);
-        llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
-        global = llvm.CreateGlobal(refValTy, "text", true, refVal);
-        text_constants[value] = global;
-    }
-    else
-    {
-        global = (*found).second;
-    }
-
-    return global;
+    Constant *refVal = llvm.TextConstant(value);
+    return refVal;
 }
 
 

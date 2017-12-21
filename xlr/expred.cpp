@@ -92,11 +92,11 @@ llvm_value CompileExpression::DoText(Text *what)
 // ----------------------------------------------------------------------------
 {
     Compiler *compiler = unit->compiler;
-    GlobalVariable *global = compiler->TextConstant(what->value);
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    return compiler->llvm.CreateStructGEP(unit->code, global, 0U, "text");
+    Constant *textConstant = compiler->TextConstant(what->value);
+    return textConstant;
 }
 
 

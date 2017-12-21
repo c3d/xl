@@ -294,11 +294,6 @@ public:
     llvm::Function *    CreateExternFunction(llvm::FunctionType *type,
                                              text name);
     llvm::Constant *    CreateConstant(llvm::PointerType *type, void *pointer);
-    llvm::GlobalVariable *CreateGlobal(llvm::PointerType *type,
-                                       text name,
-                                       bool isConstant = false,
-                                       llvm::Constant *value = NULL,
-                                       bool makeUnique = false);
     llvm_value          Prototype(llvm_value callee);
     llvm_value          GlobalExtern(llvm_value global);
 
@@ -542,32 +537,6 @@ inline llvm::Constant *JIT::CreateConstant(llvm::PointerType *type,
     llvm::APInt addr(8 * sizeof(void*), (uintptr_t) pointer);
     llvm::Constant *result = llvm::Constant::getIntegerValue(type, addr);
     return result;
-}
-
-
-inline llvm::GlobalVariable *JIT::CreateGlobal(llvm::PointerType *type,
-                                               text name,
-                                               bool isConstant,
-                                               llvm::Constant *value,
-                                               bool makeUnique)
-// ----------------------------------------------------------------------------
-//   Create a global variable
-// ----------------------------------------------------------------------------
-{
-    if (makeUnique)
-    {
-        static unsigned index = 0;
-        name += '.';
-        name += std::to_string(++index);
-    }
-    assert(module);
-    if (value == nullptr)
-        value = llvm::ConstantPointerNull::get(type);
-    llvm::GlobalVariable *global =
-        new llvm::GlobalVariable (*module, type, isConstant,
-                                  llvm::GlobalVariable::ExternalLinkage,
-                                  value, name);
-    return global;
 }
 
 

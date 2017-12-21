@@ -3867,11 +3867,8 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     Value *treeValue = Known(tree);
     assert(treeValue);
     Constant *refVal = llvm.TextConstant(value);
-    llvm::PointerType *refValTy = (llvm::PointerType *) refVal->getType();
-    GlobalVariable *gvar = llvm.CreateGlobal(refValTy, "str", true, refVal);
-    Value *refPtr = llvm.CreateStructGEP(code, gvar, 0, "strRef");
     Value *isGood = llvm.CreateCall(code, compiler->xl_same_text,
-                                    treeValue, refPtr);
+                                    treeValue, refVal);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
     code->CreateCondBr(isGood, isGoodBB, notGood);
 
@@ -3916,17 +3913,12 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     Value *refVal = NeedStorage(reference);     assert (refVal);
 
     // Extract the name of the reference
-    Constant *refNameVal = llvm.TextConstant(reference->name);
-    llvm::PointerType *refNameTy = (llvm::PointerType *) refNameVal->getType();
-    GlobalVariable *gvar = llvm.CreateGlobal(refNameTy,
-                                             "infix_name", true,
-                                             refNameVal);
-    Value *refNamePtr = llvm.CreateStructGEP(code, gvar, 0, "refPtr");
+    Constant *refName = llvm.TextConstant(reference->name);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();
     Value *afterExtract = llvm.CreateCall(code, compiler->xl_infix_match_check,
-                                          contextPtr, actualVal, refNamePtr);
+                                          contextPtr, actualVal, refName);
     Constant *null = ConstantPointerNull::get(compiler->treePtrTy);
     Value *isGood = code->CreateICmpNE(afterExtract, null, "isGoodInfix");
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);

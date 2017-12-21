@@ -156,7 +156,6 @@
     {                                           \
         Name *n = new Name(#symbol);            \
         xl_##symbol = n;                        \
-        xl_enter_global(MAIN, n, &xl_##symbol); \
         context->Define(n, n);                  \
         xl_enter_name(MAIN->globals, n);        \
     } while (0);
@@ -168,7 +167,6 @@
         /* Type alone evaluates as self */                              \
         Name *n = new Name(#symbol);                                    \
         symbol##_type = n;                                              \
-        xl_enter_global(MAIN, n, &symbol##_type);                       \
         context->Define(n, n);                                          \
         xl_enter_type(MAIN->globals, n,                                 \
                       "xl_" #symbol "_cast", xl_##symbol##_cast);       \
