@@ -785,8 +785,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         }
         else if (Value *global = compiler->TreeGlobal(tree))
         {
-            global = llvm.GlobalExtern(global);
-            initializer = data->CreateLoad(global);
+            initializer = global;
         }
         if (initializer && initializer->getType() == mtype)
             data->CreateStore(initializer, result);
@@ -848,14 +847,6 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
     {
         // Check if this is a global
         result = compiler->TreeGlobal(tree);
-        if (result)
-        {
-            text label = "glob";
-            IFTRACE(labels)
-                label += "[" + text(*tree) + "]";
-            result = llvm.GlobalExtern(result);
-            result = code->CreateLoad(result, label);
-        }
     }
     return result;
 }
@@ -1067,9 +1058,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     {
         assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
         Value *falsePtr = compiler->TreeGlobal(xl_false);
-        falsePtr = llvm.GlobalExtern(falsePtr);
-        result = code->CreateLoad(falsePtr, "xl_false");
-        result = code->CreateICmpNE(value, result, "notFalse");
+        result = code->CreateICmpNE(value, falsePtr, "notFalse");
     }
     else if (req->isIntegerTy())
     {
@@ -1131,17 +1120,13 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         // True block
         code->SetInsertPoint(isTrue);
         Value *truePtr = compiler->TreeGlobal(xl_true);
-        truePtr = llvm.GlobalExtern(truePtr);
-        result = code->CreateLoad(truePtr);
-        result = code->CreateStore(result, ptr);
+        result = code->CreateStore(result, truePtr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
         Value *falsePtr = compiler->TreeGlobal(xl_false);
-        falsePtr = llvm.GlobalExtern(falsePtr);
-        result = code->CreateLoad(falsePtr);
-        result = code->CreateStore(result, ptr);
+        result = code->CreateStore(result, falsePtr);
         code->CreateBr(exit);
 
         // Now on shared exit block
@@ -1222,14 +1207,6 @@ Value *CompiledUnit::Global(Tree *tree)
 {
     // Check if this is a global
     Value *result = compiler->TreeGlobal(tree);
-    if (result)
-    {
-        text label = "glob";
-        IFTRACE(labels)
-            label += "[" + text(*tree) + "]";
-        result = llvm.GlobalExtern(result);
-        result = code->CreateLoad(result, label);
-    }
     return result;
 }
 

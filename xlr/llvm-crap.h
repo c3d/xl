@@ -295,7 +295,6 @@ public:
                                              text name);
     llvm::Constant *    CreateConstant(llvm::PointerType *type, void *pointer);
     llvm_value          Prototype(llvm_value callee);
-    llvm_value          GlobalExtern(llvm_value global);
 
     // Attributes
     void                SetResolver(resolver_fn resolver);
@@ -583,46 +582,6 @@ inline llvm_value JIT::Prototype(llvm_value callee)
                      << " probably a pointer\n";
 
     return callee;
-#endif // LLVM_CRAP_MCJIT
-}
-
-
-inline llvm_value JIT::GlobalExtern(llvm_value global)
-// ----------------------------------------------------------------------------
-//   Return a function acceptable for this module
-// ----------------------------------------------------------------------------
-//   If the function is in this module, return it, else return prototype for it
-{
-#ifndef LLVM_CRAP_MCJIT
-    return bld ? global : global;
-#else // LLVM_CRAP_MCJIT
-    assert(global);
-    assert(module);
-    text name = global->getName();
-
-    // First check if we don't already have it in the current module
-    if (module)
-        if (llvm::GlobalVariable *g = module->getGlobalVariable(name))
-            return g;
-
-    // Otherwise search in other modules
-    for (auto m : modules)
-    {
-        if (m != module)
-        {
-            if (llvm::GlobalVariable *g = m->getGlobalVariable(name))
-            {
-                // Create extern declarationbased on original function type
-                auto linkage = llvm::GlobalVariable::ExternalLinkage;
-                llvm::PointerType *pt = (llvm::PointerType *) g->getType();
-                llvm::GlobalVariable *decl =
-                    new llvm::GlobalVariable(*module, pt->getElementType(),
-                                             false, linkage, NULL, name);
-                return decl;
-            }
-        }
-    }
-    return nullptr;
 #endif // LLVM_CRAP_MCJIT
 }
 

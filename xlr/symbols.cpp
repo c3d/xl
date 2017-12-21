@@ -3123,8 +3123,7 @@ Value *OCompiledUnit::NeedStorage(Tree *tree, Tree *source)
     }
     else if (Value *global = compiler->TreeGlobal(tree))
     {
-        global = llvm.GlobalExtern(global);
-        data->CreateStore(data->CreateLoad(global), result);
+        data->CreateStore(global, result);
     }
 
     return result;
@@ -3167,14 +3166,6 @@ Value *OCompiledUnit::Known(Tree *tree, uint which)
     {
         // Check if this is a global
         result = compiler->TreeGlobal(tree);
-        if (result)
-        {
-            text label = "glob";
-            IFTRACE(labels)
-                label += "[" + text(*tree) + "]";
-            result = llvm.GlobalExtern(result);
-            result = code->CreateLoad(result, label);
-        }
     }
     return result;
 }
