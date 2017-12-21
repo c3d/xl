@@ -249,6 +249,8 @@ typedef llvm::legacy::PassManager               LLVMCrap_PassManager;
 typedef llvm::legacy::FunctionPassManager       LLVMCrap_FunctionPassManager;
 #endif
 
+
+
 // ============================================================================
 //
 //   New JIT support for after LLVM 3.5
@@ -289,7 +291,8 @@ public:
 
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
                                        text name);
-    void *              FinalizeFunction(llvm::Function *f);
+    void                FinalizeFunction(llvm::Function *f);
+    void *              FunctionPointer(llvm::Function *f);
 
     llvm::Function *    CreateExternFunction(llvm::FunctionType *type,
                                              text name);
@@ -593,12 +596,15 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
 // ----------------------------------------------------------------------------
 {
 #if LLVM_CRAP_MCJIT
-    static unsigned index = 0;
-    name += '.';
-    name += std::to_string(++index);
-    if (module)
-        pending.push_back(module);
-    CreateModule(name);
+    if (!module)
+    {
+        static unsigned index = 0;
+        name += '.';
+        name += std::to_string(++index);
+        if (module)
+            pending.push_back(module);
+        CreateModule(name);
+    }
 #endif
     llvm::Function *result =
         llvm::Function::Create(type, llvm::Function::ExternalLinkage,
@@ -609,17 +615,26 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
 }
 
 
-inline void *JIT::FinalizeFunction(llvm::Function* f)
+inline void JIT::FinalizeFunction(llvm::Function* f)
+// ----------------------------------------------------------------------------
+//   Finalize function code generation
+// ----------------------------------------------------------------------------
+{
+    IFTRACE(llvm)
+        llvm::errs() << "Finalizing " << f->getName() << "\n";
+    llvm::verifyFunction(*f);
+}
+
+
+
+inline void *JIT::FunctionPointer(llvm::Function* f)
 // ----------------------------------------------------------------------------
 //   Return an executable pointer to the function
 // ----------------------------------------------------------------------------
 //   In the MCJIT implementation, things are a bit more complicated,
 //   since we can't just incremently add functions to modules.
 {
-    IFTRACE(llvm)
-        llvm::errs() << "Finalizing " << f->getName() << "\n";
 #ifndef LLVM_CRAP_MCJIT
-    llvm::verifyFunction(*f);
     if (optimizer)
         optimizer->run(*adapter);
     return runtime->getPointerToFunction(f);
@@ -630,8 +645,6 @@ inline void *JIT::FinalizeFunction(llvm::Function* f)
 
     if (module)
     {
-        llvm::verifyFunction(*f);
-
         text error;
         llvm::EngineBuilder builder((std::unique_ptr<llvm::Module>(module)));
 #if LLVM_VERSION >= 360

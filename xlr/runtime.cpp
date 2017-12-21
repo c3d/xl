@@ -780,7 +780,7 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
         TreeList noParms;
         OCompiledUnit unit(compiler, result, noParms, false);
         unit.CallClosure(result, ntrees);
-        fn = unit.Finalize();
+        fn = unit.Finalize(false);
         compiler->closures[ntrees] = fn;
         compiler->SetTreeFunction(result, NULL); // Now owned by closures[n]
     }
@@ -2030,7 +2030,7 @@ Tree *xl_apply(Context *context, Tree *code, Tree *data)
 
         // Generate code if compilation was successful
         if (compiled)
-            fn = unit.Finalize();
+            fn = unit.Finalize(true);
 
         // Generate appropriate function info
         if (filter)

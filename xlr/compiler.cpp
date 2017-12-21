@@ -479,28 +479,6 @@ void Compiler::SetTreeClosure(Tree *tree, llvm::Function *closure)
 }
 
 
-llvm::GlobalValue * Compiler::TreeGlobal(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Return the global value associated to the tree, if any
-// ----------------------------------------------------------------------------
-{
-    if (CompilerInfo *info = Info(tree))
-        return info->global;
-    return NULL;
-}
-
-
-void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
-// ----------------------------------------------------------------------------
-//   Set the global value associated to the tree
-// ----------------------------------------------------------------------------
-{
-    CompilerInfo *info = Info(tree, true);
-    info->global = global;
-    llvm.AddGlobalMapping(global, addr ? addr : &info->tree);
-}
-
-
 llvm::Function *Compiler::EnterBuiltin(text name,
                                        Tree *to,
                                        TreeList parms,
@@ -637,7 +615,8 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     }
 
     // Enter the result in the map
-    result = (adapter_fn) llvm.FinalizeFunction(adapter);
+    llvm.FinalizeFunction(adapter);
+    result = (adapter_fn) llvm.FunctionPointer(adapter);
     array_to_args_adapters[numargs] = result;
 
     IFTRACE(llvm)
@@ -717,15 +696,6 @@ eval_fn Compiler::MarkAsClosure(XL::Tree *closure, uint ntrees)
     (void) closure;
     (void) ntrees;
     return NULL;
-}
-
-
-bool Compiler::IsKnown(Tree *tree)
-// ----------------------------------------------------------------------------
-//    Test if global is known
-// ----------------------------------------------------------------------------
-{
-    return TreeGlobal(tree) != NULL;
 }
 
 
@@ -1018,29 +988,6 @@ bool Compiler::FreeResources(Tree *tree)
                 f->eraseFromParent();
                 info->closure = NULL;
             }
-        }
-    }
-
-    // Drop any global reference
-    if (GlobalValue *v = info->global)
-    {
-        bool inUse = !v->use_empty();
-
-        IFTRACE(llvm)
-            std::cerr << " global V" << v
-                      << (inUse ? " in use" : " unused");
-
-        if (inUse)
-        {
-            // Defer deletion until later
-            result = false;
-        }
-        else
-        {
-            // Delete the LLVM value immediately if it's safe to do it.
-            llvm.EraseGlobalMapping(v);
-            v->eraseFromParent();
-            info->global = NULL;
         }
     }
 

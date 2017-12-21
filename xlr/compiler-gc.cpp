@@ -1,17 +1,17 @@
 // ****************************************************************************
 //  compiler-gc.cpp                                                 XLR project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Information connecting the LLVM compiler to the XLR garbage collector
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -53,12 +53,10 @@ CompilerInfo::~CompilerInfo()
 {
     RECORD(COMPILER_DETAILS, "Compiler info deleted",
            "function", (intptr_t) function,
-           "global", (intptr_t) global,
            "tree", (intptr_t) tree);
 
     IFTRACE(llvm)
         std::cerr << "CompilerInfo deleted F" << (void *) function
-                  << " G" << (void *) global
                   << " T" << (void *) tree
                   << "\n";
 }

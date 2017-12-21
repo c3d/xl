@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  compiler-gc.h                                                   XLR project
 // ****************************************************************************
-// 
-//   File Description:
-// 
-//     Information connecting the XLR/LLVM compiler to the garbage collector
-// 
 //
-// 
-// 
-// 
-// 
-// 
-// 
+//   File Description:
+//
+//     Information connecting the XLR/LLVM compiler to the garbage collector
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -64,10 +64,9 @@ struct CompilerInfo : Info
 //   Information about compiler-related data structures
 // ----------------------------------------------------------------------------
 {
-    CompilerInfo(Tree *tree): tree(tree), global(0), function(0), closure(0) {}
+    CompilerInfo(Tree *tree): tree(tree), function(0), closure(0) {}
     ~CompilerInfo();
     Tree *                      tree;
-    llvm::GlobalValue *         global;
     llvm::Function *            function;
     llvm::Function *            closure;
 
@@ -78,4 +77,3 @@ struct CompilerInfo : Info
 XL_END
 
 #endif // COMPILER_GC_H
-

@@ -695,7 +695,7 @@ Tree *Symbols::CompileAll(Tree *source,
     if (!result)
         return result;
 
-    eval_fn fn = unit.Finalize();
+    eval_fn fn = unit.Finalize(true);
     source->code = fn;
     source->symbols = this; // Fix for #1017
 
@@ -771,7 +771,7 @@ Tree *Symbols::CompileCall(Context *context,
     // without passing argument if we ever came to evaluate the tree (#2051)
     // So we keep the original code (which may itself be evaluated)
     // and "shield" it with a protective Block where we store the code.
-    eval_fn fn = unit.Finalize();
+    eval_fn fn = unit.Finalize(false);
     Tree *result = compiled;
     result->symbols = this; // Fix for #1017
     if (arity != 0)
@@ -833,7 +833,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
-    eval_fn fn = compile.unit.Finalize();
+    eval_fn fn = compile.unit.Finalize(false);
     call->code = fn;
     call->symbols = locals; // Fix for #1017
 
@@ -1249,7 +1249,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         // but only if we attempt to actually evaluate the tree
         if (!symbols->Compile(source, subUnit, true))
             subUnit.CallTypeError(source);
-        if (eval_fn fn = subUnit.Finalize())
+        if (eval_fn fn = subUnit.Finalize(false))
             if (isCallableDirectly)
                 source->code = fn;
     }
@@ -2898,7 +2898,7 @@ Tree *Rewrite::Compile(TreeList &xargs)
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
-    eval_fn fn = unit.Finalize();
+    eval_fn fn = unit.Finalize(false);
     to->code = fn;
     to->symbols = locals; // Record symbols, fix for #1017
 
@@ -3036,7 +3036,7 @@ OCompiledUnit::~OCompiledUnit()
 }
 
 
-eval_fn OCompiledUnit::Finalize()
+eval_fn OCompiledUnit::Finalize(bool topLevel)
 // ----------------------------------------------------------------------------
 //   Finalize the build of the current function
 // ----------------------------------------------------------------------------
@@ -3076,9 +3076,14 @@ eval_fn OCompiledUnit::Finalize()
         function->print(errs());
     }
 
-    void *result = llvm.FinalizeFunction(function);
-    IFTRACE(llvm)
-        std::cerr << " C" << (void *) result << "\n";
+    llvm.FinalizeFunction(function);
+    void *result = NULL;
+    if (topLevel)
+    {
+        result = llvm.FunctionPointer(function);
+        IFTRACE(llvm)
+            std::cerr << " C" << (void *) result << "\n";
+    }
     IFTRACE(compile_progress)
         std::cerr << "Finalized\n";
 
@@ -3121,7 +3126,7 @@ Value *OCompiledUnit::NeedStorage(Tree *tree, Tree *source)
     {
         data->CreateStore(value[tree], result);
     }
-    else if (Value *global = compiler->TreeGlobal(tree))
+    else if (Value *global = compiler->TreeConstant(tree))
     {
         data->CreateStore(global, result);
     }
@@ -3140,8 +3145,7 @@ bool OCompiledUnit::IsKnown(Tree *tree, uint which)
     else if ((which & knowValues) && value.count(tree) > 0)
         return true;
     else if (which & knowGlobals)
-        if (compiler->IsKnown(tree))
-            return true;
+        return true;
     return false;
 }
 
@@ -3165,7 +3169,7 @@ Value *OCompiledUnit::Known(Tree *tree, uint which)
     else if (which & knowGlobals)
     {
         // Check if this is a global
-        result = compiler->TreeGlobal(tree);
+        result = compiler->TreeConstant(tree);
     }
     return result;
 }

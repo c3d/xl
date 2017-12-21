@@ -737,16 +737,17 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         errs() << "UNOPTIMIZED (CompiledUnit):\n";
         function->print(errs());
     }
+    llvm.FinalizeFunction(function);
 
     void *result = NULL;
     if (createCode)
     {
-        result = llvm.FinalizeFunction(function);
         IFTRACE(code)
         {
             errs() << "AFTER GLOBAL OPTIMIZATIONS:\n";
             function->print(errs());
         }
+        result = llvm.FunctionPointer(function);
         IFTRACE(llvm)
             std::cerr << " C" << (void *) result << "\n";
     }
@@ -783,7 +784,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         {
             initializer = value[tree];
         }
-        else if (Value *global = compiler->TreeGlobal(tree))
+        else if (Value *global = compiler->TreeConstant(tree))
         {
             initializer = global;
         }
@@ -821,8 +822,7 @@ bool CompiledUnit::IsKnown(Tree *tree, uint which)
     else if ((which & knowValues) && value.count(tree) > 0)
         return true;
     else if (which & knowGlobals)
-        if (compiler->IsKnown(tree))
-            return true;
+        return true;
     return false;
 }
 
@@ -846,7 +846,7 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
     else if (which & knowGlobals)
     {
         // Check if this is a global
-        result = compiler->TreeGlobal(tree);
+        result = compiler->TreeConstant(tree);
     }
     return result;
 }
@@ -1057,7 +1057,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     if (req == compiler->booleanTy)
     {
         assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
-        Value *falsePtr = compiler->TreeGlobal(xl_false);
+        Value *falsePtr = compiler->TreeConstant(xl_false);
         result = code->CreateICmpNE(value, falsePtr, "notFalse");
     }
     else if (req->isIntegerTy())
@@ -1119,13 +1119,13 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
 
         // True block
         code->SetInsertPoint(isTrue);
-        Value *truePtr = compiler->TreeGlobal(xl_true);
+        Value *truePtr = compiler->TreeConstant(xl_true);
         result = code->CreateStore(result, truePtr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
-        Value *falsePtr = compiler->TreeGlobal(xl_false);
+        Value *falsePtr = compiler->TreeConstant(xl_false);
         result = code->CreateStore(result, falsePtr);
         code->CreateBr(exit);
 
@@ -1206,7 +1206,7 @@ Value *CompiledUnit::Global(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     // Check if this is a global
-    Value *result = compiler->TreeGlobal(tree);
+    Value *result = compiler->TreeConstant(tree);
     return result;
 }
 

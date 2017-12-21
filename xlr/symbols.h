@@ -213,7 +213,7 @@ struct OCompiledUnit
     ~OCompiledUnit();
 
     bool                IsForwardCall()         { return entrybb == NULL; }
-    eval_fn             Finalize();
+    eval_fn             Finalize(bool topLevel);
 
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
 

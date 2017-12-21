@@ -113,8 +113,6 @@ struct Compiler
     void                      SetTreeFunction(Tree *tree, llvm::Function *);
     llvm::Function *          TreeClosure(Tree *tree);
     void                      SetTreeClosure(Tree *tree, llvm::Function *);
-    llvm::GlobalValue *       TreeGlobal(Tree *tree);
-    void                      SetTreeGlobal(Tree*, llvm::GlobalValue*, void*);
     llvm::Function *          EnterBuiltin(text name,
                                            Tree *to,
                                            TreeList parms,
@@ -126,7 +124,6 @@ struct Compiler
     llvm::Constant *          TreeConstant(Tree *constant);
     llvm::Constant *          TextConstant(text value);
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
-    bool                      IsKnown(Tree *value);
 
     void                      MachineType(Tree *source, llvm_type mtype);
     llvm_type                 MachineType(Tree *tree);
