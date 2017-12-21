@@ -442,7 +442,7 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
         }
 
         // Arguments not bound here are returned as a constant
-        return compiler->EnterConstant(rw->from);
+        return compiler->TreeConstant(rw->from);
     }
 
     case INFIX:
@@ -524,13 +524,13 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         }
 
         // Arguments not bound here are returned as a constant
-        return compiler->EnterConstant(rw->from);
+        return compiler->TreeConstant(rw->from);
     }
 
     case INFIX:
     {
         Infix *infix = (Infix *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         left = Unbox(boxed, infix->left, index);
         right = Unbox(boxed, infix->right, index);
         left = Autobox(left, ttp);
@@ -542,9 +542,9 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         if (prefix->left->Kind() == NAME)
-            left = compiler->EnterConstant(prefix->left);
+            left = compiler->TreeConstant(prefix->left);
         else
             left = Unbox(boxed, prefix->left, index);
         right = Unbox(boxed, prefix->right, index);
@@ -557,10 +557,10 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         left = Unbox(boxed, postfix->left, index);
         if (postfix->right->Kind() == NAME)
-            right = compiler->EnterConstant(postfix->right);
+            right = compiler->TreeConstant(postfix->right);
         else
             right = Unbox(boxed, postfix->right, index);
         left = Autobox(left, ttp);
@@ -572,7 +572,7 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
     case BLOCK:
     {
         Block *block = (Block *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         child = Unbox(boxed, block->child, index);
         child = Autobox(child, ttp);
         return llvm.CreateCall(code, compiler->xl_new_block, ref, child);
@@ -878,7 +878,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -894,7 +894,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -910,7 +910,7 @@ Value *CompiledUnit::ConstantText(Text *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -926,7 +926,7 @@ Value *CompiledUnit::ConstantTree(Tree *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
     }
     return result;
 }

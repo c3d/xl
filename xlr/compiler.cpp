@@ -706,7 +706,7 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 }
 
 
-Constant *Compiler::EnterConstant(Tree *constant)
+Constant *Compiler::TreeConstant(Tree *constant)
 // ----------------------------------------------------------------------------
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------

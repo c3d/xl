@@ -3188,7 +3188,7 @@ Value *OCompiledUnit::ConstantInteger(Integer *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -3204,7 +3204,7 @@ Value *OCompiledUnit::ConstantReal(Real *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -3220,7 +3220,7 @@ Value *OCompiledUnit::ConstantText(Text *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
     }
     if (storage.count(what))
         code->CreateStore(result, storage[what]);
@@ -3236,7 +3236,7 @@ Value *OCompiledUnit::ConstantTree(Tree *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             data->CreateStore(result, storage[what]);
     }
