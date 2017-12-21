@@ -690,10 +690,10 @@ Constant *Compiler::TreeConstant(Tree *constant)
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER_DETAILS, "Enter Constant",
+    RECORD(COMPILER_DETAILS, "Tree Constant",
            "tree", (intptr_t) constant, "kind", constant->Kind());
     IFTRACE(llvm)
-        std::cerr << "EnterConstant "
+        std::cerr << "TreeConstant "
                   << "[" << constant << "]=" << (void *) constant << "\n";
     return llvm.CreateConstant(treePtrTy, constant);
 }
