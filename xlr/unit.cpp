@@ -643,7 +643,7 @@ llvm_value CompiledUnit::InvokeClosure(llvm_value result, llvm_value fnPtr)
 //   Invoke a closure with a known closure function
 // ----------------------------------------------------------------------------
 {
-    result = code->CreateCall(fnPtr, result);
+    result = llvm.CreateCall(code, fnPtr, result);
     return result;
 }
 
@@ -1177,7 +1177,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     // If we need to invoke a boxing function, do it now
     if (boxFn)
     {
-        result = code->CreateCall(boxFn, value);
+        result = llvm.CreateCall(code, boxFn, value);
         type = result->getType();
     }
 
