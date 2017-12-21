@@ -53,7 +53,7 @@
 // ============================================================================
 
 // Getting help on options
-OPTION(h, "List usage information and exit", Usage(args[0].c_str()); exit(0))
+OPTION(help, "List usage information and exit", Usage(args[0].c_str()); exit(0))
 
 // Rendering control
 OPTVAR(stylesheet, text, "xl")
@@ -68,7 +68,7 @@ OPTVAR(signedConstants, bool, false)
 OPTION(signed, "Parse -1 as a constant, not unary minus prefix",
        signedConstants = true)
 OPTVAR(showGV, bool, false)
-OPTION(showgv, "Generate Graphviz output", showGV = true)
+OPTION(graphviz, "Generate Graphviz output", showGV = true)
 OPTVAR(showSource, bool, false)
 OPTION(show, "Show source file", showSource = true)
 
@@ -78,7 +78,6 @@ OPTION(builtins, "Select the builtins file", builtins = STRING)
 
 // Do not load builtins file
 OPTION(nobuiltins, "Do not load builtins", builtins = "")
-OPTION(nb, "Short form for -nobuiltins", builtins = "")
 
 // Read or write from serialized format
 OPTVAR(readSerialized, bool, false)
@@ -92,11 +91,11 @@ OPTION(compile, "Only compile file, do not run", compileOnly = true)
 
 // Debug controlling options
 OPTVAR(debug, bool, false)
-OPTION(g, "Compile with debugging information", debug=true)
+OPTION(debug, "Compile with debugging information", debug=true)
 
 // Warning-level option
 OPTVAR(warning_level, uint, 0)
-OPTION(w, "Set the warning level, from 0 to 5",
+OPTION(warning, "Set the warning level, from 0 to 5",
        warning_level = INTEGER(0, 5))
 OPTION(pedantic, "Set the maximum warning level",
        warning_level = 5)
@@ -106,24 +105,27 @@ OPTION(pedantic, "Set the maximum warning level",
 // -O1 means old-style compilation, not fully optimized
 // -O3 means new-style full compilation with type inference
 OPTVAR(optimize_level, uint, 1)
-OPTION(O, "Set the optimization level, from 0 to 3",
+OPTION(optimize_level, "Set the optimization level, from 0 to 3",
+       optimize_level = INTEGER(0, 3);
+       if (builtins != "" && optimize_level >= 3)
+           builtins = "opt-" + builtins)
+OPTION(O, "Short form for -optimize_level",
        optimize_level = INTEGER(0, 3);
        if (builtins != "" && optimize_level >= 3)
            builtins = "opt-" + builtins)
 OPTVAR(verbose,bool,false)
 OPTION(verbose, "Select more verbose error messages.", verbose = true)
-OPTION(v, "Short form for -verbose.", verbose = true)
 OPTVAR(interpreted, bool, false)
-OPTION(i, "Select interpreted mode", interpreted = true)
+OPTION(interpreted, "Select interpreted mode", interpreted = true)
 
 // Stack depth
 OPTVAR(stack_depth, uint, 1000)
-OPTION(stack, "Select the evaluation stack depth",
+OPTION(stack_depth, "Select the evaluation stack depth",
        stack_depth = INTEGER(50,25000)) // Experimentally, 52K max on MacOSX
 
 // Output file
 OPTVAR(output_file, std::string, "")
-OPTION(o, "Select output file", output_file = STRING)
+OPTION(output, "Select output file", output_file = STRING)
 
 // Debug controlling options
 OPTVAR(doDiff, bool, false)
@@ -135,12 +137,11 @@ OPTVAR(debugPrefix, text, "")
 OPTION(debug_prefix, "Select the prefix to debug", debugPrefix = STRING)
 
 OPTVAR(flightRecorderSize, uint, 8192)
-OPTION(frs, "Select the flight recorder size",
+OPTION(recorder_size, "Select the flight recorder size",
        flightRecorderSize=INTEGER(128, 131072))
 OPTVAR(flightRecorderFlags, uint, 0)
-OPTION(frf, "Select the flight recorder flags",
+OPTION(recorder_flags, "Select the flight recorder flags",
        flightRecorderFlags=INTEGER(0, ~0UL))
-
 
 
 

@@ -4,18 +4,18 @@
 //   Christophe de Dinechin                                        XL2 PROJECT
 //   XL COMPILER: options.h
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Processing of XL compiler options
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is distributed under the GNU General Public License
 // See the enclosed COPYING file or http://www.gnu.org for information
@@ -51,6 +51,7 @@ struct Options
 #undef OPTION
 
     uint                arg;
+    kstring             argt;
     std::vector<text>   args;
     std::vector<text>   files;
 

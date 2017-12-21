@@ -87,7 +87,8 @@ static void Usage(kstring appName)
 // ----------------------------------------------------------------------------
 {
     std::cerr << "Usage:\n";
-    std::cerr << appName << " <options> <source_file>\n";
+    std::cerr << appName << " <options> <source_file>\n"
+              << "   (option names can be shortened if not ambiguous)\n";
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
@@ -109,13 +110,25 @@ static void Usage(kstring appName)
 }
 
 
-static bool OptionMatches(kstring command_line, kstring optdescr)
+template <class TextArray>
+static inline bool OptionMatches(Options &options,
+                                 kstring command_line,
+                                 const TextArray &optdescr)
 // ----------------------------------------------------------------------------
 //   Check if a given option matches the command line
 // ----------------------------------------------------------------------------
 // Single character options may accept argument as same or next parameter
 {
-    return text(command_line) == text(optdescr);
+    const unsigned size = sizeof(optdescr) - 1;
+    bool matches = true;
+    for (unsigned i = 0; matches && i < size && command_line[i]; i++)
+        matches = command_line[i] == optdescr[i];
+    if (matches)
+    {
+        options.argt = command_line + size;
+        return true;
+    }
+    return false;
 }
 
 
@@ -124,11 +137,18 @@ static kstring OptionString(Options &opt)
 //   Check if we find an integer between low and high on the command line
 // ----------------------------------------------------------------------------
 {
-    opt.arg += 1;
-    if (opt.arg  < opt.args.size())
-        return opt.args[opt.arg].c_str();
-    Ooops("Option #$1 does not exist", Error::COMMAND_LINE).Arg(opt.arg);
-    return "";
+    if (*opt.argt == 0)
+    {
+        if (opt.arg + 1 < opt.args.size())
+        {
+            opt.arg++;
+            opt.argt = opt.args[opt.arg].c_str();
+        }
+        if (*opt.argt == 0)
+            Ooops("Option #$1 does not exist", Error::COMMAND_LINE)
+                .Arg(opt.arg);
+    }
+    return opt.argt;
 }
 
 
@@ -138,19 +158,16 @@ static ulong OptionInteger(Options &opt, ulong low, ulong high)
 // ----------------------------------------------------------------------------
 {
     uint result = low;
-    opt.arg += 1;
-    if (opt.arg  < opt.args.size())
-    {
-        kstring val = opt.args[opt.arg].c_str();
-        if (isdigit(*val))
-            result = strtol(val, (char**) &val, 10);
-        else
-            Ooops("Option $1 is not an integer value", Error::COMMAND_LINE)
-                .Arg(val);
-        if (*val)
-            Ooops("Garbage $1 after integer value", Error::COMMAND_LINE)
-                .Arg(val);
-    }
+    kstring val = OptionString(opt);
+    if (isdigit(*val))
+        result = strtol(val, (char**) &val, 10);
+    else
+        Ooops("Option #$1 ($2) is not an integer value", Error::COMMAND_LINE)
+            .Arg(opt.arg).Arg(val);
+    if (*val)
+        Ooops("Garbage $1 after integer value", Error::COMMAND_LINE)
+            .Arg(val);
+
     if (result < low || result > high)
     {
         char lowstr[15], highstr[15];
@@ -184,20 +201,39 @@ text Options::ParseNext(bool consumeFiles)
 // ----------------------------------------------------------------------------
 // Note: What we read here should be compatible with GCC parsing
 {
+    enum
+    {
+        OPTION_INVALID,
+#define OPTVAR(name, type, value)
+#define OPTION(name, descr, code)       OPTION_##name,
+#include "options.tbl"
+        OPTION_COUNT
+    } selected = OPTION_INVALID;
+    static const char *option_name[] = {
+        "invalid",
+#define OPTVAR(name, descr, code)
+#define OPTION(name, descr, code)       #name,
+#include "options.tbl"
+    };
+
     while (arg < args.size())
     {
         if(args[arg].length() > 1 && args[arg][0] == '-')
         {
-            kstring option = args[arg].c_str() + 1;
-            kstring argval = option;
+            kstring option = args[arg].c_str();
+            kstring argval = option + 1;
 
             RECORD(INFO, "Parse option", "Index", arg, option);
+
+            selected = OPTION_INVALID;
 
 #if XL_DEBUG
             if (argval[0] == 't')
             {
                 kstring trace_name = argval + 1;
                 Traces::enable(trace_name);
+                arg++;
+                continue;
             }
 #endif
             // Pass LLVM options as is (they are caught in compiler init)
@@ -209,19 +245,37 @@ text Options::ParseNext(bool consumeFiles)
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
-            if (OptionMatches(argval, #name))                           \
+            if (OptionMatches(*this, argval, #name))                    \
             {                                                           \
-                code;                                                   \
-            }                                                           \
-            else
+                if (selected != OPTION_INVALID)                         \
+                    Ooops("Ambiguous option $1, "                       \
+                          "selected " #name " instead of $2",           \
+                          Error::COMMAND_LINE)                          \
+                        .Arg(argval)                                    \
+                        .Arg(option_name[selected]);                    \
+                selected = OPTION_##name;                               \
+            }
+#include "options.tbl"
+
+            switch(selected)
+            {
+#define OPTVAR(name, type, value)
+#define OPTION(name, descr, code)                                       \
+                case OPTION_##name:                                     \
+                {                                                       \
+                    code;                                               \
+                }                                                       \
+                break;
 #define INTEGER(n, m)           OptionInteger(*this, n, m)
 #define STRING                  OptionString(*this)
 #include "options.tbl"
-            {
+
+            default:
                 // Default: Output usage
                 Ooops("Unknown option $1 ignored", Error::COMMAND_LINE)
-                    .Arg(argval);
+                    .Arg(option);
             }
+
             arg++;
         }
         else
@@ -243,4 +297,3 @@ ulong xl_traces = 0;
 // ----------------------------------------------------------------------------
 //   Bits for each trace
 // ----------------------------------------------------------------------------
-
