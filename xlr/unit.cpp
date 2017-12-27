@@ -1122,13 +1122,13 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
         // True block
         code->SetInsertPoint(isTrue);
         Value *truePtr = compiler->TreeConstant(xl_true);
-        result = code->CreateStore(result, truePtr);
+        result = code->CreateStore(truePtr, ptr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
         Value *falsePtr = compiler->TreeConstant(xl_false);
-        result = code->CreateStore(result, falsePtr);
+        result = code->CreateStore(falsePtr, ptr);
         code->CreateBr(exit);
 
         // Now on shared exit block
