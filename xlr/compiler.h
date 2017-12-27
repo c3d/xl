@@ -122,7 +122,7 @@ struct Compiler
                                              int parmCount, ...);
     adapter_fn                ArrayToArgsAdapter(uint numtrees);
     llvm::Constant *          TreeConstant(Tree *constant);
-    llvm::Constant *          TextConstant(text value);
+    llvm_value                TextConstant(llvm_builder code, text value);
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
 
     void                      MachineType(Tree *source, llvm_type mtype);

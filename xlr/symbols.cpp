@@ -3861,7 +3861,7 @@ BasicBlock *OCompiledUnit::TextTest(Tree *tree, text value)
     // Check if the value is the same, call xl_same_text
     Value *treeValue = Known(tree);
     assert(treeValue);
-    Constant *refVal = llvm.TextConstant(value);
+    llvm_value refVal = llvm.TextConstant(data, value);
     Value *isGood = llvm.CreateCall(code, compiler->xl_same_text,
                                     treeValue, refVal);
     BasicBlock *isGoodBB = BasicBlock::Create(llvm, "isGood", function);
@@ -3908,7 +3908,7 @@ BasicBlock *OCompiledUnit::InfixMatchTest(Tree *actual, Infix *reference)
     Value *refVal = NeedStorage(reference);     assert (refVal);
 
     // Extract the name of the reference
-    Constant *refName = llvm.TextConstant(reference->name);
+    llvm_value refName = llvm.TextConstant(data, reference->name);
 
     // Where we go if the tests fail
     BasicBlock *notGood = NeedTest();

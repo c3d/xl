@@ -678,13 +678,13 @@ Constant *Compiler::TreeConstant(Tree *constant)
 }
 
 
-Constant *Compiler::TextConstant(text value)
+llvm_value Compiler::TextConstant(llvm_builder code, text value)
 // ----------------------------------------------------------------------------
 //   Return a C-style string pointer for a string constant
 // ----------------------------------------------------------------------------
 {
-    Constant *refVal = llvm.TextConstant(value);
-    return refVal;
+    llvm_value textValue = llvm.TextConstant(code, value);
+    return textValue;
 }
 
 

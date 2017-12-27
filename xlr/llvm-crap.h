@@ -285,7 +285,7 @@ public:
     llvm_struct         OpaqueType();
     llvm::StructType *  Struct(llvm_struct old,
                                std::vector<llvm_type> &elements);
-    llvm::Constant *    TextConstant(text value);
+    llvm_value          TextConstant(llvm_builder code, text value);
 
     llvm::Module *      CreateModule(text name);
 
@@ -410,6 +410,8 @@ inline JIT::JIT()
     // Setup the optimizer - REVISIT: Adjust with optimization level
     optimizer = new LLVMCrap_FunctionPassManager(module);
     moduleOptimizer = new LLVMCrap_PassManager;
+#else // LLVM_CRAP_MCJIT
+    sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 #endif // LLVM_CRAP_MCJIT
 }
 
@@ -478,16 +480,27 @@ inline llvm_struct JIT::OpaqueType()
 }
 
 
-inline llvm::Constant *JIT::TextConstant(text value)
+inline llvm_value JIT::TextConstant(llvm_builder code, text value)
 // ----------------------------------------------------------------------------
 //    Return a constant array of characters for the input text
 // ----------------------------------------------------------------------------
 {
 #if LLVM_VERSION < 31
-    return llvm::ConstantArray::get(context, value);
+    llvm::Constant *array = llvm::ConstantArray::get(context, value);
 #else
-    return llvm::ConstantDataArray::getString(context, value);
+    llvm::Constant *array = llvm::ConstantDataArray::getString(context, value);
 #endif
+    llvm::GlobalVariable *gv =
+                   new llvm::GlobalVariable(*module,
+                                            array->getType(),
+                                            true,
+                                            llvm::GlobalValue::PrivateLinkage,
+                                            array);
+    // gv->setUnnamedAddr(GlobalValue::UnnamedAddr::Global);
+    llvm::ArrayType *arrayTy = (llvm::ArrayType *) array->getType();
+    llvm::PointerType *ptrTy = llvm::PointerType::get(arrayTy->getElementType(), 0);
+    llvm_value result = code->CreateBitCast(gv, ptrTy);
+    return result;
 }
 
 

@@ -95,7 +95,7 @@ llvm_value CompileExpression::DoText(Text *what)
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    Constant *textConstant = compiler->TextConstant(what->value);
+    llvm_value textConstant = compiler->TextConstant(unit->data, what->value);
     return textConstant;
 }
 

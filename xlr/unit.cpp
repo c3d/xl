@@ -211,7 +211,9 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
         void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
         if (!address)
         {
-            Ooops("No library function matching $1", rewrite->from);
+            Ooops("No library function matching $1 (symbol '$2')",
+                  rewrite->from)
+                .Arg(label);
             return NULL;
         }
         sys::DynamicLibrary::AddSymbol(label, address);
