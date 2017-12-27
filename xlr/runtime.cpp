@@ -777,10 +777,11 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
     eval_fn fn = compiler->closures[ntrees];
     if (!fn)
     {
+        LLVMCrap::JITModule module(compiler->llvm, "xl.generated.closure");
         TreeList noParms;
         OCompiledUnit unit(compiler, result, noParms, false);
         unit.CallClosure(result, ntrees);
-        fn = unit.Finalize(false);
+        fn = unit.Finalize(true);
         compiler->closures[ntrees] = fn;
         compiler->SetTreeFunction(result, NULL); // Now owned by closures[n]
     }

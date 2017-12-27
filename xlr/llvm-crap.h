@@ -281,6 +281,7 @@ public:
 
     operator llvm::LLVMContext &();
     llvm::Module *      Module();
+    void                SetModule(llvm::Module *module);
 
     llvm_struct         OpaqueType();
     llvm::StructType *  Struct(llvm_struct old,
@@ -288,7 +289,6 @@ public:
     llvm_value          TextConstant(llvm_builder code, text value);
 
     llvm::Module *      CreateModule(text name);
-
     llvm::Function *    CreateFunction(llvm::FunctionType *type,
                                        text name);
     void                FinalizeFunction(llvm::Function *f);
@@ -334,7 +334,7 @@ private:
 #if LLVM_CRAP_MCJIT
     typedef std::pair<llvm::GlobalValue *, void *> global_t;
 
-    std::vector<llvm::Module *>                 modules, pending;
+    std::vector<llvm::Module *>                 modules;
     std::vector<llvm::ExecutionEngine *>        engines;
     std::vector<global_t>                       globals;
 #else // !LLVM_CRAP_MCJIT
@@ -443,10 +443,19 @@ inline JIT::operator llvm::LLVMContext &()
 
 inline llvm::Module * JIT::Module()
 // ----------------------------------------------------------------------------
-//   Returm the current compilation module for the JIT
+//   Return the current compilation module for the JIT
 // ----------------------------------------------------------------------------
 {
     return module;
+}
+
+
+inline void JIT::SetModule(llvm::Module *mod)
+// ----------------------------------------------------------------------------
+//   Set the current module
+// ----------------------------------------------------------------------------
+{
+    module = mod;
 }
 
 
@@ -511,6 +520,12 @@ inline llvm::Module *JIT::CreateModule(text name)
 //   If the current module has been JITed already, we need to create a new one
 //   as the MCJIT will have "closed" all relocations
 {
+#if LLVM_CRAP_MCJIT
+    static unsigned index = 0;
+    name += '.';
+    name += std::to_string(++index);
+#endif
+
     llvm::Module *m = new llvm::Module(name, context);
     module = m;
 
@@ -569,10 +584,21 @@ inline llvm_value JIT::Prototype(llvm_value callee)
     assert(module);
     text name = function->getName();
 
+    llvm::errs() << "Prototype " << name
+                 << " in " << module->getName() << "\n";
+
     // First check if we don't already have it in the current module
     if (module)
+    {
         if (llvm::Function *f = module->getFunction(name))
+        {
+            IFTRACE(prototypes)
+                llvm::errs() << "Prototype for " << name
+                             << " found in current module " << module->getName()
+                             << "\n";
             return f;
+        }
+    }
 
     // Otherwise search in other modules
     for (auto m : modules)
@@ -581,6 +607,13 @@ inline llvm_value JIT::Prototype(llvm_value callee)
         {
             if (llvm::Function *f = m->getFunction(name))
             {
+                IFTRACE(prototypes)
+                    llvm::errs() << "Prototype for " << name
+                                 << " created in module " << module->getName()
+                                 << " from " << m->getName()
+                                 << " type " << *f->getFunctionType()
+                                 << "\n";
+
                 // Create prototype based on original function type
                 llvm::Function *proto =
                     llvm::Function::Create(f->getFunctionType(),
@@ -592,10 +625,10 @@ inline llvm_value JIT::Prototype(llvm_value callee)
         }
     }
 
-    IFTRACE(llvm)
+    IFTRACE(prototypes)
         llvm::errs() << "No function found for " << *callee
                      << " (" << (void *) callee << ", " << name << ")"
-                     << " probably a pointer\n";
+                     << " probably a function pointer\n";
 
     return callee;
 #endif // LLVM_CRAP_MCJIT
@@ -614,8 +647,6 @@ inline llvm::Function *JIT::CreateFunction(llvm::FunctionType *type,
         static unsigned index = 0;
         name += '.';
         name += std::to_string(++index);
-        if (module)
-            pending.push_back(module);
         CreateModule(name);
     }
 #endif
@@ -677,12 +708,6 @@ inline void *JIT::FunctionPointer(llvm::Function* f)
         engines.push_back(engine);
 
         module = nullptr;
-        if (pending.size())
-        {
-            module = pending.back();
-            pending.pop_back();
-        }
-
         if (resolver)
             engine->InstallLazyFunctionCreator(resolver);
         engine->clearAllGlobalMappings();
@@ -696,7 +721,6 @@ inline void *JIT::FunctionPointer(llvm::Function* f)
         }
         engine->finalizeObject();
         void *result = engine->getPointerToFunction(f);
-        globals.push_back(global_t(f, result));
         return result;
     }
     return nullptr;
@@ -934,6 +958,34 @@ inline void JIT::Dump()
     module->dump();
 #endif // LLVM_CRAP_MCJIT
 }
+
+
+// ============================================================================
+//
+//    A helper class to push/pop modules with the MCJIT
+//
+// ============================================================================
+
+struct JITModule
+// ----------------------------------------------------------------------------
+//   Save and restore the current JIT module
+// ----------------------------------------------------------------------------
+{
+    JITModule(JIT &llvm, kstring name)
+        : llvm(llvm), module(llvm.Module())
+    {
+        llvm.CreateModule(name);
+    }
+    ~JITModule()
+    {
+        llvm.SetModule(module);
+    }
+
+private:
+    JIT &               llvm;
+    llvm::Module *      module;
+};
+
 
 } // namespace LLVMCrap
 

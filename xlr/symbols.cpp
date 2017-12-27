@@ -687,6 +687,7 @@ Tree *Symbols::CompileAll(Tree *source,
 
     Compiler *compiler = MAIN->compiler;
     TreeList noParms;
+    LLVMCrap::JITModule module(compiler->llvm, "xl.all");
     OCompiledUnit unit (compiler, source, noParms, false);
     if (unit.IsForwardCall())
         return source;
@@ -755,6 +756,7 @@ Tree *Symbols::CompileCall(Context *context,
     }
 
     Compiler *compiler = MAIN->compiler;
+    LLVMCrap::JITModule module(compiler->llvm, "xl.call");
     OCompiledUnit unit (compiler, call, argList, false);
     if (unit.IsForwardCall())
         return source;

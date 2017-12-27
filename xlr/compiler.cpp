@@ -288,7 +288,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     llvm.SetName(structSymTy, "Symbols");
 
     // Create one module for all extern function declarations
-    llvm.CreateModule(moduleName);
+    llvm.CreateModule(text(moduleName) + ".externs");
 
     // Create references to the various runtime functions
 #define FN(x) #x, (void *) XL::x
@@ -352,6 +352,9 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
         llvm_primitives[le->name] = le;
+
+    // Create a new module for the generated code
+    llvm.CreateModule(moduleName);
 }
 
 
@@ -556,6 +559,9 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
         return result;
     }
 
+    // We need a new independent module for this adapter with the MCJIT
+    LLVMCrap::JITModule module(llvm, "xl.array2arg.adapter");
+
     // Generate the function type:
     // Tree *generated(Context *, native_fn, Tree *, Tree **)
     llvm_types parms;
@@ -564,7 +570,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
     FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
-    llvm::Function *adapter = llvm.CreateFunction(fnType, "xl_adapter");
+    llvm::Function *adapter = llvm.CreateFunction(fnType, "xl.adapter");
 
     // Generate the function type for the called function
     llvm_types called;
@@ -587,7 +593,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     Value *treeArray = &*inArgs++;
 
     // Cast the input function pointer to right type
-    Value *fnTyped = code.CreateBitCast(fnToCall, calledPtrType, "fnCast");
+    Value *fnTyped = code.CreateBitCast(fnToCall, calledPtrType, "xl.fnCast");
 
     // Add source as first argument to output arguments
     std::vector<Value *> outArgs;
@@ -816,7 +822,7 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
     signature.push_back(type);
     FunctionType *ftype = FunctionType::get(mtype, signature, false);
     CompiledUnit unit(this, ctx);
-    fn = unit.InitializeFunction(ftype, NULL, "xl_unbox", false, false);
+    fn = unit.InitializeFunction(ftype, NULL, "xl.unbox", false, false);
 
     // Take the first input argument, which is the boxed value.
     llvm::Function::arg_iterator args = fn->arg_begin();

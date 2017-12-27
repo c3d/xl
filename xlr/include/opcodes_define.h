@@ -169,5 +169,5 @@
         symbol##_type = n;                                              \
         context->Define(n, n);                                          \
         xl_enter_type(MAIN->globals, n,                                 \
-                      "xl_" #symbol "_cast", xl_##symbol##_cast);       \
+                      "xl." #symbol ".cast", xl_##symbol##_cast);       \
     } while(0);

@@ -109,7 +109,7 @@ Function *CompiledUnit::TopLevelFunction()
     llvm_type retTy = compiler->treePtrTy;
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     return InitializeFunction(fnTy, &parameters.parameters,
-                              "xl_program", true, false);
+                              "xl.program", true, false);
 }
 
 
@@ -137,7 +137,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
     Tree *rtype = inference->Type(expr);
     llvm_type retTy = compiler->MachineType(rtype);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    llvm_function fn = InitializeFunction(fnTy,NULL,"xl_closure",true,false);
+    llvm_function fn = InitializeFunction(fnTy,NULL,"xl.closure",true,false);
 
     // Return the function
     return fn;
@@ -182,7 +182,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     else
         retTy = StructureType(signature, source);
 
-    text label = "xl_eval_" + parameters.name;
+    text label = "xl.eval." + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
 
