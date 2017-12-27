@@ -771,7 +771,7 @@ Tree *Symbols::CompileCall(Context *context,
     // without passing argument if we ever came to evaluate the tree (#2051)
     // So we keep the original code (which may itself be evaluated)
     // and "shield" it with a protective Block where we store the code.
-    eval_fn fn = unit.Finalize(false);
+    eval_fn fn = unit.Finalize(true);
     Tree *result = compiled;
     result->symbols = this; // Fix for #1017
     if (arity != 0)
@@ -833,7 +833,7 @@ Infix *Symbols::CompileTypeTest(Tree *type)
 
     // Even if technically, this is not an 'eval_fn' (it has more args),
     // we still record it to avoid recompiling multiple times
-    eval_fn fn = compile.unit.Finalize(false);
+    eval_fn fn = compile.unit.Finalize(true);
     call->code = fn;
     call->symbols = locals; // Fix for #1017
 
