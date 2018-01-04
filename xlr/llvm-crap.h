@@ -584,9 +584,6 @@ inline llvm_value JIT::Prototype(llvm_value callee)
     assert(module);
     text name = function->getName();
 
-    llvm::errs() << "Prototype " << name
-                 << " in " << module->getName() << "\n";
-
     // First check if we don't already have it in the current module
     if (module)
     {
