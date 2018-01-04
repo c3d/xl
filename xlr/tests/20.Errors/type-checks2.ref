@@ -1,6 +1,4 @@
-WARNING: Tree error "No form match 'cos """"A""""'" was not compiled
-WARNING: Tree error "No form match '2.6 * cos """"A""""'" was not compiled
-error "No form match '3.3 - 2.6 * cos """"A""""'"
-20.Errors/type-checks2.xl:2: No form match 'cos "A"'
-20.Errors/type-checks2.xl:2: No form match '2.6 * cos "A"'
-20.Errors/type-checks2.xl:2: No form match '3.3 - 2.6 * cos "A"'
+error "Couldn't compile $1", '3.3 - 2.6 * cos "A"'
+20.Errors/type-checks2.xl:2: No rewrite candidate for '3.3 - 2.6 * cos "A"'
+20.Errors/type-checks2.xl:2: Couldn't compile '3.3 - 2.6 * cos "A"'
+20.Errors/type-checks2.xl:2: Error compiling '3.3 - 2.6 * cos "A"'

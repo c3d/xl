@@ -1,5 +1,6 @@
-WARNING: Tree error "No form match 'month_name Creation'" was not compiled
-DEBUG: error "No form match 'glop month_name Creation'"
-true
+WARNING: Tree Creation was not compiled
+DEBUG: glop month_name Creation
+month_name 1 -> "Toto"
+20.Errors/invalid-form-nested-in-call-1370.xl:5: No form match 'month_name Creation'
 20.Errors/invalid-form-nested-in-call-1370.xl:5: No form match 'month_name Creation'
 20.Errors/invalid-form-nested-in-call-1370.xl:5: No form match 'glop month_name Creation'
