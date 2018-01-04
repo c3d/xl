@@ -1214,7 +1214,10 @@ Value *CompiledUnit::Global(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     // Check if this is a global
-    Value *result = compiler->TreeConstant(tree);
+    Value *result = NULL;
+    CompilerInfo *info = compiler->Info(tree);
+    if (info)
+        result = compiler->TreeConstant(tree);
     return result;
 }
 
