@@ -55,6 +55,7 @@
 #include "args.h"
 #include "expred.h"
 #include "errors.h"
+#include "renderer.h"
 #include "types.h"
 #include "llvm-crap.h"
 #include <stdio.h>
@@ -182,6 +183,11 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     else
         retTy = StructureType(signature, source);
 
+    IFTRACE(signature)
+    {
+        std::cerr << "Return type for '" << source;
+        llvm::errs() << "' is " << *retTy << "\n";
+    }
     text label = "xl.eval." + parameters.name;
     IFTRACE(labels)
         label += "[" + text(*source) + "]";
