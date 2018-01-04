@@ -1,3 +1,2 @@
 // OPT=-O3 -nobuiltins
 // This simply verifies that an empty file doesn't crash
-// EXIT=1
