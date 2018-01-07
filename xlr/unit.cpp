@@ -601,13 +601,13 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
 {
     // Record the function that we build
     text fkey = compiler->ClosureKey(expr, context);
-    llvm_function &function = compiler->FunctionFor(fkey);
-    assert (function == NULL);
+    llvm_function &fn = compiler->FunctionFor(fkey);
+    assert (fn == NULL);
 
     // Create the evaluation function
     CompiledUnit cunit(compiler, context);
-    function = cunit.ClosureFunction(expr, inference);
-    if (!function || !cunit.code || !cunit.closureTy)
+    fn = cunit.ClosureFunction(expr, inference);
+    if (!fn || !cunit.code || !cunit.closureTy)
         return NULL;
     cunit.ImportClosureInfo(this);
     llvm_value returned = cunit.CompileTopLevel(expr);
@@ -625,7 +625,7 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
     // First, store the function pointer
     uint field = 0;
     llvm_value fptr = llvm.CreateStructGEP(code, stackPtr, field++, "fnPtr");
-    code->CreateStore(function, fptr);
+    code->CreateStore(fn, fptr);
 
     // Then loop over all values that were detected while evaluating expr
     value_map &cls = cunit.closure;
