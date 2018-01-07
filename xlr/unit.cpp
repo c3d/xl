@@ -125,9 +125,12 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, TypeInference *types)
 
     // We have a closure type that we will build as we evaluate expression
     closureTy = llvm.OpaqueType();
-    static char buffer[80]; static int count = 0;
-    snprintf(buffer, 80, "closure%d", count++);
-    llvm.SetName(closureTy, buffer);
+    IFTRACE(named_closures)
+    {
+        static char buffer[80]; static int count = 0;
+        snprintf(buffer, 80, "xl.closure%d", count++);
+        llvm.SetName(closureTy, buffer);
+    }
 
     // Add a single parameter to the signature
     llvm_types signature;
