@@ -1,4 +1,4 @@
-// OPT=-O3 -nobuiltins -tcode
+// OPT=-O3 -nobuiltins
 extern bool xl_write_text(text);
 extern bool xl_write_cr(void);
 

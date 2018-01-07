@@ -1,8 +1,7 @@
-// OPT=-O3 -tcode
+// OPT=-O3
 (X:integer < Y:integer):boolean -> opcode ICmpSLT
 
 if true then X else Y -> X
 if false then X else Y -> Y
 
-if 1 < 3 then "hello" else "world"
-
+if 1 < 3 then "OK" else "KO"

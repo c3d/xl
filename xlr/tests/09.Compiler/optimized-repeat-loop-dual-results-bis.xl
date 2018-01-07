@@ -1,4 +1,4 @@
-// OPT=-O3 -nobuiltins -tcode
+// OPT=-O3 -nobuiltins
 extern bool puts(text);
 (x:integer + y:integer):integer -> opcode Add
 (x:integer - y:integer):integer -> opcode Sub
@@ -7,7 +7,4 @@ repeat 0, B -> true
 repeat 1, B -> 42
 repeat N, B -> B; repeat N-2, B
 
-repeat 26, { puts "Hello" }
-
-
-
+repeat 27, { puts "Hello" }
