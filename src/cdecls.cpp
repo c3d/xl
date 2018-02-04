@@ -107,7 +107,7 @@ Infix *CDeclaration::Declaration(Tree *input)
 
             Name *C = new Name("C", source->Position());
             Prefix *cdecl = new Prefix(C, name);
-            rewrite = new Infix("->", decl, cdecl);
+            rewrite = new Infix("is", decl, cdecl);
 
             return rewrite;
         }
@@ -123,7 +123,7 @@ Tree *CDeclaration::TypeAndName(Tree *input,
                                        Name_p &declName,
                                        uint &mods)
 // ----------------------------------------------------------------------------
-//   Incrementally build the return type 
+//   Incrementally build the return type
 // ----------------------------------------------------------------------------
 {
     // Check case of pointers
@@ -404,7 +404,7 @@ Name *CDeclaration::BaroqueTypeMods(Name *first,
         if ((a == cvt[i].first && b == cvt[i].second) ||
             (b == cvt[i].first && a == cvt[i].second))
             return new Name(cvt[i].to, first->Position());
-            
+
     return NULL;
 }
 

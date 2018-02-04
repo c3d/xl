@@ -253,8 +253,8 @@ bool Types::DoInfix(Infix *what)
                 AssignType(what) &&
                 UnifyExpressionTypes(what, what->left));
 
-    // Case of 'X -> Y': Analyze type of X and Y, unify them, set type of result
-    if (what->name == "->")
+    // Case of 'X is Y': Analyze type of X and Y, unify them, set type of result
+    if (what->name == "is")
         return Rewrite(what);
 
     // For other cases, we assign types to left and right
@@ -440,7 +440,7 @@ bool Types::Evaluate(Tree *what)
     Errors errors;
     errors.Log (Error("Unable to evaluate '$1':", what), true);
     context->Lookup(what, lookupRewriteCalls, rc);
-        
+
     // If we have no candidate, this is a failure
     count = rc->candidates.size();
     if (count == 0)
@@ -685,7 +685,7 @@ bool Types::JoinConstant(Name *type, Tree *cst)
 
     case REAL:
         if (type == real_type   ||
-            type == real64_type || 
+            type == real64_type ||
             type == real32_type)
             return Join(type, cst, true);
         return Unify(real_type, type) && Join(cst, real_type);
@@ -1054,10 +1054,10 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
             if (Tree *rtOK = ValueMatchesType(ctx, it->right, value, convert))
                 return rtOK;
         }
-        else if (it->name == "->")
+        else if (it->name == "is")
         {
             if (Infix *iv = value->AsInfix())
-                if (iv->name == "->")
+                if (iv->name == "is")
                 {
                     // REVISIT: Compare function signatures
                     Ooops("Unimplemented: "
@@ -1144,11 +1144,11 @@ Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
                 TypeIntersectsType(ctx, type, itst->right, convert))
                 return test;
         }
-        else if (itst->name == "->")
+        else if (itst->name == "is")
         {
             if (Infix *it = type->AsInfix())
             {
-                if (it->name == "->")
+                if (it->name == "is")
                 {
                     // REVISIT: Coverage of function types
                     Ooops("Unimplemented: "
@@ -1179,10 +1179,10 @@ Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
             if (Tree *rtOK = TypeIntersectsType(ctx, it->right,test, convert))
                 return rtOK;
         }
-        else if (it->name == "->")
+        else if (it->name == "is")
         {
             if (Infix *iv = test->AsInfix())
-                if (iv->name == "->")
+                if (iv->name == "is")
                 {
                     // REVISIT: Compare function signatures
                     Ooops("Unimplemented: "

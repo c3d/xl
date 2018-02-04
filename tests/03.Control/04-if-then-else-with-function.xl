@@ -1,4 +1,4 @@
-compare foo, bar ->
+compare foo, bar is
     if foo < bar then
         writeln "FOO lower than BAR"
     else

@@ -1,4 +1,4 @@
-adder X:integer -> (Y -> Y + X)
+adder X:integer is (Y is Y + X)
 
 add3 := adder 3
 add5 := adder 5

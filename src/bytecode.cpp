@@ -458,7 +458,7 @@ struct IndexOp : FailOp
         if (Infix *lifx = callee->AsInfix())
         {
             // Check if we have a function definition
-            if (lifx->name == "->")
+            if (lifx->name == "is")
             {
                 // If we have a single name on the left, like (X->X+1)
                 // interpret that as a lambda function
@@ -1337,11 +1337,11 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // Create a call for forms like (X -> X+1) 31
             if (Infix *lifx = callee->AsInfix())
             {
-                if (lifx->name == "->")
+                if (lifx->name == "is")
                 {
                     TreeIDs   outs;
                     ParmOrder parms;
-                    
+
                     // If we have a single name on the left, like (X->X+1)
                     // interpret that as a lambda function
                     int argID = Evaluate(ctx, arg);
@@ -1425,7 +1425,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             }
 
             // Check declarations
-            if (name == "->")
+            if (name == "is")
             {
                 // Declarations evaluate last non-declaration result, or self
                 InstructionsSuccess(saveEvals.saved.size());

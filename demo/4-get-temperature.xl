@@ -1,6 +1,5 @@
 // Send a temperature test to two different remote hosts
-pi1_temp -> ask "pi.local",  { temperature }
-pi2_temp -> ask "pi2.local", { temperature }
-     
+pi1_temp is ask "pi.local",  { temperature }
+pi2_temp is ask "pi2.local", { temperature }
+
 writeln "Temperature on pi=", pi1_temp, " on pi2=", pi2_temp
-    

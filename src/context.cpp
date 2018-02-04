@@ -122,9 +122,9 @@ Context::~Context()
 
 
 // ============================================================================
-// 
+//
 //    High-level evaluation functions
-// 
+//
 // ============================================================================
 
 void Context::CreateScope(TreePosition pos)
@@ -200,7 +200,7 @@ Tree *Context::Evaluate(Tree *what)
         break;
     case 2:
         // Compilation of bytecode not implemented yet, fall through for now
-        
+
 #endif // INTERPRETER_ONLY
 
     default:
@@ -212,7 +212,7 @@ Tree *Context::Evaluate(Tree *what)
         result = XL::Evaluate(this, what);
         break;
     }
-    
+
     return result;
 }
 
@@ -241,9 +241,9 @@ Tree *Context::Call(text prefix, TreeList &argList)
 
 
 // ============================================================================
-// 
+//
 //    Entering symbols
-// 
+//
 // ============================================================================
 
 bool Context::ProcessDeclarations(Tree *what)
@@ -259,7 +259,7 @@ bool Context::ProcessDeclarations(Tree *what)
         bool isInstruction = true;
         if (Infix *infix = what->AsInfix())
         {
-            if (infix->name == "->")
+            if (infix->name == "is")
             {
                 Enter(infix);
                 isInstruction = false;
@@ -270,7 +270,7 @@ bool Context::ProcessDeclarations(Tree *what)
                 if (Infix *left = infix->left->AsInfix())
                 {
                     isInstruction = false;
-                    if (left->name == "->")
+                    if (left->name == "is")
                         Enter(left);
                     else
                         isInstruction = ProcessDeclarations(left);
@@ -380,7 +380,7 @@ Rewrite *Context::Define(Tree *form, Tree *value, bool overwrite)
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
-    Infix *decl = new Infix("->", form, value, form->Position());
+    Infix *decl = new Infix("is", form, value, form->Position());
     return Enter(decl, overwrite);
 }
 
@@ -401,7 +401,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 {
     // If the rewrite is not good, just exit
-    if (rewrite->name != "->")
+    if (rewrite->name != "is")
         return NULL;
 
     // In interpreted mode, just skip any C declaration
@@ -418,7 +418,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 
     // Find 'from', 'to' and 'hash' for the rewrite
     Tree *from = rewrite->left;
-    
+
     // Check what we are really defining, and verify if it's a name
     Tree *defined = RewriteDefined(from);
     Name *name = defined->AsName();
@@ -560,9 +560,9 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 
 
 // ============================================================================
-// 
+//
 //    Context attributes
-// 
+//
 // ============================================================================
 
 Rewrite *Context::SetAttribute(text attribute, Tree *value, bool owr)
@@ -603,9 +603,9 @@ Rewrite *Context::SetAttribute(text attribute, text value, bool owr)
 
 
 // ============================================================================
-// 
+//
 //    Path management
-// 
+//
 // ============================================================================
 
 text Context::ResolvePrefixedPath(text path)
@@ -619,9 +619,9 @@ text Context::ResolvePrefixedPath(text path)
 
 
 // ============================================================================
-// 
+//
 //    Looking up symbols
-// 
+//
 // ============================================================================
 
 Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
@@ -632,7 +632,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
     // Quick exit if we have no rewrite for that tree kind
     if (!HasRewritesFor(what->Kind()))
         return NULL;
-    
+
     Scope * scope = symbols;
     ulong   h0    = Hash(what);
 
@@ -654,7 +654,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             Rewrite *entry = (*parent)->AsInfix();
             XL_ASSERT(entry && entry->name == REWRITE_NAME);
             Infix *decl = RewriteDeclaration(entry);
-            XL_ASSERT(!decl || decl->name == "->");
+            XL_ASSERT(!decl || decl->name == "is");
             RewriteChildren *children = RewriteNext(entry);
             XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
@@ -791,7 +791,7 @@ static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
     while (where)
     {
         Infix *decl = RewriteDeclaration(where);
-        if (decl && decl->name == "->")
+        if (decl && decl->name == "is")
         {
             Tree *declared = decl->left;
             Name *name = declared->AsName();
@@ -838,9 +838,9 @@ ulong Context::ListNames(text begin, RewriteList &list,
 
 
 // ============================================================================
-// 
+//
 //    Hash functions to balance things in the symbol table
-// 
+//
 // ============================================================================
 
 static inline ulong HashText(const text &t)
@@ -868,7 +868,7 @@ static inline longlong hashRealToInteger(double value)
     u.d = value;
     return u.i;
 }
-    
+
 
 ulong Context::Hash(Tree *what)
 // ----------------------------------------------------------------------------
@@ -914,9 +914,9 @@ ulong Context::Hash(Tree *what)
 
 
 // ============================================================================
-// 
+//
 //    Utility functions
-// 
+//
 // ============================================================================
 
 void Context::Clear()
@@ -962,7 +962,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
 
         if (decl)
         {
-            if (decl->name == "->")
+            if (decl->name == "is")
                 out << decl->left << " -> "
                     << ShortTreeForm(decl->right) << "\n";
             else
@@ -978,7 +978,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
         {
             Infix *nextl = next->left->AsInfix();
             Infix *nextr = next->right->AsInfix();
-            
+
             if (nextl && nextr)
             {
                 Dump(out, nextl);
@@ -1049,19 +1049,19 @@ void debugs(XL::Context *context)
         if (XL::Allocator<XL::Scope>::IsAllocated(scope))
         {
             debugl(ScopeRewrites(scope));
-        } 
+        }
         else
         {
             std::cerr << "Cowardly refusing to render unknown scope pointer "
                       << (void *) scope << "\n";
         }
-    } 
+    }
     else
     {
         std::cerr << "Cowardly refusing to render unknown context pointer "
                   << (void *) context << "\n";
     }
-   
+
 }
 
 
@@ -1084,7 +1084,7 @@ void debugc(XL::Context *context)
                 debugl(ScopeRewrites(scope));
                 scope = ScopeParent(scope);
             }
-        } 
+        }
         else
         {
             std::cerr << "Cowardly refusing to render unknown scope pointer "

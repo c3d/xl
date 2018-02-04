@@ -1,6 +1,6 @@
 INFIX
         11      NEWLINE
-        21      -> =>
+        21      is
         31      else into
         40      loop while until
         50      then require ensure
@@ -8,13 +8,13 @@ INFIX
         75      with as
         85      := += -= *= /= ^= |= &=
         100     STATEMENT
-        110     is
+        110     -> =>
         120     written
         130     where
         200     DEFAULT
         211     when
         231     ,
-        240     return 
+        240     return
         250     and or xor
         260     in at contains
         271     of to
@@ -52,7 +52,7 @@ BLOCK
 
 TEXT
         "<<" ">>"
-                
+
 COMMENT
         "//" NEWLINE
         "/*" "*/"
@@ -60,4 +60,3 @@ COMMENT
 
 SYNTAX "C"
         extern ;
-

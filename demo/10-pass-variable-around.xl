@@ -1,4 +1,3 @@
-Var -> "Declared on original computer"
+Var is "Declared on original computer"
 tell "localhost",
    writeln "The value of Var is ", Var
-   

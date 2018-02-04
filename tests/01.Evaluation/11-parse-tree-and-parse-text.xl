@@ -11,5 +11,5 @@ writeln "foo 3=", foo 3
 writeln "foo 551.3=", foo 551.3
 writeln "foo Z+1=", foo (Z+1)
 writeln "bar Z+1=", bar (Z+1)
-foo X -> quote(X + 2 * {X+1})
-bar X -> quote(X + 2 * ({X}+1))
+foo X is quote(X + 2 * {X+1})
+bar X is quote(X + 2 * ({X}+1))

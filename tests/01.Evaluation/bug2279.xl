@@ -1,5 +1,5 @@
 if first_condition and second_condition then
    writeln "both are true"
 
-first_condition -> true
-second_condition -> 1 > 0
+first_condition is true
+second_condition is 1 > 0

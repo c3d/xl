@@ -704,7 +704,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
             if (Infix *lifx = callee->AsInfix())
             {
                 // Check if we have a function definition
-                if (lifx->name == "->")
+                if (lifx->name == "is")
                 {
                     // If we have a single name on the left, like (X->X+1)
                     // interpret that as a lambda function
@@ -745,7 +745,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
                     what = arg;
                     // Check if we have a single definition on the left
                     if (Infix *ifx = inside->AsInfix())
-                        if (ifx->name == "->")
+                        if (ifx->name == "is")
                             what = new Prefix(newCallee, arg, pfx->Position());
                 }
                 else
@@ -786,7 +786,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
             }
 
             // Check declarations
-            if (name == "->")
+            if (name == "is")
             {
                 // Declarations evaluate last non-declaration result, or self
                 return encloseResult(context, originalScope, result);

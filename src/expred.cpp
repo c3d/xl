@@ -154,7 +154,7 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
 
     // Declarations: it's too early to define a function just yet,
     // because we don't have the actual argument types.
-    if (infix->name == "->")
+    if (infix->name == "is")
         return NULL;
 
     // General case: expression
@@ -239,7 +239,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     for (i = 0; i < max; i++)
     {
         Save<value_map> saveComputed(computed, computed);
-        
+
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
         Save<Types_p> saveTypes(unit->types, cand.types);
@@ -263,7 +263,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
             conditional = true;
         }
 
-        
+
         // Perform the tests to check if this candidate is valid
         RewriteConditions &conds = cand.conditions;
         RewriteConditions::iterator t;

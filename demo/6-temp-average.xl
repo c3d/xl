@@ -1,8 +1,8 @@
 invoke "pi2.local",
-    sum_temperatures    -> 0.0
-    count_temperatures  -> 0
+    sum_temperatures    is 0.0
+    count_temperatures  is 0
 
-    compute_and_report_average T:real ->
+    compute_and_report_average T:real is
         sum_temperatures := sum_temperatures + T
         count_temperatures := count_temperatures + 1
         reply

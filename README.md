@@ -30,17 +30,17 @@ Two dialects of XL exist that demonstrate this extensibility:
 
         invoke "pi2.local",
            every 1.1s,
-                rasp1_temp ->
+                rasp1_temp is
                     ask "pi.local",
                         temperature
                 send_temps rasp1_temp, temperature
 
-           send_temps T1:real, T2:real ->
+           send_temps T1:real, T2:real is
                if abs(T1-T2) > 2.0 then
                    reply
                        show_temps T1, T2
 
-        show_temps T1:real, T2:real ->
+        show_temps T1:real, T2:real is
             write "Temperature on pi is ", T1, " and on pi2 ", T2, ". "
             if T1>T2 then
                 writeln "Pi is hotter by ", T1-T2, " degrees"
@@ -74,10 +74,10 @@ consumption. Examples similar to the ones below can be found in the
 To measure the temperature on a remote node called "sensor.corp.net",
 use the following code:
 
-    temperature_on_sensor -> ask "sensor.corp.net", { temperature }
+    temperature_on_sensor is ask "sensor.corp.net", { temperature }
     writeln "Temperature is ", temperature_on_sensor
 
-The `->` rewrite operator reads "transforms into" and is used in XL
+The `is` rewrite operator reads "transforms into" and is used in XL
 to define variables, functions, macros, and so on. Look into
 [builtins.xl](https://github.com/c3d/xl/blob/master/src/builtins.xl)
 for examples of its use.
@@ -101,13 +101,13 @@ it was measured with the following program:
         last_temperature := temperature
         every 1s,
             check_temperature temperature
-        check_temperature T:real ->
+        check_temperature T:real is
             writeln "Measuring temperature ", T, " from process ", process_id
             if abs(T - last_temperature) >= 1.0 then
                 reply
                     temperature_changed T, last_temperature
             last_temperature := T
-    temperature_changed new_temp, last_temp ->
+    temperature_changed new_temp, last_temp is
         writeln "Temperature changed from ", last_temp, " to ", new_temp
 
 The `invoke` function sends a program to the remote node and opens a
@@ -132,13 +132,13 @@ only after having transmitted the new value, not after having measured it:
         last_temperature := temperature
         every 1s,
             check_temperature temperature
-        check_temperature T:real ->
+        check_temperature T:real is
             writeln "Measuring temperature ", T, " from process ", process_id
             if abs(T - last_temperature) >= 1.0 then
                 reply
                     temperature_changed T, last_temperature
                 last_temperature := T
-    temperature_changed new_temp, last_temp ->
+    temperature_changed new_temp, last_temp is
         writeln "Temperature changed from ", last_temp, " to ", new_temp
 
 In XL, indentation is significant, and defined "blocks" of
@@ -156,12 +156,12 @@ on the sensor, you can also have it compute min, max and average
 temperatures from samples taken every 2.5 seconds:
 
     invoke "sensor.corp.net",
-        min   -> 100.0
-        max   -> 0.0
-        sum   -> 0.0
-        count -> 0
+        min   : real    := 100.0
+        max   : real    := 0.0
+        sum   : real    := 0.0
+        count : integer := 0
 
-        compute_stats T:real ->
+        compute_ stats T:real is
             min   := min(T, min)
             max   := max(T, max)
             sum   := sum + T
@@ -172,7 +172,7 @@ temperatures from samples taken every 2.5 seconds:
         every 2.5s,
             compute_stats temperature
 
-    report_stats Count, T, Min, Max, Avg ->
+    report_stats Count, T, Min, Max, Avg is
         writeln "Sample ", Count, " T=", T,
                 " Min=", Min, " Max=", Max, " Avg=", Avg
 
@@ -205,17 +205,17 @@ remain local:
 
     invoke "sensor2.corp.net",
        every 1.1s,
-            sensor1_temp ->
+            sensor1_temp is
                 ask "sensor1.corp.net",
                     temperature
             send_temps sensor1_temp, temperature
 
-       send_temps T1:real, T2:real ->
+       send_temps T1:real, T2:real is
            if abs(T1-T2) > 2.0 then
                reply
                    show_temps T1, T2
 
-    show_temps T1:real, T2:real ->
+    show_temps T1:real, T2:real is
         write "Temperature on sensor1 is ", T1, " and on sensor2 ", T2, ". "
         if T1>T2 then
             writeln "Sensor1 is hotter by ", T1-T2, " degrees"
@@ -376,39 +376,39 @@ also safer, since you cannot call arbitrary C functions.
 
 ### Semantics: One operator to rule them all
 
-XL has one fundamental operator, `->`, the "rewrite operator",
+XL has one fundamental operator, `is`, the "rewrite operator",
 which reads as *transforms into*. It is used to declare variables:
 
-    X -> 0
+    X is 0
 
 It can be used to declare functions:
 
-    add_one X -> X + 1
+    add_one X is X + 1
 
 The rewrite operator  can be used to declare other operators:
 
-    X + Y -> writeln "Adding ", X, " and ", Y; X - (-Y)
+    X + Y is writeln "Adding ", X, " and ", Y; X - (-Y)
 
 But it is a more general tool than the operator overloading found in
 most other languages, in particular since it allows you to easily
 overload combinations of operators, or special cases:
 
-    A in B..C -> A >= B and A <= C
-    X * 1 -> X
+    A in B..C is A >= B and A <= C
+    X * 1 is X
 
 Rewrites are considered in program order, and pattern matching finds
 the first one that applies. For example, factorial is defined as follows:
 
-    0! -> 1
-    N! -> N * (N-1)!
+    0! is 1
+    N! is N * (N-1)!
 
 Many basic program structures are defined that way in
 [builtins.xl](https://github.com/c3d/xl/blob/master/src/builtins.xl).
 For example, if-then-else and infinite loops are defined as follows:
 
-    if true  then X else Y      -> X
-    if false then X else Y      -> Y
-    loop Body                   -> Body; loop Body
+    if true  then X else Y      is X
+    if false then X else Y      is Y
+    loop Body                   is Body; loop Body
 
 
 ### Syntax: Look, Ma, no keywords!
@@ -469,10 +469,10 @@ XL can be seen as a functional language, where functions are
 first-class entities, i.e. you can manipulate them, pass them around,
 etc:
 
-    adder X:integer -> (Y -> Y + X)
+    adder X:integer is (Y is Y + X)
 
-    add3 := adder 3
-    add5 := adder 5
+    add3 is adder 3
+    add5 is adder 5
 
     writeln "3+2=", add3 2
     writeln "5+17=", add5 17
@@ -531,7 +531,7 @@ mistake.
 
 Consider the following definition of `every`:
 
-    every Duration, Body ->
+    every Duration, Body is
         loop
             Body
             sleep Duration
@@ -544,7 +544,7 @@ One way to force evaluation is to give a type to the argument. If you
 want to force early evaluation of the argument, and to check that it
 is a real value, you can do it as follows:
 
-    every Duration:real, Body ->
+    every Duration:real, Body is
         loop
             Body
             sleep Duration
@@ -555,13 +555,13 @@ Like many functional languages, XL ensures that the value of
 variables is preserved for the evaluation of a given body. Consider
 for example:
 
-    adder X:integer -> (Y -> Y + X)
+    adder X:integer is (Y is Y + X)
     add3 := adder 3
 
 In that case, `adder 3` will bind `X` to value `3`, but then the
 returned value outlives the scope where `X` was declared. However, `X`
 is referred to in the code. So the returned value is a *closure* which
-integrates the binding `X->3`.
+integrates the binding `X is 3`.
 
 At this point, such closures cannot be sent across a `tell`, `ask`,
 `invoke` or `reply`. Make sure data that is sent over to a remote node

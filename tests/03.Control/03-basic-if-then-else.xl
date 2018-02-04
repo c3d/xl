@@ -1,5 +1,5 @@
-foo -> 1
-bar -> 2*3
+foo is 1
+bar is 2*3
 if foo < bar then
     writeln "Foo less than bar (GOOD)"
 else

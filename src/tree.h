@@ -198,7 +198,7 @@ struct Integer : Tree
     static const kind KIND = INTEGER;
     typedef Integer  self_t;
     typedef longlong value_t;
-    
+
     Integer(value_t i = 0, TreePosition pos = NOWHERE):
         Tree(INTEGER, pos), value(i) {}
     Integer(Integer *i): Tree(INTEGER, i), value(i->value) {}
@@ -217,7 +217,7 @@ struct Real : Tree
     static const kind KIND = REAL;
     typedef Real   self_t;
     typedef double value_t;
-    
+
     Real(value_t d = 0.0, TreePosition pos = NOWHERE):
         Tree(REAL, pos), value(d) {}
     Real(Real *r): Tree(REAL, r), value(r->value) {}
@@ -235,7 +235,7 @@ struct Text : Tree
     static const kind KIND = TEXT;
     typedef Text self_t;
     typedef text value_t;
-    
+
     Text(value_t t, text open="\"", text close="\"", TreePosition pos=NOWHERE):
         Tree(TEXT, pos), value(t), opening(open), closing(close) {}
     Text(value_t t, TreePosition pos):
@@ -268,7 +268,7 @@ struct Name : Tree
     static const kind KIND = NAME;
     typedef Name self_t;
     typedef text value_t;
-    
+
     Name(value_t n, TreePosition pos = NOWHERE):
         Tree(NAME, pos), value(n) {}
     Name(Name *n):
@@ -343,7 +343,7 @@ struct Postfix : Tree
     static const kind KIND = POSTFIX;
     typedef Postfix     self_t;
     typedef Postfix *   value_t;
-    
+
     Postfix(Tree *l, Tree *r, TreePosition pos = NOWHERE):
         Tree(POSTFIX, pos), left(l), right(r) {}
     Postfix(Postfix *p, Tree *l, Tree *r):
@@ -367,7 +367,7 @@ struct Infix : Tree
         Tree(INFIX, pos), left(l), right(r), name(n) {}
     Infix(Infix *i, Tree *l, Tree *r):
         Tree(INFIX, i), left(l), right(r), name(i->name) {}
-    bool                IsDeclaration() { return name == "->"; }
+    bool                IsDeclaration() { return name == "is"; }
     Tree_p              left;
     Tree_p              right;
     text                name;
@@ -427,15 +427,15 @@ inline Tree    *Tree::AsTree()          { return As<Tree>(); }
 
 
 // ============================================================================
-// 
+//
 //   Template members for recursive operations on trees
-// 
+//
 // ============================================================================
 
 template<typename Action>
 typename Action::value_type Tree::Do(Action *action)
 // ----------------------------------------------------------------------------
-//   Perform an action on the tree 
+//   Perform an action on the tree
 // ----------------------------------------------------------------------------
 {
     switch(Kind())
@@ -514,7 +514,7 @@ template <class I> inline void Tree::SetInfo(I *i)
     // The info can only be owned by a single tree, should not be linked
     XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
     XL_ASSERT(!i->Info::next);
-    
+
     Info *asInfo = i;           // For proper deduction if I is a derived class
     LinkedListInsert(info, asInfo);
 }

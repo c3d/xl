@@ -1,4 +1,4 @@
 // EXIT=1
 // Patterns can only contain names, not symbols
-@ - ` -> @ + `
+@ - ` is @ + `
 3 - 5

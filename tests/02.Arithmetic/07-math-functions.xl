@@ -1,4 +1,4 @@
-run_test x ->
+run_test x is
     writeln abs x
     writeln sqrt x
     writeln sin x
@@ -19,5 +19,3 @@ run_test 0.13331
 run_test 1.3331
 run_test pi
 run_test 2.0*pi
-
-

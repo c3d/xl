@@ -1,5 +1,5 @@
-BankAccount -> -100
+BankAccount is -100
 if BankAccount < 0 then
     writeln "Warning shots fired"
 else
-    writeln "Round of cakes and applause"  
+    writeln "Round of cakes and applause"

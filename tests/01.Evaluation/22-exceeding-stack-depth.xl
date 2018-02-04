@@ -1,4 +1,4 @@
 // OPT=-stack 50
 // EXIT=1
-foo N -> 1 + foo(N-1)
+foo N is 1 + foo(N-1)
 foo 10

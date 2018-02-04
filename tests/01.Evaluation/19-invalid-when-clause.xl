@@ -1,7 +1,7 @@
 // Evaluation of the Collatz conjecture sequence
 
-collatz N when N mod 2 = "glop" -> N/2
-collatz N                       -> 3*N + 1
+collatz N when N mod 2 = "glop" is N/2
+collatz N                       is 3*N + 1
 
 N := 27
 I := 0

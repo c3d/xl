@@ -70,7 +70,7 @@ bool RewriteBinding::IsDeferred()
 
     // Defer sequences and function definitions
     if (Infix *infix = val->AsInfix())
-        return infix->name == ";" || infix->name == "\n" || infix->name == "->";
+        return infix->name == ";" || infix->name == "\n" || infix->name == "is";
 
     return false;
 }
@@ -141,7 +141,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
             if (Name *pfname = prefix->left->AsName())
                 if (pfname->value == "opcode" || pfname->value == "C")
                     builtin = true;
-        
+
         if (!builtin)
         {
             bool childSucceeded = childTypes->TypeCheck(value);
@@ -447,7 +447,7 @@ RewriteCalls::BindBinary(Context *context,
         return FAILED;
 
     return Bind(context, form2, value2, rc);
-    
+
 }
 
 
@@ -467,7 +467,7 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
                   << " with " << form
                   << " as " << formType << " [" << types->Type(form) << "]\n";
     }
-    
+
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)
     {

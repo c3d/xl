@@ -1,4 +1,4 @@
-run_test x, y ->
+run_test x, y is
     writeln x+y
     writeln x-y
     writeln x*y

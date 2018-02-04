@@ -1,11 +1,11 @@
-A -> "Outer A"
-C -> "Outer C"
+A is "Outer A"
+C is "Outer C"
 
-foo ->
-    A -> "Inner A"
-    B -> "Inner B"
+foo is
+    A is "Inner A"
+    B is "Inner B"
 
-    "Outer A" -> "Indexed by Outer A"
+    "Outer A" is "Indexed by Outer A"
 
 writeln "foo.A=", foo.A
 writeln "foo.B=", foo.B
@@ -22,5 +22,3 @@ writeln "foo(C)=", foo(C)
 writeln "foo A=", foo A
 writeln "foo B=", foo B
 writeln "foo C=", foo C
-
-    
