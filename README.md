@@ -21,7 +21,8 @@ Two dialects of XL exist that demonstrate this extensibility:
                   color "red"
                   circle 50 * sin time, 50 * cos time, 20
 
-* [ELFE](http://github.com/c3d/elfe) focuses on controlling swarms of
+* [ELFE](http://github.com/c3d/elfe), formerly ELIOT (Extensible
+  Language for the Internet of things) focuses on controlling swarms of
   devices in the context of the Internet of Things. It features simple
   extensions to send programs to a remote device and wait for
   responses from it. A demo ELFE program that measures temperatures on
@@ -57,7 +58,7 @@ For more information about the language, please read the
 The examples below are derived from the ELFE documentation.
 You can also look at [Examples of Tao3D code](http://tao3d.sf.net).
 
-## Example: Measuring temperature
+## ELFE example: Measuring temperature
 
 Consider a sensor named `sensor.corp.net` running XL and featuring
 a temperature measurement through a `temperature` function.
