@@ -23,9 +23,12 @@ tests/success.out
 tests/xl
 tests/xl.stylesheet
 tests/xl.syntax
+tests/C.syntax
 tests/**/*.ref.old
 tests/**/expected-*.out
 tests/**/failure-*.out
 tests/**/success-*.out
 src/[a-z].xl
 src/[a-z].xl
+src/config.h
+xl
