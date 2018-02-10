@@ -31,6 +31,7 @@ PATTERN='[A-Za-z0-9]*'
 UPDATE=
 BASELINE=
 NOCACHE=
+INSTALLED=
 RUNTIME=default
 POSITIVE_SUCCESS=0
 NEGATIVE_SUCCESS=0
@@ -44,28 +45,26 @@ MISSING_REFERENCE=0
 EXCLUDED=0
 TOTAL_TESTS=0
 
-if [ "$1" == '-xl' ]; then XL="$2"; shift; shift; fi
-if [ "$1" == "-r" -o "$1" == "-runtime" ]; then
-    shift; RUNTIME="$1"; shift;
-fi
-if [ "$1" == "-i" ]; then
-    RUNTIME="O0"
-    shift;
-fi
-if [ "$1" == "-O1" ]; then
-    RUNTIME="O1"
-    shift;
-fi
-if [ "$1" == "-dir" -o "$1" == "-d" ]; then
-    SUBDIRS="$2"; shift; shift;
-fi
-if [ "$1" == "-baseline" -o "$1" == "-b" ]; then
-   shift; BASELINE='*'; PATTERN="$BASELINE";
-fi
-if [ "$1" == "-update" -o "$1" == "-u" ]; then
-   shift; UPDATE='*'$1'*'; PATTERN="$UPDATE"; shift;
-fi
-if [ ! -z "$1" ]; then PATTERN='*'"$1"'*'; shift; fi
+while [ $# -gt 0 ]
+do
+    echo "There are $# args, first is $1"
+    case $1 in
+        -xl)                    XL="$2";                shift; shift;;
+        -r|-runtime)            RUNTIME="$2";           shift; shift;;
+        -i|-interactive)        RUNTIME="O0";           shift;;
+        -I|-installed)          XL="xl"; INSTALLED=1;   shift;;
+        -O0|-O1|-O2|-O3)        RUNTIME="${1/-/}";      shift;;
+        -d|-dir)                SUBDIRS="$2";           shift; shift;;
+        -b|-baseline)           BASELINE="*";           shift;;
+        -u|-update)             UPDATE='*'"$2"'*';      shift; shift;;
+        *)                      PATTERN='*'"$1"'*';     shift;;
+    esac
+done
+
+# If we update the baseline, then select all patterns
+if [ ! -z "$UPDATE" ];   then  PATTERN="$UPDATE"; fi
+if [ ! -z "$BASELINE" ]; then  PATTERN="*"; fi
+
 
 # Make sure we have the correct support files in this directory
 for F in xl.syntax              \
@@ -76,7 +75,11 @@ for F in xl.syntax              \
          debug.stylesheet       \
          dbghtml.stylesheet
 do
-    ln -sf ../src/$I .
+    if [ -z "$INSTALLED" ]; then
+        ln -sf ../src/$F .
+    else
+        rm -f $F
+    fi
 done
 
 SUCCESS="$TESTDIR/success-"$RUNTIME".out"
@@ -167,6 +170,7 @@ do
         elif [ ! -z "$REF" ]; then
             sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            sed 's@/usr/local/lib/xl/@@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             if diff $REF $LOG > /dev/null 2>&1; then
                 THIS=ok
             elif diff $REFR $LOG > /dev/null 2>&1; then
