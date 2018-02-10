@@ -1,21 +1,21 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 // ****************************************************************************
-//  renderer.h                      (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  renderer.h                      (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Rendering of XL trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -64,8 +64,7 @@ struct Renderer
     Renderer(std::ostream &out, Renderer *from = renderer);
 
     // Selecting the style sheet file
-    void                SelectStyleSheet(text styleFile,
-                                         text syntaxFile = XL_LIB "xl.syntax");
+    void                SelectStyleSheet(text styleFile);
 
     // Rendering proper
     void                RenderFile (Tree *what);
@@ -82,7 +81,7 @@ struct Renderer
     bool                IsAmbiguousPrefix(Tree *test, bool testL, bool testR);
     bool                IsSubFunctionInfix(Tree *t);
     int                 InfixPriority(Tree *test);
-    
+
 protected:
     std::ostream &      output;
     Syntax &            syntax;

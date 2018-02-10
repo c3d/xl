@@ -128,22 +128,31 @@ SourceFile::~SourceFile()
 //
 // ============================================================================
 
-Main::Main(int inArgc, char **inArgv, text compilerName,
-           text syntaxName, text styleSheetName, text builtinsName)
+Main::Main(int inArgc,
+           char **inArgv,
+           const path_list &bin_paths,
+           const path_list &lib_paths,
+           text compilerName,
+           text syntaxName,
+           text styleSheetName,
+           text builtinsName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
 // ----------------------------------------------------------------------------
-    : argc(inArgc), argv(inArgv),
+    : argc(inArgc),
+      argv(inArgv),
+      bin_paths(bin_paths),
+      lib_paths(lib_paths),
       positions(),
       errors(InitMAIN()),
       topLevelErrors(),
-      syntax(syntaxName.c_str()),
+      syntax(SearchLibFile(syntaxName).c_str()),
       options(inArgc, inArgv),
 #ifndef INTERPRETER_ONLY
       compiler(NULL),
 #endif // INTERPRETER_ONLY
       context(new Context),
-      renderer(std::cout, styleSheetName, syntax),
+      renderer(std::cout, SearchLibFile(styleSheetName), syntax),
       reader(NULL), writer(NULL)
 {
     XL_INIT_TRACES();
@@ -151,13 +160,14 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
-    options.builtins = builtinsName;
+    options.builtins = SearchLibFile(builtinsName);
     ParseOptions();
 
     // Once all options have been read, enter symbols and setup compiler
 #ifndef INTERPRETER_ONLY
     if (options.optimize_level > 1)
     {
+        compilerName = SearchFile(compilerName, bin_path);
         compiler = new Compiler(compilerName.c_str(), inArgc, inArgv);
         compiler->Setup(options);
     }
@@ -464,9 +474,42 @@ int Main::Run()
 
 text Main::SearchFile(text file)
 // ----------------------------------------------------------------------------
+//   Implement the default search strategy for file in paths
+// ----------------------------------------------------------------------------
+{
+    return SearchFile(file, paths);
+}
+
+
+text Main::SearchLibFile(text file)
+// ----------------------------------------------------------------------------
+//   Implement the default search strategy for file in the library paths
+// ----------------------------------------------------------------------------
+{
+    return SearchFile(file, lib_paths);
+}
+
+
+text Main::SearchFile(text file, const path_list &paths)
+// ----------------------------------------------------------------------------
 //   Hook to search a file in paths if application sets them up
 // ----------------------------------------------------------------------------
 {
+    utf8_filestat_t st;
+
+    // If the given file is already good, use that
+    if (utf8_stat(file.c_str(), &st) == 0)
+        return file;
+
+    // Search for a possible file in path
+    for (auto &p : paths)
+    {
+        text candidate = p + file;
+        if (utf8_stat (candidate.c_str(), &st) == 0)
+            return candidate;
+    }
+
+    // If we get there, we'll probably have an error downstream
     return file;
 }
 
@@ -587,7 +630,8 @@ XL_END
 
 RECORDER(compiler, 32, "Compiler main entry point");
 
-int main(int argc, char **argv)
+
+ int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
@@ -598,7 +642,13 @@ int main(int argc, char **argv)
     char *low_water = (char *) sbrk(0);
 #endif
 
-    XL::Main main(argc, argv);
+    XL::path_list bin { XL_BIN,
+                        "/usr/local/bin/", "/bin/", "/usr/bin/" };
+    XL::path_list lib { "../lib/xl/", "../lib/",
+                        XL_LIB,
+                        "/usr/local/lib/xl/", "/lib/xl/", "/usr/lib/xl/"  };
+    XL::Main main(argc, argv, bin, lib,
+                  "xl", "xl.syntax", "xl.stylesheet", "builtins.xl");
     int rc = main.LoadAndRun();
 
     IFTRACE(gcstats)

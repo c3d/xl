@@ -80,7 +80,7 @@ struct SourceFile
     bool        readOnly;
 };
 typedef std::map<text, SourceFile> source_files;
-typedef std::vector<text> source_names;
+typedef std::vector<text> source_names, path_list;
 
 
 struct Main
@@ -88,11 +88,14 @@ struct Main
 //    The main entry point and associated data
 // ----------------------------------------------------------------------------
 {
-    Main(int argc, char **argv,
-         text compiler_name = XL_BIN "xl",
-         text syntax        = XL_LIB "xl.syntax",
-         text style         = XL_LIB "xl.stylesheet",
-         text builtins      = XL_LIB "builtins.xl");
+    Main(int               argc,
+         char            **argv,
+         const path_list  &bin_paths,
+         const path_list  &lib_paths,
+         text              compiler_name,
+         text              syntax,
+         text              style,
+         text              builtins);
     virtual ~Main();
 
     // Entry point that does everythin
@@ -111,6 +114,8 @@ struct Main
 
     // Hooks for use as a library in an application
     virtual text SearchFile(text input);
+    virtual text SearchLibFile(text input);
+    virtual text SearchFile(text input, const path_list &p);
     virtual text ModuleDirectory(text path);
     virtual text ModuleBaseName(text path);
     virtual text ModuleName(text path);
@@ -123,6 +128,7 @@ struct Main
 public:
     int          argc;
     char **      argv;
+    path_list    bin_paths, lib_paths, paths;
 
     Positions    positions;
     Errors *     errors;

@@ -130,16 +130,15 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 {}
 
 
-void Renderer::SelectStyleSheet(text styleFile, text syntaxFile)
+void Renderer::SelectStyleSheet(text styleFile)
 // ----------------------------------------------------------------------------
 //   Select an arbitrary style sheet
 // ----------------------------------------------------------------------------
 {
-    Syntax defaultSyntax, emptySyntax;
+    Syntax defaultSyntax = syntax;
+    Syntax emptySyntax;
     Positions positions;
     Errors errors;
-    Scanner scanner(syntaxFile.c_str(), emptySyntax, positions, errors);
-    defaultSyntax.ReadSyntaxFile(scanner);
     Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
 
     // Some defaults

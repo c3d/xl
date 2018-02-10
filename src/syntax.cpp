@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  syntax.cpp                      (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  syntax.cpp                      (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Description of syntax information used to parse XL trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -42,13 +42,14 @@
 #include "scanner.h"
 #include "tree.h"
 #include "errors.h"
+#include "main.h"
 
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Syntax used to parse trees
-// 
+//
 // ============================================================================
 
 Syntax *Syntax::syntax = NULL;
@@ -387,7 +388,7 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 if (txt.find(".syntax") == txt.npos)
                     txt += ".syntax";
                 if (txt.find("/") == txt.npos)
-                    txt = XL_LIB + txt;
+                    txt = MAIN->SearchLibFile(txt);
                 childSyntax = &subsyntax[txt];
                 if (childSyntax->filename == "")
                 {

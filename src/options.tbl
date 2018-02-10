@@ -59,9 +59,11 @@ OPTION(h, "List usage information and exit", Usage(args[0].c_str()); exit(0))
 OPTVAR(stylesheet, text, "xl")
 OPTION(style, "Select the stylesheet",
        stylesheet = STRING;
+       if (stylesheet.find(".stylesheet") == stylesheet.npos)
+           stylesheet += ".stylesheet";
        if (stylesheet.find("/") == stylesheet.npos)
-           stylesheet = XL_LIB + stylesheet;
-       Renderer::renderer->SelectStyleSheet(stylesheet + ".stylesheet"))
+           stylesheet = MAIN->SearchLibFile(stylesheet);
+       Renderer::renderer->SelectStyleSheet(stylesheet))
 
 // Parse only
 OPTVAR(parseOnly, bool, false)

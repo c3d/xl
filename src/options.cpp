@@ -21,6 +21,12 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
+#include "options.h"
+#include "errors.h"
+#include "renderer.h"
+#include "recorder.h"
+#include "main.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -30,10 +36,6 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
-#include "options.h"
-#include "errors.h"
-#include "renderer.h"
-#include "recorder.h"
 
 
 XL_BEGIN
