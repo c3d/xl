@@ -129,71 +129,32 @@ RECORDER_TWEAK_DEFINE(recorder_dump_truncation, 40,
                       "Maximum number of chars for truncation (0 = unlimited)");
 
 
-static size_t render_opcode_for_recorder(const char *format,
-                                         char *buffer, size_t size,
-                                         uintptr_t arg)
+template <typename stream_t, typename arg_t>
+size_t recorder_render(const char *format,
+                       char *buffer, size_t size,
+                       uintptr_t arg)
 // ----------------------------------------------------------------------------
 //   Render an LLVM value during a recorder dump (%v format)
 // ----------------------------------------------------------------------------
 {
     const unsigned max_len = RECORDER_TWEAK(recorder_dump_truncation);
     const unsigned trunc_len = max_len/2 - 3;
-    Op *value = (Op *) arg;
+    arg_t value = (arg_t) arg;
     text t;
-    std::ostringstream os;
+    stream_t os;
     if (value)
-        os << *value;
+        os << value;
     else
         os << "NULL";
     t = os.str();
     size_t len = t.length();
     if (max_len > 8 && len > max_len)
         t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
-    return snprintf(buffer, size, "%s", t.c_str());
-}
-
-
-#ifndef INTERPRETER_ONLY
-static size_t render_llvm_value_for_recorder(const char *format,
-                                             char *buffer, size_t size,
-                                             uintptr_t arg)
-// ----------------------------------------------------------------------------
-//   Render an LLVM value during a recorder dump (%v format)
-// ----------------------------------------------------------------------------
-{
-    const unsigned max_len = RECORDER_TWEAK(recorder_dump_truncation);
-    const unsigned trunc_len = max_len/2 - 3;
-    llvm_value value = (llvm_value) arg;
-    text t;
-    llvm::raw_string_ostream os(t);
-    if (value)
-        os << *value;
-    else
-        os << "NULL";
-    t = os.str();
-    size_t len = t.length();
-    if (max_len > 8 && len > max_len)
-        t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
-    return snprintf(buffer, size, "%p:%s", value, t.c_str());
-}
-#endif // INTERPRETER_ONLY
-
-
-static size_t render_tree_for_recorder(const char *format,
-                                       char *buffer, size_t size,
-                                       uintptr_t arg)
-// ----------------------------------------------------------------------------
-//   Render a tree during a recorder dump (%t format)
-// ----------------------------------------------------------------------------
-{
-    const unsigned max_len = RECORDER_TWEAK(recorder_dump_truncation);
-    const unsigned trunc_len = max_len/2 - 3;
-    Tree *tree = (Tree *) arg;
-    text t = tree ? text(*tree) : "NULL";
-    size_t len = t.length();
-    if (max_len > 8 && len > max_len)
-        t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
-    return snprintf(buffer, size, "%p:%s", (void *) tree, t.c_str());
+    size_t result = snprintf(buffer, size, "%s", t.c_str());
+    for (unsigned i = 0; i < result; i++)
+        if (buffer[i] == '\n')
+            buffer[i] = '|';
+    return result;
 }
 
 
@@ -242,10 +203,10 @@ Main::Main(int inArgc,
     ParseOptions();
 
     // Once all options have been read, enter symbols and setup compiler
-    recorder_configure_type('O', render_opcode_for_recorder);
-    recorder_configure_type('t', render_tree_for_recorder);
+    recorder_configure_type('O', recorder_render<std::ostringstream, Op *>);
+    recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
 #ifndef INTERPRETER_ONLY
-    recorder_configure_type('v', render_llvm_value_for_recorder);
+    recorder_configure_type('v', recorder_render<llvm::raw_string_ostream, llvm_value>);
     if (options.optimize_level > 1)
     {
         compilerName = SearchFile(compilerName, bin_paths);
@@ -350,7 +311,7 @@ int Main::LoadFiles()
 
 
 RECORDER(file_load, 64, "Files being loaded");
-int Main::LoadFile(text file, text modname)
+int Main::LoadFile(const text &file, text modname)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
@@ -481,6 +442,7 @@ int Main::LoadFile(text file, text modname)
     sf = SourceFile (file, tree, ctx);
 
     // Process declarations from the program
+    record(file_load, "File loaded as %t", tree);
     record(file_load, "File loaded in %t", ctx->CurrentScope());
 
     // We were OK, done

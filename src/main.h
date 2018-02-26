@@ -107,7 +107,7 @@ struct Main
     Errors *     InitMAIN();
     int          ParseOptions();
     int          LoadFiles();
-    int          LoadFile(text file, text modname="");
+    int          LoadFile(const text &file, text modname="");
     int          Run();
 
     // Error checking
