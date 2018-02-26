@@ -60,6 +60,9 @@
 #include <stdio.h>
 
 
+
+RECORDER(eval, 64, "Evaluation in standard compilation unit");
+
 XL_BEGIN
 
 using namespace llvm;
@@ -160,13 +163,15 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
 
     Tree *source = RewriteDefined(rewrite->left);
     Tree *def = rewrite->right;
-    IFTRACE(llvm)
-        std::cerr << "CompiledUnit::RewriteFunction T" << (void *) source;
+    record(calls, "RewriteFunction %t defined as %t", source, def);
 
     // Extract parameters from source form
     ParameterList parameters(this);
     if (!source->Do(parameters))
+    {
+        record(eval, "RewriteFunction could not extract parameters");
         return NULL;
+    }
 
     // Create the function signature, one entry per parameter
     llvm_types signature;
@@ -185,7 +190,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
         retTy = StructureType(signature, source);
 
     text label = "_XL_" + parameters.name;
-    IFTRACE(labels)
+    if (RECORDER_TWEAK(labels))
         label += "[" + text(*source) + "]";
 
     // Check if we are actually declaring a C function
@@ -208,15 +213,19 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
     FunctionType *fnTy = FunctionType::get(retTy, signature, isVararg);
     Function *f = InitializeFunction(fnTy, &parameters.parameters,
                                      label.c_str(), isC, isC);
+    record(calls, "RewriteFunction %t type %v is %v %s",
+           source, fnTy, f, isC ? "is C" : "from XL source");
     if (isC)
     {
         void *address = sys::DynamicLibrary::SearchForAddressOfSymbol(label);
+        record(xl2c, "C symbol for %t is at address %p", source, address);
         if (!address)
         {
             Ooops("No library function matching $1", rewrite->left);
             return NULL;
         }
         sys::DynamicLibrary::AddSymbol(label, address);
+
     }
     return f;
 }
@@ -238,8 +247,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
                                 ? Function::ExternalLinkage
                                 : Function::InternalLinkage,
                                 label, compiler->module);
-    IFTRACE(llvm)
-        std::cerr << " new F" << function << "\n";
+    record(llvm, "New function %v", function);
 
     if (!isC)
     {
@@ -684,7 +692,7 @@ llvm_value CompiledUnit::InvokeClosure(llvm_value result)
     // Overwrite the function pointer to its original value
     // (actually improves optimizations by showing it doesn't change)
     code->CreateStore(fnPtr, fnPtrPtr);
-    
+
     return result;
 }
 
@@ -701,13 +709,13 @@ llvm_value CompiledUnit::Return(llvm_value value)
 }
 
 
+RECORDER_TWEAK_DEFINE(llvm_ir, 0, "Dump the LLVM IR after generating function");
 eval_fn CompiledUnit::Finalize(bool createCode)
 // ----------------------------------------------------------------------------
 //   Finalize the build of the current function
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(llvm)
-        std::cerr << "CompiledUnit Finalize F" << function;
+    record(llvm, "Finalize function %v", function);
 
     // If we had closure information, finish building the closure type
     if (closureTy)
@@ -753,27 +761,31 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     data->CreateBr(entrybb);
 
     // Verify the function we built
-    IFTRACE(ucode)
+    if (RECORDER_TWEAK(llvm_ir) & 1)
+    {
+        errs() << "LLVM IR before optimizations:\n";
         function->print(errs());
+    }
     verifyFunction(*function);
     if (compiler->optimizer)
         compiler->optimizer->run(*function);
-
-    IFTRACE(code)
+    if (RECORDER_TWEAK(llvm_ir) & 2)
+    {
+        errs() << "LLVM IR after optimizations:\n";
         function->print(errs());
+    }
 
     void *result = NULL;
     if (createCode)
     {
         // compiler->moduleOptimizer->run(*compiler->module);
         result = compiler->runtime->getPointerToFunction(function);
-        IFTRACE(code)
+        if (RECORDER_TWEAK(llvm_ir) & 4)
         {
-            errs() << "AFTER GLOBAL OPTIMIZATIONS:\n";
+            errs() << "After global optimizations:\n";
             function->print(errs());
         }
-        IFTRACE(llvm)
-            std::cerr << " C" << (void *) result << "\n";
+        record(xl2c, "Address of function %v is %p", function, result);
     }
 
     exitbb = NULL;              // Tell destructor we were successful
@@ -796,7 +808,7 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
 
         // Create alloca to store the new form
         text label = "loc";
-        IFTRACE(labels)
+        if (RECORDER_TWEAK(labels))
             label += "[" + text(*tree) + "]";
         const char *clabel = label.c_str();
         result = data->CreateAlloca(mtype, 0, clabel);
@@ -871,7 +883,7 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
         if (result)
         {
             text label = "glob";
-            IFTRACE(labels)
+            if (RECORDER_TWEAK(labels))
                 label += "[" + text(*tree) + "]";
             result = code->CreateLoad(result, label);
         }
@@ -994,7 +1006,7 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature, Tree *source)
     // Build the corresponding structure type
     StructType *stype = StructType::get(llvm, signature);
     text tname = "boxed";
-    IFTRACE(labels)
+    if (RECORDER_TWEAK(labels))
         tname += "[" + text(*source) + "]";
     LLVMS_SetName(compiler->module, stype, tname);
 
@@ -1238,7 +1250,7 @@ Value *CompiledUnit::Global(Tree *tree)
     if (result)
     {
         text label = "glob";
-        IFTRACE(labels)
+        if (RECORDER_TWEAK(labels))
             label += "[" + text(*tree) + "]";
         result = code->CreateLoad(result, label);
     }

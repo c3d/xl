@@ -160,13 +160,15 @@
   It is set when the value is evaluated, and initially cleared.
  */
 
+#include "base.h"
+#include "tree.h"
+
+#include <recorder/recorder.h>
 #include <map>
 #include <set>
 #include <vector>
 #include <iostream>
 
-#include "base.h"
-#include "tree.h"
 
 XL_BEGIN
 
@@ -306,9 +308,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //    Meaning adapters - Make it more explicit what happens in code
-// 
+//
 // ============================================================================
 
 inline Scope *ScopeParent(Scope *scope)
@@ -376,9 +378,9 @@ struct ContextStack
 
 
 // ============================================================================
-// 
+//
 //    Helper functions to extract key elements from a rewrite
-// 
+//
 // ============================================================================
 
 inline Rewrite *Context::SetOverridePriority(double priority)
@@ -490,6 +492,8 @@ inline std::ostream &operator<< (std::ostream &out, Context *c)
     return out;
 }
 
+
+RECORDER_DECLARE(xl2c);
 
 XL_END
 

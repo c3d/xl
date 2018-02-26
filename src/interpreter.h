@@ -27,9 +27,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Main entry points
-// 
+//
 // ============================================================================
 
 Tree *Evaluate(Context *context, Tree *code);
@@ -39,9 +39,9 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
 
 
 // ============================================================================
-// 
+//
 //    Closure and opcode management
-// 
+//
 // ============================================================================
 
 Tree *IsClosure(Tree *value, Context_p *context);
@@ -135,9 +135,9 @@ retry:
 
 
 // ============================================================================
-// 
+//
 //    Inline implementations for main entry points
-// 
+//
 // ============================================================================
 
 inline Tree *Evaluate(Context *context, Tree *what)
@@ -153,5 +153,8 @@ inline Tree *Evaluate(Context *context, Tree *what)
 
 
 XL_END
+
+RECORDER_DECLARE(interpreter);
+RECORDER_DECLARE(typecheck);
 
 #endif // INTERPRETER_H

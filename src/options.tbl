@@ -40,7 +40,6 @@
 // Keywords:
 // OPTVAR defines an option-controlling variable
 // OPTION defines an option and associated code
-// TRACE defines a trace
 //
 // Only the beginning of the option is checked for a match. The largest
 // matching option is considered good, so short options should be first
@@ -152,6 +151,12 @@ OPTVAR(listen_forks, int, 20)
 OPTION(forks, "Fork on listen", listen_forks = INTEGER(0, 1000))
 OPTION(nofork, "Do not fork on listen", listen_forks = 0)
 
+OPTION(t, "Enable or set recorder trace(s), 'list' to get list",
+       kstring opt = STRING;
+       recorder_trace_set(opt);
+       if (strcmp(opt, "help") == 0 || strcmp(opt, "list") == 0)
+           exit(0);)
+
 
 
 // ============================================================================
@@ -165,4 +170,3 @@ OPTION(nofork, "Do not fork on listen", listen_forks = 0)
 // Undefine for next use...
 #undef OPTVAR
 #undef OPTION
-#undef TRACE

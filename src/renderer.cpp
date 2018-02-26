@@ -48,6 +48,7 @@
 #include "options.h"
 #include "interpreter.h"
 
+#include <recorder/recorder.h>
 #include <iostream>
 #include <sstream>
 #include <cctype>

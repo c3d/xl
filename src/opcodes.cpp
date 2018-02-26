@@ -87,6 +87,7 @@ Opcode * Opcode::Find(Tree *self, text name)
 }
 
 
+RECORDER(opcodes, 64, "List of opcodes");
 void Opcode::Register(Context *context)
 // ----------------------------------------------------------------------------
 //    If the opcode defines a shape, enter that shape in symbol table
@@ -94,9 +95,7 @@ void Opcode::Register(Context *context)
 {
     if (Tree *shape = this->Shape())
     {
-        IFTRACE(opcodes)
-            std::cerr << "Opcode " << this->OpID()
-                      << " for " << shape << "\n";
+        record(opcodes, "Opcode %s for %t", this->OpID(), shape);
 
         Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         static Name_p opcodeName = new Name("opcode");
@@ -108,8 +107,7 @@ void Opcode::Register(Context *context)
     }
     else
     {
-        IFTRACE(opcodes)
-            std::cerr << "Opcode " << this->OpID() << "\n";
+        record(opcodes, "Opcode %s", this->OpID());
     }
 }
 
@@ -126,8 +124,7 @@ void NameOpcode::Register(Context *context)
 //   For name rewrites, create the name, assign to variable, enter it
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(opcodes)
-        std::cerr << "Opcode " << this->OpID() << " is a name\n";
+    record(opcodes, "Opcode %s is a name", this->OpID());
 
     context->Define(toDefine, toDefine);
     toDefine->SetInfo<Opcode> (this);

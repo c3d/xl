@@ -46,6 +46,10 @@
 #include "renderer.h"
 #include "llvm-crap.h"
 
+
+RECORDER(calls, 128, "Compilation of calls");
+
+
 XL_BEGIN
 
 using namespace llvm;
@@ -200,6 +204,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
 {
     llvm_value result = NULL;
 
+    record(calls, "Call %t", call);
     rcall_map &rcalls = unit->types->rcalls;
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
@@ -211,6 +216,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
 
     // Optimize the frequent case where we have a single call candidate
     uint i, max = calls.size();
+    record(calls, "Call %t has %u candidates", call, max);
     if (max == 1)
     {
         // We now evaluate in that rewrite's type system
@@ -256,10 +262,10 @@ llvm_value CompileExpression::DoCall(Tree *call)
             code->CreateCondBr(compare, isGood, isBad);
             code->SetInsertPoint(isGood);
             llvm_value treeValue = Value((*k).value);
-            computed[(*k).value] = unit->Autobox(treeValue, (*k).machineType);
-            IFTRACE(calltypes)
-                llvm::errs() << "Kind test: " << *treeValue
-                             << " as " << *computed[(*k).value] << "\n";
+            llvm_value cmptValue = unit->Autobox(treeValue, (*k).machineType);
+            computed[(*k).value] = cmptValue;
+            record(calls, "Kind test for % candidate %ut: %v vs %v",
+                   call, i, treeValue, cmptValue);
             conditional = true;
         }
 
@@ -270,6 +276,8 @@ llvm_value CompileExpression::DoCall(Tree *call)
         for (t = conds.begin(); t != conds.end(); t++)
         {
             llvm_value compare = Compare((*t).value, (*t).test);
+            record(calls, "Condition test for %t candidate %u: %v",
+                   call, i, compare);
             llvm_block isGood = BasicBlock::Create(llvm, "condT", function);
             code->CreateCondBr(compare, isGood, isBad);
             code->SetInsertPoint(isGood);
@@ -280,6 +288,8 @@ llvm_value CompileExpression::DoCall(Tree *call)
         {
             result = DoRewrite(cand);
             result = unit->Autobox(result, storageType);
+            record(calls, "Call %t candidate %u is conditional: %v",
+                   call, i, result);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
             code->SetInsertPoint(isBad);
@@ -289,6 +299,8 @@ llvm_value CompileExpression::DoCall(Tree *call)
             // If this particular call was unconditional, we are done
             result = DoRewrite(cand);
             result = unit->Autobox(result, storageType);
+            record(calls, "Call %t candidate %u is unconditional: %v",
+                   call, i, result);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
             code->SetInsertPoint(isBad);
@@ -304,6 +316,8 @@ llvm_value CompileExpression::DoCall(Tree *call)
     code->CreateBr(isDone);
     code->SetInsertPoint(isDone);
     result = code->CreateLoad(storage);
+    record(calls, "No match for call %t, inserted form error: %v",
+           call, result);
     return result;
 }
 
@@ -316,8 +330,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     Infix *rw = cand.rewrite;
     llvm_value result = NULL;
 
-    IFTRACE(calltypes)
-        std::cerr << "Rewrite: " << rw << "\n";
+    record(calls, "Rewrite: %t", rw);
 
     // Evaluate parameters
     llvm_values args;
@@ -326,13 +339,10 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     for (b = bnds.begin(); b != bnds.end(); b++)
     {
         Tree *tree = (*b).value;
-        IFTRACE(calltypes)
-            std::cerr << "  Arg: " << tree << ": ";
         if (llvm_value closure = (*b).Closure(unit))
         {
+            record(calls, "Rewrite %t arg %t closure %v", rw, tree, closure);
             args.push_back(closure);
-            IFTRACE(calltypes)
-                llvm::errs() << "  closure " << *closure << "\n";
         }
         else if (llvm_value value = Value(tree))
         {
@@ -340,9 +350,11 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             llvm_type mtype = value->getType();
             if (unit->compiler->IsClosureType(mtype))
                 (*b).closure = value;
-            IFTRACE(calltypes)
-                llvm::errs() << "  value " << *value
-                             << " mtype " << *mtype << "\n";
+            record(calls, "Rewrite %t arg %t value %v", rw, tree, value);
+        }
+        else
+        {
+            record(calls, "Rewrite %t arg %t not found", rw, tree);
         }
     }
 
@@ -356,6 +368,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
 
     if (builtin)
     {
+        record(calls, "Rewrite %t is builtin %t", rw, builtin);
         llvm_builder bld = unit->code;
         if (Prefix *prefix = builtin->AsPrefix())
         {
@@ -374,6 +387,8 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         {
             Ooops("Malformed primitive $1", builtin);
             result = unit->CallFormError(builtin);
+            record(calls, "Rewrite %t is malformed builtin %t: form error %v",
+                   rw, builtin, result);
         }
         else
         {
@@ -384,19 +399,15 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             result = compiler->Primitive(*unit, bld, op, sz, a);
             if (!result)
                 Ooops("Invalid primitive $1", builtin);
-            IFTRACE(calltypes)
-                llvm::errs() << "  = Primitive: " << *result << "\n";
+            record(calls, "Rewrite %t is builtin %t: %v", rw, builtin, result);
         }
     }
     else
     {
         llvm_value function = unit->Compile(cand, args);
-        IFTRACE(calltypes)
-            llvm::errs() << "  < Function: " << *function << "\n";
         if (function)
             result = unit->code->CreateCall(function, LLVMS_ARGS(args));
-        IFTRACE(calltypes)
-            llvm::errs() << "  =Call: " << *result << "\n";
+        record(calls, "Rewrite %t function %v call %v", rw, function, result);
     }
 
     return result;

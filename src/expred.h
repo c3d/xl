@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  expred.h                                                      XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Information required by the compiler for expression reduction
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -51,7 +51,7 @@ struct CompileExpression
 // ----------------------------------------------------------------------------
 {
     typedef llvm_value value_type;
-    
+
 public:
     CompileExpression(CompiledUnit *unit) : unit(unit) {}
 
@@ -80,5 +80,6 @@ public:
 
 XL_END
 
-#endif // COMPILER_EXPRED_H
+RECORDER_DECLARE(calls);
 
+#endif // COMPILER_EXPRED_H

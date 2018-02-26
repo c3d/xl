@@ -246,6 +246,8 @@ Tree *Context::Call(text prefix, TreeList &argList)
 //
 // ============================================================================
 
+RECORDER(xl2c, 64, "XL to C translation");
+
 bool Context::ProcessDeclarations(Tree *what)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return true if there are instructions
@@ -295,9 +297,7 @@ bool Context::ProcessDeclarations(Tree *what)
                 {
                     CDeclaration *pcd = new CDeclaration;
                     Infix *normalForm = pcd->Declaration(prefix->right);
-                    IFTRACE(xl2c)
-                        std::cout << "C:     " << prefix << "\n"
-                                  << "XL: " << normalForm << "\n";
+                    record(xl2c, "C: %t is XL: %t", prefix, normalForm);
                     if (normalForm)
                     {
                         // Process C declarations only in optimized mode

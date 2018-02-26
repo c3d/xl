@@ -451,6 +451,8 @@ RewriteCalls::BindBinary(Context *context,
 }
 
 
+RECORDER(calltypes, 64, "Type information in calls");
+
 bool RewriteCalls::Unify(RewriteCandidate &rc,
                          Tree *valueType, Tree *formType,
                          Tree *value, Tree *form,
@@ -460,13 +462,9 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
 // ----------------------------------------------------------------------------
 {
     Tree *refType = types->LookupTypeName(valueType);
-    IFTRACE(calltypes)
-    {
-        std::cerr << "Unify: " << value
-                  << " as " << valueType << " [" << types->Type(value) << "]"
-                  << " with " << form
-                  << " as " << formType << " [" << types->Type(form) << "]\n";
-    }
+
+    record(calltypes,
+           "Unify %t as %t with %t as %t", value, valueType, form, formType);
 
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)

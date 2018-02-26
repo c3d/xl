@@ -911,6 +911,8 @@ void CodeBuilder::AddTypeCheck(Context *context, Tree *what, Tree *type)
 }
 
 
+RECORDER(bytecode, 64, "Byte code generation");
+
 void CodeBuilder::Success()
 // ----------------------------------------------------------------------------
 //    Success at the end of a declaration
@@ -919,9 +921,7 @@ void CodeBuilder::Success()
     XL_ASSERT(successOp && failOp);
     XL_ASSERT(count(instrs.begin(), instrs.end(), failOp) == 0);
 
-    IFTRACE(compile)
-        std::cerr << "SUCCESS:\t" << successOp << "\n"
-                  << "FAIL:\t"    << failOp << "\n";
+    record(bytecode, "SUCCESS: %O FAIL: %O", successOp, failOp);
 
     // End current stream to the success exit, restart code gen at failure exit
     *lastOp = successOp;
@@ -1013,10 +1013,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     CodeBuilder *builder = (CodeBuilder *) cb;
     uint         cindex = builder->candidates++;
 
-    IFTRACE(compile)
-        std::cerr << "COMPILE" << depth << ":" << cindex
-                  << "(" << self << ") from "
-                  << decl->left << "\n";
+    record(bytecode,
+           "Compile %d:%d (%t) from %t",
+           depth, cindex, self, decl->left);
 
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
@@ -1047,10 +1046,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     {
         if (defined != xl_self && !Tree::Equal(defined, self))
         {
-            IFTRACE(compile)
-                std::cerr << "COMPILE" << depth << ":" << cindex
-                          << "(" << self << ") from constant "
-                          << decl->left << " MISMATCH\n";
+            record(bytecode,
+                   "Compile %d:%d (%t) from constant %t - MISMATCH",
+                   depth, cindex, self, decl->left);
             builder->failOp = oldFailOp;
             delete failOp;
             return NULL;
@@ -1072,10 +1070,8 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         strength = decl->left->Do(builder);
         if (strength == CodeBuilder::NEVER)
         {
-            IFTRACE(compile)
-                std::cerr << "COMPILE" << depth << ":" << cindex
-                          << "(" << self << ") from " << decl->left
-                          << " MISMATCH\n";
+            record(bytecode, "Compile %d:%d (%t) from %t - MISMATCH",
+                   depth, cindex, self, decl->left);
 
             // Remove the instructions that were added and the failed exit
             *lastOp = NULL;
@@ -1096,10 +1092,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     if (decl->right == xl_self)
     {
         // If the right is "self", just return the input
-        IFTRACE(compile)
-            std::cerr << "COMPILE" << depth << ":" << cindex
-                      << "(" << self << ") from " << decl->left
-                      << " SELF\n";
+        record(bytecode,
+               "Compile %d:%d (%t) from %t SELF",
+               depth, cindex, self, decl->left);
         builder->Add(new SelfOp);
     }
     else if (Opcode *opcode = OpcodeInfo(decl))
@@ -1109,10 +1104,9 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
         Opcode *clone = opcode->Clone();
         clone->SetParms(builder->parms);
         builder->Add(clone);
-        IFTRACE(compile)
-            std::cerr << "COMPILE" << depth << ":" << cindex
-                      << "(" << self << ") OPCODE " << opcode
-                      << "\n";
+        record(bytecode,
+               "Compile %d:%d (%t) OPCODE %O SELF",
+               depth, cindex, self, (Op *) opcode);
     }
     else if (isLeaf)
     {
@@ -1132,15 +1126,16 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     builder->Success();
 
     // Keep looking for other declarations
-    IFTRACE(compile)
-        std::cerr << "COMPILE" << depth << ":" << cindex
-                  << "(" << self << ") SUCCCESS\n";
+    record(bytecode, "Compile %d:%d (%t) SUCCESS",
+           depth, cindex, self);
 
     if (strength == CodeBuilder::ALWAYS)
         return decl;
     return NULL;
 }
 
+
+RECORDER(bytecode_output, 64, "Output of the bytecode generator");
 
 Function *CodeBuilder::Compile(Context *ctx, Tree *what,
                                TreeIDs &callArgs, Tree *type)
@@ -1183,9 +1178,7 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
         function->nLocals = nEvals + nParms + 2;
         function->captured = captured;
 
-        IFTRACE(ucode)
-            std::cerr << "CODE " << what << "\n"
-                      << function << "\n";
+        record(bytecode_output, "Code %t: %O", what, (Op *) function);
 
         return function;
     }

@@ -42,9 +42,9 @@
 #include "config.h"
 #include "gc.h"
 #include "options.h"
-#include "recorder.h"
-#include "valgrind/memcheck.h"
 
+#include <recorder/recorder.h>
+#include <valgrind/memcheck.h>
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -55,6 +55,8 @@
 #include <malloc.h>
 #endif // !HAVE_POSIX_MEMALIGN
 
+
+RECORDER(memory, 256, "Memory related events and garbage collection");
 
 XL_BEGIN
 
@@ -73,8 +75,6 @@ Atomic<uint> TypeAllocator::finalizing = 0;
 // Identifier of the thread currently collecting if any
 #define PTHREAD_NULL ((pthread_t) 0)
 static pthread_t collecting = PTHREAD_NULL;
-
-RECORDER(memory, 256, "Memory related events and garbage collection");
 
 
 TypeAllocator::TypeAllocator(kstring tn, uint os)
@@ -539,7 +539,7 @@ bool GarbageCollector::Collect()
             (*l)->EndCollection();
 
         // Print statistics (inside lock, to increase race pressure)
-        IFTRACE(memory)
+        if (RECORDER_TRACE(memory))
             PrintStatistics();
 
         // We are done, mark it so

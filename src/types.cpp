@@ -59,6 +59,7 @@ XL_BEGIN
 // ============================================================================
 
 ulong Types::id = 0;
+RECORDER(types, 64, "Type analysis");
 
 Types::Types(Context *context)
 // ----------------------------------------------------------------------------
@@ -99,19 +100,15 @@ bool Types::TypeCheck(Tree *program)
 // ----------------------------------------------------------------------------
 {
     // Once this is done, record all type information for the program
+    record(typecheck, "Type check for %t", program);
     bool result = program->Do(this);
 
     // Dump debug information if approriate
-    IFTRACE(typecheck)
+    if (RECORDER_TRACE(typecheck))
     {
-        std::cout << "TYPE CHECK FOR " << ShortTreeForm(program) << "\n";
         std::cout << "TYPES:\n"; debugt(this);
         std::cout << "UNIFICATIONS:\n"; debugu(this);
-    }
-    IFTRACE(types)
-    {
-        std::cout << "CALLS FOR " << ShortTreeForm(program) << ":\n";
-        debugr(this);
+        std::cout << "CALLS:\n"; debugr(this);
     }
 
     return result;
@@ -1348,8 +1345,7 @@ Tree *StructuredType(Context *ctx, Tree *value)
     // Memorize the type for next time
     if (type && !IsTreeType(type))
     {
-        IFTRACE(types)
-            std::cerr << "Caching type " << type << " for " << value << '\n';
+        record(types, "Caching type %t for %t", type, value);
         value->Set<TypeInfo>(type);
     }
 

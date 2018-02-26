@@ -494,8 +494,7 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
     bool exists = MAIN->files.count(path);
     if (!exists)
     {
-        IFTRACE(fileload)
-                std::cout << "Loading: " << path << "\n";
+        record(file_load, "Loading %s", path.c_str());
         bool hadError = MAIN->LoadFile(path);
         if (hadError)
         {

@@ -175,37 +175,6 @@ externc void xl_assert_failed(kstring msg, kstring file, uint line);
 #endif
 
 
-// ============================================================================
-//
-//   Tracing information
-//
-// ============================================================================
-
-#ifdef XL_DEBUG
-#  include "traces.h"
-#  ifdef XL_TRACE_INSTNAME
-#    define IFTRACE(x)          if XL_TRACE(x)
-#    define XL_TRACE(x)         (XL_TRACE_INSTNAME &&   \
-                                 XL_TRACE_INSTNAME->x)
-#    define IFTRACE2(x,y)       if XL_TRACE2(x,y)
-#    define XL_TRACE2(x,y)      (XL_TRACE_INSTNAME &&        \
-                                 (XL_TRACE_INSTNAME->x ||    \
-                                  XL_TRACE_INSTNAME->y))
-#  else
-#    define IFTRACE(x)          if(0)
-#    define XL_TRACE(x)      0
-#    define IFTRACE2(x,y)       if(0)
-#    define XL_TRACE2(x,y)   0
-#  endif
-#else
-#  define IFTRACE(x)            if(0)
-#  define XL_TRACE(x)        0
-#  define IFTRACE2(x,y)         if(0)
-#  define XL_TRACE2(x,y)     0
-#endif
-
-
-
 /* ========================================================================= */
 /*                                                                           */
 /*   Namespace support                                                       */

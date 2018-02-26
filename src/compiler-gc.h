@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  compiler-gc.h                                                 XL project
 // ****************************************************************************
-// 
-//   File Description:
-// 
-//     Information connecting the XL/LLVM compiler to the garbage collector
-// 
 //
-// 
-// 
-// 
-// 
-// 
-// 
+//   File Description:
+//
+//     Information connecting the XL/LLVM compiler to the garbage collector
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -77,5 +77,6 @@ struct CompilerInfo : Info
 
 XL_END
 
-#endif // COMPILER_GC_H
+RECORDER_DECLARE(compiler_gc);
 
+#endif // COMPILER_GC_H

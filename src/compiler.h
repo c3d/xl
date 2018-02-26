@@ -1,21 +1,21 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 // ****************************************************************************
-//  compiler.h                       (C) 1992-2009 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  compiler.h                       (C) 1992-2009 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Just-in-time compiler for the trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -49,9 +49,9 @@
 
 
 // ============================================================================
-// 
+//
 //    Forward declarations
-// 
+//
 // ============================================================================
 
 XL_BEGIN
@@ -86,9 +86,9 @@ typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
 
 
 // ============================================================================
-// 
+//
 //    Global structures to access the LLVM just-in-time compiler
-// 
+//
 // ============================================================================
 
 struct Compiler
@@ -253,9 +253,9 @@ inline bool Compiler::IsRealType(llvm_type t)
 
 
 // ============================================================================
-// 
+//
 //   Useful macros
-// 
+//
 // ============================================================================
 
 #define LLVM_INTTYPE(t)         llvm::IntegerType::get(llvm, sizeof(t) * 8)
@@ -278,6 +278,11 @@ inline bool Compiler::IsRealType(llvm_type t)
 #define INFIX_NAME_INDEX    4
 
 XL_END
+
+RECORDER_DECLARE(compiler);
+RECORDER_DECLARE(llvm);
+RECORDER_TWEAK_DECLARE(labels);
+RECORDER_TWEAK_DECLARE(llvm_ir);
 
 extern void debugv(llvm::Value *);
 extern void debugv(llvm::Type *);

@@ -29,11 +29,12 @@
 #include <cmath>
 #include <algorithm>
 
+RECORDER(interpreter, 128, "Interpreted evaluation of XL code");
+RECORDER(interpreter_lazy, 64, "Interpreter lazy evaluation");
+RECORDER(interpreter_eval, 128, "Primary evaluation entry point");
+RECORDER(typecheck, 64, "Type checks");
 
 XL_BEGIN
-
-
-
 // ============================================================================
 //
 //   Evaluation cache - Recording what has been evaluated and how
@@ -190,19 +191,15 @@ inline bool Bindings::DoName(Name *what)
     {
         MustEvaluate(true);
         bool result = Tree::Equal(bound, test);
-        IFTRACE(eval)
-            std::cerr << "  ARGCHECK: "
-                      << test << " vs " << bound
-                      << (result ? " MATCH" : " FAILED")
-                      << "\n";
+        record(interpreter, "Arg check %t vs %t: %s",
+               test, bound, result ? "match" : "failed");
         if (!result)
             Ooops("Name $1 does not match $2", bound, test);
         return result;
     }
 
-    IFTRACE(eval)
-        std::cerr << "  CLOSURE " << ContextStack(context->CurrentScope())
-                  << what << "=" << test << "\n";
+    record(interpreter, "In closure %t: %t = %t",
+           context->CurrentScope(), what, test);
     BindClosure(what, test);
     return true;
 }
@@ -413,22 +410,23 @@ void Bindings::MustEvaluate(bool updateContext)
     {
         evaluated = EvaluateClosure(context, test);
         cache[test] = evaluated;
-        IFTRACE(eval)
-            std::cerr << "  TEST(" << test << ") = "
-                      << "NEW(" << evaluated << ")\n";
+        record(interpreter_lazy, "Test %t = new %t", test, evaluated);
     }
     else
     {
-        IFTRACE(eval)
-            std::cerr << "  TEST(" << test << ") = "
-                      << "OLD(" << evaluated << ")\n";
+        record(interpreter_lazy, "Test %t = old %t", test, evaluated);
     }
 
     test = evaluated;
     if (updateContext)
+    {
         if (Tree *inside = IsClosure(test, &context))
+        {
+            record(interpreter_lazy, "Encapsulate %t in closure %t",
+                   test, inside);
             test = inside;
-
+        }
+    }
 }
 
 
@@ -442,29 +440,31 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
     {
         evaluated = EvaluateClosure(context, tval);
         cache[tval] = evaluated;
-        IFTRACE(eval)
-            std::cerr << "  NEED(" << tval << ") = "
-                      << "NEW(" << evaluated << ")\n";
+        record(interpreter_lazy, "Evaluate %t in context %t is new %t",
+               tval, context, evaluated);
     }
     else
     {
-        IFTRACE(eval)
-            std::cerr << "  NEED(" << tval << ") = "
-                      << "OLD(" << evaluated << ")\n";
+        record(interpreter_lazy, "Evaluate %t in context %t is old %t",
+               tval, context, evaluated);
     }
     if (Tree *inside = IsClosure(evaluated, NULL))
+    {
+        record(interpreter_lazy, "Encapsulate %t in closure %t",
+               evaluated, inside);
         evaluated = inside;
+    }
     return evaluated;
 }
 
 
+RECORDER(bind, 64, "Bind values to names");
 void Bindings::Bind(Name *name, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a new binding in the current context, remember left and right
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(eval)
-        std::cerr << "  BIND " << name << "=" << ShortTreeForm(value) <<"\n";
+    record(bind, "Bind %t = %t", name, value);
     args.push_back(value);
     locals->Define(name, value);
 }
@@ -498,9 +498,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 {
     static uint depth = 0;
     Save<uint> saveDepth(depth, depth+1);
-    IFTRACE(eval)
-        std::cerr << "EVAL" << depth << "(" << self
-                  << ") from " << decl->left << "\n";
+    record(interpreter_eval, "Eval%u %t from %t", depth, self, decl->left);
     if (depth > MAIN->options.stack_depth)
     {
         Ooops("Stack depth exceeded evaluating $1", self);
@@ -532,10 +530,8 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         // Must match literally, or we don't have a candidate
         if (!Tree::Equal(defined, self))
         {
-            IFTRACE(eval)
-                std::cerr << "EVAL" << depth << "(" << self
-                          << ") from constant " << decl->left
-                          << " MISMATCH\n";
+            record(interpreter_eval, "Eval%u %t from constant %t: mismatch",
+                   depth, self, decl->left);
             return NULL;
         }
         locals = context;
@@ -553,10 +549,8 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         Bindings  bindings(context, locals, self, *cache, args);
         if (!decl->left->Do(bindings))
         {
-            IFTRACE(eval)
-                std::cerr << "EVAL" << depth << "(" << self
-                          << ") from " << decl->left
-                          << " MISMATCH\n";
+            record(interpreter_eval, "Eval%u %t from %t: mismatch",
+                   depth, self, decl->left);
             return NULL;
         }
         if (bindings.resultType)
@@ -566,10 +560,8 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     // Check if the right is "self"
     if (result == xl_self)
     {
-        IFTRACE(eval)
-            std::cerr << "EVAL" << depth << "(" << self
-                      << ") from " << decl->left
-                      << " SELF\n";
+        record(interpreter_eval, "Eval%u %t from %t is self",
+               depth, self, decl->left);
         return self;
     }
 
@@ -584,11 +576,8 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         Data data = &args[offset];
         opcode->Run(data);
         result = DataResult(data);
-        IFTRACE(eval)
-            std::cerr << "EVAL" << depth << "(" << self
-                      << ") OPCODE " << opcode->OpID()
-                      << "(" << args << ") = "
-                      << result << "\n";
+        record(interpreter_eval, "Eval%u %t opcode %s, result %t",
+               depth, self, opcode->OpID(), result);
         return result;
     }
 
@@ -598,12 +587,8 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         result = new Infix("as", result, resultType, self->Position());
 
     result = MakeClosure(locals, result);
-    IFTRACE(eval)
-        std::cerr << "EVAL" << depth << " BINDINGS: "
-                  << ContextStack(locals->CurrentScope())
-                  << "\n" << locals << "\n"
-                  << "EVAL(" << self
-                  << ") = (" << result << ")\n";
+    record(interpreter_eval, "Eval%u %t in context %t = %t",
+           depth, locals->CurrentScope(), self, result);
     return result;
 }
 
@@ -938,8 +923,7 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
     Bindings  bindings(context, locals, value, cache, args);
     if (!shape->Do(bindings))
     {
-        IFTRACE(eval)
-            std::cerr << "TYPECHECK: shape mismatch for " << value << "\n";
+        record(typecheck, "Shape of tree %t does not match %t", value, shape);
         return NULL;
     }
 
@@ -948,8 +932,7 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
     value = shape->Do(expand);
 
     // The value is associated to the symbols we extracted
-    IFTRACE(eval)
-        std::cerr << "TYPECHECK: shape match for " << value << "\n";
+    record(typecheck, "Shape of tree %t matches %t", value, shape);
     return MakeClosure(locals, value);
 }
 
@@ -959,8 +942,7 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
 //   Check if 'value' matches 'type' in the given context
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(eval)
-        std::cerr << "TYPECHECK " << value << " against " << type << "\n";
+    record(typecheck, "Check %t against %t", value, type);
 
     // Accelerated type check for the builtin or constructed types
     if (TypeCheckOpcode *builtin = type->GetInfo<TypeCheckOpcode>())
@@ -968,9 +950,7 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
         // If this is marked as builtin, check if the test passes
         if (Tree *converted = builtin->Check(scope, value))
         {
-            IFTRACE(eval)
-                std::cerr << "TYPECHECK " << value
-                          << " as " << converted << "\n";
+            record(typecheck, "Check %t converted as %t", value, converted);
             return converted;
         }
     }
@@ -982,16 +962,13 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
                 if (ptypename->value == "type")
                     return formTypeCheck(scope, ptype->right, value);
 
-        IFTRACE(eval)
-            std::cerr << "TYPECHECK: no code for " << type
-                      << " opcode is " << type->GetInfo<Opcode>()
-                      << "\n";
+        record(typecheck, "No code for %t, opcode is %O",
+               type, type->GetInfo<Opcode>());
     }
 
 
     // No direct or converted match, end of game
-    IFTRACE(eval)
-        std::cerr << "TYPECHECK " << value << " FAILED\n";
+    record(typecheck, "Type checking %t failed", value);
     return NULL;
 }
 

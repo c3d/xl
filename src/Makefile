@@ -52,7 +52,6 @@ SOURCES     =					\
 	opcodes.cpp				\
 	cdecls.cpp				\
 	serializer.cpp				\
-        traces_base.cpp                         \
 	utf8_fileutils.cpp			\
 	winglob.cpp				\
 	recorder/recorder.c			\

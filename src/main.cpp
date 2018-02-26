@@ -52,8 +52,6 @@
 #include "basics.h"
 #include "serializer.h"
 #include "runtime.h"
-#include "traces.h"
-#include "recorder.h"
 #include "utf8_fileutils.h"
 #include "interpreter.h"
 #include "opcodes.h"
@@ -64,6 +62,7 @@
 #include "compiler.h"
 #endif // INTERPRETER_ONLY
 
+#include <recorder/recorder.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <map>
@@ -74,8 +73,6 @@
 #include <ctype.h>
 #include <sys/stat.h>
 
-
-XL_DEFINE_TRACES
 
 XL_BEGIN
 
@@ -124,6 +121,85 @@ SourceFile::~SourceFile()
 
 // ============================================================================
 //
+//    Recorder helpers
+//
+// ============================================================================
+
+RECORDER_TWEAK_DEFINE(recorder_dump_truncation, 40,
+                      "Maximum number of chars for truncation (0 = unlimited)");
+
+
+static size_t render_opcode_for_recorder(const char *format,
+                                         char *buffer, size_t size,
+                                         uintptr_t arg)
+// ----------------------------------------------------------------------------
+//   Render an LLVM value during a recorder dump (%v format)
+// ----------------------------------------------------------------------------
+{
+    const unsigned max_len = RECORDER_TWEAK(recorder_dump_truncation);
+    const unsigned trunc_len = max_len/2 - 3;
+    Op *value = (Op *) arg;
+    text t;
+    std::ostringstream os;
+    if (value)
+        os << *value;
+    else
+        os << "NULL";
+    t = os.str();
+    size_t len = t.length();
+    if (max_len > 8 && len > max_len)
+        t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
+    return snprintf(buffer, size, "%s", t.c_str());
+}
+
+
+#ifndef INTERPRETER_ONLY
+static size_t render_llvm_value_for_recorder(const char *format,
+                                             char *buffer, size_t size,
+                                             uintptr_t arg)
+// ----------------------------------------------------------------------------
+//   Render an LLVM value during a recorder dump (%v format)
+// ----------------------------------------------------------------------------
+{
+    const unsigned max_len = RECORDER_TWEAK(recorder_dump_truncation);
+    const unsigned trunc_len = max_len/2 - 3;
+    llvm_value value = (llvm_value) arg;
+    text t;
+    llvm::raw_string_ostream os(t);
+    if (value)
+        os << *value;
+    else
+        os << "NULL";
+    t = os.str();
+    size_t len = t.length();
+    if (max_len > 8 && len > max_len)
+        t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
+    return snprintf(buffer, size, "%p:%s", value, t.c_str());
+}
+#endif // INTERPRETER_ONLY
+
+
+static size_t render_tree_for_recorder(const char *format,
+                                       char *buffer, size_t size,
+                                       uintptr_t arg)
+// ----------------------------------------------------------------------------
+//   Render a tree during a recorder dump (%t format)
+// ----------------------------------------------------------------------------
+{
+    const unsigned max_len = RECORDER_TWEAK(recorder_dump_truncation);
+    const unsigned trunc_len = max_len/2 - 3;
+    Tree *tree = (Tree *) arg;
+    text t = tree ? text(*tree) : "NULL";
+    size_t len = t.length();
+    if (max_len > 8 && len > max_len)
+        t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
+    return snprintf(buffer, size, "%p:%s", (void *) tree, t.c_str());
+}
+
+
+
+// ============================================================================
+//
 //     Main
 //
 // ============================================================================
@@ -155,7 +231,9 @@ Main::Main(int inArgc,
       renderer(std::cout, SearchLibFile(styleSheetName), syntax),
       reader(NULL), writer(NULL)
 {
-    XL_INIT_TRACES();
+    recorder_dump_on_common_signals(0, 0);
+    recorder_trace_set(".*_(error|warning)");
+    recorder_trace_set(getenv("XL_TRACES"));
     Options::options = &options;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
@@ -164,10 +242,13 @@ Main::Main(int inArgc,
     ParseOptions();
 
     // Once all options have been read, enter symbols and setup compiler
+    recorder_configure_type('O', render_opcode_for_recorder);
+    recorder_configure_type('t', render_tree_for_recorder);
 #ifndef INTERPRETER_ONLY
+    recorder_configure_type('v', render_llvm_value_for_recorder);
     if (options.optimize_level > 1)
     {
-        compilerName = SearchFile(compilerName, bin_path);
+        compilerName = SearchFile(compilerName, bin_paths);
         compiler = new Compiler(compilerName.c_str(), inArgc, inArgv);
         compiler->Setup(options);
     }
@@ -268,6 +349,7 @@ int Main::LoadFiles()
 }
 
 
+RECORDER(file_load, 64, "Files being loaded");
 int Main::LoadFile(text file, text modname)
 // ----------------------------------------------------------------------------
 //   Load an individual file
@@ -284,14 +366,12 @@ int Main::LoadFile(text file, text modname)
     // See if we read from standard input
     if (file == "-")
     {
-        IFTRACE(fileload)
-            std::cerr << "Loading from standard input\n";
+        record(file_load, "Loading from standard input");
         input = &std::cin;
     }
     else
     {
-        IFTRACE(fileload)
-            std::cerr << "Loading from " << file << "\n";
+        record(file_load, "Loading from %s", file.c_str());
         input = &inputFile;
     }
 
@@ -302,8 +382,7 @@ int Main::LoadFile(text file, text modname)
         text decrypted = Decrypt(inputStream.str());
         if (decrypted != "")
         {
-            IFTRACE(fileload)
-                std::cerr << "Input was crypted\n";
+            record(file_load, "Input was encrypted");
             inputStream.str(decrypted);
         }
         input = &inputStream;
@@ -316,8 +395,7 @@ int Main::LoadFile(text file, text modname)
         tree = deserializer.ReadTree();
         if (deserializer.IsValid())
         {
-            IFTRACE(fileload)
-                std::cerr << "Input was in serialized format\n";
+            record(file_load, "Input was in serialized format");
         }
     }
 
@@ -335,8 +413,7 @@ int Main::LoadFile(text file, text modname)
     // If at this stage we don't have a tree, this is an error
     if (!tree)
     {
-        IFTRACE(fileload)
-            std::cerr << "File load error for " << file << "\n";
+        record(file_load, "File load error for %s", file.c_str());
         return false;
     }
 
@@ -352,21 +429,18 @@ int Main::LoadFile(text file, text modname)
             text crypted = Encrypt(packed);
             if (crypted == "")
             {
-                IFTRACE(fileload)
-                    std::cerr << "No encryption, output is packed\n";
+                record(file_load, "No encryption, output is packed");
                 std::cout << packed;
             }
-                else
-                {
-                    IFTRACE(fileload)
-                        std::cerr << "Encrypted output\n";
-                    std::cout << crypted;
-                }
+            else
+            {
+                record(file_load, "Encrypted output");
+                std::cout << crypted;
+            }
         }
         else
         {
-            IFTRACE(fileload)
-                std::cerr << "Packed output\n";
+            record(file_load, "Packed output");
             std::cout << packed;
         }
     }
@@ -407,8 +481,7 @@ int Main::LoadFile(text file, text modname)
     sf = SourceFile (file, tree, ctx);
 
     // Process declarations from the program
-    IFTRACE(fileload)
-        std::cout << "File loaded in " << ctx << "\n";
+    record(file_load, "File loaded in %t", ctx->CurrentScope());
 
     // We were OK, done
     return false;
@@ -628,7 +701,8 @@ XL_END
 
 #ifndef LIBXL
 
-RECORDER(compiler, 32, "Compiler main entry point");
+RECORDER(main, 32, "Compiler main entry point");
+RECORDER_TWEAK_DEFINE(gc_statistics, 0, "Display garbage collector stats");
 
 
  int main(int argc, char **argv)
@@ -636,7 +710,8 @@ RECORDER(compiler, 32, "Compiler main entry point");
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    RECORD(compiler, "XL Compiler version %s starting", XL_VERSION);
+    record(main, "XL Compiler version %s starting", XL_VERSION);
+
 
 #if HAVE_SBRK
     char *low_water = (char *) sbrk(0);
@@ -651,16 +726,16 @@ RECORDER(compiler, 32, "Compiler main entry point");
                   "xl", "xl.syntax", "xl.stylesheet", "builtins.xl");
     int rc = main.LoadAndRun();
 
-    IFTRACE(gcstats)
+    if (RECORDER_TRACE(memory) || RECORDER_TRACE(gc_statistics))
         XL::GarbageCollector::GC()->PrintStatistics();
 
 #if HAVE_SBRK
-    IFTRACE(memory)
+    if (RECORDER_TRACE(memory))
         fprintf(stderr, "Total memory usage: %ldK\n",
                 long ((char *) malloc(1) - low_water) / 1024);
 #endif
 
-    RECORD(compiler, "Compiler exit code %d", rc);
+    RECORD(main, "Compiler exit code %d", rc);
 
     if (main.options.dumpRecorder)
         recorder_dump();

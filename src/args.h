@@ -42,10 +42,13 @@
 #include "compiler.h"
 #include "renderer.h"
 
+#include <recorder/recorder.h>
+
 XL_BEGIN
 
 struct Types;
 typedef GCPtr<Types> Types_p;
+RECORDER_DECLARE(calltypes);
 
 
 struct RewriteBinding
@@ -103,13 +106,9 @@ struct RewriteCandidate
     }
     void KindCondition(Tree *value, kind k, llvm_type mtype)
     {
-        IFTRACE(calltypes)
-        {
-            std::cerr << "Check if " << value
-                      << " has type " << (int) k << "\n";
-            llvm::errs() << "  machine type is " << *mtype << "\n";
-        }
-        kinds.push_back(RewriteKind(value, k, mtype));
+        record(calltypes, "Check if %t has type %d machine type %v",
+               value, (int) k, mtype);
+         kinds.push_back(RewriteKind(value, k, mtype));
     }
     bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
 
@@ -155,4 +154,3 @@ typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 XL_END
 
 #endif // COMPILER_ARG_H
-

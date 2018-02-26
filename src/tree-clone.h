@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  tree-clone.h                                                  XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Tree clone and copy operations
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -84,7 +84,7 @@ public:
     Tree *DoText(Text *what)
     {
         return Adjust(what, new Text(what->value,
-                                     what->opening, what->closing, 
+                                     what->opening, what->closing,
                                      what->Position()));
     }
     Tree *DoName(Name *what)

@@ -24,9 +24,9 @@
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
-#include "recorder.h"
 #include "main.h"
 
+#include <recorder/recorder.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -100,19 +100,6 @@ static void Usage(kstring appName)
 #define OPTION(name, descr, code)                                       \
     std::cerr << "\t-" << #name ": " descr "\n";
 #include "options.tbl"
-#if XL_DEBUG
-    std::set<std::string> names = XL::Traces::names();
-    if (names.size())
-    {
-        std::cerr << "\t-t<name>: Enable trace <name>. ";
-        std::cerr << "Valid trace names are:\n";
-        std::cerr << "\t          ";
-        std::set<std::string>::iterator it;
-        for (it = names.begin(); it != names.end(); it++)
-            std::cerr << (*it) << " ";
-        std::cerr << "\n";
-    }
-#endif
 }
 
 
@@ -232,15 +219,6 @@ text Options::ParseNext(bool consumeFiles)
 
             RECORD(options, "Parse option #%d, '%s'", arg, option);
 
-#if XL_DEBUG
-            if (argval[0] == 't')
-            {
-                kstring trace_name = argval + 1;
-                Traces::enable(trace_name);
-            }
-            else
-#endif
-
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
             if (OptionMatches(argval, #name))                           \
@@ -278,7 +256,3 @@ text Options::ParseNext(bool consumeFiles)
 }
 
 XL_END
-ulong xl_traces = 0;
-// ----------------------------------------------------------------------------
-//   Bits for each trace
-// ----------------------------------------------------------------------------

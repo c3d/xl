@@ -42,25 +42,22 @@
 //
 
 #include "compiler-gc.h"
-#include "recorder.h"
 
-XL_BEGIN
+#include <recorder/recorder.h>
 
 RECORDER(compiler_gc, 128, "Compiler garbage collection");
 
+
+XL_BEGIN
 
 CompilerInfo::~CompilerInfo()
 // ----------------------------------------------------------------------------
 //   Notice when we lose a compiler info
 // ----------------------------------------------------------------------------
 {
-    RECORD(compiler_gc, "Compiler info deleted: function %p global %p tree %p",
-             function, global, tree);
-    IFTRACE(llvm)
-        std::cerr << "CompilerInfo deleted F" << (void *) function
-                  << " G" << (void *) global
-                  << " T" << (void *) tree
-                  << "\n";
+    RECORD(compiler_gc,
+           "Compiler info deleted: function %v global %v tree %t",
+           function, global, tree);
 }
 
 

@@ -49,6 +49,8 @@
 #include "context.h"
 #include "options.h"
 #include "info.h"
+
+#include <recorder/recorder.h>
 #include <map>
 #include <set>
 #include <time.h>
@@ -147,6 +149,8 @@ public:
 };
 
 extern Main *MAIN;
+
+RECORDER_DECLARE(file_load);
 
 XL_END
 

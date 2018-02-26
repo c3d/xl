@@ -41,6 +41,12 @@
 #include <sstream>
 
 
+RECORDER(remote_tell, 32, "Evaluating the 'tell' command in remote package");
+RECORDER(remote_ask, 32, "Evaluating the 'ask' command in remote package");
+RECORDER(remote_invoke, 32, "Evaluating 'invoke' in remote package");
+RECORDER(remote_listen, 32, "Evaluating 'listen' in remote package");
+RECORDER(remote_reply, 32, "Evaluating 'reply' in remote package");
+
 XL_BEGIN
 
 
@@ -117,6 +123,7 @@ struct StopAtGlobalsCloneMode
 typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
 
 
+RECORDER(remote, 64, "Remote context information");
 static Tree_p xl_attach_context(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Attach the context for the given code
@@ -135,9 +142,7 @@ static Tree_p xl_attach_context(Context *context, Tree *code)
     Scope_p symbols = context->CurrentScope();
     Tree_p symbolsToSend = partialClone.Clone(symbols);
 
-    IFTRACE(remote)
-        std::cerr << "Sending context:\n"
-                  << new Context(symbolsToSend->As<Scope>()) << "\n";
+    record(remote, "Sending context %t", symbolsToSend.Pointer());
 
     return new Prefix(symbolsToSend, code, code->Position());
 }
@@ -217,6 +222,7 @@ static Tree_p xl_merge_context(Context *context, Tree *code)
 //
 // ============================================================================
 
+RECORDER(remote_error, 64, "Errors from the remote package");
 static int xl_send(Context *context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host, return open fd
@@ -231,8 +237,8 @@ static int xl_send(Context *context, text host, Tree *code)
         port = atoi(portText.c_str());
         if (!port)
         {
-            std::cerr << "xl_tell: Port '" << portText << " is invalid, "
-                      << "using " << XL_DEFAULT_PORT << "\n";
+            record(remote_error, "Port %s is invalid, using %d",
+                   portText.c_str(), XL_DEFAULT_PORT);
             port = XL_DEFAULT_PORT;
         }
         host = host.substr(0, found);
@@ -242,8 +248,8 @@ static int xl_send(Context *context, text host, Tree *code)
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
-        std::cerr << "xl_tell: Error opening socket: "
-                  << strerror(errno) << "\n";
+        record(remote_error, "Error opening socket: %s (%d)",
+               strerror(errno), errno);
         return -1;
     }
 
@@ -251,8 +257,8 @@ static int xl_send(Context *context, text host, Tree *code)
     struct hostent *server = gethostbyname(host.c_str());
     if (!server)
     {
-        std::cerr << "xl_tell: Error resolving server '" << host << "': "
-                  << strerror(errno) << "\n";
+        record(remote_error, "Error resolving server %s: %s (%d)",
+               host.c_str(), strerror(errno), errno);
         return -1;
     }
 
@@ -267,9 +273,8 @@ static int xl_send(Context *context, text host, Tree *code)
     // Connect
     if (connect(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
     {
-        std::cerr << "xl_tell: Error connecting to '"
-                  << host << "' port " << port << ": "
-                  << strerror(errno) << "\n";
+        record(remote_error, "Error connecting to %s port %d: %s (%d)",
+               host.c_str(), port, strerror(errno), errno);
         return -1;
     }
 
@@ -288,9 +293,7 @@ int xl_tell(Context *context, text host, Tree *code)
 //   Send the text for the given body to the target host
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(remote)
-        std::cerr << "xl_tell: Telling " << host << ":\n"
-                  << code << "\n";
+    record(remote_tell, "Telling %s: %t", host.c_str(), code);
     int sock = xl_send(context, host, code);
     if (sock < 0)
         return sock;
@@ -304,18 +307,14 @@ Tree_p xl_ask(Context *context, text host, Tree *code)
 //   Send code to the target, wait for reply
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(remote)
-        std::cerr << "xl_ask: Asking " << host << ":\n"
-                  << code << "\n";
+    record(remote_ask, "Asking %s: %t", host.c_str(), code);
     int sock = xl_send(context, host, code);
     if (sock < 0)
         return xl_nil;
 
     Tree_p result = xl_read_tree(sock);
     result = xl_merge_context(context, result);
-    IFTRACE(remote)
-        std::cerr << "xl_ask: Response from " << host << " was:\n"
-                  << result << "\n";
+    record(remote_ask, "Response from %s was %t", host.c_str(), result);
 
     close(sock);
 
@@ -328,9 +327,7 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
 //   Send code to the target, wait for multiple replies
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(remote)
-        std::cerr << "xl_invoke: Invoking " << host << ":\n"
-                  << code << "\n";
+    record(remote_invoke, "Invoking %s: %t", host.c_str(), code);
     int sock = xl_send(context, host, code);
     if (sock < 0)
         return xl_nil;
@@ -342,11 +339,12 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
         if (response == NULL)
             break;
 
-        IFTRACE(remote)
-            std::cerr << "xl_invoke: Response from " << host << " was:\n"
-                      << response << "\n";
+        record(remote_invoke, "Response from %s was %t",
+               host.c_str(), response);
         response = xl_merge_context(context, response);
+        record(remote_invoke, "After merge, response was %t", response);
         result = context->Evaluate(response);
+        record(remote_invoke, "After eval, was %t", result);
         if (result == xl_nil)
             break;
     }
@@ -375,11 +373,8 @@ static int child_wait(int flag)
 
     if (childPID > 0)
     {
-        IFTRACE(remote)
-            std::cerr << "xl_listen: Child PID " << childPID << " died "
-                      << (flag ? "nowait" : "wait")
-		      << " status " << status
-		      << "\n";
+        record(remote_listen, "Child PID %d died %s status %d",
+               childPID, flag ? "nowait" : "wait", status);
         active_children--;
         if (!flag && WIFEXITED(status))
         {
@@ -397,8 +392,10 @@ static void child_died(int)
 //    When a child dies, get its exit status
 // ----------------------------------------------------------------------------
 {
+    record(remote, "Child died, waiting");
     while (child_wait(WNOHANG) > 0)
         /* Loop */;
+    record(remote, "Child died, end of wait");
 }
 
 
@@ -450,8 +447,8 @@ int xl_listen(Context *context, uint forking, uint port)
     address.sin_port = htons(port);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
     {
-        std::cerr << "xl_listen: Error binding to port " << port << ": "
-                  << strerror(errno) << "\n";
+        record(remote_error, "Error binding to port %d: %s (%d)",
+               port, strerror(errno), errno);
         return -1;
     }
 
@@ -468,18 +465,14 @@ int xl_listen(Context *context, uint forking, uint port)
         // Block until we can accept more connexions (avoid fork bombs)
         while (forking && active_children >= forking)
         {
-            IFTRACE(remote)
-                std::cerr << "xl_listen: Too many children, waiting\n";
+            record(remote, "xl_listen: Too many children, waiting");
             int childPID = child_wait(0);
             if (childPID > 0)
-                IFTRACE(remote)
-                    std::cerr << "xl_listen: Child " << childPID
-                              << " died, resuming\n";
+                record(remote, "xl_listen: Child %d died, resuming", childPID);
         }
 
         // Accept input
-        IFTRACE(remote)
-            std::cerr << "xl_listen: Accepting input\n";
+        record(remote, "xl_listen: Accepting input");
         sockaddr_in client = { 0 };
         socklen_t length = sizeof(client);
         int insock = accept(sock, (struct sockaddr *) &client, &length);
@@ -489,8 +482,7 @@ int xl_listen(Context *context, uint forking, uint port)
                       << strerror(errno) << "\n";
             continue;
         }
-        IFTRACE(remote)
-            std::cerr << "xl_listen: Got incoming connexion\n";
+        record(remote_listen, "Got incoming connexion");
 
         // Fork child for incoming connexion
         int pid = forking ? fork() : 0;
@@ -500,8 +492,7 @@ int xl_listen(Context *context, uint forking, uint port)
         }
         else if (pid)
         {
-            IFTRACE(remote)
-                std::cerr << "xl_listen: Forked pid " << pid << "\n";
+            record(remote_listen, "Forked pid %d", pid);
             close(insock);
             active_children++;
         }
@@ -513,9 +504,7 @@ int xl_listen(Context *context, uint forking, uint port)
             // Evaluate resulting code
             if (code)
             {
-                IFTRACE(remote)
-                    std::cerr << "xl_listen: Received code: "
-                              << code << "\n";
+                record(remote_listen, "Received code: %t", code);
                 received = code;
                 Tree_p hookResult = context->Evaluate(hook);
                 if (hookResult != xl_nil)
@@ -523,12 +512,9 @@ int xl_listen(Context *context, uint forking, uint port)
                     Save<int> saveReply(reply_socket, insock);
                     code = xl_merge_context(context, code);
                     Tree_p result = context->Evaluate(code);
-                    IFTRACE(remote)
-                        std::cerr << "xl_listen: Evaluated as: "
-                                  << result << "\n";
+                    record(remote_listen, "Evaluated as %t", result);
                     xl_write_tree(insock, result);
-                    IFTRACE(remote)
-                        std::cerr << "xl_listen: Response sent\n";
+                    record(remote_listen, "Response sent");
                 }
                 if (hookResult == xl_false || hookResult == xl_nil)
                 {
@@ -539,9 +525,7 @@ int xl_listen(Context *context, uint forking, uint port)
 
             if (forking)
             {
-                IFTRACE(remote)
-                    std::cerr << "xl_listen: Exiting PID "
-                              << getpid() << "\n";
+                record(remote_listen, "Exiting PID %d", getpid());
                 exit(listening ? 0 : 42);
             }
         }
@@ -559,15 +543,13 @@ int xl_reply(Context *context, Tree *code)
 {
     if (!reply_socket)
     {
-        std::cerr << "xl_reply: Not replying to anybody\n";
+        record(remote_reply, "Not replying to anybody");
         return -1;
     }
 
-    IFTRACE(remote)
-        std::cerr << "xl_reply: Replying:\n" << code << "\n";
+    record(remote_reply, "Replying: %t", code);
     code = xl_attach_context(context, code);
-    IFTRACE(remote)
-        std::cerr << "xl_reply: After replacement:\n" << code << "\n";
+    record(remote_reply, "After replacement: %t", code);
     xl_write_tree(reply_socket, code);
     return 0;
 }

@@ -44,6 +44,7 @@
 #include "base.h"
 #include "atomic.h"
 
+#include <recorder/recorder.h>
 #include <vector>
 #include <map>
 #include <set>
@@ -612,5 +613,7 @@ inline bool GarbageCollector::SafePoint()
 }
 
 XL_END
+
+RECORDER_DECLARE(memory);
 
 #endif // GC_H

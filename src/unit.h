@@ -3,18 +3,18 @@
 // ****************************************************************************
 //  unit.h                                                        XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Information about a single compilation unit, i.e. the code generated
 //     for a particular tree rerite.
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -135,5 +135,7 @@ public:
 };
 
 XL_END
+
+RECORDER_DECLARE(eval);
 
 #endif // COMPILER_UNIT_H

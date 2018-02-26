@@ -50,16 +50,20 @@
 #include "runtime.h"
 #include "errors.h"
 #include "types.h"
-#include "recorder.h"
 #include "llvm-crap.h"
 
+#include <recorder/recorder.h>
 #include <iostream>
 #include <sstream>
 #include <cstdarg>
 
+
+RECORDER(compiler, 128, "Global information about the LLVM compiler");
+RECORDER(llvm, 128, "Information about LLVM entities");
+RECORDER_TWEAK_DEFINE(labels, 0, "Show tree value in label names");
+
+
 XL_BEGIN
-
-
 // ============================================================================
 //
 //    Compiler - Global information about the LLVM compiler
@@ -70,8 +74,6 @@ XL_BEGIN
 // persists during the lifetime of the program: LLVM data structures,
 // LLVM definitions for frequently used types, XL runtime functions, ...
 //
-
-RECORDER(compiler, 128, "Global information about the LLVM compiler");
 
 using namespace llvm;
 
@@ -337,14 +339,16 @@ Compiler::~Compiler()
 }
 
 
+RECORDER(llvm_dump, 64, "Dump LLVM module information");
+RECORDER_TWEAK_DEFINE(llvm_statistics, 0, "Flag to dump LLVM statistics");
+
 void Compiler::Dump()
 // ----------------------------------------------------------------------------
 //   Debug dump of the whole compiler program at exit
 // ----------------------------------------------------------------------------
 {
-    IFTRACE(llvmdump)
-        llvm::errs() << "; MODULE:\n" << *module << "\n";
-    IFTRACE(llvmstats)
+    record(llvm_dump, "Module %v", module);
+    if (RECORDER_TWEAK(llvm_statistics))
         llvm::PrintStatistics(llvm::errs());
 }
 
@@ -525,6 +529,7 @@ void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
 }
 
 
+RECORDER(builtins, 64, "Builtin definitions");
 llvm::Function *Compiler::EnterBuiltin(text name,
                                        Tree *from, Tree *to,
                                        eval_fn code)
@@ -539,18 +544,13 @@ llvm::Function *Compiler::EnterBuiltin(text name,
     from->Do(plist);
     Parameters &parms = plist.parameters;
 
-    RECORD(compiler, "Builtin %d parms, source %p, code %p",
+    record(builtins, "Builtin %d parms, source %t, code %p",
            parms.size(), to, (void *) code);
-    IFTRACE(llvm)
-        std::cerr << "EnterBuiltin " << name
-                  << " C" << (void *) code << " T" << (void *) to;
 
     llvm::Function *result = builtins[name];
     if (result)
     {
-        IFTRACE(llvm)
-            std::cerr << " existing F " << result
-                      << " replaces F" << TreeFunction(to) << "\n";
+        record(builtins, "Existing function %v for %t", result, to);
         SetTreeFunction(to, result);
         SetTreeClosure(to, result);
     }
@@ -569,9 +569,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
         // Record the runtime symbol address
         sys::DynamicLibrary::AddSymbol(name, (void*) code);
 
-        IFTRACE(llvm)
-            std::cerr << " new F " << result
-                      << "replaces F" << TreeFunction(to) << "\n";
+        record(builtins, "New %v for %t", result, to);
 
         // Associate the function with the tree form
         SetTreeFunction(to, result);
@@ -583,6 +581,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
 }
 
 
+RECORDER(array_to_args, 64, "Array to args adapters");
 adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 // ----------------------------------------------------------------------------
 //   Generate code to call a function with N arguments
@@ -592,15 +591,14 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
 //   For example, it allows you to call foo(Tree *src, Tree *a1, Tree *a2)
 //   by calling generated_adapter(foo, Tree *src, Tree *args[2])
 {
-    IFTRACE(llvm)
-        std::cerr << "EnterArrayToArgsAdapater " << numargs;
+    record(array_to_args, "Enter adapter for %u args", numargs);
 
     // Check if we already computed it
     adapter_fn result = array_to_args_adapters[numargs];
     if (result)
     {
-        IFTRACE(llvm)
-            std::cerr << " existing C" << (void *) result << "\n";
+        record(array_to_args,
+               "Adapter existed at %p for %u args", (void *) result, numargs);
         return result;
     }
 
@@ -668,15 +666,13 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     result = (adapter_fn) runtime->getPointerToFunction(adapter);
     array_to_args_adapters[numargs] = result;
 
-    IFTRACE(llvm)
-        std::cerr << " new C" << (void *) result << "\n";
+    record(array_to_args, "Created adapter %p for %d args",
+           (void *) result, numargs);
 
     // And return it to the caller
     return result;
 }
 
-
-RECORDER(builtins, 128, "Builtins");
 
 llvm::Function *Compiler::ExternFunction(kstring name, void *address,
                                          llvm_type retType, int parmCount, ...)
@@ -686,10 +682,6 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
 {
     RECORD(builtins, "Extern function %s, %d parameters, address %p",
              name, parmCount, address);
-    IFTRACE(llvm)
-        std::cerr << "ExternFunction " << name
-                  << " has " << parmCount << " parameters "
-                  << " C" << address;
 
     va_list va;
     llvm_types parms;
@@ -711,20 +703,21 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
                                name, module);
     sys::DynamicLibrary::AddSymbol(name, address);
 
-    IFTRACE(llvm)
-        std::cerr << " F" << result << "\n";
+    record(builtins, "Result function %v", result);
 
     return result;
 }
 
+
+RECORDER(globals, 64, "Global values");
 
 Value *Compiler::EnterGlobal(Name *name, Name_p *address)
 // ----------------------------------------------------------------------------
 //   Enter a global variable in the symbol table
 // ----------------------------------------------------------------------------
 {
-    RECORD(builtins, "Global %s address %p",
-           name->value.c_str(), address);
+    RECORD(globals, "Global %t address %p",
+           name, (void *) address->Pointer());
 
     Constant *null = ConstantPointerNull::get(treePtrTy);
     bool isConstant = false;
@@ -732,14 +725,6 @@ Value *Compiler::EnterGlobal(Name *name, Name_p *address)
                                               GlobalVariable::ExternalLinkage,
                                               null, name->value);
     SetTreeGlobal(name, result, address);
-
-    IFTRACE(llvm)
-        std::cerr << "EnterGlobal " << name->value
-                  << " name T" << (void *) name
-                  << " A" << address
-                  << " address T" << (void *) address->Pointer()
-                  << "\n";
-
     return result;
 }
 
@@ -749,33 +734,24 @@ Value *Compiler::EnterConstant(Tree *constant)
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
-    RECORD(builtins, "Constant %p kind %s",
-           constant, Tree::kindName[constant->Kind()]);
-
+    kstring name = Tree::kindName[constant->Kind()];
+    text label = name;
     bool isConstant = true;
-    text name = "xlk";
-    switch(constant->Kind())
-    {
-    case INTEGER: name = "elint";  break;
-    case REAL:    name = "elreal"; break;
-    case TEXT:    name = "eltext"; break;
-    default:                       break;
-    }
-    IFTRACE(labels)
-        name += "[" + text(*constant) + "]";
+    if (RECORDER_TWEAK(labels))
+        label += "[" + text(*constant) + "]";
     GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
                                               GlobalVariable::ExternalLinkage,
-                                              NULL, name);
+                                              NULL, label);
     SetTreeGlobal(constant, result, NULL);
-
-    IFTRACE(llvm)
-        std::cerr << "EnterConstant T" << (void *) constant
-                  << " A" << (void *) &Info(constant)->tree << "\n";
+    record(globals,
+           "Constant %t kind %s at address %p",
+           constant, name, (void *) &Info(constant)->tree);
 
     return result;
 }
 
 
+RECORDER(constants, 64, "Generated tree constants");
 GlobalVariable *Compiler::TextConstant(text value)
 // ----------------------------------------------------------------------------
 //   Return a C-style string pointer for a string constant
@@ -798,6 +774,7 @@ GlobalVariable *Compiler::TextConstant(text value)
         global = (*found).second;
     }
 
+    record(constants, "Text constant %s is global %v", value.c_str(), global);
     return global;
 }
 
@@ -1089,23 +1066,18 @@ bool Compiler::FreeResources(Tree *tree)
 //   other's body still makes a reference.
 {
     bool result = true;
-
-    IFTRACE(llvm)
-        std::cerr << "FreeResources T" << (void *) tree;
-
     CompilerInfo *info = Info(tree);
+
     if (!info)
     {
-        IFTRACE(llvm)
-            std::cerr << " has no info\n";
+        record(compiler_gc, "FreeResources %t no info", tree);
         return true;
     }
 
     // Avoid purging built-in functions (bug #991)
     if (info->IsBuiltin())
     {
-        IFTRACE(llvm)
-            std::cerr << " is a built-in, don't purge it\n";
+        record(compiler_gc, "FreeResource %t is a built-in, don't purge", tree);
     }
     else
     {
@@ -1113,10 +1085,8 @@ bool Compiler::FreeResources(Tree *tree)
         if (llvm::Function *f = info->function)
         {
             bool inUse = !f->use_empty();
-
-            IFTRACE(llvm)
-                std::cerr << " function F" << f
-                          << (inUse ? " in use" : " unused");
+            record(compiler_gc, "FreeResources %t function %v is %s",
+                   tree, f, inUse ? "in use" : "unused");
 
             if (inUse)
             {
@@ -1135,10 +1105,8 @@ bool Compiler::FreeResources(Tree *tree)
         if (llvm::Function *f = info->closure)
         {
             bool inUse = !f->use_empty();
-
-            IFTRACE(llvm)
-                std::cerr << " closure F" << f
-                          << (inUse ? " in use" : " unused");
+            record(compiler_gc, "FreeResources %t closure %v is %s",
+                   tree, f, inUse ? "in use" : "unused");
 
             if (inUse)
             {
@@ -1158,10 +1126,8 @@ bool Compiler::FreeResources(Tree *tree)
     if (GlobalValue *v = info->global)
     {
         bool inUse = !v->use_empty();
-
-        IFTRACE(llvm)
-            std::cerr << " global V" << v
-                      << (inUse ? " in use" : " unused");
+        record(compiler_gc, "FreeResources %t global %v is %s",
+               tree, v, inUse ? "in use" : "unused");
 
         if (inUse)
         {
@@ -1177,9 +1143,8 @@ bool Compiler::FreeResources(Tree *tree)
         }
     }
 
-    IFTRACE(llvm)
-        std::cerr << (result ? " Delete\n" : "Preserved\n");
-
+    record(compiler_gc, "FreeResources %t: %s",
+           tree, result ? "deleted" : "preserved");
     return result;
 }
 

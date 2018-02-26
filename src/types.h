@@ -62,9 +62,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //   Forward classes
-// 
+//
 // ============================================================================
 
 struct RewriteCalls;
@@ -251,5 +251,7 @@ XL_END
 extern "C" void debugt(XL::Types *ti);
 extern "C" void debugu(XL::Types *ti);
 extern "C" void debugr(XL::Types *ti);
+
+RECORDER_DECLARE(types);
 
 #endif // TYPES_H
