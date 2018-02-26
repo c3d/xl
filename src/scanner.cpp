@@ -516,15 +516,25 @@ token_t Scanner::NextToken(bool hungry)
     }
 
     // Look for other symbols
+    bool hadChar = false;
     while (ispunct(c) && c != '\'' && c != '"' && c != EOF &&
            !syntax.IsBlock(c, endMarker))
     {
+        hadChar = true;
         NEXT_CHAR(c);
         if (!hungry && !syntax.KnownPrefix(tokenText))
             break;
     }
-    input.unget();
-    position--;
+    if (hadChar)
+    {
+        input.unget();
+        position--;
+    }
+    else
+    {
+        errors.Log(Error("Invalid character code $1", position)).Arg(c);
+        NEXT_CHAR(c);
+    }
     if (!hungry)
     {
         while (tokenText.length() > 1 && !syntax.KnownToken(tokenText))
