@@ -141,12 +141,11 @@ size_t recorder_render(const char *format,
     const unsigned trunc_len = max_len/2 - 3;
     arg_t value = (arg_t) arg;
     text t;
-    stream_t os;
+    stream_t os(t);
     if (value)
         os << value;
     else
         os << "NULL";
-    t = os.str();
     size_t len = t.length();
     if (max_len > 8 && len > max_len)
         t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
@@ -249,7 +248,8 @@ int Main::LoadAndRun()
         return xl_listen(context, options.listen_forks, options.listen);
 
 #ifndef INTERPRETER_ONLY
-    compiler->Dump();
+    if (compiler)
+        compiler->Dump();
 #endif // INTERPRETER_ONLY
 
     return rc;
