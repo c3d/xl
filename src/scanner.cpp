@@ -21,15 +21,17 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include <stdio.h>
-#include <ctype.h>
-#include <errno.h>
 #include "scanner.h"
 #include "errors.h"
 #include "syntax.h"
 #include "options.h"
 #include "utf8.h"
 #include "utf8_fileutils.h"
+
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
+#include <stdint.h>
 
 
 XL_BEGIN
@@ -46,30 +48,54 @@ class DigitValue
 // ----------------------------------------------------------------------------
 {
 public:
-    enum { SIZE = 128, INVALID = 999 };
+    enum { SIZE = 0x100, INVALID = 999 };
 
 public:
     DigitValue()
     {
         uint i;
+
+        // Default for all digits
         for (i = 0; i < SIZE; i++)
-            value[i] = INVALID;
+            based_value[i] = base64_value[i] = INVALID;
+
+        // Bases 2-36
         for (i = '0'; i <= '9'; i++)
-            value[i] = i - '0';
+            based_value[i] = i - '0';
         for (i = 'A'; i <= 'Z'; i++)
-            value[i] = i - 'A' + 10;
+            based_value[i] = i - 'A' + 10;
         for (i = 'a'; i <= 'z'; i++)
-            value[i] = i - 'a' + 10;
+            based_value[i] = i - 'a' + 10;
+
+        // For base-64 (see https://en.wikipedia.org/wiki/Base64)
+        for (i = 'A'; i <= 'Z'; i++)
+            base64_value[i] = i - 'A';
+        for (i = 'a'; i <= 'z'; i++)
+            base64_value[i] = i - 'a' + 26;
+        for (i = '0'; i <= '9'; i++)
+            base64_value[i] = i - '0' + 52;
+        base64_value[0 + '+'] = 62;
+        base64_value[0 + '/'] = 63;
+
+        // Select regular bases by default
+        select_base(10);
     }
-    inline uint operator[] (uint c)
+
+    void select_base(uint base)
     {
-        if (c < SIZE)
-            return value[c];
-        return INVALID;
+        value = base == 64 ? base64_value : based_value;
     }
+
+    int operator[] (uint8_t c)
+    {
+        return value[c];
+    }
+
 private:
-    uint value[SIZE];
-} digit_values;
+    uint based_value[SIZE];
+    uint base64_value[SIZE];
+    const uint *value;
+} digits;
 
 
 
@@ -318,13 +344,14 @@ token_t Scanner::NextToken(bool hungry)
 
         base = 10;
         intValue = 0;
+        digits.select_base(base);
 
         // Take integral part (or base)
         do
         {
-            while (digit_values[c] < base)
+            while (digits[c] < base)
             {
-                intValue = base * intValue + digit_values[c];
+                intValue = base * intValue + digits[c];
                 NEXT_CHAR(c);
                 if (c == '_')       // Skip a single underscore
                 {
@@ -339,12 +366,13 @@ token_t Scanner::NextToken(bool hungry)
             if (c == '#' && !basedNumber)
             {
                 base = intValue;
-                if (base < 2 || base > 36)
+                if (base != 64 && (base < 2 || base > 36))
                 {
                     base = 36;
-                    errors.Log(Error("The base $1 is not valid, not in 2..36",
+                    errors.Log(Error("The base $1 is not valid (2..36 or 64)",
                                      position).Arg(textValue));
                 }
+                digits.select_base(base);
                 NEXT_CHAR(c);
                 intValue = 0;
                 basedNumber = true;
@@ -360,7 +388,7 @@ token_t Scanner::NextToken(bool hungry)
         if (c == '.')
         {
             int nextDigit = input.peek();
-            if (digit_values[nextDigit] >= base)
+            if (digits[nextDigit] >= base)
             {
                 // This is something else following an integer: 1..3, 1.(3)
                 input.unget();
@@ -374,10 +402,10 @@ token_t Scanner::NextToken(bool hungry)
                 double comma_position = 1.0;
 
                 NEXT_CHAR(c);
-                while (digit_values[c] < base)
+                while (digits[c] < base)
                 {
                     comma_position /= base;
-                    realValue += comma_position * digit_values[c];
+                    realValue += comma_position * digits[c];
                     NEXT_CHAR(c);
                     if (c == '_')
                     {
@@ -416,9 +444,9 @@ token_t Scanner::NextToken(bool hungry)
             }
 
             // Exponent value
-            while (digit_values[c] < 10)
+            while (digits[c] < 10)
             {
-                exponent = 10 * exponent + digit_values[c];
+                exponent = 10 * exponent + digits[c];
                 NEXT_CHAR(c);
                 if (c == '_')
                     IGNORE_CHAR(c);
@@ -557,12 +585,12 @@ text Scanner::Comment(text EOC, bool stripIndent)
 //   Keep adding characters until end of comment is found (and consumed)
 // ----------------------------------------------------------------------------
 {
-    kstring eoc     = EOC.c_str();
-    kstring match   = eoc;
-    text    comment = "";
-    int     c       = 0;
-    bool    skip    = false;
-    ulong   column  = position - lineStart;
+    kstring  eoc     = EOC.c_str();
+    kstring  match   = eoc;
+    text     comment = "";
+    unsigned c       = 0;
+    bool     skip    = false;
+    ulong    column  = position - lineStart;
 
     while (*match && c != EOF)
     {
