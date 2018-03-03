@@ -53,7 +53,7 @@ struct CompileExpression
     typedef llvm_value value_type;
 
 public:
-    CompileExpression(CompiledUnit *unit) : unit(unit) {}
+    CompileExpression(CompiledUnit *unit);
 
 public:
     llvm_value DoInteger(Integer *what);
@@ -69,12 +69,12 @@ public:
     llvm_value DoRewrite(RewriteCandidate &candidate);
     llvm_value Value(Tree *expr);
     llvm_value Compare(Tree *value, Tree *test);
-    llvm_value KindTest(Tree *value, kind test);
     llvm_value ForceEvaluation(Tree *expr);
     llvm_value TopLevelEvaluation(Tree *expr);
 
 public:
     CompiledUnit *  unit;         // Current compilation unit
+    LLVMCrap::JIT & llvm;         // JIT compiler being used
     value_map       computed;     // Values we already computed
 };
 

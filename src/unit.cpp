@@ -114,8 +114,11 @@ Function *CompiledUnit::ExpressionFunction()
     signature.push_back(compiler->treePtrTy);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
     return InitializeFunction(fnTy, &parameters.parameters,
-                              "xl_eval", true, false);
+                              "xl.program", true, false);
 }
+
+
+RECORDER_TWEAK_DEFINE(named_closures, 0, "Set to 1 to add names to closures");
 
 
 Function *CompiledUnit::ClosureFunction(Tree *expr, Types *types)
@@ -128,10 +131,13 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, Types *types)
     this->types = types;
 
     // We have a closure type that we will build as we evaluate expression
-    closureTy = LLVMS_getOpaqueType(llvm);
-    static char buffer[80]; static int count = 0;
-    snprintf(buffer, 80, "closure%d", count++);
-    LLVMS_SetName(compiler->module, closureTy, buffer);
+    closureTy = llvm.OpaqueType();
+    if (RECORDER_TWEAK(named_closures))
+    {
+        static char buffer[80]; static int count = 0;
+        snprintf(buffer, 80, "xl.closure%d", count++);
+        llvm.SetName(closureTy, buffer);
+    }
 
     // Add a single parameter to the signature
     llvm_types signature;
@@ -142,7 +148,7 @@ Function *CompiledUnit::ClosureFunction(Tree *expr, Types *types)
     Tree *rtype = this->types->Type(expr);
     llvm_type retTy = compiler->MachineType(rtype);
     FunctionType *fnTy = FunctionType::get(retTy, signature, false);
-    llvm_function fn = InitializeFunction(fnTy,NULL,"xl_closure",true,false);
+    llvm_function fn = InitializeFunction(fnTy,NULL,"xl.closure",true,false);
 
     // Return the function
     return fn;
@@ -155,7 +161,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
 // ----------------------------------------------------------------------------
 {
     Types *types = rc.types;
-    Infix *rewrite = rc.rewrite;
+    Rewrite *rewrite = rc.rewrite;
 
     // We must have verified the types before
     assert((types && !this->types) || !"RewriteFunction: bogus type check");
@@ -225,7 +231,6 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
             return NULL;
         }
         sys::DynamicLibrary::AddSymbol(label, address);
-
     }
     return f;
 }
@@ -242,11 +247,7 @@ Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
     assert (!function || !"LLVM function was already built");
 
     // Create function and save it in the CompiledUnit
-    function = Function::Create(fnTy,
-                                global
-                                ? Function::ExternalLinkage
-                                : Function::InternalLinkage,
-                                label, compiler->module);
+    function = llvm.CreateFunction(fnTy, label);
     record(llvm, "New function %v", function);
 
     if (!isC)
@@ -372,7 +373,7 @@ llvm_value CompiledUnit::Compile(RewriteCandidate &rc, llvm_values &args)
     if (function == NULL)
     {
         Types *types = rc.types;
-        Infix *rewrite = rc.rewrite;
+        Rewrite *rewrite = rc.rewrite;
         Context_p rewriteContext = types->context;
         CompiledUnit rewriteUnit(compiler, rewriteContext);
 
@@ -434,8 +435,8 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
 
     case NAME:
     {
-        Infix_p    rw;
-        Prefix_p   scope;
+        Scope_p   scope;
+        Rewrite_p rw;
         Tree      *existing;
 
         // Bound names are returned as is, parameters are evaluated
@@ -449,8 +450,9 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
             if (llvm_value result = Known(defined))
             {
                 // Store that in the result tree
-                llvm_value ptr =
-                    LLVMCrap_CreateStructGEP(code, returned, index++);
+                llvm_value ptr = llvm.CreateStructGEP(code,
+                                                      returned, index++,
+                                                      "resultp");
                 result = code->CreateStore(result, ptr);
                 return result;
             }
@@ -458,7 +460,7 @@ llvm_value CompiledUnit::Data(Tree *form, uint &index)
 
         // Arguments not bound here are returned as a constant
         Tree *form = RewriteDefined(rw->left);
-        return compiler->EnterConstant(form);
+        return compiler->TreeConstant(form);
     }
 
     case INFIX:
@@ -521,9 +523,9 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
 
     case NAME:
     {
-        Infix_p  rw;
-        Prefix_p scope;
-        Tree    *existing;
+        Scope_p   scope;
+        Rewrite_p rw;
+        Tree      *existing;
 
         // Bound names are returned as is, parameters are evaluated
         existing = context->Bound(form, true, &rw, &scope);
@@ -533,70 +535,64 @@ llvm_value CompiledUnit::Unbox(llvm_value boxed, Tree *form, uint &index)
         if (scope == context->CurrentScope())
         {
             // Get element from input argument
-                llvm_value ptr =
-                    LLVMCrap_CreateStructGEP(code, boxed, index++);
+            llvm_value ptr = llvm.CreateStructGEP(code, boxed, index++, "inp");
             return code->CreateLoad(ptr);
         }
 
         // Arguments not bound here are returned as a constant
         Tree *defined = RewriteDefined(rw->left);
-        return compiler->EnterConstant(defined);
+        return compiler->TreeConstant(defined);
     }
 
     case INFIX:
     {
         Infix *infix = (Infix *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         left = Unbox(boxed, infix->left, index);
         right = Unbox(boxed, infix->right, index);
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
-        return LLVMCrap_CreateCall(code,
-                                   compiler->xl_new_infix,
-                                   ref, left, right);
+        return llvm.CreateCall(code, compiler->xl_new_infix,
+                               ref, left, right);
     }
 
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         if (prefix->left->Kind() == NAME)
-            left = compiler->EnterConstant(prefix->left);
+            left = compiler->TreeConstant(prefix->left);
         else
             left = Unbox(boxed, prefix->left, index);
         right = Unbox(boxed, prefix->right, index);
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
-        return LLVMCrap_CreateCall(code,
-                                   compiler->xl_new_prefix,
-                                   ref, left, right);
+        return llvm.CreateCall(code, compiler->xl_new_prefix,
+                               ref, left, right);
     }
 
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         left = Unbox(boxed, postfix->left, index);
         if (postfix->right->Kind() == NAME)
-            right = compiler->EnterConstant(postfix->right);
+            right = compiler->TreeConstant(postfix->right);
         else
             right = Unbox(boxed, postfix->right, index);
         left = Autobox(left, ttp);
         right = Autobox(right, ttp);
-        return LLVMCrap_CreateCall(code,
-                                   compiler->xl_new_postfix,
-                                   ref, left, right);
+        return llvm.CreateCall(code, compiler->xl_new_postfix,
+                               ref, left, right);
     }
 
     case BLOCK:
     {
         Block *block = (Block *) form;
-        ref = compiler->EnterConstant(form);
+        ref = compiler->TreeConstant(form);
         child = Unbox(boxed, block->child, index);
         child = Autobox(child, ttp);
-        return LLVMCrap_CreateCall(code,
-                                   compiler->xl_new_block,
-                                   ref, child);
+        return llvm.CreateCall(code, compiler->xl_new_block, ref, child);
     }
     }
 
@@ -614,53 +610,45 @@ llvm_value CompiledUnit::Closure(Name *name, Tree *expr)
 {
     // Record the function that we build
     text fkey = compiler->ClosureKey(expr, context);
-    llvm_function &function = compiler->FunctionFor(fkey);
-    assert (function == NULL);
+    llvm_function &fn = compiler->FunctionFor(fkey);
+    assert (fn == NULL);
 
-    llvm_type closureType = NULL;
-    llvm_value stackPtr = NULL;
-    if (function == NULL)
+    // Create the evaluation function
+    CompiledUnit cunit(compiler, context);
+    fn = cunit.ClosureFunction(expr, types);
+    if (!fn || !cunit.code || !cunit.closureTy)
+        return NULL;
+    cunit.ImportClosureInfo(this);
+    llvm_value returned = cunit.CompileTopLevel(expr);
+    if (!returned)
+        return NULL;
+    if (!cunit.Return(returned))
+        return NULL;
+    cunit.Finalize(false);
+
+    // Values imported from closure are now in cunit.closure[]
+    // Allocate a local data block to pass as the closure
+    llvm_value stackPtr = data->CreateAlloca(cunit.closureTy);
+    compiler->MarkAsClosureType(stackPtr->getType());
+
+    // First, store the function pointer
+    uint field = 0;
+    llvm_value fptr = llvm.CreateStructGEP(code, stackPtr, field++, "fnPtr");
+    code->CreateStore(fn, fptr);
+
+    // Then loop over all values that were detected while evaluating expr
+    value_map &cls = cunit.closure;
+    for (value_map::iterator v = cls.begin(); v != cls.end(); v++)
     {
-        // Create the evaluation function
-        CompiledUnit cunit(compiler, context);
-        function = cunit.ClosureFunction(expr, types);
-        if (!function || !cunit.code || !cunit.closureTy)
-            return NULL;
-        cunit.ImportClosureInfo(this);
-        llvm_value returned = cunit.CompileTopLevel(expr);
-        if (!returned)
-            return NULL;
-        if (!cunit.Return(returned))
-            return NULL;
-        cunit.Finalize(false);
-
-        closureType = cunit.closureTy;
-
-        // Values imported from closure are now in cunit.closure[]
-        // Allocate a local data block to pass as the closure
-        stackPtr = data->CreateAlloca(closureType);
-        compiler->MarkAsClosureType(stackPtr->getType());
-
-        // First, store the function pointer
-        uint field = 0;
-        llvm_value fptr =
-            LLVMCrap_CreateStructGEP(code, stackPtr, field++);
-        code->CreateStore(function, fptr);
-
-        // Then loop over all values that were detected while evaluating expr
-        value_map &cls = cunit.closure;
-        for (value_map::iterator v = cls.begin(); v != cls.end(); v++)
-        {
-            Tree *subexpr = (*v).first;
-            llvm_value subval = Compile(subexpr);
-            fptr = LLVMCrap_CreateStructGEP(code, stackPtr, field++);
-            code->CreateStore(subval, fptr);
-        }
-
-        // Remember the machine type associated with this closure
-        llvm_type mtype = stackPtr->getType();
-        ExpressionMachineType(name, mtype);
+        Tree *subexpr = (*v).first;
+        llvm_value subval = Compile(subexpr);
+        fptr = llvm.CreateStructGEP(code, stackPtr, field++, "itemPtr");
+        code->CreateStore(subval, fptr);
     }
+
+    // Remember the machine type associated with this closure
+    llvm_type mtype = stackPtr->getType();
+    ExpressionMachineType(name, mtype);
 
     // Return the stack pointer that we'll use later to evaluate the closure
     return stackPtr;
@@ -672,7 +660,7 @@ llvm_value CompiledUnit::InvokeClosure(llvm_value result, llvm_value fnPtr)
 //   Invoke a closure with a known closure function
 // ----------------------------------------------------------------------------
 {
-    result = code->CreateCall(fnPtr, result);
+    result = llvm.CreateCall(code, fnPtr, result);
     return result;
 }
 
@@ -683,7 +671,7 @@ llvm_value CompiledUnit::InvokeClosure(llvm_value result)
 // ----------------------------------------------------------------------------
 {
     // Get function pointer and argument
-    llvm_value fnPtrPtr = LLVMCrap_CreateStructGEP(data, result, 0);
+    llvm_value fnPtrPtr = llvm.CreateStructGEP(data, result, 0, "fnPtrPtr");
     llvm_value fnPtr = data->CreateLoad(fnPtrPtr);
 
     // Call the closure callback
@@ -737,7 +725,7 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         }
 
         // Build the structure type and unify it with opaque type used in decl
-        closureTy = LLVMS_Struct(llvm, closureTy, sig);
+        closureTy = llvm.Struct(closureTy, sig);
 
         // Load the elements from the closure
         Function::arg_iterator args = function->arg_begin();
@@ -747,7 +735,8 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         {
             Tree *value = (*v).first;
             llvm_value storage = NeedStorage(value);
-            llvm_value ptr = LLVMCrap_CreateStructGEP(data,closureArg,field++);
+            llvm_value ptr = llvm.CreateStructGEP(data, closureArg, field++,
+                                                  "closure_input_ptr");
             llvm_value input = data->CreateLoad(ptr);
             data->CreateStore(input, storage);
         }
@@ -767,24 +756,22 @@ eval_fn CompiledUnit::Finalize(bool createCode)
         function->print(errs());
     }
     verifyFunction(*function);
-    if (compiler->optimizer)
-        compiler->optimizer->run(*function);
     if (RECORDER_TWEAK(llvm_ir) & 2)
     {
         errs() << "LLVM IR after optimizations:\n";
         function->print(errs());
     }
+    llvm.FinalizeFunction(function);
 
     void *result = NULL;
     if (createCode)
     {
-        // compiler->moduleOptimizer->run(*compiler->module);
-        result = compiler->runtime->getPointerToFunction(function);
         if (RECORDER_TWEAK(llvm_ir) & 4)
         {
             errs() << "After global optimizations:\n";
             function->print(errs());
         }
+        result = llvm.FunctionPointer(function);
         record(xl2c, "Address of function %v is %p", function, result);
     }
 
@@ -817,9 +804,13 @@ Value *CompiledUnit::NeedStorage(Tree *tree)
         // If this started with a value or global, initialize on function entry
         llvm_value initializer = NULL;
         if (value.count(tree))
+        {
             initializer = value[tree];
-        else if (Value *global = compiler->TreeGlobal(tree))
-            initializer = data->CreateLoad(global);
+        }
+        else if (Value *global = compiler->TreeConstant(tree))
+        {
+            initializer = global;
+        }
         if (initializer && initializer->getType() == mtype)
             data->CreateStore(initializer, result);
     }
@@ -854,8 +845,7 @@ bool CompiledUnit::IsKnown(Tree *tree, uint which)
     else if ((which & knowValues) && value.count(tree) > 0)
         return true;
     else if (which & knowGlobals)
-        if (compiler->IsKnown(tree))
-            return true;
+        return true;
     return false;
 }
 
@@ -879,14 +869,7 @@ Value *CompiledUnit::Known(Tree *tree, uint which)
     else if (which & knowGlobals)
     {
         // Check if this is a global
-        result = compiler->TreeGlobal(tree);
-        if (result)
-        {
-            text label = "glob";
-            if (RECORDER_TWEAK(labels))
-                label += "[" + text(*tree) + "]";
-            result = code->CreateLoad(result, label);
-        }
+        result = compiler->TreeConstant(tree);
     }
     return result;
 }
@@ -909,8 +892,7 @@ Value *CompiledUnit::ConstantInteger(Integer *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "intk");
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -926,8 +908,7 @@ Value *CompiledUnit::ConstantReal(Real *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "realk");
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -943,8 +924,7 @@ Value *CompiledUnit::ConstantText(Text *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
-        result = code->CreateLoad(result, "textk");
+        result = compiler->TreeConstant(what);
         if (storage.count(what))
             code->CreateStore(result, storage[what]);
     }
@@ -960,8 +940,7 @@ Value *CompiledUnit::ConstantTree(Tree *what)
     Value *result = Known(what, knowGlobals);
     if (!result)
     {
-        result = compiler->EnterConstant(what);
-        result = data->CreateLoad(result, "treek");
+        result = compiler->TreeConstant(what);
     }
     return result;
 }
@@ -974,9 +953,8 @@ Value *CompiledUnit::CallFormError(Tree *what)
 {
     Value *ptr = ConstantTree(what); assert(what);
     Value *nullContext = ConstantPointerNull::get(compiler->contextPtrTy);
-    Value *callVal = LLVMCrap_CreateCall(code,
-                                         compiler->xl_form_error,
-                                         nullContext, ptr);
+    Value *callVal = llvm.CreateCall(code, compiler->xl_form_error,
+                                     nullContext, ptr);
     return callVal;
 }
 
@@ -1008,7 +986,7 @@ llvm_type CompiledUnit::StructureType(llvm_types &signature, Tree *source)
     text tname = "boxed";
     if (RECORDER_TWEAK(labels))
         tname += "[" + text(*source) + "]";
-    LLVMS_SetName(compiler->module, stype, tname);
+    llvm.SetName(stype, tname);
 
     // Record boxing and unboxing for that particular tree
     machineType[source] = stype;
@@ -1102,25 +1080,28 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     if (req == compiler->booleanTy)
     {
         assert (type == compiler->treePtrTy || type == compiler->nameTreePtrTy);
-        Value *falsePtr = compiler->TreeGlobal(xl_false);
-        result = code->CreateLoad(falsePtr, "xl_false");
-        result = code->CreateICmpNE(value, result, "notFalse");
+        Value *falsePtr = compiler->TreeConstant(xl_false);
+        result = code->CreateICmpNE(value, falsePtr, "notFalse");
     }
     else if (req->isIntegerTy())
     {
         if (req == compiler->characterTy && type == compiler->textTreePtrTy)
         {
             // Convert text constant to character
-            result = LLVMCrap_CreateStructGEP(code, result, TEXT_VALUE_INDEX);
-            result = LLVMCrap_CreateStructGEP(code, result, 0);
-            result = LLVMCrap_CreateStructGEP(code, result, 0);
-            result = code->CreateLoad(result);
+            result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX,
+                                          "unbox_char_tree_ptr");
+            result = llvm.CreateStructGEP(code, result, 0,
+                                          "unbox_char_ptr_ptr");
+            result = llvm.CreateStructGEP(code, result, 0,
+                                          "unbox_char_ptr");
+            result = code->CreateLoad(result, "unbox_char");
         }
         else
         {
             // Convert integer constants
             assert (type == compiler->integerTreePtrTy);
-            result = LLVMCrap_CreateStructGEP(code, value, INTEGER_VALUE_INDEX);
+            result = llvm.CreateStructGEP(code, value, INTEGER_VALUE_INDEX,
+                                          "unbox_integer");
             if (req != compiler->integerTy)
                 result = code->CreateTrunc(result, req);
         }
@@ -1128,21 +1109,25 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     else if (req->isFloatingPointTy())
     {
         assert(type == compiler->realTreePtrTy);
-        result = LLVMCrap_CreateStructGEP(code,value,REAL_VALUE_INDEX, "rval");
+        result = llvm.CreateStructGEP(code, value, REAL_VALUE_INDEX,
+                                      "unbox_real");
         if (req != compiler->realTy)
             result = code->CreateFPTrunc(result, req);
     }
     else if (req == compiler->charPtrTy)
     {
         assert(type == compiler->textTreePtrTy);
-        result = LLVMCrap_CreateStructGEP(code, result, TEXT_VALUE_INDEX);
-        result = LLVMCrap_CreateStructGEP(code, result, 0);
-        result = code->CreateLoad(result);
+        result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX,
+                                      "unbox_text_ptr");
+        result = llvm.CreateStructGEP(code, result, 0,
+                                      "unbox_char_ptr_ptr");
+        result = code->CreateLoad(result, "unbox_char_ptr");
     }
     else if (req == compiler->textTy)
     {
         assert (type == compiler->textTreePtrTy);
-        result = LLVMCrap_CreateStructGEP(code, result, TEXT_VALUE_INDEX, "tval");
+        result = llvm.CreateStructGEP(code, result, TEXT_VALUE_INDEX,
+                                      "unbox_text_ptr");
     }
     else if (type == compiler->booleanTy)
     {
@@ -1157,16 +1142,14 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
 
         // True block
         code->SetInsertPoint(isTrue);
-        Value *truePtr = compiler->TreeGlobal(xl_true);
-        result = code->CreateLoad(truePtr);
-        result = code->CreateStore(result, ptr);
+        Value *truePtr = compiler->TreeConstant(xl_true);
+        result = code->CreateStore(truePtr, ptr);
         code->CreateBr(exit);
 
         // False block
         code->SetInsertPoint(isFalse);
-        Value *falsePtr = compiler->TreeGlobal(xl_false);
-        result = code->CreateLoad(falsePtr);
-        result = code->CreateStore(result, ptr);
+        Value *falsePtr = compiler->TreeConstant(xl_false);
+        result = code->CreateStore(falsePtr, ptr);
         code->CreateBr(exit);
 
         // Now on shared exit block
@@ -1217,7 +1200,7 @@ llvm_value CompiledUnit::Autobox(llvm_value value, llvm_type req)
     // If we need to invoke a boxing function, do it now
     if (boxFn)
     {
-        result = code->CreateCall(boxFn, value);
+        result = llvm.CreateCall(code, boxFn, value);
         type = result->getType();
     }
 
@@ -1246,14 +1229,10 @@ Value *CompiledUnit::Global(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     // Check if this is a global
-    Value *result = compiler->TreeGlobal(tree);
-    if (result)
-    {
-        text label = "glob";
-        if (RECORDER_TWEAK(labels))
-            label += "[" + text(*tree) + "]";
-        result = code->CreateLoad(result, label);
-    }
+    Value *result = NULL;
+    CompilerInfo *info = compiler->Info(tree);
+    if (info)
+        result = compiler->TreeConstant(tree);
     return result;
 }
 

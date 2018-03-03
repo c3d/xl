@@ -109,8 +109,6 @@ struct Compiler
     void                      SetTreeFunction(Tree *tree, llvm::Function *);
     llvm::Function *          TreeClosure(Tree *tree);
     void                      SetTreeClosure(Tree *tree, llvm::Function *);
-    llvm::GlobalValue *       TreeGlobal(Tree *tree);
-    void                      SetTreeGlobal(Tree*, llvm::GlobalValue*, void*);
     llvm::Function *          EnterBuiltin(text name,
                                            Tree *from, Tree *to,
                                            eval_fn code);
@@ -118,9 +116,8 @@ struct Compiler
                                              llvm_type retType,
                                              int parmCount, ...);
     adapter_fn                ArrayToArgsAdapter(uint numtrees);
-    llvm::Value *             EnterGlobal(Name *name, Name_p *address);
-    llvm::Value *             EnterConstant(Tree *constant);
-    llvm::GlobalVariable *    TextConstant(text value);
+    llvm::Constant *          TreeConstant(Tree *constant);
+    llvm_value                TextConstant(llvm_builder code, text value);
     eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
     bool                      IsKnown(Tree *value);
 
@@ -139,7 +136,7 @@ struct Compiler
     bool                      MarkAsClosureType(llvm_type type);
     bool                      IsClosureType(llvm_type type);
 
-    text                      FunctionKey(Infix *rw, llvm_values &values);
+    text                      FunctionKey(Rewrite *rw, llvm_values &values);
     text                      ClosureKey(Tree *expr, Context *context);
     llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
 
@@ -148,11 +145,15 @@ struct Compiler
 
 
 public:
+#if LLVM_CRAP_MCJIT
+    LLVMCrap::JIT                llvm;
+#else // !LLVM_CRAP_JIT
     llvm::LLVMContext            &llvm;
     llvm::Module                 *module;
     llvm::ExecutionEngine        *runtime;
     LLVMCrap_FunctionPassManager *optimizer;
     LLVMCrap_PassManager         *moduleOptimizer;
+#endif // LLVM_CRAP_JIT
     llvm_integer_type             booleanTy;
     llvm_integer_type             integerTy;
     llvm_integer_type             integer8Ty;
@@ -190,7 +191,11 @@ public:
     llvm::PointerType            *infoPtrTy;
     llvm::PointerType            *contextPtrTy;
     llvm::Function               *strcmp_fn;
+    llvm::Function               *xl_evaluate;
+    llvm::Function               *xl_same_text;
     llvm::Function               *xl_same_shape;
+    llvm::Function               *xl_infix_match_check;
+    llvm::Function               *xl_type_check;
     llvm::Function               *xl_form_error;
     llvm::Function               *xl_stack_overflow;
     llvm::Function               *xl_new_integer;
@@ -203,6 +208,13 @@ public:
     llvm::Function               *xl_new_prefix;
     llvm::Function               *xl_new_postfix;
     llvm::Function               *xl_new_infix;
+    llvm::Function               *xl_fill_block;
+    llvm::Function               *xl_fill_prefix;
+    llvm::Function               *xl_fill_postfix;
+    llvm::Function               *xl_fill_infix;
+    llvm::Function               *xl_integer2real;
+    llvm::Function               *xl_array_index;
+    llvm::Function               *xl_new_closure;
     llvm::Constant               *xl_recursion_count_ptr;
     functions_map                 builtins;
     functions_map                 functions;

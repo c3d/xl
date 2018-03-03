@@ -128,11 +128,6 @@ void NameOpcode::Register(Context *context)
 
     context->Define(toDefine, toDefine);
     toDefine->SetInfo<Opcode> (this);
-
-#ifndef INTERPRETER_ONLY
-    if (MAIN->options.optimize_level > 1)
-        MAIN->compiler->EnterGlobal(toDefine, &toDefine);
-#endif
 }
 
 XL_END

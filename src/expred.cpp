@@ -62,6 +62,14 @@ using namespace llvm;
 //
 // ============================================================================
 
+CompileExpression::CompileExpression(CompiledUnit *unit)
+// ----------------------------------------------------------------------------
+//   Constructor for a compiler expression
+// ----------------------------------------------------------------------------
+    : unit(unit), llvm(unit->compiler->llvm)
+{}
+
+
 llvm_value CompileExpression::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Compile an integer constant
@@ -88,12 +96,11 @@ llvm_value CompileExpression::DoText(Text *what)
 // ----------------------------------------------------------------------------
 {
     Compiler *compiler = unit->compiler;
-    GlobalVariable *global = compiler->TextConstant(what->value);
     if (what->IsCharacter())
         return ConstantInt::get(compiler->characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    return LLVMCrap_CreateStructGEP(unit->code,
-                                    global, 0U);
+    llvm_value textConstant = compiler->TextConstant(unit->data, what->value);
+    return textConstant;
 }
 
 
@@ -102,11 +109,10 @@ llvm_value CompileExpression::DoName(Name *what)
 //   Compile a name
 // ----------------------------------------------------------------------------
 {
-    Prefix_p   where;
-    Infix_p    rewrite;
+    Scope_p    where;
+    Rewrite_p  rewrite;
     Context   *context  = unit->context;
     Tree      *existing = context->Bound(what, true, &rewrite, &where);
-
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
     if (where == context->CurrentScope())
@@ -172,9 +178,48 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 {
     if (Name *name = what->left->AsName())
+    {
         if (name->value == "data" || name->value == "extern")
             return NULL;
 
+        if (name->value == "opcode")
+        {
+            // This is a builtin, find if we write to code or data
+            llvm_builder bld = unit->code;
+            Tree *builtin = what->right;
+            if (Prefix *prefix = builtin->AsPrefix())
+            {
+                if (Name *name = prefix->left->AsName())
+                {
+                    if (name->value == "data")
+                    {
+                        bld = unit->data;
+                        builtin = prefix->right;
+                    }
+                }
+            }
+
+            // Take args list for current function as input
+            llvm_values args;
+            Function *function = unit->function;
+            uint i, max = function->arg_size();
+            Function::arg_iterator arg = function->arg_begin();
+            for (i = 0; i < max; i++)
+            {
+                llvm_value inputArg = &*arg++;
+                args.push_back(inputArg);
+            }
+
+            // Call the primitive (effectively creating a wrapper for it)
+            Name *name = builtin->AsName();
+            assert(name || !"Malformed primitive");
+            Compiler *compiler = unit->compiler;
+            text op = name->value;
+            uint sz = args.size();
+            llvm_value *a = &args[0];
+            return compiler->Primitive(*unit, bld, op, sz, a);
+        }
+    }
     return DoCall(what);
 }
 
@@ -249,26 +294,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
         Save<Types_p> saveTypes(unit->types, cand.types);
-        bool conditional = false;
-        llvm_block isBad = BasicBlock::Create(llvm, "skip", function);
-
-        // Perform the tests on type kind to see if candidate is valid
-        RewriteKinds &kinds = cand.kinds;
-        RewriteKinds::iterator k;
-        for (k = kinds.begin(); k != kinds.end(); k++)
-        {
-            llvm_value compare = KindTest((*k).value, (*k).test);
-            llvm_block isGood = BasicBlock::Create(llvm, "kindT", function);
-            code->CreateCondBr(compare, isGood, isBad);
-            code->SetInsertPoint(isGood);
-            llvm_value treeValue = Value((*k).value);
-            llvm_value cmptValue = unit->Autobox(treeValue, (*k).machineType);
-            computed[(*k).value] = cmptValue;
-            record(calls, "Kind test for % candidate %ut: %v vs %v",
-                   call, i, treeValue, cmptValue);
-            conditional = true;
-        }
-
+        llvm_value condition = NULL;
 
         // Perform the tests to check if this candidate is valid
         RewriteConditions &conds = cand.conditions;
@@ -278,15 +304,21 @@ llvm_value CompileExpression::DoCall(Tree *call)
             llvm_value compare = Compare((*t).value, (*t).test);
             record(calls, "Condition test for %t candidate %u: %v",
                    call, i, compare);
-            llvm_block isGood = BasicBlock::Create(llvm, "condT", function);
-            code->CreateCondBr(compare, isGood, isBad);
-            code->SetInsertPoint(isGood);
-            conditional = true;
+            if (condition)
+                condition = code->CreateAnd(condition, compare);
+            else
+                condition = compare;
         }
 
-        if (conditional)
+        if (condition)
         {
+            llvm_block isBad = BasicBlock::Create(llvm, "bad", function);
+            llvm_block isGood = BasicBlock::Create(llvm, "good", function);
+            code->CreateCondBr(condition, isGood, isBad);
+            code->SetInsertPoint(isGood);
+            value_map saveComputed = computed;
             result = DoRewrite(cand);
+            computed = saveComputed;
             result = unit->Autobox(result, storageType);
             record(calls, "Call %t candidate %u is conditional: %v",
                    call, i, result);
@@ -299,11 +331,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
             // If this particular call was unconditional, we are done
             result = DoRewrite(cand);
             result = unit->Autobox(result, storageType);
-            record(calls, "Call %t candidate %u is unconditional: %v",
-                   call, i, result);
             code->CreateStore(result, storage);
-            code->CreateBr(isDone);
-            code->SetInsertPoint(isBad);
             code->CreateBr(isDone);
             code->SetInsertPoint(isDone);
             result = code->CreateLoad(storage);
@@ -327,7 +355,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
 {
-    Infix *rw = cand.rewrite;
+    Rewrite *rw = cand.rewrite;
     llvm_value result = NULL;
 
     record(calls, "Rewrite: %t", rw);
@@ -406,7 +434,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     {
         llvm_value function = unit->Compile(cand, args);
         if (function)
-            result = unit->code->CreateCall(function, LLVMS_ARGS(args));
+            result = llvm.CreateCall(unit->code, function, args);
         record(calls, "Rewrite %t function %v call %v", rw, function, result);
     }
 
@@ -490,7 +518,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
         }
         if (valueType != c.charPtrTy)
             return ConstantInt::get(c.booleanTy, 0);
-        value = LLVMCrap_CreateCall(code, c.strcmp_fn, test, value);
+        value = llvm.CreateCall(code, c.strcmp_fn, test, value);
         test = ConstantInt::get(value->getType(), 0);
         value = code->CreateICmpEQ(value, test);
         return value;
@@ -580,36 +608,11 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             return ConstantInt::get(c.booleanTy, 0);
 
         // Call runtime function to perform tree comparison
-        return LLVMCrap_CreateCall(code, c.xl_same_shape, value, test);
+        return llvm.CreateCall(code, c.xl_same_shape, value, test);
     }
 
     // Other comparisons fail for now
     return ConstantInt::get(c.booleanTy, 0);
-}
-
-
-llvm_value CompileExpression::KindTest(Tree *valueTree, kind test)
-// ----------------------------------------------------------------------------
-//   Perform a comparison between the two values and check if this matches
-// ----------------------------------------------------------------------------
-{
-    CompiledUnit &u = *unit;
-    Compiler &c = *u.compiler;
-    llvm_builder code = u.code;
-
-    llvm_value value = Value(valueTree);
-
-    llvm_value treeValue = u.Autobox(value, c.treePtrTy);
-    llvm_value ptr = LLVMCrap_CreateStructGEP(code,
-                                              treeValue,
-                                              TAG_INDEX, "tagPtr");
-    llvm_value tag = code->CreateLoad(ptr, "tag");
-    llvm_value mask = llvm::ConstantInt::get(tag->getType(), Tree::KINDMASK);
-    llvm_value kind = code->CreateAnd(tag, mask, "tagAndMask");
-
-    llvm_value ref = llvm::ConstantInt::get(tag->getType(), test);
-    llvm_value result = code->CreateICmpEQ(kind, ref);
-    return result;
 }
 
 

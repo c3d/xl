@@ -113,7 +113,7 @@ public:
     Types_p             types;          // Type inferences for this unit
 
     Compiler *          compiler;       // The compiler environment we use
-    llvm::LLVMContext & llvm;           // The LLVM context we got from compiler
+    LLVMCrap::JIT &     llvm;           // The LLVM context we got from compiler
 
     llvm_builder        code;           // Instruction builder for code
     llvm_builder        data;           // Instruction builder for data

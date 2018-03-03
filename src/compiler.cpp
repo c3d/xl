@@ -59,7 +59,10 @@
 
 
 RECORDER(compiler, 128, "Global information about the LLVM compiler");
-RECORDER(llvm, 128, "Information about LLVM entities");
+RECORDER(llvm, 64, "LLVM general information");
+RECORDER(llvm_functions, 64, "LLVM functions");
+RECORDER(llvm_globals, 64, "LLVM globals");
+RECORDER(llvm_prototypes, 64, "LLVM prototypes");
 RECORDER_TWEAK_DEFINE(labels, 0, "Show tree value in label names");
 
 
@@ -83,6 +86,9 @@ static void* unresolved_external(const std::string& name)
 // ----------------------------------------------------------------------------
 // This is really just to print a fancy error message
 {
+    if (auto SymAddr = RTDyldMemoryManager::getSymbolAddressInProcess(name))
+        return (void *) SymAddr;
+
     std::cout.flush();
     std::cerr << "Unable to resolve external: " << name << std::endl;
     assert(0);
@@ -94,8 +100,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various instances we may need
 // ----------------------------------------------------------------------------
-    : llvm(LLVMCrap_GlobalContext()),
-      module(NULL), runtime(NULL), optimizer(NULL), moduleOptimizer(NULL),
+    : llvm(),
       booleanTy(NULL),
       integerTy(NULL), integer8Ty(NULL), integer16Ty(NULL), integer32Ty(NULL),
       realTy(NULL), real32Ty(NULL),
@@ -113,12 +118,18 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       evalTy(NULL), evalFnTy(NULL),
       infoPtrTy(NULL), contextPtrTy(NULL),
       strcmp_fn(NULL),
-      xl_same_shape(NULL),
+      xl_evaluate(NULL),
+      xl_same_text(NULL), xl_same_shape(NULL),
+      xl_infix_match_check(NULL), xl_type_check(NULL),
       xl_form_error(NULL), xl_stack_overflow(NULL),
       xl_new_integer(NULL), xl_new_real(NULL), xl_new_character(NULL),
       xl_new_text(NULL), xl_new_ctext(NULL), xl_new_xtext(NULL),
       xl_new_block(NULL),
       xl_new_prefix(NULL), xl_new_postfix(NULL), xl_new_infix(NULL),
+      xl_fill_block(NULL),
+      xl_fill_prefix(NULL), xl_fill_postfix(NULL), xl_fill_infix(NULL),
+      xl_integer2real(NULL),
+      xl_array_index(NULL), xl_new_closure(NULL),
       xl_recursion_count_ptr(NULL)
 {
     std::vector<char *> llvmArgv;
@@ -147,16 +158,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     Allocator<Postfix>  ::Singleton()->AddListener(cgcl);
     Allocator<Block>    ::Singleton()->AddListener(cgcl);
 
-    // Create the runtime environment for just-in-time compilation
-    runtime = LLVMS_InitializeJIT(llvm, moduleName, &module);
-
-    // Setup the optimizer - REVISIT: Adjust with optimization level
-    optimizer = new LLVMCrap_FunctionPassManager(module);
-    moduleOptimizer = new LLVMCrap_PassManager;
-
-    // Install a fallback mechanism to resolve references to the runtime, on
-    // systems which do not allow the program to dlopen itself.
-    runtime->InstallLazyFunctionCreator(unresolved_external);
+    llvm.SetResolver(unresolved_external);
 
     // Get the basic types
     booleanTy = Type::getInt1Ty(llvm);
@@ -176,15 +178,15 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     textTy = StructType::get(llvm, textElements); // text
 
     // Create the Info and Symbol pointer types
-    OpaqueType *structInfoTy = LLVMS_getOpaqueType(llvm);// struct Info
-    infoPtrTy = PointerType::get(structInfoTy, 0);      // Info *
-    OpaqueType *structCtxTy = LLVMS_getOpaqueType(llvm);// struct Context
-    contextPtrTy = PointerType::get(structCtxTy, 0);    // Context *
+    llvm_struct structInfoTy = llvm.OpaqueType();    // struct Info
+    infoPtrTy = PointerType::get(structInfoTy, 0);   // Info *
+    llvm_struct structCtxTy = llvm.OpaqueType();     // struct Context
+    contextPtrTy = PointerType::get(structCtxTy, 0); // Context *
 
     // Create the Tree and Tree pointer types
-    llvm_struct structTreeTy = LLVMS_getOpaqueType(llvm);// struct Tree
-    treePtrTy = PointerType::get(structTreeTy, 0);      // Tree *
-    treePtrPtrTy = PointerType::get(treePtrTy, 0);      // Tree **
+    llvm_struct structTreeTy = llvm.OpaqueType();    // struct Tree
+    treePtrTy = PointerType::get(structTreeTy, 0);   // Tree *
+    treePtrPtrTy = PointerType::get(treePtrTy, 0);   // Tree **
 
     // Create the native_fn type
     llvm_types nativeParms;
@@ -192,6 +194,13 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     nativeParms.push_back(treePtrTy);
     nativeTy = FunctionType::get(treePtrTy, nativeParms, false);
     nativeFnTy = PointerType::get(nativeTy, 0);
+
+    // Create the eval_fn type
+    llvm_types evalParms;
+    evalParms.push_back(contextPtrTy);
+    evalParms.push_back(treePtrTy);
+    evalTy = FunctionType::get(treePtrTy, evalParms, false);
+    evalFnTy = PointerType::get(evalTy, 0);
 
     // Verify that there wasn't a change in the Tree type invalidating us
     struct LocalTree
@@ -207,7 +216,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     llvm_types treeElements;
     treeElements.push_back(LLVM_INTTYPE(ulong));           // tag
     treeElements.push_back(infoPtrTy);                     // info
-    treeTy = LLVMS_Struct(llvm, structTreeTy, treeElements);
+    treeTy = llvm.Struct(structTreeTy, treeElements);
 
     // Create the Integer type
     llvm_types integerElements = treeElements;
@@ -261,38 +270,43 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     infixTreeTy = StructType::get(llvm, infixElements);     // Infix
     infixTreePtrTy = PointerType::get(infixTreeTy, 0);      // Infix *
 
-    // Create the eval_fn type
-    llvm_types evalParms;
-    evalParms.push_back(prefixTreePtrTy);
-    evalParms.push_back(treePtrTy);
-    evalTy = FunctionType::get(treePtrTy, evalParms, false);
-    evalFnTy = PointerType::get(evalTy, 0);
-
     // Record the type names
-    LLVMS_SetName(module, booleanTy, "boolean");
-    LLVMS_SetName(module, integerTy, "integer");
-    LLVMS_SetName(module, characterTy, "character");
-    LLVMS_SetName(module, realTy, "real");
-    LLVMS_SetName(module, charPtrTy, "text");
+    llvm.SetName(booleanTy, "boolean");
+    llvm.SetName(integerTy, "integer");
+    llvm.SetName(characterTy, "character");
+    llvm.SetName(realTy, "real");
+    llvm.SetName(charPtrTy, "text");
 
-    LLVMS_SetName(module, treeTy, "Tree");
-    LLVMS_SetName(module, integerTreeTy, "Integer");
-    LLVMS_SetName(module, realTreeTy, "Real");
-    LLVMS_SetName(module, textTreeTy, "Text");
-    LLVMS_SetName(module, blockTreeTy, "Block");
-    LLVMS_SetName(module, nameTreeTy, "Name");
-    LLVMS_SetName(module, prefixTreeTy, "Prefix");
-    LLVMS_SetName(module, postfixTreeTy, "Postfix");
-    LLVMS_SetName(module, infixTreeTy, "Infix");
-    LLVMS_SetName(module, evalTy, "eval_fn");
-    LLVMS_SetName(module, nativeTy, "native_fn");
-    LLVMS_SetName(module, infoPtrTy, "Info*");
-    LLVMS_SetName(module, contextPtrTy, "Context*");
+    llvm.SetName(treeTy, "Tree");
+    llvm.SetName(integerTreeTy, "Integer");
+    llvm.SetName(realTreeTy, "Real");
+    llvm.SetName(textTreeTy, "Text");
+    llvm.SetName(blockTreeTy, "Block");
+    llvm.SetName(nameTreeTy, "Name");
+    llvm.SetName(prefixTreeTy, "Prefix");
+    llvm.SetName(postfixTreeTy, "Postfix");
+    llvm.SetName(infixTreeTy, "Infix");
+    llvm.SetName(evalTy, "eval_fn");
+    llvm.SetName(nativeTy, "native_fn");
+    llvm.SetName(structInfoTy, "Info");
+    llvm.SetName(structCtxTy, "Context");
 
-    // Create a reference to the evaluation function
-#define FN(x) #x, (void *) XL::x
+    // Create one module for all extern function declarations
+    llvm.CreateModule(text(moduleName) + ".externs");
+
+    // Create references to the various runtime functions
+#define FN(x) #x, (void *) x
     strcmp_fn = ExternFunction("strcmp", (void *) strcmp,
                                LLVM_INTTYPE(int), 2, charPtrTy, charPtrTy);
+    xl_evaluate = ExternFunction(FN(xl_evaluate),
+                                 treePtrTy, 2, contextPtrTy, treePtrTy);
+    xl_same_shape = ExternFunction(FN(xl_same_shape),
+                                   booleanTy, 2, treePtrTy, treePtrTy);
+    xl_infix_match_check = ExternFunction(FN(xl_infix_match_check),
+                                          treePtrTy, 3,
+                                          contextPtrTy, treePtrTy, charPtrTy);
+    xl_type_check = ExternFunction(FN(xl_type_check), treePtrTy,
+                                   3, contextPtrTy, treePtrTy, treePtrTy);
     xl_form_error = ExternFunction(FN(xl_form_error),
                                    treePtrTy, 2, contextPtrTy, treePtrTy);
     xl_stack_overflow = ExternFunction(FN(xl_stack_overflow),
@@ -317,6 +331,22 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
                                     postfixTreePtrTy, treePtrTy, treePtrTy);
     xl_new_infix = ExternFunction(FN(xl_new_infix), infixTreePtrTy, 3,
                                   infixTreePtrTy,treePtrTy,treePtrTy);
+    xl_fill_block = ExternFunction(FN(xl_fill_block), blockTreePtrTy, 2,
+                                  blockTreePtrTy,treePtrTy);
+    xl_fill_prefix = ExternFunction(FN(xl_fill_prefix), prefixTreePtrTy, 3,
+                                   prefixTreePtrTy, treePtrTy, treePtrTy);
+    xl_fill_postfix = ExternFunction(FN(xl_fill_postfix), postfixTreePtrTy, 3,
+                                    postfixTreePtrTy, treePtrTy, treePtrTy);
+    xl_fill_infix = ExternFunction(FN(xl_fill_infix), infixTreePtrTy, 3,
+                                  infixTreePtrTy,treePtrTy,treePtrTy);
+    xl_integer2real = ExternFunction(FN(xl_integer2real), treePtrTy, 1,
+                                     treePtrTy);
+    xl_array_index = ExternFunction(FN(xl_array_index),
+                                    treePtrTy, 3,
+                                    contextPtrTy, treePtrTy, treePtrTy);
+    xl_new_closure = ExternFunction(FN(xl_new_closure),
+                                    treePtrTy, -3,
+                                    evalFnTy, treePtrTy, LLVM_INTTYPE(uint));
 
     // Create a global value used to count recursions
     llvm::PointerType *uintPtrTy = PointerType::get(LLVM_INTTYPE(uint), 0);
@@ -326,6 +356,9 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     // Initialize the llvm_entries table
     for (CompilerLLVMTableEntry *le = CompilerLLVMTable; le->name; le++)
         llvm_primitives[le->name] = le;
+
+    // Create a new module for the generated code
+    llvm.CreateModule(moduleName);
 }
 
 
@@ -333,10 +366,7 @@ Compiler::~Compiler()
 // ----------------------------------------------------------------------------
 //    Destructor deletes the various things we had created
 // ----------------------------------------------------------------------------
-{
-    delete optimizer;
-    delete moduleOptimizer;
-}
+{}
 
 
 RECORDER(llvm_dump, 64, "Dump LLVM module information");
@@ -347,7 +377,8 @@ void Compiler::Dump()
 //   Debug dump of the whole compiler program at exit
 // ----------------------------------------------------------------------------
 {
-    record(llvm_dump, "Module %v", module);
+    if (RECORDER_TRACE(llvm_dump))
+        llvm.Dump();
     if (RECORDER_TWEAK(llvm_statistics))
         llvm::PrintStatistics(llvm::errs());
 }
@@ -381,67 +412,16 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
 }
 
 
-static inline void createCompilerFunctionPasses(PassManagerBase *PM)
-// ----------------------------------------------------------------------------
-//   Add all function passes useful for XL
-// ----------------------------------------------------------------------------
-{
-     PM->add(createInstructionCombiningPass()); // Clean up after IPCP & DAE
-     PM->add(createCFGSimplificationPass()); // Clean up after IPCP & DAE
-
-    // Start of function pass.
-    // Break up aggregate allocas, using SSAUpdater.
-#if LLVM_VERSION < 391
-     PM->add(createScalarReplAggregatesPass(-1, false));
-#else // >= 391
-     PM->add(createScalarizerPass());
-#endif // 391
-     PM->add(createEarlyCSEPass());              // Catch trivial redundancies
-#if LLVM_VERSION < 342
-     PM->add(createSimplifyLibCallsPass());      // Library Call Optimizations
-#endif
-     PM->add(createJumpThreadingPass());         // Thread jumps.
-     PM->add(createCorrelatedValuePropagationPass()); // Propagate conditionals
-     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
-     PM->add(createInstructionCombiningPass());  // Combine silly seq's
-     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
-     PM->add(createReassociatePass());           // Reassociate expressions
-     PM->add(createLoopRotatePass());            // Rotate Loop
-     PM->add(createLICMPass());                  // Hoist loop invariants
-     PM->add(createInstructionCombiningPass());
-     PM->add(createIndVarSimplifyPass());        // Canonicalize indvars
-     PM->add(createLoopIdiomPass());             // Recognize idioms like memset
-     PM->add(createLoopDeletionPass());          // Delete dead loops
-     PM->add(createLoopUnrollPass());            // Unroll small loops
-     PM->add(createInstructionCombiningPass());  // Clean up after the unroller
-     PM->add(createGVNPass());                   // Remove redundancies
-     PM->add(createMemCpyOptPass());             // Remove memcpy / form memset
-     PM->add(createSCCPPass());                  // Constant prop with SCCP
-
-     // Run instcombine after redundancy elimination to exploit opportunities
-     // opened up by them.
-     PM->add(createInstructionCombiningPass());
-     PM->add(createJumpThreadingPass());         // Thread jumps
-     PM->add(createCorrelatedValuePropagationPass());
-     PM->add(createDeadStoreEliminationPass());  // Delete dead stores
-     PM->add(createAggressiveDCEPass());         // Delete dead instructions
-     PM->add(createCFGSimplificationPass());     // Merge & remove BBs
-}
-
-
 void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 //   Setup the compiler after we have parsed the options
 // ----------------------------------------------------------------------------
 {
     uint optLevel = options.optimize_level;
-    RECORD(compiler, "Setup optimization level %d", optLevel);
-    LLVMS_SetupOpts(moduleOptimizer, optimizer, optLevel);
-    createCompilerFunctionPasses(optimizer);
+    record(compiler, "Compiler setup", "opt", optLevel);
 
-    // If we use the old compiler, we need lazy compilation, see bug #718
-    if (optLevel == 1)
-        runtime->DisableLazyCompilation(false);
+    LLVMLinkInMCJIT();
+    llvm.SetOptimizationLevel(optLevel);
 }
 
 
@@ -508,28 +488,7 @@ void Compiler::SetTreeClosure(Tree *tree, llvm::Function *closure)
 }
 
 
-llvm::GlobalValue * Compiler::TreeGlobal(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Return the global value associated to the tree, if any
-// ----------------------------------------------------------------------------
-{
-    CompilerInfo *info = Info(tree);
-    return info ? info->global : NULL;
-}
-
-
-void Compiler::SetTreeGlobal(Tree *tree, llvm::GlobalValue *global, void *addr)
-// ----------------------------------------------------------------------------
-//   Set the global value associated to the tree
-// ----------------------------------------------------------------------------
-{
-    CompilerInfo *info = Info(tree, true);
-    info->global = global;
-    runtime->addGlobalMapping(global, addr ? addr : &info->tree);
-}
-
-
-RECORDER(builtins, 64, "Builtin definitions");
+RECORDER(builtins, 64, "Builtin definitions for LLVM");
 llvm::Function *Compiler::EnterBuiltin(text name,
                                        Tree *from, Tree *to,
                                        eval_fn code)
@@ -563,8 +522,7 @@ llvm::Function *Compiler::EnterBuiltin(text name,
         for (Parameters::iterator p = parms.begin(); p != parms.end(); p++)
             parmTypes.push_back(treePtrTy); // TODO: (*p).type
         FunctionType *fnTy = FunctionType::get(treePtrTy, parmTypes, false);
-        result = llvm::Function::Create(fnTy, llvm::Function::ExternalLinkage,
-                                        name, module);
+        result = llvm.CreateExternFunction(fnTy, name);
 
         // Record the runtime symbol address
         sys::DynamicLibrary::AddSymbol(name, (void*) code);
@@ -602,22 +560,22 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
         return result;
     }
 
+    // We need a new independent module for this adapter with the MCJIT
+    LLVMCrap::JITModule module(llvm, "xl.array2arg.adapter");
+
     // Generate the function type:
     // Tree *generated(Context *, native_fn, Tree *, Tree **)
     llvm_types parms;
     parms.push_back(nativeFnTy);
-    parms.push_back(prefixTreePtrTy);
+    parms.push_back(contextPtrTy);
     parms.push_back(treePtrTy);
     parms.push_back(treePtrPtrTy);
     FunctionType *fnType = FunctionType::get(treePtrTy, parms, false);
-    llvm::Function *adapter =
-        llvm::Function::Create(fnType,
-                               llvm::Function::InternalLinkage,
-                               "xl_adapter", module);
+    llvm::Function *adapter = llvm.CreateFunction(fnType, "xl.adapter");
 
     // Generate the function type for the called function
     llvm_types called;
-    called.push_back(prefixTreePtrTy);
+    called.push_back(contextPtrTy);
     called.push_back(treePtrTy);
     for (uint a = 0; a < numargs; a++)
         called.push_back(treePtrTy);
@@ -636,7 +594,7 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     Value *treeArray = &*inArgs++;
 
     // Cast the input function pointer to right type
-    Value *fnTyped = code.CreateBitCast(fnToCall, calledPtrType, "fnCast");
+    Value *fnTyped = code.CreateBitCast(fnToCall, calledPtrType, "xl.fnCast");
 
     // Add source as first argument to output arguments
     std::vector<Value *> outArgs;
@@ -652,18 +610,17 @@ adapter_fn Compiler::ArrayToArgsAdapter(uint numargs)
     }
 
     // Call the function
-    Value *retVal = code.CreateCall(fnTyped, LLVMS_ARGS(outArgs));
+    Value *retVal = llvm.CreateCall(&code, fnTyped, outArgs);
 
     // Return the result
     code.CreateRet(retVal);
 
     // Verify the function and optimize it.
     verifyFunction (*adapter);
-    if (optimizer)
-        optimizer->run(*adapter);
 
     // Enter the result in the map
-    result = (adapter_fn) runtime->getPointerToFunction(adapter);
+    llvm.FinalizeFunction(adapter);
+    result = (adapter_fn) llvm.FunctionPointer(adapter);
     array_to_args_adapters[numargs] = result;
 
     record(array_to_args, "Created adapter %p for %d args",
@@ -697,10 +654,7 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
     }
     va_end(va);
     FunctionType *fnType = FunctionType::get(retType, parms, isVarArg);
-    llvm::Function *result =
-        llvm::Function::Create(fnType,
-                               llvm::Function::ExternalLinkage,
-                               name, module);
+    llvm::Function *result = llvm.CreateExternFunction(fnType, name);
     sys::DynamicLibrary::AddSymbol(name, address);
 
     record(builtins, "Result function %v", result);
@@ -711,71 +665,24 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
 
 RECORDER(globals, 64, "Global values");
 
-Value *Compiler::EnterGlobal(Name *name, Name_p *address)
-// ----------------------------------------------------------------------------
-//   Enter a global variable in the symbol table
-// ----------------------------------------------------------------------------
-{
-    RECORD(globals, "Global %t address %p",
-           name, (void *) address->Pointer());
-
-    Constant *null = ConstantPointerNull::get(treePtrTy);
-    bool isConstant = false;
-    GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
-                                              GlobalVariable::ExternalLinkage,
-                                              null, name->value);
-    SetTreeGlobal(name, result, address);
-    return result;
-}
-
-
-Value *Compiler::EnterConstant(Tree *constant)
+Constant *Compiler::TreeConstant(Tree *constant)
 // ----------------------------------------------------------------------------
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
-    kstring name = Tree::kindName[constant->Kind()];
-    text label = name;
-    bool isConstant = true;
-    if (RECORDER_TWEAK(labels))
-        label += "[" + text(*constant) + "]";
-    GlobalValue *result = new GlobalVariable (*module, treePtrTy, isConstant,
-                                              GlobalVariable::ExternalLinkage,
-                                              NULL, label);
-    SetTreeGlobal(constant, result, NULL);
-    record(globals,
-           "Constant %t kind %s at address %p",
-           constant, name, (void *) &Info(constant)->tree);
-
+    Constant *result = llvm.CreateConstant(treePtrTy, constant);
+    record(globals, "Tree constant %t = %v", constant, result);
     return result;
 }
 
 
-RECORDER(constants, 64, "Generated tree constants");
-GlobalVariable *Compiler::TextConstant(text value)
+llvm_value Compiler::TextConstant(llvm_builder code, text value)
 // ----------------------------------------------------------------------------
 //   Return a C-style string pointer for a string constant
 // ----------------------------------------------------------------------------
 {
-    GlobalVariable *global;
-
-    text_constants_map::iterator found = text_constants.find(value);
-    if (found == text_constants.end())
-    {
-        Constant *refVal = LLVMS_TextConstant(llvm, value);
-        llvm_type refValTy = refVal->getType();
-        global = new GlobalVariable(*module, refValTy, true,
-                                    GlobalValue::InternalLinkage,
-                                    refVal, "text");
-        text_constants[value] = global;
-    }
-    else
-    {
-        global = (*found).second;
-    }
-
-    record(constants, "Text constant %s is global %v", value.c_str(), global);
-    return global;
+    llvm_value textValue = llvm.TextConstant(code, value);
+    return textValue;
 }
 
 
@@ -787,15 +694,6 @@ eval_fn Compiler::MarkAsClosure(XL::Tree *closure, uint ntrees)
     (void) closure;
     (void) ntrees;
     return NULL;
-}
-
-
-bool Compiler::IsKnown(Tree *tree)
-// ----------------------------------------------------------------------------
-//    Test if global is known
-// ----------------------------------------------------------------------------
-{
-    return TreeGlobal(tree) != NULL;
 }
 
 
@@ -957,7 +855,7 @@ llvm_function Compiler::UnboxFunction(Context_p ctx, llvm_type type, Tree *form)
     signature.push_back(type);
     FunctionType *ftype = FunctionType::get(mtype, signature, false);
     CompiledUnit unit(this, ctx);
-    fn = unit.InitializeFunction(ftype, NULL, "xl_unbox", false, false);
+    fn = unit.InitializeFunction(ftype, NULL, "xl.unbox", false, false);
 
     // Take the first input argument, which is the boxed value.
     llvm::Function::arg_iterator args = fn->arg_begin();
@@ -1026,7 +924,7 @@ bool Compiler::IsClosureType(llvm_type type)
 }
 
 
-text Compiler::FunctionKey(Infix *rw, llvm_values &args)
+text Compiler::FunctionKey(Rewrite *rw, llvm_values &args)
 // ----------------------------------------------------------------------------
 //    Return a unique function key corresponding to a given overload
 // ----------------------------------------------------------------------------
@@ -1119,27 +1017,6 @@ bool Compiler::FreeResources(Tree *tree)
                 f->eraseFromParent();
                 info->closure = NULL;
             }
-        }
-    }
-
-    // Drop any global reference
-    if (GlobalValue *v = info->global)
-    {
-        bool inUse = !v->use_empty();
-        record(compiler_gc, "FreeResources %t global %v is %s",
-               tree, v, inUse ? "in use" : "unused");
-
-        if (inUse)
-        {
-            // Defer deletion until later
-            result = false;
-        }
-        else
-        {
-            // Delete the LLVM value immediately if it's safe to do it.
-            runtime->updateGlobalMapping(v, NULL);
-            v->eraseFromParent();
-            info->global = NULL;
         }
     }
 
