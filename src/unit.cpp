@@ -752,27 +752,27 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     // Verify the function we built
     if (RECORDER_TWEAK(llvm_ir) & 1)
     {
-        errs() << "LLVM IR before optimizations:\n";
+        errs() << "LLVM IR before verification and optimizations:\n";
         function->print(errs());
     }
     verifyFunction(*function);
+    llvm.FinalizeFunction(function);
     if (RECORDER_TWEAK(llvm_ir) & 2)
     {
         errs() << "LLVM IR after optimizations:\n";
         function->print(errs());
     }
-    llvm.FinalizeFunction(function);
 
     void *result = NULL;
     if (createCode)
     {
+        result = llvm.FunctionPointer(function);
         if (RECORDER_TWEAK(llvm_ir) & 4)
         {
-            errs() << "After global optimizations:\n";
+            errs() << "After pointer generation:\n";
             function->print(errs());
         }
-        result = llvm.FunctionPointer(function);
-        record(xl2c, "Address of function %v is %p", function, result);
+        record(llvm_functions, "Function code %p for %v", result, function);
     }
 
     exitbb = NULL;              // Tell destructor we were successful
