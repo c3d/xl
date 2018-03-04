@@ -106,6 +106,7 @@ public:
 };
 
 std::ostream& operator<< (std::ostream&out, XL::Tree *t);
+std::ostream& operator<< (std::ostream&out, XL::Tree &t);
 std::ostream& operator<< (std::ostream&out, XL::TreeList &list);
 
 XL_END

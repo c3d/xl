@@ -827,6 +827,17 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
 }
 
 
+std::ostream& operator<< (std::ostream &out, XL::Tree &t)
+// ----------------------------------------------------------------------------
+//   Just in case you want to emit a tree using normal ostream interface
+// ----------------------------------------------------------------------------
+{
+    XL::Renderer render(out);
+    render.RenderFile(&t);
+    return out;
+}
+
+
 std::ostream& operator<< (std::ostream &out, XL::TreeList &list)
 // ----------------------------------------------------------------------------
 //   Just in case you want to emit a tree using normal ostream interface
