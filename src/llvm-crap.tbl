@@ -1,0 +1,103 @@
+// ****************************************************************************
+//  llvm-crap.tbl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//    List of LLVM operations implemeented by our JIT interface
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2017 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+BINARY_OP(GEP)
+
+BINARY_OP(Add)
+BINARY_OP(Sub)
+BINARY_OP(Mul)
+BINARY_OP(SDiv)
+BINARY_OP(SRem)
+BINARY_OP(UDiv)
+
+BINARY_OP(Shl)
+BINARY_OP(LShr)
+BINARY_OP(AShr)
+
+BINARY_OP(And)
+BINARY_OP(Or)
+BINARY_OP(Xor)
+
+BINARY_OP(FAdd)
+BINARY_OP(FSub)
+BINARY_OP(FMul)
+BINARY_OP(FDiv)
+BINARY_OP(FRem)
+
+UNARY_OP(Neg)
+UNARY_OP(Not)
+UNARY_OP(FNeg)
+
+UNARY_OP(Load)
+BINARY_OP(Store)
+
+CAST_OP(Trunc)
+CAST_OP(ZExt)
+CAST_OP(SExt)
+CAST_OP(ZExtOrTrunc)
+CAST_OP(SExtOrTrunc)
+CAST_OP(FPToUI)
+CAST_OP(FPToSI)
+CAST_OP(UIToFP)
+CAST_OP(SIToFP)
+CAST_OP(FPTrunc)
+CAST_OP(FPExt)
+CAST_OP(PtrToInt)
+CAST_OP(IntToPtr)
+CAST_OP(BitCast)
+CAST_OP(ZExtOrBitCast)
+CAST_OP(SExtOrBitCast)
+CAST_OP(TruncOrBitCast)
+CAST_OP(PointerCast)
+CAST_OP(BitOrPointerCast)
+CAST_OP(FPCast)
+
+BINARY_OP(ICmpEQ)
+BINARY_OP(ICmpNE)
+BINARY_OP(ICmpUGT)
+BINARY_OP(ICmpUGE)
+BINARY_OP(ICmpULT)
+BINARY_OP(ICmpULE)
+BINARY_OP(ICmpSGT)
+BINARY_OP(ICmpSGE)
+BINARY_OP(ICmpSLT)
+BINARY_OP(ICmpSLE)
+
+BINARY_OP(FCmpORD)
+BINARY_OP(FCmpOEQ)
+BINARY_OP(FCmpONE)
+BINARY_OP(FCmpOGT)
+BINARY_OP(FCmpOGE)
+BINARY_OP(FCmpOLT)
+BINARY_OP(FCmpOLE)
+
+BINARY_OP(FCmpUNO)
+BINARY_OP(FCmpUEQ)
+BINARY_OP(FCmpUNE)
+BINARY_OP(FCmpUGT)
+BINARY_OP(FCmpUGE)
+BINARY_OP(FCmpULT)
+BINARY_OP(FCmpULE)
+
+
+#undef UNARY_OP
+#undef BINARY_OP
+#undef CAST_OP
