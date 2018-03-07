@@ -42,6 +42,10 @@
 //  (C) 2014 Taodyne SAS
 // ****************************************************************************
 
+#include <recorder/recorder.h>
+#include <string>
+
+
 #ifndef LLVM_VERSION
 #error "Sorry, no can do anything without knowing the LLVM version"
 #elif LLVM_VERSION < 500
@@ -49,24 +53,6 @@
 // Feel free to enhance if you care about earlier versions of LLVM.
 #error "LLVM versions that do not support ORC are no longer supported."
 #endif
-
-
-// ============================================================================
-//
-//                          HEADER FILE ADJUSTMENTS
-//
-// ============================================================================
-
-// Where any sane library would offer something like #include <llvm.h>,
-// LLVM insists on you loading every single header file they have.
-// And then changes their name regularly, just for fun. When they don't
-// simply remove them! It's not like anybody is using header names, right?
-// The wise man says: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARGH!
-//
-
-#include <recorder/recorder.h>
-
-#include <string>
 
 
 
@@ -133,7 +119,6 @@ namespace XL
 // LLVM data types required for the JIT interface
 typedef llvm::Type              Type,           *Type_p;
 typedef llvm::IntegerType       IntegerType,    *IntegerType_p;
-typedef llvm::IntegerType       IntegerType,    *IntegerType_p;
 typedef llvm::PointerType       PointerType,    *PointerType_p;
 typedef llvm::ArrayType         ArrayType,      *ArrayType_p;
 typedef llvm::StructType        StructType,     *StructType_p;
@@ -173,16 +158,17 @@ public:
 public:
     // JIT attributes
     void                SetOptimizationLevel(unsigned opt);
+    void                PrintStatistics();
 
     // Types
-    template<class T>
+    template<typename T>
     IntegerType_p       IntegerType();
     IntegerType_p       IntegerType(unsigned bits);
     Type_p              FloatType(unsigned bits);
     StructType_p        OpaqueType();
-    StructType_p        StructType(StructType_p base, Signature &elements);
-    StructType_p        StructType(Signature &elements);
-    FunctionType_p      FunctionType(Type_p rty, Signature &p, bool va=false);
+    StructType_p        StructType(StructType_p base, const Signature &items);
+    StructType_p        StructType(const Signature &items);
+    FunctionType_p      FunctionType(Type_p r,const Signature &p,bool va=false);
     PointerType_p       PointerType(Type_p rty);
     void                SetName(Type_p type, text name);
 
@@ -198,7 +184,7 @@ public:
 };
 
 
-template<class T>
+template<typename T>
 inline IntegerType_p JIT::IntegerType()
 // ----------------------------------------------------------------------------
 //    Return the integer type for type T
@@ -221,6 +207,9 @@ public:
     JITBlock(const JITBlock &from, kstring name);
     ~JITBlock();
 
+    Type_p              Type(Value_p value);
+    Type_p              ReturnType(Function_p fn);
+
     Constant_p          IntegerConstant(IntegerType_p ty, uint64_t value);
     Constant_p          IntegerConstant(IntegerType_p ty, int64_t value);
     Constant_p          FloatConstant(Type_p ty, double value);
@@ -239,13 +228,14 @@ public:
     Value_p             IfBranch(Value_p cond, JITBlock &t, JITBlock &f);
 
     Value_p             Alloca(Type_p type);
+    Value_p             AllocateReturnValue(Function_p f);
     Value_p             StructGEP(Value_p ptr, unsigned idx, kstring name="");
 
-#define UNARY_OP(Name)                          \
+#define UNARY(Name)                                     \
     Value_p             Name(Value_p l);
-#define BINARY_OP(Name)                                 \
+#define BINARY(Name)                                    \
     Value_p             Name(Value_p l, Value_p r);
-#define CAST_OP(Name)                                   \
+#define CAST(Name)                                      \
     Value_p             Name(Value_p l, Type_p r);
 #include "llvm-crap.tbl"
 };

@@ -26,6 +26,7 @@
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
@@ -421,6 +422,15 @@ void JIT::SetOptimizationLevel(unsigned optLevel)
 }
 
 
+void JIT::PrintStatistics()
+// ----------------------------------------------------------------------------
+//   Print the LLVM statistics at end of compilation
+// ----------------------------------------------------------------------------
+{
+    llvm::PrintStatistics(llvm::errs());
+}
+
+
 IntegerType_p JIT::IntegerType(unsigned bits)
 // ----------------------------------------------------------------------------
 //   Create an integer type with the given number of bits
@@ -453,7 +463,7 @@ StructType_p JIT::OpaqueType()
 }
 
 
-StructType_p JIT::StructType(StructType_p base, Signature &elements)
+StructType_p JIT::StructType(StructType_p base, const Signature &elements)
 // ----------------------------------------------------------------------------
 //    Refine a forward-declared structure type
 // ----------------------------------------------------------------------------
@@ -463,7 +473,7 @@ StructType_p JIT::StructType(StructType_p base, Signature &elements)
 }
 
 
-StructType_p JIT::StructType(Signature &items)
+StructType_p JIT::StructType(const Signature &items)
 // ----------------------------------------------------------------------------
 //    Define a structure type in one pass
 // ----------------------------------------------------------------------------
@@ -473,7 +483,7 @@ StructType_p JIT::StructType(Signature &items)
 }
 
 
-FunctionType_p JIT::FunctionType(Type_p rty, Signature &parms, bool va)
+FunctionType_p JIT::FunctionType(Type_p rty, const Signature &parms, bool va)
 // ----------------------------------------------------------------------------
 //    Create a function type
 // ----------------------------------------------------------------------------
@@ -616,6 +626,7 @@ Value_p JIT::Prototype(Value_p callee)
 }
 
 
+
 // ============================================================================
 //
 //    JITBlock class
@@ -699,6 +710,24 @@ JITBlock::~JITBlock()
 // ----------------------------------------------------------------------------
 {
     delete &b;
+}
+
+
+Type_p JITBlock::Type(Value_p value)
+// ----------------------------------------------------------------------------
+//   The type for the given value
+// ----------------------------------------------------------------------------
+{
+    return value->getType();
+}
+
+
+Type_p JITBlock::ReturnType(Function_p fn)
+// ----------------------------------------------------------------------------
+//   The return type for the function
+// ----------------------------------------------------------------------------
+{
+    return fn->getReturnType();
 }
 
 
@@ -862,6 +891,15 @@ Value_p JITBlock::Alloca(Type_p type)
 }
 
 
+Value_p JITBlock::AllocateReturnValue(Function_p f)
+// ----------------------------------------------------------------------------
+//   Do an alloca for the return value
+// ----------------------------------------------------------------------------
+{
+    return Alloca(f->getReturnType());
+}
+
+
 Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 // ----------------------------------------------------------------------------
 //   Accessing a struct element used to be complicated. Now it's incompatible.
@@ -873,7 +911,7 @@ Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 }
 
 
-#define UNARY_OP(Name)                                                  \
+#define UNARY(Name)                                                     \
 /* ------------------------------------------------------------ */      \
 /*  Create a unary operator                                     */      \
 /* ------------------------------------------------------------ */      \
@@ -885,7 +923,7 @@ Value_p JITBlock::Name(Value_p v)                                       \
 }
 
 
-#define BINARY_OP(Name)                                                 \
+#define BINARY(Name)                                                    \
 /* ------------------------------------------------------------ */      \
 /*  Create a binary operator                                    */      \
 /* ------------------------------------------------------------ */      \
@@ -897,7 +935,7 @@ Value_p JITBlock::Name(Value_p l, Value_p r)                            \
 }
 
 
-#define CAST_OP(Name)                                                   \
+#define CAST(Name)                                                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a cast operation                                     */      \
 /* ------------------------------------------------------------ */      \
