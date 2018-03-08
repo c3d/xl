@@ -42,6 +42,7 @@
 
 #include "tree.h"
 #include "context.h"
+#include "evaluator.h"
 #include "llvm-crap.h"
 #include <map>
 #include <set>
@@ -54,214 +55,80 @@
 //
 // ============================================================================
 
+RECORDER_DECLARE(compiler);
+
 XL_BEGIN
-
-struct CompiledUnit;
-struct CompilerInfo;
-struct Context;
-struct Options;
-struct CompilerLLVMTableEntry;
-struct RewriteCandidate;
-
-// llvm_type defined in llvm-crap.h, 3.0 API breakage
-typedef std::vector<llvm_type>                 llvm_types;
-typedef std::vector<llvm_value>                llvm_values;
-typedef llvm::Constant *                       llvm_constant;
-typedef std::vector<llvm_constant>             llvm_constants;
-typedef llvm::Function *                       llvm_function;
-typedef llvm::BasicBlock *                     llvm_block;
-
-typedef Tree *(*adapter_fn) (eval_fn callee,Context *ctx,Tree *src,Tree **args);
-typedef std::map<text, llvm_function>          functions_map;
-typedef std::map<Tree *, llvm_value>           value_map;
-typedef std::map<Tree *, llvm_type>            type_map;
-typedef std::map<llvm_type, Tree *>            unboxing_map;
-typedef std::map<Tree *, Tree **>              address_map;
-typedef std::map<text, llvm::GlobalVariable *> text_constants_map;
-typedef std::map<uint, eval_fn>                closure_map;
-typedef std::map<uint, adapter_fn>             adapter_map;
-typedef std::set<Tree *>                       closure_set;
-typedef std::set<Tree *>                       data_set;
-typedef std::map<text,CompilerLLVMTableEntry *>llvm_entry_table;
-
-
 // ============================================================================
 //
 //    Global structures to access the LLVM just-in-time compiler
 //
 // ============================================================================
 
-struct Compiler
+struct Compiler : Evaluator, TypeAllocator::Listener
 // ----------------------------------------------------------------------------
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
 {
-    Compiler(kstring moduleName, int argc, char **argv);
+    Compiler(kstring name, int argc, char **argv);
     ~Compiler();
 
+    // Interpreter interface
+    Tree *              Evaluate(Scope *, Tree *source) override;
+    Tree *              TypeCheck(Scope *, Tree *type, Tree *val) override;
+    bool                TypeAnalysis(Scope *, Tree *tree) override;
+
     // Top-level entry point: analyze and compile a tree or a whole program
-    eval_fn                   Compile(Context *context, Tree *program);
-
-    void                      Setup(Options &options);
-    void                      Reset();
-    CompilerInfo *            Info(Tree *tree, bool create = false);
-    llvm::Function *          TreeFunction(Tree *tree);
-    void                      SetTreeFunction(Tree *tree, llvm::Function *);
-    llvm::Function *          TreeClosure(Tree *tree);
-    void                      SetTreeClosure(Tree *tree, llvm::Function *);
-    llvm::Function *          EnterBuiltin(text name,
-                                           Tree *from, Tree *to,
-                                           eval_fn code);
-    llvm::Function *          ExternFunction(kstring name, void *address,
-                                             llvm_type retType,
-                                             int parmCount, ...);
-    adapter_fn                ArrayToArgsAdapter(uint numtrees);
-    llvm::Constant *          TreeConstant(Tree *constant);
-    llvm_value                TextConstant(llvm_builder code, text value);
-    eval_fn                   MarkAsClosure(Tree *closure, uint ntrees);
-    bool                      IsKnown(Tree *value);
-
-    void                      MachineType(Tree *source, llvm_type mtype);
-    llvm_type                 MachineType(Tree *tree);
-    llvm_type                 TreeMachineType(Tree *tree);
-    bool                      IsTreePtrType(llvm_type t);
-    bool                      IsIntegerType(llvm_type t);
-    bool                      IsRealType(llvm_type t);
-    bool                      CanCastMachineType(llvm_type from, llvm_type to);
-    llvm_function             UnboxFunction(Context_p ctx, llvm_type type,
-                                            Tree *form);
-    llvm_value                Primitive(CompiledUnit &unit,
-                                        llvm_builder builder, text name,
-                                        uint arity, llvm_value *args);
-    bool                      MarkAsClosureType(llvm_type type);
-    bool                      IsClosureType(llvm_type type);
-
-    text                      FunctionKey(Rewrite *rw, llvm_values &values);
-    text                      ClosureKey(Tree *expr, Context *context);
-    llvm::Function * &        FunctionFor(text fkey) { return functions[fkey]; }
-
-    bool                      FreeResources(Tree *tree);
-    void                      Dump();
-
+    eval_fn             Compile(Scope *scope, Tree *program);
 
 public:
-#if LLVM_CRAP_MCJIT
-    LLVMCrap::JIT                llvm;
-#else // !LLVM_CRAP_JIT
-    llvm::LLVMContext            &llvm;
-    llvm::Module                 *module;
-    llvm::ExecutionEngine        *runtime;
-    LLVMCrap_FunctionPassManager *optimizer;
-    LLVMCrap_PassManager         *moduleOptimizer;
-#endif // LLVM_CRAP_JIT
-    llvm_integer_type             booleanTy;
-    llvm_integer_type             integerTy;
-    llvm_integer_type             integer8Ty;
-    llvm_integer_type             integer16Ty;
-    llvm_integer_type             integer32Ty;
-    llvm_type                     realTy;
-    llvm_type                     real32Ty;
-    llvm_integer_type             characterTy;
-    llvm::PointerType            *charPtrTy;
-    llvm::PointerType            *charPtrPtrTy;
-    llvm::StructType             *textTy;
-    llvm::StructType             *treeTy;
-    llvm::PointerType            *treePtrTy;
-    llvm::PointerType            *treePtrPtrTy;
-    llvm::StructType             *integerTreeTy;
-    llvm::PointerType            *integerTreePtrTy;
-    llvm::StructType             *realTreeTy;
-    llvm::PointerType            *realTreePtrTy;
-    llvm::StructType             *textTreeTy;
-    llvm::PointerType            *textTreePtrTy;
-    llvm::StructType             *nameTreeTy;
-    llvm::PointerType            *nameTreePtrTy;
-    llvm::StructType             *blockTreeTy;
-    llvm::PointerType            *blockTreePtrTy;
-    llvm::StructType             *prefixTreeTy;
-    llvm::PointerType            *prefixTreePtrTy;
-    llvm::StructType             *postfixTreeTy;
-    llvm::PointerType            *postfixTreePtrTy;
-    llvm::StructType             *infixTreeTy;
-    llvm::PointerType            *infixTreePtrTy;
-    llvm::FunctionType           *nativeTy;
-    llvm::PointerType            *nativeFnTy;
-    llvm::FunctionType           *evalTy;
-    llvm::PointerType            *evalFnTy;
-    llvm::PointerType            *infoPtrTy;
-    llvm::PointerType            *contextPtrTy;
-    llvm::Function               *strcmp_fn;
-    llvm::Function               *xl_evaluate;
-    llvm::Function               *xl_same_text;
-    llvm::Function               *xl_same_shape;
-    llvm::Function               *xl_infix_match_check;
-    llvm::Function               *xl_type_check;
-    llvm::Function               *xl_form_error;
-    llvm::Function               *xl_stack_overflow;
-    llvm::Function               *xl_new_integer;
-    llvm::Function               *xl_new_real;
-    llvm::Function               *xl_new_character;
-    llvm::Function               *xl_new_text;
-    llvm::Function               *xl_new_ctext;
-    llvm::Function               *xl_new_xtext;
-    llvm::Function               *xl_new_block;
-    llvm::Function               *xl_new_prefix;
-    llvm::Function               *xl_new_postfix;
-    llvm::Function               *xl_new_infix;
-    llvm::Function               *xl_fill_block;
-    llvm::Function               *xl_fill_prefix;
-    llvm::Function               *xl_fill_postfix;
-    llvm::Function               *xl_fill_infix;
-    llvm::Function               *xl_integer2real;
-    llvm::Function               *xl_array_index;
-    llvm::Function               *xl_new_closure;
-    llvm::Constant               *xl_recursion_count_ptr;
-    functions_map                 builtins;
-    functions_map                 functions;
-    adapter_map                   array_to_args_adapters;
-    closure_map                   closures;
-    text_constants_map            text_constants;
-    llvm_entry_table              llvm_primitives;
-    llvm_types                    closure_types;
-    type_map                      machineTypes;
+    // Garbage collector listener interface
+    void                BeginCollection() override;
+    bool                CanDelete (void *obj) override;
+    void                EndCollection() override;
+
+public:
+    JIT                 jit;
+    IntegerType_p       booleanTy;
+    IntegerType_p       integerTy;
+    IntegerType_p       integer8Ty;
+    IntegerType_p       integer16Ty;
+    IntegerType_p       integer32Ty;
+    IntegerType_p       integer64Ty;
+    IntegerType_p       integer128Ty;
+    IntegerType_p       ulongTy;
+    IntegerType_p       ulonglongTy;
+    Type_p              realTy;
+    Type_p              real32Ty;
+    IntegerType_p       characterTy;
+    PointerType_p       charPtrTy;
+    PointerType_p       charPtrPtrTy;
+    StructType_p        textTy;
+    StructType_p        infoTy;
+    PointerType_p       infoPtrTy;
+    StructType_p        treeTy;
+    PointerType_p       treePtrTy;
+    PointerType_p       treePtrPtrTy;
+    StructType_p        integerTreeTy;
+    PointerType_p       integerTreePtrTy;
+    StructType_p        realTreeTy;
+    PointerType_p       realTreePtrTy;
+    StructType_p        textTreeTy;
+    PointerType_p       textTreePtrTy;
+    StructType_p        nameTreeTy;
+    PointerType_p       nameTreePtrTy;
+    StructType_p        blockTreeTy;
+    PointerType_p       blockTreePtrTy;
+    StructType_p        prefixTreeTy;
+    PointerType_p       prefixTreePtrTy;
+    StructType_p        postfixTreeTy;
+    PointerType_p       postfixTreePtrTy;
+    StructType_p        infixTreeTy;
+    PointerType_p       infixTreePtrTy;
+    StructType_p        scopeTy;
+    PointerType_p       scopePtrTy;
+    FunctionType_p      evalTy;
+    PointerType_p       evalFnTy;
 };
-
-
-inline bool Compiler::IsTreePtrType(llvm_type t)
-// ----------------------------------------------------------------------------
-//   Check if it's any of the tree ptr types
-// ----------------------------------------------------------------------------
-{
-    return (t == blockTreePtrTy         ||
-            t == prefixTreePtrTy        ||
-            t == postfixTreePtrTy       ||
-            t == infixTreePtrTy         ||
-            t == treePtrTy);
-}
-
-
-inline bool Compiler::IsIntegerType(llvm_type t)
-// ----------------------------------------------------------------------------
-//   Check if it's any of the integer types
-// ----------------------------------------------------------------------------
-{
-    return (t == booleanTy              ||
-            t == integerTy              ||
-            t == integer8Ty             ||
-            t == integer16Ty            ||
-            t == integer32Ty            ||
-            t == characterTy);
-}
-
-
-inline bool Compiler::IsRealType(llvm_type t)
-// ----------------------------------------------------------------------------
-//   Check if it's any of the integer types
-// ----------------------------------------------------------------------------
-{
-    return (t == realTy || t == real32Ty);
-}
-
 
 
 // ============================================================================
@@ -269,9 +136,6 @@ inline bool Compiler::IsRealType(llvm_type t)
 //   Useful macros
 //
 // ============================================================================
-
-#define LLVM_INTTYPE(t)         llvm::IntegerType::get(llvm, sizeof(t) * 8)
-#define LLVM_BOOLTYPE           llvm::Type::getInt1Ty(llvm)
 
 // Index in data structures of fields in Tree types
 #define TAG_INDEX           0
@@ -290,13 +154,5 @@ inline bool Compiler::IsRealType(llvm_type t)
 #define INFIX_NAME_INDEX    4
 
 XL_END
-
-RECORDER_DECLARE(compiler);
-RECORDER_DECLARE(llvm);
-RECORDER_TWEAK_DECLARE(labels);
-RECORDER_TWEAK_DECLARE(llvm_ir);
-
-extern void debugv(llvm::Value *);
-extern void debugv(llvm::Type *);
 
 #endif // COMPILER_H

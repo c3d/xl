@@ -1,5 +1,5 @@
-#ifndef COMPILER_ARG_H
-#define COMPILER_ARG_H
+#ifndef COMPILER_ARGS_H
+#define COMPILER_ARGS_H
 // ****************************************************************************
 //  args.h                                                        XL project
 // ****************************************************************************
@@ -47,6 +47,7 @@
 XL_BEGIN
 
 struct Types;
+struct CompilerUnit;
 typedef GCPtr<Types> Types_p;
 RECORDER_DECLARE(calltypes);
 
@@ -59,10 +60,10 @@ struct RewriteBinding
     RewriteBinding(Name *name, Tree *value)
         : name(name), value(value), closure(NULL) {}
     bool       IsDeferred();
-    llvm_value Closure(CompiledUnit *unit);
+    Value_p    Closure(CompilerUnit *unit);
     Name_p     name;
     Tree_p     value;
-    llvm_value closure;
+    Value_p    closure;
 };
 typedef std::vector<RewriteBinding> RewriteBindings;
 
@@ -84,11 +85,11 @@ struct RewriteKind
 //   Structure recording a condition for a given rewrite to be valid
 // ----------------------------------------------------------------------------
 {
-    RewriteKind(Tree *value, kind test, llvm_type mtype)
+    RewriteKind(Tree *value, kind test, Type_p mtype)
         : value(value), test(test), machineType(mtype) {}
     Tree_p      value;
     kind        test;
-    llvm_type   machineType;
+    Type_p     machineType;
 };
 typedef std::vector<RewriteKind> RewriteKinds;
 
@@ -104,7 +105,7 @@ struct RewriteCandidate
     {
         conditions.push_back(RewriteCondition(value, test));
     }
-    void KindCondition(Tree *value, kind k, llvm_type mtype)
+    void KindCondition(Tree *value, kind k, Type_p mtype)
     {
         record(calltypes, "Check if %t has type %d machine type %v",
                value, (int) k, mtype);
@@ -153,4 +154,4 @@ typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 
 XL_END
 
-#endif // COMPILER_ARG_H
+#endif // COMPILER_ARGS_H

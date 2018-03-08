@@ -43,11 +43,11 @@
 
 XL_BEGIN
 
-typedef llvm_value (*llvm_fn) (CompiledUnit &unit,
-                               llvm_builder builder,
-                               llvm_value *args);
+struct CompilerUnit;
+typedef Value_p (*llvm_fn) (CompilerUnit &u, Value_p *args);
 
-struct CompilerLLVMTableEntry
+
+struct CompilerPrimitive
 // ----------------------------------------------------------------------------
 //   An entry describing an LLVM primitive
 // ----------------------------------------------------------------------------
@@ -57,7 +57,7 @@ struct CompilerLLVMTableEntry
     uint        arity;
 };
 
-extern CompilerLLVMTableEntry CompilerLLVMTable[];
+extern CompilerPrimitive CompilerPrimitives[];
 
 XL_END
 

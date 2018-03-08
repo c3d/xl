@@ -53,12 +53,10 @@
 #include "serializer.h"
 #include "runtime.h"
 #include "utf8_fileutils.h"
-#include "interpreter.h"
 #include "opcodes.h"
 #include "remote.h"
-
+#include "interpreter.h"
 #ifndef INTERPRETER_ONLY
-#include "args.h"
 #include "compiler.h"
 #endif // INTERPRETER_ONLY
 
@@ -86,11 +84,11 @@ Main *MAIN = NULL;
 //
 // ============================================================================
 
-SourceFile::SourceFile(text n, Tree *t, Context *ctx, bool ro)
+SourceFile::SourceFile(text n, Tree *t, Scope *scope, bool ro)
 // ----------------------------------------------------------------------------
 //   Construct a source file given a name
 // ----------------------------------------------------------------------------
-    : name(n), tree(t), context(ctx),
+    : name(n), tree(t), scope(scope),
       modified(0), changed(false), readOnly(ro)
 {
     utf8_filestat_t st;
@@ -106,7 +104,7 @@ SourceFile::SourceFile()
 // ----------------------------------------------------------------------------
 //   Default constructor
 // ----------------------------------------------------------------------------
-    : name(""), tree(NULL), context(NULL),
+    : name(""), tree(NULL), scope(NULL),
       modified(0), changed(false), readOnly(false)
 {}
 
@@ -125,46 +123,6 @@ SourceFile::~SourceFile()
 //
 // ============================================================================
 
-RECORDER_TWEAK_DEFINE(recorder_dump_symbolic, 0,
-                      "Size of symbolic information to show, 0=none, -1=all");
-
-
-template <typename stream_t, typename arg_t>
-size_t recorder_render(const char *format,
-                       char *buffer, size_t size,
-                       uintptr_t arg)
-// ----------------------------------------------------------------------------
-//   Render an LLVM value during a recorder dump (%v format)
-// ----------------------------------------------------------------------------
-{
-    const unsigned max_len = RECORDER_TWEAK(recorder_dump_symbolic);
-    const unsigned trunc_len = max_len/2 - 3;
-    arg_t value = (arg_t) arg;
-    size_t result;
-    if (max_len)
-    {
-        text t;
-        stream_t os(t);
-        if (value)
-            os << *value;
-        else
-            os << "NULL";
-
-        t = os.str();
-        size_t len = t.length();
-        if (max_len > 8 && len > max_len)
-            t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
-        result = snprintf(buffer, size, "%p [%s]", (void *) value, t.c_str());
-        for (unsigned i = 0; i < result; i++)
-            if (buffer[i] == '\n')
-                buffer[i] = '|';
-    }
-    else
-    {
-        result = snprintf(buffer, size, "%p", (void *) value);
-    }
-    return result;
-}
 
 
 
@@ -194,12 +152,11 @@ Main::Main(int inArgc,
       topLevelErrors(),
       syntax(SearchLibFile(syntaxName).c_str()),
       options(inArgc, inArgv),
-#ifndef INTERPRETER_ONLY
-      compiler(NULL),
-#endif // INTERPRETER_ONLY
-      context(new Context),
+      context(),
       renderer(std::cout, SearchLibFile(styleSheetName), syntax),
-      reader(NULL), writer(NULL)
+      reader(NULL),
+      writer(NULL),
+      evaluator(NULL)
 {
     recorder_dump_on_common_signals(0, 0);
     recorder_trace_set(".*_(error|warning)");
@@ -210,20 +167,20 @@ Main::Main(int inArgc,
     MAIN = this;
     options.builtins = SearchLibFile(builtinsName);
     ParseOptions();
+    Opcode::Enter(&context);
 
     // Once all options have been read, enter symbols and setup compiler
     recorder_configure_type('O', recorder_render<std::ostringstream, Op *>);
     recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
 #ifndef INTERPRETER_ONLY
-    recorder_configure_type('v', recorder_render<llvm::raw_string_ostream, llvm_value>);
     if (options.optimize_level > 1)
     {
         compilerName = SearchFile(compilerName, bin_paths);
-        compiler = new Compiler(compilerName.c_str(), inArgc, inArgv);
-        compiler->Setup(options);
+        evaluator = new Compiler(compilerName.c_str(), inArgc, inArgv);
     }
+    else
 #endif // INTERPRETER_ONLY
-    Opcode::Enter(context);
+        evaluator = new Interpreter;
 }
 
 
@@ -243,6 +200,24 @@ Main::~Main()
 }
 
 
+Tree *Main::Evaluate(Scope *scope, Tree *source)
+// ----------------------------------------------------------------------------
+//   Dispatch evaluation to the appropriate engine for the given opt level
+// ----------------------------------------------------------------------------
+{
+    return evaluator->Evaluate(scope, source);
+}
+
+
+Tree *Main::TypeCheck(Scope *scope, Tree *type, Tree *value)
+// ----------------------------------------------------------------------------
+//   Dispatch evaluation to the appropriate engine for the given opt level
+// ----------------------------------------------------------------------------
+{
+    return evaluator->TypeCheck(scope, type, value);
+}
+
+
 int Main::LoadAndRun()
 // ----------------------------------------------------------------------------
 //   An single entry point for the normal phases
@@ -255,12 +230,10 @@ int Main::LoadAndRun()
         rc = 1;
 
     if (!rc && options.listen)
-        return xl_listen(context, options.listen_forks, options.listen);
-
-#ifndef INTERPRETER_ONLY
-    if (compiler)
-        compiler->Dump();
-#endif // INTERPRETER_ONLY
+    {
+        Scope *scope = context.CurrentScope();
+        return xl_listen(scope, options.listen_forks, options.listen);
+    }
 
     return rc;
 }
@@ -424,36 +397,34 @@ int Main::LoadFile(const text &file, text modname)
         std::cout << tree << "\n";
 
     // Create new symbol table for the file
-    Context *parent = MAIN->context;
-    Context *ctx = new Context(parent, tree->Position());
+    context.CreateScope(tree->Position());
 
     // Set the module path, directory and file
-    ctx->SetModulePath(file);
-    ctx->SetModuleDirectory(ModuleDirectory(file));
-    ctx->SetModuleFile(ModuleBaseName(file));
+    context.SetModulePath(file);
+    context.SetModuleDirectory(ModuleDirectory(file));
+    context.SetModuleFile(ModuleBaseName(file));
 
     // Check if the module name is given
     if (modname != "")
     {
         // If we have an explicit module name (e.g. import),
         // we will refer to the content using that name
-        ctx->SetModuleName(modname);
-        parent->Define(modname, tree);
+        context.SetModuleName(modname);
+        context.Define(modname, tree);
     }
     else
     {
         // No explicit module name: update current context
         modname = ModuleName(file);
-        ctx->SetModuleName(modname);
-        MAIN->context = ctx;
+        context.SetModuleName(modname);
     }
 
     // Register the source file we had
-    sf = SourceFile (file, tree, ctx);
+    sf = SourceFile (file, tree, context.CurrentScope());
 
     // Process declarations from the program
     record(file_load, "File loaded as %t", tree);
-    record(file_load, "File loaded in %t", ctx->CurrentScope());
+    record(file_load, "File loaded in %t", context.CurrentScope());
 
     // We were OK, done
     return false;
@@ -483,8 +454,7 @@ int Main::Run()
         Errors errors;
         if (Tree *tree = sf.tree)
         {
-            Context *context = sf.context;
-            result = context->Evaluate(tree);
+            result = Evaluate(sf.scope, tree);
             if (errors.HadErrors())
             {
                 errors.Display();

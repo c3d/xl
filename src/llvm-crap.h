@@ -156,6 +156,10 @@ public:
     ~JIT();
 
 public:
+    static bool         InUse(Function_p f);
+    static void         EraseFromParent(Function_p f);
+
+public:
     // JIT attributes
     void                SetOptimizationLevel(unsigned opt);
     void                PrintStatistics();
@@ -207,13 +211,15 @@ public:
     JITBlock(const JITBlock &from, kstring name);
     ~JITBlock();
 
-    Type_p              Type(Value_p value);
-    Type_p              ReturnType(Function_p fn);
+    static Type_p       Type(Value_p value);
+    static Type_p       ReturnType(Function_p fn);
 
-    Constant_p          IntegerConstant(IntegerType_p ty, uint64_t value);
-    Constant_p          IntegerConstant(IntegerType_p ty, int64_t value);
+    Constant_p          IntegerConstant(Type_p ty, uint64_t value);
+    Constant_p          IntegerConstant(Type_p ty, int64_t value);
+    Constant_p          IntegerConstant(Type_p ty, unsigned value);
+    Constant_p          IntegerConstant(Type_p ty, int value);
     Constant_p          FloatConstant(Type_p ty, double value);
-    Constant_p          PointerConstant(PointerType_p pty, void *address);
+    Constant_p          PointerConstant(Type_p pty, void *address);
     Value_p             TextConstant(text value);
 
     void                SwitchTo(JITBlock &block);
@@ -227,19 +233,22 @@ public:
     Value_p             Branch(JITBlock &to);
     Value_p             IfBranch(Value_p cond, JITBlock &t, JITBlock &f);
 
-    Value_p             Alloca(Type_p type);
-    Value_p             AllocateReturnValue(Function_p f);
+    Value_p             Alloca(Type_p type, kstring name = "");
+    Value_p             AllocateReturnValue(Function_p f, kstring name = "");
     Value_p             StructGEP(Value_p ptr, unsigned idx, kstring name="");
 
-#define UNARY(Name)                                     \
-    Value_p             Name(Value_p l);
-#define BINARY(Name)                                    \
-    Value_p             Name(Value_p l, Value_p r);
-#define CAST(Name)                                      \
-    Value_p             Name(Value_p l, Type_p r);
+#define UNARY(Name)                                                     \
+    Value_p             Name(Value_p l, kstring name = "");
+#define BINARY(Name)                                                    \
+    Value_p             Name(Value_p l, Value_p r, kstring name = "");
+#define CAST(Name)                                                      \
+    Value_p             Name(Value_p l, Type_p r, kstring name = "");
 #include "llvm-crap.tbl"
 };
 
 } // namespace XL
+
+extern void debugv(XL::Value_p);
+extern void debugv(XL::Type_p);
 
 #endif // LLVM_CRAP_H

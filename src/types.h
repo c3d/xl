@@ -42,7 +42,7 @@
 //  The type system in XL is somewhat similar to what is found in Haskell,
 //  except that it's based on the shape of trees.
 //
-//  A type form in ELIO can be:
+//  A type form in XL can be:
 //   - A type name              integer
 //   - A litteral value         0       1.5             "Hello"
 //   - A range of values        0..4    1.3..8.9        "A".."Z"
@@ -93,7 +93,7 @@ struct Types
 
 public:
     // Main entry point
-    bool        TypeCheck(Tree *what);
+    bool        TypeAnalysisb(Scope *scope, Tree *what);
     Tree *      Type(Tree *expr);
 
 public:

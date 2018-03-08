@@ -94,13 +94,13 @@ Types::~Types()
 {}
 
 
-bool Types::TypeCheck(Tree *program)
+bool Types::TypeAnalysis(Scope *scope, Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program
 // ----------------------------------------------------------------------------
 {
     // Once this is done, record all type information for the program
-    record(typecheck, "Type check for %t", program);
+    record(typecheck, "Type analysis for %t in context %t ", program, scope);
     bool result = program->Do(this);
 
     // Dump debug information if approriate

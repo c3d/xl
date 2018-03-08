@@ -71,7 +71,57 @@
 
 XL_BEGIN
 
-Tree *xl_form_error(Context *context, Tree *what)
+Tree *  xl_evaluate(Scope *scope, Tree *tree)
+// ----------------------------------------------------------------------------
+//   Dispatch evaluation to the main entry point
+// ----------------------------------------------------------------------------
+{
+    return MAIN->Evaluate(scope, tree);
+}
+
+
+Tree *  xl_typecheck(Scope *scope, Tree *type, Tree *value)
+// ----------------------------------------------------------------------------
+//   Dispatch a type check to the current evaluator
+// ----------------------------------------------------------------------------
+{
+    return MAIN->TypeCheck(scope, type, value);
+}
+
+
+Tree *xl_call(Scope *scope, text prefix, TreeList &argList)
+// ----------------------------------------------------------------------------
+//    Generate a call to the given prefix
+// ----------------------------------------------------------------------------
+{
+    uint arity = argList.size();
+    TreePosition pos = arity ? argList[0]->Position() : ~0;
+    Tree *call = new Name(prefix, pos);
+    if (arity)
+    {
+        Tree *args = argList[arity + ~0];
+        for (uint a = 1; a < arity; a++)
+        {
+            Tree *arg = argList[arity + ~a];
+            args = new Infix(",", arg, args, pos);
+        }
+        call = new Prefix(call, args, pos);
+    }
+    return xl_evaluate(scope, call);
+}
+
+
+Tree *xl_assign(Scope *scope, Tree *ref, Tree *value)
+// ----------------------------------------------------------------------------
+//   Perform an assignment in the scope (temporary? interpreter only?)
+// ----------------------------------------------------------------------------
+{
+    Context context(scope);
+    return context.Assign(ref, value);
+}
+
+
+Tree *xl_form_error(Scope *scope, Tree *what)
 // ----------------------------------------------------------------------------
 //   Raise an error if we have a form error
 // ----------------------------------------------------------------------------
@@ -227,9 +277,9 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 //
 // ============================================================================
 
-Tree *xl_parse_tree_inner(Context *context, Tree *tree)
+Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
 // ----------------------------------------------------------------------------
-//   Build a parse tree in the current context
+//   Build a parse tree in the current scope
 // ----------------------------------------------------------------------------
 {
     switch(tree->Kind())
@@ -242,24 +292,24 @@ Tree *xl_parse_tree_inner(Context *context, Tree *tree)
     case INFIX:
     {
         Infix *infix = (Infix *) tree;
-        Tree *left = xl_parse_tree_inner(context, infix->left);
-        Tree *right = xl_parse_tree_inner(context, infix->right);
+        Tree *left = xl_parse_tree_inner(scope, infix->left);
+        Tree *right = xl_parse_tree_inner(scope, infix->right);
         Infix *result = new Infix(infix, left, right);
         return result;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) tree;
-        Tree *left = xl_parse_tree_inner(context, prefix->left);
-        Tree *right = xl_parse_tree_inner(context, prefix->right);
+        Tree *left = xl_parse_tree_inner(scope, prefix->left);
+        Tree *right = xl_parse_tree_inner(scope, prefix->right);
         Prefix *result = new Prefix(prefix, left, right);
         return result;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) tree;
-        Tree *left = xl_parse_tree_inner(context, postfix->left);
-        Tree *right = xl_parse_tree_inner(context, postfix->right);
+        Tree *left = xl_parse_tree_inner(scope, postfix->left);
+        Tree *right = xl_parse_tree_inner(scope, postfix->right);
         Postfix *result = new Postfix(postfix, left, right);
         return result;
     }
@@ -273,16 +323,16 @@ Tree *xl_parse_tree_inner(Context *context, Tree *tree)
             if (child && child->opening == "{" && child->closing == "}")
             {
                 // Case where we have parse_tree {{x}}: Return {x}
-                result = xl_parse_tree_inner(context, child->child);
+                result = xl_parse_tree_inner(scope, child->child);
                 result = new Block(block, result);
                 return result;
             }
 
             // Name or expression in { }
-            result = context->Evaluate(result);
+            result = xl_evaluate(scope, result);
             return result;
         }
-        result = xl_parse_tree_inner(context, result);
+        result = xl_parse_tree_inner(scope, result);
         result = new Block(block, result);
         return result;
     }
@@ -291,14 +341,14 @@ Tree *xl_parse_tree_inner(Context *context, Tree *tree)
 }
 
 
-Tree *xl_parse_tree(Context *context, Tree *code)
+Tree *xl_parse_tree(Scope *scope, Tree *code)
 // ----------------------------------------------------------------------------
 //   Entry point for parse_tree
 // ----------------------------------------------------------------------------
 {
     if (Block *block = code->AsBlock())
         code = block->child;
-    return xl_parse_tree_inner(context, code);
+    return xl_parse_tree_inner(scope, code);
 }
 
 
@@ -339,27 +389,27 @@ static bool isAbsolute(text path)
 }
 
 
-static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
+static void xl_list_files(Scope *scope, Tree *patterns, Tree_p *&parent)
 // ----------------------------------------------------------------------------
 //   Append all files found in the parent
 // ----------------------------------------------------------------------------
 {
     if (Block *block = patterns->AsBlock())
     {
-        xl_list_files(context, block->child, parent);
+        xl_list_files(scope, block->child, parent);
         return;
     }
     if (Infix *infix = patterns->AsInfix())
     {
         if (infix->name == "," || infix->name == ";" || infix->name == "\n")
         {
-            xl_list_files(context, infix->left, parent);
-            xl_list_files(context, infix->right, parent);
+            xl_list_files(scope, infix->left, parent);
+            xl_list_files(scope, infix->right, parent);
             return;
         }
     }
 
-    patterns = context->Evaluate(patterns);
+    patterns = xl_evaluate(scope, patterns);
     if (Text *regexp = patterns->AsText())
     {
         glob_t files;
@@ -394,32 +444,33 @@ static void xl_list_files(Context *context, Tree *patterns, Tree_p *&parent)
 //
 // ============================================================================
 
-Tree *xl_list_files(Context *context, Tree *patterns)
+Tree *xl_list_files(Scope *scope, Tree *patterns)
 // ----------------------------------------------------------------------------
 //   List all files in the given pattern
 // ----------------------------------------------------------------------------
 {
     Tree_p result = NULL;
     Tree_p *parent = &result;
-    xl_list_files(context, patterns, parent);
+    xl_list_files(scope, patterns, parent);
     if (!result)
         result = xl_nil;
     return result;
 }
 
 
-bool xl_file_exists(Context *context, Tree_p self, text path)
+bool xl_file_exists(Scope *scope, Tree_p self, text path)
 // ----------------------------------------------------------------------------
 //   Check if a file exists
 // ----------------------------------------------------------------------------
 {
     if (!isAbsolute(path))
     {
-        path = context->ResolvePrefixedPath(path);
+        Context context(scope);
+        path = context.ResolvePrefixedPath(path);
         if (!isAbsolute(path))
         {
             // Relative path: look in same directory as parent
-            if (Tree * dir = context->Named("module_dir"))
+            if (Tree * dir = context.Named("module_dir"))
             {
                 if (Text * txt = dir->AsText())
                     path = txt->value + "/" + path;
@@ -450,7 +501,7 @@ struct ImportedFileInfo : Info
 };
 
 
-Tree *xl_import(Context *context, Tree *self, text name, int phase)
+Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -469,7 +520,8 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
         {
             // Relative path: look in same directory as parent
             static Name_p module_dir = new Name("module_dir");
-            if (Tree * dir = context->Bound(module_dir))
+            Context context(scope);
+            if (Tree * dir = context.Bound(module_dir))
             {
                 if (Text * txt = dir->AsText())
                 {
@@ -506,7 +558,7 @@ Tree *xl_import(Context *context, Tree *self, text name, int phase)
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
     if (phase == EXECUTION_PHASE && result)
-        result = context->Evaluate(result);
+        result = xl_evaluate(scope, result);
     return result;
 }
 
@@ -533,7 +585,7 @@ struct LoadDataInfo : Info
 };
 
 
-Tree *xl_load_data(Context *context, Tree *self,
+Tree *xl_load_data(Scope *scope, Tree *self,
                    text name, text prefix, text fieldSeps, text recordSeps,
                    Tree *body)
 // ----------------------------------------------------------------------------
@@ -557,14 +609,14 @@ Tree *xl_load_data(Context *context, Tree *self,
         return XL::xl_nil;
     }
 
-    return xl_load_data(context, self, path,
+    return xl_load_data(scope, self, path,
                         input, true, true,
                         prefix, fieldSeps, recordSeps,
                         body);
 }
 
 
-Tree *xl_load_data(Context *context, Tree *self, text inputName,
+Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
                    std::istream &input, bool cached, bool statTime,
                    text prefix, text fieldSeps, text recordSeps,
                    Tree *body)
@@ -606,7 +658,7 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
                 for (i = 0; i < max; i++)
                 {
                     LoadDataInfo::PerFile::Row &row = perFile.data[i];
-                    result = context->Call(prefix, row.args);
+                    result = xl_call(scope, prefix, row.args);
                 }
                 return result;
             }
@@ -724,7 +776,7 @@ Tree *xl_load_data(Context *context, Tree *self, text inputName,
                     if (body)
                         row.args.push_back(body);
                     perFile.data.push_back(row);
-                    tree = context->Call(prefix, row.args);
+                    tree = xl_call(scope, prefix, row.args);
                     row.args.clear();
                 }
                 else
@@ -1109,7 +1161,6 @@ bool xl_random_seed(int seed)
 }
 
 } // extern "C"
-
 
 XL_END
 

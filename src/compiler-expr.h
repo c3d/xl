@@ -1,20 +1,20 @@
-#ifndef COMPILER_PARM_H
-#define COMPILER_PARM_H
+#ifndef COMPILER_EXPR_H
+#define COMPILER_EXPR_H
 // ****************************************************************************
-//  parms.h                                                       XL project
+//  compiler-expr.h                                                 XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
-//    Actions collecting parameters on the left of a rewrite
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//    Compilation of expression ("expression reduction")
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -41,53 +41,43 @@
 
 #include "compiler.h"
 
-
 XL_BEGIN
 
-struct Parameter
-// ----------------------------------------------------------------------------
-//   Internal representation of a parameter
-// ----------------------------------------------------------------------------
-{
-    Parameter(Name *name, llvm_type type = 0) : name(name), type(type) {}
-    Name_p              name;
-    llvm_type           type;
-};
-typedef std::vector<Parameter>      Parameters;
+struct RewriteCandidate;
 
-
-struct ParameterList
+struct CompileExpression
 // ----------------------------------------------------------------------------
 //   Collect parameters on the left of a rewrite
 // ----------------------------------------------------------------------------
 {
-    typedef bool value_type;
-    
-public:
-    ParameterList(CompiledUnit *unit)
-        : unit(unit), defined(NULL), returned(NULL) {}
+    typedef Value_p value_type;
 
 public:
-    bool EnterName(Name *what, llvm_type declaredType = NULL);
-
-    bool DoInteger(Integer *what);
-    bool DoReal(Real *what);
-    bool DoText(Text *what);
-    bool DoName(Name *what);
-    bool DoPrefix(Prefix *what);
-    bool DoPostfix(Postfix *what);
-    bool DoInfix(Infix *what);
-    bool DoBlock(Block *what);
+    CompileExpression(CompilerUnit &unit);
 
 public:
-    CompiledUnit *  unit;         // Current compilation unit
-    Tree_p          defined;      // Tree being defined, e.g. 'sin' in 'sin X'
-    text            name;         // Name being given to the LLVM function
-    Parameters      parameters;   // Parameters and their order
-    llvm_type       returned;     // Returned type if specified
+    Value_p             DoInteger(Integer *what);
+    Value_p             DoReal(Real *what);
+    Value_p             DoText(Text *what);
+    Value_p             DoName(Name *what);
+    Value_p             DoPrefix(Prefix *what);
+    Value_p             DoPostfix(Postfix *what);
+    Value_p             DoInfix(Infix *what);
+    Value_p             DoBlock(Block *what);
+
+    Value_p             DoCall(Tree *call);
+    Value_p             DoRewrite(RewriteCandidate &candidate);
+    Value_p             Value(Tree *expr);
+    Value_p             Compare(Tree *value, Tree *test);
+
+public:
+    CompilerUnit &      unit;           // Current compilation unit
+    JIT &               jit;            // JIT compiler being used
+    value_map           computed;       // Values we already computed
 };
 
 XL_END
 
-#endif // COMPILER_PARM_H
+RECORDER_DECLARE(expr);
 
+#endif // COMPILER_EXPRED_H

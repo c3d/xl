@@ -37,14 +37,14 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "args.h"
+#include "compiler-args.h"
+#include "compiler-unit.h"
+#include "compiler.h"
 #include "save.h"
 #include "types.h"
 #include "errors.h"
-#include "unit.h"
 #include "renderer.h"
 #include "main.h"
-#include "compiler.h"
 #include "basics.h"
 
 
@@ -76,7 +76,7 @@ bool RewriteBinding::IsDeferred()
 }
 
 
-llvm_value RewriteBinding::Closure(CompiledUnit *unit)
+llvm_value RewriteBinding::Closure(CompilerUnit *unit)
 // ----------------------------------------------------------------------------
 //   Return closure for this value if we need one
 // ----------------------------------------------------------------------------

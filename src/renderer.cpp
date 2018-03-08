@@ -928,3 +928,7 @@ const char *debugp(XL::Tree *tree)
     std::cerr << debugBuffer;
     return debugBuffer.c_str();
 }
+
+
+RECORDER_TWEAK_DEFINE(recorder_dump_symbolic, 0,
+                      "Size of symbolic information to show, 0=none, -1=all");

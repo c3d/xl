@@ -39,7 +39,11 @@
 
 #include "compiler.h"
 #include "compiler-llvm.h"
-#include "unit.h"
+#include "compiler-unit.h"
+
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/DerivedTypes.h>
 
 
 
@@ -51,47 +55,53 @@ XL_BEGIN
 //
 // ============================================================================
 
-#define UNARY(name)                                                     \
-static llvm_value xl_llvm_##name(CompiledUnit &,                        \
-                                 llvm_builder bld, llvm_value *args)    \
+#define UNARY(Name)                                                     \
+static Value_p xl_llvm_##Name(CompilerUnit &u, Value_p *args)           \
 {                                                                       \
-    return bld->Create##name(args[0]);                                  \
+    return u.code.Name(args[0]);                                        \
 }
 
-#define BINARY(name)                                                    \
-static llvm_value xl_llvm_##name(CompiledUnit &,                        \
-                                 llvm_builder bld, llvm_value *args)    \
+#define BINARY(Name)                                                    \
+static Value_p xl_llvm_##Name(CompilerUnit &u, Value_p *args)           \
 {                                                                       \
-    return bld->Create##name(args[0], args[1]);                         \
+    return u.code.Name(args[0], args[1]);                               \
 }
 
-#define SPECIAL(name, arity, code)                                      \
-static llvm_value xl_llvm_##name(CompiledUnit &unit,                    \
-                                    llvm_builder bld, llvm_value *args) \
+#define CAST(Name)                                                      \
+static Value_p xl_llvm_##Name(CompilerUnit &u, Value_p *args)           \
 {                                                                       \
-    Compiler &compiler = *unit.compiler;                                \
-    llvm::LLVMContext &llvm = unit.llvm;                                \
-    (void) compiler;                                                    \
-    (void) llvm;                                                        \
-    code                                                                \
+    return u.code.Name(args[0], (Type_p) args[1]);                      \
+}
+
+
+#define SPECIAL(Name, Arity, Code)                                      \
+static Value_p xl_llvm_##Name(CompilerUnit &unit, Value_p *args)        \
+{                                                                       \
+    Compiler &compiler = unit.compiler; (void) compiler;                \
+    JITBlock &code = unit.code; (void) code;                            \
+    JITBlock &data = unit.data; (void) data;                            \
+    Code                                                                \
 }
 
 #define ALIAS(from, arity, to)
+#define EXTERNAL(Name, ...)
 
-#include "llvm.tbl"
+#include "compiler-llvm.tbl"
 
 
-CompilerLLVMTableEntry CompilerLLVMTable[] =
-// ----------------------------------------------------------------------------
+CompilerPrimitive CompilerPrimitives[] =
+// ---------------- ------------------------------------------------------------
 //   A table initialized with the various LLVM entry points
 // ----------------------------------------------------------------------------
 {
-#define UNARY(name)                     { #name, xl_llvm_##name, 1 },
-#define BINARY(name)                    { #name, xl_llvm_##name, 2 },
-#define SPECIAL(name, arity, code)      { #name, xl_llvm_##name, arity },
-#define ALIAS(from, arity, to)          { #from, xl_llvm_##to, arity },
+#define UNARY(Name)                     { #Name, xl_llvm_##Name, 1 },
+#define BINARY(Name)                    { #Name, xl_llvm_##Name, 2 },
+#define CAST(Name)                      { #Name, xl_llvm_##Name, 2 },
+#define SPECIAL(Name, Arity, Code)      { #Name, xl_llvm_##Name, Arity },
+#define ALIAS(From, Arity, To)          { #From, xl_llvm_##To, Arity },
+#define EXTERNAL(Name, ...)
 
-#include "llvm.tbl"
+#include "compiler-llvm.tbl"
 
     // Terminator
     { NULL, NULL, 0 }

@@ -1,20 +1,20 @@
 #ifndef BYTECODE_H
 #define BYTECODE_H
 // ****************************************************************************
-//  bytecode.h                                                   XL project 
+//  bytecode.h                                                   XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Implementation of a bytecode to evaluate XL programs faster
 //     without the need to generate machine code directly
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 //  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2015 Taodyne SAS
@@ -33,6 +33,7 @@
 
 #include "tree.h"
 #include "context.h"
+#include "evaluator.h"
 
 #include <vector>
 #include <map>
@@ -43,7 +44,7 @@ XL_BEGIN
 
 struct Op;                      // An individual operation
 struct Code;                    // A sequence of operations
-struct Function;                // Internal representation of functions
+struct Procedure;               // Internal representation of functions
 struct CallOp;                  // A call operation
 struct CodeBuilder;             // Code generator
 typedef std::vector<Op *> Ops;  // Sequence of operations
@@ -55,21 +56,34 @@ typedef Tree_p *               Data;
 
 
 // ============================================================================
-// 
+//
 //     Main entry point
-// 
+//
 // ============================================================================
 
-Tree *          EvaluateWithBytecode(Context *context, Tree *input);
-Function *      CompileToBytecode(Context *context, Tree *input, Tree *type,
-                                  TreeIDs &parms, TreeList &captured);
+struct Bytecode : Evaluator
+// ----------------------------------------------------------------------------
+//   An evaluation based on some intermediate byte code
+// ----------------------------------------------------------------------------
+{
+    Bytecode();
+    ~Bytecode();
 
+    Tree *              Evaluate(Scope *, Tree *input) override;
+    Tree *              TypeCheck(Scope *, Tree *type, Tree *val) override;
+    bool                TypeAnalysis(Scope *, Tree *input) override;
+
+public:
+    static Procedure *  Compile(Context *context,
+                                Tree *input, Tree *type,
+                                TreeIDs &parms, TreeList &captured);
+};
 
 
 // ============================================================================
-// 
+//
 //    Code representation
-// 
+//
 // ============================================================================
 
 struct Op
@@ -80,7 +94,7 @@ struct Op
 public:
     // The action to perform
     virtual Op *        Run(Data data)          { return success; }
-    
+
 public:
                         Op()                    : success(NULL) {}
     virtual             ~Op()                   {}
@@ -120,14 +134,14 @@ public:
 };
 
 
-struct Function : Code
+struct Procedure : Code
 // ----------------------------------------------------------------------------
 //   A sequence of operations with its own scope
 // ----------------------------------------------------------------------------
 {
-    Function(Context *context, Tree *self, uint nInputs, uint nLocals);
-    Function(Function *original, Data data, ParmOrder &capture);
-    ~Function();
+    Procedure(Context *context, Tree *self, uint nInputs, uint nLocals);
+    Procedure(Procedure *original, Data data, ParmOrder &capture);
+    ~Procedure();
 
     virtual Op *        Run(Data data);
     virtual void        Dump(std::ostream &out);
@@ -148,9 +162,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //    Build code from the input
-// 
+//
 // ============================================================================
 
 struct CodeBuilder
@@ -162,7 +176,7 @@ struct CodeBuilder
     ~CodeBuilder();
 
 public:
-    Function *  Compile(Context *context,Tree *tree,TreeIDs &parms,Tree *type);
+    Procedure * Compile(Context *context,Tree *tree,TreeIDs &parms,Tree *type);
     Op *        CompileInternal(Context *context, Tree *what, bool defer);
     bool        Instructions(Context *context, Tree *tree);
 
@@ -231,9 +245,9 @@ public:
 
 
 // ============================================================================
-// 
+//
 //    Functions returning specific items in a data scope
-// 
+//
 // ============================================================================
 
 inline Tree *DataSelf(Data data)
@@ -310,9 +324,9 @@ inline void DataValue(Data data, uint index, Tree *value)
 
 
 // ============================================================================
-// 
+//
 //    Streaming operators
-// 
+//
 // ============================================================================
 
 inline std::ostream &operator<<(std::ostream &out, Op *op)

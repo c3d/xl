@@ -156,7 +156,7 @@
 
   Trees are evaluated as late as possible (lazy evaluation). In order to
   achieve that, the compiler maintains a boolean variable per tree that may
-  be evaluated lazily. This variable is allocated by CompiledUnit::NeedLazy.
+  be evaluated lazily. This variable is allocated by CompilerUnit::NeedLazy.
   It is set when the value is evaluated, and initially cleared.
  */
 
@@ -236,10 +236,6 @@ public:
     void                SetScope(Scope *s)      { symbols = s; }
     Context *           Parent();
     Context *           Pointer()               { return this; }
-
-    // Compile and evaluate a tree in the current context
-    eval_fn             Compile(Tree *what);
-    Tree *              Evaluate(Tree *what);
 
     // Special forms of evaluation
     Tree *              Call(text prefix, TreeList &args);

@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  expred.cpp                                                    XL project
+//  compiler-expr.cpp                                              XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Information required by the compiler for expression reduction
+//    Compilation of XL expressions ("expression reduction")
 //
 //
 //
@@ -37,8 +37,8 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "expred.h"
-#include "unit.h"
+#include "compiler-expr.h"
+#include "compiler-unit.h"
 #include "args.h"
 #include "types.h"
 #include "save.h"
@@ -47,13 +47,10 @@
 #include "llvm-crap.h"
 
 
-RECORDER(calls, 128, "Compilation of calls");
+RECORDER(expr, 128, "Expression reduction (compilation of calls)");
 
 
 XL_BEGIN
-
-using namespace llvm;
-
 
 
 // ============================================================================
@@ -62,11 +59,11 @@ using namespace llvm;
 //
 // ============================================================================
 
-CompileExpression::CompileExpression(CompiledUnit *unit)
+CompileExpression::CompileExpression(CompilerUnit &unit)
 // ----------------------------------------------------------------------------
 //   Constructor for a compiler expression
 // ----------------------------------------------------------------------------
-    : unit(unit), llvm(unit->compiler->llvm)
+    : unit(unit), llvm(unit.compiler.llvm)
 {}
 
 
@@ -75,8 +72,8 @@ llvm_value CompileExpression::DoInteger(Integer *what)
 //   Compile an integer constant
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = unit->compiler;
-    return ConstantInt::get(compiler->integerTy, what->value);
+    Compiler *compiler = unit.compiler;
+    return ConstantInt::get(compiler.integerTy, what->value);
 }
 
 
@@ -85,8 +82,8 @@ llvm_value CompileExpression::DoReal(Real *what)
 //   Compile a real constant
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = unit->compiler;
-    return ConstantFP::get(compiler->realTy, what->value);
+    Compiler *compiler = unit.compiler;
+    return ConstantFP::get(compiler.realTy, what->value);
 }
 
 
@@ -95,11 +92,11 @@ llvm_value CompileExpression::DoText(Text *what)
 //   Compile a text constant
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = unit->compiler;
+    Compiler *compiler = unit.compiler;
     if (what->IsCharacter())
-        return ConstantInt::get(compiler->characterTy,
+        return ConstantInt::get(compiler.characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    llvm_value textConstant = compiler->TextConstant(unit->data, what->value);
+    llvm_value textConstant = compiler.TextConstant(unit.data, what->value);
     return textConstant;
 }
 
@@ -111,29 +108,29 @@ llvm_value CompileExpression::DoName(Name *what)
 {
     Scope_p    where;
     Rewrite_p  rewrite;
-    Context   *context  = unit->context;
+    Context   *context  = unit.context;
     Tree      *existing = context->Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
     if (where == context->CurrentScope())
-        if (llvm_value result = unit->Known(from))
+        if (llvm_value result = unit.Known(from))
             return result;
 
     // Check true and false values
     if (existing == xl_true)
-        return ConstantInt::get(unit->compiler->booleanTy, 1);
+        return ConstantInt::get(unit.compiler.booleanTy, 1);
     if (existing == xl_false)
-        return ConstantInt::get(unit->compiler->booleanTy, 0);
+        return ConstantInt::get(unit.compiler.booleanTy, 0);
 
     // Check if it is a global
-    if (llvm_value global = unit->Global(existing))
+    if (llvm_value global = unit.Global(existing))
         return global;
-    if (llvm_value global = unit->Global(from))
+    if (llvm_value global = unit.Global(from))
         return global;
 
     // If we are in a context building a closure, record dependency
-    if (unit->closureTy)
-        return unit->NeedClosure(from);
+    if (unit.closureTy)
+        return unit.NeedClosure(from);
 
     return DoCall(what);
 }
@@ -185,7 +182,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
         if (name->value == "opcode")
         {
             // This is a builtin, find if we write to code or data
-            llvm_builder bld = unit->code;
+            llvm_builder bld = unit.code;
             Tree *builtin = what->right;
             if (Prefix *prefix = builtin->AsPrefix())
             {
@@ -193,7 +190,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
                 {
                     if (name->value == "data")
                     {
-                        bld = unit->data;
+                        bld = unit.data;
                         builtin = prefix->right;
                     }
                 }
@@ -201,7 +198,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 
             // Take args list for current function as input
             llvm_values args;
-            Function *function = unit->function;
+            Function *function = unit.function;
             uint i, max = function->arg_size();
             Function::arg_iterator arg = function->arg_begin();
             for (i = 0; i < max; i++)
@@ -213,11 +210,11 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
             // Call the primitive (effectively creating a wrapper for it)
             Name *name = builtin->AsName();
             assert(name || !"Malformed primitive");
-            Compiler *compiler = unit->compiler;
+            Compiler *compiler = unit.compiler;
             text op = name->value;
             uint sz = args.size();
             llvm_value *a = &args[0];
-            return compiler->Primitive(*unit, bld, op, sz, a);
+            return compiler.Primitive(*unit, bld, op, sz, a);
         }
     }
     return DoCall(what);
@@ -250,12 +247,12 @@ llvm_value CompileExpression::DoCall(Tree *call)
     llvm_value result = NULL;
 
     record(calls, "Call %t", call);
-    rcall_map &rcalls = unit->types->rcalls;
+    rcall_map &rcalls = unit.types->rcalls;
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
-    Function *function = unit->function;
-    LLVMContext &llvm = unit->llvm;
+    Function *function = unit.function;
+    LLVMContext &llvm = unit.llvm;
     RewriteCalls *rc = (*found).second;
     RewriteCandidates &calls = rc->candidates;
 
@@ -266,7 +263,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     {
         // We now evaluate in that rewrite's type system
         RewriteCandidate &cand = calls[0];
-        Save<Types_p> saveTypes(unit->types, cand.types);
+        Save<Types_p> saveTypes(unit.types, cand.types);
 
         if (cand.Unconditional())
         {
@@ -277,15 +274,15 @@ llvm_value CompileExpression::DoCall(Tree *call)
     else if (max == 0)
     {
         // If it passed type check and there is no candidate, return tree as is
-        result = unit->ConstantTree(call);
+        result = unit.ConstantTree(call);
         return result;
     }
 
     // More general case: we need to generate expression reduction
     llvm_block isDone = BasicBlock::Create(llvm, "done", function);
-    llvm_builder code = unit->code;
-    llvm_value storage = unit->NeedStorage(call);
-    llvm_type storageType = unit->ExpressionMachineType(call);
+    llvm_builder code = unit.code;
+    llvm_value storage = unit.NeedStorage(call);
+    llvm_type storageType = unit.ExpressionMachineType(call);
 
     for (i = 0; i < max; i++)
     {
@@ -293,7 +290,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
 
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
-        Save<Types_p> saveTypes(unit->types, cand.types);
+        Save<Types_p> saveTypes(unit.types, cand.types);
         llvm_value condition = NULL;
 
         // Perform the tests to check if this candidate is valid
@@ -319,7 +316,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
             value_map saveComputed = computed;
             result = DoRewrite(cand);
             computed = saveComputed;
-            result = unit->Autobox(result, storageType);
+            result = unit.Autobox(result, storageType);
             record(calls, "Call %t candidate %u is conditional: %v",
                    call, i, result);
             code->CreateStore(result, storage);
@@ -330,7 +327,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
         {
             // If this particular call was unconditional, we are done
             result = DoRewrite(cand);
-            result = unit->Autobox(result, storageType);
+            result = unit.Autobox(result, storageType);
             code->CreateStore(result, storage);
             code->CreateBr(isDone);
             code->SetInsertPoint(isDone);
@@ -340,7 +337,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     }
 
     // The final call to xl_form_error if nothing worked
-    unit->CallFormError(call);
+    unit.CallFormError(call);
     code->CreateBr(isDone);
     code->SetInsertPoint(isDone);
     result = code->CreateLoad(storage);
@@ -376,7 +373,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         {
             args.push_back(value);
             llvm_type mtype = value->getType();
-            if (unit->compiler->IsClosureType(mtype))
+            if (unit.compiler.IsClosureType(mtype))
                 (*b).closure = value;
             record(calls, "Rewrite %t arg %t value %v", rw, tree, value);
         }
@@ -397,14 +394,14 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     if (builtin)
     {
         record(calls, "Rewrite %t is builtin %t", rw, builtin);
-        llvm_builder bld = unit->code;
+        llvm_builder bld = unit.code;
         if (Prefix *prefix = builtin->AsPrefix())
         {
             if (Name *name = prefix->left->AsName())
             {
                 if (name->value == "data")
                 {
-                    bld = unit->data;
+                    bld = unit.data;
                     builtin = prefix->right;
                 }
             }
@@ -414,17 +411,17 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
         if (!name)
         {
             Ooops("Malformed primitive $1", builtin);
-            result = unit->CallFormError(builtin);
+            result = unit.CallFormError(builtin);
             record(calls, "Rewrite %t is malformed builtin %t: form error %v",
                    rw, builtin, result);
         }
         else
         {
-            Compiler *compiler = unit->compiler;
+            Compiler *compiler = unit.compiler;
             text op = name->value;
             uint sz = args.size();
             llvm_value *a = &args[0];
-            result = compiler->Primitive(*unit, bld, op, sz, a);
+            result = compiler.Primitive(*unit, bld, op, sz, a);
             if (!result)
                 Ooops("Invalid primitive $1", builtin);
             record(calls, "Rewrite %t is builtin %t: %v", rw, builtin, result);
@@ -432,9 +429,9 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     }
     else
     {
-        llvm_value function = unit->Compile(cand, args);
+        llvm_value function = unit.Compile(cand, args);
         if (function)
-            result = llvm.CreateCall(unit->code, function, args);
+            result = llvm.CreateCall(unit.code, function, args);
         record(calls, "Rewrite %t function %v call %v", rw, function, result);
     }
 
@@ -462,7 +459,7 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
 //   Perform a comparison between the two values and check if this matches
 // ----------------------------------------------------------------------------
 {
-    CompiledUnit &u = *unit;
+    Unit &u = *unit;
     Compiler &c = *u.compiler;
 
     if (Name *vt = valueTree->AsName())
@@ -613,33 +610,6 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
 
     // Other comparisons fail for now
     return ConstantInt::get(c.booleanTy, 0);
-}
-
-
-llvm_value CompileExpression::ForceEvaluation(Tree *expr)
-// ----------------------------------------------------------------------------
-//   For top-level expressions, make sure we evaluate closures
-// ----------------------------------------------------------------------------
-{
-    llvm_value result = expr->Do(this);
-    if (result)
-    {
-        llvm_type resTy = result->getType();
-        if (unit->compiler->IsClosureType(resTy))
-            result = unit->InvokeClosure(result);
-    }
-    return result;
-}
-
-
-llvm_value CompileExpression::TopLevelEvaluation(Tree *expr)
-// ----------------------------------------------------------------------------
-//   Evaluate normally, but force evaluation for names
-// ----------------------------------------------------------------------------
-{
-    if (expr->Kind() == NAME)
-        return ForceEvaluation(expr);
-    return expr->Do(this);
 }
 
 XL_END

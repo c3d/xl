@@ -23,6 +23,7 @@
 // ****************************************************************************
 
 #include "llvm-crap.h"
+#include "renderer.h"
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
@@ -391,8 +392,11 @@ JIT::JIT(int argc, char **argv)
 // ----------------------------------------------------------------------------
     : p(*new JITPrivate())
 {
-    std::vector<char *> llvmArgv;
+    recorder_type_fn jit_output_format =
+        recorder_render<llvm::raw_string_ostream, llvm::Value *>;
+    recorder_configure_type('v', jit_output_format);
 
+    std::vector<char *> llvmArgv;
     llvmArgv.push_back(argv[0]);
     for (int arg = 1; arg < argc; arg++)
         if (strncmp(argv[arg], "-llvm", 5) == 0)
@@ -410,6 +414,24 @@ JIT::~JIT()
     if (p.Module())
         p.DeleteModule(p.key);
     delete &p;
+}
+
+
+bool JIT::InUse(Function_p function)
+// ----------------------------------------------------------------------------
+//   Check if the function is currently in use
+// ----------------------------------------------------------------------------
+{
+    return function->use_empty();
+}
+
+
+void JIT::EraseFromParent(Function_p function)
+// ----------------------------------------------------------------------------
+//   Erase function from the parent
+// ----------------------------------------------------------------------------
+{
+    return function->eraseFromParent();
 }
 
 
@@ -731,25 +753,45 @@ Type_p JITBlock::ReturnType(Function_p fn)
 }
 
 
-Constant_p JITBlock::IntegerConstant(IntegerType_p ty, uint64_t value)
+Constant_p JITBlock::IntegerConstant(Type_p ty, uint64_t value)
 // ----------------------------------------------------------------------------
 //   Build an unsigned integer constant
 // ----------------------------------------------------------------------------
 {
+    assert(ty->isIntegerTy());
     Constant_p result = ConstantInt::get(ty, value);
     record(llvm_constants, "Unsigned constant %v for %llu", result, value);
     return result;
 }
 
 
-Constant_p JITBlock::IntegerConstant(IntegerType_p ty, int64_t value)
+Constant_p JITBlock::IntegerConstant(Type_p ty, int64_t value)
 // ----------------------------------------------------------------------------
 //   Build a signed integer constant
 // ----------------------------------------------------------------------------
 {
+    assert(ty->isIntegerTy());
     Constant_p result = ConstantInt::get(ty, value);
     record(llvm_constants, "Signed constant %v for %lld", result, value);
     return result;
+}
+
+
+Constant_p JITBlock::IntegerConstant(Type_p ty, unsigned value)
+// ----------------------------------------------------------------------------
+//   Build an unsigned integer constant
+// ----------------------------------------------------------------------------
+{
+    return IntegerConstant(ty, uint64_t(value));
+}
+
+
+Constant_p JITBlock::IntegerConstant(Type_p ty, int value)
+// ----------------------------------------------------------------------------
+//   Build a signed integer constant
+// ----------------------------------------------------------------------------
+{
+    return IntegerConstant(ty, int64_t(value));
 }
 
 
@@ -764,7 +806,7 @@ Constant_p JITBlock::FloatConstant(Type_p ty, double value)
 }
 
 
-Constant_p JITBlock::PointerConstant(PointerType_p type, void *pointer)
+Constant_p JITBlock::PointerConstant(Type_p type, void *pointer)
 // ----------------------------------------------------------------------------
 //    Create a constant pointer
 // ----------------------------------------------------------------------------
@@ -880,23 +922,23 @@ Value_p JITBlock::IfBranch(Value_p cond, JITBlock &t, JITBlock &f)
 }
 
 
-Value_p JITBlock::Alloca(Type_p type)
+Value_p JITBlock::Alloca(Type_p type, kstring name)
 // ----------------------------------------------------------------------------
 //  Do a local allocation
 // ----------------------------------------------------------------------------
 {
-    auto inst = b->CreateAlloca(type);
-    record(llvm_ir, "Alloca(%v) is %v", type, inst);
+    auto inst = b->CreateAlloca(type, 0, nullptr, name);
+    record(llvm_ir, "Alloca %s(%v) is %v", name, type, inst);
     return inst;
 }
 
 
-Value_p JITBlock::AllocateReturnValue(Function_p f)
+Value_p JITBlock::AllocateReturnValue(Function_p f, kstring name)
 // ----------------------------------------------------------------------------
 //   Do an alloca for the return value
 // ----------------------------------------------------------------------------
 {
-    return Alloca(f->getReturnType());
+    return Alloca(f->getReturnType(), name);
 }
 
 
@@ -915,10 +957,10 @@ Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 /* ------------------------------------------------------------ */      \
 /*  Create a unary operator                                     */      \
 /* ------------------------------------------------------------ */      \
-Value_p JITBlock::Name(Value_p v)                                       \
+Value_p JITBlock::Name(Value_p v, kstring name)                         \
 {                                                                       \
-    auto value = b->Create##Name(v);                                    \
-    record(llvm_ir, #Name "(%v) = %v", v, value);                       \
+    auto value = b->Create##Name(v, name);                              \
+    record(llvm_ir, #Name " %s(%v) = %v", name, v, value);              \
     return value;                                                       \
 }
 
@@ -927,10 +969,10 @@ Value_p JITBlock::Name(Value_p v)                                       \
 /* ------------------------------------------------------------ */      \
 /*  Create a binary operator                                    */      \
 /* ------------------------------------------------------------ */      \
-Value_p JITBlock::Name(Value_p l, Value_p r)                            \
+    Value_p JITBlock::Name(Value_p l, Value_p r, kstring name)          \
 {                                                                       \
-    auto value = b->Create##Name(l, r);                                 \
-    record(llvm_ir, #Name "(%v, %v) = %v", l, r, value);                \
+    auto value = b->Create##Name(l, r, name);                           \
+    record(llvm_ir, #Name " %s(%v, %v) = %v", name, l, r, value);       \
     return value;                                                       \
 }
 
@@ -939,13 +981,38 @@ Value_p JITBlock::Name(Value_p l, Value_p r)                            \
 /* ------------------------------------------------------------ */      \
 /*  Create a cast operation                                     */      \
 /* ------------------------------------------------------------ */      \
-Value_p JITBlock::Name(Value_p v, Type_p t)                             \
+Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
 {                                                                       \
-    auto value = b->Create##Name(v, t);                                 \
-    record(llvm_ir, #Name "(%v, type %v) = %v", v, t, value);           \
+    auto value = b->Create##Name(v, t, name);                           \
+    record(llvm_ir, #Name " %s(%v, type %v) = %v", name, v, t, value);  \
     return value;                                                       \
 }
 
 #include "llvm-crap.tbl"
+
+
+
+// ============================================================================
+//
+//    Debug helpers
+//
+// ============================================================================
+
+void debugv(XL::Value_p v)
+// ----------------------------------------------------------------------------
+//   Dump a value for the debugger
+// ----------------------------------------------------------------------------
+{
+    v->print(errs());
+}
+
+
+void debugv(XL::Type_p t)
+// ----------------------------------------------------------------------------
+//   Dump a value for the debugger
+// ----------------------------------------------------------------------------
+{
+    t->print(errs());
+}
 
 } // namespace XL

@@ -45,7 +45,7 @@
 
 #ifndef INTERPRETER_ONLY
 #include "types.h"
-#include "args.h"
+#include "compiler-args.h"
 #endif
 
 #include "main.h"

@@ -43,36 +43,32 @@
 
 XL_BEGIN
 
-struct CompilerGarbageCollectionListener : TypeAllocator::Listener
-// ----------------------------------------------------------------------------
-//   Listen to the garbage collection to put away LLVM data structures
-// ----------------------------------------------------------------------------
-{
-    CompilerGarbageCollectionListener(Compiler *compiler)
-        : compiler(compiler) {}
-
-    virtual void BeginCollection();
-    virtual bool CanDelete (void *obj);
-    virtual void EndCollection();
-
-    Compiler *compiler;
-};
-
-
 struct CompilerInfo : Info
 // ----------------------------------------------------------------------------
 //   Information about compiler-related data structures
 // ----------------------------------------------------------------------------
+//   These informations are always attached to the [Form] tree
+//   in a [Form is Implementation] definition.
 {
-    CompilerInfo(Tree *tree): tree(tree), global(0), function(0), closure(0) {}
+    CompilerInfo(Tree *form, Function_p function = nullptr);
     ~CompilerInfo();
-    Tree *                      tree;
-    llvm::GlobalValue *         global;
-    llvm::Function *            function;
-    llvm::Function *            closure;
 
-    // We must mark builtins in a special way, see bug #991
-    bool        IsBuiltin()     { return function && function == closure; }
+private:
+    Tree *                      form;
+    Function_p                  function;
+    StructType_p                closure; // Null if no capture
+    Type_p                      returned;
+
+public:
+    static CompilerInfo *       Info(Tree *form, bool create = false);
+    static Function_p           Function(Tree *form);
+    static void                 Function(Tree *form, Function_p function);
+    static StructType_p         Closure(Tree *form);
+    static void                 Closure(Tree *form, StructType_p closure);
+    static Type_p               Returned(Tree *form);
+    static void                 Returned(Tree *form, Type_p closure);
+
+    static bool                 FreeResources(Tree *);
 };
 
 XL_END

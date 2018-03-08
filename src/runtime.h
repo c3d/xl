@@ -71,7 +71,11 @@ struct SourceFile;
 //
 // ============================================================================
 
-Tree *  xl_form_error(Context *c, Tree *tree);
+Tree *  xl_evaluate(Scope *c, Tree *tree);
+Tree *  xl_typecheck(Scope *c, Tree *type, Tree *value);
+Tree *  xl_call(Scope *c, text prefix, TreeList &args);
+Tree *  xl_assign(Scope *c, Tree *ref, Tree *value);
+Tree *  xl_form_error(Scope *c, Tree *tree);
 Tree *  xl_stack_overflow(Tree *tree);
 bool    xl_same_shape(Tree *t1, Tree *t2);
 
@@ -177,7 +181,7 @@ extern "C"
 //
 // ============================================================================
 
-Tree *  xl_parse_tree(Context *, Tree *tree);
+Tree *  xl_parse_tree(Scope *, Tree *tree);
 Tree *  xl_parse_text(text source);
 
 
@@ -188,8 +192,8 @@ Tree *  xl_parse_text(text source);
 //
 // ============================================================================
 
-Tree *  xl_list_files(Context *context, Tree *patterns);
-bool    xl_file_exists(Context *context, Tree_p self, text path);
+Tree *  xl_list_files(Scope *scope, Tree *patterns);
+bool    xl_file_exists(Scope *scope, Tree_p self, text path);
 
 
 
@@ -199,21 +203,21 @@ bool    xl_file_exists(Context *context, Tree_p self, text path);
 //
 // ============================================================================
 
-Tree *  xl_import(Context *, Tree *self, text name, int phase);
-Tree *  xl_load_data(Context *, Tree *self,
+Tree *  xl_import(Scope *, Tree *self, text name, int phase);
+Tree *  xl_load_data(Scope *, Tree *self,
                      text name, text prefix,
                      text fieldSeps = ",;", text recordSeps = "\n",
                      Tree *body = NULL);
-Tree *  xl_load_data(Context *, Tree *self, text inputName,
+Tree *  xl_load_data(Scope *, Tree *self, text inputName,
                      std::istream &source, bool cached, bool statTime,
                      text prefix, text fieldSeps = ",;", text recordSeps = "\n",
                      Tree *body = NULL);
-Tree *  xl_add_search_path(Context *, text prefix, text dir);
-Text *  xl_find_in_search_path(Context *, text prefix, text file);
+Tree *  xl_add_search_path(Scope *, text prefix, text dir);
+Text *  xl_find_in_search_path(Scope *, text prefix, text file);
 
 typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
-typedef Tree * (*decl_fn) (Context *, Tree *source, phase_t phase);
-Name *  xl_set_override_priority(Context *context, Tree *self, float priority);
+typedef Tree * (*decl_fn) (Scope *, Tree *source, phase_t phase);
+Name *  xl_set_override_priority(Scope *scope, Tree *self, float priority);
 
 XL_END
 

@@ -1,7 +1,7 @@
 // ============================================================================
-// 
+//
 //    Garbage collection initialization
-// 
+//
 // ============================================================================
 
 INIT_GC;
@@ -26,9 +26,9 @@ INIT_ALLOCATOR(RewriteCalls);
 
 
 // ============================================================================
-// 
+//
 //   Built-in names
-// 
+//
 // ============================================================================
 
 NAME(nil);
@@ -40,9 +40,9 @@ NAME(error);
 
 
 // ============================================================================
-// 
+//
 //   Built-in types
-// 
+//
 // ============================================================================
 
 TYPE(boolean, Name,
@@ -112,7 +112,7 @@ TYPE(integer8,integer,
          if (ival->value >= -0x80 && ival->value < 0x80)
              return (integer8_p) ival;
     );
-            
+
 TYPE(integer16,integer,
      if (Integer *ival = AsInteger())
          if (ival->value >= -0x8000 && ival->value < 0x8000)
@@ -164,13 +164,13 @@ TYPE(real64,real,
 
 
 // ============================================================================
-// 
+//
 //   Basic operations
-// 
+//
 // ============================================================================
 
-INFIX_CTX(Assign, tree, tree, ":=", value,
-          RESULT(context->Assign(&left, &right)));
+INFIX_SCOPE(Assign, tree, tree, ":=", value,
+            RESULT(xl_assign(scope, &left, &right)));
 
 INFIX(TextEQ, boolean, text, "=",  text, R_BOOL(LEFT == RIGHT));
 INFIX(TextNE, boolean, text, "<>", text, R_BOOL(LEFT != RIGHT));
@@ -179,6 +179,6 @@ INFIX(TextGT, boolean, text, ">",  text, R_BOOL(LEFT >  RIGHT));
 INFIX(TextLE, boolean, text, "<=", text, R_BOOL(LEFT <= RIGHT));
 INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 
-PREFIX_CTX(quote, tree, "quote", tree,  RESULT(xl_parse_tree(context,leftPtr)));
+PREFIX_SCOPE(quote, tree, "quote", tree,RESULT(xl_parse_tree(scope,leftPtr)));
 PREFIX_FN(parse, tree, text,            RESULT(xl_parse_text(left)));
 PREFIX_FN(exit,  tree, integer,         exit(left); R_INT(0))

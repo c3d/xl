@@ -22,19 +22,37 @@
 
 #include "tree.h"
 #include "context.h"
+#include "evaluator.h"
 
 
 XL_BEGIN
 
-// ============================================================================
-//
-//    Main entry points
-//
-// ============================================================================
+struct Opcode;
 
-Tree *Evaluate(Context *context, Tree *code);
-Tree *EvaluateClosure(Context *context, Tree *code);
-Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
+struct Interpreter : Evaluator
+// ----------------------------------------------------------------------------
+//   Base class for all ways to evaluate an XL tree
+// ----------------------------------------------------------------------------
+{
+    Interpreter();
+    virtual ~Interpreter();
+
+    Tree *              Evaluate(Scope *, Tree *source) override;
+    Tree *              TypeCheck(Scope *, Tree *type, Tree *value) override;
+    bool                TypeAnalysis(Scope *, Tree *tree) override;
+
+public:
+    static Tree *       EvaluateClosure(Context *context, Tree *code);
+    static Tree *       Instructions(Context_p context, Tree_p what);
+
+public:
+    static Tree *       IsClosure(Tree *value, Context_p *scope);
+    static Tree *       MakeClosure(Context *context, Tree *value);
+
+    static Opcode *     SetInfo(Infix *decl, Opcode *opcode);
+    static Opcode *     OpcodeInfo(Infix *decl);
+};
+
 
 
 
@@ -43,13 +61,6 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value);
 //    Closure and opcode management
 //
 // ============================================================================
-
-Tree *IsClosure(Tree *value, Context_p *context);
-Tree *MakeClosure(Context *context, Tree *value);
-
-struct Opcode;
-Opcode *SetInfo(Infix *decl, Opcode *opcode);
-Opcode *OpcodeInfo(Infix *decl);
 
 
 
@@ -66,7 +77,7 @@ struct ClosureInfo : Info
 {};
 
 
-inline Tree *IsClosure(Tree *tree, Context_p *context)
+inline Tree *Interpreter::IsClosure(Tree *tree, Context_p *context)
 // ----------------------------------------------------------------------------
 //   Check if something is a closure, if so set scope and/or context
 // ----------------------------------------------------------------------------
@@ -88,7 +99,7 @@ inline Tree *IsClosure(Tree *tree, Context_p *context)
 }
 
 
-inline Tree *MakeClosure(Context *ctx, Tree *value)
+inline Tree *Interpreter::MakeClosure(Context *ctx, Tree *value)
 // ----------------------------------------------------------------------------
 //   Create a closure encapsulating the current context
 // ----------------------------------------------------------------------------
@@ -132,29 +143,9 @@ retry:
     return value;
 }
 
-
-
-// ============================================================================
-//
-//    Inline implementations for main entry points
-//
-// ============================================================================
-
-inline Tree *Evaluate(Context *context, Tree *what)
-// ----------------------------------------------------------------------------
-//    Evaluate 'what', finding the final, non-closure result
-// ----------------------------------------------------------------------------
-{
-    Tree *result = EvaluateClosure(context, what);
-    if (Tree *inside = IsClosure(result, NULL))
-        result = inside;
-    return result;
-}
-
-
 XL_END
 
 RECORDER_DECLARE(interpreter);
-RECORDER_DECLARE(typecheck);
+RECORDER_DECLARE(interpreter_typecheck);
 
 #endif // INTERPRETER_H

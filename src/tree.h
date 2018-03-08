@@ -141,7 +141,7 @@ struct Tree
 
     // Safe cast to an appropriate subclass
     template<class T>
-    T *                 As(Context *context = NULL);
+    T *                 As(Scope *context = NULL);
     Integer *           AsInteger();
     Real *              AsReal();
     Text *              AsText();
@@ -393,7 +393,7 @@ bool IsNotNull(T *ptr)
 
 
 template<class T>
-inline T * Tree::As(Context *)
+inline T * Tree::As(Scope *)
 // ----------------------------------------------------------------------------
 //   Return a pointer to the given class
 // ----------------------------------------------------------------------------
@@ -405,7 +405,7 @@ inline T * Tree::As(Context *)
 }
 
 template<>
-inline Tree *Tree::As<Tree>(Context *)
+inline Tree *Tree::As<Tree>(Scope *)
 // ----------------------------------------------------------------------------
 //    Special case for Tree
 // ----------------------------------------------------------------------------

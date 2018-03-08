@@ -61,15 +61,16 @@ FUNCTION(reply, integer,
 
 FUNCTION(listen_on, integer,
          PARM(port, integer),
-         int rc = xl_listen(XL_CONTEXT, 0, port);
+         int rc = xl_listen(XL_CONTEXT->CurrentScope(), 0, port);
          R_INT(rc));
 
 FUNCTION(listen, integer, ,
-         int rc = xl_listen(XL_CONTEXT, 0);
+         int rc = xl_listen(XL_CONTEXT->CurrentScope(), 0);
          R_INT(rc));
 
 FUNCTION(listen_forking, integer, ,
-         int rc = xl_listen(XL_CONTEXT, MAIN->options.listen_forks);
+         int rc = xl_listen(XL_CONTEXT->CurrentScope(),
+                            MAIN->options.listen_forks);
          R_INT(rc));
 
 FUNCTION(listen_hook, tree,
@@ -81,4 +82,3 @@ NAME_FN(ListenReceived, tree, "listen_received",
 
 NAME_FN(GetPid, integer, "process_id",
         R_INT(getpid()));
-

@@ -126,7 +126,7 @@ typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
 RECORDER(remote, 64, "Remote context information");
 static Tree_p xl_attach_context(Context *context, Tree *code)
 // ----------------------------------------------------------------------------
-//   Attach the context for the given code
+//   Attach the scope for the given code
 // ----------------------------------------------------------------------------
 {
     // Find first enclosing scope containing a "module_path"
@@ -207,7 +207,7 @@ static Tree_p xl_merge_context(Context *context, Tree *code)
             }
 
             // And make the resulting code a closure at that location
-            code = MakeClosure(codeCtx, code);
+            code = Interpreter::MakeClosure(codeCtx, code);
         }
     }
 
@@ -343,7 +343,7 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
                host.c_str(), response);
         response = xl_merge_context(context, response);
         record(remote_invoke, "After merge, response was %t", response);
-        result = context->Evaluate(response);
+        result = xl_evaluate(context->CurrentScope(), response);
         record(remote_invoke, "After eval, was %t", result);
         if (result == xl_nil)
             break;
@@ -421,7 +421,7 @@ Tree_p xl_listen_hook(Tree *newHook)
 }
 
 
-int xl_listen(Context *context, uint forking, uint port)
+int xl_listen(Scope *scope, uint forking, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
 // ----------------------------------------------------------------------------
@@ -506,12 +506,13 @@ int xl_listen(Context *context, uint forking, uint port)
             {
                 record(remote_listen, "Received code: %t", code);
                 received = code;
-                Tree_p hookResult = context->Evaluate(hook);
+                Tree_p hookResult = xl_evaluate(scope, hook);
                 if (hookResult != xl_nil)
                 {
+                    Context_p context = new Context(scope);
                     Save<int> saveReply(reply_socket, insock);
                     code = xl_merge_context(context, code);
-                    Tree_p result = context->Evaluate(code);
+                    Tree_p result = xl_evaluate(scope, code);
                     record(remote_listen, "Evaluated as %t", result);
                     xl_write_tree(insock, result);
                     record(remote_listen, "Response sent");

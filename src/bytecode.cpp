@@ -23,6 +23,7 @@
 #include "save.h"
 #include "errors.h"
 #include "basics.h"
+#include "runtime.h"
 
 #include <algorithm>
 #include <sstream>
@@ -35,25 +36,25 @@ XL_BEGIN
 //
 // ============================================================================
 
-Tree *EvaluateWithBytecode(Context *ctx, Tree *what)
+Tree *Bytecode::Evaluate(Scope *scope, Tree *what)
 // ----------------------------------------------------------------------------
 //   Compile bytecode and then evaluate it
 // ----------------------------------------------------------------------------
 {
     TreeIDs  noParms;
     TreeList captured;
+    Context_p context = new Context(scope);
 
-    Function *function = CompileToBytecode(ctx, what, NULL, noParms, captured);
+    Procedure *proc = Compile(context, what, NULL, noParms, captured);
     Tree_p result = what;
-    if (function)
+    if (proc)
     {
-        XL_ASSERT(function->Inputs() == 0);
+        XL_ASSERT(proc->Inputs() == 0);
         uint size = captured.size();
-        Scope *scope = ctx->CurrentScope();
         captured.push_back(what);
         captured.push_back(scope);
         Data data = &captured[size];
-        Op *op = function;
+        Op *op = proc;
         while(op)
             op = op->Run(data);
         result = DataResult(data);
@@ -62,15 +63,33 @@ Tree *EvaluateWithBytecode(Context *ctx, Tree *what)
 }
 
 
-Function *CompileToBytecode(Context *ctx, Tree *what, Tree *type,
-                            TreeIDs &parms, TreeList &captured)
+Tree * Bytecode::TypeCheck(Scope *scope, Tree *type, Tree *val)
+// ----------------------------------------------------------------------------
+//   Perform a type check for the given value
+// ----------------------------------------------------------------------------
+{
+    return val;
+}
+
+
+bool Bytecode::TypeAnalysis(Scope *scope, Tree *input)
+// ----------------------------------------------------------------------------
+//    No type analysis for the bytecode analyzer
+// ----------------------------------------------------------------------------
+{
+    return false;
+}
+
+
+Procedure *Bytecode::Compile(Context *ctx, Tree *what, Tree *type,
+                             TreeIDs &parms, TreeList &captured)
 // ----------------------------------------------------------------------------
 //    Compile a tree to bytecode
 // ----------------------------------------------------------------------------
 {
-    CodeBuilder  builder(captured);
-    Function *function = builder.Compile(ctx, what, parms, type);
-    return function;
+    CodeBuilder builder(captured);
+    Procedure *proc = builder.Compile(ctx, what, parms, type);
+    return proc;
 }
 
 
@@ -205,16 +224,16 @@ struct ArgEvalOp : FailOp
 
         // Evaluate in place
         Tree *self = data[argId];
-        if (Tree *inside = IsClosure(self, &context))
+        if (Tree *inside = Interpreter::IsClosure(self, &context))
             self = inside;
         Context *ctx = context;
         if (self->IsConstant())
             result = self;
         else
-            result = EvaluateWithBytecode(ctx, self);
+            result = xl_evaluate(ctx->CurrentScope(), self);
         if (result)
         {
-            result = MakeClosure(ctx, result);
+            result = Interpreter::MakeClosure(ctx, result);
             data[id] = result;
             return success;
         }
@@ -266,7 +285,7 @@ struct ClosureOp : Op
     virtual Op *        Run(Data data)
     {
         Tree *result = DataResult(data);
-        result = MakeClosure(context, result);
+        result = Interpreter::MakeClosure(context, result);
         DataResult(data, result);
         return success;
     }
@@ -378,8 +397,8 @@ struct TypeCheckOp : FailOp
 
     virtual Op *        Run(Data data)
     {
-        Context_p context = new Context(DataScope(data));
-        Tree *cast = TypeCheck(context, data[type], data[value]);
+        Scope *scope = DataScope(data);
+        Tree *cast = xl_typecheck(scope, data[type], data[value]);
         if (!cast)
             return fail;
         DataResult(data, cast);
@@ -443,7 +462,7 @@ struct IndexOp : FailOp
 
         // Check if we have a closure
         Context_p context = new Context(scope);
-        if (Tree *inside = IsClosure(callee, &context))
+        if (Tree *inside = Interpreter::IsClosure(callee, &context))
         {
             scope = context->CurrentScope();
             callee = inside;
@@ -469,7 +488,7 @@ struct IndexOp : FailOp
                     // Bind arg in new context and evaluate body
                     context = new Context(context);
                     context->Define(lfname, arg);
-                    result = context->Evaluate(lifx->right);
+                    result = xl_evaluate(context->CurrentScope(), lifx->right);
                 }
                 else
                 {
@@ -477,7 +496,7 @@ struct IndexOp : FailOp
                     // '(X,Y->X+Y) (2,3)' should evaluate as 5
                     context = new Context(context);
                     context->Define(lifx->left, lifx->right);
-                    result = context->Evaluate(arg);
+                    result = xl_evaluate(context->CurrentScope(), arg);
                 }
 
                 DataResult(data, result);
@@ -693,15 +712,15 @@ text Code::Ref(Op *op, text sep, text set, text null)
 }
 
 
-Function::Function(Context *context, Tree *self, uint nInputs, uint nLocals)
+Procedure::Procedure(Context *context, Tree *self, uint nInputs, uint nLocals)
 // ----------------------------------------------------------------------------
-//   Create a function
+//   Create a proc
 // ----------------------------------------------------------------------------
     : Code(context, self), nInputs(nInputs), nLocals(nLocals)
 {}
 
 
-Function::Function(Function *original, Data data, ParmOrder &capture)
+Procedure::Procedure(Procedure *original, Data data, ParmOrder &capture)
 // ----------------------------------------------------------------------------
 //    Copy constructor used for closures
 // ----------------------------------------------------------------------------
@@ -724,14 +743,14 @@ Function::Function(Function *original, Data data, ParmOrder &capture)
 }
 
 
-Function::~Function()
+Procedure::~Procedure()
 // ----------------------------------------------------------------------------
-//    Destructor for functions
+//    Destructor for procs
 // ----------------------------------------------------------------------------
 {}
 
 
-Op *Function::Run(Data data)
+Op *Procedure::Run(Data data)
 // ----------------------------------------------------------------------------
 //   Create a new scope and run all instructions in the sequence
 // ----------------------------------------------------------------------------
@@ -779,7 +798,7 @@ Op *Function::Run(Data data)
 }
 
 
-void Function::Dump(std::ostream &out)
+void Procedure::Dump(std::ostream &out)
 // ----------------------------------------------------------------------------
 //   Dump all the instructions
 // ----------------------------------------------------------------------------
@@ -827,11 +846,11 @@ CodeBuilder::~CodeBuilder()
 
 CodeBuilder::depth CodeBuilder::ScopeDepth(Scope *scope)
 // ----------------------------------------------------------------------------
-//   Return true if the given scope is local to the current function
+//   Return true if the given scope is local to the current proc
 // ----------------------------------------------------------------------------
 {
     Scope *parmsScope = parmsCtx->CurrentScope();
-    Scope *globalScope = MAIN->context->CurrentScope();
+    Scope *globalScope = MAIN->context.CurrentScope();
     uint count = 0;
 
     // Loop on scope, looking for either current parm scope or global scope
@@ -897,7 +916,7 @@ void CodeBuilder::AddTypeCheck(Context *context, Tree *what, Tree *type)
 
     // Check if we have some static match
     if (what->IsConstant())
-        if (TypeCheck(context, type, what))
+        if (xl_typecheck(context->CurrentScope(), type, what))
             return;
 
     // Check if types match statically
@@ -1097,7 +1116,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                depth, cindex, self, decl->left);
         builder->Add(new SelfOp);
     }
-    else if (Opcode *opcode = OpcodeInfo(decl))
+    else if (Opcode *opcode = Interpreter::OpcodeInfo(decl))
     {
         // Cached callback - Make a copy
         XL_ASSERT(!opcode->success);
@@ -1137,26 +1156,26 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
 RECORDER(bytecode_output, 64, "Output of the bytecode generator");
 
-Function *CodeBuilder::Compile(Context *ctx, Tree *what,
+Procedure *CodeBuilder::Compile(Context *ctx, Tree *what,
                                TreeIDs &callArgs, Tree *type)
 // ----------------------------------------------------------------------------
 //    Compile the tree
 // ----------------------------------------------------------------------------
 {
     // Check if we already compiled this particular tree (possibly recursive)
-    Function *function = what->GetInfo<Function>();
-    if (function)
+    Procedure *proc = what->GetInfo<Procedure>();
+    if (proc)
     {
-        captured = function->captured;
-        return function;
+        captured = proc->captured;
+        return proc;
     }
 
     // Does not exist yet, set it up
     Save<Context_p> saveParmsCtx(parmsCtx, ctx);
     uint nArgs = callArgs.size();
     Save<TreeIDs> saveInputs(inputs, callArgs);
-    function = new Function(ctx, what, nArgs, 0);
-    what->SetInfo<Code>(function);
+    proc = new Procedure(ctx, what, nArgs, 0);
+    what->SetInfo<Code>(proc);
 
     // Evaluate the input code
     bool result = true;
@@ -1170,17 +1189,17 @@ Function *CodeBuilder::Compile(Context *ctx, Tree *what,
         AddTypeCheck(ctx, what, type);
 
     // The generated code takes over the instructions in all cases
-    function->SetOps(&ops, &instrs, nEvals + nParms);
+    proc->SetOps(&ops, &instrs, nEvals + nParms);
     if (result)
     {
         // Successful compilation - Return the code we created
-        function->nInputs = nArgs + captured.size();
-        function->nLocals = nEvals + nParms + 2;
-        function->captured = captured;
+        proc->nInputs = nArgs + captured.size();
+        proc->nLocals = nEvals + nParms + 2;
+        proc->captured = captured;
 
-        record(bytecode_output, "Code %t: %O", what, (Op *) function);
+        record(bytecode_output, "Code %t: %O", what, (Op *) proc);
 
-        return function;
+        return proc;
     }
 
     // We failed, delete the result and return
@@ -1289,7 +1308,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             if (hasInstructions)
                 continue;
             if (hasDecls)
-                what = MakeClosure(ctx, what);
+                what = Interpreter::MakeClosure(ctx, what);
             Add(new ConstOp(what));
             if (hasDecls)
                 ctx->PopScope();
@@ -1300,7 +1319,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         case PREFIX:
         {
             // If we have a prefix on the left, check if it's a closure
-            if (Tree *closed = IsClosure(what, &gcContext))
+            if (Tree *closed = Interpreter::IsClosure(what, &gcContext))
             {
                 ctx = gcContext;
                 what = closed;
@@ -1627,7 +1646,7 @@ CallOp *CodeBuilder::Call(Context *ctx, Tree *value, Tree *type,
 // ----------------------------------------------------------------------------
 {
     TreeList captured;
-    Function *fn = CompileToBytecode(ctx, value, type, parmIDs, captured);
+    Procedure *fn = Bytecode::Compile(ctx, value, type, parmIDs, captured);
 
     // Check if we captured values from the surrounding contexts
     if (uint csize = captured.size())
@@ -1752,7 +1771,7 @@ struct InfixMatchOp : FailOp
     {
         Tree *test = DataResult(data);
         Context_p ctx = NULL;
-        if (Tree *inside = IsClosure(test, &ctx))
+        if (Tree *inside = Interpreter::IsClosure(test, &ctx))
             test = inside;
         if (Infix *ifx = test->AsInfix())
         {
@@ -1760,8 +1779,8 @@ struct InfixMatchOp : FailOp
             {
                 if (ctx)
                 {
-                    data[lid] = MakeClosure(ctx, ifx->left);
-                    data[rid] = MakeClosure(ctx, ifx->right);
+                    data[lid] = Interpreter::MakeClosure(ctx, ifx->left);
+                    data[rid] = Interpreter::MakeClosure(ctx, ifx->right);
                 }
                 else
                 {
@@ -1986,7 +2005,8 @@ CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
                 Bind(name, test);
                 return ALWAYS;
             }
-            if (Tree *cast = TypeCheck(context, namedType, test))
+            Scope *scope = context->CurrentScope();
+            if (Tree *cast = xl_typecheck(scope, namedType, test))
             {
                 test = cast;
                 Evaluate(context, test);

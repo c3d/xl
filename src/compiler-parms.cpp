@@ -1,18 +1,18 @@
 // ****************************************************************************
 //  parms.cpp                                                    XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //    Actions collecting parameters on the left of a rewrite
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -37,9 +37,9 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "parms.h"
-#include "args.h"
-#include "unit.h"
+#include "compiler-parms.h"
+#include "compiler-args.h"
+#include "compiler-unit.h"
 #include "errors.h"
 #include "llvm-crap.h"
 

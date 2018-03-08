@@ -183,7 +183,7 @@ struct TypeCheckOpcode : NameOpcode
     TypeCheckOpcode(kstring name, Name_p &toDefine)
         : NameOpcode(name, toDefine) {}
     virtual Opcode *            Clone() { return new TypeCheckOpcode(*this); }
-    virtual Tree *              Check(Context *ctx, Tree *what)
+    virtual Tree *              Check(Scope *scope, Tree *what)
     {
         return what;
     }
@@ -409,13 +409,13 @@ XL_END
 
 #undef INIT_GC
 #undef INIT_ALLOCATOR
-#undef UNARY
-#undef BINARY
+#undef UNARY_OP
+#undef BINARY_OP
 #undef INFIX
-#undef INFIX_CTX
+#undef INFIX_SCOPE
 #undef PREFIX
 #undef PREFIX_FN
-#undef PREFIX_CTX
+#undef PREFIX_SCOPE
 #undef POSTFIX
 #undef OVERLOAD
 #undef FUNCTION
@@ -436,13 +436,13 @@ XL_END
 
 #define INIT_GC
 #define INIT_ALLOCATOR(type)
-#define UNARY(Name, ResTy, LeftTy, Code)
-#define BINARY(Name, ResTy, LeftTy, RightTy, Code)
+#define UNARY_OP(Name, ResTy, LeftTy, Code)
+#define BINARY_OP(Name, ResTy, LeftTy, RightTy, Code)
 #define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code)
-#define INFIX_CTX(Name, ResTy, LeftTy, Symbol, RightTy, Code)
+#define INFIX_SCOPE(Name, ResTy, LeftTy, Symbol, RightTy, Code)
 #define PREFIX(Name, ResTy, Symbol, RightTy, Code)
 #define PREFIX_FN(Name, ResTy, RightTy, Code)
-#define PREFIX_CTX(Name, ResTy, Symbol, RightTy, Code)
+#define PREFIX_SCOPE(Name, ResTy, Symbol, RightTy, Code)
 #define POSTFIX(Name, ResTy, RightTy, Symbol, Code)
 #define OVERLOAD(Name, Symbol, ResTy, Parms, Code)
 #define FUNCTION(Name, ResTy, Parms, Code)
@@ -460,7 +460,7 @@ XL_END
     typedef symbol##_r *symbol##_p;                                     \
     typedef symbol##_r::value_t symbol##_t;                             \
     template<> inline                                                   \
-    symbol##_r *Tree::As<symbol##_r>(Context *context)                  \
+    symbol##_r *Tree::As<symbol##_r>(Scope *context)                    \
     {                                                                   \
         (void) context;                                                 \
         Condition;                                                      \
@@ -517,7 +517,7 @@ XL_END
     Type##_r &Name = *Name##Ptr; (void) Name;
 
 
-#define UNARY(UName, ResTy, LeftTy, Code)                               \
+#define UNARY_OP(UName, ResTy, LeftTy, Code)                            \
 /* ------------------------------------------------------------ */      \
 /*  Create a unary opcode (for 'opcode X' declarations)         */      \
 /* ------------------------------------------------------------ */      \
@@ -553,7 +553,7 @@ XL_END
     static Opcode_U_##UName init_opcode_U_##UName;
 
 
-#define BINARY(BName, ResTy, LeftTy, RightTy, Code)                     \
+#define BINARY_OP(BName, ResTy, LeftTy, RightTy, Code)                  \
 /* ------------------------------------------------------------ */      \
 /*  Create a binary opcode (for 'opcode X' declarations)        */      \
 /* ------------------------------------------------------------ */      \
@@ -629,13 +629,12 @@ XL_END
     static Opcode_I_##IName init_opcode_I_##IName;
 
 
-#define INFIX_CTX(IName, ResTy, LeftTy, Symbol, RightTy, Code)          \
+#define INFIX_SCOPE(IName, ResTy, LeftTy, Symbol, RightTy, Code)          \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
     INFIX(IName, ResTy, LeftTy, Symbol, RightTy,                        \
           Scope_p scope = DataScope(data);                              \
-          Context_p context = new Context(scope);                       \
           Code)
 
 
@@ -681,13 +680,12 @@ XL_END
     PREFIX(Name, ResTy, #Name, RightTy, Code)
 
 
-#define PREFIX_CTX(Name, ResTy, Symbol, RightTy, Code)                  \
+#define PREFIX_SCOPE(Name, ResTy, Symbol, RightTy, Code)                \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefixopcode, also generates prefix declaration    */      \
 /* ------------------------------------------------------------ */      \
     PREFIX(Name, ResTy, Symbol, RightTy,                                \
           Scope_p scope = DataScope(data);                              \
-          Context_p context = new Context(scope);                       \
           Code)
 
 
@@ -831,9 +829,9 @@ XL_END
         {                                                               \
             return new sym##TypeCheckOpcode(*this);                     \
         }                                                               \
-        virtual Tree *Check(Context *context, Tree *what)               \
+        virtual Tree *Check(Scope *scope, Tree *what)                   \
         {                                                               \
-            return what->As<sym##_r>(context);                          \
+            return what->As<sym##_r>(scope);                            \
         }                                                               \
     };                                                                  \
                                                                         \

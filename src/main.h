@@ -49,6 +49,7 @@
 #include "context.h"
 #include "options.h"
 #include "info.h"
+#include "evaluator.h"
 
 #include <recorder/recorder.h>
 #include <map>
@@ -69,13 +70,13 @@ struct SourceFile
 //    A source file and associated data
 // ----------------------------------------------------------------------------
 {
-    SourceFile(text n, Tree *t, Context *ctx, bool readOnly = false);
+    SourceFile(text n, Tree *t, Scope *ctx, bool readOnly = false);
     SourceFile();
     ~SourceFile();
 
     text        name;
     Tree_p      tree;
-    Context_p   context;
+    Scope_p   scope;
     time_t      modified;
     text        hash;
     bool        changed;
@@ -100,8 +101,12 @@ struct Main
          text              builtins);
     virtual ~Main();
 
-    // Entry point that does everythin
+    // Entry point that does everything
     int          LoadAndRun();
+
+    // Evaluate a tree in the given context
+    Tree *       Evaluate(Scope *scope, Tree *value);
+    Tree *       TypeCheck(Scope *scope, Tree *type, Tree *value);
 
     // Individual phases of the above
     Errors *     InitMAIN();
@@ -137,15 +142,13 @@ public:
     Errors       topLevelErrors;
     Syntax       syntax;
     Options      options;
-#ifndef INTERPRETER_ONLY
-    Compiler    *compiler;
-#endif // INTERPRETER_ONLY
-    Context_p    context;
+    Context      context;
     Renderer     renderer;
     source_files files;
     source_names file_names;
     Deserializer *reader;
     Serializer   *writer;
+    Evaluator *  evaluator;
 };
 
 extern Main *MAIN;

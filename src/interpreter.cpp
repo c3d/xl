@@ -25,6 +25,7 @@
 #include "types.h"
 #include "renderer.h"
 #include "basics.h"
+#include "runtime.h"
 
 #include <cmath>
 #include <algorithm>
@@ -32,7 +33,7 @@
 RECORDER(interpreter, 128, "Interpreted evaluation of XL code");
 RECORDER(interpreter_lazy, 64, "Interpreter lazy evaluation");
 RECORDER(interpreter_eval, 128, "Primary evaluation entry point");
-RECORDER(typecheck, 64, "Type checks");
+RECORDER(interpreter_typecheck, 64, "Type checks");
 
 XL_BEGIN
 // ============================================================================
@@ -45,13 +46,61 @@ typedef std::map<Tree_p, Tree_p> EvalCache;
 
 
 
+
+// ============================================================================
+//
+//   Interpeter main entry points
+//
+// ============================================================================
+
+Interpreter::Interpreter()
+// ----------------------------------------------------------------------------
+//   Constructor for interpreter
+// ----------------------------------------------------------------------------
+{
+    record(interpreter, "Created interpreter %p", this);
+}
+
+
+Interpreter::~Interpreter()
+// ----------------------------------------------------------------------------
+//   Destructor for interpreter
+// ----------------------------------------------------------------------------
+{
+    record(interpreter, "Destroyed interpreter %p", this);
+}
+
+
+Tree *Interpreter::Evaluate(Scope *scope, Tree *what)
+// ----------------------------------------------------------------------------
+//    Evaluate 'what', finding the final, non-closure result
+// ----------------------------------------------------------------------------
+{
+    Context_p context = new Context(scope);
+    Tree *result = EvaluateClosure(context, what);
+    if (Tree *inside = IsClosure(result, NULL))
+        result = inside;
+    return result;
+}
+
+
+bool Interpreter::TypeAnalysis(Scope *scope, Tree *source)
+// ----------------------------------------------------------------------------
+//    No type analysis for the interpreter
+// ----------------------------------------------------------------------------
+{
+    return true;
+}
+
+
+
 // ============================================================================
 //
 //    Primitive cache for 'opcode' and 'C' bindings
 //
 // ============================================================================
 
-Opcode *SetInfo(Infix *decl, Opcode *opcode)
+Opcode *Interpreter::SetInfo(Infix *decl, Opcode *opcode)
 // ----------------------------------------------------------------------------
 //    Create a new info for the given callback
 // ----------------------------------------------------------------------------
@@ -61,7 +110,7 @@ Opcode *SetInfo(Infix *decl, Opcode *opcode)
 }
 
 
-Opcode *OpcodeInfo(Infix *decl)
+Opcode *Interpreter::OpcodeInfo(Infix *decl)
 // ----------------------------------------------------------------------------
 //    Check if we have an opcode in the definition
 // ----------------------------------------------------------------------------
@@ -321,12 +370,13 @@ bool Bindings::DoInfix(Infix *what)
         }
 
         // Typed name: evaluate type and check match
+        Scope *scope = context->CurrentScope();
         Tree *type = MustEvaluate(context, what->right);
-        Tree *checked = TypeCheck(context, type, test);
+        Tree *checked = xl_typecheck(scope, type, test);
         if (!checked || type == XL::value_type)
         {
             MustEvaluate(type != XL::value_type);
-            checked = TypeCheck(context, type, test);
+            checked = xl_typecheck(scope, type, test);
         }
         if (checked)
         {
@@ -408,7 +458,7 @@ void Bindings::MustEvaluate(bool updateContext)
     Tree *evaluated = cache[test];
     if (!evaluated)
     {
-        evaluated = EvaluateClosure(context, test);
+        evaluated = Interpreter::EvaluateClosure(context, test);
         cache[test] = evaluated;
         record(interpreter_lazy, "Test %t = new %t", test, evaluated);
     }
@@ -420,7 +470,7 @@ void Bindings::MustEvaluate(bool updateContext)
     test = evaluated;
     if (updateContext)
     {
-        if (Tree *inside = IsClosure(test, &context))
+        if (Tree *inside = Interpreter::IsClosure(test, &context))
         {
             record(interpreter_lazy, "Encapsulate %t in closure %t",
                    test, inside);
@@ -438,7 +488,7 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
     Tree *evaluated = cache[tval];
     if (!evaluated)
     {
-        evaluated = EvaluateClosure(context, tval);
+        evaluated = Interpreter::EvaluateClosure(context, tval);
         cache[tval] = evaluated;
         record(interpreter_lazy, "Evaluate %t in context %t is new %t",
                tval, context, evaluated);
@@ -448,7 +498,7 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
         record(interpreter_lazy, "Evaluate %t in context %t is old %t",
                tval, context, evaluated);
     }
-    if (Tree *inside = IsClosure(evaluated, NULL))
+    if (Tree *inside = Interpreter::IsClosure(evaluated, NULL))
     {
         record(interpreter_lazy, "Encapsulate %t in closure %t",
                evaluated, inside);
@@ -475,7 +525,7 @@ void Bindings::BindClosure(Name *name, Tree *value)
 //   Enter a new binding in the current context, preserving its environment
 // ----------------------------------------------------------------------------
 {
-    value = MakeClosure(context, value);
+    value = Interpreter::MakeClosure(context, value);
     Bind(name, value);
 }
 
@@ -517,7 +567,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     // Check if the decl is an opcode or C binding
     Errors *errors = MAIN->errors;
     uint errCount = errors->Count();
-    Opcode *opcode = OpcodeInfo(decl);
+    Opcode *opcode = Interpreter::OpcodeInfo(decl);
     if (errors->Count() != errCount)
         return NULL;
 
@@ -586,7 +636,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     if (resultType != tree_type)
         result = new Infix("as", result, resultType, self->Position());
 
-    result = MakeClosure(locals, result);
+    result = Interpreter::MakeClosure(locals, result);
     record(interpreter_eval, "Eval%u %t in context %t = %t",
            depth, locals->CurrentScope(), self, result);
     return result;
@@ -599,12 +649,12 @@ inline Tree *encloseResult(Context *context, Scope *old, Tree *what)
 // ----------------------------------------------------------------------------
 {
     if (context->CurrentScope() != old)
-        what = MakeClosure(context, what);
+        what = Interpreter::MakeClosure(context, what);
     return what;
 }
 
 
-static Tree *Instructions(Context_p context, Tree_p what)
+Tree *Interpreter::Instructions(Context_p context, Tree_p what)
 // ----------------------------------------------------------------------------
 //   Evaluate the input tree once declarations have been processed
 // ----------------------------------------------------------------------------
@@ -780,7 +830,8 @@ static Tree *Instructions(Context_p context, Tree_p what)
             // Check type matching
             if (name == "as")
             {
-                result = TypeCheck(context, infix->right, infix->left);
+                Scope *scope = context->CurrentScope();
+                result = xl_typecheck(scope, infix->right, infix->left);
                 if (!result)
                 {
                     Ooops("Value $1 does not match type $2",
@@ -810,7 +861,7 @@ static Tree *Instructions(Context_p context, Tree_p what)
 }
 
 
-Tree *EvaluateClosure(Context *context, Tree *what)
+Tree *Interpreter::EvaluateClosure(Context *context, Tree *what)
 // ----------------------------------------------------------------------------
 //    Evaluate 'what', possibly returned as a closure in case not in 'context'
 // ----------------------------------------------------------------------------
@@ -861,7 +912,7 @@ struct Expansion
     {
         if (Tree *bound = context->Bound(what))
         {
-            if (Tree *eval = IsClosure(bound, NULL))
+            if (Tree *eval = Interpreter::IsClosure(bound, NULL))
                 bound = eval;
             return bound;
         }
@@ -907,7 +958,7 @@ struct Expansion
 };
 
 
-static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
+static Tree *formTypeCheck(Scope *scope, Tree *shape, Tree *value)
 // ----------------------------------------------------------------------------
 //    Check a value against a type shape
 // ----------------------------------------------------------------------------
@@ -917,13 +968,15 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
         shape = block->child;
 
     // Check if the shape matches
+    Context_p context = new Context(scope);
     Context_p locals = new Context(context);
     EvalCache cache;
     TreeList  args;
     Bindings  bindings(context, locals, value, cache, args);
     if (!shape->Do(bindings))
     {
-        record(typecheck, "Shape of tree %t does not match %t", value, shape);
+        record(interpreter_typecheck, "Shape of tree %t does not match %t",
+               value, shape);
         return NULL;
     }
 
@@ -932,17 +985,18 @@ static Tree *formTypeCheck(Context *context, Tree *shape, Tree *value)
     value = shape->Do(expand);
 
     // The value is associated to the symbols we extracted
-    record(typecheck, "Shape of tree %t matches %t", value, shape);
-    return MakeClosure(locals, value);
+    record(interpreter_typecheck, "Shape of tree %t matches %t", value, shape);
+    return Interpreter::MakeClosure(locals, value);
 }
 
 
-Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
+Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if 'value' matches 'type' in the given context
 // ----------------------------------------------------------------------------
 {
-    record(typecheck, "Check %t against %t", value, type);
+    record(interpreter_typecheck, "Check %t against %t in scope %t",
+           value, type, scope);
 
     // Accelerated type check for the builtin or constructed types
     if (TypeCheckOpcode *builtin = type->GetInfo<TypeCheckOpcode>())
@@ -950,7 +1004,8 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
         // If this is marked as builtin, check if the test passes
         if (Tree *converted = builtin->Check(scope, value))
         {
-            record(typecheck, "Check %t converted as %t", value, converted);
+            record(interpreter_typecheck, "Check %t converted as %t",
+                   value, converted);
             return converted;
         }
     }
@@ -962,13 +1017,13 @@ Tree *TypeCheck(Context *scope, Tree *type, Tree *value)
                 if (ptypename->value == "type")
                     return formTypeCheck(scope, ptype->right, value);
 
-        record(typecheck, "No code for %t, opcode is %O",
+        record(interpreter_typecheck, "No code for %t, opcode is %O",
                type, type->GetInfo<Opcode>());
     }
 
 
     // No direct or converted match, end of game
-    record(typecheck, "Type checking %t failed", value);
+    record(interpreter_typecheck, "Type checking %t failed", value);
     return NULL;
 }
 

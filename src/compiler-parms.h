@@ -1,12 +1,12 @@
-#ifndef COMPILER_EXPRED_H
-#define COMPILER_EXPRED_H
+#ifndef COMPILER_PARMS_H
+#define COMPILER_PARMS_H
 // ****************************************************************************
-//  expred.h                                                      XL project
+//  compiler-parms.h                                               XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Information required by the compiler for expression reduction
+//    Actions collecting parameters on the left of a rewrite
 //
 //
 //
@@ -43,43 +43,51 @@
 
 XL_BEGIN
 
-struct RewriteCandidate;
+struct CompilerUnit;
 
-struct CompileExpression
+struct Parameter
+// ----------------------------------------------------------------------------
+//   Internal representation of a parameter
+// ----------------------------------------------------------------------------
+{
+    Parameter(Name *name, Type_p type = 0) : name(name), type(type) {}
+    Name_p              name;
+    Type_p           type;
+};
+typedef std::vector<Parameter> Parameters;
+
+
+struct ParameterList
 // ----------------------------------------------------------------------------
 //   Collect parameters on the left of a rewrite
 // ----------------------------------------------------------------------------
 {
-    typedef llvm_value value_type;
+    typedef bool value_type;
 
 public:
-    CompileExpression(CompiledUnit *unit);
+    ParameterList(CompilerUnit &unit)
+        : unit(unit), defined(NULL), returned(NULL) {}
 
 public:
-    llvm_value DoInteger(Integer *what);
-    llvm_value DoReal(Real *what);
-    llvm_value DoText(Text *what);
-    llvm_value DoName(Name *what);
-    llvm_value DoPrefix(Prefix *what);
-    llvm_value DoPostfix(Postfix *what);
-    llvm_value DoInfix(Infix *what);
-    llvm_value DoBlock(Block *what);
+    bool                EnterName(Name *what, Type_p declaredType = NULL);
 
-    llvm_value DoCall(Tree *call);
-    llvm_value DoRewrite(RewriteCandidate &candidate);
-    llvm_value Value(Tree *expr);
-    llvm_value Compare(Tree *value, Tree *test);
-    llvm_value ForceEvaluation(Tree *expr);
-    llvm_value TopLevelEvaluation(Tree *expr);
+    bool                DoInteger(Integer *what);
+    bool                DoReal(Real *what);
+    bool                DoText(Text *what);
+    bool                DoName(Name *what);
+    bool                DoPrefix(Prefix *what);
+    bool                DoPostfix(Postfix *what);
+    bool                DoInfix(Infix *what);
+    bool                DoBlock(Block *what);
 
 public:
-    CompiledUnit *  unit;         // Current compilation unit
-    LLVMCrap::JIT & llvm;         // JIT compiler being used
-    value_map       computed;     // Values we already computed
+    CompilerUnit &      unit;           // Current compilation unit
+    Tree_p              defined;        // Tree being defined, 'sin' in sin X
+    text                name;           // Name being given to the LLVM function
+    Parameters          parameters;     // Parameters and their order
+    Type_p              returned;       // Returned type if specified
 };
 
 XL_END
 
-RECORDER_DECLARE(calls);
-
-#endif // COMPILER_EXPRED_H
+#endif // COMPILER_PARMS_H

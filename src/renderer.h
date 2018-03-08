@@ -45,6 +45,9 @@
 #include "tree.h"
 #include <ostream>
 
+
+RECORDER_TWEAK_DECLARE(recorder_dump_symbolic);
+
 XL_BEGIN
 
 struct Syntax;
@@ -108,6 +111,43 @@ public:
 std::ostream& operator<< (std::ostream&out, XL::Tree *t);
 std::ostream& operator<< (std::ostream&out, XL::Tree &t);
 std::ostream& operator<< (std::ostream&out, XL::TreeList &list);
+
+template <typename stream_t, typename arg_t>
+size_t recorder_render(const char *format,
+                       char *buffer, size_t size,
+                       uintptr_t arg)
+// ----------------------------------------------------------------------------
+//   Render a value during a recorder dump (%t and %v format)
+// ----------------------------------------------------------------------------
+{
+    const unsigned max_len = RECORDER_TWEAK(recorder_dump_symbolic);
+    const unsigned trunc_len = max_len/2 - 3;
+    arg_t value = (arg_t) arg;
+    size_t result;
+    if (max_len)
+    {
+        text t;
+        stream_t os(t);
+        if (value)
+            os << *value;
+        else
+            os << "NULL";
+
+        t = os.str();
+        size_t len = t.length();
+        if (max_len > 8 && len > max_len)
+            t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
+        result = snprintf(buffer, size, "%p [%s]", (void *) value, t.c_str());
+        for (unsigned i = 0; i < result; i++)
+            if (buffer[i] == '\n')
+                buffer[i] = '|';
+    }
+    else
+    {
+        result = snprintf(buffer, size, "%p", (void *) value);
+    }
+    return result;
+}
 
 XL_END
 

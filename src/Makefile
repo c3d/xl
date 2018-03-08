@@ -35,6 +35,7 @@ MODULES_HEADERS=$(MODULES:%=%_module.h)
 
 # List of source files to process
 SOURCES     =					\
+	$(SOURCES_$(COMPILER))			\
 	main.cpp				\
 	tree.cpp				\
 	action.cpp				\
@@ -56,18 +57,18 @@ SOURCES     =					\
 	winglob.cpp				\
 	recorder/recorder.c			\
 	recorder/recorder_ring.c		\
-	$(MODULES_SOURCES)			\
-	$(SOURCES_$(COMPILER))
+	$(MODULES_SOURCES)
 
 SOURCES_llvm =					\
+	llvm-crap.cpp				\
 	compiler.cpp				\
 	compiler-llvm.cpp			\
 	compiler-gc.cpp				\
+	compiler-unit.cpp			\
+	compiler-expr.cpp			\
+	compiler-parms.cpp			\
+	compiler-args.cpp			\
 	types.cpp				\
-	args.cpp				\
-	expred.cpp				\
-	parms.cpp				\
-	unit.cpp				\
 
 PRODUCTS=xl.exe
 

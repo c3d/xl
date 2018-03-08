@@ -157,88 +157,6 @@ Context *Context::Parent()
 }
 
 
-eval_fn Context::Compile(Tree *what)
-// ----------------------------------------------------------------------------
-//   Evaluate 'what' in the given context
-// ----------------------------------------------------------------------------
-{
-    eval_fn code = compiled[what];
-
-#ifndef INTERPRETER_ONLY
-    if (!code)
-    {
-        code = MAIN->compiler->Compile(this, what);
-        if (!code)
-        {
-            Ooops("Error compiling $1", what);
-            return NULL;
-        }
-        compiled[what] = code;
-    }
-#endif // INTERPRETER_ONLY
-
-    return code;
-}
-
-
-Tree *Context::Evaluate(Tree *what)
-// ----------------------------------------------------------------------------
-//   Evaluate 'what' in the given context
-// ----------------------------------------------------------------------------
-{
-    Tree *result = what;
-    assert (!GarbageCollector::Running());
-
-    uint optLevel = MAIN->options.optimize_level;
-    switch(optLevel)
-    {
-
-#ifndef INTERPRETER_ONLY
-    case 3:
-        if (eval_fn code = Compile(what))
-            result = code(this->CurrentScope(), what);
-        break;
-    case 2:
-        // Compilation of bytecode not implemented yet, fall through for now
-
-#endif // INTERPRETER_ONLY
-
-    default:
-        // Compile at O1 for all cases, O2 and O3 in interpreter-only mode
-        result = XL::EvaluateWithBytecode(this, what);
-        break;
-    case 0:
-        // Interpreter-only mode
-        result = XL::Evaluate(this, what);
-        break;
-    }
-
-    return result;
-}
-
-
-Tree *Context::Call(text prefix, TreeList &argList)
-// ----------------------------------------------------------------------------
-//    Generate a call and evaluate it
-// ----------------------------------------------------------------------------
-{
-    uint arity = argList.size();
-    TreePosition pos = arity ? argList[0]->Position() : ~0;
-    Tree *call = new Name(prefix, pos);
-    if (arity)
-    {
-        Tree *args = argList[arity + ~0];
-        for (uint a = 1; a < arity; a++)
-        {
-            Tree *arg = argList[arity + ~a];
-            args = new Infix(",", arg, args, pos);
-        }
-        call = new Prefix(call, args, pos);
-    }
-    return Evaluate(call);
-}
-
-
 
 // ============================================================================
 //
@@ -534,8 +452,9 @@ Tree *Context::Assign(Tree *ref, Tree *value)
         {
             if (typeDecl->name == "as")
             {
+                Scope *scope = CurrentScope();
                 Tree *type = typeDecl->right;
-                Tree *castedValue = TypeCheck(this, type, value);
+                Tree *castedValue = xl_typecheck(scope, type, value);
                 if (castedValue)
                 {
                     value = castedValue;
