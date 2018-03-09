@@ -77,7 +77,7 @@ bool Bytecode::TypeAnalysis(Scope *scope, Tree *input)
 //    No type analysis for the bytecode analyzer
 // ----------------------------------------------------------------------------
 {
-    return false;
+    return true;
 }
 
 

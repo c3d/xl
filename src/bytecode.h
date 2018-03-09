@@ -41,13 +41,12 @@
 
 XL_BEGIN
 
-
-struct Op;                      // An individual operation
-struct Code;                    // A sequence of operations
-struct Procedure;               // Internal representation of functions
-struct CallOp;                  // A call operation
-struct CodeBuilder;             // Code generator
-typedef std::vector<Op *> Ops;  // Sequence of operations
+struct Op;                     // An individual operation
+struct Code;                   // A sequence of operations
+struct Procedure;              // Internal representation of functions
+struct CallOp;                 // A call operation
+struct CodeBuilder;            // Code generator
+typedef std::vector<Op *> Ops; // Sequence of operations
 typedef std::map<Tree *, int>  TreeIDs;
 typedef std::map<Tree *, Op *> TreeOps;
 typedef std::vector<int>       ParmOrder;
@@ -61,11 +60,12 @@ typedef Tree_p *               Data;
 //
 // ============================================================================
 
-struct Bytecode : Evaluator
+class Bytecode : public Evaluator
 // ----------------------------------------------------------------------------
 //   An evaluation based on some intermediate byte code
 // ----------------------------------------------------------------------------
 {
+public:
     Bytecode();
     ~Bytecode();
 
@@ -92,6 +92,8 @@ struct Op
 // ----------------------------------------------------------------------------
 {
 public:
+    Op *                success;
+public:
     // The action to perform
     virtual Op *        Run(Data data)          { return success; }
 
@@ -101,17 +103,19 @@ public:
     virtual Op *        Fail()                  { return NULL; }
     virtual void        Dump(std::ostream &out) { out << OpID(); }
     virtual kstring     OpID()                  { return "op"; }
-
-public:
-    Op *                success;
 };
 
 
-struct Code : Op, Info
+struct Code : public Op, Info
 // ----------------------------------------------------------------------------
 //    A sequence of operations (may be local evaluation code in a function)
 // ----------------------------------------------------------------------------
 {
+    Context_p           context;
+    Tree_p              self;
+    Op *                ops;
+    Ops                 instrs;
+public:
     Code(Context *, Tree *self);
     Code(Context *, Tree *self, Op *instr);
     ~Code();
@@ -125,12 +129,6 @@ struct Code : Op, Info
     virtual uint        Inputs()        { return 0; }
     virtual uint        Locals()        { return 0; }
     virtual kstring     OpID()          { return "code"; }
-
-public:
-    Context_p           context;
-    Tree_p              self;
-    Op *                ops;
-    Ops                 instrs;
 };
 
 
@@ -139,6 +137,9 @@ struct Procedure : Code
 //   A sequence of operations with its own scope
 // ----------------------------------------------------------------------------
 {
+    uint                nInputs, nLocals;
+    TreeList            captured;
+public:
     Procedure(Context *context, Tree *self, uint nInputs, uint nLocals);
     Procedure(Procedure *original, Data data, ParmOrder &capture);
     ~Procedure();
@@ -153,10 +154,6 @@ struct Procedure : Code
     Tree_p *            ClosureData()   { return &captured[0]; }
     uint                OffsetSize()    { return Inputs() + Closures(); }
     uint                FrameSize()     { return 2 + OffsetSize() + Locals(); }
-
-public:
-    uint                nInputs, nLocals;
-    TreeList            captured;
 };
 
 
@@ -172,6 +169,7 @@ struct CodeBuilder
 //    Build the bytecode to rapidly evaluate a tree
 // ----------------------------------------------------------------------------
 {
+public:
     CodeBuilder(TreeList &captured);
     ~CodeBuilder();
 
@@ -217,7 +215,6 @@ public:
     // Success at end of declaration
     void        Success();
     void        InstructionsSuccess(uint oldNumEvals);
-
 
 public:
     Op *        ops;            // List of operations to evaluate that tree

@@ -25,11 +25,12 @@
 
 XL_BEGIN
 
-struct Evaluator
+class Evaluator
 // ----------------------------------------------------------------------------
-//   Base class for all ways to evaluate an XL tree
+//   Pure virtual class defining the interface for XL tree evaluation
 // ----------------------------------------------------------------------------
 {
+public:
     virtual ~Evaluator() {}
 
     virtual Tree *      Evaluate(Scope *, Tree *source) = 0;

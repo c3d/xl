@@ -29,11 +29,12 @@ XL_BEGIN
 
 struct Opcode;
 
-struct Interpreter : Evaluator
+class Interpreter : public Evaluator
 // ----------------------------------------------------------------------------
 //   Base class for all ways to evaluate an XL tree
 // ----------------------------------------------------------------------------
 {
+public:
     Interpreter();
     virtual ~Interpreter();
 
@@ -52,16 +53,6 @@ public:
     static Opcode *     SetInfo(Infix *decl, Opcode *opcode);
     static Opcode *     OpcodeInfo(Infix *decl);
 };
-
-
-
-
-// ============================================================================
-//
-//    Closure and opcode management
-//
-// ============================================================================
-
 
 
 // ============================================================================
