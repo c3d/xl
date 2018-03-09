@@ -67,9 +67,10 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct RewriteCalls;
-typedef GCPtr<RewriteCalls> RewriteCalls_p;
+class RewriteCalls;
+typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
+typedef std::set<Tree *>                 closure_set;
 
 extern Name_p tree_type;
 
@@ -80,20 +81,31 @@ extern Name_p tree_type;
 //
 // ============================================================================
 
-struct Types
+class Types
 // ----------------------------------------------------------------------------
 //   Record type information
 // ----------------------------------------------------------------------------
 {
-    Types(Context *context);
-    Types(Context *context, Types *parent);
+    Context_p   context;        // Context in which we lookup things
+    TreeMap     types;          // Map an expression to its type
+    TreeMap     unifications;   // Map a type to its reference type
+    closure_set captured;       // Trees captured during analysis
+    rcall_map   rcalls;         // Rewrites to call for a given tree
+    Tree_p      left, right;    // Current left and right of unification
+    bool        prototyping;    // Prototyping a function declaration
+    bool        matching;       // Matching a pattern
+    static ulong id;            // Id of next type
+
+public:
+    Types(Scope *scope);
+    Types(Scope *scope, Types *parent);
     ~Types();
     typedef bool value_type;
     enum unify_mode { STANDARD, DECLARATION };
 
 public:
     // Main entry point
-    bool        TypeAnalysisb(Scope *scope, Tree *what);
+    bool        TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
 
 public:
@@ -150,16 +162,7 @@ public:
     // Error messages
     bool        TypeError(Tree *t1, Tree *t2);
 
-public:
-    Context_p   context;        // Context in which we lookup things
-    TreeMap     types;          // Map an expression to its type
-    TreeMap     unifications;   // Map a type to its reference type
-    rcall_map   rcalls;         // Rewrites to call for a given tree
-    Tree_p      left, right;    // Current left and right of unification
-    bool        prototyping;    // Prototyping a function declaration
-    bool        matching;       // Matching a pattern
-    static ulong id;            // Id of next type
-
+private:
     GARBAGE_COLLECT(Types);
 };
 typedef GCPtr<Types> Types_p;
