@@ -80,6 +80,15 @@ Tree *  xl_evaluate(Scope *scope, Tree *tree)
 }
 
 
+Tree *  xl_identity(Scope *scope, Tree *tree)
+// ----------------------------------------------------------------------------
+//   No op, returns the input tree
+// ----------------------------------------------------------------------------
+{
+    return tree;
+}
+
+
 Tree *  xl_typecheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Dispatch a type check to the current evaluator
@@ -170,62 +179,63 @@ bool xl_same_shape(Tree *left, Tree *right)
 //
 // ========================================================================
 
-Integer *xl_new_integer(longlong value)
+Integer *xl_new_integer(TreePosition pos, longlong value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Integer
 // ----------------------------------------------------------------------------
 {
-    Integer *result = new Integer(value);
+    Integer *result = new Integer(value, pos);
     return result;
 }
 
 
-Real *xl_new_real(double value)
+Real *xl_new_real(TreePosition pos, double value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new Real
 // ----------------------------------------------------------------------------
 {
-    Real *result = new Real (value);
+    Real *result = new Real (value, pos);
     return result;
 }
 
 
-Text *xl_new_character(char value)
+Text *xl_new_character(TreePosition pos, char value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new single-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Text *result = new Text(text(value, 1), "'", "'");
+    Text *result = new Text(text(value, 1), "'", "'", pos);
     return result;
 }
 
 
-Text *xl_new_text(text value)
+Text *xl_new_text(TreePosition pos, text value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Text *result = new Text(value);
+    Text *result = new Text(value, pos);
     return result;
 }
 
 
-Text *xl_new_ctext(kstring value)
+Text *xl_new_ctext(TreePosition pos, kstring value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Text *result = new Text(text(value));
+    Text *result = new Text(text(value), pos);
     return result;
 }
 
 
-Text *xl_new_xtext(kstring value, longlong len, kstring open, kstring close)
+Text *xl_new_xtext(TreePosition pos, kstring value, longlong len,
+                   kstring open, kstring close)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new arbitrarily-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Text *result = new Text(text(value, len), open, close);
+    Text *result = new Text(text(value, len), open, close, pos);
     return result;
 }
 

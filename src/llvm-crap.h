@@ -42,6 +42,11 @@
 //  (C) 2014 Taodyne SAS
 // ****************************************************************************
 
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
+
 #include <recorder/recorder.h>
 #include <string>
 
@@ -156,8 +161,14 @@ public:
     ~JIT();
 
 public:
+    static Type_p       Type(Value_p value);
+    static Type_p       ReturnType(Function_p fn);
+
     static bool         InUse(Function_p f);
     static void         EraseFromParent(Function_p f);
+
+    static bool         VerifyFunction(Function_p function);
+    static void         Print(kstring label, Value_p value);
 
 public:
     // JIT attributes
@@ -211,8 +222,8 @@ public:
     JITBlock(const JITBlock &from, kstring name);
     ~JITBlock();
 
-    static Type_p       Type(Value_p value);
-    static Type_p       ReturnType(Function_p fn);
+    static Type_p       Type(Value_p value)      { return JIT::Type(value); }
+    static Type_p       ReturnType(Function_p f) { return JIT::ReturnType(f); }
 
     Constant_p          IntegerConstant(Type_p ty, uint64_t value);
     Constant_p          IntegerConstant(Type_p ty, int64_t value);
@@ -229,9 +240,13 @@ public:
     Value_p             Call(Value_p c, Value_p a1, Value_p a2, Value_p a3);
     Value_p             Call(Value_p c, Values &args);
 
+    BasicBlock_p        Block();
     Value_p             Return(Value_p value = nullptr);
     Value_p             Branch(JITBlock &to);
+    Value_p             Branch(BasicBlock_p to);
     Value_p             IfBranch(Value_p cond, JITBlock &t, JITBlock &f);
+    Value_p             IfBranch(Value_p cond, BasicBlock_p t, BasicBlock_p f);
+    Value_p             Select(Value_p cond, Value_p t, Value_p f);
 
     Value_p             Alloca(Type_p type, kstring name = "");
     Value_p             AllocateReturnValue(Function_p f, kstring name = "");

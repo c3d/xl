@@ -40,12 +40,13 @@
 // ****************************************************************************
 
 #include "compiler.h"
+#include "compiler-function.h"
 
 XL_BEGIN
 
 struct RewriteCandidate;
 
-struct CompileExpression
+struct CompilerExpression
 // ----------------------------------------------------------------------------
 //   Collect parameters on the left of a rewrite
 // ----------------------------------------------------------------------------
@@ -53,7 +54,7 @@ struct CompileExpression
     typedef Value_p value_type;
 
 public:
-    CompileExpression(CompilerUnit &unit);
+    CompilerExpression(CompilerFunction &functin);
 
 public:
     Value_p             DoInteger(Integer *what);
@@ -71,6 +72,8 @@ public:
     Value_p             Compare(Tree *value, Tree *test);
 
 public:
+    Compiler &          compiler;       // Compiler
+    CompilerFunction &  function;       // Current compilation function
     CompilerUnit &      unit;           // Current compilation unit
     JIT &               jit;            // JIT compiler being used
     value_map           computed;       // Values we already computed
@@ -78,6 +81,6 @@ public:
 
 XL_END
 
-RECORDER_DECLARE(expr);
+RECORDER_DECLARE(compiler_expr);
 
 #endif // COMPILER_EXPRED_H

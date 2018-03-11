@@ -46,16 +46,18 @@
 
 XL_BEGIN
 
-struct Types;
-struct CompilerUnit;
+class Types;
+class CompilerUnit;
 typedef GCPtr<Types> Types_p;
 RECORDER_DECLARE(calltypes);
 
 
 struct RewriteBinding
 // ----------------------------------------------------------------------------
-//   Structure recording the binding of a given parameter to a value
+//   Binding of a given parameter to a value
 // ----------------------------------------------------------------------------
+//   If [foo X is ...] is invoked as [foo 2], then this records the binding
+//   of [X] to [2].
 {
     RewriteBinding(Name *name, Tree *value)
         : name(name), value(value), closure(NULL) {}
@@ -70,8 +72,10 @@ typedef std::vector<RewriteBinding> RewriteBindings;
 
 struct RewriteCondition
 // ----------------------------------------------------------------------------
-//   Structure recording a condition for a given rewrite to be valid
+//   A condition for a given rewrite to be valid
 // ----------------------------------------------------------------------------
+//   For [foo X when X > 0 is ...] being called as [foo 2], this records
+//   the condition [X > 0] along with [2].
 {
     RewriteCondition(Tree *value, Tree *test): value(value), test(test) {}
     Tree_p      value;
@@ -82,8 +86,10 @@ typedef std::vector<RewriteCondition> RewriteConditions;
 
 struct RewriteKind
 // ----------------------------------------------------------------------------
-//   Structure recording a condition for a given rewrite to be valid
+//   A kind-based condition for a given rewrite to be valid
 // ----------------------------------------------------------------------------
+//   For [foo X,Y], the input must be an infix, so when called "ambiguously"
+//   as [foo Z], this will check that [Z] hss an infix kind.
 {
     RewriteKind(Tree *value, kind test, Type_p mtype)
         : value(value), test(test), machineType(mtype) {}

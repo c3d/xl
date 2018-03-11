@@ -445,7 +445,7 @@ inline void Context::HasOneRewriteFor(kind k)
 
 inline Tree * RewriteDefined(Tree *form)
 // ----------------------------------------------------------------------------
-//   Find what we actually define based on the shape of the left of a ->
+//   Find what we actually define based on the shape of the left of a 'is'
 // ----------------------------------------------------------------------------
 {
     // Check 'X as integer', we define X

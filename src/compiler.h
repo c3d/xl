@@ -80,6 +80,10 @@ struct Compiler : Evaluator, TypeAllocator::Listener
     // Top-level entry point: analyze and compile a tree or a whole program
     eval_fn             Compile(Scope *scope, Tree *program);
 
+    // Find the machine type corresponding to the tree type or value
+    PointerType_p       TreeMachineType(Tree *tree);
+    Type_p              MachineType(Tree *tree);
+
 public:
     // Garbage collector listener interface
     void                BeginCollection() override;
@@ -95,6 +99,7 @@ public:
     IntegerType_p       integer32Ty;
     IntegerType_p       integer64Ty;
     IntegerType_p       integer128Ty;
+    IntegerType_p       unsignedTy;
     IntegerType_p       ulongTy;
     IntegerType_p       ulonglongTy;
     Type_p              realTy;

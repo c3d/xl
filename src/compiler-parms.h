@@ -43,7 +43,7 @@
 
 XL_BEGIN
 
-struct CompilerUnit;
+class CompilerFunction;
 
 struct Parameter
 // ----------------------------------------------------------------------------
@@ -51,8 +51,8 @@ struct Parameter
 // ----------------------------------------------------------------------------
 {
     Parameter(Name *name, Type_p type = 0) : name(name), type(type) {}
-    Name_p              name;
-    Type_p           type;
+    Name_p name;
+    Type_p type;
 };
 typedef std::vector<Parameter> Parameters;
 
@@ -65,8 +65,8 @@ struct ParameterList
     typedef bool value_type;
 
 public:
-    ParameterList(CompilerUnit &unit)
-        : unit(unit), defined(NULL), returned(NULL) {}
+    ParameterList(CompilerFunction &function)
+        : function(function), defined(NULL), returned(NULL) {}
 
 public:
     bool                EnterName(Name *what, Type_p declaredType = NULL);
@@ -81,7 +81,7 @@ public:
     bool                DoBlock(Block *what);
 
 public:
-    CompilerUnit &      unit;           // Current compilation unit
+    CompilerFunction &  function;       // Current function
     Tree_p              defined;        // Tree being defined, 'sin' in sin X
     text                name;           // Name being given to the LLVM function
     Parameters          parameters;     // Parameters and their order

@@ -33,6 +33,7 @@ INIT_ALLOCATOR(RewriteCalls);
 
 NAME(nil);
 NAME(self);
+NAME(scope);
 NAME(true);
 NAME(false);
 NAME(error);

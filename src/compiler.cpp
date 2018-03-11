@@ -42,8 +42,6 @@
 #include "compiler-gc.h"
 #include "errors.h"
 
-#include <llvm/IR/Type.h>
-#include <llvm/IR/DerivedTypes.h>
 #include <recorder/recorder.h>
 #include <iostream>
 #include <sstream>
@@ -78,6 +76,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       integer32Ty       (jit.IntegerType(32)),
       integer64Ty       (jit.IntegerType(64)),
       integer128Ty      (jit.IntegerType(128)),
+      unsignedTy        (jit.IntegerType<unsigned>()),
       ulongTy           (jit.IntegerType<ulong>()),
       ulonglongTy       (jit.IntegerType<ulonglong>()),
       realTy            (jit.FloatType(64)),
@@ -170,7 +169,7 @@ Tree * Compiler::Evaluate(Scope *scope, Tree *source)
 }
 
 
-Tree * Compiler::TypeCheck(Context *, Tree *type, Tree *val)
+Tree * Compiler::TypeCheck(Scope *, Tree *type, Tree *val)
 // ----------------------------------------------------------------------------
 //   Compile a type check
 // ----------------------------------------------------------------------------
@@ -185,11 +184,11 @@ bool Compiler::TypeAnalysis(Scope *scope, Tree *program)
 // ----------------------------------------------------------------------------
 {
     CompilerUnit unit(*this, scope, program);
-    return unit.TypeCheck();
+    return unit.TypeAnalysis();
 }
 
 
-eval_fn Compiler::Compile(Context *context, Tree *program)
+eval_fn Compiler::Compile(Scope *scope, Tree *program)
 // ----------------------------------------------------------------------------
 //   Compile an XL tree and return the machine function for it
 // ----------------------------------------------------------------------------
@@ -197,23 +196,45 @@ eval_fn Compiler::Compile(Context *context, Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
-    record(compiler, "Compile program %t in context %t", program, context);
-    if (!program || !context)
+    record(compiler, "Compiling program %t in scope %t", program, scope);
+    if (!program || !scope)
         return NULL;
 
-    CompilerUnit unit(*this, program, context);
-    if (!unit.TypeCheck())
-        return NULL;
-    Value_p returned = unit.Compile(program, true);
-    if (!returned)
-        returned = unit.ConstantTree(program); // Error case
-    if (!unit.Return(returned))
-        return NULL;
-    return unit.Finalize(true);
+    CompilerUnit unit(*this, scope, program);
+    eval_fn result = unit.Compile();
+    record(compiler, "Compiled %t in scope %t as %p",
+           program, scope, (void *) result);
+    return result;
 }
 
 
-
+PointerType_p Compiler::TreeMachineType(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Return the LLVM tree type associated to a given XL expression
+// ----------------------------------------------------------------------------
+{
+    switch(tree->Kind())
+    {
+    case INTEGER:
+        return integerTreePtrTy;
+    case REAL:
+        return realTreePtrTy;
+    case TEXT:
+        return textTreePtrTy;
+    case NAME:
+        return nameTreePtrTy;
+    case INFIX:
+        return infixTreePtrTy;
+    case PREFIX:
+        return prefixTreePtrTy;
+    case POSTFIX:
+        return postfixTreePtrTy;
+    case BLOCK:
+        return blockTreePtrTy;
+    }
+    assert(!"Invalid tree type");
+    return treePtrTy;
+}
 
 
 

@@ -61,11 +61,11 @@ XL_BEGIN
 ulong Types::id = 0;
 RECORDER(types, 64, "Type analysis");
 
-Types::Types(Context *context)
+Types::Types(Scope *scope)
 // ----------------------------------------------------------------------------
 //   Constructor for top-level type inferences
 // ----------------------------------------------------------------------------
-    : context(context),
+    : context(new Context(scope)),
       types(),
       unifications(),
       rcalls(),
@@ -74,11 +74,11 @@ Types::Types(Context *context)
 {}
 
 
-Types::Types(Context *context, Types *parent)
+Types::Types(Scope *scope, Types *parent)
 // ----------------------------------------------------------------------------
 //   Constructor for "child" type inferences, i.e. done within a parent
 // ----------------------------------------------------------------------------
-    : context(context),
+    : context(new Context(scope)),
       types(parent->types),
       unifications(parent->unifications),
       rcalls(parent->rcalls),
@@ -100,7 +100,7 @@ bool Types::TypeAnalysis(Scope *scope, Tree *program)
 // ----------------------------------------------------------------------------
 {
     // Once this is done, record all type information for the program
-    record(typecheck, "Type analysis for %t in context %t ", program, scope);
+    record(typecheck, "Type analysis for %t in scope %t ", program, scope);
     bool result = program->Do(this);
 
     // Dump debug information if approriate

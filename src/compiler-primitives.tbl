@@ -47,7 +47,7 @@ SPECIAL(TreeKind, 1,
 // ----------------------------------------------------------------------------
 //   Return the kind for the input tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p ptr = code.StructGEP(treeValue, TAG_INDEX, "tagp");
         Value_p tag = code.Load(ptr, "tag");
         Value_p mask = code.IntegerConstant(code.Type(tag), Tree::KINDMASK);
@@ -60,7 +60,7 @@ SPECIAL(TreeLeft, 1,
 // ----------------------------------------------------------------------------
 //   Return the left for an infix, prefix, or postfix trees
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p prefixValue = code.BitCast(treeValue, compiler.prefixTreePtrTy);
         Value_p ptr = code.StructGEP(prefixValue, LEFT_VALUE_INDEX, "leftp");
         Value_p result = code.Load(ptr, "left");
@@ -72,7 +72,7 @@ SPECIAL(TreeRight, 1,
 // ----------------------------------------------------------------------------
 //   Return the right for the infix, prefix or postfix trees
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p prefixValue = code.BitCast(treeValue, compiler.prefixTreePtrTy);
         Value_p ptr = code.StructGEP(prefixValue, RIGHT_VALUE_INDEX, "rightp");
         Value_p result = code.Load(ptr, "right");
@@ -84,7 +84,7 @@ SPECIAL(InfixName, 1,
 // ----------------------------------------------------------------------------
 //   Return the name for an infix tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p infixValue = code.BitCast(treeValue, compiler.infixTreePtrTy);
         Value_p ptr = code.StructGEP(infixValue, INFIX_NAME_INDEX, "namep");
         Value_p result = code.Load(ptr, "name");
@@ -96,7 +96,7 @@ SPECIAL(TextOpening, 1,
 // ----------------------------------------------------------------------------
 //   Return the text opening for a text tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p textValue = code.BitCast(treeValue, compiler.textTreePtrTy);
         Value_p ptr = code.StructGEP(textValue, TEXT_OPENING_INDEX, "openingp");
         Value_p result = code.Load(ptr, "opening");
@@ -108,7 +108,7 @@ SPECIAL(TextClosing, 1,
 // ----------------------------------------------------------------------------
 //   Return the text closing for a text tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.treePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p textValue = code.BitCast(treeValue, compiler.textTreePtrTy);
         Value_p ptr = code.StructGEP(textValue, TEXT_CLOSING_INDEX, "closingp");
         Value_p result = code.Load(ptr, "closing");
@@ -120,7 +120,7 @@ SPECIAL(BlockChild, 1,
 // ----------------------------------------------------------------------------
 //   Return the child for a block tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
         Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
         Value_p ptr = code.StructGEP(blockValue, BLOCK_CHILD_INDEX, "childp");
         Value_p result = code.Load(ptr, "child");
@@ -132,7 +132,7 @@ SPECIAL(BlockOpening, 1,
 // ----------------------------------------------------------------------------
 //   Return the opening text for a block tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
         Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
         Value_p ptr = code.StructGEP(blockValue, BLOCK_OPENING_INDEX, "bopenp");
         Value_p result = code.Load(ptr, "bopen");
@@ -144,7 +144,7 @@ SPECIAL(BlockClosing, 1,
 // ----------------------------------------------------------------------------
 //   Return the closing text for a block tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = unit.Autobox(args[0], compiler.textTreePtrTy);
+        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
         Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
         Value_p ptr = code.StructGEP(blockValue, BLOCK_CLOSING_INDEX, "bclosep");
         Value_p result = code.Load(ptr, "bclose");
@@ -164,14 +164,14 @@ EXTERNAL(strcmp,                integerTy,      charPtrTy, charPtrTy)
 EXTERNAL(xl_evaluate,           treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_same_shape,         booleanTy,      treePtrTy, treePtrTy)
 EXTERNAL(xl_infix_match_check,  treePtrTy,      scopePtrTy, treePtrTy, charPtrTy)
-EXTERNAL(xl_typecheck,          treePtrTy,      contextPtrTy, treePtrTy, treePtrTy)
-EXTERNAL(xl_form_error,         treePtrTy,      contextPtrTy, treePtrTy)
+EXTERNAL(xl_typecheck,          treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_form_error,         treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_stack_overflow,     treePtrTy,      treePtrTy)
-EXTERNAL(xl_new_integer,        integerTreePtrTy, integerTy)
-EXTERNAL(xl_new_real,           realTreePtrTy,  realTy)
-EXTERNAL(xl_new_character,      textTreePtrTy,  characterTy)
-EXTERNAL(xl_new_text,           textTreePtrTy,  textTy)
-EXTERNAL(xl_new_ctext,          textTreePtrTy,  charPtrTy)
+EXTERNAL(xl_new_integer,        integerTreePtrTy, ulongTy, integerTy)
+EXTERNAL(xl_new_real,           realTreePtrTy,  ulongTy, realTy)
+EXTERNAL(xl_new_character,      textTreePtrTy,  ulongTy, characterTy)
+EXTERNAL(xl_new_text,           textTreePtrTy,  ulongTy, textTy)
+EXTERNAL(xl_new_ctext,          textTreePtrTy,  ulongTy, charPtrTy)
 EXTERNAL(xl_new_xtext,          textTreePtrTy,  charPtrTy, integerTy, charPtrTy, charPtrTy)
 EXTERNAL(xl_new_block,          blockTreePtrTy, blockTreePtrTy,treePtrTy)
 EXTERNAL(xl_new_prefix,         prefixTreePtrTy, prefixTreePtrTy, treePtrTy, treePtrTy)
@@ -182,8 +182,16 @@ EXTERNAL(xl_fill_prefix,        prefixTreePtrTy, prefixTreePtrTy, treePtrTy, tre
 EXTERNAL(xl_fill_postfix,       postfixTreePtrTy, postfixTreePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_fill_infix,         infixTreePtrTy, infixTreePtrTy,treePtrTy,treePtrTy)
 EXTERNAL(xl_integer2real,       treePtrTy,      treePtrTy)
-EXTERNAL(xl_array_index,        treePtrTy,      contextPtrTy, treePtrTy, treePtrTy)
-EXTERNAL(xl_new_closure,        treePtrTy,      evalFnTy, treePtrTy, LLVM_INTTYPE(uint))
+EXTERNAL(xl_array_index,        treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_new_closure,        treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
+
+
+
+// ============================================================================
+//
+//    Types
+//
+// ============================================================================
 
 
 

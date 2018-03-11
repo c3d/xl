@@ -40,132 +40,70 @@
 // ****************************************************************************
 
 #include "compiler.h"
+#include "compiler-args.h"
 #include "compiler-parms.h"
+#include "llvm-crap.h"
 #include "types.h"
-
+#include <map>
 
 XL_BEGIN
 
-struct Types;
-struct CompilerPrimitive;
-struct RewriteCandidate;
-typedef GCPtr<Types> Types_p;
+typedef std::map<Tree *, Value_p>  value_map;
+typedef std::map<text, Function_p> compiled_map;
+typedef std::set<Type_p>           closure_set;
 
-typedef Tree *(*adapter_fn) (eval_fn callee,Context *ctx,Tree *src,Tree **args);
-typedef std::map<Tree *, Value_p>          value_map;
-typedef std::map<Tree *, Type_p>           mtype_map;
-typedef std::map<Type_p, Tree *>           unboxing_map;
-typedef std::map<uint, eval_fn>            closure_map;
-typedef std::map<uint, adapter_fn>         adapter_map;
-typedef std::set<Tree *>                   closure_set;
-typedef std::set<Tree *>                   data_set;
-typedef std::map<text,CompilerPrimitive *> primitive_map;
-
-
-struct CompilerUnit
+class CompilerUnit
 // ----------------------------------------------------------------------------
-//  The function we generate for a given rewrite
+//   A unit of compilation, roughly similar to a 'module' in LLVM
 // ----------------------------------------------------------------------------
 {
-    CompilerUnit(Compiler &compiler, Scope *, Tree *);
-    CompilerUnit(Compiler &compiler, Scope *, Tree *,
-                 Function_p function,
-                 const Types &types,
-                 const mtype_map &mtypes);
+    Compiler &          compiler;       // The compiler environment we use
+    JIT &               jit;            // The JIT compiler (LLVM CRAP)
+    Context_p           context;        // Context in which we compile
+    Tree_p              source;         // The source of the program to compile
+    Types               types;          // Type inferences for this unit
+    value_map           globals;        // Global definitions in the unit
+    compiled_map        compiled;       // Already compiled functions
+    closure_set         closures;       // Machine types representing closures
+
+    friend class CompilerFunction;
+
+public:
+    CompilerUnit(Compiler &compiler, Scope *scope, Tree *source);
     ~CompilerUnit();
 
 public:
-    Function_p  EvaluationFunctionPrototype();
-    bool        TypeAnalysis();
+    // Top-level compilation for the whole unit
+    eval_fn             Compile();
+    bool                TypeAnalysis();
 
+    // Global values (defined at the unit level)
+    Value_p             Global(Tree *tree);
+    void                Global(Tree *tree, Value_p value);
 
-    Function_p  ClosureFunction(Tree *expr, Types *types);
-    Function_p  RewriteFunction(RewriteCandidate &rc);
+    // Cache of already compiled functions
+    Function_p &        Compiled(Scope *, RewriteCandidate &, const Values &);
+    Function_p &        CompiledUnbox(Scope *, Type_p type);
+    Function_p &        CompiledClosure(Scope *, Tree *expr);
 
-    Function_p  InitializeFunction(FunctionType_p,
-                                   Parameters *parameters,
-                                   kstring label,
-                                   bool global,
-                                   bool isC);
-    bool        ExtractSignature(Parameters &parms,
-                                 RewriteCandidate &rc,
-                                 Signature &signature);
+    // Closure types management
+    StructType_p        ClosureType(Tree *form);
+    bool                IsClosureType(Type_p type);
+    void                AddClosureType(Type_p type);
 
-public:
-    Value_p     Compile(Tree *tree, bool forceEvaluation = false);
-    Value_p     Compile(RewriteCandidate &rc, Values &args);
-    Value_p     Data(Tree *form, uint &index);
-    Value_p     Unbox(Value_p arg, Tree *form, uint &index);
-    Function_p  UnboxFunction(Context_p ctx, Type_p type, Tree *form);
-    Value_p     Primitive(CompilerUnit &unit,
-                          text name, uint arity, Value_p *args);
-
-    Function_p  ExternFunction(kstring name, void *address,
-                                       Type_p retType, int parmCount, ...);
-    adapter_fn  ArrayToArgsAdapter(uint numtrees);
-
-    text        FunctionKey(Rewrite *rw, Values &values);
-    text        ClosureKey(Tree *expr, Context *context);
-
-
-    Value_p     Closure(Name *name, Tree *value);
-    Value_p     InvokeClosure(Value_p result, Value_p fnPtr);
-    Value_p     InvokeClosure(Value_p result);
-    Value_p     Return(Value_p value);
-    eval_fn     Finalize(bool createCode);
-
-    enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
-    Value_p     NeedStorage(Tree *tree);
-    Value_p     NeedClosure(Tree *tree);
-    bool        IsKnown(Tree *tree, uint which = knowAll);
-    Value_p     Known(Tree *tree, uint which = knowAll );
-    void        ImportClosureInfo(const CompilerUnit &other);
-
-    Value_p     ConstantInteger(Integer *what);
-    Value_p     ConstantReal(Real *what);
-    Value_p     ConstantText(Text *what);
-    Value_p     ConstantTree(Tree *what);
-
-    Value_p     CallFormError(Tree *what);
-
-    Type_p      ReturnType(Tree *form);
-    Type_p      StructureType(Signature &signature, Tree *source);
-    Type_p      ExpressionMachineType(Tree *expr, Type_p type);
-    Type_p      ExpressionMachineType(Tree *expr);
-    Type_p      MachineType(Tree *type);
-    void        InheritMachineTypes(CompilerUnit &unit);
-    Value_p     Autobox(Value_p value, Type_p requested);
-    Value_p     Global(Tree *tree);
-
-    static bool ValidCName(Tree *tree, text &label);
-
-public:
-    Compiler &  compiler;       // The compiler environment we use
-    JIT &       jit;            // The JIT compiler (LLVM API stabilizer)
-    Context     context;        // Context in which we compile
-    Tree_p      source;         // Source for what is being compiled
-    Function_p  function;       // The function we currently generate
-    Types       types;          // Type inferences for this unit
-    JITBlock    data;           // A basic block for local variables
-    JITBlock    code;           // A basic block for current code
-    JITBlock    exit;           // A basic block for shared exit
-    Value_p     returned;       // Returned value
-    value_map   values;         // Map tree -> LLVM value
-    value_map   storage;        // Map tree -> LLVM alloca space
-    mtype_map   mtypes;          // Map tree -> machine type
-    closure_set captured;       // List of trees captured
-
+private:
+    // Import all runtime functions
 #define UNARY(Name)
 #define BINARY(Name)
 #define CAST(Name)
 #define ALIAS(Name, Arity, Original)
 #define SPECIAL(Name, Arity, Code)
 #define EXTERNAL(Name, RetTy, ...)      Function_p  Name;
-#include "compiler-llvm.tbl"
+#include "compiler-primitives.tbl"
 };
 
 XL_END
 
-RECORDER_DECLARE(unit);
+RECORDER_DECLARE(compiler_unit);
 
 #endif // COMPILER_UNIT_H

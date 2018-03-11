@@ -67,10 +67,9 @@ XL_BEGIN
 //
 // ============================================================================
 
-class RewriteCalls;
+struct RewriteCalls;
 typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
-typedef std::set<Tree *>                 closure_set;
 
 extern Name_p tree_type;
 
@@ -89,7 +88,6 @@ class Types
     Context_p   context;        // Context in which we lookup things
     TreeMap     types;          // Map an expression to its type
     TreeMap     unifications;   // Map a type to its reference type
-    closure_set captured;       // Trees captured during analysis
     rcall_map   rcalls;         // Rewrites to call for a given tree
     Tree_p      left, right;    // Current left and right of unification
     bool        prototyping;    // Prototyping a function declaration

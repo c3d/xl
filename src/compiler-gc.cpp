@@ -164,6 +164,20 @@ void CompilerInfo::Returned(Tree *form, Type_p returned)
 }
 
 
+captured_set *CompilerInfo::Captured(Tree *form)
+// ----------------------------------------------------------------------------
+//   Return the captured list associated to the tree
+// ----------------------------------------------------------------------------
+{
+    captured_set *captured = nullptr;
+    CompilerInfo *info = Info(form);
+    if (info)
+        captured = &info->captured;
+    record(llvm_gc, "Captured for %t is %p info %p",form, captured, info);
+    return captured;
+}
+
+
 bool CompilerInfo::FreeResources(Tree *form)
 // ----------------------------------------------------------------------------
 //   Free the LLVM resources associated to the form, if any

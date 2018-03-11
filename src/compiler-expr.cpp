@@ -39,7 +39,7 @@
 
 #include "compiler-expr.h"
 #include "compiler-unit.h"
-#include "args.h"
+#include "compiler-args.h"
 #include "types.h"
 #include "save.h"
 #include "errors.h"
@@ -47,8 +47,7 @@
 #include "llvm-crap.h"
 
 
-RECORDER(expr, 128, "Expression reduction (compilation of calls)");
-
+RECORDER(compiler_expr, 128, "Expression reduction (compilation of calls)");
 
 XL_BEGIN
 
@@ -59,15 +58,15 @@ XL_BEGIN
 //
 // ============================================================================
 
-CompileExpression::CompileExpression(CompilerUnit &unit)
+CompilerExpression::CompilerExpression(CompilerFunction &function)
 // ----------------------------------------------------------------------------
 //   Constructor for a compiler expression
 // ----------------------------------------------------------------------------
-    : unit(unit), llvm(unit.compiler.llvm)
+    : function(function), unit(function.unit), jit(function.jit)
 {}
 
 
-llvm_value CompileExpression::DoInteger(Integer *what)
+Value_p CompilerExpression::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Compile an integer constant
 // ----------------------------------------------------------------------------
@@ -77,7 +76,7 @@ llvm_value CompileExpression::DoInteger(Integer *what)
 }
 
 
-llvm_value CompileExpression::DoReal(Real *what)
+Value_p CompilerExpression::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   Compile a real constant
 // ----------------------------------------------------------------------------
@@ -87,7 +86,7 @@ llvm_value CompileExpression::DoReal(Real *what)
 }
 
 
-llvm_value CompileExpression::DoText(Text *what)
+Value_p CompilerExpression::DoText(Text *what)
 // ----------------------------------------------------------------------------
 //   Compile a text constant
 // ----------------------------------------------------------------------------
@@ -96,12 +95,12 @@ llvm_value CompileExpression::DoText(Text *what)
     if (what->IsCharacter())
         return ConstantInt::get(compiler.characterTy,
                                 what->value.length() ? what->value[0] : 0);
-    llvm_value textConstant = compiler.TextConstant(unit.data, what->value);
+    Value_p textConstant = compiler.TextConstant(unit.data, what->value);
     return textConstant;
 }
 
 
-llvm_value CompileExpression::DoName(Name *what)
+Value_p CompilerExpression::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //   Compile a name
 // ----------------------------------------------------------------------------
@@ -113,7 +112,7 @@ llvm_value CompileExpression::DoName(Name *what)
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
     if (where == context->CurrentScope())
-        if (llvm_value result = unit.Known(from))
+        if (Value_p result = unit.Known(from))
             return result;
 
     // Check true and false values
@@ -123,20 +122,20 @@ llvm_value CompileExpression::DoName(Name *what)
         return ConstantInt::get(unit.compiler.booleanTy, 0);
 
     // Check if it is a global
-    if (llvm_value global = unit.Global(existing))
+    if (Value_p global = unit.Global(existing))
         return global;
-    if (llvm_value global = unit.Global(from))
+    if (Value_p global = unit.Global(from))
         return global;
 
     // If we are in a context building a closure, record dependency
-    if (unit.closureTy)
-        return unit.NeedClosure(from);
+    if (function.closureTy)
+        return function.NeedClosure(from);
 
     return DoCall(what);
 }
 
 
-llvm_value CompileExpression::DoInfix(Infix *infix)
+Value_p CompilerExpression::DoInfix(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Compile infix expressions
 // ----------------------------------------------------------------------------
@@ -144,8 +143,8 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
     // Sequences
     if (infix->name == "\n" || infix->name == ";")
     {
-        llvm_value left = ForceEvaluation(infix->left);
-        llvm_value right = ForceEvaluation(infix->right);
+        Value_p left = ForceEvaluation(infix->left);
+        Value_p right = ForceEvaluation(infix->right);
         if (right)
             return right;
         if (left)
@@ -169,7 +168,7 @@ llvm_value CompileExpression::DoInfix(Infix *infix)
 }
 
 
-llvm_value CompileExpression::DoPrefix(Prefix *what)
+Value_p CompilerExpression::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Compile prefix expressions
 // ----------------------------------------------------------------------------
@@ -197,13 +196,13 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
             }
 
             // Take args list for current function as input
-            llvm_values args;
+            Value_ps args;
             Function *function = unit.function;
             uint i, max = function->arg_size();
             Function::arg_iterator arg = function->arg_begin();
             for (i = 0; i < max; i++)
             {
-                llvm_value inputArg = &*arg++;
+                Value_p inputArg = &*arg++;
                 args.push_back(inputArg);
             }
 
@@ -213,7 +212,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
             Compiler *compiler = unit.compiler;
             text op = name->value;
             uint sz = args.size();
-            llvm_value *a = &args[0];
+            Value_p *a = &args[0];
             return compiler.Primitive(*unit, bld, op, sz, a);
         }
     }
@@ -221,7 +220,7 @@ llvm_value CompileExpression::DoPrefix(Prefix *what)
 }
 
 
-llvm_value CompileExpression::DoPostfix(Postfix *what)
+Value_p CompilerExpression::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Compile postfix expressions
 // ----------------------------------------------------------------------------
@@ -230,7 +229,7 @@ llvm_value CompileExpression::DoPostfix(Postfix *what)
 }
 
 
-llvm_value CompileExpression::DoBlock(Block *block)
+Value_p CompilerExpression::DoBlock(Block *block)
 // ----------------------------------------------------------------------------
 //   Compile blocks
 // ----------------------------------------------------------------------------
@@ -239,12 +238,12 @@ llvm_value CompileExpression::DoBlock(Block *block)
 }
 
 
-llvm_value CompileExpression::DoCall(Tree *call)
+Value_p CompilerExpression::DoCall(Tree *call)
 // ----------------------------------------------------------------------------
 //   Compile expressions into calls for the right expression
 // ----------------------------------------------------------------------------
 {
-    llvm_value result = NULL;
+    Value_p result = NULL;
 
     record(calls, "Call %t", call);
     rcall_map &rcalls = unit.types->rcalls;
@@ -281,7 +280,7 @@ llvm_value CompileExpression::DoCall(Tree *call)
     // More general case: we need to generate expression reduction
     llvm_block isDone = BasicBlock::Create(llvm, "done", function);
     llvm_builder code = unit.code;
-    llvm_value storage = unit.NeedStorage(call);
+    Value_p storage = unit.NeedStorage(call);
     llvm_type storageType = unit.ExpressionMachineType(call);
 
     for (i = 0; i < max; i++)
@@ -291,14 +290,14 @@ llvm_value CompileExpression::DoCall(Tree *call)
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
         Save<Types_p> saveTypes(unit.types, cand.types);
-        llvm_value condition = NULL;
+        Value_p condition = NULL;
 
         // Perform the tests to check if this candidate is valid
         RewriteConditions &conds = cand.conditions;
         RewriteConditions::iterator t;
         for (t = conds.begin(); t != conds.end(); t++)
         {
-            llvm_value compare = Compare((*t).value, (*t).test);
+            Value_p compare = Compare((*t).value, (*t).test);
             record(calls, "Condition test for %t candidate %u: %v",
                    call, i, compare);
             if (condition)
@@ -347,29 +346,29 @@ llvm_value CompileExpression::DoCall(Tree *call)
 }
 
 
-llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
+Value_p CompilerExpression::DoRewrite(RewriteCandidate &cand)
 // ----------------------------------------------------------------------------
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
 {
     Rewrite *rw = cand.rewrite;
-    llvm_value result = NULL;
+    Value_p result = NULL;
 
     record(calls, "Rewrite: %t", rw);
 
     // Evaluate parameters
-    llvm_values args;
+    Value_ps args;
     RewriteBindings &bnds = cand.bindings;
     RewriteBindings::iterator b;
     for (b = bnds.begin(); b != bnds.end(); b++)
     {
         Tree *tree = (*b).value;
-        if (llvm_value closure = (*b).Closure(unit))
+        if (Value_p closure = (*b).Closure(unit))
         {
             record(calls, "Rewrite %t arg %t closure %v", rw, tree, closure);
             args.push_back(closure);
         }
-        else if (llvm_value value = Value(tree))
+        else if (Value_p value = Value(tree))
         {
             args.push_back(value);
             llvm_type mtype = value->getType();
@@ -420,7 +419,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
             Compiler *compiler = unit.compiler;
             text op = name->value;
             uint sz = args.size();
-            llvm_value *a = &args[0];
+            Value_p *a = &args[0];
             result = compiler.Primitive(*unit, bld, op, sz, a);
             if (!result)
                 Ooops("Invalid primitive $1", builtin);
@@ -429,7 +428,7 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
     }
     else
     {
-        llvm_value function = unit.Compile(cand, args);
+        Value_p function = unit.Compile(cand, args);
         if (function)
             result = llvm.CreateCall(unit.code, function, args);
         record(calls, "Rewrite %t function %v call %v", rw, function, result);
@@ -439,12 +438,12 @@ llvm_value CompileExpression::DoRewrite(RewriteCandidate &cand)
 }
 
 
-llvm_value CompileExpression::Value(Tree *expr)
+Value_p CompilerExpression::Value(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Evaluate an expression once
 // ----------------------------------------------------------------------------
 {
-    llvm_value value = computed[expr];
+    Value_p value = computed[expr];
     if (!value)
     {
         value = expr->Do(this);
@@ -454,7 +453,7 @@ llvm_value CompileExpression::Value(Tree *expr)
 }
 
 
-llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
+Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
 // ----------------------------------------------------------------------------
 //   Perform a comparison between the two values and check if this matches
 // ----------------------------------------------------------------------------
@@ -467,8 +466,8 @@ llvm_value CompileExpression::Compare(Tree *valueTree, Tree *testTree)
             if (vt->value == tt->value)
                 return ConstantInt::get(c.booleanTy, 1);
 
-    llvm_value value = Value(valueTree);
-    llvm_value test = Value(testTree);
+    Value_p value = Value(valueTree);
+    Value_p test = Value(testTree);
     llvm_type valueType = value->getType();
     llvm_type testType = test->getType();
 

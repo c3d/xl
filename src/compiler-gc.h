@@ -40,8 +40,11 @@
 // ****************************************************************************
 
 #include "compiler.h"
+#include <set>
 
 XL_BEGIN
+
+typedef std::vector<Tree *> captured_set;
 
 struct CompilerInfo : Info
 // ----------------------------------------------------------------------------
@@ -58,6 +61,7 @@ private:
     Function_p                  function;
     StructType_p                closure; // Null if no capture
     Type_p                      returned;
+    captured_set                captured;
 
 public:
     static CompilerInfo *       Info(Tree *form, bool create = false);
@@ -67,6 +71,7 @@ public:
     static void                 Closure(Tree *form, StructType_p closure);
     static Type_p               Returned(Tree *form);
     static void                 Returned(Tree *form, Type_p closure);
+    static captured_set *       Captured(Tree *form);
 
     static bool                 FreeResources(Tree *);
 };

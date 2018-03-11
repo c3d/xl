@@ -72,6 +72,7 @@ struct SourceFile;
 // ============================================================================
 
 Tree *  xl_evaluate(Scope *c, Tree *tree);
+Tree *  xl_identity(Scope *c, Tree *tree);
 Tree *  xl_typecheck(Scope *c, Tree *type, Tree *value);
 Tree *  xl_call(Scope *c, text prefix, TreeList &args);
 Tree *  xl_assign(Scope *c, Tree *ref, Tree *value);
@@ -79,12 +80,12 @@ Tree *  xl_form_error(Scope *c, Tree *tree);
 Tree *  xl_stack_overflow(Tree *tree);
 bool    xl_same_shape(Tree *t1, Tree *t2);
 
-Integer *xl_new_integer(longlong value);
-Real    *xl_new_real(double value);
-Text    *xl_new_character(char value);
-Text    *xl_new_ctext(kstring value);
-Text    *xl_new_text(text value);
-Text    *xl_new_xtext(kstring value, longlong len, kstring open, kstring close);
+Integer *xl_new_integer(TreePosition pos, longlong value);
+Real    *xl_new_real(TreePosition pos, double value);
+Text    *xl_new_character(TreePosition pos, char value);
+Text    *xl_new_ctext(TreePosition pos, kstring value);
+Text    *xl_new_text(TreePosition pos, text value);
+Text    *xl_new_xtext(TreePosition pos, kstring value, longlong len, kstring open, kstring close);
 Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);

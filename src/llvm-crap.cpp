@@ -417,6 +417,24 @@ JIT::~JIT()
 }
 
 
+Type_p JIT::Type(Value_p value)
+// ----------------------------------------------------------------------------
+//   The type for the given value
+// ----------------------------------------------------------------------------
+{
+    return value->getType();
+}
+
+
+Type_p JIT::ReturnType(Function_p fn)
+// ----------------------------------------------------------------------------
+//   The return type for the function
+// ----------------------------------------------------------------------------
+{
+    return fn->getReturnType();
+}
+
+
 bool JIT::InUse(Function_p function)
 // ----------------------------------------------------------------------------
 //   Check if the function is currently in use
@@ -432,6 +450,26 @@ void JIT::EraseFromParent(Function_p function)
 // ----------------------------------------------------------------------------
 {
     return function->eraseFromParent();
+}
+
+
+bool JIT::VerifyFunction(Function_p function)
+// ----------------------------------------------------------------------------
+//   Verify the input function, return true in case of error
+// ----------------------------------------------------------------------------
+//   WARNING: This returns true if there is an error, following llvm
+{
+    return llvm::verifyFunction(*function, &llvm::errs());
+}
+
+
+void JIT::Print(kstring label, Value_p value)
+// ----------------------------------------------------------------------------
+//   Print the tree on the error output
+// ----------------------------------------------------------------------------
+{
+    llvm::errs() << label << ":\n";
+    value->print(llvm::errs());
 }
 
 
@@ -735,24 +773,6 @@ JITBlock::~JITBlock()
 }
 
 
-Type_p JITBlock::Type(Value_p value)
-// ----------------------------------------------------------------------------
-//   The type for the given value
-// ----------------------------------------------------------------------------
-{
-    return value->getType();
-}
-
-
-Type_p JITBlock::ReturnType(Function_p fn)
-// ----------------------------------------------------------------------------
-//   The return type for the function
-// ----------------------------------------------------------------------------
-{
-    return fn->getReturnType();
-}
-
-
 Constant_p JITBlock::IntegerConstant(Type_p ty, uint64_t value)
 // ----------------------------------------------------------------------------
 //   Build an unsigned integer constant
@@ -888,6 +908,15 @@ Value_p JITBlock::Call(Value_p callee, Values &args)
 }
 
 
+BasicBlock_p JITBlock::Block()
+// ----------------------------------------------------------------------------
+//   Return the basic block for this JIT block
+// ----------------------------------------------------------------------------
+{
+    return b.block;
+}
+
+
 Value_p JITBlock::Return(Value_p value)
 // ----------------------------------------------------------------------------
 //  Return the given value, or RetVoid if nullptr
@@ -910,6 +939,17 @@ Value_p JITBlock::Branch(JITBlock &to)
 }
 
 
+Value_p JITBlock::Branch(BasicBlock_p to)
+// ----------------------------------------------------------------------------
+//   Create an unconditinal branch
+// ----------------------------------------------------------------------------
+{
+    auto inst = b->CreateBr(to);
+    record(llvm_ir, "Block Branch(%v) is %v", to, inst);
+    return inst;
+}
+
+
 Value_p JITBlock::IfBranch(Value_p cond, JITBlock &t, JITBlock &f)
 // ----------------------------------------------------------------------------
 //  Create a conditional branch
@@ -917,8 +957,33 @@ Value_p JITBlock::IfBranch(Value_p cond, JITBlock &t, JITBlock &f)
 {
     auto inst = b->CreateCondBr(cond, t.b.block, f.b.block);
     record(llvm_ir, "Conditional branch(%v, %v, %v) = %v",
-           cond, t.b.block, f.b.block);
+           cond, t.b.block, f.b.block, inst);
     return inst;
+}
+
+
+Value_p JITBlock::IfBranch(Value_p cond, BasicBlock_p t, BasicBlock_p f)
+// ----------------------------------------------------------------------------
+//  Create a conditional branch
+// ----------------------------------------------------------------------------
+{
+    auto inst = b->CreateCondBr(cond, t, f);
+    record(llvm_ir, "Conditional lock branch(%v, %v, %v) = %v",
+           cond, t, f, inst);
+    return inst;
+}
+
+
+Value_p JITBlock::Select(Value_p cond, Value_p t, Value_p f)
+// ----------------------------------------------------------------------------
+//   Create a select
+// ----------------------------------------------------------------------------
+{
+    auto inst = b->CreateSelect(cond, t, f);
+    record(llvm_ir, "Conditional select(%v, %v, %v) = %v",
+           cond, t, f, inst);
+    return inst;
+
 }
 
 

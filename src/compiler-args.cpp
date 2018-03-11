@@ -82,7 +82,7 @@ llvm_value RewriteBinding::Closure(CompilerUnit *unit)
 // ----------------------------------------------------------------------------
 {
     if (!closure && IsDeferred())
-        closure = unit->Closure(name, value);
+        closure = unit->NamedClosure(name, value);
 
     return closure;
 }
