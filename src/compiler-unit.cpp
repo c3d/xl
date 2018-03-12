@@ -79,10 +79,9 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
       jit(compiler.jit),
       context(new Context(scope)),
       source(source),
-      types(scope),
+      types(new Types(scope)),
       globals(),
-      compiled(),
-      closures()
+      compiled()
 {
     // Local copy of the types for the macro below
     IntegerType_p  booleanTy        = compiler.booleanTy;
@@ -152,7 +151,7 @@ eval_fn CompilerUnit::Compile()
         return xl_identity;
     }
 
-    if (!types.TypeAnalysis(source))
+    if (!types->TypeAnalysis(source))
     {
         // Type analysis failed
         Ooops("Type analysis for $1 failed", source);
@@ -165,7 +164,7 @@ eval_fn CompilerUnit::Compile()
     Global(source, global);
 
     Value_p returned = function.Compile(source, true);
-    if (!returned || !function.Return(source, returned))
+    if (!returned)
     {
         Ooops("Compilation for $1 failed", source);
         record(compiler_unit, "Compilation for %t failed", source);
@@ -184,7 +183,7 @@ bool CompilerUnit::TypeAnalysis()
 //   Perform type analysis on the given tree
 // ----------------------------------------------------------------------------
 {
-    return types.TypeAnalysis(source);
+    return types->TypeAnalysis(source);
 }
 
 
@@ -277,7 +276,7 @@ bool CompilerUnit::IsClosureType(Type_p type)
 //    Check if this is a known closure type
 // ----------------------------------------------------------------------------
 {
-    return closures.count(type) > 0;
+    return clotypes.count(type) > 0;
 }
 
 
@@ -286,7 +285,7 @@ void CompilerUnit::AddClosureType(Type_p type)
 //   Mark the type as a closure type
 // ----------------------------------------------------------------------------
 {
-    closures.insert(type);
+    clotypes.insert(type);
 }
 
 XL_END

@@ -124,7 +124,7 @@ Opcode *Interpreter::OpcodeInfo(Infix *decl)
     // If so, lookup 'Foo' in the opcode table the first time to record it
     if (Prefix *prefix = right->AsPrefix())
         if (Name *name = prefix->left->AsName())
-            if (name->value == "opcode")
+            if (name->value == "builtin")
                 if (Name *opName = prefix->right->AsName())
                     if (Opcode *opcode = Opcode::Find(prefix, opName->value))
                         return SetInfo(decl, opcode->Clone());

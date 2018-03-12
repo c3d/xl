@@ -105,6 +105,7 @@ public:
     // Main entry point
     bool        TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
+    rcall_map & RewriteCalls();
 
 public:
     // Interface for Tree::Do() to annotate the tree
@@ -117,10 +118,10 @@ public:
     bool        DoInfix(Infix *what);
     bool        DoBlock(Block *what);
 
+public:
     // Common code for all constants (integer, real, text)
     bool        DoConstant(Tree *what);
 
-public:
     // Annotate expressions with type variables
     bool        AssignType(Tree *expr, Tree *type = NULL);
     bool        Rewrite(Infix *rewrite);
@@ -160,7 +161,7 @@ public:
     // Error messages
     bool        TypeError(Tree *t1, Tree *t2);
 
-private:
+public:
     GARBAGE_COLLECT(Types);
 };
 typedef GCPtr<Types> Types_p;

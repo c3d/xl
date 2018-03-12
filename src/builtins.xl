@@ -1,42 +1,42 @@
 // Binary operations on integers
-x:integer + y:integer           as integer is opcode Add
-x:integer - y:integer           as integer is opcode Sub
-x:integer * y:integer           as integer is opcode Mul
-x:integer / y:integer           as integer is opcode SDiv
-x:integer rem y:integer         as integer is opcode SRem
+x:integer + y:integer           as integer is builtin Add
+x:integer - y:integer           as integer is builtin Sub
+x:integer * y:integer           as integer is builtin Mul
+x:integer / y:integer           as integer is builtin SDiv
+x:integer rem y:integer         as integer is builtin SRem
 x:integer mod y:integer         as integer is C elfe_mod
-x:integer and y:integer         as integer is opcode And
-x:integer or y:integer          as integer is opcode Or
-x:integer xor y:integer         as integer is opcode Xor
-x:integer shl y:integer         as integer is opcode Shl
-x:integer ashr y:integer        as integer is opcode AShr
-x:integer lshr y:integer        as integer is opcode LShr
--x:integer                      as integer is opcode Neg
-not x:integer                   as integer is opcode Not
+x:integer and y:integer         as integer is builtin And
+x:integer or y:integer          as integer is builtin Or
+x:integer xor y:integer         as integer is builtin Xor
+x:integer shl y:integer         as integer is builtin Shl
+x:integer ashr y:integer        as integer is builtin AShr
+x:integer lshr y:integer        as integer is builtin LShr
+-x:integer                      as integer is builtin Neg
+not x:integer                   as integer is builtin Not
 
 // Binary operation on real numbers
-x:real + y:real                 as real is opcode FAdd
-x:real - y:real                 as real is opcode FSub
-x:real * y:real                 as real is opcode FMul
-x:real / y:real                 as real is opcode FDiv
+x:real + y:real                 as real is builtin FAdd
+x:real - y:real                 as real is builtin FSub
+x:real * y:real                 as real is builtin FMul
+x:real / y:real                 as real is builtin FDiv
 x:real rem y:real               as real is C fmod
 x:real mod y:real               as real is C elfe_modf
--x:real                         as real is opcode FNeg
+-x:real                         as real is builtin FNeg
 
 // Comparison operators
-X:integer = Y:integer           as boolean is opcode ICmpEQ
-X:integer <> Y:integer          as boolean is opcode ICmpNE
-X:integer > Y:integer           as boolean is opcode ICmpSGT
-X:integer >= Y:integer          as boolean is opcode ICmpSGE
-X:integer < Y:integer           as boolean is opcode ICmpSLT
-X:integer <= Y:integer          as boolean is opcode ICmpSLE
+X:integer = Y:integer           as boolean is builtin ICmpEQ
+X:integer <> Y:integer          as boolean is builtin ICmpNE
+X:integer > Y:integer           as boolean is builtin ICmpSGT
+X:integer >= Y:integer          as boolean is builtin ICmpSGE
+X:integer < Y:integer           as boolean is builtin ICmpSLT
+X:integer <= Y:integer          as boolean is builtin ICmpSLE
 
-X:real = Y:real                 as boolean is opcode FCmpOEQ
-X:real <> Y:real                as boolean is opcode FCmpONE
-X:real > Y:real                 as boolean is opcode FCmpOGT
-X:real >= Y:real                as boolean is opcode FCmpOGE
-X:real < Y:real                 as boolean is opcode FCmpOLT
-X:real <= Y:real                as boolean is opcode FCmpOLE
+X:real = Y:real                 as boolean is builtin FCmpOEQ
+X:real <> Y:real                as boolean is builtin FCmpONE
+X:real > Y:real                 as boolean is builtin FCmpOGT
+X:real >= Y:real                as boolean is builtin FCmpOGE
+X:real < Y:real                 as boolean is builtin FCmpOLT
+X:real <= Y:real                as boolean is builtin FCmpOLE
 
 X:text = Y:text                 as boolean is C elfe_text_eq
 X:text <> Y:text                as boolean is C elfe_text_ne
@@ -45,16 +45,16 @@ X:text >= Y:text                as boolean is C elfe_text_ge
 X:text < Y:text                 as boolean is C elfe_text_lt
 X:text <= Y:text                as boolean is C elfe_text_le
 
-X:boolean = Y:boolean           as boolean is opcode BCmpEQ
-X:boolean <> Y:boolean          as boolean is opcode BCmpNE
-X:boolean > Y:boolean           as boolean is opcode BCmpGT
-X:boolean >= Y:boolean          as boolean is opcode BCmpGE
-X:boolean < Y:boolean           as boolean is opcode BCmpLT
-X:boolean <= Y:boolean          as boolean is opcode BCmpLE
-X:boolean and Y:boolean         as boolean is opcode BAnd
-X:boolean or  Y:boolean         as boolean is opcode BOr
-X:boolean xor Y:boolean         as boolean is opcode BXor
-not X:boolean                   as boolean is opcode BNot
+X:boolean = Y:boolean           as boolean is builtin BCmpEQ
+X:boolean <> Y:boolean          as boolean is builtin BCmpNE
+X:boolean > Y:boolean           as boolean is builtin BCmpGT
+X:boolean >= Y:boolean          as boolean is builtin BCmpGE
+X:boolean < Y:boolean           as boolean is builtin BCmpLT
+X:boolean <= Y:boolean          as boolean is builtin BCmpLE
+X:boolean and Y:boolean         as boolean is builtin BAnd
+X:boolean or  Y:boolean         as boolean is builtin BOr
+X:boolean xor Y:boolean         as boolean is builtin BXor
+not X:boolean                   as boolean is builtin BNot
 
 // Basic math functions
 abs X:real                      as real is C fabs
@@ -93,19 +93,19 @@ write head, rest        is write head; write rest
 writeln a               is write a; writeln
 
 // Tree shape and attributes
-kind  X:tree            as integer      is opcode TreeKind
-left  X:prefix          as tree         is opcode TreeLeft
-right X:prefix          as tree         is opcode TreeRight
-left  X:postfix         as tree         is opcode TreeLeft
-right X:postfix         as tree         is opcode TreeRight
-left  X:infix           as tree         is opcode TreeLeft
-right X:infix           as tree         is opcode TreeRight
-name  X:infix           as text         is opcode InfixName
-opening X:text          as text         is opcode TextOpening
-closing X:text          as text         is opcode TextClosing
-child X:block           as tree         is opcode BlockChild
-opening X:block         as text         is opcode BlockOpening
-closing X:block         as text         is opcode BlockClosing
+kind  X:tree            as integer      is builtin TreeKind
+left  X:prefix          as tree         is builtin TreeLeft
+right X:prefix          as tree         is builtin TreeRight
+left  X:postfix         as tree         is builtin TreeLeft
+right X:postfix         as tree         is builtin TreeRight
+left  X:infix           as tree         is builtin TreeLeft
+right X:infix           as tree         is builtin TreeRight
+name  X:infix           as text         is builtin InfixName
+opening X:text          as text         is builtin TextOpening
+closing X:text          as text         is builtin TextClosing
+child X:block           as tree         is builtin BlockChild
+opening X:block         as text         is builtin BlockOpening
+closing X:block         as text         is builtin BlockClosing
 
 // Min and max functions
 min x, y is if x < min y then x else min y

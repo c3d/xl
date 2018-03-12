@@ -47,7 +47,7 @@
 XL_BEGIN
 
 class Types;
-class CompilerUnit;
+class CompilerFunction;
 typedef GCPtr<Types> Types_p;
 RECORDER_DECLARE(calltypes);
 
@@ -62,7 +62,7 @@ struct RewriteBinding
     RewriteBinding(Name *name, Tree *value)
         : name(name), value(value), closure(NULL) {}
     bool       IsDeferred();
-    Value_p    Closure(CompilerUnit *unit);
+    Value_p    Closure(CompilerFunction &function);
     Name_p     name;
     Tree_p     value;
     Value_p    closure;

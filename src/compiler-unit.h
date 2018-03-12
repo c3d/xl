@@ -61,12 +61,13 @@ class CompilerUnit
     JIT &               jit;            // The JIT compiler (LLVM CRAP)
     Context_p           context;        // Context in which we compile
     Tree_p              source;         // The source of the program to compile
-    Types               types;          // Type inferences for this unit
+    Types_p             types;          // Type inferences for this unit
     value_map           globals;        // Global definitions in the unit
     compiled_map        compiled;       // Already compiled functions
-    closure_set         closures;       // Machine types representing closures
+    closure_set         clotypes;       // Closure types
 
-    friend class CompilerFunction;
+    friend class        CompilerFunction;
+    friend class        CompilerExpression;
 
 public:
     CompilerUnit(Compiler &compiler, Scope *scope, Tree *source);

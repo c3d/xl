@@ -76,13 +76,13 @@ bool RewriteBinding::IsDeferred()
 }
 
 
-llvm_value RewriteBinding::Closure(CompilerUnit *unit)
+llvm_value RewriteBinding::Closure(CompilerFunction &function)
 // ----------------------------------------------------------------------------
 //   Return closure for this value if we need one
 // ----------------------------------------------------------------------------
 {
     if (!closure && IsDeferred())
-        closure = unit->NamedClosure(name, value);
+        closure = function.NamedClosure(name, value);
 
     return closure;
 }
@@ -139,7 +139,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
                 builtin = true;
         if (Prefix *prefix = value->AsPrefix())
             if (Name *pfname = prefix->left->AsName())
-                if (pfname->value == "opcode" || pfname->value == "C")
+                if (pfname->value == "builtin" || pfname->value == "C")
                     builtin = true;
 
         if (!builtin)

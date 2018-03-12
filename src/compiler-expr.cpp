@@ -62,8 +62,30 @@ CompilerExpression::CompilerExpression(CompilerFunction &function)
 // ----------------------------------------------------------------------------
 //   Constructor for a compiler expression
 // ----------------------------------------------------------------------------
-    : function(function), unit(function.unit), jit(function.jit)
+    : function(function),
+      unit(function.unit),
+      compiler(function.compiler),
+      code(function.code)
 {}
+
+
+
+Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
+// ----------------------------------------------------------------------------
+//   For top-level expressions, make sure we evaluate closures
+// ----------------------------------------------------------------------------
+{
+    Value_p result = expr->Do(this);
+    if (result && force)
+    {
+        Type_p resultTy = JIT::Type(result);
+        if (unit.IsClosureType(resultTy))
+            result = function.InvokeClosure(result);
+    }
+    return result;
+}
+
+
 
 
 Value_p CompilerExpression::DoInteger(Integer *what)
@@ -71,8 +93,7 @@ Value_p CompilerExpression::DoInteger(Integer *what)
 //   Compile an integer constant
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = unit.compiler;
-    return ConstantInt::get(compiler.integerTy, what->value);
+    return code.IntegerConstant(compiler.integerTy, what->value);
 }
 
 
@@ -81,8 +102,7 @@ Value_p CompilerExpression::DoReal(Real *what)
 //   Compile a real constant
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = unit.compiler;
-    return ConstantFP::get(compiler.realTy, what->value);
+    return code.FloatConstant(compiler.realTy, what->value);
 }
 
 
@@ -91,12 +111,12 @@ Value_p CompilerExpression::DoText(Text *what)
 //   Compile a text constant
 // ----------------------------------------------------------------------------
 {
-    Compiler *compiler = unit.compiler;
     if (what->IsCharacter())
-        return ConstantInt::get(compiler.characterTy,
-                                what->value.length() ? what->value[0] : 0);
-    Value_p textConstant = compiler.TextConstant(unit.data, what->value);
-    return textConstant;
+    {
+        char c = what->value.length() ? what->value[0] : 0;
+        return code.IntegerConstant(compiler.characterTy, c);
+    }
+    return code.TextConstant(what->value);
 }
 
 
@@ -107,19 +127,19 @@ Value_p CompilerExpression::DoName(Name *what)
 {
     Scope_p    where;
     Rewrite_p  rewrite;
-    Context   *context  = unit.context;
+    Context   *context  = function.context;
     Tree      *existing = context->Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
     if (where == context->CurrentScope())
-        if (Value_p result = unit.Known(from))
+        if (Value_p result = function.Known(from))
             return result;
 
     // Check true and false values
     if (existing == xl_true)
-        return ConstantInt::get(unit.compiler.booleanTy, 1);
+        return code.BooleanConstant(true);
     if (existing == xl_false)
-        return ConstantInt::get(unit.compiler.booleanTy, 0);
+        return code.BooleanConstant(false);
 
     // Check if it is a global
     if (Value_p global = unit.Global(existing))
@@ -143,13 +163,13 @@ Value_p CompilerExpression::DoInfix(Infix *infix)
     // Sequences
     if (infix->name == "\n" || infix->name == ";")
     {
-        Value_p left = ForceEvaluation(infix->left);
-        Value_p right = ForceEvaluation(infix->right);
+        Value_p left = Evaluate(infix->left, true);
+        Value_p right = Evaluate(infix->right, true);
         if (right)
             return right;
         if (left)
             return left;
-        return NULL;
+        return function.ConstantTree(xl_false);
     }
 
     // Type casts - REVISIT: may need to do some actual conversion
@@ -161,7 +181,7 @@ Value_p CompilerExpression::DoInfix(Infix *infix)
     // Declarations: it's too early to define a function just yet,
     // because we don't have the actual argument types.
     if (infix->name == "is")
-        return NULL;
+        return function.ConstantTree(infix);
 
     // General case: expression
     return DoCall(infix);
@@ -176,30 +196,24 @@ Value_p CompilerExpression::DoPrefix(Prefix *what)
     if (Name *name = what->left->AsName())
     {
         if (name->value == "data" || name->value == "extern")
-            return NULL;
+            return function.ConstantTree(what);
 
-        if (name->value == "opcode")
+        if (name->value == "builtin")
         {
             // This is a builtin, find if we write to code or data
-            llvm_builder bld = unit.code;
             Tree *builtin = what->right;
-            if (Prefix *prefix = builtin->AsPrefix())
+            Name *name = builtin->AsName();
+            if (!name)
             {
-                if (Name *name = prefix->left->AsName())
-                {
-                    if (name->value == "data")
-                    {
-                        bld = unit.data;
-                        builtin = prefix->right;
-                    }
-                }
+                Ooops("Malformed primitive $1", name);
+                return function.ConstantTree(builtin);
             }
 
             // Take args list for current function as input
-            Value_ps args;
-            Function *function = unit.function;
-            uint i, max = function->arg_size();
-            Function::arg_iterator arg = function->arg_begin();
+            Values args;
+            Function_p fn = function.Function();
+            uint i, max = fn->arg_size();
+            Function::arg_iterator arg = fn->arg_begin();
             for (i = 0; i < max; i++)
             {
                 Value_p inputArg = &*arg++;
@@ -207,13 +221,10 @@ Value_p CompilerExpression::DoPrefix(Prefix *what)
             }
 
             // Call the primitive (effectively creating a wrapper for it)
-            Name *name = builtin->AsName();
-            assert(name || !"Malformed primitive");
-            Compiler *compiler = unit.compiler;
             text op = name->value;
             uint sz = args.size();
             Value_p *a = &args[0];
-            return compiler.Primitive(*unit, bld, op, sz, a);
+            return function.Primitive(what, op, sz, a);
         }
     }
     return DoCall(what);
@@ -243,21 +254,19 @@ Value_p CompilerExpression::DoCall(Tree *call)
 //   Compile expressions into calls for the right expression
 // ----------------------------------------------------------------------------
 {
-    Value_p result = NULL;
+    Value_p result = nullptr;
 
-    record(calls, "Call %t", call);
-    rcall_map &rcalls = unit.types->rcalls;
+    record(compiler_expr, "Call %t", call);
+    rcall_map &rcalls = function.types->RewriteCalls();
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
-    Function *function = unit.function;
-    LLVMContext &llvm = unit.llvm;
     RewriteCalls *rc = (*found).second;
     RewriteCandidates &calls = rc->candidates;
 
     // Optimize the frequent case where we have a single call candidate
     uint i, max = calls.size();
-    record(calls, "Call %t has %u candidates", call, max);
+    record(compiler_expr, "Call %t has %u candidates", call, max);
     if (max == 1)
     {
         // We now evaluate in that rewrite's type system
@@ -273,15 +282,15 @@ Value_p CompilerExpression::DoCall(Tree *call)
     else if (max == 0)
     {
         // If it passed type check and there is no candidate, return tree as is
-        result = unit.ConstantTree(call);
+        result = function.ConstantTree(call);
         return result;
     }
 
     // More general case: we need to generate expression reduction
-    llvm_block isDone = BasicBlock::Create(llvm, "done", function);
-    llvm_builder code = unit.code;
-    Value_p storage = unit.NeedStorage(call);
-    llvm_type storageType = unit.ExpressionMachineType(call);
+    JITBlock &code = function.code;
+    JITBlock isDone(code, "done");
+    Value_p storage = function.NeedStorage(call);
+    Type_p storageType = function.MachineType(call);
 
     for (i = 0; i < max; i++)
     {
@@ -290,57 +299,56 @@ Value_p CompilerExpression::DoCall(Tree *call)
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
         Save<Types_p> saveTypes(unit.types, cand.types);
-        Value_p condition = NULL;
+        Value_p condition = nullptr;
 
         // Perform the tests to check if this candidate is valid
         RewriteConditions &conds = cand.conditions;
-        RewriteConditions::iterator t;
-        for (t = conds.begin(); t != conds.end(); t++)
+        for (RewriteCondition &t : conds)
         {
-            Value_p compare = Compare((*t).value, (*t).test);
-            record(calls, "Condition test for %t candidate %u: %v",
+            Value_p compare = Compare(t.value, t.test);
+            record(compiler_expr, "Condition test for %t candidate %u: %v",
                    call, i, compare);
             if (condition)
-                condition = code->CreateAnd(condition, compare);
+                condition = code.And(condition, compare);
             else
                 condition = compare;
         }
 
         if (condition)
         {
-            llvm_block isBad = BasicBlock::Create(llvm, "bad", function);
-            llvm_block isGood = BasicBlock::Create(llvm, "good", function);
-            code->CreateCondBr(condition, isGood, isBad);
-            code->SetInsertPoint(isGood);
+            JITBlock isBad(code, "bad");
+            JITBlock isGood(code, "good");
+            code.IfBranch(condition, isGood, isBad);
+            code.SwitchTo(isGood);
             value_map saveComputed = computed;
             result = DoRewrite(cand);
             computed = saveComputed;
-            result = unit.Autobox(result, storageType);
-            record(calls, "Call %t candidate %u is conditional: %v",
+            result = function.Autobox(call, result, storageType);
+            record(compiler_expr, "Call %t candidate %u is conditional: %v",
                    call, i, result);
-            code->CreateStore(result, storage);
-            code->CreateBr(isDone);
-            code->SetInsertPoint(isBad);
+            code.Store(result, storage);
+            code.Branch(isDone);
+            code.SwitchTo(isBad);
         }
         else
         {
             // If this particular call was unconditional, we are done
             result = DoRewrite(cand);
-            result = unit.Autobox(result, storageType);
-            code->CreateStore(result, storage);
-            code->CreateBr(isDone);
-            code->SetInsertPoint(isDone);
-            result = code->CreateLoad(storage);
+            result = function.Autobox(call, result, storageType);
+            code.Store(result, storage);
+            code.Branch(isDone);
+            code.SwitchTo(isDone);
+            result = code.Load(storage);
             return result;
         }
     }
 
     // The final call to xl_form_error if nothing worked
-    unit.CallFormError(call);
-    code->CreateBr(isDone);
-    code->SetInsertPoint(isDone);
-    result = code->CreateLoad(storage);
-    record(calls, "No match for call %t, inserted form error: %v",
+    function.CallFormError(call);
+    code.Branch(isDone);
+    code.SwitchTo(isDone);
+    result = code.Load(storage);
+    record(compiler_expr, "No match for call %t, inserted form error: %v",
            call, result);
     return result;
 }
@@ -352,86 +360,76 @@ Value_p CompilerExpression::DoRewrite(RewriteCandidate &cand)
 // ----------------------------------------------------------------------------
 {
     Rewrite *rw = cand.rewrite;
-    Value_p result = NULL;
+    Value_p result = nullptr;
 
-    record(calls, "Rewrite: %t", rw);
+    record(compiler_expr, "Rewrite: %t", rw);
 
     // Evaluate parameters
-    Value_ps args;
+    Values args;
     RewriteBindings &bnds = cand.bindings;
-    RewriteBindings::iterator b;
-    for (b = bnds.begin(); b != bnds.end(); b++)
+    for (RewriteBinding &b : bnds)
     {
-        Tree *tree = (*b).value;
-        if (Value_p closure = (*b).Closure(unit))
+        Tree *tree = b.value;
+        if (Value_p closure = b.Closure(function))
         {
-            record(calls, "Rewrite %t arg %t closure %v", rw, tree, closure);
+            record(compiler_expr, "Rewrite %t arg %t closure %v",
+                   rw, tree, closure);
             args.push_back(closure);
         }
         else if (Value_p value = Value(tree))
         {
             args.push_back(value);
-            llvm_type mtype = value->getType();
-            if (unit.compiler.IsClosureType(mtype))
-                (*b).closure = value;
-            record(calls, "Rewrite %t arg %t value %v", rw, tree, value);
+            Type_p mtype = JIT::Type(value);
+            if (unit.IsClosureType(mtype))
+                b.closure = value;
+            record(compiler_expr, "Rewrite %t arg %t value %v",
+                   rw, tree, value);
         }
         else
         {
-            record(calls, "Rewrite %t arg %t not found", rw, tree);
+            record(compiler_expr, "Rewrite %t arg %t not found", rw, tree);
         }
     }
 
     // Check if this is an LLVM builtin
-    Tree *builtin = NULL;
+    Tree *builtin = nullptr;
     if (Tree *value = rw->right)
         if (Prefix *prefix = value->AsPrefix())
             if (Name *name = prefix->left->AsName())
-                if (name->value == "opcode")
+                if (name->value == "builtin")
                     builtin = prefix->right;
 
     if (builtin)
     {
-        record(calls, "Rewrite %t is builtin %t", rw, builtin);
-        llvm_builder bld = unit.code;
-        if (Prefix *prefix = builtin->AsPrefix())
-        {
-            if (Name *name = prefix->left->AsName())
-            {
-                if (name->value == "data")
-                {
-                    bld = unit.data;
-                    builtin = prefix->right;
-                }
-            }
-        }
-
+        record(compiler_expr, "Rewrite %t is builtin %t", rw, builtin);
         Name *name = builtin->AsName();
         if (!name)
         {
             Ooops("Malformed primitive $1", builtin);
-            result = unit.CallFormError(builtin);
-            record(calls, "Rewrite %t is malformed builtin %t: form error %v",
+            result = function.CallFormError(builtin);
+            record(compiler_expr,
+                   "Rewrite %t is malformed builtin %t: form error %v",
                    rw, builtin, result);
         }
         else
         {
-            Compiler *compiler = unit.compiler;
             text op = name->value;
             uint sz = args.size();
             Value_p *a = &args[0];
-            result = compiler.Primitive(*unit, bld, op, sz, a);
+            result = function.Primitive(builtin, op, sz, a);
             if (!result)
                 Ooops("Invalid primitive $1", builtin);
-            record(calls, "Rewrite %t is builtin %t: %v", rw, builtin, result);
+            record(compiler_expr, "Rewrite %t is builtin %t: %v",
+                   rw, builtin, result);
         }
     }
     else
     {
-        Value_p function = unit.Compile(cand, args);
-        if (function)
-            result = llvm.CreateCall(unit.code, function, args);
-        record(calls, "Rewrite %t function %v call %v", rw, function, result);
+        Value_p fn = function.Compile(cand, args);
+        if (fn)
+            result = code.Call(fn, args);
+        record(compiler_expr, "Rewrite %t function %v call %v",
+               rw, fn, result);
     }
 
     return result;
@@ -446,7 +444,7 @@ Value_p CompilerExpression::Value(Tree *expr)
     Value_p value = computed[expr];
     if (!value)
     {
-        value = expr->Do(this);
+        value = Evaluate(expr);
         computed[expr] = value;
     }
     return value;
@@ -458,157 +456,153 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
 //   Perform a comparison between the two values and check if this matches
 // ----------------------------------------------------------------------------
 {
-    Unit &u = *unit;
-    Compiler &c = *u.compiler;
+    JITBlock &code = function.code;
 
     if (Name *vt = valueTree->AsName())
         if (Name *tt = testTree->AsName())
             if (vt->value == tt->value)
-                return ConstantInt::get(c.booleanTy, 1);
+                return code.BooleanConstant(true);
 
     Value_p value = Value(valueTree);
     Value_p test = Value(testTree);
-    llvm_type valueType = value->getType();
-    llvm_type testType = test->getType();
-
-    llvm_builder code = u.code;
+    Type_p valueType = JIT::Type(value);
+    Type_p testType = JIT::Type(test);
 
     // Comparison of boolean values
-    if (testType == c.booleanTy)
+    if (testType == compiler.booleanTy)
     {
-        if (valueType == c.treePtrTy || valueType == c.nameTreePtrTy)
+        if (valueType == compiler.treePtrTy ||
+            valueType == compiler.nameTreePtrTy)
         {
-            value = u.Autobox(value, c.booleanTy);
-            valueType = value->getType();
+            value = function.Autobox(valueTree, value, compiler.booleanTy);
+            valueType = JIT::Type(value);
         }
-        if (valueType != c.booleanTy)
-            return ConstantInt::get(c.booleanTy, 0);
-        return code->CreateICmpEQ(test, value);
+        if (valueType != compiler.booleanTy)
+            return code.BooleanConstant(false);
+        return code.ICmpEQ(test, value);
     }
 
     // Comparison of character values
-    if (testType == c.characterTy)
+    if (testType == compiler.characterTy)
     {
-        if (valueType == c.textTreePtrTy)
+        if (valueType == compiler.textTreePtrTy)
         {
-            value = u.Autobox(value, testType);
-            valueType = value->getType();
+            value = function.Autobox(valueTree, value, testType);
+            valueType = JIT::Type(value);
         }
-        if (valueType != c.characterTy)
-            return ConstantInt::get(c.booleanTy, 0);
-        return code->CreateICmpEQ(test, value);
+        if (valueType != compiler.characterTy)
+            return code.BooleanConstant(false);
+        return code.ICmpEQ(test, value);
     }
 
     // Comparison of text constants
-    if (testType == c.textTy)
+    if (testType == compiler.textTy)
     {
-        test = u.Autobox(test, c.charPtrTy);
+        test = function.Autobox(testTree, test, compiler.charPtrTy);
         testType = test->getType();
     }
-    if (testType == c.charPtrTy)
+    if (testType == compiler.charPtrTy)
     {
-        if (valueType == c.textTreePtrTy)
+        if (valueType == compiler.textTreePtrTy)
         {
-            value = u.Autobox(value, testType);
-            valueType = value->getType();
+            value = function.Autobox(valueTree, value, testType);
+            valueType = JIT::Type(value);
         }
-        if (valueType != c.charPtrTy)
-            return ConstantInt::get(c.booleanTy, 0);
-        value = llvm.CreateCall(code, c.strcmp_fn, test, value);
-        test = ConstantInt::get(value->getType(), 0);
-        value = code->CreateICmpEQ(value, test);
+        if (valueType != compiler.charPtrTy)
+            return code.BooleanConstant(false);
+        value = code.Call(unit.strcmp, test, value);
+        test = code.IntegerConstant(JIT::Type(value), 0);
+        value = code.ICmpEQ(value, test);
         return value;
     }
 
     // Comparison of integer values
     if (testType->isIntegerTy())
     {
-        if (valueType == c.integerTreePtrTy)
+        if (valueType == compiler.integerTreePtrTy)
         {
-            value = u.Autobox(value, c.integerTy);
-            valueType = value->getType();
+            value = function.Autobox(valueTree, value, compiler.integerTy);
+            valueType = JIT::Type(value);
         }
         if (!valueType->isIntegerTy())
-            return ConstantInt::get(c.booleanTy, 0);
-        if (valueType != c.integerTy)
-            value = code->CreateSExt(value, c.integerTy);
-        if (testType != c.integerTy)
-            test = code->CreateSExt(test, c.integerTy);
-        return code->CreateICmpEQ(test, value);
+            return code.BooleanConstant(false);
+        if (valueType != testType)
+            value = code.BitCast(value, testType);
+        return code.ICmpEQ(test, value);
     }
 
     // Comparison of floating-point values
     if (testType->isFloatingPointTy())
     {
-        if (valueType == c.realTreePtrTy)
+        if (valueType == compiler.realTreePtrTy)
         {
-            value = u.Autobox(value, c.realTy);
-            valueType = value->getType();
+            value = function.Autobox(valueTree, value, compiler.realTy);
+            valueType = JIT::Type(value);
         }
         if (!valueType->isFloatingPointTy())
-            return ConstantInt::get(c.booleanTy, 0);
+            return code.BooleanConstant(false);
         if (valueType != testType)
         {
-            if (valueType != c.realTy)
+            if (valueType != compiler.realTy)
             {
-                value = code->CreateFPExt(value, c.realTy);
-                valueType = value->getType();
+                value = code.FPExt(value, compiler.realTy);
+                valueType = JIT::Type(value);
             }
-            if (testType != c.realTy)
+            if (testType != compiler.realTy)
             {
-                test = code->CreateFPExt(test, c.realTy);
+                test = code.FPExt(test, compiler.realTy);
                 testType = test->getType();
             }
             if (valueType != testType)
-                return ConstantInt::get(c.booleanTy, 0);
+                return code.BooleanConstant(false);
         }
-        return code->CreateFCmpOEQ(test, value);
+        return code.FCmpOEQ(test, value);
     }
 
     // Test our special types
-    if (testType == c.treePtrTy         ||
-        testType == c.integerTreePtrTy  ||
-        testType == c.realTreePtrTy     ||
-        testType == c.textTreePtrTy     ||
-        testType == c.nameTreePtrTy     ||
-        testType == c.blockTreePtrTy    ||
-        testType == c.infixTreePtrTy    ||
-        testType == c.prefixTreePtrTy   ||
-        testType == c.postfixTreePtrTy)
+    if (testType == compiler.treePtrTy         ||
+        testType == compiler.integerTreePtrTy  ||
+        testType == compiler.realTreePtrTy     ||
+        testType == compiler.textTreePtrTy     ||
+        testType == compiler.nameTreePtrTy     ||
+        testType == compiler.blockTreePtrTy    ||
+        testType == compiler.infixTreePtrTy    ||
+        testType == compiler.prefixTreePtrTy   ||
+        testType == compiler.postfixTreePtrTy)
     {
-        if (testType != c.treePtrTy)
+        if (testType != compiler.treePtrTy)
         {
-            test = code->CreateBitCast(test, c.treePtrTy);
+            test = code.BitCast(test, compiler.treePtrTy);
             testType = test->getType();
         }
 
         // Convert value to a Tree * if possible
         if (valueType->isIntegerTy() ||
             valueType->isFloatingPointTy() ||
-            valueType == c.charPtrTy ||
-            valueType == c.textTy ||
-            valueType == c.integerTreePtrTy  ||
-            valueType == c.realTreePtrTy     ||
-            valueType == c.textTreePtrTy     ||
-            valueType == c.nameTreePtrTy     ||
-            valueType == c.blockTreePtrTy    ||
-            valueType == c.infixTreePtrTy    ||
-            valueType == c.prefixTreePtrTy   ||
-            valueType == c.postfixTreePtrTy)
+            valueType == compiler.charPtrTy ||
+            valueType == compiler.textTy ||
+            valueType == compiler.integerTreePtrTy  ||
+            valueType == compiler.realTreePtrTy     ||
+            valueType == compiler.textTreePtrTy     ||
+            valueType == compiler.nameTreePtrTy     ||
+            valueType == compiler.blockTreePtrTy    ||
+            valueType == compiler.infixTreePtrTy    ||
+            valueType == compiler.prefixTreePtrTy   ||
+            valueType == compiler.postfixTreePtrTy)
         {
-            value = u.Autobox(value, c.treePtrTy);
-            valueType = value->getType();
+            value = function.Autobox(valueTree, value, compiler.treePtrTy);
+            valueType = JIT::Type(value);
         }
 
         if (testType != valueType)
-            return ConstantInt::get(c.booleanTy, 0);
+            return code.BooleanConstant(false);
 
         // Call runtime function to perform tree comparison
-        return llvm.CreateCall(code, c.xl_same_shape, value, test);
+        return code.Call(unit.xl_same_shape, value, test);
     }
 
     // Other comparisons fail for now
-    return ConstantInt::get(c.booleanTy, 0);
+    return code.BooleanConstant(false);
 }
 
 XL_END

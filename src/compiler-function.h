@@ -71,22 +71,24 @@ class CompilerFunction
     Compiler &          compiler;   // The compiler environment we use
     JIT &               jit;        // The JIT compiler (LLVM API stabilizer)
     Context_p           context;    // Context for this function
+    Types_p             types;      // Types for this function
     Tree_p              form;       // Interface for this function
     Tree_p              source;     // Source code for this function
-    StructType_p        closureTy;  // A structure type for closure data
-    FunctionType_p      functionTy; // The function type
-    Function_p          function;   // The LLVM function we are building
-    JITBlock            data;       // A basic block for local variables
-    JITBlock            code;       // A basic block for current code
-    JITBlock            exit;       // A basic block for shared exit
-    BasicBlock_p        entry;      // The entry point for the function code
-    Value_p             returned;   // Returned value
     value_map           values;     // Tree -> LLVM value
     value_map           storage;    // Tree -> LLVM storage (alloca)
     value_map           closures;   // Tree -> LLVM storage (alloca)
     mtype_map           mtypes;     // Tree -> machine type
     box_map             boxed;      // Tree type -> machine type
     unbox_map           unboxed;    // Machine type -> Tree type
+    StructType_p        closureTy;  // A structure type for closure data
+    Function_p          function;   // The LLVM function we are building
+    JITBlock            data;       // A basic block for local variables
+    JITBlock            code;       // A basic block for current code
+    JITBlock            exit;       // A basic block for shared exit
+    BasicBlock_p        entry;      // The entry point for the function code
+    Value_p             returned;   // Returned value
+
+    friend class CompilerExpression;
 
 public:
     CompilerFunction(CompilerUnit &unit, Scope *, Tree *, FunctionType_p type);
@@ -102,11 +104,12 @@ public:
     eval_fn             Finalize(bool createCode);
 
 private:
-    StructType_p        ClosureType(Tree *form);
+    // Function interface creation
     Function_p          OptimizedFunction(text n, Type_p r, const Parameters &);
     void                InitializeArgs();
     void                InitializeArgs(const Parameters &parms);
-    bool                IsClosureType(Type_p type);
+
+    // Closure management
     Value_p             NamedClosure(Name *name, Tree *value);
     Value_p             InvokeClosure(Value_p result, Value_p fnPtr);
     Value_p             InvokeClosure(Value_p result);
@@ -125,7 +128,7 @@ private:
     static bool         IsValidCName(Tree *tree, text &label);
 
 private:
-    text                FunctionKey(RewriteCandidate &rc, const Values &args);
+    // Compilation of rewrites and data
     Value_p             Compile(RewriteCandidate &rc, const Values &args);
     Value_p             Data(Tree *form, unsigned &index);
     Value_p             Autobox(Tree *source, Value_p value, Type_p requested);
@@ -133,7 +136,7 @@ private:
     Value_p             Unbox(Value_p arg, Tree *form, uint &index);
     Value_p             Primitive(Tree *, text name, uint arity, Value_p *args);
 
-
+    // Storage management
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
     Value_p             NeedStorage(Tree *tree);
     Value_p             NeedClosure(Tree *tree);
@@ -141,11 +144,13 @@ private:
     Value_p             Known(Tree *tree, uint which = knowAll );
     void                ImportClosureInfo(const CompilerUnit &other);
 
+    // Creating constants
     Value_p             ConstantInteger(Integer *what);
     Value_p             ConstantReal(Real *what);
     Value_p             ConstantText(Text *what);
     Value_p             ConstantTree(Tree *what);
 
+    // Error management
     Value_p             CallFormError(Tree *what);
 
 private:

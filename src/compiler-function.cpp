@@ -65,22 +65,16 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
       compiler(unit.compiler),
       jit(unit.jit),
       context(new Context(scope)),
+      types(new Types(scope)),
       form(nullptr),
       source(source),
       closureTy(nullptr),
-      functionTy(type),
       function(jit.Function(type, "xl.eval")),
       data(jit, function, "data"),
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function)),
-      values(),
-      storage(),
-      closures(),
-      mtypes(),
-      boxed(),
-      unboxed()
+      returned(data.AllocateReturnValue(function))
 {
     InitializeArgs();
     record(compiler_function, "Created eval %p with scope %t type %v",
@@ -105,6 +99,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       compiler(unit.compiler),
       jit(unit.jit),
       context(new Context(scope)),
+      types(new Types(scope, caller.types)),
       form(form),
       source(body),
       closureTy(unit.ClosureType(form)),
@@ -113,13 +108,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function)),
-      values(),
-      storage(),
-      closures(),
-      mtypes(),
-      boxed(),
-      unboxed()
+      returned(data.AllocateReturnValue(function))
 {
     InitializeArgs(parms);
 
@@ -145,6 +134,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       compiler(unit.compiler),
       jit(unit.jit),
       context(new Context(scope)),
+      types(new Types(scope, caller.types)),
       form(form),
       source(form),
       closureTy(nullptr),
@@ -153,13 +143,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function)),
-      values(),
-      storage(),
-      closures(),
-      mtypes(),
-      boxed(),
-      unboxed()
+      returned(data.AllocateReturnValue(function))
 {
     // Inherit information about machine types from the caller
     mtypes = caller.mtypes;
@@ -189,19 +173,13 @@ Function_p CompilerFunction::Function()
 }
 
 
-Function_p CompilerFunction::Compile(Tree *tree, bool forceEvaluation)
+Function_p CompilerFunction::Compile(Tree *tree, bool force)
 // ----------------------------------------------------------------------------
 //    Compile a given tree in given function and return the associated value
 // ----------------------------------------------------------------------------
 {
     CompilerExpression expr(*this);
-    Value_p result = tree->Do(expr);
-    if (forceEvaluation && tree->Kind() == NAME)
-    {
-        Type_p resultTy = JIT::Type(result);
-        if (unit.IsClosureType(resultTy))
-            result = InvokeClosure(result);
-    }
+    Value_p result = expr.Evaluate(tree, force);
     Return(tree, result);
     return function;
 }
@@ -424,7 +402,7 @@ Value_p CompilerFunction::Data(Tree *form, unsigned &index)
     {
         // For all these cases, simply compute the corresponding value
         CompilerExpression expr(*this);
-        Value_p result = form->Do(expr);
+        Value_p result = expr.Evaluate(form);
         return result;
     }
 
@@ -781,7 +759,7 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
         Signature sig { closurePtrTy };
 
         // Figure out the return type and function type
-        Tree *rtype = unit.types.Type(expr);
+        Tree *rtype = types->Type(expr);
         Type_p retTy = MachineType(rtype);
         CompilerFunction closure(*this, scope, expr, "xl.closure", retTy, sig);
         function = closure.Function();
@@ -991,9 +969,8 @@ Type_p CompilerFunction::MachineType(Tree *tree)
         return type;
 
     // Find the base type for the expression
-    Types &types = unit.types;
-    Tree *typeTree = types.Type(tree);
-    Tree *base = types.Base(typeTree);
+    Tree *typeTree = types->Type(tree);
+    Tree *base = types->Base(typeTree);
     type = mtypes[base];
     if (type)
     {
@@ -1041,7 +1018,7 @@ void CompilerFunction::AddBoxedType(Tree *treeType, Type_p machineType)
 ///  The tree type could be a named type, e.g. [integer], or data, e.g. [X,Y]
 //   The machine type could be integerTy or StructType({integerTy, realTy})
 {
-    Tree *baseType = unit.types.Base(treeType);
+    Tree *baseType = types->Base(treeType);
     boxed[baseType] = machineType;
     unboxed[machineType] = baseType;
 }
@@ -1052,7 +1029,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 //   Return the machine "boxed" type for a given tree type
 // ----------------------------------------------------------------------------
 {
-    Tree *baseType = unit.types.Base(type);
+    Tree *baseType = types->Base(type);
     return boxed[baseType];
 }
 
@@ -1193,7 +1170,7 @@ Type_p CompilerFunction::ReturnType(Tree *form)
 // ----------------------------------------------------------------------------
 {
     // Type inference gives us the return type for this form
-    Tree *type = unit.types.Type(form);
+    Tree *type = types->Type(form);
     Type_p mtype = MachineType(type);
     return mtype;
 }

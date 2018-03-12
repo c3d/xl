@@ -142,6 +142,14 @@ Tree *Types::Type(Tree *expr)
 }
 
 
+rcall_map & Types::RewriteCalls()
+// ----------------------------------------------------------------------------
+//   Returns the list of rewrite calls for this
+// ----------------------------------------------------------------------------
+{
+    return rcalls;
+}
+
 
 bool Types::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------

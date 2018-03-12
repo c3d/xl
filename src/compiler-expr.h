@@ -45,18 +45,26 @@
 XL_BEGIN
 
 struct RewriteCandidate;
+class  JITBlock;
 
-struct CompilerExpression
+class CompilerExpression
 // ----------------------------------------------------------------------------
 //   Collect parameters on the left of a rewrite
 // ----------------------------------------------------------------------------
 {
+    CompilerFunction &  function;       // Current compilation function
+    CompilerUnit &      unit;           // Compilation unit
+    Compiler &          compiler;       // The compiler being used
+    JITBlock &          code;           // Code block used to generate stuff
+    value_map           computed;       // Values we already computed
+
+public:
     typedef Value_p value_type;
+    CompilerExpression(CompilerFunction &function);
 
 public:
-    CompilerExpression(CompilerFunction &functin);
+    Value_p             Evaluate(Tree *tree, bool force = false);
 
-public:
     Value_p             DoInteger(Integer *what);
     Value_p             DoReal(Real *what);
     Value_p             DoText(Text *what);
@@ -70,13 +78,6 @@ public:
     Value_p             DoRewrite(RewriteCandidate &candidate);
     Value_p             Value(Tree *expr);
     Value_p             Compare(Tree *value, Tree *test);
-
-public:
-    Compiler &          compiler;       // Compiler
-    CompilerFunction &  function;       // Current compilation function
-    CompilerUnit &      unit;           // Current compilation unit
-    JIT &               jit;            // JIT compiler being used
-    value_map           computed;       // Values we already computed
 };
 
 XL_END

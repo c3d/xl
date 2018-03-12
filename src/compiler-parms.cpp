@@ -45,7 +45,7 @@
 
 XL_BEGIN
 
-bool ParameterList::EnterName(Name *what, llvm_type declaredType)
+bool ParameterList::EnterName(Name *what, Type_p declaredType)
 // ----------------------------------------------------------------------------
 //   Enter a name in the parameter list
 // ----------------------------------------------------------------------------
@@ -58,34 +58,30 @@ bool ParameterList::EnterName(Name *what, llvm_type declaredType)
     }
 
     // Check the LLVM type for the given form
-    llvm_type type = NULL;
+    Type_p type = nullptr;
 
-    if (unit->types)
+    type = function->MachineType(what);
+
+    // Check if the name already exists in parameter list, e.g. in 'A+A'
+    text name = what->value;
+    for (Parameter &p : parameters)
     {
-        type = unit->ExpressionMachineType(what);
-
-        // Check if the name already exists in parameter list, e.g. in 'A+A'
-        text name = what->value;
-        Parameters::iterator it;
-        for (it = parameters.begin(); it != parameters.end(); it++)
+        if (p.name->value == name)
         {
-            if ((*it).name->value == name)
-            {
-                llvm_type nameType = unit->ExpressionMachineType((*it).name);
-                if (type == nameType)
-                    return true;
+            Type_p nameType = function->MachineType(p.name);
+            if (type == nameType)
+                return true;
 
-                Ooops("Conflicting machine types for $1", what);
-                return false;
-            }
+            Ooops("Conflicting machine types for $1", what);
+            return false;
         }
-
-        // Check if the name already exists in context, e.g. 'false'
-        if (!declaredType)
-            if (Context *parent = unit->context->Parent())
-                if (parent->Bound(what))
-                    return true;
     }
+
+    // Check if the name already exists in context, e.g. 'false'
+    if (!declaredType)
+        if (Context *parent = function->context->Parent())
+            if (parent->Bound(what))
+                return true;
 
     // If there is a declared parameter type, use it
     if (declaredType)
@@ -161,17 +157,13 @@ bool ParameterList::DoInfix(Infix *what)
         // Check the variable name, e.g. K in example above
         if (Name *varName = what->left->AsName())
         {
-            llvm_type mtype = NULL;
-            if (unit->types)
+            // Enter a name in the parameter list with adequate machine type
+            Type_p ntype = function->MachineType(varName);
+            Type_p mtype = function->MachineType(what->right);
+            if (!unit->compiler->CanCastMachineType(mtype, ntype))
             {
-                // Enter a name in the parameter list with adequate machine type
-                llvm_type ntype = unit->ExpressionMachineType(varName);
-                mtype = unit->MachineType(what->right);
-                if (!unit->compiler->CanCastMachineType(mtype, ntype))
-                {
-                    Ooops("Conflicting machine type for declaration $1", what);
-                    return false;
-                }
+                Ooops("Conflicting machine type for declaration $1", what);
+                return false;
             }
             return EnterName(varName, mtype);
         }
@@ -221,7 +213,7 @@ bool ParameterList::DoPrefix(Prefix *what)
     Infix *defined_infix = defined->AsInfix();
     text defined_name = name;
     if (defined_infix)
-        defined = NULL;
+        defined = nullptr;
 
     if (!what->left->Do(this))
         return false;
