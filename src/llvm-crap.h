@@ -225,6 +225,7 @@ public:
     static Type_p       Type(Value_p value)      { return JIT::Type(value); }
     static Type_p       ReturnType(Function_p f) { return JIT::ReturnType(f); }
 
+    Constant_p          BooleanConstant(bool value);
     Constant_p          IntegerConstant(Type_p ty, uint64_t value);
     Constant_p          IntegerConstant(Type_p ty, int64_t value);
     Constant_p          IntegerConstant(Type_p ty, unsigned value);

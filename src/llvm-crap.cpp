@@ -773,6 +773,18 @@ JITBlock::~JITBlock()
 }
 
 
+Constant_p JITBlock::BooleanConstant(bool value)
+// ----------------------------------------------------------------------------
+//   Build a boolean integer constant
+// ----------------------------------------------------------------------------
+{
+    Type_p ty = llvm::Type::getInt1Ty(p.context);
+    Constant_p result = ConstantInt::get(ty, value);
+    record(llvm_constants, "Unsigned constant %v for %llu", result, value);
+    return result;
+}
+
+
 Constant_p JITBlock::IntegerConstant(Type_p ty, uint64_t value)
 // ----------------------------------------------------------------------------
 //   Build an unsigned integer constant
