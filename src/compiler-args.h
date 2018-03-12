@@ -91,11 +91,9 @@ struct RewriteKind
 //   For [foo X,Y], the input must be an infix, so when called "ambiguously"
 //   as [foo Z], this will check that [Z] hss an infix kind.
 {
-    RewriteKind(Tree *value, kind test, Type_p mtype)
-        : value(value), test(test), machineType(mtype) {}
+    RewriteKind(Tree *value, kind test): value(value), test(test) {}
     Tree_p      value;
     kind        test;
-    Type_p     machineType;
 };
 typedef std::vector<RewriteKind> RewriteKinds;
 
@@ -111,11 +109,10 @@ struct RewriteCandidate
     {
         conditions.push_back(RewriteCondition(value, test));
     }
-    void KindCondition(Tree *value, kind k, Type_p mtype)
+    void KindCondition(Tree *value, kind k)
     {
-        record(calltypes, "Check if %t has type %d machine type %v",
-               value, (int) k, mtype);
-         kinds.push_back(RewriteKind(value, k, mtype));
+        record(calltypes, "Check if %t has kind %u", value, (unsigned) k);
+        kinds.push_back(RewriteKind(value, k));
     }
     bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
 

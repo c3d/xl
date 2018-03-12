@@ -60,7 +60,7 @@ CompilerInfo::CompilerInfo(Tree *form, Function_p function)
 // ----------------------------------------------------------------------------
     : form(form), function(function)
 {
-    record(llvm_gc, "Create Info %p for form %t function %v",
+    record(compiler_gc, "Create Info %p for form %t function %v",
            this, form, function);
 }
 
@@ -70,7 +70,7 @@ CompilerInfo::~CompilerInfo()
 //   Notice when we lose a compiler info
 // ----------------------------------------------------------------------------
 {
-    record(llvm_gc, "Delete Info %p for form %t function %v",
+    record(compiler_gc, "Delete Info %p for form %t function %v",
            this, form, function);
 }
 
@@ -86,7 +86,7 @@ CompilerInfo *CompilerInfo::Info(Tree *form, bool create)
         result = new CompilerInfo(form);
         form->SetInfo<CompilerInfo>(result);
     }
-    record(llvm_gc, "Info for %t is %p%s",
+    record(compiler_gc, "Info for %t is %p%s",
            form, result, create ? " (creating)" : "");
     return result;
 }
@@ -99,7 +99,7 @@ Function_p CompilerInfo::Function(Tree *form)
 {
     CompilerInfo *info = Info(form);
     Function_p function = info ? info->function : nullptr;
-    record(llvm_gc, "Info for %t is %p function %v", form, info, function);
+    record(compiler_gc, "Info for %t is %p function %v", form, info, function);
     return function;
 }
 
@@ -110,7 +110,7 @@ void CompilerInfo::Function(Tree *form, Function_p function)
 // ----------------------------------------------------------------------------
 {
     CompilerInfo *info = Info(form, true);
-    record(llvm_gc, "Setting function %v for %t in info %p",
+    record(compiler_gc, "Setting function %v for %t in info %p",
            function, form, info);
     info->function = function;
 }
@@ -123,7 +123,7 @@ StructType_p CompilerInfo::Closure(Tree *form)
 {
     CompilerInfo *info = Info(form);
     StructType_p closure = info ? info->closure : nullptr;
-    record(llvm_gc, "Info for %t is %p closure %v", form, info, closure);
+    record(compiler_gc, "Info for %t is %p closure %v", form, info, closure);
     return closure;
 }
 
@@ -134,7 +134,7 @@ void CompilerInfo::Closure(Tree *form, StructType_p closure)
 // ----------------------------------------------------------------------------
 {
     CompilerInfo *info = Info(form, true);
-    record(llvm_gc, "Setting closure %v for %t in info %p",
+    record(compiler_gc, "Setting closure %v for %t in info %p",
            closure, form, info);
     info->closure = closure;
 }
@@ -147,7 +147,7 @@ Type_p CompilerInfo::Returned(Tree *form)
 {
     CompilerInfo *info = Info(form);
     Type_p returned = info ? info->returned : nullptr;
-    record(llvm_gc, "Info for %t is %p returned %v", form, info, returned);
+    record(compiler_gc, "Info for %t is %p returned %v", form, info, returned);
     return returned;
 }
 
@@ -158,7 +158,7 @@ void CompilerInfo::Returned(Tree *form, Type_p returned)
 // ----------------------------------------------------------------------------
 {
     CompilerInfo *info = Info(form, true);
-    record(llvm_gc, "Setting returned %v for %t in info %p",
+    record(compiler_gc, "Setting returned %v for %t in info %p",
            returned, form, info);
     info->returned = returned;
 }
@@ -173,7 +173,7 @@ captured_set *CompilerInfo::Captured(Tree *form)
     CompilerInfo *info = Info(form);
     if (info)
         captured = &info->captured;
-    record(llvm_gc, "Captured for %t is %p info %p",form, captured, info);
+    record(compiler_gc, "Captured for %t is %p info %p",form, captured, info);
     return captured;
 }
 
@@ -192,7 +192,7 @@ bool CompilerInfo::FreeResources(Tree *form)
 
     if (!info)
     {
-        record(llvm_gc, "FreeResources %t no info", form);
+        record(compiler_gc, "FreeResources %t no info", form);
         return true;
     }
 
@@ -220,3 +220,5 @@ bool CompilerInfo::FreeResources(Tree *form)
 }
 
 XL_END
+
+RECORDER(compiler_gc, 64, "Compiler-related garbage collected info");

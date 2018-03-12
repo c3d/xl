@@ -257,7 +257,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
     Value_p result = nullptr;
 
     record(compiler_expr, "Call %t", call);
-    rcall_map &rcalls = function.types->RewriteCalls();
+    rcall_map &rcalls = function.types->TypesRewriteCalls();
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
@@ -301,9 +301,52 @@ Value_p CompilerExpression::DoCall(Tree *call)
         Save<Types_p> saveTypes(unit.types, cand.types);
         Value_p condition = nullptr;
 
+        // Perform tree-kind tests to check if this candidate is valid
+        for (RewriteKind &k : cand.kinds)
+        {
+            Value_p value = Evaluate(k.value);
+            Type_p type = JIT::Type(value);
+
+            if (type == compiler.treePtrTy        ||
+                type == compiler.integerTreePtrTy ||
+                type == compiler.realTreePtrTy    ||
+                type == compiler.textTreePtrTy    ||
+                type == compiler.nameTreePtrTy    ||
+                type == compiler.blockTreePtrTy   ||
+                type == compiler.prefixTreePtrTy  ||
+                type == compiler.postfixTreePtrTy ||
+                type == compiler.infixTreePtrTy)
+            {
+                // Unboxed value, check the dynamic kind
+                Value_p tagPtr = code.StructGEP(value, TAG_INDEX, "tagp");
+                Value_p tag = code.Load(tagPtr, "tag");
+                Type_p  tagType = JIT::Type(tag);
+                Value_p mask = code.IntegerConstant(tagType, Tree::KINDMASK);
+                Value_p kindValue = code.And(tag, mask, "kind");
+                Value_p kindCheck = code.IntegerConstant(tagType, k.test);
+                Value_p compare = code.ICmpEQ(kindValue, kindCheck);
+                record(compiler_expr, "Kind test for %t candidate %u: %v",
+                       call, i, compare);
+
+                if (condition)
+                    condition = code.And(condition, compare);
+                else
+                    condition = compare;
+            }
+            else
+            {
+                // If we have boxed values, it was a static check
+                if (!((type->isIntegerTy()        && k.test == INTEGER)   ||
+                      (type->isFloatingPointTy()  && k.test == REAL)      ||
+                      (type == compiler.charPtrTy && k.test == TEXT)))
+                {
+                    Ooops("Invalid type combination in kind for $1", call);
+                }
+            }
+        } // Kinds
+
         // Perform the tests to check if this candidate is valid
-        RewriteConditions &conds = cand.conditions;
-        for (RewriteCondition &t : conds)
+        for (RewriteCondition &t : cand.conditions)
         {
             Value_p compare = Compare(t.value, t.test);
             record(compiler_expr, "Condition test for %t candidate %u: %v",

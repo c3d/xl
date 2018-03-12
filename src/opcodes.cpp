@@ -55,7 +55,7 @@
 XL_BEGIN
 
 // List of registered opcodes
-Opcode::Opcodes *Opcode::opcodes = NULL;
+Opcode::Opcodes *Opcode::opcodes = nullptr;
 
 
 void Opcode::Enter(Context *context)
@@ -82,8 +82,8 @@ Opcode * Opcode::Find(Tree *self, text name)
         if (opcode->OpID() == name)
             return opcode;
     }
-    Ooops("Invalid opcode name in $1", self);
-    return NULL;
+    Ooops("Invalid builtin name in $1", self);
+    return nullptr;
 }
 
 

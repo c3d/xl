@@ -161,5 +161,8 @@ prebuild: 				\
 	recorder/recorder_ring.h
 .PRECIOUS: $(MODULE_HEADERS) $(MODULE_SOURCES)
 
+llvm:
+	(cd .. && make llvm)
+
 $(BUILD)rules.mk recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive

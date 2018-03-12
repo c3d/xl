@@ -40,6 +40,7 @@
 #include "compiler-parms.h"
 #include "compiler-args.h"
 #include "compiler-unit.h"
+#include "compiler-function.h"
 #include "errors.h"
 #include "llvm-crap.h"
 
@@ -60,7 +61,7 @@ bool ParameterList::EnterName(Name *what, Type_p declaredType)
     // Check the LLVM type for the given form
     Type_p type = nullptr;
 
-    type = function->MachineType(what);
+    type = function.MachineType(what);
 
     // Check if the name already exists in parameter list, e.g. in 'A+A'
     text name = what->value;
@@ -68,7 +69,7 @@ bool ParameterList::EnterName(Name *what, Type_p declaredType)
     {
         if (p.name->value == name)
         {
-            Type_p nameType = function->MachineType(p.name);
+            Type_p nameType = function.MachineType(p.name);
             if (type == nameType)
                 return true;
 
@@ -79,9 +80,10 @@ bool ParameterList::EnterName(Name *what, Type_p declaredType)
 
     // Check if the name already exists in context, e.g. 'false'
     if (!declaredType)
-        if (Context *parent = function->context->Parent())
-            if (parent->Bound(what))
-                return true;
+        if (Context *context = function.FunctionContext())
+            if (Context *parent = context->Parent())
+                if (parent->Bound(what))
+                    return true;
 
     // If there is a declared parameter type, use it
     if (declaredType)
@@ -158,11 +160,12 @@ bool ParameterList::DoInfix(Infix *what)
         if (Name *varName = what->left->AsName())
         {
             // Enter a name in the parameter list with adequate machine type
-            Type_p ntype = function->MachineType(varName);
-            Type_p mtype = function->MachineType(what->right);
-            if (!unit->compiler->CanCastMachineType(mtype, ntype))
+            Type_p ntype = function.MachineType(varName);
+            Type_p mtype = function.MachineType(what->right);
+            if (ntype != mtype)
             {
-                Ooops("Conflicting machine type for declaration $1", what);
+                Ooops("Inconsistent machine types between $1 and $2",
+                      what->left, what->right);
                 return false;
             }
             return EnterName(varName, mtype);
@@ -177,8 +180,7 @@ bool ParameterList::DoInfix(Infix *what)
             }
 
             // Remember the specified returned value
-            if (unit->types)
-                returned = unit->ExpressionMachineType(what);
+            returned = function.MachineType(what);
 
             // Keep going with the left-hand side
             return what->left->Do(this);

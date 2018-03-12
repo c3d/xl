@@ -22,5 +22,11 @@ all:
 check:
 	cd tests; ./alltests
 
+llvm:	.ALWAYS
+	mkdir -p llvm/build;						\
+	cd llvm/build;							\
+	cmake -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_RTTI=true ..;	\
+	cmake --build . --target install
+
 %:
 	cd src; $(MAKE) $@

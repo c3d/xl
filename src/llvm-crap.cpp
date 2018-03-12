@@ -49,9 +49,13 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+
+#include "llvm/LinkAllIR.h"
+#include "llvm/LinkAllPasses.h"
 
 #include <algorithm>
 #include <cassert>
@@ -113,6 +117,40 @@ typedef std::unique_ptr<JITCompileCallbackManager>   CompileCallbacks_u;
 typedef std::unique_ptr<IndirectStubsManager>        IndirectStubs_u;
 
 
+struct JITInitializer
+// ----------------------------------------------------------------------------
+//    A structure only used to pre-initialize LLVM
+// ----------------------------------------------------------------------------
+{
+    JITInitializer(int argc, char **argv);
+};
+
+
+JITInitializer::JITInitializer(int argc, char **argv)
+// ----------------------------------------------------------------------------
+//   Initialize the stuff in LLVM that must be initialized before target
+// ----------------------------------------------------------------------------
+{
+    // Parse LLVM options
+    std::vector<char *> llvmArgv;
+    llvmArgv.push_back(argv[0]);
+    for (int arg = 1; arg < argc; arg++)
+        if (strncmp(argv[arg], "-llvm", 5) == 0)
+            llvmArgv.push_back(argv[arg] + 5);
+    llvm::cl::ParseCommandLineOptions(llvmArgv.size(), &llvmArgv[0]);
+    llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
+
+    // I get a crash on Linux if I don't do that. Unclear why.
+    LLVMInitializeAllTargetMCs();
+
+    // Initialize native target (new features)
+    InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+    InitializeNativeTargetDisassembler();
+}
+
+
 class JITPrivate
 // ----------------------------------------------------------------------------
 //   JIT private data (from Kaleidoscope)
@@ -122,6 +160,7 @@ class JITPrivate
     friend class        JITBlock;
     friend class        JITBlockPrivate;
 
+    JITInitializer      initializer;
     unsigned            optLevel;
     LLVMContext         context;
     SymbolStringPool    strings;
@@ -140,7 +179,7 @@ class JITPrivate
     Function_p          function;
 
 public:
-    JITPrivate();
+    JITPrivate(int argc, char **argv);
     ~JITPrivate();
 
 private:
@@ -153,6 +192,7 @@ private:
     JITSymbol           Symbol(text name);
     JITTargetAddress    Address(text name);
 };
+
 
 
 static inline uint64_t globalSymbolAddress(const text &name)
@@ -182,7 +222,7 @@ static inline IndirectStubs_u createStubs(TargetMachine &target)
 }
 
 
-JITPrivate::JITPrivate()
+JITPrivate::JITPrivate(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Constructor for JIT private helper
 // ----------------------------------------------------------------------------
@@ -191,7 +231,8 @@ JITPrivate::JITPrivate()
 // (This code is apparently churning quite a bit, and not for simplicity)
 // If constructors take lambdas, this is functional code, right?
 // Yuck. Barf.
-    : optLevel(0),
+    : initializer(argc, argv),
+      optLevel(0),
       context(),
       strings(),
       session(strings),
@@ -390,19 +431,11 @@ JIT::JIT(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Create the JIT
 // ----------------------------------------------------------------------------
-    : p(*new JITPrivate())
+    : p(*new JITPrivate(argc, argv))
 {
     recorder_type_fn jit_output_format =
         recorder_render<llvm::raw_string_ostream, llvm::Value *>;
     recorder_configure_type('v', jit_output_format);
-
-    std::vector<char *> llvmArgv;
-    llvmArgv.push_back(argv[0]);
-    for (int arg = 1; arg < argc; arg++)
-        if (strncmp(argv[arg], "-llvm", 5) == 0)
-            llvmArgv.push_back(argv[arg] + 5);
-    llvm::cl::ParseCommandLineOptions(llvmArgv.size(), &llvmArgv[0]);
-    llvm::sys::PrintStackTraceOnErrorSignal(argv[0]);
 }
 
 
@@ -1067,6 +1100,8 @@ Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
 
 #include "llvm-crap.tbl"
 
+} // namespace XL
+
 
 
 // ============================================================================
@@ -1080,7 +1115,7 @@ void debugv(XL::Value_p v)
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
 {
-    v->print(errs());
+    v->print(llvm::errs());
 }
 
 
@@ -1089,7 +1124,5 @@ void debugv(XL::Type_p t)
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
 {
-    t->print(errs());
+    t->print(llvm::errs());
 }
-
-} // namespace XL

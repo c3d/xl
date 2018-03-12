@@ -43,7 +43,7 @@
 #include "errors.h"
 #include "options.h"
 #include "save.h"
-#include "args.h"
+#include "compiler-args.h"
 #include "cdecls.h"
 #include "renderer.h"
 #include "basics.h"
@@ -84,7 +84,9 @@ Types::Types(Scope *scope, Types *parent)
       rcalls(parent->rcalls),
       left(parent->left), right(parent->right),
       prototyping(false), matching(false)
-{}
+{
+    context->CreateScope();
+}
 
 
 Types::~Types()
@@ -94,17 +96,17 @@ Types::~Types()
 {}
 
 
-bool Types::TypeAnalysis(Scope *scope, Tree *program)
+bool Types::TypeAnalysis(Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program
 // ----------------------------------------------------------------------------
 {
     // Once this is done, record all type information for the program
-    record(typecheck, "Type analysis for %t in scope %t ", program, scope);
+    record(types, "Type analysis for %t", program);
     bool result = program->Do(this);
 
     // Dump debug information if approriate
-    if (RECORDER_TRACE(typecheck))
+    if (RECORDER_TRACE(types))
     {
         std::cout << "TYPES:\n"; debugt(this);
         std::cout << "UNIFICATIONS:\n"; debugu(this);
@@ -142,12 +144,30 @@ Tree *Types::Type(Tree *expr)
 }
 
 
-rcall_map & Types::RewriteCalls()
+rcall_map & Types::TypesRewriteCalls()
 // ----------------------------------------------------------------------------
 //   Returns the list of rewrite calls for this
 // ----------------------------------------------------------------------------
 {
     return rcalls;
+}
+
+
+Context *Types::TypesContext()
+// ----------------------------------------------------------------------------
+//   Returns the context where we evaluated the types
+// ----------------------------------------------------------------------------
+{
+    return context;
+}
+
+
+Scope *Types::TypesScope()
+// ----------------------------------------------------------------------------
+//   Returns the scope where we evaluated the types
+// ----------------------------------------------------------------------------
+{
+    return context->CurrentScope();
 }
 
 
@@ -1360,6 +1380,81 @@ Tree *StructuredType(Context *ctx, Tree *value)
     return type;
 }
 
+
+void Types::DumpTypes()
+// ----------------------------------------------------------------------------
+//   Dump the list of types in this
+// ----------------------------------------------------------------------------
+{
+    uint i = 0;
+
+    for (auto &t : types)
+    {
+        Tree *value = t.first;
+        Tree *type = t.second;
+        Tree *base = Base(type);
+        std::cout << "#" << ++i
+                  << "\t" << ShortTreeForm(value)
+                  << "\t: " << type;
+        if (base != type)
+            std::cout << "\t= " << base;
+        std::cout << "\n";
+    }
+}
+
+
+void Types::DumpUnifications()
+// ----------------------------------------------------------------------------
+//   Dump the current unifications
+// ----------------------------------------------------------------------------
+{
+    uint i = 0;
+    for (auto &t : unifications)
+    {
+        Tree *type = t.first;
+        Tree *base = t.second;
+        std::cout << "#" << ++i
+                  << "\t" << type
+                  << "\t= " << base << "\n";
+    }
+}
+
+
+void Types::DumpRewriteCalls()
+// ----------------------------------------------------------------------------
+//   Dump the list of rewrite calls
+// ----------------------------------------------------------------------------
+{
+    uint i = 0;
+    for (auto &t : rcalls)
+    {
+        Tree *expr = t.first;
+        std::cout << "#" << ++i << "\t" << ShortTreeForm(expr) << "\n";
+
+        uint j = 0;
+        RewriteCalls *calls = t.second;
+        RewriteCandidates &rc = calls->candidates;
+        for (auto &r : rc)
+        {
+            std::cout << "\t#" << ++j
+                      << "\t" << r.rewrite->left
+                      << "\t: " << r.type << "\n";
+
+            RewriteConditions &rt = r.conditions;
+            for (auto &t : rt)
+                std::cout << "\t\tWhen " << ShortTreeForm(t.value)
+                          << "\t= " << ShortTreeForm(t.test) << "\n";
+
+            RewriteBindings &rb = r.bindings;
+            for (auto &b : rb)
+            {
+                std::cout << "\t\t" << b.name;
+                std::cout << "\t= " << ShortTreeForm(b.value) << "\n";
+            }
+        }
+    }
+}
+
 XL_END
 
 
@@ -1374,23 +1469,7 @@ void debugt(XL::Types *ti)
                   << (void *) ti << "\n";
         return;
     }
-
-    using namespace XL;
-    uint i = 0;
-
-    TreeMap &map = ti->types;
-    for (TreeMap::iterator t = map.begin(); t != map.end(); t++)
-    {
-        Tree *value = (*t).first;
-        Tree *type = (*t).second;
-        Tree *base = ti->Base(type);
-        std::cout << "#" << ++i
-                  << "\t" << ShortTreeForm(value)
-                  << "\t: " << type;
-        if (base != type)
-            std::cout << "\t= " << base;
-        std::cout << "\n";
-    }
+    ti->DumpTypes();
 }
 
 
@@ -1405,20 +1484,7 @@ void debugu(XL::Types *ti)
                   << (void *) ti << "\n";
         return;
     }
-
-    using namespace XL;
-    uint i = 0;
-
-    TreeMap &map = ti->unifications;
-    for (TreeMap::iterator t = map.begin(); t != map.end(); t++)
-    {
-        Tree *value = (*t).first;
-        Tree *type = (*t).second;
-        std::cout << "#" << ++i
-                  << "\t" << ShortTreeForm(value)
-                  << "\t= " << type
-                  << "\t= " << ti->Base(type) << "\n";
-    }
+    ti->DumpUnifications();
 }
 
 
@@ -1434,36 +1500,5 @@ void debugr(XL::Types *ti)
                   << (void *) ti << "\n";
         return;
     }
-
-    using namespace XL;
-    uint i = 0;
-
-    rcall_map &map = ti->rcalls;
-    for (rcall_map::iterator t = map.begin(); t != map.end(); t++)
-    {
-        Tree *expr = (*t).first;
-        std::cout << "#" << ++i << "\t" << ShortTreeForm(expr) << "\n";
-
-        uint j = 0;
-        RewriteCalls *calls = (*t).second;
-        RewriteCandidates &rc = calls->candidates;
-        for (RewriteCandidates::iterator r = rc.begin(); r != rc.end(); r++)
-        {
-            std::cout << "\t#" << ++j
-                      << "\t" << (*r).rewrite->left
-                      << "\t: " << (*r).type << "\n";
-
-            RewriteConditions &rt = (*r).conditions;
-            for (RewriteConditions::iterator t = rt.begin(); t != rt.end(); t++)
-                std::cout << "\t\tWhen " << ShortTreeForm((*t).value)
-                          << "\t= " << ShortTreeForm((*t).test) << "\n";
-
-            RewriteBindings &rb = (*r).bindings;
-            for (RewriteBindings::iterator b = rb.begin(); b != rb.end(); b++)
-            {
-                std::cout << "\t\t" << (*b).name;
-                std::cout << "\t= " << ShortTreeForm((*b).value) << "\n";
-            }
-        }
-    }
+    ti->DumpRewriteCalls();
 }

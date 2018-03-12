@@ -39,6 +39,7 @@
 
 #include "compiler-args.h"
 #include "compiler-unit.h"
+#include "compiler-function.h"
 #include "compiler.h"
 #include "save.h"
 #include "types.h"
@@ -76,7 +77,7 @@ bool RewriteBinding::IsDeferred()
 }
 
 
-llvm_value RewriteBinding::Closure(CompilerFunction &function)
+Value_p RewriteBinding::Closure(CompilerFunction &function)
 // ----------------------------------------------------------------------------
 //   Return closure for this value if we need one
 // ----------------------------------------------------------------------------
@@ -101,12 +102,11 @@ Tree *RewriteCalls::Check (Prefix *scope,
     types->AssignType(what);
 
     // Create local type inference deriving from ours
-    Context_p valueContext = types->context;
-    Types_p childTypes = new Types(valueContext, types);
+    Scope *valueScope = types->TypesScope();
+    Types_p childTypes = new Types(valueScope, types);
 
-    // Create local context in which we will do the bindings
-    Context_p childContext = new Context(scope);
-    childContext->CreateScope();
+    // Get local context in which we will do the bindings
+    Context_p childContext = childTypes->TypesContext();
 
     // Attempt binding / unification of parameters to arguments
     Save<Types *> saveTypes(types, childTypes);
@@ -119,7 +119,6 @@ Tree *RewriteCalls::Check (Prefix *scope,
         return NULL;
 
     // If argument/parameters binding worked, try to typecheck the definition
-    childTypes->context = childContext;
     Tree *value = candidate->right;
     bool builtin = false;
     if (value && value != xl_self)
@@ -144,7 +143,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
 
         if (!builtin)
         {
-            bool childSucceeded = childTypes->TypeCheck(value);
+            bool childSucceeded = childTypes->TypeAnalysis(value);
             if (!childSucceeded)
                 binding = FAILED;
         }
@@ -240,11 +239,11 @@ RewriteCalls::Bind(Context *context,
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
-        bool old_matching = types->matching;
-        types->matching = true;
+        bool old_matching = types->Matching();
+        types->Matching(true);
         if (!value->Do(types))
             return FAILED;
-        types->matching = old_matching;
+        types->Matching(old_matching);
         type = types->Type(value);
 
         // Test if the name is already bound, and if so, if trees fail to match
@@ -340,11 +339,11 @@ RewriteCalls::Bind(Context *context,
         // We may have an expression that evaluates as an infix
 
         // Check if what we have as an expression evaluates correctly
-        bool old_matching = types->matching;
-        types->matching = true;
+        bool old_matching = types->Matching();
+        types->Matching(true);
         if (!value->Do(types))
             return FAILED;
-        types->matching = old_matching;
+        types->Matching(old_matching);
 
         // Then check if the type matches
         type = types->Type(value);
@@ -471,23 +470,22 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
     {
         Tree *vrefType = types->LookupTypeName(formType);
         kind k = valueType->Kind();
-        Compiler &compiler = *MAIN->compiler;
         if (k == INTEGER || vrefType == integer_type)
-            rc.KindCondition(value, INTEGER, compiler.integerTreePtrTy);
+            rc.KindCondition(value, INTEGER);
         else if (k == REAL || vrefType == real_type)
-            rc.KindCondition(value, REAL, compiler.realTreePtrTy);
+            rc.KindCondition(value, REAL);
         else if (k == TEXT || vrefType == text_type)
-            rc.KindCondition(value, TEXT, compiler.textTreePtrTy);
+            rc.KindCondition(value, TEXT);
         else if (vrefType == name_type || vrefType == boolean_type)
-            rc.KindCondition(value, NAME, compiler.nameTreePtrTy);
+            rc.KindCondition(value, NAME);
         else if (vrefType == block_type)
-            rc.KindCondition(value, BLOCK, compiler.blockTreePtrTy);
+            rc.KindCondition(value, BLOCK);
         else if (k == INFIX || vrefType == infix_type)
-            rc.KindCondition(value, INFIX, compiler.infixTreePtrTy);
+            rc.KindCondition(value, INFIX);
         else if (vrefType == prefix_type)
-            rc.KindCondition(value, PREFIX, compiler.prefixTreePtrTy);
+            rc.KindCondition(value, PREFIX);
         else if (vrefType == postfix_type)
-            rc.KindCondition(value, POSTFIX, compiler.postfixTreePtrTy);
+            rc.KindCondition(value, POSTFIX);
     }
 
     // Otherwise, do type inference

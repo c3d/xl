@@ -173,6 +173,24 @@ Function_p CompilerFunction::Function()
 }
 
 
+Scope *CompilerFunction::FunctionScope()
+// ----------------------------------------------------------------------------
+//   The declaration scope associated with the function
+// ----------------------------------------------------------------------------
+{
+    return context->CurrentScope();
+}
+
+
+Context *CompilerFunction::FunctionContext()
+// ----------------------------------------------------------------------------
+//   The declaration context for the function
+// ----------------------------------------------------------------------------
+{
+    return context;
+}
+
+
 Function_p CompilerFunction::Compile(Tree *tree, bool force)
 // ----------------------------------------------------------------------------
 //    Compile a given tree in given function and return the associated value

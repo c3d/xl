@@ -105,7 +105,11 @@ public:
     // Main entry point
     bool        TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
-    rcall_map & RewriteCalls();
+    rcall_map & TypesRewriteCalls();
+    Scope *     TypesScope();
+    Context *   TypesContext();
+    bool        Matching()              { return matching; }
+    void        Matching(bool m)        { matching = m; }
 
 public:
     // Interface for Tree::Do() to annotate the tree
@@ -160,6 +164,11 @@ public:
 
     // Error messages
     bool        TypeError(Tree *t1, Tree *t2);
+
+    // Debug utilities
+    void        DumpTypes();
+    void        DumpUnifications();
+    void        DumpRewriteCalls();
 
 public:
     GARBAGE_COLLECT(Types);

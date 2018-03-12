@@ -122,6 +122,7 @@ public:
 public:
     struct Listener
     {
+        virtual ~Listener()                     {}
         virtual void BeginCollection()          {}
         virtual bool CanDelete(void *)          { return true; }
         virtual void EndCollection()            {}

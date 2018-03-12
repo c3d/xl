@@ -103,6 +103,11 @@ public:
     Value_p             Return(Tree *tree, Value_p value);
     eval_fn             Finalize(bool createCode);
 
+    Value_p             NamedClosure(Name *name, Tree *value);
+    Type_p              MachineType(Tree *tree);
+    Scope *             FunctionScope();
+    Context *           FunctionContext();
+
 private:
     // Function interface creation
     Function_p          OptimizedFunction(text n, Type_p r, const Parameters &);
@@ -110,12 +115,10 @@ private:
     void                InitializeArgs(const Parameters &parms);
 
     // Closure management
-    Value_p             NamedClosure(Name *name, Tree *value);
     Value_p             InvokeClosure(Value_p result, Value_p fnPtr);
     Value_p             InvokeClosure(Value_p result);
 
     // Machine types management
-    Type_p              MachineType(Tree *tree);
     void                MachineType(Tree *tree, Type_p type);
     void                AddBoxedType(Tree *treeType, Type_p machineType);
     Type_p              BoxedType(Tree *type);

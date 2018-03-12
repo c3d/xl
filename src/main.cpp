@@ -654,7 +654,6 @@ RECORDER_TWEAK_DEFINE(gc_statistics, 0, "Display garbage collector stats");
 {
     record(main, "XL Compiler version %s starting", XL_VERSION);
 
-
 #if HAVE_SBRK
     char *low_water = (char *) sbrk(0);
 #endif
