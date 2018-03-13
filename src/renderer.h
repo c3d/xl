@@ -153,7 +153,7 @@ size_t recorder_render(intptr_t tracing,
 XL_END
 
 // For use in a debugger
-extern "C" const char *debug(XL::Tree *);
 extern "C" const char *debugp(XL::Tree *);
+extern "C" const char *debugd(XL::Tree *);
 
 #endif // RENDERER_H

@@ -258,7 +258,7 @@ int Main::ParseOptions()
 
     // Make sure debug function is linked in...
     if (getenv("SHOW_INITIAL_DEBUG"))
-        debug((Tree *) NULL);
+        debugp((Tree *) NULL);
 
     // Initialize the locale
     if (!setlocale(LC_CTYPE, ""))

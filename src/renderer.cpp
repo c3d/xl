@@ -860,7 +860,7 @@ XL_END
 
 static text debugBuffer;
 
-const char *debug(XL::Tree *tree)
+const char *debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
@@ -891,16 +891,7 @@ const char *debug(XL::Tree *tree)
 }
 
 
-const char *debugx(void *tree)
-// ----------------------------------------------------------------------------
-//    Avoid ambiguities in name lookup in the debugger
-// ----------------------------------------------------------------------------
-{
-    return debug((XL::Tree *) tree);
-}
-
-
-const char *debugp(XL::Tree *tree)
+const char *debugd(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
