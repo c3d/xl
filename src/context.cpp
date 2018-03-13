@@ -882,7 +882,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
         if (decl)
         {
             if (decl->name == "is")
-                out << decl->left << " -> "
+                out << decl->left << " is "
                     << ShortTreeForm(decl->right) << "\n";
             else
                 out << "DECL?" << decl << "\n";
