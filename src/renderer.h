@@ -113,7 +113,8 @@ std::ostream& operator<< (std::ostream&out, XL::Tree &t);
 std::ostream& operator<< (std::ostream&out, XL::TreeList &list);
 
 template <typename stream_t, typename arg_t>
-size_t recorder_render(const char *format,
+size_t recorder_render(intptr_t tracing,
+                       const char *format,
                        char *buffer, size_t size,
                        uintptr_t arg)
 // ----------------------------------------------------------------------------
@@ -124,7 +125,7 @@ size_t recorder_render(const char *format,
     const unsigned trunc_len = max_len/2 - 3;
     arg_t value = (arg_t) arg;
     size_t result;
-    if (max_len)
+    if (max_len && tracing)
     {
         text t;
         stream_t os(t);
