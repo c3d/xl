@@ -144,7 +144,7 @@ eval_fn CompilerUnit::Compile()
 {
     Scope *scope = context->CurrentScope();
     record(compiler_unit, "Compile %t in scope %t", source, scope);
-    if (context->ProcessDeclarations(source))
+    if (!context->ProcessDeclarations(source))
     {
         // No instruction in input source, return as is
         record(compiler_unit, "No instructions in %t, identity", source);
