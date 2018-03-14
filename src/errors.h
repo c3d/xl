@@ -1,8 +1,8 @@
 #ifndef XL_ERRORS_H
 #define XL_ERRORS_H
 /* ************************************************************************* */
-/*   Christophe de Dinechin                                  XL  PROJECT  */
-/*   errors.h             4                                      UTILITIES    */
+/*   Christophe de Dinechin                                     XL  PROJECT  */
+/*   errors.h                                                   UTILITIES    */
 /* ************************************************************************* */
 /*                                                                           */
 /*   File Description:                                                       */
