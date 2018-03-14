@@ -137,13 +137,19 @@ Tree *Types::Type(Tree *expr)
 //   Return the base type associated with a given expression
 // ----------------------------------------------------------------------------
 {
-    Tree *type = types[expr];
-    record(types_ids, "Original type for %t in %p is %t", expr, this, type);
-    if (!type)
+    // Check type, make sure we don't destroy a nullptr type
+    Tree *type = nullptr;
+    auto it = types.find(expr);
+    if (it == types.end())
     {
         type = NewTypeName(expr->Position());
         types[expr] = type;
         record(types_ids, "Created type for %t in %p is %t", expr, this, type);
+    }
+    else
+    {
+        type = (*it).second;
+        record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
     }
     return type;
 }
@@ -241,7 +247,7 @@ Tree *Types::DoPrefix(Prefix *what)
             if (!cdecl)
             {
                 Ooops("No C declaration for $1", what);
-                return xl_error;
+                return nullptr;
             }
             Tree *type = Extern(cdecl->rewrite);
             type = AssignType(what, type);
@@ -296,7 +302,7 @@ Tree *Types::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
 {
     Tree *type = Evaluate(what, true);
-    if (type == xl_error)
+    if (!type)
     {
         type = Evaluate(what->child);
         type = AssignType(what, type);
@@ -310,9 +316,12 @@ Tree *Types::AssignType(Tree *expr, Tree *type)
 //   Set the type of the expression to be 'type'
 // ----------------------------------------------------------------------------
 {
-    Tree *existing = types[expr];
-    if (existing)
-        type = Unify(existing, type);
+    if (type)
+    {
+        Tree *existing = types[expr];
+        if (existing)
+            type = Unify(existing, type);
+    }
     types[expr] = type;
     return type;
 }
@@ -380,6 +389,13 @@ Tree *Types::RewriteType(Infix *what)
     // Regular case: create a [type X => type Y] type
     Tree *declt = Type(decl);
     Tree *initt = Type(init);
+    if (!declt || !initt)
+    {
+        record(types_calls, "Failed type for %t declt=%t initt=%t",
+               what, declt, initt);
+        return nullptr;
+    }
+
     Tree *type = new Infix("=> ", declt, initt, what->Position());
     type = AssignType(what, type);
 
@@ -444,11 +460,11 @@ Tree *Types::Statements(Tree *expr, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 {
     Tree *lt = left->Do(this);
-    if (lt == xl_error)
+    if (!lt)
         return lt;
 
     Tree *rt = right->Do(this);
-    if (rt == xl_error)
+    if (!rt)
         return rt;
 
     // Check if right term is a declaration, otherwise return that
@@ -501,7 +517,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     {
         if (!mayFail)
             Ooops("No form matches $1", what);
-        return xl_error;
+        return nullptr;
     }
     errors.Clear();
     errors.Log(Error("Unable to check types in $1 because", what), true);
@@ -529,6 +545,10 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     // Check if already unified
     if (t1 == t2)
         return t1;
+
+    // Check if one of the sides had a type error
+    if (!t1 || !t2)
+        return nullptr;
 
     // Strip out blocks in type specification, i.e. [T] == [(T)]
     if (Block *b1 = t1->AsBlock())
@@ -591,8 +611,8 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         {
             Tree *ul = Unify(r1->left, r2->left);
             Tree *ur = Unify(r1->right, r2->right);
-            if (ul == xl_error || ur == xl_error)
-                return xl_error;
+            if (!ul || !ur)
+                return nullptr;
             if (ul == r1->left && ur == r1->right)
                 return Join(r2, r1);
             if (ul == r2->left && ur == r2->right)
@@ -686,8 +706,8 @@ Tree *Types::Join(Tree *old, Tree *replace)
 // ----------------------------------------------------------------------------
 {
     // Deal with error cases
-    if (old == xl_error || replace == xl_error)
-        return xl_error;
+    if (!old || !replace)
+        return nullptr;
 
     // Replace the type in the types map
     for (auto &t : types)
@@ -716,6 +736,11 @@ Tree *Types::UnionType(Tree *t1, Tree *t2)
 //    Create the union of two types
 // ----------------------------------------------------------------------------
 {
+    if (t1 == t2)
+        return t1;
+    if (!t1 || !t2)
+        return nullptr;
+
     if (TypeCoversType(t1, t2))
         return t1;
     if (TypeCoversType(t2, t1))
@@ -733,6 +758,10 @@ bool Types::TypeCoversConstant(Tree *type, Tree *cst)
 //    Check if a type covers a constant or range
 // ----------------------------------------------------------------------------
 {
+    // Deal with type errors
+    if (!type || !cst)
+        return false;
+
     // If the type is something like 0..3, set 'range' to that range
     Infix *range = IsRangeType(type);
 
@@ -795,6 +824,10 @@ bool Types::TypeCoversType(Tree *top, Tree *bottom)
 //   Check if the top type covers all values in the bottom type
 // ----------------------------------------------------------------------------
 {
+    // Deal with type errors
+    if (!top || !bottom)
+        return false;
+
     // Quick exit when types are the same or the tree type is used
     if (top == bottom)
         return true;
@@ -818,6 +851,8 @@ bool Types::TreePatternsMatch(Tree *t1, Tree *t2)
 //   Patterns have to match exactly, i.e. [X:integer] matches [X:integer]
 //   but neither [Y:integer] nor [X:0]
 {
+    if (!t1 || !t2)
+        return false;
     if (t1 == t2)
         return true;
 
@@ -896,6 +931,11 @@ bool Types::TreePatternMatchesValue(Tree *pat, Tree *val)
 //   Check if the pattern matches some tree value
 // ----------------------------------------------------------------------------
 {
+    if (!pat || !val)
+        return false;
+    if (pat == val)             // May occur as [type X] vs [X]
+        return true;
+
     switch(pat->Kind())
     {
     case INTEGER:
@@ -919,14 +959,14 @@ bool Types::TreePatternMatchesValue(Tree *pat, Tree *val)
     case NAME:
         // A name at that stage is a variable, so we match
         // PROBLEM: matching X+X will match twice?
-        return Unify(pat, Type(val)) != xl_error;
+        return Unify(pat, Type(val));
 
     case INFIX:
         if (Infix *x1 = pat->AsInfix())
         {
             // Check if the pattern is a type declaration
             if (x1->name == ":")
-                return Unify(x1->right, Type(val)) != xl_error;
+                return Unify(x1->right, Type(val));
 
             if (Infix *x2 = val->AsInfix())
                 return
@@ -1038,7 +1078,7 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
         Ooops("Cannot unify type $2 of $1", x1, t1);
         Ooops("with type $2 of $1", x2, t2);
     }
-    return xl_error;
+    return nullptr;
 }
 
 

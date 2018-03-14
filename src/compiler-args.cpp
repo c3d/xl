@@ -131,7 +131,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
         {
             type = childTypes->AssignType(init, type);
             type = childTypes->AssignType(what, type);
-            if (type == xl_error)
+            if (!type)
                 binding = FAILED;
         }
 
@@ -149,7 +149,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
             if (!builtin)
             {
                 type = childTypes->TypeAnalysis(init);
-                if (type == xl_error)
+                if (!type)
                     binding = FAILED;
             }
         }
@@ -172,7 +172,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
     if (binding != FAILED)
     {
         type = saveTypes.saved->AssignType(what, type);
-        if (type == xl_error)
+        if (!type)
             binding = FAILED;
     }
 
@@ -201,7 +201,7 @@ RewriteCalls::Bind(Context *context,
 //   Attempts to bind 'value' to the pattern form given in 'form'
 // ----------------------------------------------------------------------------
 {
-    Tree *type = NULL;
+    Tree *type = nullptr;
     kind k = form->Kind();
 
     switch(k)
@@ -257,7 +257,8 @@ RewriteCalls::Bind(Context *context,
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
-        if (!value->Do(types))
+        type = value->Do(types);
+        if (!type)
             return FAILED;
 
         // Test if the name is already bound, and if so, if trees fail to match
