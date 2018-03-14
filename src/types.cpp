@@ -58,8 +58,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-ulong Types::id = 0;
-RECORDER(types, 64, "Type analysis");
+uint Types::id= 0;
 
 Types::Types(Scope *scope)
 // ----------------------------------------------------------------------------
@@ -68,10 +67,10 @@ Types::Types(Scope *scope)
     : context(new Context(scope)),
       types(),
       unifications(),
-      rcalls(),
-      left(NULL), right(NULL),
-      prototyping(false), matching(false)
-{}
+      rcalls()
+{
+    record(types, "Created Types %p for scope %t", this, scope);
+}
 
 
 Types::Types(Scope *scope, Types *parent)
@@ -81,11 +80,11 @@ Types::Types(Scope *scope, Types *parent)
     : context(new Context(scope)),
       types(parent->types),
       unifications(parent->unifications),
-      rcalls(parent->rcalls),
-      left(parent->left), right(parent->right),
-      prototyping(false), matching(false)
+      rcalls(parent->rcalls)
 {
     context->CreateScope();
+    scope = context->CurrentScope();
+    record(types, "Created child Types %p scope %t", this, scope);
 }
 
 
@@ -93,27 +92,43 @@ Types::~Types()
 // ----------------------------------------------------------------------------
 //    Destructor - Nothing to explicitly delete, but useful for debugging
 // ----------------------------------------------------------------------------
-{}
+{
+    record(types, "Deleted Types %p", this);
+}
 
 
-bool Types::TypeAnalysis(Tree *program)
+Tree *Types::TypeAnalysis(Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program
 // ----------------------------------------------------------------------------
 {
     // Once this is done, record all type information for the program
-    record(types, "Type analysis for %t", program);
-    bool result = program->Do(this);
+    record(types, "Type analysis for %t in %p", program, this);
+    Tree *result = program->Do(this);
+    record(types, "Type for %t in %p is %t", program, this, result);
 
     // Dump debug information if approriate
-    if (RECORDER_TRACE(types))
-    {
+    if (RECORDER_TRACE(types_ids))
         std::cout << "TYPES:\n"; debugt(this);
+    if (RECORDER_TRACE(types_unifications))
         std::cout << "UNIFICATIONS:\n"; debugu(this);
+    if (RECORDER_TRACE(types_calls))
         std::cout << "CALLS:\n"; debugr(this);
-    }
 
     return result;
+}
+
+
+Tree *Types::BaseType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return the base type associated to the input type
+// ----------------------------------------------------------------------------
+{
+    // Check if we have a type as input and if there is a base type for it
+    auto it = unifications.find(type);
+    if (it != unifications.end())
+        return (*it).second;
+    return type;
 }
 
 
@@ -123,24 +138,14 @@ Tree *Types::Type(Tree *expr)
 // ----------------------------------------------------------------------------
 {
     Tree *type = types[expr];
+    record(types_ids, "Original type for %t in %p is %t", expr, this, type);
     if (!type)
     {
-        if (expr->Kind() == NAME)
-        {
-            if (expr == xl_true || expr == xl_false)
-                AssignType(expr, boolean_type);
-            else
-                AssignType(expr);
-        }
-        else if (!expr->Do(this))
-        {
-            Ooops("Unable to assign type to $1", expr);
-            if (!types[expr])
-                AssignType(expr);
-        }
-        type = types[expr];
+        type = NewTypeName(expr->Position());
+        types[expr] = type;
+        record(types_ids, "Created type for %t in %p is %t", expr, this, type);
     }
-    return Base(type);
+    return type;
 }
 
 
@@ -149,6 +154,7 @@ rcall_map & Types::TypesRewriteCalls()
 //   Returns the list of rewrite calls for this
 // ----------------------------------------------------------------------------
 {
+    record(types_calls, "Number of rewrites for %p is %u", this, rcalls.size());
     return rcalls;
 }
 
@@ -171,256 +177,300 @@ Scope *Types::TypesScope()
 }
 
 
-bool Types::DoInteger(Integer *what)
+Tree *Types::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value
 // ----------------------------------------------------------------------------
 {
-    return DoConstant(what);
+    return DoConstant(what, INTEGER);
 }
 
 
-bool Types::DoReal(Real *what)
+Tree *Types::DoReal(Real *what)
 // ----------------------------------------------------------------------------
 //   Annotate a real tree with its value
 // ----------------------------------------------------------------------------
 {
-    return DoConstant(what);
+    return DoConstant(what, REAL);
 }
 
 
-bool Types::DoText(Text *what)
+Tree *Types::DoText(Text *what)
 // ----------------------------------------------------------------------------
 //   Annotate a text tree with its own value
 // ----------------------------------------------------------------------------
 {
-    return DoConstant(what);
+    return DoConstant(what, TEXT);
 }
 
 
-bool Types::DoConstant(Tree *what)
+Tree *Types::DoConstant(Tree *what, kind k)
 // ----------------------------------------------------------------------------
 //   All constants have themselves as type, and evaluate normally
 // ----------------------------------------------------------------------------
 {
-    Tree *canon = CanonicalType(what);
-    bool result = AssignType(what, canon);
-    result = Evaluate(what);
-    return result;
+    Tree *type = what;
+    if (context->HasRewritesFor(k))
+        type = Evaluate(what);
+    else
+        type = AssignType(what, what); // Assign the value itself as a type
+    return type;
 }
 
 
-bool Types::DoName(Name *what)
+Tree *Types::DoName(Name *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
-    if (!AssignType(what))
-        return false;
     return Evaluate(what);
 }
 
 
-bool Types::DoPrefix(Prefix *what)
+Tree *Types::DoPrefix(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a prefix and then to its children
 // ----------------------------------------------------------------------------
 {
-    if (!AssignType(what))
-        return false;
-
-    // Skip bizarre declarations
+    // Deal with bizarre declarations
     if (Name *name = what->left->AsName())
     {
-        if (name->value == "data")
-            return AssignType(what, declaration_type) && Data(what->right);
-        else if (name->value == "extern")
-            return AssignType(what, declaration_type) && Extern(what->right);
+        if (name->value == "extern")
+        {
+            CDeclaration *cdecl = what->GetInfo<CDeclaration>();
+            if (!cdecl)
+            {
+                Ooops("No C declaration for $1", what);
+                return xl_error;
+            }
+            Tree *type = Extern(cdecl->rewrite);
+            type = AssignType(what, type);
+            return type;
+        }
     }
-
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
 
 
-bool Types::DoPostfix(Postfix *what)
+Tree *Types::DoPostfix(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
 {
-    if (!AssignType(what))
-        return false;
-
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
 
 
-bool Types::DoInfix(Infix *what)
+Tree *Types::DoInfix(Infix *what)
 // ----------------------------------------------------------------------------
-//   Special treatment for the special infix forms
+//   Assign type to infix forms
 // ----------------------------------------------------------------------------
+//   We deal with the following special forms:
+//   - [X;Y]: a statement sequence, type is the type of last statement
+//   - [X:T] and [X as T]: a type declaration, assign the type T to X
+//   - [X is Y]: A declaration, assign a type [type X => type Y]
 {
     // For a sequence, both sub-expressions must succeed individually.
     // The type of the sequence is the type of the last statement
     if (what->name == "\n" || what->name == ";")
-    {
-        // Assign types to left and right
-        if (!AssignType(what))
-            return false;
         return Statements(what, what->left, what->right);
-    }
 
-    // Case of 'X : T' : Set type of X to T and unify X:T with X
+    // Case of [X : T] : Set type of [X] to [T] and unify [X:T] with [X]
     if (what->name == ":" || what->name == "as")
-        return (AssignType(what->left, what->right) &&
-                what->left->Do(this) &&
-                AssignType(what) &&
-                UnifyExpressionTypes(what, what->left));
+        return TypeDeclaration(what);
 
-    // Case of 'X is Y': Analyze type of X and Y, unify them, set type of result
+    // Case of [X is Y]: Analysis if any will be done during
     if (what->name == "is")
-        return Rewrite(what);
+        return RewriteType(what);
 
-    // For other cases, we assign types to left and right
-    if (!AssignType(what))
-        return false;
-
-    // Success depends on successful evaluation of the complete form
+    // For all other cases, evaluate the infix
     return Evaluate(what);
 }
 
 
-bool Types::DoBlock(Block *what)
+Tree *Types::DoBlock(Block *what)
 // ----------------------------------------------------------------------------
-//   A block has the same type as its children, except if child alone fails
+//   A block evaluates either as itself, or as its child
 // ----------------------------------------------------------------------------
 {
-    // Assign a type to the block
-    if (!AssignType(what))
-        return false;
-
-    // If child succeeds, the block and its child have the same type
-    if (what->child->Do(this))
-        return UnifyExpressionTypes(what, what->child);
-
-    // Otherwise, try to find a matching form
-    return Evaluate(what);
+    Tree *type = Evaluate(what, true);
+    if (type == xl_error)
+    {
+        type = Evaluate(what->child);
+        type = AssignType(what, type);
+    }
+    return type;
 }
 
 
-bool Types::AssignType(Tree *expr, Tree *type)
+Tree *Types::AssignType(Tree *expr, Tree *type)
 // ----------------------------------------------------------------------------
-//   Assign a type to a given tree
+//   Set the type of the expression to be 'type'
 // ----------------------------------------------------------------------------
 {
-    // Check if we already have a type
-    if (Tree *existing = types[expr])
-    {
-        // If no type given, that's it
-        if (!type || existing == type)
-            return true;
-
-        // We have two types specified for that entity, need to unify
-        return Unify(existing, type, expr, expr);
-    }
-
-    // Generate a unique type name if nothing is given
-    if (type == NULL)
-    {
-        if (expr == xl_true || expr == xl_false)
-            type = boolean_type;
-        else
-            type = NewTypeName(expr->Position());
-    }
-
-    // Record the type for that tree
+    Tree *existing = types[expr];
+    if (existing)
+        type = Unify(existing, type);
     types[expr] = type;
-
-    // Success
-    return true;
+    return type;
 }
 
 
-bool Types::Rewrite(Infix *what)
+Tree *Types::TypeOf(Tree *expr)
 // ----------------------------------------------------------------------------
-//   Assign a type to a rewrite
+//   Return the type of the expr as a [type X] expression
 // ----------------------------------------------------------------------------
 {
-    // Create a context for the rewrite parameters
-    Context *childContext = new Context(context);
-    Save<Context_p> saveContext(context, childContext);
+    TreePosition pos = expr->Position();
+    return new Prefix(new Name("type", pos), expr, pos);
+}
 
-    // Assign types on the left of the rewrite
-    Save<bool> proto(prototyping, true);
-    if (!what->left->Do(this))
+
+Tree *Types::TypeDeclaration(Infix *decl)
+// ----------------------------------------------------------------------------
+//   Explicitely define the type for an expression
+// ----------------------------------------------------------------------------
+{
+    Tree *declared = decl->left;
+    Tree *type = decl->right;
+    record(types_ids, "Declaration %t declared %t type %t in %p",
+           decl, declared, type, this);
+    type = AssignType(declared, type);
+    return type;
+}
+
+
+Tree *Types::RewriteType(Infix *what)
+// ----------------------------------------------------------------------------
+//   Assign an [A => B] type to a rewrite
+// ----------------------------------------------------------------------------
+//   Here, we are processing [X is Y]
+//   There are three special cases we want to deal with:
+//   - [X is builtin Op]: Check that X has types and that Op exists
+//   - [X is C function]: Check that X has types and that function exists
+//   - [X is self]: assign [type X] to X
+//
+//   In other cases, we unify the type of [X] with that of [Y] and
+//   return the type [type X => type Y] for the [X is Y] expression.
+{
+    record(types_calls, "Processing rewrite %t in %p", what, this);
+
+    Tree *decl = what->left;
+    Tree *init = what->right;
+
+    // Case of [X is self]: Return the type of X
+    if (Name *name = init->AsName())
+        if (name->value == "self")
+            return Data(what);
+
+    // Case of [X is C name] or [X is builtin Op]
+    if (Prefix *prefix = init->AsPrefix())
     {
-        Ooops("Malformed rewrite pattern $1", what->left);
-        return false;
-    }
-
-    // The rewrite itself is an infix (in case we have to manage it)
-    Tree *formType = Type(what->left);
-    Tree *valueType = Type(what->right);
-    if (!AssignType(what, declaration_type))
-        return false;
-
-    // We need to be able to unify pattern and definition types
-    if (!Unify(valueType, formType, what->right, what->left))
-        return false;
-
-    // The type of the definition is a pattern type, perform unification
-    if (Infix *infix = what->left->AsInfix())
-    {
-        if (infix->name == ":" || what->name == "as")
+        if (Name *name = prefix->left->AsName())
         {
-            // Explicit type declaration
-            if (!Unify(valueType, infix->right, what->right, infix->right))
-                return false;
+            if (name->value == "C")
+                return Extern(what);
+            if (name->value == "builtin")
+                return Builtin(what);
         }
     }
 
-    // Well done, success!
-    return true;
+    // Regular case: create a [type X => type Y] type
+    Tree *declt = Type(decl);
+    Tree *initt = Type(init);
+    Tree *type = new Infix("=> ", declt, initt, what->Position());
+    type = AssignType(what, type);
+
+    record(types_calls, "Rewrite for %t is %t (%t => %t)",
+           what, type, decl, init);
+    return type;
 }
 
 
-bool Types::Data(Tree *what)
+Tree *Types::DeclarationOnly(Infix *what, kstring description)
+// ----------------------------------------------------------------------------
+//    Declarations where the interface is all we know
+// ----------------------------------------------------------------------------
+{
+    record(types_calls, "%!s %t in %p", description, what, this);
+
+    Tree *decl = what->left;
+    Tree *init = what->right;
+
+    Tree *type = TypeOf(decl);
+    type = AssignType(decl, type);
+    type = AssignType(init, type);
+    type = AssignType(what, type);
+
+    record(types_calls, "%!s %t in %p is %t", description, what, this, type);
+    return type;
+}
+
+
+Tree *Types::Data(Infix *what)
 // ----------------------------------------------------------------------------
 //   Use the structure type associated to the data form
 // ----------------------------------------------------------------------------
+//   The type associated to [X] is [type X], so that the cost is deferred
+//   to unification and only done when necessary
 {
-    return AssignType(what, CanonicalType(what));
+    return DeclarationOnly(what, "Data");
 }
 
 
-bool Types::Extern(Tree *what)
+Tree *Types::Extern(Infix *decl)
 // ----------------------------------------------------------------------------
 //   Recover the transformed rewrite and enter that
 // ----------------------------------------------------------------------------
 {
-    CDeclaration *cdecl = what->GetInfo<CDeclaration>();
-    if (!cdecl)
-        return false;
-    return Rewrite(cdecl->rewrite);
+    return DeclarationOnly(decl, "C declaration");
 }
 
 
-bool Types::Statements(Tree *expr, Tree *left, Tree *right)
+Tree *Types::Builtin(Infix *decl)
+// ----------------------------------------------------------------------------
+//   Recover the transformed rewrite and enter that
+// ----------------------------------------------------------------------------
+{
+    return DeclarationOnly(decl, "Builtin");
+}
+
+
+Tree *Types::Statements(Tree *expr, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Return the type of a combo statement, skipping declarations
 // ----------------------------------------------------------------------------
 {
-    if (!left->Do(this))
-        return false;
-    if (!right->Do(this))
-        return false;
+    Tree *lt = left->Do(this);
+    if (lt == xl_error)
+        return lt;
+
+    Tree *rt = right->Do(this);
+    if (rt == xl_error)
+        return rt;
 
     // Check if right term is a declaration, otherwise return that
-    Tree *t2 = Type(right);
-    if (t2 != declaration_type)
-        return t2;
-    return Type(left);
+    Tree *type = rt;
+    if (IsRewriteType(rt) && !IsRewriteType(lt))
+        type = lt;
+    type = AssignType(expr, type);
+    return type;
+}
+
+
+bool Types::Commit(Types *child)
+// ----------------------------------------------------------------------------
+//   Commit the type inferences gathered in the child
+// ----------------------------------------------------------------------------
+{
+    // Import expressions in child
+    for (auto &t : child->types)
+        if (AssignType(t.first, t.second) == xl_error)
+            return false;
+
+    return true;
 }
 
 
@@ -435,28 +485,21 @@ static Tree *lookupRewriteCalls(Scope *evalScope, Scope *sc,
 }
 
 
-bool Types::Evaluate(Tree *what)
+Tree *Types::Evaluate(Tree *what, bool mayFail)
 // ----------------------------------------------------------------------------
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
-    // We don't evaluate expressions while prototyping a pattern
-    if (prototyping)
-        return true;
-
-    // Record if we are matching patterns
-    bool matchingPattern = matching;
-    matching = false;
-
-    // Look directly inside blocks
-    while (Block *block = what->AsBlock())
-        what = block->child;
+    record(types_calls, "Evaluating %t in %p", what, this);
 
     // Test if we are already trying to evaluate this particular form
     rcall_map::iterator found = rcalls.find(what);
     bool recursive = found != rcalls.end();
     if (recursive)
-        return true;
+    {
+        // Need to assign a type name, will be unified by outer Evaluate()
+        return Type(what);
+    }
 
     // Identify all candidate rewrites in the current context
     RewriteCalls_p rc = new RewriteCalls(this);
@@ -470,279 +513,324 @@ bool Types::Evaluate(Tree *what)
     count = rc->candidates.size();
     if (count == 0)
     {
-        if (what->IsConstant())
-        {
-            Tree *wtype = Type(what);
-            return Unify(wtype, what, what, what);
-        }
-
-        if (matchingPattern && what->Kind() > KIND_LEAF_LAST)
-        {
-            Tree *wtype = Type(what);
-            return Unify(wtype, what, what, what);
-        }
-        Ooops("No form matches $1", what);
-        return false;
+        if (!mayFail)
+            Ooops("No form matches $1", what);
+        return xl_error;
     }
     errors.Clear();
     errors.Log(Error("Unable to check types in $1 because", what), true);
 
     // The resulting type is the union of all candidates
-    Tree *type = Base(rc->candidates[0].type);
-    Tree *wtype = Type(what);
+    Tree *type = rc->candidates[0].type;
     for (uint i = 1; i < count; i++)
     {
         Tree *ctype = rc->candidates[i].type;
-        ctype = Base(ctype);
-        if (IsGeneric(ctype) && IsGeneric(wtype))
-        {
-            // foo:#A rewritten as bar:#B and another type
-            // Join types instead of performing a union
-            if (!Join(ctype, type))
-                return false;
-            if (!Join(wtype, type))
-                return false;
-            continue;
-        }
-        type = UnionType(context, type, ctype);
+        type = UnionType(type, ctype);
     }
-
-    // Perform type unification
-    return Unify(type, wtype, what, what, DECLARATION);
+    type = AssignType(what, type);
+    return type;
 }
 
 
-bool Types::UnifyExpressionTypes(Tree *expr1, Tree *expr2)
-// ----------------------------------------------------------------------------
-//   Indicates that the two trees must have identical types
-// ----------------------------------------------------------------------------
-{
-    Tree *t1 = Type(expr1);
-    Tree *t2 = Type(expr2);
-
-    // If already unified, we are done
-    if (t1 == t2)
-        return true;
-
-    return Unify(t1, t2, expr1, expr2);
-}
-
-
-bool Types::Unify(Tree *t1, Tree *t2,
-                  Tree *x1, Tree *x2,
-                  unify_mode mode)
-// ----------------------------------------------------------------------------
-//   Unification with expressions
-// ----------------------------------------------------------------------------
-{
-    Save<Tree_p> saveLeft(left, x1);
-    Save<Tree_p> saveRight(right, x2);
-    return Unify(t1, t2, mode);
-}
-
-
-bool Types::Unify(Tree *t1, Tree *t2, unify_mode mode)
+Tree *Types::Unify(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
-//  A type form in XL can be:
-//   - A type name              integer
-//   - A generic type name      #ABC
-//   - A litteral value         0       1.5             "Hello"
-//   - A block for precedence   (real)
-//   - The type of a pattern    type (X:integer, Y:integer)
-//
 // Unification happens almost as "usual" for Algorithm W, except for how
-// we deal with XL "shape-based" type constructors, e.g. type(P)
+// we deal with XL "shape-based" type constructors, e.g. [type P] where
+// P is a pattern like [X:integer, Y:real]
 {
-    // Make sure we have the canonical form
-    t1 = Base(t1);
-    t2 = Base(t2);
+    // Check if already unified
     if (t1 == t2)
-        return true;            // Already unified
+        return t1;
 
-    // Strip out blocks in type specification
+    // Strip out blocks in type specification, i.e. [T] == [(T)]
     if (Block *b1 = t1->AsBlock())
-        if (Unify(b1->child, t2))
-            return Join(b1, t2);
+        return Unify(b1->child, t2);
     if (Block *b2 = t2->AsBlock())
-        if (Unify(t1, b2->child))
-            return Join(t1, b2);
+        return Unify(t1, b2->child);
+
+    // Check if we have a unification for this type
+    TreeMap::iterator i1 = unifications.find(t1);
+    if (i1 != unifications.end())
+        return Unify((*i1).second, t2);
+    TreeMap::iterator i2 = unifications.find(t2);
+    if (i2 != unifications.end())
+        return Unify(t1, (*i2).second);
 
     // Lookup type names, replace them with their value
-    t1 = LookupTypeName(t1);
-    t2 = LookupTypeName(t2);
+    t1 = DeclaredTypeName(t1);
+    t2 = DeclaredTypeName(t2);
     if (t1 == t2)
-        return true;            // This may have been enough for unifiation
+        return t1;
 
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
         return Join(t1, t2);
     if (IsGeneric(t2))
+        return Join(t2, t1);
+
+    // Success if t1 covers t2 or t2 covers t1
+    if (TypeCoversType(t1, t2))
+        return Join(t2, t1);
+    if (TypeCoversType(t2, t1))
+        return Join(t2, t1);
+
+    // Check if we have [integer] against [0]
+    if (TypeCoversConstant(t1, t2))
+        return Join(t2, t1);
+    if (TypeCoversConstant(t2, t1))
         return Join(t1, t2);
 
-    // In declaration mode, we have success if t2 covers t1
-    if (mode == DECLARATION && TypeCoversType(context, t2, t1, false))
-        return true;
-
-    // If we have a type name at this stage, this is a failure
-    if (IsTypeName(t1))
-    {
-        if (JoinConstant((Name *) t1, t2))
-            return true;
-
-        return TypeError(t1, t2);
-    }
-    if (IsTypeName(t2))
-    {
-        if (JoinConstant((Name *) t2, t1))
-            return true;
-        return TypeError(t1, t2);
-    }
-
-    // Check prefix constructor types
-    if (Tree *pat1 = TypePattern(t1))
+    // Check type patterns, i.e. [type X] as in [type(X:integer, Y:real)]
+    if (Tree *pat1 = IsTypeOf(t1))
     {
         // If we have two type patterns, they must be structurally identical
-        if (Tree *pat2 = TypePattern(t2))
-        {
-            if (UnifyPatterns(pat1, pat2))
+        if (Tree *pat2 = IsTypeOf(t2))
+            if (TreePatternsMatch(pat1, pat2))
                 return Join(t1, t2);
-            return TypeError(t1, t2);
-        }
 
         // Match a type pattern with another value
-        return UnifyPatternAndValue(pat1, t2);
+        if (TreePatternMatchesValue(pat1, t2))
+            return Join(t2, t1);
     }
-    if (Tree *pat2 = TypePattern(t2))
-        return UnifyPatternAndValue(pat2, t1);
+    if (Tree *pat2 = IsTypeOf(t2))
+        if (TreePatternMatchesValue(pat2, t1))
+            return Join(t1, t2);
+
+    // Check functions [X => Y]
+    if (Infix *r1 = IsRewriteType(t1))
+    {
+        if (Infix *r2 = IsRewriteType(t2))
+        {
+            Tree *ul = Unify(r1->left, r2->left);
+            Tree *ur = Unify(r1->right, r2->right);
+            if (ul == xl_error || ur == xl_error)
+                return xl_error;
+            if (ul == r1->left && ur == r1->right)
+                return Join(r2, r1);
+            if (ul == r2->left && ur == r2->right)
+                return Join(r1, r2);
+            Tree *type = new Infix("=>", ul, ur, r1->Position());
+            type = Join(r1, type);
+            type = Join(r2, type);
+            return type;
+        }
+    }
+
+    // TODO: Range versus range?
 
     // None of the above: fail
     return TypeError(t1, t2);
 }
 
 
-Tree *Types::Base(Tree *type)
-// ----------------------------------------------------------------------------
-//   Return the base type for a given type, i.e. after all substitutions
-// ----------------------------------------------------------------------------
-{
-    Tree *chain = type;
-
-    // If we had some unification, find the reference type
-    TreeMap::iterator found = unifications.find(type);
-    while (found != unifications.end())
-    {
-        type = (*found).second;
-        found = unifications.find(type);
-        assert(type != chain || !"Circularity in unification chain");
-    }
-
-    // Make all elements in chain point to correct type for performance
-    while (chain != type)
-    {
-        Tree_p &u = unifications[chain];
-        chain = u;
-        u = type;
-    }
-
-    return type;
-}
-
-
-Tree *Types::TypePattern(Tree *type)
+Tree *Types::IsTypeOf(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a type pattern, i.e. type ( ... )
 // ----------------------------------------------------------------------------
 {
     if (Prefix *pfx = type->AsPrefix())
-        if (Name *tname = pfx->left->AsName())
-            if (tname->value == "type")
-                return pfx->right;
-
-    return NULL;
-}
-
-
-bool Types::Join(Tree *base, Tree *other, bool knownGood)
-// ----------------------------------------------------------------------------
-//   Use 'base' as the prototype for the other type
-// ----------------------------------------------------------------------------
-{
-    if (!knownGood)
     {
-        // If we have a type name, prefer that to a more complex form
-        // in order to keep error messages more readable
-        if (IsTypeName(other) && !IsTypeName(base))
-            std::swap(other, base);
-
-        // If what we want to use as a base is a generic and other isn't, swap
-        // (otherwise we could later unify through that variable)
-        else if (IsGeneric(base))
-            std::swap(other, base);
+        if (Name *tname = pfx->left->AsName())
+        {
+            if (tname->value == "type")
+            {
+                Tree *pattern = pfx->right;
+                if (Block *block = pattern->AsBlock())
+                    pattern = block->child;
+                return pattern;
+            }
+        }
     }
 
-    // Connext the base type classes
-    base = Base(base);
-    other = Base(other);
-    if (other != base)
-        unifications[other] = base;
-    return true;
+    return nullptr;
 }
 
 
-bool Types::JoinConstant(Name *type, Tree *cst)
+Infix *Types::IsRewriteType(Tree *type)
 // ----------------------------------------------------------------------------
-//    Join a constant with a type name
+//   Check if type is a rewrite type, i.e. something like [X => Y]
 // ----------------------------------------------------------------------------
 {
-    // Check if we match against some sized type, otherwise force type
-    switch (cst->Kind())
+    if (Infix *infix = type->AsInfix())
+        if (infix->name == "=>")
+            return infix;
+
+    return nullptr;
+}
+
+
+Infix *Types::IsRangeType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if type is a range type, i.e. [X..Y] with [X] and [Y] constant
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = type->AsInfix())
     {
-    case INTEGER:
+        if (infix->name == "..")
+        {
+            kind l = infix->left->Kind();
+            kind r = infix->right->Kind();
+            if (l == r && (l == INTEGER || l == REAL || l == TEXT))
+                return infix;
+        }
+    }
+
+    return nullptr;
+}
+
+
+Infix *Types::IsUnionType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if type is a union type, i.e. something like [integer|real]
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = type->AsInfix())
+        if (infix->name == "|")
+            return infix;
+
+    return nullptr;
+}
+
+
+Tree *Types::Join(Tree *old, Tree *replace)
+// ----------------------------------------------------------------------------
+//   Replace the old type with the new one
+// ----------------------------------------------------------------------------
+{
+    // Deal with error cases
+    if (old == xl_error || replace == xl_error)
+        return xl_error;
+
+    // Replace the type in the types map
+    for (auto &t : types)
+        if (t.second == old)
+            t.second = replace;
+
+    // Replace the type in the 'unifications' map
+    for (auto &u : unifications)
+        if (u.second == old)
+            u.second = replace;
+    unifications.erase(replace);
+    unifications[old] = replace;
+
+    // Replace the type in the rewrite calls
+    for (auto &r : rcalls)
+        for (auto &rc : r.second->candidates)
+            if (rc.type == old)
+                rc.type = replace;
+
+    return replace;
+}
+
+
+Tree *Types::UnionType(Tree *t1, Tree *t2)
+// ----------------------------------------------------------------------------
+//    Create the union of two types
+// ----------------------------------------------------------------------------
+{
+    if (TypeCoversType(t1, t2))
+        return t1;
+    if (TypeCoversType(t2, t1))
+        return t2;
+
+    // TODO: Union of range types and constants
+
+    return new Infix("|", t1, t2, t1->Position());
+
+}
+
+
+bool Types::TypeCoversConstant(Tree *type, Tree *cst)
+// ----------------------------------------------------------------------------
+//    Check if a type covers a constant or range
+// ----------------------------------------------------------------------------
+{
+    // If the type is something like 0..3, set 'range' to that range
+    Infix *range = IsRangeType(type);
+
+    // Check if we match against some sized type, otherwise force type
+    if (Integer *icst = cst->AsInteger())
+    {
         if (type == integer_type   || type == unsigned_type   ||
             type == integer8_type  || type == unsigned8_type  ||
             type == integer16_type || type == unsigned16_type ||
             type == integer32_type || type == unsigned32_type ||
             type == integer64_type || type == unsigned64_type)
-            return Join(type, cst, true);
-        return Unify(integer_type, type) && Join(cst, integer_type);
+            return true;
+        if (range)
+            if (Integer *il = range->left->AsInteger())
+                if (Integer *ir = range->right->AsInteger())
+                    return
+                        icst->value >= il->value &&
+                        icst->value <= ir->value;
+        return false;
+    }
 
-    case REAL:
+    if (Real *rcst = cst->AsReal())
+    {
         if (type == real_type   ||
             type == real64_type ||
             type == real32_type)
-            return Join(type, cst, true);
-        return Unify(real_type, type) && Join(cst, real_type);
-
-    case TEXT:
-    {
-        Text *text = (Text *) cst;
-        if (text->IsCharacter())
-        {
-            if (type == character_type)
-                return Join(type, cst, true);
-            return Join(type, character_type) && Join(cst, character_type);
-        }
-
-        if (type == text_type)
-            return Join(type, cst, true);
-        return Unify(text_type, type) && Join(cst, text_type);
+            return true;
+        if (range)
+            if (Real *rl = range->left->AsReal())
+                if (Real *rr = range->right->AsReal())
+                    return
+                        rcst->value >= rl->value &&
+                        rcst->value <= rr->value;
+        return false;
     }
-    default:
+
+    if (Text *tcst = cst->AsText())
     {
-        Tree *canon = CanonicalType(cst);
-        return type == canon;
-    }
+        bool isChar = tcst->IsCharacter();
+        if ((isChar  && type == character_type) ||
+            (!isChar && type == text_type))
+            return true;
+
+        if (range)
+            if (Text *tl = range->left->AsText())
+                if (Text *tr = range->right->AsText())
+                    return
+                        tl->IsCharacter() == isChar &&
+                        tr->IsCharacter() == isChar &&
+                        tcst->value >= tl->value &&
+                        tcst->value <= tr->value;
+        return false;
     }
     return false;
 }
 
 
-bool Types::UnifyPatterns(Tree *t1, Tree *t2)
+bool Types::TypeCoversType(Tree *top, Tree *bottom)
+// ----------------------------------------------------------------------------
+//   Check if the top type covers all values in the bottom type
+// ----------------------------------------------------------------------------
+{
+    // Quick exit when types are the same or the tree type is used
+    if (top == bottom)
+        return true;
+    if (top == tree_type)
+        return true;
+    if (Infix *u = IsUnionType(top))
+        if (TypeCoversType(u->left, bottom) || TypeCoversType(u->right, bottom))
+            return true;
+    if (TypeCoversConstant(top, bottom))
+        return true;
+
+    // Failed to match type
+    return false;
+}
+
+
+bool Types::TreePatternsMatch(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Check if two patterns describe the same tree shape
 // ----------------------------------------------------------------------------
+//   Patterns have to match exactly, i.e. [X:integer] matches [X:integer]
+//   but neither [Y:integer] nor [X:0]
 {
     if (t1 == t2)
         return true;
@@ -777,19 +865,18 @@ bool Types::UnifyPatterns(Tree *t1, Tree *t2)
     case INFIX:
         if (Infix *x1 = t1->AsInfix())
             if (Infix *x2 = t2->AsInfix())
-                return
-                    x1->name == x2->name &&
-                    UnifyPatterns(x1->left, x2->left) &&
-                    UnifyPatterns(x1->right, x2->right);
-
+                if (x1->name == x2->name &&
+                    TreePatternsMatch(x1->left, x2->left) &&
+                    TreePatternsMatch(x1->right, x2->right))
+                    return true;
         return false;
 
     case PREFIX:
         if (Prefix *x1 = t1->AsPrefix())
             if (Prefix *x2 = t2->AsPrefix())
                 return
-                    UnifyPatterns(x1->left, x2->left) &&
-                    UnifyPatterns(x1->right, x2->right);
+                    TreePatternsMatch(x1->left, x2->left) &&
+                    TreePatternsMatch(x1->right, x2->right);
 
         return false;
 
@@ -797,8 +884,8 @@ bool Types::UnifyPatterns(Tree *t1, Tree *t2)
         if (Postfix *x1 = t1->AsPostfix())
             if (Postfix *x2 = t2->AsPostfix())
                 return
-                    UnifyPatterns(x1->left, x2->left) &&
-                    UnifyPatterns(x1->right, x2->right);
+                    TreePatternsMatch(x1->left, x2->left) &&
+                    TreePatternsMatch(x1->right, x2->right);
 
         return false;
 
@@ -808,7 +895,7 @@ bool Types::UnifyPatterns(Tree *t1, Tree *t2)
                 return
                     x1->opening == x2->opening &&
                     x1->closing == x2->closing &&
-                    UnifyPatterns(x1->child, x2->child);
+                    TreePatternsMatch(x1->child, x2->child);
 
         return false;
 
@@ -818,9 +905,9 @@ bool Types::UnifyPatterns(Tree *t1, Tree *t2)
 }
 
 
-bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
+bool Types::TreePatternMatchesValue(Tree *pat, Tree *val)
 // ----------------------------------------------------------------------------
-//   Check if two patterns describe the same tree shape
+//   Check if the pattern matches some tree value
 // ----------------------------------------------------------------------------
 {
     switch(pat->Kind())
@@ -846,20 +933,20 @@ bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
     case NAME:
         // A name at that stage is a variable, so we match
         // PROBLEM: matching X+X will match twice?
-        return UnifyExpressionTypes(pat, val);
+        return Unify(pat, Type(val)) != xl_error;
 
     case INFIX:
         if (Infix *x1 = pat->AsInfix())
         {
             // Check if the pattern is a type declaration
             if (x1->name == ":")
-                return Unify(x1->right, val);
+                return Unify(x1->right, Type(val)) != xl_error;
 
             if (Infix *x2 = val->AsInfix())
                 return
                     x1->name == x2->name &&
-                    UnifyPatternAndValue(x1->left, x2->left) &&
-                    UnifyPatternAndValue(x1->right, x2->right);
+                    TreePatternMatchesValue(x1->left, x2->left) &&
+                    TreePatternMatchesValue(x1->right, x2->right);
         }
 
         return false;
@@ -868,8 +955,8 @@ bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
         if (Prefix *x1 = pat->AsPrefix())
             if (Prefix *x2 = val->AsPrefix())
                 return
-                    UnifyPatterns(x1->left, x2->left) &&
-                    UnifyPatternAndValue(x1->right, x2->right);
+                    TreePatternsMatch(x1->left, x2->left) &&
+                    TreePatternMatchesValue(x1->right, x2->right);
 
         return false;
 
@@ -877,8 +964,8 @@ bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
         if (Postfix *x1 = pat->AsPostfix())
             if (Postfix *x2 = val->AsPostfix())
                 return
-                    UnifyPatternAndValue(x1->left, x2->left) &&
-                    UnifyPatterns(x1->right, x2->right);
+                    TreePatternMatchesValue(x1->left, x2->left) &&
+                    TreePatternsMatch(x1->right, x2->right);
 
         return false;
 
@@ -888,31 +975,13 @@ bool Types::UnifyPatternAndValue(Tree *pat, Tree *val)
                 return
                     x1->opening == x2->opening &&
                     x1->closing == x2->closing &&
-                    UnifyPatternAndValue(x1->child, x2->child);
+                    TreePatternMatchesValue(x1->child, x2->child);
 
         return false;
 
     }
 
     return false;
-}
-
-
-bool Types::Commit(Types *child)
-// ----------------------------------------------------------------------------
-//   Commit all the inferences from 'child' into the current
-// ----------------------------------------------------------------------------
-{
-    rcall_map &rmap = rcalls;
-    for (rcall_map::iterator r = rmap.begin(); r != rmap.end(); r++)
-    {
-        Tree *expr = (*r).first;
-        Tree *type = child->Type(expr);
-        if (!AssignType(expr, type))
-            return false;
-    }
-
-    return true;
 }
 
 
@@ -932,7 +1001,7 @@ Name * Types::NewTypeName(TreePosition pos)
 }
 
 
-Tree *Types::LookupTypeName(Tree *type)
+Tree *Types::DeclaredTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   If we have a type name, lookup its definition
 // ----------------------------------------------------------------------------
@@ -944,36 +1013,46 @@ Tree *Types::LookupTypeName(Tree *type)
             return name;
 
         // Check if we have a type definition. If so, use it
-        Tree *definition = context->Bound(name);
+        Rewrite_p rewrite;
+        Scope_p scope;
+        Tree *definition = context->Bound(name, true, &rewrite, &scope);
         if (definition && definition != name)
         {
-            Join(definition, name);
-            return Base(definition);
+            type = Join(type, definition);
+            type = Join(type, rewrite->left);
         }
     }
 
-    // Otherwise, simply return input type
+    // By default, return input type
     return type;
 }
 
 
-bool Types::TypeError(Tree *t1, Tree *t2)
+Tree *Types::TypeError(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Show type matching errors
 // ----------------------------------------------------------------------------
 {
-    assert(left && right);
-
-    if (left == right)
+    Tree *x1 = nullptr;
+    Tree *x2 = nullptr;
+    for (auto &t : types)
     {
-        Ooops("Type of $1 cannot be both $2 and $3", left, t1, t2);
+        if (t.second == t1)
+            x1 = t.first;
+        if (t.second == t2)
+            x2 = t.first;
+    }
+
+    if (x1 == x2)
+    {
+        Ooops("Type of $1 cannot be both $2 and $3", x1, t1, t2);
     }
     else
     {
-        Ooops("Cannot unify type $2 of $1", left, t1);
-        Ooops("with type $2 of $1", right, t2);
+        Ooops("Cannot unify type $2 of $1", x1, t1);
+        Ooops("with type $2 of $1", x2, t2);
     }
-    return false;
+    return xl_error;
 }
 
 
@@ -1118,29 +1197,6 @@ Tree *ValueMatchesType(Context *ctx, Tree *type, Tree *value, bool convert)
 }
 
 
-Tree *TypeCoversType(Context *ctx, Tree *type, Tree *test, bool convert)
-// ----------------------------------------------------------------------------
-//   Check if type 'test' is covered by 'type'
-// ----------------------------------------------------------------------------
-{
-    // Quick exit when types are the same or the tree type is used
-    if (type == test)
-        return test;
-    if (IsTreeType(type))
-        return test;
-
-    // Numerical conversion
-    if (convert)
-    {
-        if (type == real_type && test == integer_type)
-            return test;
-    }
-
-    // Failed to match type
-    return NULL;
-}
-
-
 Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
 // ----------------------------------------------------------------------------
 //   Check if type 'test' intersects 'type'
@@ -1240,23 +1296,6 @@ Tree *TypeIntersectsType(Context *ctx, Tree *type, Tree *test, bool convert)
 
     // Failed to match type
     return NULL;
-}
-
-
-Tree *UnionType(Context *ctx, Tree *t1, Tree *t2)
-// ----------------------------------------------------------------------------
-//    Create the union of two types
-// ----------------------------------------------------------------------------
-{
-    if (t1 == NULL)
-        return t2;
-    if (t2 == NULL)
-        return t1;
-    if (TypeCoversType(ctx, t1, t2, false))
-        return t1;
-    if (TypeCoversType(ctx, t2, t1, false))
-        return t2;
-    return tree_type;
 }
 
 
@@ -1392,7 +1431,7 @@ void Types::DumpTypes()
     {
         Tree *value = t.first;
         Tree *type = t.second;
-        Tree *base = Base(type);
+        Tree *base = BaseType(type);
         std::cout << "#" << ++i
                   << "\t" << ShortTreeForm(value)
                   << "\t: " << type;
@@ -1502,3 +1541,8 @@ void debugr(XL::Types *ti)
     }
     ti->DumpRewriteCalls();
 }
+
+RECORDER(types,                 64, "Type analysis");
+RECORDER(types_ids,             64, "Assigned type identifiers");
+RECORDER(types_unifications,    64, "Type unifications");
+RECORDER(types_calls,           64, "Type deductions in rewrites (calls)")

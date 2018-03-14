@@ -99,7 +99,6 @@ Tree *RewriteCalls::Check (Prefix *scope,
     Errors errors;
     errors.Log(Error("Pattern '$1' doesn't match:", candidate->left), true);
     RewriteCandidate rc(candidate);
-    types->AssignType(what);
 
     // Create local type inference deriving from ours
     Scope *valueScope = types->TypesScope();
@@ -112,41 +111,56 @@ Tree *RewriteCalls::Check (Prefix *scope,
     Save<Types *> saveTypes(types, childTypes);
     Tree *form = candidate->left;
     Tree *defined = RewriteDefined(form);
-    Tree *defType = RewriteType(form);
+    Tree *type = RewriteType(form);
 
     BindingStrength binding = Bind(childContext, defined, what, rc);
     if (binding == FAILED)
-        return NULL;
+        return nullptr;
 
     // If argument/parameters binding worked, try to typecheck the definition
-    Tree *value = candidate->right;
+    Tree *init = candidate->right;
     bool builtin = false;
-    if (value && value != xl_self)
+    if (init)
     {
+        // Process declarations in the initializer
+        childContext->CreateScope();
+        childContext->ProcessDeclarations(init);
+
         // Check if we have a type to match
-        if (defType)
+        if (type)
         {
-            if (!childTypes->AssignType(value, defType))
-                binding = FAILED;
-            if (!childTypes->UnifyExpressionTypes(what, value))
+            type = childTypes->AssignType(init, type);
+            type = childTypes->AssignType(what, type);
+            if (type == xl_error)
                 binding = FAILED;
         }
 
         // Check built-ins and C functions
-        if (Name *name = value->AsName())
-            if (name->value == "C")
-                builtin = true;
-        if (Prefix *prefix = value->AsPrefix())
-            if (Name *pfname = prefix->left->AsName())
-                if (pfname->value == "builtin" || pfname->value == "C")
-                    builtin = true;
-
-        if (!builtin)
+        if (binding != FAILED)
         {
-            bool childSucceeded = childTypes->TypeAnalysis(value);
-            if (!childSucceeded)
-                binding = FAILED;
+            if (Name *name = init->AsName())
+                if (name->value == "C")
+                    builtin = true;
+            if (Prefix *prefix = init->AsPrefix())
+                if (Name *pfname = prefix->left->AsName())
+                    if (pfname->value == "builtin" || pfname->value == "C")
+                        builtin = true;
+
+            if (!builtin)
+            {
+                type = childTypes->TypeAnalysis(init);
+                if (type == xl_error)
+                    binding = FAILED;
+            }
         }
+    }
+
+    // Match the type of the form and declared entity
+    if (binding != FAILED && type != nullptr )
+    {
+        type = childTypes->AssignType(form, type);
+        if (defined && form != defined)
+            type = childTypes->AssignType(defined, type);
     }
 
     // If we had some errors in the process, binding fails,
@@ -162,7 +176,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
     if (binding != FAILED)
     {
         // Record the type for that specific expression
-        rc.type = childTypes->Type(!builtin && value ? value : form);
+        rc.type = childTypes->Type(form);
         rc.types = childTypes;
         candidates.push_back(rc);
     }
@@ -239,12 +253,8 @@ RewriteCalls::Bind(Context *context,
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
-        bool old_matching = types->Matching();
-        types->Matching(true);
         if (!value->Do(types))
             return FAILED;
-        types->Matching(old_matching);
-        type = types->Type(value);
 
         // Test if the name is already bound, and if so, if trees fail to match
         if (Tree *bound = context->Bound(f, true))
@@ -339,11 +349,8 @@ RewriteCalls::Bind(Context *context,
         // We may have an expression that evaluates as an infix
 
         // Check if what we have as an expression evaluates correctly
-        bool old_matching = types->Matching();
-        types->Matching(true);
         if (!value->Do(types))
             return FAILED;
-        types->Matching(old_matching);
 
         // Then check if the type matches
         type = types->Type(value);
@@ -460,7 +467,7 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
 //   Check unification for types in a given candidate
 // ----------------------------------------------------------------------------
 {
-    Tree *refType = types->LookupTypeName(valueType);
+    Tree *refType = types->DeclaredTypeName(valueType);
 
     record(calltypes,
            "Unify %t as %t with %t as %t", value, valueType, form, formType);
@@ -468,7 +475,7 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)
     {
-        Tree *vrefType = types->LookupTypeName(formType);
+        Tree *vrefType = types->DeclaredTypeName(formType);
         kind k = valueType->Kind();
         if (k == INTEGER || vrefType == integer_type)
             rc.KindCondition(value, INTEGER);
@@ -489,8 +496,7 @@ bool RewriteCalls::Unify(RewriteCandidate &rc,
     }
 
     // Otherwise, do type inference
-    return types->Unify(valueType, formType, value, form,
-                        declaration ? Types::DECLARATION : Types::STANDARD);
+    return types->Unify(valueType, formType);
 }
 
 

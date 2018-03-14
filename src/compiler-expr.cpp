@@ -257,7 +257,8 @@ Value_p CompilerExpression::DoCall(Tree *call)
     Value_p result = nullptr;
 
     record(compiler_expr, "Call %t", call);
-    rcall_map &rcalls = function.types->TypesRewriteCalls();
+    Types *types = unit.types;
+    rcall_map &rcalls = types->TypesRewriteCalls();
     rcall_map::iterator found = rcalls.find(call);
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 

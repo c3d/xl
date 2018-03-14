@@ -71,7 +71,6 @@ class CompilerFunction
     Compiler &          compiler;   // The compiler environment we use
     JIT &               jit;        // The JIT compiler (LLVM API stabilizer)
     Context_p           context;    // Context for this function
-    Types_p             types;      // Types for this function
     Tree_p              form;       // Interface for this function
     Tree_p              source;     // Source code for this function
     value_map           values;     // Tree -> LLVM value

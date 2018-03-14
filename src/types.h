@@ -46,13 +46,9 @@
 //   - A type name              integer
 //   - A litteral value         0       1.5             "Hello"
 //   - A range of values        0..4    1.3..8.9        "A".."Z"
-//   - A union of types         0,3,5   integer|real
-//   - A block for precedence   (real)
+//   - A union of types         0|3|5   integer|real
 //   - A rewrite specifier      integer => real
 //   - The type of a pattern    type (X:integer, Y:integer)
-//
-//  REVISIT: The form A => B is to distinguish from a rewrite itself.
-//  Not sure if this is desirable.
 
 #include "tree.h"
 #include "context.h"
@@ -89,81 +85,88 @@ class Types
     TreeMap     types;          // Map an expression to its type
     TreeMap     unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
-    Tree_p      left, right;    // Current left and right of unification
-    bool        prototyping;    // Prototyping a function declaration
-    bool        matching;       // Matching a pattern
-    static ulong id;            // Id of next type
+    static uint id;             // Id of next type
 
 public:
     Types(Scope *scope);
     Types(Scope *scope, Types *parent);
     ~Types();
-    typedef bool value_type;
-    enum unify_mode { STANDARD, DECLARATION };
+    typedef Tree *value_type;
 
 public:
     // Main entry point
-    bool        TypeAnalysis(Tree *source);
+    Tree *      TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
+    Tree *      BaseType(Tree *expr);
     rcall_map & TypesRewriteCalls();
     Scope *     TypesScope();
     Context *   TypesContext();
-    bool        Matching()              { return matching; }
-    void        Matching(bool m)        { matching = m; }
+    bool        Commit(Types *child);
 
 public:
     // Interface for Tree::Do() to annotate the tree
-    bool        DoInteger(Integer *what);
-    bool        DoReal(Real *what);
-    bool        DoText(Text *what);
-    bool        DoName(Name *what);
-    bool        DoPrefix(Prefix *what);
-    bool        DoPostfix(Postfix *what);
-    bool        DoInfix(Infix *what);
-    bool        DoBlock(Block *what);
+    Tree *      DoInteger(Integer *what);
+    Tree *      DoReal(Real *what);
+    Tree *      DoText(Text *what);
+    Tree *      DoName(Name *what);
+    Tree *      DoPrefix(Prefix *what);
+    Tree *      DoPostfix(Postfix *what);
+    Tree *      DoInfix(Infix *what);
+    Tree *      DoBlock(Block *what);
 
 public:
     // Common code for all constants (integer, real, text)
-    bool        DoConstant(Tree *what);
+    Tree *      DoConstant(Tree *what, kind k);
 
     // Annotate expressions with type variables
-    bool        AssignType(Tree *expr, Tree *type = NULL);
-    bool        Rewrite(Infix *rewrite);
-    bool        Data(Tree *form);
-    bool        Extern(Tree *form);
-    bool        Statements(Tree *expr, Tree *left, Tree *right);
+    Tree *      AssignType(Tree *expr, Tree *type);
+    Tree *      TypeOf(Tree *expr);
+    Tree *      TypeDeclaration(Infix *decl);
+    Tree *      RewriteType(Infix *rw);
+    Tree *      DeclarationOnly(Infix *rw, kstring description);
+    Tree *      Data(Infix *rw);
+    Tree *      Extern(Infix *rw);
+    Tree *      Builtin(Infix *rw);
+    Tree *      Statements(Tree *expr, Tree *left, Tree *right);
 
     // Attempt to evaluate an expression and perform required unifications
-    bool        Evaluate(Tree *tree);
+    Tree *      Evaluate(Tree *tree, bool mayFail = false);
 
     // Indicates that two trees must have compatible types
-    bool        UnifyExpressionTypes(Tree *expr1, Tree *expr2);
-    bool        Unify(Tree *t1, Tree *t2,
-                      Tree *x1, Tree *x2, unify_mode mode = STANDARD);
-    bool        Unify(Tree *t1, Tree *t2, unify_mode mode = STANDARD);
-    bool        Join(Tree *base, Tree *other, bool knownGood = false);
-    bool        JoinConstant(Name *tname, Tree *cst);
-    bool        UnifyPatterns(Tree *t1, Tree *t2);
-    bool        UnifyPatternAndValue(Tree *pat, Tree *val);
-    bool        Commit(Types *child);
+    Tree *      Unify(Tree *t1, Tree *t2);
+    Tree *      Join(Tree *old, Tree *replacement);
+    Tree *      UnionType(Tree *t1, Tree *t2);
 
-    // Return the base type associated with a given tree
-    Tree *      Base(Tree *type);
+    // Check attributes of the given name
     bool        IsGeneric(text name);
-    bool        IsGeneric(Tree *type);
-    bool        IsTypeName(Tree *type);
+    Name *      IsGeneric(Tree *type);
+    Name *      IsTypeName(Tree *type);
 
-    // Type constructors
-    Tree *      TypePattern(Tree *type);
+    // Operations on types
+    Tree *      ValueMatchesType(Tree *type, Tree *value, bool conversions);
+    Tree *      CanonicalType(Tree *value);
+    Tree *      StructuredType(Tree *value);
+    bool        IsTreeType(Tree *type);
+    bool        TypeCoversConstant(Tree *type, Tree *cst);
+    bool        TypeCoversType(Tree *type, Tree *test);
+    bool        TypeIntersectsType(Tree *type, Tree *test, bool conversions);
+    bool        TreePatternsMatch(Tree *t1, Tree *t2);
+    bool        TreePatternMatchesValue(Tree *pat, Tree *val);
+
+    // Checking if we have specific kinds of types
+    Tree *      IsTypeOf(Tree *type);
+    Infix *     IsRewriteType(Tree *type);
+    Infix *     IsRangeType(Tree *type);
+    Infix *     IsUnionType(Tree *type);
 
     // Generation of type names
     Name *      NewTypeName(TreePosition pos);
 
     // Lookup a type name in the given context
-    Tree *      LookupTypeName(Tree *input);
+    Tree *      DeclaredTypeName(Tree *input);
 
     // Error messages
-    bool        TypeError(Tree *t1, Tree *t2);
+    Tree *      TypeError(Tree *t1, Tree *t2);
 
     // Debug utilities
     void        DumpTypes();
@@ -174,22 +177,6 @@ public:
     GARBAGE_COLLECT(Types);
 };
 typedef GCPtr<Types> Types_p;
-
-
-
-// ============================================================================
-//
-//   High-level entry points for type management
-//
-// ============================================================================
-
-Tree *ValueMatchesType(Context *, Tree *type, Tree *value, bool conversions);
-Tree *TypeCoversType(Context *, Tree *type, Tree *test, bool conversions);
-Tree *TypeIntersectsType(Context *, Tree *type, Tree *test, bool conversions);
-Tree *UnionType(Context *, Tree *t1, Tree *t2);
-Tree *CanonicalType(Tree *value);
-Tree *StructuredType(Context *, Tree *value);
-bool  IsTreeType(Tree *type);
 
 
 
@@ -227,31 +214,33 @@ inline bool Types::IsGeneric(text name)
 }
 
 
-inline bool Types::IsGeneric(Tree *type)
+inline Name *Types::IsGeneric(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
 {
     if (Name *name = type->AsName())
-        return IsGeneric(name->value);
-    return false;
+        if (IsGeneric(name->value))
+            return name;
+    return nullptr;
 }
 
 
-inline bool Types::IsTypeName(Tree *type)
+inline Name *Types::IsTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a 'true' type name, i.e. not generated
 // ----------------------------------------------------------------------------
 {
     if (Name *name = type->AsName())
-        return !IsGeneric(name->value);
-    return false;
+        if (!IsGeneric(name->value))
+            return name;
+    return nullptr;
 }
 
 
 inline bool IsTreeType(Tree *type)
 // ----------------------------------------------------------------------------
-//   Return true for any 'tree' type
+//   Return true for the 'tree' type
 // ----------------------------------------------------------------------------
 {
     return type == tree_type;
@@ -264,5 +253,8 @@ extern "C" void debugu(XL::Types *ti);
 extern "C" void debugr(XL::Types *ti);
 
 RECORDER_DECLARE(types);
+RECORDER_DECLARE(types_ids);
+RECORDER_DECLARE(types_unifications);
+RECORDER_DECLARE(types_calls);
 
 #endif // TYPES_H

@@ -151,7 +151,7 @@ eval_fn CompilerUnit::Compile()
         return xl_identity;
     }
 
-    if (!types->TypeAnalysis(source))
+    if (types->TypeAnalysis(source) == xl_error)
     {
         // Type analysis failed
         Ooops("Type analysis for $1 failed", source);
@@ -183,7 +183,7 @@ bool CompilerUnit::TypeAnalysis()
 //   Perform type analysis on the given tree
 // ----------------------------------------------------------------------------
 {
-    return types->TypeAnalysis(source);
+    return types->TypeAnalysis(source) != xl_error;
 }
 
 

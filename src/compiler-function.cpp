@@ -65,7 +65,6 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
       compiler(unit.compiler),
       jit(unit.jit),
       context(new Context(scope)),
-      types(new Types(scope)),
       form(nullptr),
       source(source),
       closureTy(nullptr),
@@ -99,7 +98,6 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       compiler(unit.compiler),
       jit(unit.jit),
       context(new Context(scope)),
-      types(new Types(scope, caller.types)),
       form(form),
       source(body),
       closureTy(unit.ClosureType(form)),
@@ -134,7 +132,6 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       compiler(unit.compiler),
       jit(unit.jit),
       context(new Context(scope)),
-      types(new Types(scope, caller.types)),
       form(form),
       source(form),
       closureTy(nullptr),
@@ -777,6 +774,7 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
         Signature sig { closurePtrTy };
 
         // Figure out the return type and function type
+        Types *types = unit.types;
         Tree *rtype = types->Type(expr);
         Type_p retTy = MachineType(rtype);
         CompilerFunction closure(*this, scope, expr, "xl.closure", retTy, sig);
@@ -987,8 +985,8 @@ Type_p CompilerFunction::MachineType(Tree *tree)
         return type;
 
     // Find the base type for the expression
-    Tree *typeTree = types->Type(tree);
-    Tree *base = types->Base(typeTree);
+    Types *types = unit.types;
+    Tree *base = types->Type(tree);
     type = mtypes[base];
     if (type)
     {
@@ -1036,7 +1034,8 @@ void CompilerFunction::AddBoxedType(Tree *treeType, Type_p machineType)
 ///  The tree type could be a named type, e.g. [integer], or data, e.g. [X,Y]
 //   The machine type could be integerTy or StructType({integerTy, realTy})
 {
-    Tree *baseType = types->Base(treeType);
+    Types *types = unit.types;
+    Tree *baseType = types->BaseType(treeType);
     boxed[baseType] = machineType;
     unboxed[machineType] = baseType;
 }
@@ -1047,7 +1046,8 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 //   Return the machine "boxed" type for a given tree type
 // ----------------------------------------------------------------------------
 {
-    Tree *baseType = types->Base(type);
+    Types *types = unit.types;
+    Tree *baseType = types->BaseType(type);
     return boxed[baseType];
 }
 
@@ -1188,6 +1188,7 @@ Type_p CompilerFunction::ReturnType(Tree *form)
 // ----------------------------------------------------------------------------
 {
     // Type inference gives us the return type for this form
+    Types *types = unit.types;
     Tree *type = types->Type(form);
     Type_p mtype = MachineType(type);
     return mtype;
