@@ -64,7 +64,7 @@ Options::Options(int argc, char **argv):
     // Check if some options are given from environment
     if (kstring envopt = getenv("XL_OPT"))
     {
-        RECORD(options, "Environment variable XL_OPT='%s'", envopt);
+        RECORD(options, "Environment variable XL_OPT='%+s'", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -82,7 +82,7 @@ Options::Options(int argc, char **argv):
     RECORD(options, "Command line has %d options", argc-1);
     for (int a = 1; a < argc; a++)
     {
-        RECORD(options, "  Option #%d is '%s'", a, argv[a]);
+        RECORD(options, "  Option #%d is '%+s'", a, argv[a]);
         args.push_back(argv[a]);
     }
 }
@@ -217,7 +217,7 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str() + 1;
             kstring argval = option;
 
-            RECORD(options, "Parse option #%d, '%s'", arg, option);
+            RECORD(options, "Parse option #%d, '%+s'", arg, option);
 
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \

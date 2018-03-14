@@ -95,7 +95,7 @@ void Opcode::Register(Context *context)
 {
     if (Tree *shape = this->Shape())
     {
-        record(opcodes, "Opcode %s for %t", this->OpID(), shape);
+        record(opcodes, "Opcode %+s for %t", this->OpID(), shape);
 
         Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         static Name_p builtinName = new Name("builtin");
@@ -107,7 +107,7 @@ void Opcode::Register(Context *context)
     }
     else
     {
-        record(opcodes, "Opcode %s", this->OpID());
+        record(opcodes, "Opcode %+s", this->OpID());
     }
 }
 
@@ -124,7 +124,7 @@ void NameOpcode::Register(Context *context)
 //   For name rewrites, create the name, assign to variable, enter it
 // ----------------------------------------------------------------------------
 {
-    record(opcodes, "Opcode %s is a name", this->OpID());
+    record(opcodes, "Opcode %+s is a name", this->OpID());
 
     context->Define(toDefine, toDefine);
     toDefine->SetInfo<Opcode> (this);

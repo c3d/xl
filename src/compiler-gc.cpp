@@ -86,7 +86,7 @@ CompilerInfo *CompilerInfo::Info(Tree *form, bool create)
         result = new CompilerInfo(form);
         form->SetInfo<CompilerInfo>(result);
     }
-    record(compiler_gc, "Info for %t is %p%s",
+    record(compiler_gc, "Info for %t is %p%+s",
            form, result, create ? " (creating)" : "");
     return result;
 }
@@ -199,7 +199,7 @@ bool CompilerInfo::FreeResources(Tree *form)
     if (Function_p f = info->function)
     {
         bool inUse = !JIT::InUse(f);
-        record(compiler_gc, "FreeResources %t function %v is %s",
+        record(compiler_gc, "FreeResources %t function %v is %+s",
                form, f, inUse ? "in use" : "unused");
 
         if (inUse)
@@ -214,7 +214,7 @@ bool CompilerInfo::FreeResources(Tree *form)
             info->function = nullptr;
         }
     }
-    record(compiler_gc, "FreeResources %t: %s",
+    record(compiler_gc, "FreeResources %t: %+s",
            form, result ? "deleted" : "preserved");
     return result;
 }

@@ -174,6 +174,7 @@ public:
     // JIT attributes
     void                SetOptimizationLevel(unsigned opt);
     void                PrintStatistics();
+    static void         StackTrace();
 
     // Types
     template<typename T>

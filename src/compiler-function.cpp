@@ -1228,7 +1228,7 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate &rc)
         ? new CompilerFunction(*this, scope, source, label, retTy, parms)
         : new CompilerFunction(*this, scope, def, source,
                                label, retTy, parms);
-    record(compiler_unit, "Rewrite function for %t is %p %s",
+    record(compiler_unit, "Rewrite function for %t is %p %+s",
            source, f, isC ? "is C" : "from XL source");
     return f;
 }

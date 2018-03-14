@@ -653,7 +653,7 @@ RECORDER_TWEAK_DEFINE(gc_statistics, 0, "Display garbage collector stats");
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    record(main, "XL Compiler version %s starting", XL_VERSION);
+    record(main, "XL Compiler version %+s starting", XL_VERSION);
 
 #if HAVE_SBRK
     char *low_water = (char *) sbrk(0);

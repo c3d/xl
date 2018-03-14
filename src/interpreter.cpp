@@ -240,7 +240,7 @@ inline bool Bindings::DoName(Name *what)
     {
         MustEvaluate(true);
         bool result = Tree::Equal(bound, test);
-        record(interpreter, "Arg check %t vs %t: %s",
+        record(interpreter, "Arg check %t vs %t: %+s",
                test, bound, result ? "match" : "failed");
         if (!result)
             Ooops("Name $1 does not match $2", bound, test);
@@ -626,7 +626,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         Data data = &args[offset];
         opcode->Run(data);
         result = DataResult(data);
-        record(interpreter_eval, "Eval%u %t opcode %s, result %t",
+        record(interpreter_eval, "Eval%u %t opcode %+s, result %t",
                depth, self, opcode->OpID(), result);
         return result;
     }

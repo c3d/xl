@@ -458,7 +458,7 @@ Tree *Types::DeclarationOnly(Infix *what, kstring description)
 //    Declarations where the interface is all we know
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "%!s %t in %p", description, what, this);
+    record(types_calls, "%+s %t in %p", description, what, this);
 
     Tree *decl = what->left;
     Tree *init = what->right;
@@ -468,7 +468,7 @@ Tree *Types::DeclarationOnly(Infix *what, kstring description)
     type = AssignType(init, type);
     type = AssignType(what, type);
 
-    record(types_calls, "%!s %t in %p is %t", description, what, this, type);
+    record(types_calls, "%+s %t in %p is %t", description, what, this, type);
     return type;
 }
 

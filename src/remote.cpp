@@ -373,7 +373,7 @@ static int child_wait(int flag)
 
     if (childPID > 0)
     {
-        record(remote_listen, "Child PID %d died %s status %d",
+        record(remote_listen, "Child PID %d died %+s status %d",
                childPID, flag ? "nowait" : "wait", status);
         active_children--;
         if (!flag && WIFEXITED(status))

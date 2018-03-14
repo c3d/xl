@@ -521,6 +521,15 @@ void JIT::PrintStatistics()
 }
 
 
+void JIT::StackTrace()
+// ----------------------------------------------------------------------------
+//    Dump the stack trace in case of crash
+// ----------------------------------------------------------------------------
+{
+    sys::PrintStackTrace(llvm::errs());
+}
+
+
 IntegerType_p JIT::IntegerType(unsigned bits)
 // ----------------------------------------------------------------------------
 //   Create an integer type with the given number of bits
@@ -630,7 +639,7 @@ Function_p JIT::Function(FunctionType_p type, text name)
     Function_p f = llvm::Function::Create(type,
                                           llvm::Function::ExternalLinkage,
                                           name, module);
-    record(llvm_functions, "Created %s %v type %v in module %v",
+    record(llvm_functions, "Created %+s %v type %v in module %v",
            top ? "top-level function" : "inner function",
            f, type, p.Module());
 
@@ -761,7 +770,7 @@ JITBlockPrivate::JITBlockPrivate(JIT &jit, Function_p function, kstring name)
       block(BasicBlock::Create(jit.p.context, name, function)),
       builder(new JITBuilder(block))
 {
-    record(llvm_blocks, "Create JIT block '%s' %p for block %v",
+    record(llvm_blocks, "Create JIT block '%+s' %p for block %v",
            name, this, block);
 }
 
@@ -774,7 +783,7 @@ JITBlockPrivate::JITBlockPrivate(const JITBlockPrivate &other, kstring name)
       block(BasicBlock::Create(jit.p.context, name, other.block->getParent())),
       builder(new JITBuilder(block))
 {
-    record(llvm_blocks, "Copy JIT block '%s' %p for block %v from %p",
+    record(llvm_blocks, "Copy JIT block '%+s' %p for block %v from %p",
            name, this, block, &other);
 }
 
@@ -1089,7 +1098,7 @@ Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 // ----------------------------------------------------------------------------
 {
     auto inst =  b->CreateStructGEP(nullptr, ptr, idx, name);
-    record(llvm_ir, "StructGEP %s(%v, %u) is %v", name, ptr, idx, inst);
+    record(llvm_ir, "StructGEP %+s(%v, %u) is %v", name, ptr, idx, inst);
     return inst;
 }
 
@@ -1101,7 +1110,7 @@ Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 Value_p JITBlock::Name(Value_p v, kstring name)                         \
 {                                                                       \
     auto value = b->Create##Name(v, name);                              \
-    record(llvm_ir, #Name " %s(%v) = %v", name, v, value);              \
+    record(llvm_ir, #Name " %+s(%v) = %v", name, v, value);             \
     return value;                                                       \
 }
 
@@ -1113,7 +1122,7 @@ Value_p JITBlock::Name(Value_p v, kstring name)                         \
     Value_p JITBlock::Name(Value_p l, Value_p r, kstring name)          \
 {                                                                       \
     auto value = b->Create##Name(l, r, name);                           \
-    record(llvm_ir, #Name " %s(%v, %v) = %v", name, l, r, value);       \
+    record(llvm_ir, #Name " %+s(%v, %v) = %v", name, l, r, value);      \
     return value;                                                       \
 }
 
@@ -1125,7 +1134,7 @@ Value_p JITBlock::Name(Value_p v, kstring name)                         \
 Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
 {                                                                       \
     auto value = b->Create##Name(v, t, name);                           \
-    record(llvm_ir, #Name " %s(%v, type %v) = %v", name, v, t, value);  \
+    record(llvm_ir, #Name " %+s(%v, type %v) = %v", name, v, t, value); \
     return value;                                                       \
 }
 

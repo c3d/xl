@@ -87,7 +87,8 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
       chunkSize(1022), objectSize(os), alignedSize(os),
       allocatedCount(0), scannedCount(0), collectedCount(0), totalCount(0)
 {
-    RECORD(memory, "New type allocator %p name '%s' object size %u", this, tn, os);
+    RECORD(memory, "New type allocator %p name '%+s' object size %u",
+           this, tn, os);
 
     // Make sure we align everything on Chunk boundaries
     if ((alignedSize + sizeof (Chunk)) & CHUNKALIGN_MASK)
@@ -123,7 +124,7 @@ TypeAllocator::~TypeAllocator()
 //   Delete all the chunks we allocated
 // ----------------------------------------------------------------------------
 {
-    RECORD(memory, "Destroy type allocator %p '%s'", this, this->name);
+    RECORD(memory, "Destroy type allocator %p '%+s'", this, this->name);
 
     VALGRIND_DESTROY_MEMPOOL(this);
 
@@ -137,7 +138,7 @@ void *TypeAllocator::Allocate()
 //   Allocate a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(memory, "Allocate in '%s', free list %p",
+    RECORD(memory, "Allocate in '%+s', free list %p",
            this->name, (void *) freeList.Get());
 
     Chunk_vp result;
@@ -162,7 +163,7 @@ void *TypeAllocator::Allocate()
             void   *allocated = malloc(allocSize);
             (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
 
-            RECORD(memory, "New chunk %p in '%s'", allocated, this->name);
+            RECORD(memory, "New chunk %p in '%+s'", allocated, this->name);
 
             char *chunkBase = (char *) allocated + alignedSize;
             Chunk_vp last = (Chunk_vp) chunkBase;
@@ -212,7 +213,7 @@ void *TypeAllocator::Allocate()
     void *ret =  (void *) &result[1];
     VALGRIND_MEMPOOL_ALLOC(this, ret, objectSize);
 
-    RECORD(memory, "Allocated %p from %s", ret, name);
+    RECORD(memory, "Allocated %p from %+s", ret, name);
     return ret;
 }
 
@@ -222,7 +223,7 @@ void TypeAllocator::Delete(void *ptr)
 //   Free a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(memory, "Delete %p in '%s'", ptr, this->name);
+    RECORD(memory, "Delete %p in '%+s'", ptr, this->name);
 
     if (!ptr)
         return;
@@ -303,7 +304,7 @@ bool TypeAllocator::CheckLeakedPointers()
 //   Check if any pointers were allocated and not captured between safe points
 // ----------------------------------------------------------------------------
 {
-    RECORD(memory, "CheckLeaks in '%s'", name);
+    RECORD(memory, "CheckLeaks in '%+s'", name);
 
     char *lo = (char *) lowestInUse.Get();
     char *hi = (char *) highestInUse.Get();
@@ -348,7 +349,7 @@ bool TypeAllocator::CheckLeakedPointers()
     }
 
     collectedCount += collected;
-    RECORD(memory, "CheckLeaks in '%s' done, scanned %u, collected %u",
+    RECORD(memory, "CheckLeaks in '%+s' done, scanned %u, collected %u",
            name, scannedCount, collected);
     return collected;
 }
@@ -359,7 +360,7 @@ bool TypeAllocator::Sweep()
 //    Remove all the things that we have pushed on the toDelete list
 // ----------------------------------------------------------------------------
 {
-    RECORD(memory, "Sweep '%s'", name);
+    RECORD(memory, "Sweep '%+s'", name);
     bool result = false;
     while (toDelete)
     {
@@ -368,7 +369,8 @@ bool TypeAllocator::Sweep()
         Finalize((void *) (next+1));
         result = true;
     }
-    RECORD(memory, "Swept '%s' %s objects deleted", name, result ? "with" : "without");
+    RECORD(memory, "Swept '%+s' %+s objects deleted",
+           name, result ? "with" : "without");
     return result;
 }
 
@@ -434,7 +436,8 @@ bool TypeAllocator::CanDelete(void *obj)
     for (i = listeners.begin(); i != listeners.end(); i++)
         if (!(*i)->CanDelete(obj))
             result = false;
-    RECORD(memory, "%s delete %p in '%s'", result ? "Can" : "Cannot", obj, name);
+    RECORD(memory, "%+s delete %p in '%+s'", result ? "Can" : "Cannot",
+           obj, name);
     return result;
 }
 
