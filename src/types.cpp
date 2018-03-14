@@ -109,11 +109,20 @@ Tree *Types::TypeAnalysis(Tree *program)
 
     // Dump debug information if approriate
     if (RECORDER_TRACE(types_ids))
-        std::cout << "TYPES:\n"; debugt(this);
+    {
+        std::cout << "TYPES:\n";
+        debugt(this);
+    }
     if (RECORDER_TRACE(types_unifications))
-        std::cout << "UNIFICATIONS:\n"; debugu(this);
+    {
+        std::cout << "UNIFICATIONS:\n";
+        debugu(this);
+    }
     if (RECORDER_TRACE(types_calls))
-        std::cout << "CALLS:\n"; debugr(this);
+    {
+        std::cout << "CALLS:\n";
+        debugr(this);
+    }
 
     return result;
 }
@@ -143,7 +152,7 @@ Tree *Types::Type(Tree *expr)
     if (it == types.end())
     {
         type = expr->Do(this);
-        types[expr] = type;
+        type = AssignType(expr, type);
         record(types_ids, "Created type for %t in %p is %t", expr, this, type);
     }
     else
@@ -605,12 +614,6 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     if (TypeCoversType(t1, t2))
         return Join(t2, t1);
     if (TypeCoversType(t2, t1))
-        return Join(t2, t1);
-
-    // Check if we have [integer] against [0]
-    if (TypeCoversConstant(t1, t2))
-        return Join(t2, t1);
-    if (TypeCoversConstant(t2, t1))
         return Join(t1, t2);
 
     // Check type patterns, i.e. [type X] as in [type(X:integer, Y:real)]

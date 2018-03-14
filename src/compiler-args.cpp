@@ -111,7 +111,8 @@ Tree *RewriteCalls::Check (Prefix *scope,
     Save<Types *> saveTypes(types, childTypes);
     Tree *form = candidate->left;
     Tree *defined = RewriteDefined(form);
-    Tree *type = RewriteType(form);
+    Tree *declType = RewriteType(form);
+    Tree *type = declType;
 
     BindingStrength binding = Bind(childContext, defined, what, rc);
     if (binding == FAILED)
@@ -122,10 +123,6 @@ Tree *RewriteCalls::Check (Prefix *scope,
     bool builtin = false;
     if (init)
     {
-        // Process declarations in the initializer
-        childContext->CreateScope();
-        childContext->ProcessDeclarations(init);
-
         // Check if we have a type to match
         if (type)
         {
@@ -148,9 +145,18 @@ Tree *RewriteCalls::Check (Prefix *scope,
 
             if (!builtin)
             {
+                // Process declarations in the initializer
+                childContext->CreateScope();
+                childContext->ProcessDeclarations(init);
+
                 type = childTypes->TypeAnalysis(init);
                 if (!type)
                     binding = FAILED;
+            }
+            else if (!declType)
+            {
+                // No type specified, assign a generic type
+                type = childTypes->NewType(init);
             }
         }
     }
@@ -299,13 +305,18 @@ RewriteCalls::Bind(Context *context,
         // Check type declarations
         if (fi->name == ":" || fi->name == "as")
         {
+            // Assign the given type to the declared expression
+            Tree *form = fi->left;
+            Tree *declType = fi->right;
+            type = types->AssignType(form, declType);
+
             // Check if we can bind the value from what we know
-            if (Bind(context, fi->left, value, rc) == FAILED)
+            if (Bind(context, form, value, rc) == FAILED)
                 return FAILED;
 
             // Add type binding with the given type
-            type = types->Type(value);
-            if (!Unify(rc, type, fi->right, value, fi->left, true))
+            Tree *valueType = types->Type(value);
+            if (!Unify(rc, valueType, type, value, form, true))
                 return FAILED;
 
             // Having been successful makes it a strong binding
@@ -458,7 +469,6 @@ RewriteCalls::BindBinary(Context *context,
         return FAILED;
 
     return Bind(context, form2, value2, rc);
-
 }
 
 

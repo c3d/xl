@@ -986,7 +986,7 @@ Type_p CompilerFunction::MachineType(Tree *tree)
 
     // Find the base type for the expression
     Types *types = unit.types;
-    Tree *base = types->Type(tree);
+    Tree *base = types->BaseType(tree);
     type = mtypes[base];
     if (type)
     {
