@@ -144,12 +144,9 @@ public:
 
     // Operations on types
     Tree *      ValueMatchesType(Tree *type, Tree *value, bool conversions);
-    Tree *      CanonicalType(Tree *value);
-    Tree *      StructuredType(Tree *value);
     bool        IsTreeType(Tree *type);
     bool        TypeCoversConstant(Tree *type, Tree *cst);
     bool        TypeCoversType(Tree *type, Tree *test);
-    bool        TypeIntersectsType(Tree *type, Tree *test, bool conversions);
     bool        TreePatternsMatch(Tree *t1, Tree *t2);
     bool        TreePatternMatchesValue(Tree *pat, Tree *val);
 
