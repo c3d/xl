@@ -98,6 +98,7 @@ public:
     Tree *      TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
     Tree *      NewType(Tree *expr);
+    Tree *      ValueType(Tree *expr);
     Tree *      BaseType(Tree *expr);
     rcall_map & TypesRewriteCalls();
     Scope *     TypesScope();

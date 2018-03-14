@@ -176,7 +176,8 @@ Main::Main(int inArgc,
     if (options.optimize_level > 1)
     {
         compilerName = SearchFile(compilerName, bin_paths);
-        evaluator = new Compiler(compilerName.c_str(), inArgc, inArgv);
+        evaluator = new Compiler(compilerName.c_str(), options.optimize_level,
+                                 inArgc, inArgv);
     }
     else
 #endif // INTERPRETER_ONLY

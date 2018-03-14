@@ -185,6 +185,7 @@ public:
     StructType_p        StructType(const Signature &items);
     FunctionType_p      FunctionType(Type_p r,const Signature &p,bool va=false);
     PointerType_p       PointerType(Type_p rty);
+    Type_p              VoidType();
     void                SetName(Type_p type, text name);
 
     // Functions
@@ -220,6 +221,7 @@ class JITBlock
 public:
     JITBlock(JIT &jit, Function_p function, kstring name);
     JITBlock(const JITBlock &from, kstring name);
+    JITBlock(JIT &jit);
     ~JITBlock();
 
     static Type_p       Type(Value_p value)      { return JIT::Type(value); }

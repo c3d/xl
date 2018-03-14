@@ -232,7 +232,7 @@ JITPrivate::JITPrivate(int argc, char **argv)
 // If constructors take lambdas, this is functional code, right?
 // Yuck. Barf.
     : initializer(argc, argv),
-      optLevel(0),
+      optLevel(3),
       context(),
       strings(),
       session(strings),
@@ -306,7 +306,6 @@ Module_p JITPrivate::Module(text name, bool renew)
         module->setDataLayout(layout);
 
         key = session.allocateVModule();
-        cantFail(optimizer.addModule(key, module));
     }
     return module.get();
 }
@@ -335,9 +334,6 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 //   Run the optimization pass
 // ----------------------------------------------------------------------------
 {
-    if (optLevel <= 1)
-        return module;
-
     // Create a function pass manager.
     legacy::FunctionPassManager fpm(module.get());
 
@@ -416,6 +412,7 @@ JITTargetAddress JITPrivate::Address(text name)
 //   Return the address for the given symbol
 // ----------------------------------------------------------------------------
 {
+    cantFail(optimizer.addModule(key, std::move(module)));
     return cantFail(Symbol(name).getAddress());
 }
 
@@ -594,6 +591,15 @@ PointerType_p JIT::PointerType(Type_p rty)
 }
 
 
+Type_p JIT::VoidType()
+// ----------------------------------------------------------------------------
+//   Return the void type
+// ----------------------------------------------------------------------------
+{
+    return llvm::Type::getVoidTy(p.context);
+}
+
+
 void JIT::SetName(Type_p type, text name)
 // ----------------------------------------------------------------------------
 //   Set the name for a type (for debugging purpose)
@@ -736,13 +742,14 @@ class JITBlockPrivate
     friend class JITBlock;
     JIT &               jit;
     BasicBlock_p        block;
-    JITBuilder          builder;
+    JITBuilder *        builder;
 
     JITBlockPrivate(JIT &jit, Function_p function, kstring name);
     JITBlockPrivate(const JITBlockPrivate &other, kstring name);
+    JITBlockPrivate(JIT &jit);
     ~JITBlockPrivate();
 
-    JITBuilder *        operator->() { return &builder; }
+    JITBuilder *        operator->() { return builder; }
 };
 
 
@@ -752,7 +759,7 @@ JITBlockPrivate::JITBlockPrivate(JIT &jit, Function_p function, kstring name)
 // ----------------------------------------------------------------------------
     : jit(jit),
       block(BasicBlock::Create(jit.p.context, name, function)),
-      builder(block)
+      builder(new JITBuilder(block))
 {
     record(llvm_blocks, "Create JIT block '%s' %p for block %v",
            name, this, block);
@@ -765,18 +772,30 @@ JITBlockPrivate::JITBlockPrivate(const JITBlockPrivate &other, kstring name)
 // ----------------------------------------------------------------------------
     : jit(other.jit),
       block(BasicBlock::Create(jit.p.context, name, other.block->getParent())),
-      builder(block)
+      builder(new JITBuilder(block))
 {
     record(llvm_blocks, "Copy JIT block '%s' %p for block %v from %p",
            name, this, block, &other);
 }
 
 
+JITBlockPrivate::JITBlockPrivate(JIT &jit)
+// ----------------------------------------------------------------------------
+//   An empty JIT block private for extern functions
+// ----------------------------------------------------------------------------
+    : jit(jit),
+      block(nullptr),
+      builder(nullptr)
+{}
+
+
 JITBlockPrivate::~JITBlockPrivate()
 // ----------------------------------------------------------------------------
 //   Delete the private information for the block
 // ----------------------------------------------------------------------------
-{}
+{
+    delete builder;
+}
 
 
 JITBlock::JITBlock(JIT &jit, Function_p function, kstring name)
@@ -794,6 +813,15 @@ JITBlock::JITBlock(const JITBlock &other, kstring name)
 // ----------------------------------------------------------------------------
     : p(other.p),
       b(*new JITBlockPrivate(other.b, name))
+{}
+
+
+JITBlock::JITBlock(JIT &jit)
+// ----------------------------------------------------------------------------
+//   Create a JIT block for the same function as another block
+// ----------------------------------------------------------------------------
+    : p(jit.p),
+      b(*new JITBlockPrivate(jit))
 {}
 
 
@@ -1048,7 +1076,10 @@ Value_p JITBlock::AllocateReturnValue(Function_p f, kstring name)
 //   Do an alloca for the return value
 // ----------------------------------------------------------------------------
 {
-    return Alloca(f->getReturnType(), name);
+    Type_p ret = f->getReturnType();
+    if (ret->isVoidTy())
+        return nullptr;
+    return Alloca(ret, name);
 }
 
 
@@ -1115,7 +1146,9 @@ void debugv(XL::Value_p v)
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
 {
+    llvm::errs() << "V" << (void *) v << ": ";
     v->print(llvm::errs());
+    llvm::errs() << "\n";
 }
 
 
@@ -1124,5 +1157,7 @@ void debugv(XL::Type_p t)
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
 {
+    llvm::errs() << "T" << (void *) t << ": ";
     t->print(llvm::errs());
+    llvm::errs() << "\n";
 }

@@ -69,7 +69,7 @@ struct Compiler : Evaluator, TypeAllocator::Listener
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
 {
-    Compiler(kstring name, int argc, char **argv);
+    Compiler(kstring name, unsigned opts, int argc, char **argv);
     ~Compiler();
 
     // Interpreter interface
@@ -104,6 +104,7 @@ public:
     IntegerType_p       ulonglongTy;
     Type_p              realTy;
     Type_p              real32Ty;
+    Type_p              real64Ty;
     IntegerType_p       characterTy;
     PointerType_p       charPtrTy;
     PointerType_p       charPtrPtrTy;

@@ -291,7 +291,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
     JITBlock &code = function.code;
     JITBlock isDone(code, "done");
     Value_p storage = function.NeedStorage(call);
-    Type_p storageType = function.MachineType(call);
+    Type_p storageType = function.ValueMachineType(call);
 
     for (i = 0; i < max; i++)
     {

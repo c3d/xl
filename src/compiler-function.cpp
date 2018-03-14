@@ -123,6 +123,42 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
 CompilerFunction::CompilerFunction(CompilerFunction &caller,
                                    Scope *scope,
                                    Tree *form,
+                                   text name,
+                                   Type_p ret,
+                                   const Parameters &parms)
+// ----------------------------------------------------------------------------
+//   Create new interface function for a C function
+// ----------------------------------------------------------------------------
+//   This is used by rewrites to interface to C code, i.e. [C strcmp]
+    : unit(caller.unit),
+      compiler(unit.compiler),
+      jit(unit.jit),
+      context(new Context(scope)),
+      form(form),
+      source(form),
+      closureTy(nullptr),
+      function(OptimizedFunction(name, ret, parms)),
+      data(jit),
+      code(jit),
+      exit(jit),
+      entry(nullptr),
+      returned(nullptr)
+{
+    InitializeArgs(parms);
+
+    // Inherit information about machine types from the caller
+    mtypes = caller.mtypes;
+    boxed = caller.boxed;
+    unboxed = caller.unboxed;
+
+    record(compiler_function, "Created external %p for %t in scope %t",
+           this, source, scope);
+}
+
+
+CompilerFunction::CompilerFunction(CompilerFunction &caller,
+                                   Scope *scope,
+                                   Tree *form,
                                    text name, Type_p ret, const Signature &sig)
 // ----------------------------------------------------------------------------
 //   Create a new function with given signature
@@ -170,6 +206,15 @@ Function_p CompilerFunction::Function()
 }
 
 
+bool CompilerFunction::IsInterfaceOnly()
+// ----------------------------------------------------------------------------
+//   Check if the function is an interface-only function (for C calls)
+// ----------------------------------------------------------------------------
+{
+    return entry == nullptr;
+}
+
+
 Scope *CompilerFunction::FunctionScope()
 // ----------------------------------------------------------------------------
 //   The declaration scope associated with the function
@@ -195,7 +240,8 @@ Function_p CompilerFunction::Compile(Tree *tree, bool force)
 {
     CompilerExpression expr(*this);
     Value_p result = expr.Evaluate(tree, force);
-    Return(tree, result);
+    if (returned)
+        Return(tree, result);
     return function;
 }
 
@@ -207,7 +253,10 @@ Value_p CompilerFunction::Return(Tree *tree, Value_p value)
 {
     Type_p retTy = jit.ReturnType(function);
     value = Autobox(tree, value, retTy);
-    code.Store(value, returned);
+
+    Type_p valTy = JIT::Type(value);
+    if (valTy == retTy)
+        code.Store(value, returned);
     return value;
 }
 
@@ -233,7 +282,7 @@ eval_fn CompilerFunction::Finalize(bool createCode)
         // Loop over other elements that need a closure
         for (Tree *tree : *captured)
         {
-            Type_p type = MachineType(tree);
+            Type_p type = ValueMachineType(tree);
             sig.push_back(type);
         }
 
@@ -390,13 +439,16 @@ Value_p CompilerFunction::Compile(RewriteCandidate &rc, const Values &args)
                 data = true;
             }
         }
-        if (!data)
+        if (!rewriteFunction->IsInterfaceOnly())
         {
-            // Regular function body: compile it
-            rewriteFunction->Compile(value);
+            if (!data)
+            {
+                // Regular function body: compile it
+                rewriteFunction->Compile(value);
+            }
+            rewriteFunction->Finalize(false);
+            function = rewriteFunction->Function();
         }
-        rewriteFunction->Finalize(false);
-        function = rewriteFunction->Function();
     }
     return function;
 }
@@ -608,15 +660,18 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
     // Check if a tree type cast is required
     if (req == compiler.treePtrTy && type != req)
     {
-        assert(type == compiler.integerTreePtrTy ||
-               type == compiler.realTreePtrTy    ||
-               type == compiler.textTreePtrTy    ||
-               type == compiler.nameTreePtrTy    ||
-               type == compiler.blockTreePtrTy   ||
-               type == compiler.prefixTreePtrTy  ||
-               type == compiler.postfixTreePtrTy ||
-               type == compiler.infixTreePtrTy);
-        result = code.BitCast(result, req);
+        if (type == compiler.integerTreePtrTy ||
+            type == compiler.realTreePtrTy    ||
+            type == compiler.textTreePtrTy    ||
+            type == compiler.nameTreePtrTy    ||
+            type == compiler.blockTreePtrTy   ||
+            type == compiler.prefixTreePtrTy  ||
+            type == compiler.postfixTreePtrTy ||
+            type == compiler.infixTreePtrTy)
+            result = code.BitCast(result, req);
+        else
+            // If there was some inconsistency, return an error
+            result = ConstantTree(xl_nil);
     }
 
     // Return what we built if anything
@@ -775,8 +830,8 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
 
         // Figure out the return type and function type
         Types *types = unit.types;
-        Tree *rtype = types->Type(expr);
-        Type_p retTy = MachineType(rtype);
+        Tree *rtype = types->ValueType(expr);
+        Type_p retTy = BoxedType(rtype);
         CompilerFunction closure(*this, scope, expr, "xl.closure", retTy, sig);
         function = closure.Function();
         closure.Compile(expr);
@@ -787,7 +842,7 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
 
     // Allocate a local structure to pass as the closure
     Value_p closureData = data.Alloca(closureType);
-    MachineType(name, closureType);
+    ValueMachineType(name, closureType);
     unit.AddClosureType(closureType);
 
     // First, store the function pointer
@@ -848,7 +903,7 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
     if (!result)
     {
         // Get the associated machine type
-        Type_p mtype = MachineType(tree);
+        Type_p mtype = ValueMachineType(tree);
 
         // Create alloca to store the new form
         result = data.Alloca(mtype, "loc");
@@ -974,7 +1029,7 @@ Value_p CompilerFunction::CallFormError(Tree *what)
 }
 
 
-Type_p CompilerFunction::MachineType(Tree *tree)
+Type_p CompilerFunction::ValueMachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return machine type associated to a type name or expression, if any
 // ----------------------------------------------------------------------------
@@ -986,39 +1041,28 @@ Type_p CompilerFunction::MachineType(Tree *tree)
 
     // Find the base type for the expression
     Types *types = unit.types;
-    Tree *base = types->BaseType(tree);
-    type = mtypes[base];
-    if (type)
+    Tree *base = types->ValueType(tree);
+    if (!base)
     {
-        mtypes[tree] = type;
-        return type;
+        Ooops("Internal: No type deduced for $1, using integer", tree);
+        return compiler.integerTy;
     }
 
-    // Check if we have one of the basic types
-#define BASIC_TYPE(name, ctype)                 \
-    if (base == name##_type)                    \
-        type = jit.IntegerType<ctype>()
-    BASIC_TYPE(integer,         int64_t);
-    BASIC_TYPE(unsigned,        uint64_t);
-    BASIC_TYPE(integer8,        int8_t);
-    BASIC_TYPE(unsigned8,       uint8_t);
-    BASIC_TYPE(integer16,       int16_t);
-    BASIC_TYPE(unsigned16,      uint16_t);
-    BASIC_TYPE(integer32,       int32_t);
-    BASIC_TYPE(unsigned32,      uint32_t);
-    BASIC_TYPE(integer64,       int64_t);
-    BASIC_TYPE(unsigned64,      uint64_t);
-
-    if (type)
+    // Find the corresponding machine type
+    type = BoxedType(base);
+    if (!type)
     {
-        mtypes[tree] = type;
-        mtypes[base] = type;
+        Ooops("Internal: No type associated to $1", tree);
+        return compiler.integerTy;
     }
+
+    mtypes[tree] = type;
+
     return type;
 }
 
 
-void CompilerFunction::MachineType(Tree *tree, Type_p type)
+void CompilerFunction::ValueMachineType(Tree *tree, Type_p type)
 // ----------------------------------------------------------------------------
 //    Record the global value associated to a type name or expression
 // ----------------------------------------------------------------------------
@@ -1046,9 +1090,53 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 //   Return the machine "boxed" type for a given tree type
 // ----------------------------------------------------------------------------
 {
+    // Check if we already had it
     Types *types = unit.types;
-    Tree *baseType = types->BaseType(type);
-    return boxed[baseType];
+    Tree *base = types->BaseType(type);
+    auto it = boxed.find(base);
+    if (it != boxed.end())
+        return (*it).second;
+
+    // Check if we have one of the basic types
+    Type_p mtype = nullptr;
+#define CTYPE(name, cty)        if (base==name##_type) mtype = compiler.cty##Ty
+#define STYPE(name)             CTYPE(name, name)
+#define TTYPE(name)             CTYPE(name, name##TreePtr)
+
+    STYPE(boolean);
+    STYPE(integer);
+    STYPE(integer8);
+    STYPE(integer16);
+    STYPE(integer32);
+    STYPE(integer64);
+    STYPE(unsigned);
+    CTYPE(unsigned8,            integer8);
+    CTYPE(unsigned16,           integer16);
+    CTYPE(unsigned32,           integer32);
+    CTYPE(unsigned64,           integer64);
+    STYPE(character);
+    CTYPE(text,                 charPtr);
+    STYPE(real);
+    STYPE(real32);
+    STYPE(real64);
+    CTYPE(tree,                 treePtr);
+    CTYPE(value,                treePtr);
+    CTYPE(name,                 nameTreePtr);
+    CTYPE(symbol,               nameTreePtr);
+    CTYPE(operator,             nameTreePtr);
+    TTYPE(infix);
+    CTYPE(declaration,          infixTreePtr);
+    TTYPE(prefix);
+    TTYPE(postfix);
+    TTYPE(block);
+
+    if (mtype)
+    {
+        boxed[base] = mtype;
+        unboxed[mtype] = base;
+    }
+
+    return mtype;
 }
 
 
@@ -1136,8 +1224,10 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate &rc)
     }
 
     Scope *scope = context->CurrentScope();
-    CompilerFunction *f = new CompilerFunction(*this, scope, def, source,
-                                               label, retTy, parms);
+    CompilerFunction *f = isC
+        ? new CompilerFunction(*this, scope, source, label, retTy, parms)
+        : new CompilerFunction(*this, scope, def, source,
+                               label, retTy, parms);
     record(compiler_unit, "Rewrite function for %t is %p %s",
            source, f, isC ? "is C" : "from XL source");
     return f;
@@ -1189,8 +1279,10 @@ Type_p CompilerFunction::ReturnType(Tree *form)
 {
     // Type inference gives us the return type for this form
     Types *types = unit.types;
-    Tree *type = types->Type(form);
-    Type_p mtype = MachineType(type);
+    Tree *type = types->ValueType(form);
+    Type_p mtype = BoxedType(type);
+    if (!mtype)
+        mtype = jit.VoidType();
     return mtype;
 }
 
@@ -1201,7 +1293,7 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
 // ----------------------------------------------------------------------------
 {
     // Check if we already had this signature
-    if (Type_p found = MachineType(source))
+    if (Type_p found = ValueMachineType(source))
         return found;
 
     // Build the corresponding structure type
@@ -1209,7 +1301,9 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
     jit.SetName(stype, "boxed");
 
     // Record boxing and unboxing for that particular tree
-    AddBoxedType(source, stype);
+    Types *types = unit.types;
+    Tree *base = types->ValueType(source);
+    AddBoxedType(base, stype);
 
     return stype;
 }

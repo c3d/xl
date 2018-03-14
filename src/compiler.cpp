@@ -64,7 +64,7 @@ XL_BEGIN
 
 using namespace llvm;
 
-Compiler::Compiler(kstring moduleName, int argc, char **argv)
+Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Initialize the various types and global functions we may need
 // ----------------------------------------------------------------------------
@@ -81,6 +81,7 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       ulonglongTy       (jit.IntegerType<ulonglong>()),
       realTy            (jit.FloatType(64)),
       real32Ty          (jit.FloatType(32)),
+      real64Ty          (jit.FloatType(64)),
       characterTy       (jit.IntegerType<char>()),
       charPtrTy         (jit.PointerType(characterTy)),
       textTy            (jit.StructType({jit.OpaqueType()})),
@@ -139,6 +140,9 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
     jit.SetName(infixTreeTy,            "Infix");
     jit.SetName(infoTy,                 "Info");
     jit.SetName(scopeTy,                "Scope");
+
+    // Set optimization level
+    jit.SetOptimizationLevel(opts);
 }
 
 

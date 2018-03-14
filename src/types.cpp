@@ -180,6 +180,20 @@ Tree *Types::NewType(Tree *expr)
 }
 
 
+Tree *Types::ValueType(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the value type associated with 'expr', or an error
+// ----------------------------------------------------------------------------
+{
+    auto it = types.find(expr);
+    if (it != types.end())
+        return (*it).second;
+    Ooops("Internal error, no type found for $1, trying deduction", expr);
+    Tree *type = Type(expr);
+    return type;
+}
+
+
 rcall_map & Types::TypesRewriteCalls()
 // ----------------------------------------------------------------------------
 //   Returns the list of rewrite calls for this

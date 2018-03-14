@@ -59,9 +59,7 @@ bool ParameterList::EnterName(Name *what, Type_p declaredType)
     }
 
     // Check the LLVM type for the given form
-    Type_p type = nullptr;
-
-    type = function.MachineType(what);
+    Type_p type = function.ValueMachineType(what);
 
     // Check if the name already exists in parameter list, e.g. in 'A+A'
     text name = what->value;
@@ -69,7 +67,7 @@ bool ParameterList::EnterName(Name *what, Type_p declaredType)
     {
         if (p.name->value == name)
         {
-            Type_p nameType = function.MachineType(p.name);
+            Type_p nameType = function.ValueMachineType(p.name);
             if (type == nameType)
                 return true;
 
@@ -160,9 +158,9 @@ bool ParameterList::DoInfix(Infix *what)
         if (Name *varName = what->left->AsName())
         {
             // Enter a name in the parameter list with adequate machine type
-            Type_p ntype = function.MachineType(varName);
-            Type_p mtype = function.MachineType(what->right);
-            if (ntype != mtype)
+            Type_p mtype = function.ValueMachineType(varName);
+            Type_p dtype = function.BoxedType(what->right);
+            if (dtype != mtype)
             {
                 Ooops("Inconsistent machine types between $1 and $2",
                       what->left, what->right);
@@ -180,7 +178,7 @@ bool ParameterList::DoInfix(Infix *what)
             }
 
             // Remember the specified returned value
-            returned = function.MachineType(what);
+            returned = function.ValueMachineType(what);
 
             // Keep going with the left-hand side
             return what->left->Do(this);

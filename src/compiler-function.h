@@ -76,7 +76,7 @@ class CompilerFunction
     value_map           values;     // Tree -> LLVM value
     value_map           storage;    // Tree -> LLVM storage (alloca)
     value_map           closures;   // Tree -> LLVM storage (alloca)
-    mtype_map           mtypes;     // Tree -> machine type
+    mtype_map           mtypes;     // Value tree -> machine type
     box_map             boxed;      // Tree type -> machine type
     unbox_map           unboxed;    // Machine type -> Tree type
     StructType_p        closureTy;  // A structure type for closure data
@@ -94,6 +94,8 @@ public:
     CompilerFunction(CompilerFunction &caller, Scope *, Tree *form, Tree *body,
                      text name, Type_p ret, const Parameters &parms);
     CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
+                     text name, Type_p ret, const Parameters &parms);
+    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
                      text name, Type_p ret, const Signature &sig);
     ~CompilerFunction();
 
@@ -103,9 +105,14 @@ public:
     eval_fn             Finalize(bool createCode);
 
     Value_p             NamedClosure(Name *name, Tree *value);
-    Type_p              MachineType(Tree *tree);
+    Type_p              ValueMachineType(Tree *expr);
     Scope *             FunctionScope();
     Context *           FunctionContext();
+
+    void                ValueMachineType(Tree *expr, Type_p type);
+    Type_p              BoxedType(Tree *type);
+
+    bool                IsInterfaceOnly();
 
 private:
     // Function interface creation
@@ -118,9 +125,7 @@ private:
     Value_p             InvokeClosure(Value_p result);
 
     // Machine types management
-    void                MachineType(Tree *tree, Type_p type);
     void                AddBoxedType(Tree *treeType, Type_p machineType);
-    Type_p              BoxedType(Tree *type);
     Tree *              TreeType(Type_p mtype);
 
     // Create a function for a given rewrite candidate
