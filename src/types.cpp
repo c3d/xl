@@ -460,20 +460,6 @@ Tree *Types::Statements(Tree *expr, Tree *left, Tree *right)
 }
 
 
-bool Types::Commit(Types *child)
-// ----------------------------------------------------------------------------
-//   Commit the type inferences gathered in the child
-// ----------------------------------------------------------------------------
-{
-    // Import expressions in child
-    for (auto &t : child->types)
-        if (AssignType(t.first, t.second) == xl_error)
-            return false;
-
-    return true;
-}
-
-
 static Tree *lookupRewriteCalls(Scope *evalScope, Scope *sc,
                                 Tree *what, Infix *entry, void *i)
 // ----------------------------------------------------------------------------

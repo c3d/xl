@@ -168,9 +168,13 @@ Tree *RewriteCalls::Check (Prefix *scope,
     if (errors.HadErrors())
         binding = FAILED;
 
+    // If everything went well, define the type for the expression
     if (binding != FAILED)
-        if (!saveTypes.saved->Commit(childTypes))
+    {
+        type = saveTypes.saved->AssignType(what, type);
+        if (type == xl_error)
             binding = FAILED;
+    }
 
     // Record the rewrite candidate if we had any success with binding
     if (binding != FAILED)

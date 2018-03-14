@@ -101,7 +101,6 @@ public:
     rcall_map & TypesRewriteCalls();
     Scope *     TypesScope();
     Context *   TypesContext();
-    bool        Commit(Types *child);
 
 public:
     // Interface for Tree::Do() to annotate the tree
