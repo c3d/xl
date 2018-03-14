@@ -309,8 +309,15 @@ eval_fn CompilerFunction::Finalize(bool createCode)
     data.Branch(entry);
 
     // Insert return in exit block
-    Value_p retVal = exit.Load(returned, "retval");
-    exit.Return(retVal);
+    if (returned)
+    {
+        Value_p retVal = exit.Load(returned, "retval");
+        exit.Return(retVal);
+    }
+    else
+    {
+        exit.Return(nullptr);
+    }
 
     // Verify the function we built
     if (RECORDER_TRACE(llvm_code) & 2)
