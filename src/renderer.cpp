@@ -921,5 +921,5 @@ const char *debugd(XL::Tree *tree)
 }
 
 
-RECORDER_TWEAK_DEFINE(recorder_dump_symbolic, 0,
+RECORDER_TWEAK_DEFINE(recorder_dump_symbolic, 40,
                       "Size of symbolic information to show, 0=none, -1=all");
