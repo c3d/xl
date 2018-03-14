@@ -104,7 +104,7 @@ Tree *Types::TypeAnalysis(Tree *program)
 {
     // Once this is done, record all type information for the program
     record(types, "Type analysis for %t in %p", program, this);
-    Tree *result = program->Do(this);
+    Tree *result = Type(program);
     record(types, "Type for %t in %p is %t", program, this, result);
 
     // Dump debug information if approriate
@@ -134,7 +134,7 @@ Tree *Types::BaseType(Tree *type)
 
 Tree *Types::Type(Tree *expr)
 // ----------------------------------------------------------------------------
-//   Return the base type associated with a given expression
+//   Return the type associated with a given expression
 // ----------------------------------------------------------------------------
 {
     // Check type, make sure we don't destroy a nullptr type
@@ -142,7 +142,7 @@ Tree *Types::Type(Tree *expr)
     auto it = types.find(expr);
     if (it == types.end())
     {
-        type = NewTypeName(expr->Position());
+        type = expr->Do(this);
         types[expr] = type;
         record(types_ids, "Created type for %t in %p is %t", expr, this, type);
     }
@@ -151,6 +151,22 @@ Tree *Types::Type(Tree *expr)
         type = (*it).second;
         record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
     }
+    return type;
+}
+
+
+Tree *Types::NewType(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Create a new generic type like #T for the given expr
+// ----------------------------------------------------------------------------
+{
+    // Protect against case where type would already exist
+    auto it = types.find(expr);
+    if (it != types.end())
+        return (*it).second;
+
+    Tree *type = NewTypeName(expr->Position());
+    types[expr] = type;
     return type;
 }
 
@@ -318,9 +334,12 @@ Tree *Types::AssignType(Tree *expr, Tree *type)
 {
     if (type)
     {
-        Tree *existing = types[expr];
-        if (existing)
+        auto it = types.find(expr);
+        if (it != types.end())
+        {
+            Tree *existing = (*it).second;
             type = Unify(existing, type);
+        }
     }
     types[expr] = type;
     return type;
@@ -332,6 +351,12 @@ Tree *Types::TypeOf(Tree *expr)
 //   Return the type of the expr as a [type X] expression
 // ----------------------------------------------------------------------------
 {
+    // Check if we know a type for this expression
+    auto it = types.find(expr);
+    if (it != types.end())
+        return (*it).second;
+
+    // Otherwise, return [type X]
     TreePosition pos = expr->Position();
     return new Prefix(new Name("type", pos), expr, pos);
 }
@@ -387,8 +412,8 @@ Tree *Types::RewriteType(Infix *what)
     }
 
     // Regular case: create a [type X => type Y] type
-    Tree *declt = Type(decl);
-    Tree *initt = Type(init);
+    Tree *declt = TypeOf(decl);
+    Tree *initt = TypeOf(init);
     if (!declt || !initt)
     {
         record(types_calls, "Failed type for %t declt=%t initt=%t",
@@ -459,11 +484,11 @@ Tree *Types::Statements(Tree *expr, Tree *left, Tree *right)
 //   Return the type of a combo statement, skipping declarations
 // ----------------------------------------------------------------------------
 {
-    Tree *lt = left->Do(this);
+    Tree *lt = Type(left);
     if (!lt)
         return lt;
 
-    Tree *rt = right->Do(this);
+    Tree *rt = Type(right);
     if (!rt)
         return rt;
 
@@ -500,7 +525,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     if (recursive)
     {
         // Need to assign a type name, will be unified by outer Evaluate()
-        return Type(what);
+        return NewType(what);
     }
 
     // Identify all candidate rewrites in the current context

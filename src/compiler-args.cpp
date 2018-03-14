@@ -257,7 +257,7 @@ RewriteCalls::Bind(Context *context,
             return POSSIBLE;
 
         // Check if what we have as an expression evaluates correctly
-        type = value->Do(types);
+        type = types->Type(value);
         if (!type)
             return FAILED;
 
@@ -319,7 +319,7 @@ RewriteCalls::Bind(Context *context,
                 return FAILED;
 
             // Check if we can evaluate the guard
-            if (!fi->right->Do(types))
+            if (!types->Type(fi->right))
                 return FAILED;
 
             // Check that the type of the guard is a boolean
@@ -354,7 +354,7 @@ RewriteCalls::Bind(Context *context,
         // We may have an expression that evaluates as an infix
 
         // Check if what we have as an expression evaluates correctly
-        if (!value->Do(types))
+        if (!types->Type(value))
             return FAILED;
 
         // Then check if the type matches
@@ -373,10 +373,10 @@ RewriteCalls::Bind(Context *context,
 
         // Add a condition on the infix name
         Tree *infixName = new Prefix(new Name("name", pos), value);
-        if (!infixName->Do(types))
+        if (!types->Type(infixName))
             return FAILED;
         Tree *infixRequiredName = new Text(fi->name, pos);
-        if (!infixRequiredName->Do(types))
+        if (!types->Type(infixRequiredName))
             return FAILED;
         rc.Condition(infixName, infixRequiredName);
 

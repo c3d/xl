@@ -97,6 +97,7 @@ public:
     // Main entry point
     Tree *      TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
+    Tree *      NewType(Tree *expr);
     Tree *      BaseType(Tree *expr);
     rcall_map & TypesRewriteCalls();
     Scope *     TypesScope();
