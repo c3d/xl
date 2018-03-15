@@ -47,7 +47,6 @@ TOTAL_TESTS=0
 
 while [ $# -gt 0 ]
 do
-    echo "There are $# args, first is $1"
     case $1 in
         -xl)                    XL="$2";                shift; shift;;
         -r|-runtime)            RUNTIME="$2";           shift; shift;;
