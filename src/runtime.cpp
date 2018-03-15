@@ -204,7 +204,7 @@ Text *xl_new_character(TreePosition pos, char value)
 //    Called by generated code to build a new single-quoted Text
 // ----------------------------------------------------------------------------
 {
-    Text *result = new Text(text(value, 1), "'", "'", pos);
+    Text *result = new Text(text(&value, 1), "'", "'", pos);
     return result;
 }
 

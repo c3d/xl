@@ -1120,7 +1120,10 @@ Type_p CompilerFunction::BoxedType(Tree *type)
         mtype = compiler.realTy;
         break;
     case TEXT:
-        mtype = compiler.charPtrTy;
+        if (((Text *)type)->IsCharacter())
+            mtype = compiler.characterTy;
+        else
+            mtype = compiler.charPtrTy;
         break;
     case NAME:
         if (base == xl_true || base == xl_false)
@@ -1166,8 +1169,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 
     case PREFIX:
         if (Tree *form = types->IsTypeOf(type))
-            if (Tree *formType = types->ValueType(form))
-                mtype = BoxedType(formType);
+            mtype = compiler.treePtrTy;
         break;
 
     case POSTFIX:
