@@ -92,6 +92,7 @@ public:
 
 public:
     JIT                 jit;
+    Type_p              voidTy;
     IntegerType_p       booleanTy;
     IntegerType_p       integerTy;
     IntegerType_p       integer8Ty;

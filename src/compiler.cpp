@@ -69,6 +69,7 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
 //   Initialize the various types and global functions we may need
 // ----------------------------------------------------------------------------
     : jit               (argc, argv),
+      voidTy            (jit.VoidType()),
       booleanTy         (jit.IntegerType(1)),
       integerTy         (jit.IntegerType<int>()),
       integer8Ty        (jit.IntegerType(8)),
