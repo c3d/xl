@@ -403,7 +403,7 @@ text FormatTreeForError(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     text result = ShortTreeForm(tree);
-    if (tree->Kind() >= KIND_LEAF_LAST)
+    if (tree && tree->Kind() >= KIND_LEAF_LAST)
         result = "[" + result + "]";
     return result;
 }
