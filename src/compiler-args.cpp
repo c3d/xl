@@ -97,7 +97,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
 // ----------------------------------------------------------------------------
 {
     Errors errors;
-    errors.Log(Error("Pattern '$1' doesn't match:", candidate->left), true);
+    errors.Log(Error("Pattern $1 doesn't match:", candidate->left), true);
     RewriteCandidate rc(candidate);
 
     // Create local type inference deriving from ours

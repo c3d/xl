@@ -433,8 +433,8 @@ JITTargetAddress JITPrivate::Address(text name)
     if (!r)
     {
         text message = toString(r.takeError());
-        Ooops("Generating machine code for '$1' failed: $2")
-            .Arg(name, "")
+        Ooops("Generating machine code for $1 failed: $2")
+            .Arg(name, "'")
             .Arg(message, "");
         return 0;
     }
