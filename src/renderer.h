@@ -122,7 +122,6 @@ size_t recorder_render(intptr_t tracing,
 // ----------------------------------------------------------------------------
 {
     const unsigned max_len = RECORDER_TWEAK(recorder_dump_symbolic);
-    const unsigned trunc_len = max_len/2 - 3;
     arg_t value = (arg_t) arg;
     size_t result;
     if (max_len && tracing)
@@ -137,7 +136,7 @@ size_t recorder_render(intptr_t tracing,
         t = os.str();
         size_t len = t.length();
         if (max_len > 8 && len > max_len)
-            t = t.substr(0, trunc_len) + "…" + t.substr(len-trunc_len, len);
+            t.replace(max_len/2, len - max_len/2 + 1, "…");
         result = snprintf(buffer, size, "%p [%s]", (void *) value, t.c_str());
         for (unsigned i = 0; i < result; i++)
             if (buffer[i] == '\n')
