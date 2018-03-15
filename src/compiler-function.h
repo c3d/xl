@@ -190,5 +190,6 @@ private:
 XL_END
 
 RECORDER_DECLARE(compiler_function);
+RECORDER_DECLARE(boxed_types);
 
 #endif // COMPILER_FUNCTION_H

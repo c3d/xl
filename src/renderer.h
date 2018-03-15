@@ -118,8 +118,12 @@ size_t recorder_render(intptr_t tracing,
                        char *buffer, size_t size,
                        uintptr_t arg)
 // ----------------------------------------------------------------------------
-//   Render a value during a recorder dump (%t and %v format)
+//   Render a value during a recorder dump (%O, %t, %T and %v format)
 // ----------------------------------------------------------------------------
+//   The '%t' is for Tree *, renders XL source code
+//   The '%v' is for llvm::Value *, renders JIT code
+//   The '%T' is for llvm::Type *, renders JIT types
+//   The '%O' is for Op * (bytecode mode ony)
 {
     const unsigned max_len = RECORDER_TWEAK(recorder_dump_symbolic);
     arg_t value = (arg_t) arg;

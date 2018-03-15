@@ -455,9 +455,10 @@ JIT::JIT(int argc, char **argv)
 // ----------------------------------------------------------------------------
     : p(*new JITPrivate(argc, argv))
 {
-    recorder_type_fn jit_output_format =
-        recorder_render<llvm::raw_string_ostream, llvm::Value *>;
-    recorder_configure_type('v', jit_output_format);
+    recorder_type_fn print_value = recorder_render<raw_string_ostream,Value_p>;
+    recorder_type_fn print_type = recorder_render<raw_string_ostream,Type_p>;
+    recorder_configure_type('v', print_value);
+    recorder_configure_type('T', print_type);
 }
 
 
@@ -692,7 +693,7 @@ Function_p JIT::ExternFunction(FunctionType_p type, text name)
     Function_p f = llvm::Function::Create(type,
                                           llvm::Function::ExternalLinkage,
                                           name, p.Module());
-    record(llvm_externals, "Extern function %v type %v", f, type);
+    record(llvm_externals, "Extern function %v type %T", f, type);
     return f;
 }
 
@@ -712,7 +713,7 @@ Function_p JIT::Prototype(Function_p function)
         if (Function_p f = module->getFunction(name))
         {
             record(llvm_prototypes,
-                   "Prototype for %v found in current module %v",
+                   "Prototype for %v found in current module %p",
                    f, module);
             return f;
         }
@@ -723,7 +724,7 @@ Function_p JIT::Prototype(Function_p function)
                                               llvm::Function::ExternalLinkage,
                                               name,
                                               module);
-    record(llvm_prototypes, "Created prototype %v for %v type %v in module %v",
+    record(llvm_prototypes, "Created prototype %v for %v type %T in module %p",
            proto, function, type, module);
     return proto;
 }
@@ -738,7 +739,7 @@ Value_p JIT::Prototype(Value_p callee)
     if (type->isFunctionTy())
         return Prototype(Function_p(callee));
 
-    record(llvm_prototypes, "Prototype for value %v type %v", callee, type);
+    record(llvm_prototypes, "Prototype for value %v type %T", callee, type);
     assert(type->isPointerTy() && "JIT::Prototype requires a callable value");
     return callee;
 }
@@ -780,7 +781,7 @@ JITBlockPrivate::JITBlockPrivate(JIT &jit, Function_p function, kstring name)
       block(BasicBlock::Create(jit.p.context, name, function)),
       builder(new JITBuilder(block))
 {
-    record(llvm_blocks, "Create JIT block '%+s' %p for block %v",
+    record(llvm_blocks, "Create JIT block '%+s' %p for block %p",
            name, this, block);
 }
 
@@ -793,7 +794,7 @@ JITBlockPrivate::JITBlockPrivate(const JITBlockPrivate &other, kstring name)
       block(BasicBlock::Create(jit.p.context, name, other.block->getParent())),
       builder(new JITBuilder(block))
 {
-    record(llvm_blocks, "Copy JIT block '%+s' %p for block %v from %p",
+    record(llvm_blocks, "Copy JIT block '%+s' %p for block %p from %p",
            name, this, block, &other);
 }
 
@@ -1085,7 +1086,7 @@ Value_p JITBlock::Alloca(Type_p type, kstring name)
 // ----------------------------------------------------------------------------
 {
     auto inst = b->CreateAlloca(type, 0, nullptr, name);
-    record(llvm_ir, "Alloca %s(%v) is %v", name, type, inst);
+    record(llvm_ir, "Alloca %s(%T) is %v", name, type, inst);
     return inst;
 }
 
@@ -1144,7 +1145,7 @@ Value_p JITBlock::Name(Value_p v, kstring name)                         \
 Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
 {                                                                       \
     auto value = b->Create##Name(v, t, name);                           \
-    record(llvm_ir, #Name " %+s(%v, type %v) = %v", name, v, t, value); \
+    record(llvm_ir, #Name " %+s(%v, type %T) = %v", name, v, t, value); \
     return value;                                                       \
 }
 

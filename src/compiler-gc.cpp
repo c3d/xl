@@ -123,7 +123,7 @@ StructType_p CompilerInfo::Closure(Tree *form)
 {
     CompilerInfo *info = Info(form);
     StructType_p closure = info ? info->closure : nullptr;
-    record(compiler_gc, "Info for %t is %p closure %v", form, info, closure);
+    record(compiler_gc, "Info for %t is %p closure %T", form, info, closure);
     return closure;
 }
 
@@ -134,7 +134,7 @@ void CompilerInfo::Closure(Tree *form, StructType_p closure)
 // ----------------------------------------------------------------------------
 {
     CompilerInfo *info = Info(form, true);
-    record(compiler_gc, "Setting closure %v for %t in info %p",
+    record(compiler_gc, "Setting closure %T for %t in info %p",
            closure, form, info);
     info->closure = closure;
 }
@@ -147,7 +147,7 @@ Type_p CompilerInfo::Returned(Tree *form)
 {
     CompilerInfo *info = Info(form);
     Type_p returned = info ? info->returned : nullptr;
-    record(compiler_gc, "Info for %t is %p returned %v", form, info, returned);
+    record(compiler_gc, "Info for %t is %p returned %T", form, info, returned);
     return returned;
 }
 
@@ -158,7 +158,7 @@ void CompilerInfo::Returned(Tree *form, Type_p returned)
 // ----------------------------------------------------------------------------
 {
     CompilerInfo *info = Info(form, true);
-    record(compiler_gc, "Setting returned %v for %t in info %p",
+    record(compiler_gc, "Setting returned %T for %t in info %p",
            returned, form, info);
     info->returned = returned;
 }
