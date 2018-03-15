@@ -71,6 +71,8 @@ struct SourceFile;
 //
 // ============================================================================
 
+extern "C"
+{
 Tree *  xl_evaluate(Scope *c, Tree *tree);
 Tree *  xl_identity(Scope *c, Tree *tree);
 Tree *  xl_typecheck(Scope *c, Tree *type, Tree *value);
@@ -99,8 +101,6 @@ Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
 //
 // ============================================================================
 
-extern "C"
-{
 #pragma GCC diagnostic push
 // You first have to ignore the fact that the following pragma may be ignored!
 #pragma GCC diagnostic ignored "-Wpragmas"

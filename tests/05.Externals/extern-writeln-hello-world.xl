@@ -1,0 +1,3 @@
+// OPT=-O3 -nobuiltins
+writeln X:text is C puts
+writeln "Hello world"
