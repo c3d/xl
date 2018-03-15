@@ -260,7 +260,7 @@ RewriteCalls::Bind(Context *context,
         // Ignore function name if that is all we have
         Tree *fname = RewriteDefined(rc.rewrite->left);
         if (fname == f)
-            return POSSIBLE;
+            return PERFECT;     // Will degrade to 'POSSIBLE' if there are args
 
         // Check if what we have as an expression evaluates correctly
         type = types->Type(value);
