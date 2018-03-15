@@ -85,6 +85,7 @@ class Types
     TreeMap     types;          // Map an expression to its type
     TreeMap     unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
+    bool        declaration;    // Analyzing type of a declaration
     static uint id;             // Id of next type
 
 public:
@@ -97,6 +98,7 @@ public:
     // Main entry point
     Tree *      TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
+    Tree *      DeclarationType(Tree *expr);
     Tree *      NewType(Tree *expr);
     Tree *      ValueType(Tree *expr);
     Tree *      BaseType(Tree *expr);

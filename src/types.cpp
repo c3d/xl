@@ -67,7 +67,8 @@ Types::Types(Scope *scope)
     : context(new Context(scope)),
       types(),
       unifications(),
-      rcalls()
+      rcalls(),
+      declaration(false)
 {
     record(types, "Created Types %p for scope %t", this, scope);
 }
@@ -80,7 +81,8 @@ Types::Types(Scope *scope, Types *parent)
     : context(new Context(scope)),
       types(parent->types),
       unifications(parent->unifications),
-      rcalls(parent->rcalls)
+      rcalls(parent->rcalls),
+      declaration(false)
 {
     context->CreateScope();
     scope = context->CurrentScope();
@@ -161,6 +163,17 @@ Tree *Types::Type(Tree *expr)
         record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
     }
     return type;
+}
+
+
+Tree *Types::DeclarationType(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the type for a declaration, e.g. for [X] in [X is 0]
+// ----------------------------------------------------------------------------
+{
+    Save<bool> save(declaration, true);
+    Tree *result = Type(expr);
+    return result;
 }
 
 
@@ -268,6 +281,8 @@ Tree *Types::DoName(Name *what)
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
+    if (declaration)
+        return NewType(what);
     return Evaluate(what);
 }
 
@@ -435,8 +450,8 @@ Tree *Types::RewriteType(Infix *what)
     }
 
     // Regular case: create a [type X => type Y] type
-    Tree *declt = TypeOf(decl);
-    Tree *initt = TypeOf(init);
+    Tree *declt = DeclarationType(decl);
+    Tree *initt = Type(init);
     if (!declt || !initt)
     {
         record(types_calls, "Failed type for %t declt=%t initt=%t",
