@@ -334,6 +334,12 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 //   Run the optimization pass
 // ----------------------------------------------------------------------------
 {
+    if (RECORDER_TRACE(llvm_code) & 0x10)
+    {
+        llvm::errs() << "Dump of module before optimizations:\n";
+        module->dump();
+    }
+
     // Create a function pass manager.
     legacy::FunctionPassManager fpm(module.get());
 
@@ -380,7 +386,13 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
     // Run the optimizations over all functions in the module being JITed
     fpm.doInitialization();
     for (auto &f : *module)
-      fpm.run(f);
+        fpm.run(f);
+
+    if (RECORDER_TRACE(llvm_code) & 0x20)
+    {
+        llvm::errs() << "Dump of module after optimizations:\n";
+        module->dump();
+    }
 
     return module;
 }
@@ -634,7 +646,7 @@ Function_p JIT::Function(FunctionType_p type, text name)
     if (top)
     {
         record(llvm_functions, "Creating module for top-level function");
-        module = p.Module(name, false);
+        module = p.Module("xl.llvm.code", false);
     }
     Function_p f = llvm::Function::Create(type,
                                           llvm::Function::ExternalLinkage,
