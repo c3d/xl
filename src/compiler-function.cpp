@@ -1122,13 +1122,6 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     case TEXT:
         mtype = compiler.charPtrTy;
         break;
-    case INFIX:
-        if (Infix *range = types->IsRangeType(type))
-            mtype = BoxedType(range->left);
-        else if (Infix *utype = types->IsUnionType(type))
-            mtype = compiler.treePtrTy;
-        break;
-
     case NAME:
         if (base == xl_true || base == xl_false)
             mtype = compiler.booleanTy;
@@ -1162,6 +1155,27 @@ Type_p CompilerFunction::BoxedType(Tree *type)
         TTYPE(prefix);
         TTYPE(postfix);
         TTYPE(block);
+        break;
+
+    case INFIX:
+        if (Infix *range = types->IsRangeType(type))
+            mtype = BoxedType(range->left);
+        else if (Infix *utype = types->IsUnionType(type))
+            mtype = compiler.treePtrTy;
+        break;
+
+    case PREFIX:
+        if (Tree *form = types->IsTypeOf(type))
+            if (Tree *formType = types->ValueType(form))
+                mtype = BoxedType(formType);
+        break;
+
+    case POSTFIX:
+        break;
+
+    case BLOCK:
+        if (Block *block = (Block *) type)
+            mtype = BoxedType(block->child);
         break;
     }
 
