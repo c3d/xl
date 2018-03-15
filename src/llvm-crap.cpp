@@ -24,6 +24,7 @@
 
 #include "llvm-crap.h"
 #include "renderer.h"
+#include "errors.h"
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
@@ -200,7 +201,10 @@ static inline uint64_t globalSymbolAddress(const text &name)
 //    Return the address of the symbol in the current address space
 // ----------------------------------------------------------------------------
 {
-    return RTDyldMemoryManager::getSymbolAddressInProcess(name);
+    uint64_t result = RTDyldMemoryManager::getSymbolAddressInProcess(name);
+    record(llvm_externals, "Global address for %s is %p",
+           name.c_str(), (void *) result);
+    return result;
 }
 
 
@@ -249,7 +253,7 @@ JITPrivate::JITPrivate(int argc, char **argv)
                            return JITSymbol(addr, JITSymbolFlags::Exported);
                        return nullptr;
                    },
-                   [](Error err)
+                   [](llvm::Error err)
                    {
                        cantFail(std::move(err), "lookupFlags failed");
                    })),
@@ -325,7 +329,7 @@ void JITPrivate::DeleteModule(VModuleKey key)
 //   Remove the last module from the JIT
 // ----------------------------------------------------------------------------
 {
-    cantFail(optimizer.removeModule(key));
+    cantFail(optimizer.removeModule(key), "Unable to remove module");
 }
 
 
@@ -425,7 +429,16 @@ JITTargetAddress JITPrivate::Address(text name)
 // ----------------------------------------------------------------------------
 {
     cantFail(optimizer.addModule(key, std::move(module)));
-    return cantFail(Symbol(name).getAddress());
+    auto r = Symbol(name).getAddress();
+    if (!r)
+    {
+        text message = toString(r.takeError());
+        Ooops("Generating machine code for '$1' failed: $2")
+            .Arg(name, "")
+            .Arg(message, "");
+        return 0;
+    }
+    return *r;
 }
 
 
