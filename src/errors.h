@@ -55,7 +55,8 @@ struct Error
     Error &             Arg(ulonglong x){ return Arg(Integer::value_t(x)); }
     Error &             Arg(Integer::value_t value);
     Error &             Arg(Real::value_t value);
-    Error &             Arg(Text::value_t t);
+    Error &             Arg(Text::value_t t, text delim="\"");
+    Error &             Arg(Text::value_t t, text open, text close);
     Error &             Arg(Tree *arg);
 
     // Displaying the message

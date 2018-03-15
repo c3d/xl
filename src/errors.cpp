@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  errors.cpp                                                     Tao project 
+//  errors.cpp                                                     Tao project
 // ****************************************************************************
 //
 //   File Description:
@@ -98,12 +98,22 @@ Error &Error::Arg(Real::value_t value)
 }
 
 
-Error &Error::Arg(Text::value_t t)
+Error &Error::Arg(Text::value_t t, text delim)
 // ----------------------------------------------------------------------------
 //   Add an argument to the message, replacing $1, $2, ...
 // ----------------------------------------------------------------------------
 {
-    arguments.push_back(new Text(t, position));
+    arguments.push_back(new Text(t, delim, delim, position));
+    return *this;
+}
+
+
+Error &Error::Arg(Text::value_t t, text open, text close)
+// ----------------------------------------------------------------------------
+//   Add an argument to the message, replacing $1, $2, ...
+// ----------------------------------------------------------------------------
+{
+    arguments.push_back(new Text(t, open, close, position));
     return *this;
 }
 
@@ -372,7 +382,7 @@ text ShortTreeForm(Tree *tree, uint maxWidth)
     if (first != t.npos)
     {
         size_t last = t.rfind("\n");
-        t.replace(first, last-first+1, "...");
+        t.replace(first, last-first+1, "|");
         length = t.length();
     }
 
@@ -380,7 +390,7 @@ text ShortTreeForm(Tree *tree, uint maxWidth)
     {
         uint extra = length - maxWidth;
         first = maxWidth / 2;
-        t.replace(first, extra+1, "...");
+        t.replace(first, extra+1, "…");
     }
 
     return t;
@@ -392,10 +402,10 @@ text FormatTreeForError(Tree *tree)
 //   Format a tree for error reporting
 // ----------------------------------------------------------------------------
 {
-    if (Text *t = tree->AsText())
-        return "\"" + t->value + "\"";
     text result = ShortTreeForm(tree);
-    return "'" + result + "'";
+    if (tree->Kind() >= KIND_LEAF_LAST)
+        result = "[" + result + "]";
+    return result;
 }
 
 XL_END
