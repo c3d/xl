@@ -1,3 +1,2 @@
-05.Externals/extern-writeln-hello-world-integer-puts.xl
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
 02.Arithmetic/09-complex-arithmetic.xl

@@ -303,8 +303,7 @@ Tree *Types::DoPrefix(Prefix *what)
                 Ooops("No C declaration for $1", what);
                 return nullptr;
             }
-            Tree *type = Extern(cdecl->rewrite);
-            type = AssignType(what, type);
+            Tree *type = RewriteType(cdecl->rewrite);
             return type;
         }
     }
@@ -389,14 +388,16 @@ Tree *Types::TypeOf(Tree *expr)
 //   Return the type of the expr as a [type X] expression
 // ----------------------------------------------------------------------------
 {
-    // Check if we know a type for this expression
+    // Check if we know a type for this expression, if so return it
     auto it = types.find(expr);
     if (it != types.end())
         return (*it).second;
 
-    // Otherwise, return [type X]
+    // Otherwise, return [type X] and assign it to this expr
     TreePosition pos = expr->Position();
-    return new Prefix(new Name("type", pos), expr, pos);
+    Tree *type = new Prefix(new Name("type", pos), expr, pos);
+    types[expr] = type;
+    return type;
 }
 
 
@@ -406,11 +407,12 @@ Tree *Types::TypeDeclaration(Infix *decl)
 // ----------------------------------------------------------------------------
 {
     Tree *declared = decl->left;
-    Tree *type = decl->right;
+    Tree *type = EvaluateType(decl->right);
+    Tree *declt = TypeOf(declared);
     record(types_ids, "Declaration %t declared %t type %t in %p",
            decl, declared, type, this);
-    type = AssignType(declared, type);
-    return type;
+    type = Join(declt, type);
+    return declt;
 }
 
 
@@ -431,27 +433,22 @@ Tree *Types::RewriteType(Infix *what)
 
     Tree *decl = what->left;
     Tree *init = what->right;
+    Tree *declt = DeclarationType(decl);
+    bool inited = true;        // True if init type can be evaluated
 
-    // Case of [X is self]: Return the type of X
+    // Case of [X is self]:
     if (Name *name = init->AsName())
         if (name->value == "self")
-            return Data(what);
+            inited = false;
 
     // Case of [X is C name] or [X is builtin Op]
     if (Prefix *prefix = init->AsPrefix())
-    {
         if (Name *name = prefix->left->AsName())
-        {
-            if (name->value == "C")
-                return Extern(what);
-            if (name->value == "builtin")
-                return Builtin(what);
-        }
-    }
+            if (name->value == "C" || name->value == "builtin")
+                inited = false;
 
-    // Regular case: create a [type X => type Y] type
-    Tree *declt = DeclarationType(decl);
-    Tree *initt = Type(init);
+    // Create a [type Decl => type Init] type
+    Tree *initt = inited ? Type(init) : NewType(init);
     if (!declt || !initt)
     {
         record(types_calls, "Failed type for %t declt=%t initt=%t",
@@ -459,61 +456,16 @@ Tree *Types::RewriteType(Infix *what)
         return nullptr;
     }
 
+    // Unify with the type of the right hand side
+    initt = Unify(declt, initt);
+
+    // If the left side has a complex shape, e.g. [X+Y], return [DT => I]
     Tree *type = new Infix("=> ", declt, initt, what->Position());
     type = AssignType(what, type);
 
     record(types_calls, "Rewrite for %t is %t (%t => %t)",
            what, type, decl, init);
     return type;
-}
-
-
-Tree *Types::DeclarationOnly(Infix *what, kstring description)
-// ----------------------------------------------------------------------------
-//    Declarations where the interface is all we know
-// ----------------------------------------------------------------------------
-{
-    record(types_calls, "%+s %t in %p", description, what, this);
-
-    Tree *decl = what->left;
-    Tree *init = what->right;
-
-    Tree *type = TypeOf(decl);
-    type = AssignType(decl, type);
-    type = AssignType(init, type);
-    type = AssignType(what, type);
-
-    record(types_calls, "%+s %t in %p is %t", description, what, this, type);
-    return type;
-}
-
-
-Tree *Types::Data(Infix *what)
-// ----------------------------------------------------------------------------
-//   Use the structure type associated to the data form
-// ----------------------------------------------------------------------------
-//   The type associated to [X] is [type X], so that the cost is deferred
-//   to unification and only done when necessary
-{
-    return DeclarationOnly(what, "Data");
-}
-
-
-Tree *Types::Extern(Infix *decl)
-// ----------------------------------------------------------------------------
-//   Recover the transformed rewrite and enter that
-// ----------------------------------------------------------------------------
-{
-    return DeclarationOnly(decl, "C declaration");
-}
-
-
-Tree *Types::Builtin(Infix *decl)
-// ----------------------------------------------------------------------------
-//   Recover the transformed rewrite and enter that
-// ----------------------------------------------------------------------------
-{
-    return DeclarationOnly(decl, "Builtin");
 }
 
 
@@ -571,7 +523,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     rcalls[what] = rc;
     uint count = 0;
     Errors errors;
-    errors.Log (Error("Unable to evaluate '$1':", what), true);
+    errors.Log (Error("Unable to evaluate $1:", what), true);
     context->Lookup(what, lookupRewriteCalls, rc);
 
     // If we have no candidate, this is a failure
@@ -593,6 +545,33 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
         type = UnionType(type, ctype);
     }
     type = AssignType(what, type);
+    return type;
+}
+
+
+static Tree *lookupType(Scope *evalScope, Scope *sc,
+                        Tree *what, Infix *entry, void *i)
+// ----------------------------------------------------------------------------
+//   Used to check if a
+// ----------------------------------------------------------------------------
+{
+    if (Name *test = what->AsName())
+        if (Name *decl = entry->left->AsName())
+            if (test->value == decl->value)
+                return decl;
+    return nullptr;
+}
+
+
+Tree *Types::EvaluateType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Find candidates for the given expression and infer types from that
+// ----------------------------------------------------------------------------
+{
+    record(types_calls, "Evaluating type %t in %p", type, this);
+    Tree *found = context->Lookup(type, lookupType, nullptr);
+    if (found)
+        type = Join(type, found);
     return type;
 }
 
@@ -765,6 +744,8 @@ Tree *Types::Join(Tree *old, Tree *replace)
     // Deal with error cases
     if (!old || !replace)
         return nullptr;
+    if (old == replace)
+        return old;
 
     // Replace the type in the types map
     for (auto &t : types)

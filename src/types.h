@@ -126,14 +126,13 @@ public:
     Tree *      TypeOf(Tree *expr);
     Tree *      TypeDeclaration(Infix *decl);
     Tree *      RewriteType(Infix *rw);
-    Tree *      DeclarationOnly(Infix *rw, kstring description);
-    Tree *      Data(Infix *rw);
-    Tree *      Extern(Infix *rw);
-    Tree *      Builtin(Infix *rw);
     Tree *      Statements(Tree *expr, Tree *left, Tree *right);
 
     // Attempt to evaluate an expression and perform required unifications
     Tree *      Evaluate(Tree *tree, bool mayFail = false);
+
+    // Evaluate a type expression
+    Tree *      EvaluateType(Tree *tree);
 
     // Indicates that two trees must have compatible types
     Tree *      Unify(Tree *t1, Tree *t2);
