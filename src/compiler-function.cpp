@@ -1110,32 +1110,60 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 #define STYPE(name)             CTYPE(name, name)
 #define TTYPE(name)             CTYPE(name, name##TreePtr)
 
-    STYPE(boolean);
-    STYPE(integer);
-    STYPE(integer8);
-    STYPE(integer16);
-    STYPE(integer32);
-    STYPE(integer64);
-    STYPE(unsigned);
-    CTYPE(unsigned8,            integer8);
-    CTYPE(unsigned16,           integer16);
-    CTYPE(unsigned32,           integer32);
-    CTYPE(unsigned64,           integer64);
-    STYPE(character);
-    CTYPE(text,                 charPtr);
-    STYPE(real);
-    STYPE(real32);
-    STYPE(real64);
-    CTYPE(tree,                 treePtr);
-    CTYPE(value,                treePtr);
-    CTYPE(name,                 nameTreePtr);
-    CTYPE(symbol,               nameTreePtr);
-    CTYPE(operator,             nameTreePtr);
-    TTYPE(infix);
-    CTYPE(declaration,          infixTreePtr);
-    TTYPE(prefix);
-    TTYPE(postfix);
-    TTYPE(block);
+    // Check types for constants
+    switch(type->Kind())
+    {
+    case INTEGER:
+        mtype = compiler.integerTy;
+        break;
+    case REAL:
+        mtype = compiler.realTy;
+        break;
+    case TEXT:
+        mtype = compiler.charPtrTy;
+        break;
+    case INFIX:
+        if (Infix *range = types->IsRangeType(type))
+            mtype = BoxedType(range->left);
+        else if (Infix *utype = types->IsUnionType(type))
+            mtype = compiler.treePtrTy;
+        break;
+
+    case NAME:
+        if (base == xl_true || base == xl_false)
+            mtype = compiler.booleanTy;
+        if (base == xl_nil)
+            mtype = compiler.voidTy;
+        if (base == xl_error)
+            mtype = compiler.treePtrTy;
+        STYPE(boolean);
+        STYPE(integer);
+        STYPE(integer8);
+        STYPE(integer16);
+        STYPE(integer32);
+        STYPE(integer64);
+        STYPE(unsigned);
+        CTYPE(unsigned8,        integer8);
+        CTYPE(unsigned16,       integer16);
+        CTYPE(unsigned32,       integer32);
+        CTYPE(unsigned64,       integer64);
+        STYPE(character);
+        CTYPE(text,             charPtr);
+        STYPE(real);
+        STYPE(real32);
+        STYPE(real64);
+        CTYPE(tree,             treePtr);
+        CTYPE(value,            treePtr);
+        CTYPE(name,             nameTreePtr);
+        CTYPE(symbol,           nameTreePtr);
+        CTYPE(operator,         nameTreePtr);
+        TTYPE(infix);
+        CTYPE(declaration,      infixTreePtr);
+        TTYPE(prefix);
+        TTYPE(postfix);
+        TTYPE(block);
+        break;
+    }
 
     if (mtype)
     {
