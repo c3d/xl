@@ -1,0 +1,6 @@
+// OPT=-O3 -nobuiltins
+// In this variant, we give an int return type for puts,
+// so the compiler has to generate unboxing code for the value and
+// the test result must be an integer (number of characters)
+writeln X:text as integer is C puts
+writeln "Hello world"
