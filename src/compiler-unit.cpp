@@ -88,6 +88,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
     IntegerType_p  integerTy        = compiler.integerTy;
     IntegerType_p  unsignedTy       = compiler.unsignedTy;
     IntegerType_p  ulongTy          = compiler.ulongTy;
+    IntegerType_p  ulonglongTy      = compiler.ulonglongTy;
     Type_p         realTy           = compiler.realTy;
     IntegerType_p  characterTy      = compiler.characterTy;
     PointerType_p  charPtrTy        = compiler.charPtrTy;

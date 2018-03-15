@@ -167,7 +167,7 @@ EXTERNAL(xl_infix_match_check,  treePtrTy,      scopePtrTy, treePtrTy, charPtrTy
 EXTERNAL(xl_typecheck,          treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_form_error,         treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_stack_overflow,     treePtrTy,      treePtrTy)
-EXTERNAL(xl_new_integer,        integerTreePtrTy, ulongTy, integerTy)
+EXTERNAL(xl_new_integer,        integerTreePtrTy, ulongTy, ulonglongTy)
 EXTERNAL(xl_new_real,           realTreePtrTy,  ulongTy, realTy)
 EXTERNAL(xl_new_character,      textTreePtrTy,  ulongTy, characterTy)
 EXTERNAL(xl_new_text,           textTreePtrTy,  ulongTy, textTy)

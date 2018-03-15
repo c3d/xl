@@ -624,8 +624,8 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
     {
         assert(req == compiler.treePtrTy || req == compiler.integerTreePtrTy);
         boxFn = unit.xl_new_integer;
-        if (type != compiler.integerTy)
-            result = code.SExt(result, type); // REVISIT: Signed?
+        if (type != compiler.ulonglongTy)
+            result = code.SExt(result, compiler.ulonglongTy); // REVISIT: Sign?
     }
     else if (type->isFloatingPointTy())
     {
@@ -660,7 +660,7 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
     {
         uint64_t pos = source->Position();
         Value_p posValue = code.IntegerConstant(compiler.ulongTy, pos);
-        result = code.Call(boxFn, posValue, value);
+        result = code.Call(boxFn, posValue, result);
         type = result->getType();
     }
 
