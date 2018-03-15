@@ -461,8 +461,6 @@ Value_p CompilerExpression::DoRewrite(RewriteCandidate &cand)
             uint sz = args.size();
             Value_p *a = &args[0];
             result = function.Primitive(builtin, op, sz, a);
-            if (!result)
-                Ooops("Invalid primitive $1", builtin);
             record(compiler_expr, "Rewrite %t is builtin %t: %v",
                    rw, builtin, result);
         }

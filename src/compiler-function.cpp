@@ -76,6 +76,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
       entry(code.Block()),
       returned(data.AllocateReturnValue(function))
 {
+    InitializePrimitives();
     InitializeArgs();
     record(compiler_function, "Created eval %p with scope %t type %T",
            this, scope, type);
@@ -145,6 +146,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       entry(nullptr),
       returned(nullptr)
 {
+    InitializePrimitives();
     InitializeArgs(parms);
 
     // Inherit information about machine types from the caller
@@ -179,6 +181,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       entry(code.Block()),
       returned(data.AllocateReturnValue(function))
 {
+    InitializePrimitives();
     // Inherit information about machine types from the caller
     mtypes = caller.mtypes;
     boxed = caller.boxed;
@@ -195,6 +198,34 @@ CompilerFunction::~CompilerFunction()
 // ----------------------------------------------------------------------------
 {
     record(compiler_unit, "Deleted function %p for %t", this, source);
+}
+
+
+CompilerFunction::Primitives CompilerFunction::primitives;
+
+
+void CompilerFunction::InitializePrimitives()
+// ----------------------------------------------------------------------------
+//   Initialize the primitives if the primitives table is empty
+// ----------------------------------------------------------------------------
+{
+    if (primitives.size())
+        return;
+
+#define UNARY(Name)                                                     \
+    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 1};
+#define BINARY(Name)                                                    \
+    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
+#define CAST(Name)                                                      \
+    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
+#define SPECIAL(Name, Arity, Code)                                      \
+    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, Arity};
+
+#define ALIAS(from, arity, to)
+#define EXTERNAL(Name, ...)
+
+#include "compiler-primitives.tbl"
+
 }
 
 
@@ -1375,14 +1406,17 @@ Value_p CompilerFunction::Primitive(Tree *source,
     // Find the entry in the primitives table
     auto found = primitives.find(name);
     if (found == primitives.end())
-        return NULL;
+    {
+        Ooops("Invalid primitive $1", source);
+        return ConstantTree(source);
+    }
 
     // If the entry doesn't have the expected arity, give up
     PrimitiveInfo &primitive = (*found).second;
     if (primitive.arity != arity)
     {
-        Ooops("Primitive  arity for $1 is wrong, should be $2",
-              source).Arg(primitive.arity);
+        Ooops("Primitive  arity for $1 is wrong, should be $2", source)
+            .Arg(primitive.arity);
         return ConstantTree(source);
     }
 

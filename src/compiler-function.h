@@ -168,8 +168,9 @@ private:
         primitive_fn    function;
         unsigned        arity;
     };
-    typedef std::map<text,PrimitiveInfo> primitive_map;
-    primitive_map       primitives;
+    typedef std::map<text,PrimitiveInfo> Primitives;
+    static Primitives   primitives;
+    static void         InitializePrimitives();
 
     // Define LLVM accessors for primitives
 #define UNARY(Name)                                                     \
