@@ -1169,13 +1169,9 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     case INFIX:
         if (Infix *range = types->IsRangeType(type))
             mtype = BoxedType(range->left);
-        else if (Infix *utype = types->IsUnionType(type))
-            mtype = compiler.treePtrTy;
         break;
 
     case PREFIX:
-        if (Tree *form = types->IsTypeOf(type))
-            mtype = compiler.treePtrTy;
         break;
 
     case POSTFIX:
