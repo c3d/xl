@@ -1348,8 +1348,7 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
         return found;
 
     // Build the corresponding structure type
-    StructType_p stype = jit.StructType(signature);
-    jit.SetName(stype, "boxed");
+    StructType_p stype = jit.StructType(signature, "boxed");
 
     // Record boxing and unboxing for that particular tree
     Types *types = unit.types;

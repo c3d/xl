@@ -264,8 +264,7 @@ StructType_p CompilerUnit::ClosureType(Tree *form)
     captured_set *captured = CompilerInfo::Captured(form);
     if (captured)
     {
-        type = jit.OpaqueType();
-        jit.SetName(type, "xl.closure");
+        type = jit.OpaqueType("xl.closure");
         AddClosureType(type);
     }
     return type;

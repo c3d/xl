@@ -85,34 +85,38 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
       real64Ty          (jit.FloatType(64)),
       characterTy       (jit.IntegerType<char>()),
       charPtrTy         (jit.PointerType(characterTy)),
-      textTy            (jit.StructType({jit.OpaqueType()})),
-      infoTy            (jit.OpaqueType()),
+      textTy            (jit.StructType({jit.OpaqueType("textrep")}, "text")),
+      infoTy            (jit.OpaqueType("Info")),
       infoPtrTy         (jit.PointerType(infoTy)),
 
-#define TREE ulongTy, infoPtrTy
-      treeTy            (jit.StructType({TREE})),
+#define TREE    ulongTy, infoPtrTy
+#define TREE1   TREE, treePtrTy
+#define TREE2   TREE1, treePtrTy
+      treeTy            (jit.StructType({TREE},                 "Tree")),
       treePtrTy         (jit.PointerType(treeTy)),
       treePtrPtrTy      (jit.PointerType(treePtrTy)),
-      integerTreeTy     (jit.StructType({TREE, ulonglongTy})),
+      integerTreeTy     (jit.StructType({TREE, ulonglongTy},    "Integer")),
       integerTreePtrTy  (jit.PointerType(integerTreeTy)),
-      realTreeTy        (jit.StructType({TREE, realTy})),
+      realTreeTy        (jit.StructType({TREE, realTy},         "Real")),
       realTreePtrTy     (jit.PointerType(realTreeTy)),
-      textTreeTy        (jit.StructType({TREE, textTy})),
+      textTreeTy        (jit.StructType({TREE, textTy},         "Text")),
       textTreePtrTy     (jit.PointerType(textTreeTy)),
-      nameTreeTy        (jit.StructType({TREE, textTy})),
+      nameTreeTy        (jit.StructType({TREE, textTy},         "Name")),
       nameTreePtrTy     (jit.PointerType(nameTreeTy)),
-      blockTreeTy       (jit.StructType({TREE, treePtrTy})),
+      blockTreeTy       (jit.StructType({TREE1},                "Block")),
       blockTreePtrTy    (jit.PointerType(blockTreeTy)),
-      prefixTreeTy      (jit.StructType({TREE,treePtrTy,treePtrTy})),
+      prefixTreeTy      (jit.StructType({TREE2},                "Prefix")),
       prefixTreePtrTy   (jit.PointerType(prefixTreeTy)),
-      postfixTreeTy     (jit.StructType({TREE,treePtrTy,treePtrTy})),
+      postfixTreeTy     (jit.StructType({TREE2},                "Postfix")),
       postfixTreePtrTy  (jit.PointerType(postfixTreeTy)),
-      infixTreeTy       (jit.StructType({TREE, treePtrTy,treePtrTy,textTy})),
+      infixTreeTy       (jit.StructType({TREE2, textTy},        "Infix")),
       infixTreePtrTy    (jit.PointerType(infixTreeTy)),
-#undef TREE
-
-      scopeTy           (prefixTreeTy),
+      scopeTy           (jit.StructType({TREE2},                "Scope")),
       scopePtrTy        (prefixTreePtrTy),
+#undef TREE
+#undef TREE1
+#undef TREE2
+
       evalTy            (jit.FunctionType(treePtrTy, {scopePtrTy, treePtrTy})),
       evalFnTy          (jit.PointerType(evalTy))
 {
@@ -128,19 +132,6 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
     Allocator<Prefix>   ::Singleton()->AddListener(this);
     Allocator<Postfix>  ::Singleton()->AddListener(this);
     Allocator<Block>    ::Singleton()->AddListener(this);
-
-    // Record the type names
-    jit.SetName(treeTy,                 "Tree");
-    jit.SetName(integerTreeTy,          "Integer");
-    jit.SetName(realTreeTy,             "Real");
-    jit.SetName(textTreeTy,             "Text");
-    jit.SetName(blockTreeTy,            "Block");
-    jit.SetName(nameTreeTy,             "Name");
-    jit.SetName(prefixTreeTy,           "Prefix");
-    jit.SetName(postfixTreeTy,          "Postfix");
-    jit.SetName(infixTreeTy,            "Infix");
-    jit.SetName(infoTy,                 "Info");
-    jit.SetName(scopeTy,                "Scope");
 
     // Set optimization level
     jit.SetOptimizationLevel(opts);

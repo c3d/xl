@@ -578,12 +578,12 @@ Type_p JIT::FloatType(unsigned bits)
 }
 
 
-StructType_p JIT::OpaqueType()
+StructType_p JIT::OpaqueType(kstring name)
 // ----------------------------------------------------------------------------
 //   Create an opaque type (i.e. a struct without a content)
 // ----------------------------------------------------------------------------
 {
-    return StructType::create(p.context);
+    return StructType::create(p.context, name);
 }
 
 
@@ -597,12 +597,12 @@ StructType_p JIT::StructType(StructType_p base, const Signature &elements)
 }
 
 
-StructType_p JIT::StructType(const Signature &items)
+StructType_p JIT::StructType(const Signature &items, kstring name)
 // ----------------------------------------------------------------------------
 //    Define a structure type in one pass
 // ----------------------------------------------------------------------------
 {
-    StructType_p type = StructType::get(p.context, ArrayRef<Type_p>(items));
+    StructType_p type = StructType::create(p.context, ArrayRef<Type_p>(items), name);
     return type;
 }
 
@@ -631,21 +631,6 @@ Type_p JIT::VoidType()
 // ----------------------------------------------------------------------------
 {
     return llvm::Type::getVoidTy(p.context);
-}
-
-
-void JIT::SetName(Type_p type, text name)
-// ----------------------------------------------------------------------------
-//   Set the name for a type (for debugging purpose)
-// ----------------------------------------------------------------------------
-{
-    // Not sure if it's possible to set the name for non-struct types anymore
-    if (type->isStructTy())
-    {
-        StructType_p stype = (StructType_p) type;
-        if (!stype->isLiteral())
-            stype->setName(name);
-    }
 }
 
 

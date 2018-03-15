@@ -181,13 +181,12 @@ public:
     IntegerType_p       IntegerType();
     IntegerType_p       IntegerType(unsigned bits);
     Type_p              FloatType(unsigned bits);
-    StructType_p        OpaqueType();
-    StructType_p        StructType(StructType_p base, const Signature &items);
-    StructType_p        StructType(const Signature &items);
+    StructType_p        OpaqueType(kstring name = nullptr);
+    StructType_p        StructType(StructType_p base, const Signature &body);
+    StructType_p        StructType(const Signature &items, kstring n = nullptr);
     FunctionType_p      FunctionType(Type_p r,const Signature &p,bool va=false);
     PointerType_p       PointerType(Type_p rty);
     Type_p              VoidType();
-    void                SetName(Type_p type, text name);
 
     // Functions
     Function_p          Function(FunctionType_p type, text name);
