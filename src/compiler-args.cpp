@@ -112,7 +112,7 @@ Tree *RewriteCalls::Check (Scope *scope,
     Tree *form = candidate->left;
     Tree *defined = RewriteDefined(form);
     Tree *declType = RewriteType(form);
-    Tree *type = declType;
+    Tree *type = declType ? childTypes->EvaluateType(declType) : nullptr;
 
     BindingStrength binding = Bind(childContext, defined, what, rc);
     if (binding == FAILED)

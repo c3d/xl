@@ -629,7 +629,7 @@ XL_END
     static Opcode_I_##IName init_opcode_I_##IName;
 
 
-#define INFIX_SCOPE(IName, ResTy, LeftTy, Symbol, RightTy, Code)          \
+#define INFIX_SCOPE(IName, ResTy, LeftTy, Symbol, RightTy, Code)        \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
