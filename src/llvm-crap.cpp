@@ -177,7 +177,6 @@ class JITPrivate
 
     Module_s            module;
     VModuleKey          key;
-    Function_p          function;
 
 public:
     JITPrivate(int argc, char **argv);
@@ -185,9 +184,8 @@ public:
 
 private:
     Module_p            Module();
-    Module_p            Module(text name, bool renew=false);
-    VModuleKey          ModuleKey();
-    void                DeleteModule(VModuleKey key);
+    ModuleID            CreateModule(text name);
+    void                DeleteModule(ModuleID mod);
     Module_s            OptimizeModule(Module_s module);
     text                Mangle(text name);
     JITSymbol           Symbol(text name);
@@ -274,7 +272,9 @@ JITPrivate::JITPrivate(int argc, char **argv)
                     return OptimizeModule(std::move(module));
                 }),
       callbacks(createCallbacks(*target)),
-      stubs(createStubs(*target))
+      stubs(createStubs(*target)),
+      module(),
+      key()
 {
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
     record(llvm, "JITPrivate %p constructed", this);
@@ -286,6 +286,8 @@ JITPrivate::~JITPrivate()
 //    Destructor for JIT private helper
 // ----------------------------------------------------------------------------
 {
+    if (key)
+        DeleteModule(key);
     record(llvm, "JITPrivate %p destroyed", this);
 }
 
@@ -299,37 +301,36 @@ Module_p JITPrivate::Module()
 }
 
 
-Module_p JITPrivate::Module(text name, bool renew)
+ModuleID JITPrivate::CreateModule(text name)
 // ----------------------------------------------------------------------------
 //   Add a module to the JIT
 // ----------------------------------------------------------------------------
 {
-    if (renew || module.get() == nullptr)
-    {
-        module = std::make_shared<llvm::Module>(name, context);
-        module->setDataLayout(layout);
+    assert (!module.get() && !key && "Creating module while module is active");
 
-        key = session.allocateVModule();
-    }
-    return module.get();
-}
+    module = std::make_shared<llvm::Module>(name, context);
+    module->setDataLayout(layout);
+    key = session.allocateVModule();
 
-
-VModuleKey JITPrivate::ModuleKey()
-// ----------------------------------------------------------------------------
-//   Return the key for the current module
-// ----------------------------------------------------------------------------
-{
     return key;
 }
 
 
-void JITPrivate::DeleteModule(VModuleKey key)
+void JITPrivate::DeleteModule(ModuleID modID)
 // ----------------------------------------------------------------------------
 //   Remove the last module from the JIT
 // ----------------------------------------------------------------------------
 {
-    cantFail(optimizer.removeModule(key), "Unable to remove module");
+    assert(modID == key && "Removing an unknown module");
+    if (key)
+    {
+        // If we have transferred the module, let the optimizer cleanup,
+        // else simply delete it here
+        if (!module.get())
+            cantFail(optimizer.removeModule(key), "Unable to remove module");
+        key = 0;
+    }
+    module = nullptr;
 }
 
 
@@ -428,7 +429,8 @@ JITTargetAddress JITPrivate::Address(text name)
 //   Return the address for the given symbol
 // ----------------------------------------------------------------------------
 {
-    cantFail(optimizer.addModule(key, std::move(module)));
+    if (module.get())
+        cantFail(optimizer.addModule(key, std::move(module)));
     auto r = Symbol(name).getAddress();
     if (!r)
     {
@@ -468,7 +470,7 @@ JIT::~JIT()
 // ----------------------------------------------------------------------------
 {
     if (p.Module())
-        p.DeleteModule(p.key);
+        Ooops("Internal: Deleting JIT while a module is active");
     delete &p;
 }
 
@@ -603,8 +605,28 @@ StructType_p JIT::StructType(const Signature &items, kstring name)
 //    Define a structure type in one pass
 // ----------------------------------------------------------------------------
 {
-    StructType_p type = StructType::create(p.context, ArrayRef<Type_p>(items), name);
+    StructType_p type = StructType::create(p.context,
+                                           ArrayRef<Type_p>(items),
+                                           name);
     return type;
+}
+
+
+ModuleID JIT::CreateModule(text name)
+// ----------------------------------------------------------------------------
+//   Create a module in the JIT
+// ----------------------------------------------------------------------------
+{
+    return p.CreateModule(name);
+}
+
+
+void JIT::DeleteModule(ModuleID modID)
+// ----------------------------------------------------------------------------
+//   Delete a module in the JIT
+// ----------------------------------------------------------------------------
+{
+    p.DeleteModule(modID);
 }
 
 
@@ -641,21 +663,12 @@ Function_p JIT::Function(FunctionType_p type, text name)
 // ----------------------------------------------------------------------------
 {
     Module_p module = p.Module();
-    bool     top = module == nullptr;
-    if (top)
-    {
-        record(llvm_functions, "Creating module for top-level function");
-        module = p.Module("xl.llvm.code", false);
-    }
+    assert(module && "Creating a function without a module");
     Function_p f = llvm::Function::Create(type,
                                           llvm::Function::ExternalLinkage,
                                           name, module);
-    record(llvm_functions, "Created %+s %v type %v in module %v",
-           top ? "top-level function" : "inner function",
+    record(llvm_functions, "Created function %v type %v in module %p",
            f, type, p.Module());
-
-    if (top)
-        p.function = f;
 
     return f;
 }
@@ -677,9 +690,7 @@ void *JIT::ExecutableCode(Function_p f)
 // ----------------------------------------------------------------------------
 {
     JITTargetAddress address = p.Address(f->getName());
-    record(llvm_functions, "Address of %v is %p (top level %v)",
-           f, (void *) address, p.function);
-    p.function = nullptr;
+    record(llvm_functions, "Address of %v is %p", f, (void *) address);
     return (void *) address;
 }
 

@@ -77,9 +77,6 @@ struct Compiler : Evaluator, TypeAllocator::Listener
     Tree *              TypeCheck(Scope *, Tree *type, Tree *val) override;
     bool                TypeAnalysis(Scope *, Tree *tree) override;
 
-    // Top-level entry point: analyze and compile a tree or a whole program
-    eval_fn             Compile(Scope *scope, Tree *program);
-
     // Find the machine type corresponding to the tree type or value
     PointerType_p       TreeMachineType(Tree *tree);
     Type_p              MachineType(Tree *tree);

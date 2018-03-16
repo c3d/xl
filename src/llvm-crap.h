@@ -140,6 +140,8 @@ typedef llvm::Constant          Constant,       *Constant_p;
 typedef std::vector<Type_p>     Signature;
 typedef std::vector<Value_p>    Values;
 
+typedef intptr_t                ModuleID;
+
 
 class JIT
 // ----------------------------------------------------------------------------
@@ -187,6 +189,10 @@ public:
     FunctionType_p      FunctionType(Type_p r,const Signature &p,bool va=false);
     PointerType_p       PointerType(Type_p rty);
     Type_p              VoidType();
+
+    // Modules
+    ModuleID            CreateModule(text name);
+    void                DeleteModule(ModuleID id);
 
     // Functions
     Function_p          Function(FunctionType_p type, text name);

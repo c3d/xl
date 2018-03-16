@@ -153,13 +153,25 @@ Tree * Compiler::Evaluate(Scope *scope, Tree *source)
 // ----------------------------------------------------------------------------
 //   Compile the tree, then run the evaluation function
 // ----------------------------------------------------------------------------
+//   This is the entry point used to compile a top-level XL program.
+//   It will process all the declarations in the program and then compile
+//   the rest of the code as a function taking no arguments.
 {
-    eval_fn code = Compile(scope, source);
+    record(compiler, "Compiling program %t in scope %t", source, scope);
+    if (!source || !scope)
+        return NULL;
+
+    CompilerUnit unit(*this, scope, source);
+    eval_fn code = unit.Compile();
+    record(compiler, "Compiled %t in scope %t as %p",
+           source, scope, (void *) code);
+
     if (!code)
     {
         Ooops("Error compiling $1", source);
         return source;
     }
+
     Tree *result = code(scope, source);
     return result;
 }
@@ -181,26 +193,6 @@ bool Compiler::TypeAnalysis(Scope *scope, Tree *program)
 {
     CompilerUnit unit(*this, scope, program);
     return unit.TypeAnalysis();
-}
-
-
-eval_fn Compiler::Compile(Scope *scope, Tree *program)
-// ----------------------------------------------------------------------------
-//   Compile an XL tree and return the machine function for it
-// ----------------------------------------------------------------------------
-//   This is the entry point used to compile a top-level XL program.
-//   It will process all the declarations in the program and then compile
-//   the rest of the code as a function taking no arguments.
-{
-    record(compiler, "Compiling program %t in scope %t", program, scope);
-    if (!program || !scope)
-        return NULL;
-
-    CompilerUnit unit(*this, scope, program);
-    eval_fn result = unit.Compile();
-    record(compiler, "Compiled %t in scope %t as %p",
-           program, scope, (void *) result);
-    return result;
 }
 
 
