@@ -89,7 +89,6 @@ public:
     Function_p &        CompiledClosure(Scope *, Tree *expr);
 
     // Closure types management
-    StructType_p        ClosureType(Tree *form);
     bool                IsClosureType(Type_p type);
     void                AddClosureType(Type_p type);
 

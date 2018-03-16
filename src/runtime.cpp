@@ -55,7 +55,6 @@
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
-#include "compiler-gc.h"
 #include "types.h"
 #endif // INTERPRETER_ONLY
 

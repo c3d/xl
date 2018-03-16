@@ -121,6 +121,7 @@ private:
     void                InitializeArgs(const Parameters &parms);
 
     // Closure management
+    StructType_p        ClosureType(Tree *form);
     Value_p             InvokeClosure(Value_p result, Value_p fnPtr);
     Value_p             InvokeClosure(Value_p result);
 
@@ -150,6 +151,7 @@ private:
     bool                IsKnown(Tree *tree, uint which = knowAll);
     Value_p             Known(Tree *tree, uint which = knowAll );
     void                ImportClosureInfo(const CompilerUnit &other);
+
 
     // Creating constants
     Value_p             ConstantInteger(Integer *what);

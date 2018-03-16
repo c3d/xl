@@ -89,7 +89,7 @@ Value_p RewriteBinding::Closure(CompilerFunction &function)
 }
 
 
-Tree *RewriteCalls::Check (Prefix *scope,
+Tree *RewriteCalls::Check (Scope *scope,
                            Tree *what,
                            Infix *candidate)
 // ----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
 {
     Errors errors;
     errors.Log(Error("Pattern $1 doesn't match:", candidate->left), true);
-    RewriteCandidate rc(candidate);
+    RewriteCandidate rc(candidate, scope);
 
     // Create local type inference deriving from ours
     Scope *valueScope = types->TypesScope();
@@ -108,7 +108,7 @@ Tree *RewriteCalls::Check (Prefix *scope,
     Context_p childContext = childTypes->TypesContext();
 
     // Attempt binding / unification of parameters to arguments
-    Save<Types *> saveTypes(types, childTypes);
+    Save<Types_p> saveTypes(types, childTypes);
     Tree *form = candidate->left;
     Tree *defined = RewriteDefined(form);
     Tree *declType = RewriteType(form);

@@ -62,7 +62,6 @@ SOURCES     =					\
 SOURCES_llvm =					\
 	llvm-crap.cpp				\
 	compiler.cpp				\
-	compiler-gc.cpp				\
 	compiler-unit.cpp			\
 	compiler-function.cpp			\
 	compiler-expr.cpp			\

@@ -105,6 +105,7 @@ public:
     rcall_map & TypesRewriteCalls();
     Scope *     TypesScope();
     Context *   TypesContext();
+    bool        HasCaptures(Tree *form, TreeList &captured);
 
 public:
     // Interface for Tree::Do() to annotate the tree

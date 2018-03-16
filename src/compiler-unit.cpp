@@ -55,7 +55,6 @@
 #include "compiler-unit.h"
 #include "compiler-function.h"
 #include "compiler-expr.h"
-#include "compiler-gc.h"
 #include "errors.h"
 #include "types.h"
 #include "runtime.h"
@@ -254,22 +253,6 @@ Function_p &CompilerUnit::CompiledClosure(Scope *scope, Tree *expr)
     os << "Closure" << (void *) expr << "@" << (void *) scope;
     text key = os.str();
     return compiled[key];
-}
-
-
-StructType_p CompilerUnit::ClosureType(Tree *form)
-// ----------------------------------------------------------------------------
-//    Check if we need a closure type, and if so, create and record it
-// ----------------------------------------------------------------------------
-{
-    StructType_p type = nullptr;
-    captured_set *captured = CompilerInfo::Captured(form);
-    if (captured)
-    {
-        type = jit.OpaqueType("xl.closure");
-        AddClosureType(type);
-    }
-    return type;
 }
 
 

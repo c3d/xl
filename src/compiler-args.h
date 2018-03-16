@@ -103,7 +103,7 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree form
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Infix *rewrite)
+    RewriteCandidate(Infix *rewrite, Scope *scope)
         : rewrite(rewrite), bindings(), type(NULL), types(NULL) {}
     void Condition(Tree *value, Tree *test)
     {
@@ -117,6 +117,7 @@ struct RewriteCandidate
     bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
 
     Infix_p             rewrite;
+    Scope_p             scope;
     RewriteBindings     bindings;
     RewriteKinds        kinds;
     RewriteConditions   conditions;
@@ -135,7 +136,7 @@ struct RewriteCalls
 
     enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
-    Tree *              Check(Prefix *scope, Tree *value, Infix *candidate);
+    Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
     BindingStrength     Bind(Context *context,
                              Tree *ref, Tree *what, RewriteCandidate &rc);
     BindingStrength     BindBinary(Context *context,
@@ -148,7 +149,7 @@ struct RewriteCalls
                               bool declaration = false);
 
 public:
-    Types *             types;
+    Types_p             types;
     RewriteCandidates   candidates;
     GARBAGE_COLLECT(RewriteCalls);
 };

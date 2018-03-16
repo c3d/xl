@@ -43,7 +43,6 @@
 
 #include "compiler-function.h"
 #include "compiler-expr.h"
-#include "compiler-gc.h"
 #include "basics.h"
 #include <stdint.h>
 
@@ -102,7 +101,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       context(new Context(scope)),
       form(form),
       source(body),
-      closureTy(unit.ClosureType(form)),
+      closureTy(ClosureType(form)),
       function(OptimizedFunction(name, ret, parms)),
       data(jit, function, "data"),
       code(jit, function, "code"),
@@ -300,40 +299,6 @@ eval_fn CompilerFunction::Finalize(bool createCode)
 {
     record(llvm, "Finalize function %v", function);
 
-    // If we had closure information, finish building the closure type
-    if (closureTy)
-    {
-        captured_set *captured = CompilerInfo::Captured(form);
-        assert(captured && "There was a closure set but now it's gone");
-        Signature sig;
-
-        // First argument is always the pointer to the evaluation function
-        Type_p fnTy = function->getType();
-        sig.push_back(fnTy);
-
-        // Loop over other elements that need a closure
-        for (Tree *tree : *captured)
-        {
-            Type_p type = ValueMachineType(tree);
-            sig.push_back(type);
-        }
-
-         // Build the structure type and unify it with opaque type used in decl
-        closureTy = jit.StructType(closureTy, sig);
-
-        // Load the elements from the closure during function data prologue
-        Function::arg_iterator args = function->arg_begin();
-        Value_p closureArg = &*args++;
-        unsigned field = 1;
-        for (Tree *tree : *captured)
-        {
-            Value_p storage = NeedStorage(tree);
-            Value_p ptr = data.StructGEP(closureArg, field++, "closure_in");
-            Value_p input = data.Load(ptr);
-            data.Store(input, storage);
-        }
-    }
-
     // Branch to the exit block from the current main body of code
     code.Branch(exit);
 
@@ -426,14 +391,46 @@ void CompilerFunction::InitializeArgs(const Parameters &parms)
 //   Initialize the arguments and return statements for optimized functions
 // ----------------------------------------------------------------------------
 //   In that case, the arguments are from the function itself
-//   They may start with a closure pointer, which  we skip if it's there,
-//   because Finalize() will add code to read it (and its contents)
+//   They may start with a closure pointer, which we read here to have
+//   the values set during the rest of the code generation
 {
     // Associate the value for the additional arguments (read-only, no alloca)
     Function::arg_iterator args = function->arg_begin();
-    if (closureTy)
-        args++;
 
+    // If we had closure information, finish building the closure type
+    // then read the closure content and initialize values[] with it
+    if (closureTy)
+    {
+        Types *types = unit.types;
+        TreeList captured;
+        bool capt = types->HasCaptures(form, captured);
+        assert(capt && captured.size() && "Where are the captured items?");
+
+        // First item in closure is the pointer to the closure fn
+        Type_p fnTy = function->getType();
+        Signature sig { jit.PointerType(fnTy) };
+
+        // Loop over actual captured items and add them to closure type
+        for (Tree *tree : captured)
+        {
+            Type_p type = ValueMachineType(tree);
+            sig.push_back(type);
+        }
+        closureTy = jit.StructType(closureTy, sig);
+
+        // Load the elements from the closure during function data prologue
+        Value_p closureArg = &*args++;
+        unsigned field = 1;     // Start at #1 since 0 is function ptr
+        for (Tree *tree : captured)
+        {
+            Value_p storage = NeedStorage(tree);
+            Value_p ptr = data.StructGEP(closureArg, field++, "closure_in");
+            Value_p input = data.Load(ptr);
+            data.Store(input, storage);
+        }
+    }
+
+    // Then read the actual parameters
     for (auto &parm : parms)
     {
         Value_p inputArg = &*args++;
@@ -863,26 +860,21 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
     Function_p &function = unit.CompiledClosure(scope, expr);
     if (!function)
     {
-        // Add a single parameter to the signature
-        PointerType_p closurePtrTy = jit.PointerType(closureTy);
-        Signature sig { closurePtrTy };
-
         // Figure out the return type and function type
         Types *types = unit.types;
         Tree *rtype = types->ValueType(expr);
         Type_p retTy = BoxedType(rtype);
+        PointerType_p closurePtrTy = jit.PointerType(closureTy);
+        Signature sig { closurePtrTy };
         CompilerFunction closure(*this, scope, expr, "xl.closure", retTy, sig);
         function = closure.Function();
         closure.Compile(expr);
         closure.Finalize(false);
     }
 
-    Type_p closureType = jit.ReturnType(function);
-
     // Allocate a local structure to pass as the closure
+    Type_p closureType = ClosureType(name);
     Value_p closureData = data.Alloca(closureType);
-    ValueMachineType(name, closureType);
-    unit.AddClosureType(closureType);
 
     // First, store the function pointer
     uint field = 0;
@@ -890,16 +882,36 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
     code.Store(function, fptr);
 
     // Then loop over all values that were detected while evaluating expr
-    captured_set *captured = CompilerInfo::Captured(expr);
-    for (auto subexpr : *captured)
+    Types *types = unit.types;
+    TreeList captured;
+    types->HasCaptures(expr, captured);
+    for (Tree *subexpr : captured)
     {
-        Value_p subval = Compile(subexpr);
+        Value_p subval = Known(subexpr);
         fptr = code.StructGEP(closureData, field++, "closureitem");
         code.Store(subval, fptr);
     }
 
     // Return the stack pointer that we'll use later to evaluate the closure
     return closureData;
+}
+
+
+StructType_p CompilerFunction::ClosureType(Tree *form)
+// ----------------------------------------------------------------------------
+//    Check if we need a closure type, and if so, create and record it
+// ----------------------------------------------------------------------------
+{
+    Types *types = unit.types;
+    StructType_p ctype = nullptr;
+    TreeList captured;
+    if (types->HasCaptures(form, captured))
+    {
+        ctype = jit.OpaqueType("xl.closure");
+        unit.AddClosureType(ctype);
+        ValueMachineType(form, ctype);
+    }
+    return ctype;
 }
 
 

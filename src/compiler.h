@@ -64,7 +64,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-struct Compiler : Evaluator, TypeAllocator::Listener
+struct Compiler : Evaluator
 // ----------------------------------------------------------------------------
 //   Just-in-time compiler data
 // ----------------------------------------------------------------------------
@@ -80,12 +80,6 @@ struct Compiler : Evaluator, TypeAllocator::Listener
     // Find the machine type corresponding to the tree type or value
     PointerType_p       TreeMachineType(Tree *tree);
     Type_p              MachineType(Tree *tree);
-
-public:
-    // Garbage collector listener interface
-    void                BeginCollection() override;
-    bool                CanDelete (void *obj) override;
-    void                EndCollection() override;
 
 public:
     JIT                 jit;

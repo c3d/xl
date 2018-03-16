@@ -39,7 +39,6 @@
 
 #include "compiler.h"
 #include "compiler-unit.h"
-#include "compiler-gc.h"
 #include "errors.h"
 
 #include <recorder/recorder.h>
@@ -121,17 +120,6 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
       evalFnTy          (jit.PointerType(evalTy))
 {
     record(compiler, "Created compiler %p", this);
-
-    // Register as a listener with the garbage collector
-    Allocator<Tree>     ::Singleton()->AddListener(this);
-    Allocator<Integer>  ::Singleton()->AddListener(this);
-    Allocator<Real>     ::Singleton()->AddListener(this);
-    Allocator<Text>     ::Singleton()->AddListener(this);
-    Allocator<Name>     ::Singleton()->AddListener(this);
-    Allocator<Infix>    ::Singleton()->AddListener(this);
-    Allocator<Prefix>   ::Singleton()->AddListener(this);
-    Allocator<Postfix>  ::Singleton()->AddListener(this);
-    Allocator<Block>    ::Singleton()->AddListener(this);
 
     // Set optimization level
     jit.SetOptimizationLevel(opts);
@@ -223,38 +211,6 @@ PointerType_p Compiler::TreeMachineType(Tree *tree)
     assert(!"Invalid tree type");
     return treePtrTy;
 }
-
-
-
-// ============================================================================
-//
-//   Compiler garbage collection
-//
-// ============================================================================
-
-void Compiler::BeginCollection()
-// ----------------------------------------------------------------------------
-//   Begin the collection - Nothing to do here?
-// ----------------------------------------------------------------------------
-{}
-
-
-bool Compiler::CanDelete(void *obj)
-// ----------------------------------------------------------------------------
-//   Tell the compiler to free the resources associated with the tree
-// ----------------------------------------------------------------------------
-{
-    Tree *tree = (Tree *) obj;
-    return CompilerInfo::FreeResources(tree);
-}
-
-
-void Compiler::EndCollection()
-// ----------------------------------------------------------------------------
-//   Finalize the collection - Nothing to do here?
-// ----------------------------------------------------------------------------
-{}
-
 
 
 XL_END
