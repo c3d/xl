@@ -101,8 +101,7 @@ Tree *RewriteCalls::Check (Scope *scope,
     RewriteCandidate rc(candidate, scope);
 
     // Create local type inference deriving from ours
-    Scope *valueScope = types->TypesScope();
-    Types_p childTypes = new Types(valueScope, types);
+    Types_p childTypes = new Types(scope, types);
 
     // Get local context in which we will do the bindings
     Context_p childContext = childTypes->TypesContext();
