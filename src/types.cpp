@@ -376,7 +376,7 @@ Tree *Types::DoBlock(Block *what)
     Tree *type = Evaluate(what, true);
     if (!type)
     {
-        type = Evaluate(what->child);
+        type = Type(what->child);
         type = AssignType(what, type);
     }
     return type;
