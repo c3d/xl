@@ -291,9 +291,9 @@ public:
     void                Clear();
 
     // Dump symbol tables
-    static void         Dump(std::ostream &out, Scope *symbols);
+    static void         Dump(std::ostream &out, Scope *symbols, bool recurse);
     static void         Dump(std::ostream &out, Rewrite *locals);
-    void                Dump(std::ostream &out) { Dump(out, symbols); }
+    void                Dump(std::ostream &out) { Dump(out, symbols, true); }
 
 public:
     Scope_p             symbols;

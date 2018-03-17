@@ -847,7 +847,7 @@ void Context::Clear()
 }
 
 
-void Context::Dump(std::ostream &out, Scope *scope)
+void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
 // ----------------------------------------------------------------------------
 //   Dump the symbol table to the given stream
 // ----------------------------------------------------------------------------
@@ -859,6 +859,8 @@ void Context::Dump(std::ostream &out, Scope *scope)
         Dump(out, rw);
         if (parent)
             out << "// Parent " << (void *) parent << "\n";
+        if (!recurse)
+            break;
         scope = parent;
     }
 }
@@ -931,14 +933,14 @@ void debugg(XL::Scope *scope)
 // ----------------------------------------------------------------------------
 {
     if (XL::Allocator<XL::Scope>::IsAllocated(scope))
-        XL::Context::Dump(std::cerr, scope);
+        XL::Context::Dump(std::cerr, scope, true);
     else
         std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
 }
 
 
-void debugl(XL::Rewrite *rw)
+void debugl(XL::Tree *rw)
 // ----------------------------------------------------------------------------
 //   Helper to show an infix as a local symbol table for debugging purpose
 // ----------------------------------------------------------------------------
@@ -946,7 +948,11 @@ void debugl(XL::Rewrite *rw)
 {
     if (XL::Allocator<XL::Rewrite>::IsAllocated(rw))
     {
-        XL::Context::Dump(std::cerr, rw);
+        XL::Context::Dump(std::cerr, (XL::Rewrite *) rw);
+    }
+    else if (XL::Allocator<XL::Scope>::IsAllocated(rw))
+    {
+        XL::Context::Dump(std::cerr, (XL::Scope *) rw, false);
     }
     else
     {
