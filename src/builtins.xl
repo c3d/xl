@@ -57,6 +57,7 @@ X:boolean xor Y:boolean         as boolean is builtin BXor
 not X:boolean                   as boolean is builtin BNot
 
 // Basic math functions
+abs X:integer                   as integer is builtin IAbs
 abs X:real                      as real is C fabs
 extern real sqrt(real);
 extern real sin(real);

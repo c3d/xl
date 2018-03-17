@@ -204,6 +204,26 @@ EXTERNAL(xl_new_closure,        treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
 #include "llvm-crap.tbl"
 
 
+// ============================================================================
+//
+//   Some opcodes that are simple enough (and multi-typed)
+//
+// ============================================================================
+//   If you have a runtime function for these, you would need one per int type
+
+SPECIAL(IAbs, 1,
+// ----------------------------------------------------------------------------
+//   Return the absolute value for the input
+// ----------------------------------------------------------------------------
+        Value_p value = args[0];
+        Type_p type = JIT::Type(value);
+        Value_p zero = code.IntegerConstant(type, 0);
+        Value_p cmp = code.ICmpSLT(value, zero);
+        Value_p neg = code.Neg(value);
+        Value_p result = code.Select(cmp, neg, value);
+        return result;
+    )
+
 
 // ============================================================================
 //
