@@ -56,10 +56,10 @@ typedef Tree *(*adapter_fn) (eval_fn callee,Context *ctx,Tree *src,Tree **args);
 typedef std::map<uint, eval_fn>    closure_map;
 typedef std::map<uint, adapter_fn> adapter_map;
 typedef std::set<Type_p>           type_set;
-typedef std::set<Tree *>           data_set;
-typedef std::map<Tree *, Type_p>   mtype_map;
-typedef std::map<Tree *, Type_p>   box_map;
-typedef std::map<Type_p, Tree *>   unbox_map;
+typedef std::set<Tree_p>           data_set;
+typedef std::map<Tree_p, Type_p>   mtype_map;
+typedef std::map<Tree_p, Type_p>   box_map;
+typedef std::map<Type_p, Tree_p>   unbox_map;
 
 
 class CompilerFunction

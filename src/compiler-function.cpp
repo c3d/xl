@@ -575,7 +575,7 @@ Value_p CompilerFunction::Data(Tree *form, unsigned &index)
 
 Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
 // ----------------------------------------------------------------------------
-//   Automatically box/unbox primitive types
+//   Automatically box/unbox types
 // ----------------------------------------------------------------------------
 //   Primitive values like integers can exist in two forms during execution:
 //   - In boxed form, e.g. as a pointer to an instance of Integer
