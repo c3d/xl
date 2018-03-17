@@ -4,7 +4,7 @@ x:integer - y:integer           as integer is builtin Sub
 x:integer * y:integer           as integer is builtin Mul
 x:integer / y:integer           as integer is builtin SDiv
 x:integer rem y:integer         as integer is builtin SRem
-x:integer mod y:integer         as integer is C xl_mod
+x:integer mod y:integer         as integer is builtin SMod
 x:integer and y:integer         as integer is builtin And
 x:integer or y:integer          as integer is builtin Or
 x:integer xor y:integer         as integer is builtin Xor
