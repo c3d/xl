@@ -582,7 +582,7 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
 //   - In native form, e.g. as an integer
 //   This function automatically converts from one to the other as necessary
 {
-    Type_p     type   = value->getType();
+    Type_p     type   = JIT::Type(value);
     Value_p    result = value;
     Function_p boxFn  = nullptr;
 
@@ -690,8 +690,8 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
         uint64_t pos = source->Position();
         Value_p posValue = code.IntegerConstant(compiler.ulongTy, pos);
         result = code.Call(boxFn, posValue, result);
-        type = result->getType();
     }
+    type = JIT::Type(result);
 
     // Check if a tree type cast is required
     if (req == compiler.treePtrTy && type != req)
