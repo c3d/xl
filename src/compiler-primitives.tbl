@@ -213,13 +213,26 @@ EXTERNAL(xl_new_closure,        treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
 
 SPECIAL(IAbs, 1,
 // ----------------------------------------------------------------------------
-//   Return the absolute value for the input
+//   Return the absolute value for an integer input
 // ----------------------------------------------------------------------------
         Value_p value = args[0];
         Type_p type = JIT::Type(value);
         Value_p zero = code.IntegerConstant(type, 0);
         Value_p cmp = code.ICmpSLT(value, zero);
         Value_p neg = code.Neg(value);
+        Value_p result = code.Select(cmp, neg, value);
+        return result;
+    )
+
+SPECIAL(FAbs, 1,
+// ----------------------------------------------------------------------------
+//   Return the absolute value for a floating-point input
+// ----------------------------------------------------------------------------
+        Value_p value = args[0];
+        Type_p type = JIT::Type(value);
+        Value_p zero = code.FloatConstant(type, 0.0);
+        Value_p cmp = code.FCmpOLT(value, zero);
+        Value_p neg = code.FNeg(value);
         Value_p result = code.Select(cmp, neg, value);
         return result;
     )
