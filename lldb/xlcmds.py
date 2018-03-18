@@ -12,6 +12,7 @@ def lldbcommands():
     PrintGlobalScope(),
     PrintContext(),
     PrintUnifications(),
+    RecorderDump()
   ]
 
 class PrintTree(fb.FBCommand):
@@ -124,3 +125,14 @@ class PrintContext(fb.FBCommand):
 
   def run(self, arguments, options):
     lldb.debugger.HandleCommand('p debugc(%s)' % arguments[0])
+
+
+class RecorderDump(fb.FBCommand):
+  def name(self):
+    return 'rdump'
+
+  def description(self):
+    return "Dump the flight recorder"
+
+  def run(self, arguments, options):
+    lldb.debugger.HandleCommand('p recorder_dump()')
