@@ -273,9 +273,9 @@ Value_p CompilerExpression::DoCall(Tree *call)
     if (max == 1)
     {
         // We now evaluate in that rewrite's type system
-        RewriteCandidate &cand = calls[0];
-        Save<Types_p> saveTypes(unit.types, cand.btypes);
-        if (cand.Unconditional())
+        RewriteCandidate* cand = calls[0];
+        Save<Types_p> saveTypes(unit.types, cand->btypes);
+        if (cand->Unconditional())
         {
             result = DoRewrite(cand);
             return result;
@@ -299,12 +299,12 @@ Value_p CompilerExpression::DoCall(Tree *call)
         Save<value_map> saveComputed(computed, computed);
 
         // Now evaluate in that candidate's type system
-        RewriteCandidate &cand = calls[i];
-        Save<Types_p> saveTypes(unit.types, cand.btypes);
+        RewriteCandidate *cand = calls[i];
+        Save<Types_p> saveTypes(unit.types, cand->btypes);
         Value_p condition = nullptr;
 
         // Perform tree-kind tests to check if this candidate is valid
-        for (RewriteKind &k : cand.kinds)
+        for (RewriteKind &k : cand->kinds)
         {
             Value_p value = Evaluate(k.value);
             Type_p type = JIT::Type(value);
@@ -348,7 +348,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
         } // Kinds
 
         // Perform the tests to check if this candidate is valid
-        for (RewriteCondition &t : cand.conditions)
+        for (RewriteCondition &t : cand->conditions)
         {
             Value_p compare = Compare(t.value, t.test);
             record(compiler_expr, "Condition test for %t candidate %u: %v",
@@ -399,19 +399,19 @@ Value_p CompilerExpression::DoCall(Tree *call)
 }
 
 
-Value_p CompilerExpression::DoRewrite(RewriteCandidate &cand)
+Value_p CompilerExpression::DoRewrite(RewriteCandidate *cand)
 // ----------------------------------------------------------------------------
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rw = cand.rewrite;
+    Rewrite *rw = cand->rewrite;
     Value_p result = nullptr;
 
     record(compiler_expr, "Rewrite: %t", rw);
 
     // Evaluate parameters
     Values args;
-    RewriteBindings &bnds = cand.bindings;
+    RewriteBindings &bnds = cand->bindings;
     for (RewriteBinding &b : bnds)
     {
         Tree *tree = b.value;

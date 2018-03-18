@@ -130,14 +130,14 @@ private:
     Tree *              TreeType(Type_p mtype);
 
     // Create a function for a given rewrite candidate
-    CompilerFunction *  RewriteFunction(RewriteCandidate &rc);
+    CompilerFunction *  RewriteFunction(RewriteCandidate *rc);
     Type_p              ReturnType(Tree *form);
     Type_p              StructureType(const Signature &signature, Tree *source);
     static bool         IsValidCName(Tree *tree, text &label);
 
 private:
     // Compilation of rewrites and data
-    Value_p             Compile(RewriteCandidate &rc, const Values &args);
+    Value_p             Compile(RewriteCandidate *rc, const Values &args);
     Value_p             Data(Tree *form, unsigned &index);
     Value_p             Autobox(Tree *source, Value_p value, Type_p requested);
     Function_p          UnboxFunction(Type_p type, Tree *form);
@@ -193,6 +193,7 @@ private:
 XL_END
 
 RECORDER_DECLARE(compiler_function);
+RECORDER_DECLARE(parameter_bindings);
 RECORDER_DECLARE(boxed_types);
 
 #endif // COMPILER_FUNCTION_H

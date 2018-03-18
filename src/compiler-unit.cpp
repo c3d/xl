@@ -211,7 +211,7 @@ void CompilerUnit::Global(Tree *tree, Value_p value)
 
 
 Function_p &CompilerUnit::Compiled(Scope *scope,
-                                   RewriteCandidate &rc,
+                                   RewriteCandidate *rc,
                                    const Values &args)
 // ----------------------------------------------------------------------------
 //    Return a unique entry corresponding to this overload
@@ -219,10 +219,10 @@ Function_p &CompilerUnit::Compiled(Scope *scope,
 {
     // Build a unique key to check if we already have the function in cache
     std::ostringstream os;
-    os << (void *) rc.rewrite << "@" << (void *) scope;
+    os << (void *) rc->rewrite << "@" << (void *) scope;
     for (auto value : args)
     {
-        Type_p type = value->getType();
+        Type_p type = JIT::Type(value);
         os << '|' << (void *) type;
     }
     text key = os.str();

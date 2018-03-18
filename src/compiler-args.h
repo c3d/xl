@@ -44,12 +44,15 @@
 
 #include <recorder/recorder.h>
 
+
+RECORDER_DECLARE(call_types);
+RECORDER_DECLARE(argument_bindings);
+
 XL_BEGIN
 
 class Types;
 class CompilerFunction;
 typedef GCPtr<Types> Types_p;
-RECORDER_DECLARE(calltypes);
 
 enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
@@ -111,7 +114,7 @@ struct RewriteCandidate
     }
     void KindCondition(Tree *value, kind k)
     {
-        record(calltypes, "Check if %t has kind %u", value, (unsigned) k);
+        record(call_types, "Check if %t has kind %u", value, (unsigned) k);
         kinds.push_back(RewriteKind(value, k));
     }
 
@@ -134,8 +137,11 @@ struct RewriteCandidate
     Types_p             btypes; // Types for bindings (local)
     Context_p           context;
     Tree_p              type;
+
+    GARBAGE_COLLECT(RewriteCandidate);
 };
-typedef std::vector<RewriteCandidate> RewriteCandidates;
+typedef GCPtr<RewriteCandidate> RewriteCandidate_p;
+typedef std::vector<RewriteCandidate_p> RewriteCandidates;
 
 
 struct RewriteCalls

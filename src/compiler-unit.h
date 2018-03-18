@@ -84,7 +84,7 @@ public:
     void                Global(Tree *tree, Value_p value);
 
     // Cache of already compiled functions
-    Function_p &        Compiled(Scope *, RewriteCandidate &, const Values &);
+    Function_p &        Compiled(Scope *, RewriteCandidate *, const Values &);
     Function_p &        CompiledUnbox(Scope *, Type_p type);
     Function_p &        CompiledClosure(Scope *, Tree *expr);
 

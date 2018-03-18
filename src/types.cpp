@@ -259,9 +259,9 @@ bool Types::HasCaptures(Tree *form, TreeList &captured)
 
     RewriteCalls_p calls = (*it).second;
     Scope *scope = context->CurrentScope();
-    for (RewriteCandidate &rc : calls->candidates)
-        if (rc.scope != scope)
-            captured.push_back(rc.rewrite->left);
+    for (RewriteCandidate *rc : calls->candidates)
+        if (rc->scope != scope)
+            captured.push_back(rc->rewrite->left);
 
     return captured.size() != 0;
 }
@@ -577,7 +577,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "Evaluating %t in %p", what, this);
+    record(types_calls, "Evaluating %t in types %p", what, this);
 
     // Test if we are already trying to evaluate this particular form
     rcall_map::iterator found = rcalls.find(what);
@@ -608,10 +608,10 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     errors.Log(Error("Unable to check types in $1 because", what), true);
 
     // The resulting type is the union of all candidates
-    Tree *type = rc->candidates[0].type;
+    Tree *type = rc->candidates[0]->type;
     for (uint i = 1; i < count; i++)
     {
-        Tree *ctype = rc->candidates[i].type;
+        Tree *ctype = rc->candidates[i]->type;
         type = UnionType(type, ctype);
     }
     type = AssignType(what, type);
@@ -638,7 +638,7 @@ Tree *Types::EvaluateType(Tree *type)
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "Evaluating type %t in %p", type, this);
+    record(types_calls, "Evaluating type %t in types %p", type, this);
     Tree *found = context->Lookup(type, lookupType, nullptr);
     if (found)
         type = Join(type, found);
@@ -831,9 +831,9 @@ Tree *Types::Join(Tree *old, Tree *replace)
 
     // Replace the type in the rewrite calls
     for (auto &r : rcalls)
-        for (auto &rc : r.second->candidates)
-            if (rc.type == old)
-                rc.type = replace;
+        for (RewriteCandidate *rc : r.second->candidates)
+            if (rc->type == old)
+                rc->type = replace;
 
     return replace;
 }
@@ -1250,18 +1250,18 @@ void Types::DumpRewriteCalls()
         uint j = 0;
         RewriteCalls *calls = t.second;
         RewriteCandidates &rc = calls->candidates;
-        for (auto &r : rc)
+        for (RewriteCandidate *r : rc)
         {
             std::cout << "\t#" << ++j
-                      << "\t" << r.rewrite->left
-                      << "\t: " << r.type << "\n";
+                      << "\t" << r->rewrite->left
+                      << "\t: " << r->type << "\n";
 
-            RewriteConditions &rt = r.conditions;
+            RewriteConditions &rt = r->conditions;
             for (auto &t : rt)
                 std::cout << "\t\tWhen " << ShortTreeForm(t.value)
                           << "\t= " << ShortTreeForm(t.test) << "\n";
 
-            RewriteBindings &rb = r.bindings;
+            RewriteBindings &rb = r->bindings;
             for (auto &b : rb)
             {
                 std::cout << "\t\t" << b.name;
