@@ -272,7 +272,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
     {
         // We now evaluate in that rewrite's type system
         RewriteCandidate &cand = calls[0];
-        Save<Types_p> saveTypes(unit.types, cand.types);
+        Save<Types_p> saveTypes(unit.types, cand.btypes);
 
         if (cand.Unconditional())
         {
@@ -299,7 +299,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
 
         // Now evaluate in that candidate's type system
         RewriteCandidate &cand = calls[i];
-        Save<Types_p> saveTypes(unit.types, cand.types);
+        Save<Types_p> saveTypes(unit.types, cand.btypes);
         Value_p condition = nullptr;
 
         // Perform tree-kind tests to check if this candidate is valid

@@ -1,7 +1,7 @@
 #ifndef COMPILER_ARGS_H
 #define COMPILER_ARGS_H
 // ****************************************************************************
-//  args.h                                                        XL project
+//  compiler-args.h                                                 XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -51,6 +51,7 @@ class CompilerFunction;
 typedef GCPtr<Types> Types_p;
 RECORDER_DECLARE(calltypes);
 
+enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
 struct RewriteBinding
 // ----------------------------------------------------------------------------
@@ -103,8 +104,7 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree form
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Infix *rewrite, Scope *scope)
-        : rewrite(rewrite), bindings(), type(NULL), types(NULL) {}
+    RewriteCandidate(Infix *rewrite, Scope *scope, Types *types);
     void Condition(Tree *value, Tree *test)
     {
         conditions.push_back(RewriteCondition(value, test));
@@ -114,15 +114,25 @@ struct RewriteCandidate
         record(calltypes, "Check if %t has kind %u", value, (unsigned) k);
         kinds.push_back(RewriteKind(value, k));
     }
+
     bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
+
+    BindingStrength     Bind(Tree *ref, Tree *what);
+    BindingStrength     BindBinary(Tree *form1, Tree *value1,
+                                   Tree *form2, Tree *value2);
+    bool                Unify(Tree *valueType, Tree *formType,
+                              Tree *value, Tree *form,
+                              bool declaration = false);
 
     Infix_p             rewrite;
     Scope_p             scope;
     RewriteBindings     bindings;
     RewriteKinds        kinds;
     RewriteConditions   conditions;
+    Types_p             vtypes; // Types for values (enclosing)
+    Types_p             btypes; // Types for bindings (local)
+    Context_p           context;
     Tree_p              type;
-    Types_p             types;
 };
 typedef std::vector<RewriteCandidate> RewriteCandidates;
 
@@ -132,21 +142,9 @@ struct RewriteCalls
 //   Identify the way to invoke rewrites for a particular form
 // ----------------------------------------------------------------------------
 {
-    RewriteCalls(Types *ti): types(ti), candidates() {}
-
-    enum BindingStrength { FAILED, POSSIBLE, PERFECT };
+    RewriteCalls(Types *ti);
 
     Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
-    BindingStrength     Bind(Context *context,
-                             Tree *ref, Tree *what, RewriteCandidate &rc);
-    BindingStrength     BindBinary(Context *context,
-                                   Tree *form1, Tree *value1,
-                                   Tree *form2, Tree *value2,
-                                   RewriteCandidate &rc);
-    bool                Unify(RewriteCandidate &rc,
-                              Tree *valueType, Tree *formType,
-                              Tree *value, Tree *form,
-                              bool declaration = false);
 
 public:
     Types_p             types;

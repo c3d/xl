@@ -326,6 +326,16 @@ Tree *Types::DoPrefix(Prefix *what)
             return type;
         }
     }
+    if (declaration)
+    {
+        Tree_p leftt = (what->left->Kind() <= KIND_LEAF_LAST)
+            ? what->left
+            : Tree_p(Type(what->left));
+        Tree_p rightt = Type(what->right);
+        if (!leftt || !rightt)
+            return nullptr;
+        return TypeOf(what);
+    }
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
@@ -336,6 +346,17 @@ Tree *Types::DoPostfix(Postfix *what)
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
 {
+    if (declaration)
+    {
+        Tree_p rightt = (what->right->Kind() <= KIND_LEAF_LAST)
+            ? what->right
+            : Tree_p(Type(what->right));
+        Tree_p leftt = Type(what->left);
+        if (!leftt || !rightt)
+            return nullptr;
+        return TypeOf(what);
+    }
+
     // What really matters is if we can evaluate the top-level expression
     return Evaluate(what);
 }
@@ -363,6 +384,15 @@ Tree *Types::DoInfix(Infix *what)
     if (what->name == "is")
         return RewriteType(what);
 
+    if (declaration)
+    {
+        Tree_p leftt = Type(what->left);
+        Tree_p rightt = Type(what->right);
+        if (!leftt || !rightt)
+            return nullptr;
+        return TypeOf(what);
+    }
+
     // For all other cases, evaluate the infix
     return Evaluate(what);
 }
@@ -373,6 +403,14 @@ Tree *Types::DoBlock(Block *what)
 //   A block evaluates either as itself, or as its child
 // ----------------------------------------------------------------------------
 {
+    if (declaration)
+    {
+        Tree_p childt = Type(what->child);
+        if (!childt)
+            return nullptr;
+        return TypeOf(what);
+    }
+
     Tree *type = Evaluate(what, true);
     if (!type)
     {
