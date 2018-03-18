@@ -273,6 +273,7 @@ void TypeAllocator::ScheduleDelete(TypeAllocator::Chunk_vp ptr)
 //   Delete now if possible, or record that we will need to delete it later
 // ----------------------------------------------------------------------------
 {
+    RECORD(memory, "Schedule delete %p (bits %lx)", (void *)(ptr+1), ptr->bits);
     if (ptr->bits & IN_USE)
     {
         UpdateInUseRange(ptr);
