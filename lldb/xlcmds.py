@@ -12,6 +12,7 @@ def lldbcommands():
     PrintGlobalScope(),
     PrintContext(),
     PrintUnifications(),
+    PrintCalls(),
     RecorderDump()
   ]
 
@@ -77,6 +78,22 @@ class PrintUnifications(fb.FBCommand):
 
   def run(self, arguments, options):
     lldb.debugger.HandleCommand('p debugu(%s)' % arguments[0])
+
+
+class PrintCalls(fb.FBCommand):
+  def name(self):
+    return 'calls'
+
+  def description(self):
+    return "Print the calls in a types table"
+
+  def args(self):
+    return [
+      fb.FBCommandArgument(arg='object', type='Types *', help='Value to print.')
+    ]
+
+  def run(self, arguments, options):
+    lldb.debugger.HandleCommand('p debugr(%s)' % arguments[0])
 
 
 class PrintScope(fb.FBCommand):
