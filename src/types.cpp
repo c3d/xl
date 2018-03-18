@@ -428,6 +428,8 @@ Tree *Types::DoBlock(Block *what)
     if (!type)
     {
         type = Type(what->child);
+        if (RewriteCalls *rc = HasRewriteCalls(what->child))
+            rcalls[what] = rc;
         type = AssignType(what, type);
     }
     return type;
