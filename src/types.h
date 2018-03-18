@@ -103,6 +103,7 @@ public:
     Tree *      ValueType(Tree *expr);
     Tree *      BaseType(Tree *expr);
     rcall_map & TypesRewriteCalls();
+    RewriteCalls *HasRewriteCalls(Tree *what);
     Scope *     TypesScope();
     Context *   TypesContext();
     bool        HasCaptures(Tree *form, TreeList &captured);

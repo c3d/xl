@@ -117,6 +117,7 @@ struct RewriteCandidate
 
     bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
 
+    Tree *              ValueType(Tree *value);
     BindingStrength     Bind(Tree *ref, Tree *what);
     BindingStrength     BindBinary(Tree *form1, Tree *value1,
                                    Tree *form2, Tree *value2);

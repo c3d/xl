@@ -260,6 +260,8 @@ Value_p CompilerExpression::DoCall(Tree *call)
     Types *types = unit.types;
     rcall_map &rcalls = types->TypesRewriteCalls();
     rcall_map::iterator found = rcalls.find(call);
+    record(types_calls, "Looking up %t in %p (%u entries)",
+           call, types, rcalls.size());
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
     RewriteCalls *rc = (*found).second;
@@ -273,7 +275,6 @@ Value_p CompilerExpression::DoCall(Tree *call)
         // We now evaluate in that rewrite's type system
         RewriteCandidate &cand = calls[0];
         Save<Types_p> saveTypes(unit.types, cand.btypes);
-
         if (cand.Unconditional())
         {
             result = DoRewrite(cand);

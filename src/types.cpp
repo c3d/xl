@@ -217,6 +217,19 @@ rcall_map & Types::TypesRewriteCalls()
 }
 
 
+RewriteCalls *Types::HasRewriteCalls(Tree *what)
+// ----------------------------------------------------------------------------
+//   Check if we have rewrite calls for this specific tree
+// ----------------------------------------------------------------------------
+{
+    auto it = rcalls.find(what);
+    RewriteCalls *result = (it != rcalls.end()) ? (*it).second : nullptr;
+    record(types_calls, "In %p, calls for %t are %p (%u entries)",
+           this, what, result, result ? result->candidates.size() : 0);
+    return result;
+}
+
+
 Context *Types::TypesContext()
 // ----------------------------------------------------------------------------
 //   Returns the context where we evaluated the types
