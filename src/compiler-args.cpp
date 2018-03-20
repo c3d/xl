@@ -112,16 +112,23 @@ Tree *RewriteCandidate::ValueType(Tree *value)
 //   Return the value type for this value, and associated calls
 // ----------------------------------------------------------------------------
 {
-    Tree *type = vtypes->Type(value);
-    if (type)
+    Tree *vtype = vtypes->Type(value);
+    if (vtype)
     {
-        if (RewriteCalls *calls = vtypes->HasRewriteCalls(value))
+        while (value)
         {
-            rcall_map &bcalls = btypes->TypesRewriteCalls();
-            bcalls[value] = calls;
+            if (RewriteCalls *calls = vtypes->HasRewriteCalls(value))
+            {
+                rcall_map &bcalls = btypes->TypesRewriteCalls();
+                bcalls[value] = calls;
+            }
+            if (Block *block = value->AsBlock())
+                value = block->child;
+            else
+                value = nullptr;
         }
     }
-    return type;
+    return vtype;
 }
 
 
@@ -454,8 +461,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         // Ignore blocks, just look inside
         Block *block = (Block *) form;
         BindingStrength ok = Bind(block->child, value);
-        record(argument_bindings,
-               "Binding block %t to %t in %p is %+s",
+        record(argument_bindings, "Binding block %t to %t in %p is %+s",
                form, value, this, sname[ok]);
         return ok;
     }
