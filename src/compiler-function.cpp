@@ -456,10 +456,18 @@ Value_p CompilerFunction::Compile(RewriteCandidate *rc, const Values &args)
                (Context *) rc->context, &rc);
         Save<Context_p> fnContext(rewriteFunction->context, rc->context);
         Tree *value = rewrite->right;
-        bool data = false;
-        if (Name *self = value->As<Name>())
+        if (!rewriteFunction->IsInterfaceOnly())
         {
-            if (self->value == "self")
+            bool data = false;
+            if (Name *self = value->As<Name>())
+                if (self->value == "self")
+                    data = true;
+            if (!data)
+            {
+                // Regular function body: compile it
+                rewriteFunction->Compile(value);
+            }
+            else
             {
                 // Constructor for a 'data' form, e.g. [X,Y is self]
                 unsigned index = 0;
@@ -468,14 +476,7 @@ Value_p CompilerFunction::Compile(RewriteCandidate *rc, const Values &args)
                 rewriteFunction->Return(value, returned);
                 data = true;
             }
-        }
-        if (!rewriteFunction->IsInterfaceOnly())
-        {
-            if (!data)
-            {
-                // Regular function body: compile it
-                rewriteFunction->Compile(value);
-            }
+
             rewriteFunction->Finalize(false);
             function = rewriteFunction->Function();
         }
@@ -1322,6 +1323,9 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
         }
     }
 
+    // Name for the generated function
+    text label = "xl." + plist.name;
+
     // Compute return type:
     // - If explicitly specified, use that (already checked by TypeAnalysis)
     // - For definitions, infer from definition
@@ -1333,8 +1337,6 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
         retTy = ReturnType(def);
     else
         retTy = StructureType(signature, source);
-
-    text label = "xl." + plist.name;
 
     // Check if we are actually declaring a C function
     bool isC = false;
