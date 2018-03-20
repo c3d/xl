@@ -1177,19 +1177,30 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     {
     case INTEGER:
         mtype = compiler.integerTy;
+        base = integer_type;
         break;
     case REAL:
         mtype = compiler.realTy;
+        base = real_type;
         break;
     case TEXT:
         if (((Text *)type)->IsCharacter())
+        {
             mtype = compiler.characterTy;
+            base = character_type;
+        }
         else
+        {
             mtype = compiler.charPtrTy;
+            base = text_type;
+        }
         break;
     case NAME:
         if (base == xl_true || base == xl_false)
+        {
             mtype = compiler.booleanTy;
+            base = boolean_type;
+        }
         if (base == xl_nil)
             mtype = compiler.voidTy;
         if (base == xl_error)
