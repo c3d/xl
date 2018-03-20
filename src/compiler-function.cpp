@@ -1265,6 +1265,9 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
     Tree *source = RewriteDefined(rewrite->left);
     Tree *def = rewrite->right;
     record(compiler_function, "RewriteFunction %t defined as %t", source, def);
+    if (Name *self = def->AsName())
+        if (self->value == "self")
+            def = nullptr;
 
     // Extract parameters from source form
     ParameterList plist(*this);
