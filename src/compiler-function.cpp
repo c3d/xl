@@ -465,7 +465,7 @@ Value_p CompilerFunction::Compile(RewriteCandidate *rc, const Values &args)
                 unsigned index = 0;
                 Tree *form = RewriteDefined(rewrite->left);
                 Value_p returned = rewriteFunction->Data(form, index);
-                Return(value, returned);
+                rewriteFunction->Return(value, returned);
                 data = true;
             }
         }
