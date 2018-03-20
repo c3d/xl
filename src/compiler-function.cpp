@@ -1381,14 +1381,14 @@ bool CompilerFunction::IsValidCName(Tree *tree, text &label)
 }
 
 
-Type_p CompilerFunction::ReturnType(Tree *form)
+Type_p CompilerFunction::ReturnType(Tree *parmForm)
 // ----------------------------------------------------------------------------
 //   Compute the return type associated with the given form
 // ----------------------------------------------------------------------------
 {
     // Type inference gives us the return type for this form
     Types *types = unit.types;
-    Tree *type = types->ValueType(form);
+    Tree *type = types->ValueType(parmForm);
     Type_p mtype = BoxedType(type);
     if (!mtype)
         mtype = jit.VoidType();
