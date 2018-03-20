@@ -528,7 +528,9 @@ Value_p CompilerFunction::Data(Tree *expr, unsigned &index)
 
         // Arguments bound here are returned directly as a tree
         Tree *defined = RewriteDefined(rw->left);
-        if (scope == context->CurrentScope())
+        Scope *locals = context->CurrentScope();
+        Scope *params = ScopeParent(locals);
+        if (scope == params)
         {
             if (Value_p result = Known(defined))
             {
