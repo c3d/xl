@@ -994,7 +994,7 @@ Value_p JITBlock::Call(Value_p callee, Value_p arg1, Value_p arg2, Value_p arg3)
 // ----------------------------------------------------------------------------
 {
     Value_p proto = b.jit.Prototype(callee);
-    Value_p result = b->CreateCall(proto, {arg1, arg2});
+    Value_p result = b->CreateCall(proto, {arg1, arg2, arg3});
     record(llvm_ir, "Call %v(%v, %v, %v) = %v", callee, arg1,arg2,arg3, result);
     return result;
 }
