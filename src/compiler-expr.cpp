@@ -425,6 +425,8 @@ Value_p CompilerExpression::DoRewrite(RewriteCandidate *cand)
         {
             args.push_back(value);
             Type_p mtype = JIT::Type(value);
+            function.ValueMachineType(b.name, mtype);
+            function.ValueMachineType(b.value, mtype);
             if (unit.IsClosureType(mtype))
                 b.closure = value;
             record(compiler_expr, "Rewrite %t arg %t value %v",
