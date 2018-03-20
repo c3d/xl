@@ -192,7 +192,7 @@ bool ParameterList::DoInfix(Infix *what)
             return what->left->Do(this);
 
         defined = what;
-        name = what->name;
+        name = "infix[" + what->name + "]";
     }
 
     // Otherwise, test left and right
