@@ -1403,16 +1403,18 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
 //   Compute the return type associated with a data form
 // ----------------------------------------------------------------------------
 {
+    Types *types = unit.types;
+    Tree *base = types->ValueType(source);
+
     // Check if we already had this signature
-    if (Type_p found = ValueMachineType(source))
-        return found;
+    auto it = mtypes.find(base);
+    if (it != mtypes.end())
+        return (*it).second;
 
     // Build the corresponding structure type
     StructType_p stype = jit.StructType(signature, "boxed");
 
     // Record boxing and unboxing for that particular tree
-    Types *types = unit.types;
-    Tree *base = types->ValueType(source);
     AddBoxedType(base, stype);
 
     return stype;
