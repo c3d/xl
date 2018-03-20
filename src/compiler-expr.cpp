@@ -296,10 +296,9 @@ Value_p CompilerExpression::DoCall(Tree *call)
 
     for (i = 0; i < max; i++)
     {
-        Save<value_map> saveComputed(computed, computed);
-
         // Now evaluate in that candidate's type system
         RewriteCandidate *cand = calls[i];
+        Save<typed_value_map> saveComputed(computed, computed);
         Save<Types_p> saveTypes(unit.types, cand->btypes);
         Value_p condition = nullptr;
 
@@ -365,7 +364,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
             JITBlock isGood(code, "good");
             code.IfBranch(condition, isGood, isBad);
             code.SwitchTo(isGood);
-            value_map saveComputed = computed;
+            typed_value_map saveComputed = computed;
             result = DoRewrite(cand);
             computed = saveComputed;
             result = function.Autobox(call, result, storageType);
@@ -406,6 +405,7 @@ Value_p CompilerExpression::DoRewrite(RewriteCandidate *cand)
 {
     Rewrite *rw = cand->rewrite;
     Value_p result = nullptr;
+    Save<Types_p> saveTypes(unit.types, cand->btypes);
 
     record(compiler_expr, "Rewrite: %t", rw);
 
@@ -484,11 +484,12 @@ Value_p CompilerExpression::Value(Tree *expr)
 //   Evaluate an expression once
 // ----------------------------------------------------------------------------
 {
-    Value_p value = computed[expr];
+    Types *types = unit.types;
+    Value_p value = computed[types][expr];
     if (!value)
     {
         value = Evaluate(expr);
-        computed[expr] = value;
+        computed[types][expr] = value;
     }
     return value;
 }

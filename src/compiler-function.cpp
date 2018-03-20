@@ -108,15 +108,10 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function))
+      returned(data.AllocateReturnValue(function)),
+      mty(caller.mty)
 {
     InitializeArgs(parms);
-
-    // Inherit information about machine types from the caller
-    mtypes = caller.mtypes;
-    boxed = caller.boxed;
-    unboxed = caller.unboxed;
-
     record(compiler_function, "Created opt %p for %t in scope %t",
            this, source, scope);
 }
@@ -144,16 +139,11 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       code(jit),
       exit(jit),
       entry(nullptr),
-      returned(nullptr)
+      returned(nullptr),
+      mty(caller.mty)           // Inherit machine info
 {
     InitializePrimitives();
     InitializeArgs(parms);
-
-    // Inherit information about machine types from the caller
-    mtypes = caller.mtypes;
-    boxed = caller.boxed;
-    unboxed = caller.unboxed;
-
     record(compiler_function, "Created external %p for %t in scope %t",
            this, source, scope);
 }
@@ -179,14 +169,10 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function))
+      returned(data.AllocateReturnValue(function)),
+      mty(caller.mty)           // Inherit machine info
 {
     InitializePrimitives();
-    // Inherit information about machine types from the caller
-    mtypes = caller.mtypes;
-    boxed = caller.boxed;
-    unboxed = caller.unboxed;
-
     record(compiler_function, "Created sys %p for %t in scope %t",
            this, source, scope);
 }
@@ -382,8 +368,10 @@ void CompilerFunction::InitializeArgs()
     Value_p self = &*args++;
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
-    values[xl_scope] = scope;
-    values[xl_self] = self;
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    m.values[xl_scope] = scope;
+    m.values[xl_self] = self;
 }
 
 
@@ -397,12 +385,12 @@ void CompilerFunction::InitializeArgs(const Parameters &parms)
 {
     // Associate the value for the additional arguments (read-only, no alloca)
     Function::arg_iterator args = function->arg_begin();
+    Types *types = unit.types;
 
     // If we had closure information, finish building the closure type
     // then read the closure content and initialize values[] with it
     if (closureTy)
     {
-        Types *types = unit.types;
         TreeList captured;
         bool capt = types->HasCaptures(form, captured);
         assert(capt && captured.size() && "Where are the captured items?");
@@ -432,16 +420,17 @@ void CompilerFunction::InitializeArgs(const Parameters &parms)
     }
 
     // Then read the actual parameters
+    MachineTypes &m = mty[types];
     for (auto &parm : parms)
     {
         Value_p inputArg = &*args++;
-        values[parm.name] = inputArg;
+        m.values[parm.name] = inputArg;
     }
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
     Scope *scope = context->CurrentScope();
-    values[xl_scope] = data.PointerConstant(compiler.scopePtrTy, scope);
-    values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
+    m.values[xl_scope] = data.PointerConstant(compiler.scopePtrTy, scope);
+    m.values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
 }
 
 
@@ -682,15 +671,17 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
         assert(req == compiler.treePtrTy || req == compiler.textTreePtrTy);
         boxFn = unit.xl_new_ctext;
     }
-    else if (unboxed.count(type) &&
-             (req == compiler.blockTreePtrTy ||
-              req == compiler.infixTreePtrTy ||
-              req == compiler.prefixTreePtrTy ||
-              req == compiler.postfixTreePtrTy ||
-              req == compiler.treePtrTy))
+    else if (req == compiler.blockTreePtrTy   ||
+             req == compiler.infixTreePtrTy   ||
+             req == compiler.prefixTreePtrTy  ||
+             req == compiler.postfixTreePtrTy ||
+             req == compiler.treePtrTy)
     {
-        Tree *form = unboxed[type];
-        boxFn = UnboxFunction(type, form);
+        Types *types = unit.types;
+        MachineTypes &m = mty[types];
+        Tree *form = m.unboxed[type];
+        if (form)
+            boxFn = UnboxFunction(type, form);
     }
 
     // If we need to invoke a boxing function, do it now
@@ -959,7 +950,9 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
-    Value_p result = storage[tree];
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    Value_p result = m.storage[tree];
     if (!result)
     {
         // Get the associated machine type
@@ -967,7 +960,7 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
 
         // Create alloca to store the new form
         result = data.Alloca(mtype, "loc");
-        storage[tree] = result;
+        m.storage[tree] = result;
 
         // If this started with a value or global, initialize on function entry
         Value_p initializer = Known(tree, knowGlobals | knowLocals);
@@ -984,11 +977,13 @@ Value_p CompilerFunction::NeedClosure(Tree *tree)
 //   Allocate a closure variable
 // ----------------------------------------------------------------------------
 {
-    Value_p storage = closures[tree];
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    Value_p storage = m.closures[tree];
     if (!storage)
     {
         storage = NeedStorage(tree);
-        closures[tree] = storage;
+        m.closures[tree] = storage;
     }
     Value_p result = code.Load(storage);
     return result;
@@ -1000,9 +995,11 @@ bool CompilerFunction::IsKnown(Tree *tree, uint which)
 //   Check if the tree has a known local or global value
 // ----------------------------------------------------------------------------
 {
-    if ((which & knowLocals) && storage.count(tree) > 0)
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    if ((which & knowLocals) && m.storage.count(tree) > 0)
         return true;
-    else if ((which & knowValues) && values.count(tree) > 0)
+    else if ((which & knowValues) && m.values.count(tree) > 0)
         return true;
     else if ((which & knowGlobals) && unit.globals.count(tree) > 0)
         return true;
@@ -1015,16 +1012,18 @@ Value_p CompilerFunction::Known(Tree *tree, uint which)
 //   Return the known local or global value if any
 // ----------------------------------------------------------------------------
 {
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
     if (which & knowLocals)
     {
-        auto it = storage.find(tree);
-        if (it != storage.end())
+        auto it = m.storage.find(tree);
+        if (it != m.storage.end())
             return code.Load((*it).second, "loc");
     }
     if (which & knowValues)
     {
-        auto it = values.find(tree);
-        if (it != values.end())
+        auto it = m.values.find(tree);
+        if (it != m.values.end())
             return (*it).second;
     }
     if (which & knowGlobals)
@@ -1095,12 +1094,13 @@ Type_p CompilerFunction::ValueMachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     // Check if we already found it
-    Type_p type = mtypes[tree];
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    Type_p type = m.mtypes[tree];
     if (type)
         return type;
 
     // Find the base type for the expression
-    Types *types = unit.types;
     Tree *base = types->ValueType(tree);
     if (!base)
     {
@@ -1116,7 +1116,7 @@ Type_p CompilerFunction::ValueMachineType(Tree *tree)
         return compiler.integerTy;
     }
 
-    mtypes[tree] = type;
+    m.mtypes[tree] = type;
 
     return type;
 }
@@ -1127,7 +1127,9 @@ void CompilerFunction::ValueMachineType(Tree *tree, Type_p type)
 //    Record the global value associated to a type name or expression
 // ----------------------------------------------------------------------------
 {
-    mtypes[tree] = type;
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    m.mtypes[tree] = type;
 }
 
 
@@ -1139,10 +1141,11 @@ void CompilerFunction::AddBoxedType(Tree *type, Type_p mtype)
 //   The machine type could be integerTy or StructType({integerTy, realTy})
 {
     Types *types = unit.types;
+    MachineTypes &m = mty[types];
     Tree *base = types->BaseType(type);
     record(boxed_types, "Add %T boxing %t (%t)", mtype, type, base);
-    boxed[base] = mtype;
-    unboxed[mtype] = base;
+    m.boxed[base] = mtype;
+    m.unboxed[mtype] = base;
 }
 
 
@@ -1153,10 +1156,11 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 {
     // Check if we already had it
     Types *types = unit.types;
+    MachineTypes &m = mty[types];
     Tree *base = types->BaseType(type);
     Type_p mtype = nullptr;
-    auto it = boxed.find(base);
-    if (it != boxed.end())
+    auto it = m.boxed.find(base);
+    if (it != m.boxed.end())
     {
         mtype = (*it).second;
         record(boxed_types, "Boxed %t (%t) is %T", type, base, mtype);
@@ -1238,8 +1242,8 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     if (mtype)
     {
         record(boxed_types, "New boxed %T for %t (%t)", mtype, type, base);
-        boxed[base] = mtype;
-        unboxed[mtype] = base;
+        m.boxed[base] = mtype;
+        m.unboxed[mtype] = base;
     }
 
     return mtype;
@@ -1251,7 +1255,9 @@ Tree *CompilerFunction::TreeType(Type_p mtype)
 //   Return the base tree type associated the machine type
 // ----------------------------------------------------------------------------
 {
-    Tree *type = unboxed[mtype];
+    Types *types = unit.types;
+    MachineTypes &m = mty[types];
+    Tree *type = m.unboxed[mtype];
     record(boxed_types, "Tree type for %T is %t", mtype, type);
     return type;
 }
@@ -1272,6 +1278,7 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
             def = nullptr;
 
     // Extract parameters from source form
+    Save<Types_p> saveTypes(unit.types, rc->btypes);
     ParameterList plist(*this);
     if (!source->Do(plist))
     {
@@ -1404,11 +1411,12 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
 // ----------------------------------------------------------------------------
 {
     Types *types = unit.types;
+    MachineTypes &m = mty[types];
     Tree *base = types->ValueType(source);
 
     // Check if we already had this signature
-    auto it = mtypes.find(base);
-    if (it != mtypes.end())
+    auto it = m.mtypes.find(base);
+    if (it != m.mtypes.end())
         return (*it).second;
 
     // Build the corresponding structure type

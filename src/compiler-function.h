@@ -62,6 +62,23 @@ typedef std::map<Tree_p, Type_p>   box_map;
 typedef std::map<Type_p, Tree_p>   unbox_map;
 
 
+struct MachineTypes
+// ----------------------------------------------------------------------------
+//   The machine types associated with trees and types
+// ----------------------------------------------------------------------------
+{
+    value_map           values;     // Tree -> LLVM value
+    value_map           storage;    // Tree -> LLVM storage (alloca)
+    value_map           closures;   // Tree -> LLVM storage (alloca)
+    mtype_map           mtypes;     // Value tree -> machine type
+    box_map             boxed;      // Tree type -> machine type
+    unbox_map           unboxed;    // Machine type -> Tree type
+};
+
+
+typedef std::map<Types_p, MachineTypes> machine_types;
+
+
 class CompilerFunction
 // ----------------------------------------------------------------------------
 //    A function generated in a compile unit
@@ -73,12 +90,6 @@ class CompilerFunction
     Context_p           context;    // Context for this function
     Tree_p              form;       // Interface for this function
     Tree_p              source;     // Source code for this function
-    value_map           values;     // Tree -> LLVM value
-    value_map           storage;    // Tree -> LLVM storage (alloca)
-    value_map           closures;   // Tree -> LLVM storage (alloca)
-    mtype_map           mtypes;     // Value tree -> machine type
-    box_map             boxed;      // Tree type -> machine type
-    unbox_map           unboxed;    // Machine type -> Tree type
     StructType_p        closureTy;  // A structure type for closure data
     Function_p          function;   // The LLVM function we are building
     JITBlock            data;       // A basic block for local variables
@@ -86,6 +97,7 @@ class CompilerFunction
     JITBlock            exit;       // A basic block for shared exit
     BasicBlock_p        entry;      // The entry point for the function code
     Value_p             returned;   // Returned value
+    machine_types       mty;        // Machine types info for given Types
 
     friend class CompilerExpression;
 
