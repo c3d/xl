@@ -165,6 +165,8 @@ public:
 public:
     static Type_p       Type(Value_p value);
     static Type_p       ReturnType(Function_p fn);
+    static Type_p       PointedType(Type_p ptrt);
+    static bool         IsStructType(Type_p strt);
 
     static bool         InUse(Function_p f);
     static void         EraseFromParent(Function_p f);

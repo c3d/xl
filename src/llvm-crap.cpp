@@ -493,6 +493,29 @@ Type_p JIT::ReturnType(Function_p fn)
 }
 
 
+Type_p JIT::PointedType(Type_p type)
+// ----------------------------------------------------------------------------
+//   The type pointed to by a pointer
+// ----------------------------------------------------------------------------
+{
+    if (type->isPointerTy())
+    {
+        PointerType_p ptype = (PointerType_p) type;
+        return ptype->getElementType();
+    }
+    return nullptr;
+}
+
+
+bool JIT::IsStructType(Type_p strt)
+// ----------------------------------------------------------------------------
+//   Check if a type is a structure type
+// ----------------------------------------------------------------------------
+{
+    return strt->isStructTy();
+}
+
+
 bool JIT::InUse(Function_p function)
 // ----------------------------------------------------------------------------
 //   Check if the function is currently in use
