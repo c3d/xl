@@ -231,7 +231,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Check if we can unify the value and name types
-        Tree *nameType = btypes->Type(name);
+        Tree *nameType = btypes->DeclarationType(name);
         if (!Unify(type, nameType, value, form))
         {
             record(argument_bindings,
