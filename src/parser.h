@@ -144,4 +144,6 @@ public:
 
 XL_END
 
+RECORDER_DECLARE(parser);
+
 #endif // PARSER_H

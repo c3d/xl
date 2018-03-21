@@ -1,20 +1,20 @@
 // ****************************************************************************
-//  parser.cpp                      (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  parser.cpp                      (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     XL language parser
-// 
+//
 //      See detailed description in parser.h
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -35,9 +35,9 @@
 
 XL_BEGIN
 // ============================================================================
-// 
+//
 //    Parser class itself
-// 
+//
 // ============================================================================
 
 struct Pending
@@ -74,6 +74,10 @@ token_t Parser::NextToken()
         token_t result = scanner.NextToken();
         hadSpaceBefore = scanner.HadSpaceBefore();
         hadSpaceAfter = scanner.HadSpaceAfter();
+        record(parser, "Token %u %+s space before and %+s space after",
+               result,
+               hadSpaceBefore ? "with" : "without",
+               hadSpaceAfter ? "with" : "without");
 
         switch(result)
         {
@@ -82,14 +86,19 @@ token_t Parser::NextToken()
             opening = scanner.NameValue();
             if (opening == "syntax")
             {
+                record(parser, "Reading special syntax");
                 syntax.ReadSyntaxFile(scanner, 0);
+                record(parser, "End of special syntax");
                 continue;
             }
             else if (syntax.IsComment(opening, closing))
             {
                 // Skip comments, keep looking to get the right indentation
+                record(parser, "Reading comment between '%s' and '%s'",
+                       opening.c_str(), closing.c_str());
                 text comment = opening + scanner.Comment(closing);
                 AddComment(comment);
+                record(parser, "Comment is %s", comment.c_str());
                 if (closing == "\n" && pend == tokNONE)
                 {
                     // If we had comments after a token, add them to that token
@@ -110,10 +119,13 @@ token_t Parser::NextToken()
             }
             else if (syntax.IsTextDelimiter(opening, closing))
             {
+                record(parser, "Reading long text between '%s' and '%s'",
+                       opening.c_str(), closing.c_str());
                 text longText = scanner.Comment(closing, false);
                 ulong cLen = closing.length();
                 longText.erase(longText.length() - cLen, cLen);
                 scanner.SetTextValue(longText);
+                record(parser, "Long text was %s", longText.c_str());
                 openquote = opening;
                 closequote = closing;
                 if (pend == tokNEWLINE)
@@ -324,6 +336,7 @@ Tree *Parser::Parse(text closing)
 
         // Check token result
         pos = scanner.Position();
+        record(parser, "Next token is %u at position %lu", tok, pos);
         switch(tok)
         {
         case tokEOF:
@@ -367,9 +380,12 @@ Tree *Parser::Parse(text closing)
             {
                 // Read the input with the special syntax
                 ulong pos = scanner.Position();
+                record(scanner, "Special syntax %s to %s at position %lu",
+                       name.c_str(), blk_closing.c_str(), pos);
                 Parser childParser(scanner, cs);
                 right = childParser.Parse(blk_closing);
                 right = new Prefix(new Name(name), right, pos);
+                record(scanner, "Special syntax result %t", right);
             }
             else if (!result)
             {
@@ -509,6 +525,7 @@ Tree *Parser::Parse(text closing)
             break;
         } // switch(tok)
 
+        record(parser, "Result %t priority %d", result, result_priority);
 
         // Attach any comments we may have had and return the result
         if (right)
@@ -524,7 +541,7 @@ Tree *Parser::Parse(text closing)
             // Instead, we defer the comment to the next 'right'
             commented = NULL;
         }
-            
+
 
         // Check what is the current result
         if (!result)
@@ -674,3 +691,5 @@ Tree *Parser::Parse(text closing)
 }
 
 XL_END
+
+RECORDER(parser, 64, "Parser");

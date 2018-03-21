@@ -234,13 +234,17 @@ token_t Scanner::NextToken(bool hungry)
 
     // Check if input was opened correctly
     if (!input.good())
+    {
+        record(scanner, "End of file at position %lu", position);
         return tokEOF;
+    }
 
     // Check if we unindented far enough for multiple indents
     hadSpaceBefore = true;
     while (indents.back() > indent)
     {
         indents.pop_back();
+        record(scanner, "Unindent at position %lu", position);
         return tokUNINDENT;
     }
 
@@ -293,6 +297,7 @@ token_t Scanner::NextToken(bool hungry)
             indents.push_back(indent);
             indent = column;
             settingIndent = false;
+            record(scanner, "Newline at position %lu", position);
             return tokNEWLINE;
         }
         else if (column > indent)
@@ -300,6 +305,7 @@ token_t Scanner::NextToken(bool hungry)
             // Strictly deeper indent : report
             indent = column;
             indents.push_back(indent);
+            record(scanner, "Indent column %u at position %lu",indent,position);
             return tokINDENT;
         }
         else if (column < indents.back())
@@ -315,23 +321,35 @@ token_t Scanner::NextToken(bool hungry)
             {
                 errors.Log(Error("Unindenting to the right "
                                  "of previous indentation", position));
+                record(scanner,
+                       "Unindent %u less than column %u at position %lu",
+                       indents.back(), column, position);
                 return tokERROR;
             }
 
             // Otherwise, report that we unindented
             // We may report multiple tokUNINDENT if we unindented deep
+            record(scanner,
+                   "Unindent column %u at position %lu",
+                   indent, position);
             return tokUNINDENT;
         }
         else
         {
             // Exactly the same indent level as before
+            record(scanner,
+                   "Indented newline column %u at position %lu",
+                   column, position);
             return tokNEWLINE;
         }
     }
 
     // Report end of input if that's what we've got
     if (input.eof())
+    {
+        record(scanner, "End of file after skipping at position %lu", position);
 	return tokEOF;
+    }
 
     // Clear spelling from whitespaces
     textValue = "";
@@ -394,6 +412,8 @@ token_t Scanner::NextToken(bool hungry)
                 input.unget();
                 position--;
                 hadSpaceAfter = false;
+                record(scanner, "Integer %ld ending in '.' at position %lu",
+                       intValue, position);
                 return tokINTEGER;
             }
             else
@@ -475,6 +495,12 @@ token_t Scanner::NextToken(bool hungry)
         input.unget();
         position--;
         hadSpaceAfter = isspace(c);
+        if (floating_point)
+            record(scanner, "Real %g at position %lu",
+                   realValue, position);
+        else
+            record(scanner, "Integer %ld at position %lu",
+                   intValue, position);
         return floating_point ? tokREAL : tokINTEGER;
     } // Numbers
 
@@ -492,7 +518,14 @@ token_t Scanner::NextToken(bool hungry)
         position--;
         hadSpaceAfter = isspace(c);
         if (syntax.IsBlock(textValue, endMarker))
-            return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
+        {
+            bool closing = endMarker == "";
+            record(scanner, "Name-like block %+s %s at position %lu",
+                   closing ? "closing" : "opening",
+                   textValue.c_str(), position);
+            return closing ? tokPARCLOSE : tokPAROPEN;
+        }
+        record(scanner, "Name %s at position %lu", textValue.c_str(), position);
         return tokNAME;
     }
 
@@ -516,6 +549,8 @@ token_t Scanner::NextToken(bool hungry)
                     input.unget();
                     position--;
                     hadSpaceAfter = isspace(c);
+                    record(scanner, "Text %s at position %lu",
+                           tokenText.c_str(), position);
                     return eos == '"' ? tokSTRING : tokQUOTE;
                 }
 
@@ -527,7 +562,12 @@ token_t Scanner::NextToken(bool hungry)
                                  position));
                 hadSpaceAfter = false;
                 if (c == '\n')
+                {
                     input.unget();
+                    position--;
+                }
+                record(scanner, "Truncated text %s at position %lu",
+                       tokenText.c_str(), position);
                 return eos == '"' ? tokSTRING : tokQUOTE;
             }
             NEXT_CHAR(c);
@@ -540,7 +580,11 @@ token_t Scanner::NextToken(bool hungry)
         textValue = c;
         tokenText = c;
         hadSpaceAfter = false;
-        return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
+        bool closing = endMarker == "";
+        record(scanner, "Single-char block %+s %s at position %lu",
+               closing ? "closing" : "opening",
+               textValue.c_str(), position);
+        return closing ? tokPARCLOSE : tokPAROPEN;
     }
 
     // Look for other symbols
@@ -575,7 +619,14 @@ token_t Scanner::NextToken(bool hungry)
     }
     hadSpaceAfter = isspace(c);
     if (syntax.IsBlock(textValue, endMarker))
-        return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
+    {
+        bool closing = endMarker == "";
+        record(scanner, "Multi-char block %+s %s at position %lu",
+               closing ? "closing" : "opening",
+               textValue.c_str(), position);
+        return closing ? tokPARCLOSE : tokPAROPEN;
+    }
+    record(scanner, "Symbol %s at position %lu", textValue.c_str(), position);
     return tokSYMBOL;
 }
 
@@ -789,3 +840,5 @@ void Positions::GetInfo(ulong pos, text *out_file, ulong *out_line,
 }
 
 XL_END
+
+RECORDER(scanner, 64, "Scanner");

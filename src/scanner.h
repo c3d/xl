@@ -1,21 +1,21 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 // ****************************************************************************
-//  scanner.h                       (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  scanner.h                       (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Interface for the XL scanner
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -92,6 +92,7 @@
 */
 
 #include "base.h"
+#include "recorder.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -170,12 +171,12 @@ public:
             kstring fileName = "<stream>");
     Scanner(const Scanner &parent);
     ~Scanner();
-    
+
 public:
     // Scanning
     token_t     NextToken(bool hungry = false);
     text        Comment(text EndOfComment, bool stripIndent = true);
-    
+
     // Access to scanned data
     text        TokenText()     { return tokenText; }
     text        NameValue()     { return caseSensitive?textValue:tokenText; }
@@ -185,7 +186,7 @@ public:
     uint        Base()          { return base; }
     void        SetTextValue(text t)    { textValue = t; }
     void        SetTokenText(text t)    { tokenText = t; }
- 
+
     // Access to location information
     uint        Indent()                { return indent; }
     void        SetPosition(ulong pos)  { position = pos; }
@@ -228,5 +229,7 @@ private:
 };
 
 XL_END
+
+RECORDER_DECLARE(scanner);
 
 #endif // SCANNER_H
