@@ -434,7 +434,9 @@ void CompilerFunction::InitializeArgs(const Parameters &parms)
 }
 
 
-Value_p CompilerFunction::Compile(RewriteCandidate *rc, const Values &args)
+Value_p CompilerFunction::Compile(Tree *call,
+                                  RewriteCandidate *rc,
+                                  const Values &args)
 // ----------------------------------------------------------------------------
 //    Compile a given rewrite for a tree
 // ----------------------------------------------------------------------------
@@ -459,7 +461,7 @@ Value_p CompilerFunction::Compile(RewriteCandidate *rc, const Values &args)
         if (!rewriteFunction->IsInterfaceOnly())
         {
             bool data = false;
-            if (Name *self = value->As<Name>())
+            if (Name *self = value->AsName())
                 if (self->value == "self")
                     data = true;
             if (!data)
@@ -481,6 +483,7 @@ Value_p CompilerFunction::Compile(RewriteCandidate *rc, const Values &args)
             function = rewriteFunction->Function();
         }
     }
+
     return function;
 }
 
@@ -682,7 +685,12 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
         MachineTypes &m = mty[types];
         Tree *form = m.unboxed[type];
         if (form)
+        {
+            Value_p storage = NeedStorage(source);
+            code.Store(result, storage);
+            result = storage;
             boxFn = UnboxFunction(type, form);
+        }
     }
 
     // If we need to invoke a boxing function, do it now
@@ -716,7 +724,7 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
 }
 
 
-Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *form)
+Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *pattern)
 // ----------------------------------------------------------------------------
 //    Create a function transforming a boxed (structure) value into tree form
 // ----------------------------------------------------------------------------
@@ -727,33 +735,43 @@ Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *form)
 
     if (!function)
     {
+        Types *types = unit.types;
+        if (Tree *inner = types->IsTypeOf(pattern))
+            pattern = inner;
+
         // Get original form representing that data type
-        Type_p mtype = compiler.TreeMachineType(form);
+        Type_p mtype = compiler.TreeMachineType(pattern);
+        Type_p ptype = unit.jit.PointerType(type);
 
         // Create a function that looks like [Tree *unboxfn(boxtype *)]
-        Signature sig { type };
-        CompilerFunction unbox(*this, scope, form, "xl.unbox", mtype, sig);
+        Signature sig { compiler.ulongTy, ptype };
+        CompilerFunction unbox(*this, scope, pattern, "xl.unbox", mtype, sig);
 
         // Find the first input argument, which is the boxed value pointer
         function = unbox.Function();
         auto args = function->arg_begin();
+        Value_p position = &*args++; // Ignored?
         Value_p arg = &*args++;
 
         // Generate the code to create the unboxed tree
         unsigned index = 0;
-        Value_p tree = unbox.Unbox(arg, form, index);
-        tree = unbox.Autobox(form, tree, compiler.treePtrTy);
-        unbox.Return(form, tree);
+        Value_p rval = unbox.Unbox(arg, pattern, index);
+        rval = unbox.Autobox(pattern, rval, mtype);
+        unbox.Return(pattern, rval);
 
         // Finalize the unbox function
         unbox.Finalize(false);
+
+        record(boxed_types, "Created %T unboxing function %v for %t pos %v",
+               mtype, unbox.function, pattern, position);
+
     }
 
     return function;
 }
 
 
-Value_p CompilerFunction::Unbox(Value_p boxed, Tree *form, uint &index)
+Value_p CompilerFunction::Unbox(Value_p boxed, Tree *pattern, uint &index)
 // ----------------------------------------------------------------------------
 //   Recursively generate code to unbox a value within UnboxFunction
 // ----------------------------------------------------------------------------
@@ -761,7 +779,7 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *form, uint &index)
     Type_p ttp = compiler.treePtrTy;
     Value_p ref, left, right, child;
 
-    switch(form->Kind())
+    switch(pattern->Kind())
     {
     default:
         assert(!"Invalid tree kind in CompilerFunction::Unbox");
@@ -770,39 +788,24 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *form, uint &index)
     case REAL:
     case TEXT:
     {
-        // For all these cases, simply compute the corresponding value
-        CompilerExpression expr(*this);
-        Value_p result = form->Do(expr);
-        return result;
+        // Constant values in the pattern can be returned as is
+        return ConstantTree(pattern);
     }
 
     case NAME:
     {
-        Scope_p   scope;
-        Rewrite_p rw;
-        Tree      *existing;
-
-        // Bound names are returned as is, parameters are evaluated
-        existing = context->Bound(form, true, &rw, &scope);
-        assert(existing || !"Type checking didn't realize a name is missing");
-
-        // Arguments bound here are returned directly as a tree
-        if (scope == context->CurrentScope())
-        {
-            // Get element from input argument
-            Value_p ptr = code.StructGEP(boxed, index++, "inp");
-            return code.Load(ptr);
-        }
-
-        // Arguments not bound here are returned as a constant
-        Tree *defined = RewriteDefined(rw->left);
-        return ConstantTree(defined);
+        // Get element from input argument
+        Value_p ptr = code.StructGEP(boxed, index++, "boxedp");
+        return code.Load(ptr);
     }
 
     case INFIX:
     {
-        Infix *infix = (Infix *) form;
+        Infix *infix = (Infix *) pattern;
+        if (infix->name == ":" || infix->name == "as" || infix->name == "when")
+            return Unbox(boxed, infix->left, index);
         ref = ConstantTree(infix);
+        ref = code.BitCast(ref, compiler.infixTreePtrTy);
         left = Unbox(boxed, infix->left, index);
         right = Unbox(boxed, infix->right, index);
         left = Autobox(infix->left, left, ttp);
@@ -812,8 +815,9 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *form, uint &index)
 
     case PREFIX:
     {
-        Prefix *prefix = (Prefix *) form;
+        Prefix *prefix = (Prefix *) pattern;
         ref = ConstantTree(prefix);
+        ref = code.BitCast(ref, compiler.prefixTreePtrTy);
         if (prefix->left->Kind() == NAME)
             left = ConstantTree(prefix->left);
         else
@@ -826,8 +830,9 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *form, uint &index)
 
     case POSTFIX:
     {
-        Postfix *postfix = (Postfix *) form;
+        Postfix *postfix = (Postfix *) pattern;
         ref = ConstantTree(postfix);
+        ref = code.BitCast(ref, compiler.postfixTreePtrTy);
         left = Unbox(boxed, postfix->left, index);
         if (postfix->right->Kind() == NAME)
             right = ConstantTree(postfix->right);
@@ -840,8 +845,9 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *form, uint &index)
 
     case BLOCK:
     {
-        Block *block = (Block *) form;
+        Block *block = (Block *) pattern;
         ref = ConstantTree(block);
+        ref = code.BitCast(ref, compiler.blockTreePtrTy);
         child = Unbox(boxed, block->child, index);
         child = Autobox(block->child, child, ttp);
         return code.Call(unit.xl_new_block, ref, child);
@@ -963,10 +969,13 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
         result = data.Alloca(mtype, "loc");
         m.storage[tree] = result;
 
-        // If this started with a value or global, initialize on function entry
-        Value_p initializer = Known(tree, knowGlobals | knowLocals);
-        if (initializer && initializer->getType() == mtype)
-            data.Store(initializer, result);
+        // If this started with a value, initialize it here
+        if (m.values.count(tree))
+        {
+            Value_p initializer = m.values[tree];
+            assert(initializer && initializer->getType() == mtype);
+            code.Store(initializer, result);
+        }
     }
 
     return result;
@@ -1437,6 +1446,7 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
 
     // Record boxing and unboxing for that particular tree
     AddBoxedType(base, stype);
+    UnboxFunction(stype, source);
 
     return stype;
 }

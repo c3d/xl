@@ -77,7 +77,7 @@ public:
     Value_p             DoBlock(Block *what);
 
     Value_p             DoCall(Tree *call);
-    Value_p             DoRewrite(RewriteCandidate *candidate);
+    Value_p             DoRewrite(Tree *call, RewriteCandidate *candidate);
     Value_p             Value(Tree *expr);
     Value_p             Compare(Tree *value, Tree *test);
 };

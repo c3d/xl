@@ -277,7 +277,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
         Save<Types_p> saveTypes(unit.types, cand->btypes);
         if (cand->Unconditional())
         {
-            result = DoRewrite(cand);
+            result = DoRewrite(call, cand);
             return result;
         }
     }
@@ -365,7 +365,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
             code.IfBranch(condition, isGood, isBad);
             code.SwitchTo(isGood);
             typed_value_map saveComputed = computed;
-            result = DoRewrite(cand);
+            result = DoRewrite(call, cand);
             computed = saveComputed;
             result = function.Autobox(call, result, storageType);
             record(compiler_expr, "Call %t candidate %u is conditional: %v",
@@ -377,7 +377,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
         else
         {
             // If this particular call was unconditional, we are done
-            result = DoRewrite(cand);
+            result = DoRewrite(call, cand);
             result = function.Autobox(call, result, storageType);
             code.Store(result, storage);
             code.Branch(isDone);
@@ -398,7 +398,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
 }
 
 
-Value_p CompilerExpression::DoRewrite(RewriteCandidate *cand)
+Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
 // ----------------------------------------------------------------------------
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
@@ -470,11 +470,23 @@ Value_p CompilerExpression::DoRewrite(RewriteCandidate *cand)
     }
     else
     {
-        Value_p fn = function.Compile(cand, args);
+        Value_p fn = function.Compile(call, cand, args);
         if (fn)
             result = code.Call(fn, args);
         record(compiler_expr, "Rewrite %t function %v call %v",
                rw, fn, result);
+    }
+
+    // Save the type of the return value
+    if (result)
+    {
+        Types *vtypes = cand->vtypes;
+        Tree *base = vtypes->ValueType(call);
+        Type_p retTy = JIT::Type(result);
+        unit.types = vtypes;
+        function.AddBoxedType(base, retTy);
+        record(compiler_expr, "Transporting type %t (%T) of %t into %p",
+               base, retTy, call, vtypes);
     }
 
     return result;

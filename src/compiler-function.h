@@ -149,7 +149,8 @@ private:
 
 private:
     // Compilation of rewrites and data
-    Value_p             Compile(RewriteCandidate *rc, const Values &args);
+    Value_p             Compile(Tree *call,
+                                RewriteCandidate *rc, const Values &args);
     Value_p             Data(Tree *form, unsigned &index);
     Value_p             Autobox(Tree *source, Value_p value, Type_p requested);
     Function_p          UnboxFunction(Type_p type, Tree *form);
