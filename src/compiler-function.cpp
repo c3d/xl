@@ -681,8 +681,7 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
              req == compiler.postfixTreePtrTy ||
              req == compiler.treePtrTy)
     {
-        Scope *scope = FunctionScope();
-        boxFn = unit.CompiledUnbox(scope, type);
+        boxFn = unit.CompiledUnbox(type);
         if (boxFn)
         {
             Value_p storage = NeedStorage(source);
@@ -728,8 +727,7 @@ Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *pattern)
 // ----------------------------------------------------------------------------
 {
     // Check if we have a matching boxing function
-    Scope *scope = context->CurrentScope();
-    Function_p &function = unit.CompiledUnbox(scope, type);
+    Function_p &function = unit.CompiledUnbox(type);
 
     if (!function)
     {
@@ -742,6 +740,7 @@ Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *pattern)
         Type_p ptype = unit.jit.PointerType(type);
 
         // Create a function that looks like [Tree *unboxfn(boxtype *)]
+        Scope *scope = context->CurrentScope();
         Signature sig { compiler.ulongTy, ptype };
         CompilerFunction unbox(*this, scope, pattern, "xl.unbox", mtype, sig);
 

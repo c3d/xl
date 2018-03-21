@@ -231,14 +231,14 @@ Function_p &CompilerUnit::Compiled(Scope *scope,
 }
 
 
-Function_p &CompilerUnit::CompiledUnbox(Scope *scope, Type_p type)
+Function_p &CompilerUnit::CompiledUnbox(Type_p type)
 // ----------------------------------------------------------------------------
 //    Return a unique entry corresponding to this unbox function
 // ----------------------------------------------------------------------------
 {
     // Build a unique key to check if we already have the function in cache
     std::ostringstream os;
-    os << "Unbox" << (void *) type << "@" << (void *) scope;
+    os << "Unbox" << (void *) type;
     text key = os.str();
     return compiled[key];
 }

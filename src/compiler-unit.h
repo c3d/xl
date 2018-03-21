@@ -85,7 +85,7 @@ public:
 
     // Cache of already compiled functions
     Function_p &        Compiled(Scope *, RewriteCandidate *, const Values &);
-    Function_p &        CompiledUnbox(Scope *, Type_p type);
+    Function_p &        CompiledUnbox(Type_p type);
     Function_p &        CompiledClosure(Scope *, Tree *expr);
 
     // Closure types management
