@@ -59,7 +59,6 @@ typedef std::set<Type_p>           type_set;
 typedef std::set<Tree_p>           data_set;
 typedef std::map<Tree_p, Type_p>   mtype_map;
 typedef std::map<Tree_p, Type_p>   box_map;
-typedef std::map<Type_p, Tree_p>   unbox_map;
 
 
 struct MachineTypes
@@ -72,7 +71,6 @@ struct MachineTypes
     value_map           closures;   // Tree -> LLVM storage (alloca)
     mtype_map           mtypes;     // Value tree -> machine type
     box_map             boxed;      // Tree type -> machine type
-    unbox_map           unboxed;    // Machine type -> Tree type
 };
 
 
@@ -139,7 +137,6 @@ private:
 
     // Machine types management
     void                AddBoxedType(Tree *treeType, Type_p machineType);
-    Tree *              TreeType(Type_p mtype);
 
     // Create a function for a given rewrite candidate
     CompilerFunction *  RewriteFunction(RewriteCandidate *rc);

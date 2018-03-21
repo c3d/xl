@@ -1154,7 +1154,6 @@ void CompilerFunction::AddBoxedType(Tree *type, Type_p mtype)
     Tree *base = types->BaseType(type);
     record(boxed_types, "Add %T boxing %t (%t)", mtype, type, base);
     m.boxed[base] = mtype;
-    m.unboxed[mtype] = base;
 }
 
 
@@ -1263,23 +1262,9 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     {
         record(boxed_types, "New boxed %T for %t (%t)", mtype, type, base);
         m.boxed[base] = mtype;
-        m.unboxed[mtype] = base;
     }
 
     return mtype;
-}
-
-
-Tree *CompilerFunction::TreeType(Type_p mtype)
-// ----------------------------------------------------------------------------
-//   Return the base tree type associated the machine type
-// ----------------------------------------------------------------------------
-{
-    Types *types = unit.types;
-    MachineTypes &m = mty[types];
-    Tree *type = m.unboxed[mtype];
-    record(boxed_types, "Tree type for %T is %t", mtype, type);
-    return type;
 }
 
 
