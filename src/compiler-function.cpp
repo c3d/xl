@@ -681,15 +681,13 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
              req == compiler.postfixTreePtrTy ||
              req == compiler.treePtrTy)
     {
-        Types *types = unit.types;
-        MachineTypes &m = mty[types];
-        Tree *form = m.unboxed[type];
-        if (form)
+        Scope *scope = FunctionScope();
+        boxFn = unit.CompiledUnbox(scope, type);
+        if (boxFn)
         {
             Value_p storage = NeedStorage(source);
             code.Store(result, storage);
             result = storage;
-            boxFn = UnboxFunction(type, form);
         }
     }
 
@@ -795,8 +793,9 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *pattern, uint &index)
     case NAME:
     {
         // Get element from input argument
-        Value_p ptr = code.StructGEP(boxed, index++, "boxedp");
-        return code.Load(ptr);
+        Value_p result = code.StructGEP(boxed, index++, "boxedp");
+        result = code.Load(result);
+        return result;
     }
 
     case INFIX:

@@ -1,4 +1,1 @@
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
-01.Evaluation/optimized-extern-atan.xl
-01.Evaluation/optimized-builtin-iabs.xl
-01.Evaluation/optimized-self-comma-list.xl
