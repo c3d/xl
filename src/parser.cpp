@@ -385,7 +385,10 @@ Tree *Parser::Parse(text closing)
                 Parser childParser(scanner, cs);
                 right = childParser.Parse(blk_closing);
                 right = new Prefix(new Name(name), right, pos);
-                record(scanner, "Special syntax result %t", right);
+                pos = childParser.scanner.Position();
+                scanner.SetPosition(pos);
+                record(scanner, "Special syntax result %t new position %lu",
+                       right, pos);
             }
             else if (!result)
             {
