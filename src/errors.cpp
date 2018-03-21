@@ -155,7 +155,7 @@ text Error::Position()
     ulong line, column;
     std::ostringstream out;
     MAIN->positions.GetInfo(position, &file, &line, &column, &source);
-    out << file << ":" << line;
+    out << file << ":" << line << ":" << column + 1;
     return out.str();
 }
 
