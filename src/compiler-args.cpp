@@ -255,7 +255,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
                    "Binding name %t to %t in %p has no separate argument",
                    form, value, this);
         }
-        return POSSIBLE;
+        return PERFECT;
     }
 
     case INFIX:
