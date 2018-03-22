@@ -1255,13 +1255,23 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
 
     if (x1 == x2)
     {
-        Ooops("Type of $1 cannot be both $2 and $3", x1, t1, t2);
+        if (x1)
+            Ooops("Type of $1 cannot be both $2 and $3", x1, t1, t2);
+        else
+            Ooops("Cannot unify type $2 and $1", t1, t2);
     }
     else
     {
-        Ooops("Cannot unify type $2 of $1", x1, t1);
-        Ooops("with type $2 of $1", x2, t2);
+        if (x1)
+            Ooops("Cannot unify type $2 of $1", x1, t1);
+        else
+            Ooops("Cannot unify type $1", t1);
+        if (x2)
+            Ooops("with type $2 of $1", x2, t2);
+        else
+            Ooops("with type $1", t1);
     }
+
     return nullptr;
 }
 
