@@ -88,6 +88,7 @@ class CompilerFunction
     Context_p           context;    // Context for this function
     Tree_p              form;       // Interface for this function
     Tree_p              source;     // Source code for this function
+    machine_types       mty;        // Machine types info for given Types
     StructType_p        closureTy;  // A structure type for closure data
     Function_p          function;   // The LLVM function we are building
     JITBlock            data;       // A basic block for local variables
@@ -95,7 +96,6 @@ class CompilerFunction
     JITBlock            exit;       // A basic block for shared exit
     BasicBlock_p        entry;      // The entry point for the function code
     Value_p             returned;   // Returned value
-    machine_types       mty;        // Machine types info for given Types
 
     friend class CompilerExpression;
 

@@ -102,14 +102,14 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       context(new Context(scope)),
       form(form),
       source(body),
+      mty(caller.mty),
       closureTy(ClosureType(form)),
       function(OptimizedFunction(name, ret, parms)),
       data(jit, function, "data"),
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function)),
-      mty(caller.mty)
+      returned(data.AllocateReturnValue(function))
 {
     InitializeArgs(parms);
     record(compiler_function, "Created opt %p for %t in scope %t",
@@ -133,14 +133,14 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       context(new Context(scope)),
       form(form),
       source(form),
+      mty(caller.mty),           // Inherit machine info
       closureTy(nullptr),
       function(OptimizedFunction(name, ret, parms)),
       data(jit),
       code(jit),
       exit(jit),
       entry(nullptr),
-      returned(nullptr),
-      mty(caller.mty)           // Inherit machine info
+      returned(nullptr)
 {
     InitializePrimitives();
     InitializeArgs(parms);
@@ -163,14 +163,14 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       context(new Context(scope)),
       form(form),
       source(form),
+      mty(caller.mty),           // Inherit machine info
       closureTy(nullptr),
       function(jit.Function(jit.FunctionType(ret, sig), name)),
       data(jit, function, "data"),
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function)),
-      mty(caller.mty)           // Inherit machine info
+      returned(data.AllocateReturnValue(function))
 {
     InitializePrimitives();
     record(compiler_function, "Created sys %p for %t in scope %t",
