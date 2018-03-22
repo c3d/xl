@@ -338,7 +338,7 @@ Tree *Types::DoPrefix(Prefix *what)
                 Ooops("No C declaration for $1", what);
                 return nullptr;
             }
-            Tree *type = RewriteType(cdecl->rewrite);
+            Tree *type = TypeOfRewrite(cdecl->rewrite);
             return type;
         }
     }
@@ -398,7 +398,7 @@ Tree *Types::DoInfix(Infix *what)
 
     // Case of [X is Y]: Analysis if any will be done during
     if (what->name == "is")
-        return RewriteType(what);
+        return TypeOfRewrite(what);
 
     if (declaration)
     {
@@ -491,7 +491,7 @@ Tree *Types::TypeDeclaration(Infix *decl)
 }
 
 
-Tree *Types::RewriteType(Infix *what)
+Tree *Types::TypeOfRewrite(Infix *what)
 // ----------------------------------------------------------------------------
 //   Assign an [A => B] type to a rewrite
 // ----------------------------------------------------------------------------

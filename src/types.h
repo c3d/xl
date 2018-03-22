@@ -127,7 +127,7 @@ public:
     Tree *      AssignType(Tree *expr, Tree *type);
     Tree *      TypeOf(Tree *expr);
     Tree *      TypeDeclaration(Infix *decl);
-    Tree *      RewriteType(Infix *rw);
+    Tree *      TypeOfRewrite(Infix *rw);
     Tree *      Statements(Tree *expr, Tree *left, Tree *right);
 
     // Attempt to evaluate an expression and perform required unifications
