@@ -676,10 +676,8 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     count = rc->candidates.size();
     if (count == 0)
     {
-        if (declaration)
+        if (declaration || !mayFail)
             return TypeOf(what);
-        if (!mayFail)
-            Ooops("No form matches $1", what);
         return nullptr;
     }
     errors.Clear();
