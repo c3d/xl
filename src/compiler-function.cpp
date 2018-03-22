@@ -206,8 +206,9 @@ void CompilerFunction::InitializePrimitives()
     primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
 #define SPECIAL(Name, Arity, Code)                                      \
     primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, Arity};
+#define ALIAS(To, Arity, From)                                          \
+    primitives[#To] = PrimitiveInfo {&CompilerFunction::llvm_##From, Arity};
 
-#define ALIAS(from, arity, to)
 #define EXTERNAL(Name, ...)
 
 #include "compiler-primitives.tbl"
