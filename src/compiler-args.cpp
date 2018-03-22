@@ -203,7 +203,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Test if the name is already bound, and if so, if trees fail to match
-        if (Tree *bound = context->Bound(name, true))
+        if (Tree *bound = context->DeclaredForm(name))
         {
             if (bound != name)
             {
