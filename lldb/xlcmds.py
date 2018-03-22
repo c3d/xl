@@ -11,6 +11,7 @@ def lldbcommands():
     PrintScope(),
     PrintGlobalScope(),
     PrintContext(),
+    PrintGlobalContext(),
     PrintUnifications(),
     PrintCalls(),
     RecorderDump()
@@ -131,6 +132,22 @@ class PrintGlobalScope(fb.FBCommand):
 class PrintContext(fb.FBCommand):
   def name(self):
     return 'context'
+
+  def description(self):
+    return "Print the current context"
+
+  def args(self):
+    return [
+      fb.FBCommandArgument(arg='object', type='Value *', help='Value to print.')
+    ]
+
+  def run(self, arguments, options):
+    lldb.debugger.HandleCommand('p debugs(%s)' % arguments[0])
+
+
+class PrintGlobalContext(fb.FBCommand):
+  def name(self):
+    return 'globalcontext'
 
   def description(self):
     return "Print the current context"

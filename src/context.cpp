@@ -973,7 +973,7 @@ void debugl(XL::Tree *rw)
 }
 
 
-void debugs(XL::Context *context)
+XL::Scope *debugs(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a single context for debugging purpose
 // ----------------------------------------------------------------------------
@@ -985,25 +985,29 @@ void debugs(XL::Context *context)
         if (XL::Allocator<XL::Scope>::IsAllocated(scope))
         {
             debugl(ScopeRewrites(scope));
+            scope = ScopeParent(scope);
+            return scope;
         }
         else
         {
             std::cerr << "Cowardly refusing to render unknown scope pointer "
                       << (void *) scope << "\n";
+            return nullptr;
         }
     }
     else
     {
         std::cerr << "Cowardly refusing to render unknown context pointer "
                   << (void *) context << "\n";
+        return nullptr;
     }
 
 }
 
 
-void debugc(XL::Context *context)
+XL::Context *debugc(XL::Context *context)
 // ----------------------------------------------------------------------------
-//   Helper to show a context for debugging purpose
+//   Helper to show a complete context for debugging purpose
 // ----------------------------------------------------------------------------
 //   A context symbols can also be shown with debug(), but it's less convenient
 {
@@ -1032,6 +1036,7 @@ void debugc(XL::Context *context)
             std::cerr << "Cowardly refusing to render unknown context pointer "
                       << (void *) context << "\n";
     }
+    return context;
 }
 
 }
