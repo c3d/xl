@@ -857,15 +857,11 @@ std::ostream& operator<< (std::ostream &out, XL::TreeList &list)
 
 XL_END
 
-
-static text debugBuffer;
-
-const char *debugp(XL::Tree *tree)
+XL::Tree *debugp(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    std::ostringstream out;
     if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
         XL::Allocator<XL::Real>::IsAllocated(tree)      ||
         XL::Allocator<XL::Text>::IsAllocated(tree)      ||
@@ -875,28 +871,25 @@ const char *debugp(XL::Tree *tree)
         XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
         XL::Allocator<XL::Block>::IsAllocated(tree))
     {
-        XL::Renderer render(out);
+        XL::Renderer render(std::cerr);
         render.RenderFile(tree);
-        out << "\n";
+        std::cerr << "\n";
 
     }
     else
     {
-        out << "Cowardly refusing to render unknown pointer "
-            << (void *) tree << "\n";
+        std::cerr << "Cowardly refusing to render unknown pointer "
+                  << (void *) tree << "\n";
     }
-    debugBuffer = out.str();
-    std::cerr << debugBuffer;
-    return debugBuffer.c_str();
+    return tree;
 }
 
 
-const char *debugd(XL::Tree *tree)
+XL::Tree *debugd(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    std::ostringstream out;
     if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
         XL::Allocator<XL::Real>::IsAllocated(tree)      ||
         XL::Allocator<XL::Text>::IsAllocated(tree)      ||
@@ -906,18 +899,16 @@ const char *debugd(XL::Tree *tree)
         XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
         XL::Allocator<XL::Block>::IsAllocated(tree))
     {
-        XL::Renderer render(out);
+        XL::Renderer render(std::cerr);
         render.SelectStyleSheet("debug.stylesheet");
         render.RenderFile(tree);
     }
     else
     {
-        out << "Cowardly refusing to render unknown pointer "
-            << (void *) tree << "\n";
+        std::cerr << "Cowardly refusing to render unknown pointer "
+                  << (void *) tree << "\n";
     }
-    debugBuffer = out.str();
-    std::cerr << debugBuffer;
-    return debugBuffer.c_str();
+    return tree;
 }
 
 

@@ -1352,7 +1352,7 @@ void Types::DumpRewriteCalls()
 XL_END
 
 
-void debugt(XL::Types *ti)
+XL::Types *debugt(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump a type inference
 // ----------------------------------------------------------------------------
@@ -1361,13 +1361,16 @@ void debugt(XL::Types *ti)
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
-        return;
     }
-    ti->DumpTypes();
+    else
+    {
+        ti->DumpTypes();
+    }
+    return ti;
 }
 
 
-void debugu(XL::Types *ti)
+XL::Types *debugu(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump type unifications in a given inference system
 // ----------------------------------------------------------------------------
@@ -1376,14 +1379,17 @@ void debugu(XL::Types *ti)
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
-        return;
     }
-    ti->DumpUnifications();
+    else
+    {
+        ti->DumpUnifications();
+    }
+    return ti;
 }
 
 
 
-void debugr(XL::Types *ti)
+XL::Types *debugr(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump rewrite calls associated with each tree in this type inference system
 // ----------------------------------------------------------------------------
@@ -1392,9 +1398,12 @@ void debugr(XL::Types *ti)
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
-        return;
     }
-    ti->DumpRewriteCalls();
+    else
+    {
+        ti->DumpRewriteCalls();
+    }
+    return ti;
 }
 
 RECORDER(types,                 64, "Type analysis");

@@ -250,9 +250,9 @@ inline bool IsTreeType(Tree *type)
 
 XL_END
 
-extern "C" void debugt(XL::Types *ti);
-extern "C" void debugu(XL::Types *ti);
-extern "C" void debugr(XL::Types *ti);
+extern "C" XL::Types *debugt(XL::Types *ti);
+extern "C" XL::Types *debugu(XL::Types *ti);
+extern "C" XL::Types *debugr(XL::Types *ti);
 
 RECORDER_DECLARE(types);
 RECORDER_DECLARE(types_ids);
