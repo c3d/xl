@@ -139,7 +139,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 // ----------------------------------------------------------------------------
 {
     static const char *sname[] = { "impossible", "possible", "unconditional" };
-    Tree *type = nullptr;
+    Tree *vtype = nullptr;
     kind k = form->Kind();
 
     switch(k)
@@ -157,8 +157,8 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
                        form, value, this, sname[result]);               \
                 return result;                                          \
             }                                                           \
-            type = ValueType(value);                                    \
-            if (Unify(type, mtype##_type, value, form))                 \
+            vtype = ValueType(value);                                   \
+            if (Unify(vtype, mtype##_type, value, form))                \
             {                                                           \
                 Condition(value, form);                                 \
                 record(argument_bindings,                               \
@@ -193,8 +193,8 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Check if what we have as an expression evaluates correctly
-        type = ValueType(value);
-        if (!type)
+        vtype = ValueType(value);
+        if (!vtype)
         {
             record(argument_bindings,
                    "Binding identical name %t to %t in %p type mismatch",
@@ -208,7 +208,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             if (bound != name)
             {
                 Tree *boundType = ValueType(bound);
-                if (!Unify(type, boundType, value, form))
+                if (!Unify(vtype, boundType, value, form))
                 {
                     record(argument_bindings,
                            "Binding duplicate name %t to %t in %p "
@@ -232,7 +232,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
         // Check if we can unify the value and name types
         Tree *nameType = btypes->DeclarationType(name);
-        if (!Unify(type, nameType, value, form))
+        if (!Unify(vtype, nameType, value, form))
         {
             record(argument_bindings,
                    "Binding name %t to %t in %p type mismatch",
@@ -268,7 +268,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             // Assign the given type to the declared expression
             Tree *form = fi->left;
             Tree *declType = fi->right;
-            type = btypes->AssignType(form, declType);
+            vtype = btypes->AssignType(form, declType);
 
             // Check if we can bind the value from what we know
             if (Bind(form, value) == FAILED)
@@ -281,7 +281,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
             // Add type binding with the given type
             Tree *valueType = btypes->Type(value);
-            if (!Unify(valueType, type, value, form, true))
+            if (!Unify(valueType, vtype, value, form, true))
             {
                 record(argument_bindings,
                        "Binding typed %t to %t in %p type mismatch",
@@ -361,8 +361,8 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         // We may have an expression that evaluates as an infix
 
         // Check if what we have as an expression evaluates correctly
-        type = btypes->Type(value);
-        if (!type)
+        vtype = btypes->Type(value);
+        if (!vtype)
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p value type mismatch",
@@ -371,7 +371,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Then check if the type matches
-        if (!Unify(type, infix_type, value, form))
+        if (!Unify(vtype, infix_type, value, form))
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p type mismatch",
