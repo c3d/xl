@@ -169,7 +169,7 @@ Value_p CompilerExpression::DoInfix(Infix *infix)
             return right;
         if (left)
             return left;
-        return function.ConstantTree(xl_false);
+        return function.ConstantTree(xl_nil);
     }
 
     // Type casts - REVISIT: may need to do some actual conversion
