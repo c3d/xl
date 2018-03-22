@@ -1274,9 +1274,9 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
 {
     Rewrite *rewrite = rc->rewrite;
 
-    Tree *source = RewriteDefined(rewrite->left);
+    Tree *rwform = RewriteDefined(rewrite->left);
     Tree *def = rewrite->right;
-    record(compiler_function, "RewriteFunction %t defined as %t", source, def);
+    record(compiler_function, "RewriteFunction %t defined as %t", rwform, def);
     if (Name *self = def->AsName())
         if (self->value == "self")
             def = nullptr;
@@ -1284,10 +1284,10 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
     // Extract parameters from source form
     Save<Types_p> saveTypes(unit.types, rc->btypes);
     ParameterList plist(*this);
-    if (!source->Do(plist))
+    if (!rwform->Do(plist))
     {
         record(compiler_function,
-               "RewriteFunction could not extract parameters for %t", source);
+               "RewriteFunction could not extract parameters for %t", rwform);
         return NULL;
     }
     Parameters &parms = plist.parameters;
@@ -1328,7 +1328,7 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
     else if (def)
         retTy = ReturnType(def);
     else
-        retTy = StructureType(signature, source);
+        retTy = StructureType(signature, rwform);
 
     // Check if we are actually declaring a C function
     bool isC = false;
@@ -1348,11 +1348,11 @@ CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
 
     Scope *scope = context->CurrentScope();
     CompilerFunction *f = isC
-        ? new CompilerFunction(*this, scope, source, label, retTy, parms)
-        : new CompilerFunction(*this, scope, def, source,
+        ? new CompilerFunction(*this, scope, rwform, label, retTy, parms)
+        : new CompilerFunction(*this, scope, def, rwform,
                                label, retTy, parms);
     record(compiler_unit, "Rewrite function for %t is %p %+s",
-           source, f, isC ? "is C" : "from XL source");
+           rwform, f, isC ? "is C" : "from XL source");
     return f;
 }
 
@@ -1410,14 +1410,14 @@ Type_p CompilerFunction::ReturnType(Tree *parmForm)
 }
 
 
-Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
+Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
 // ----------------------------------------------------------------------------
 //   Compute the return type associated with a data form
 // ----------------------------------------------------------------------------
 {
     Types *types = unit.types;
     MachineTypes &m = mty[types];
-    Tree *base = types->ValueType(source);
+    Tree *base = types->ValueType(rwform);
 
     // Check if we already had this signature
     auto it = m.mtypes.find(base);
@@ -1429,13 +1429,13 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *source)
 
     // Record boxing and unboxing for that particular tree
     AddBoxedType(base, stype);
-    UnboxFunction(stype, source);
+    UnboxFunction(stype, rwform);
 
     return stype;
 }
 
 
-Value_p CompilerFunction::Primitive(Tree *source,
+Value_p CompilerFunction::Primitive(Tree *what,
                                     text name,
                                     uint arity,
                                     Value_p *args)
@@ -1447,21 +1447,21 @@ Value_p CompilerFunction::Primitive(Tree *source,
     auto found = primitives.find(name);
     if (found == primitives.end())
     {
-        Ooops("Invalid primitive $1", source);
-        return ConstantTree(source);
+        Ooops("Invalid primitive $1", what);
+        return ConstantTree(what);
     }
 
     // If the entry doesn't have the expected arity, give up
     PrimitiveInfo &primitive = (*found).second;
     if (primitive.arity != arity)
     {
-        Ooops("Primitive  arity for $1 is wrong, should be $2", source)
+        Ooops("Primitive  arity for $1 is wrong, should be $2", what)
             .Arg(primitive.arity);
-        return ConstantTree(source);
+        return ConstantTree(what);
     }
 
     // Invoke the entry
-    Value_p result = (this->*primitive.function)(source, args);
+    Value_p result = (this->*primitive.function)(what, args);
     return result;
 }
 
