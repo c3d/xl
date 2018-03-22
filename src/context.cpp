@@ -616,15 +616,26 @@ static Tree *findReference(Scope *, Scope *, Tree *what, Infix *decl, void *)
 }
 
 
-Infix *Context::Reference(Tree *form)
+Rewrite *Context::Reference(Tree *form)
 // ----------------------------------------------------------------------------
 //   Find an existing definition in the symbol table that matches the form
 // ----------------------------------------------------------------------------
 {
-    Tree *result = Lookup(form, findReference, NULL, true);
-    if (result)
-        if (Infix *decl = result->AsInfix())
+    if (Tree *result = Lookup(form, findReference, NULL, true))
+        if (Rewrite *decl = result->As<Rewrite>())
             return decl;
+    return NULL;
+}
+
+
+Tree *Context::DeclaredForm(Tree *form)
+// ----------------------------------------------------------------------------
+//   Find the original declaration associated to a given form
+// ----------------------------------------------------------------------------
+{
+    if (Tree *result = Lookup(form, findReference, NULL, true))
+        if (Rewrite *decl = result->As<Rewrite>())
+            return RewriteDefined(decl->left);
     return NULL;
 }
 
