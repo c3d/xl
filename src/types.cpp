@@ -316,8 +316,6 @@ Tree *Types::DoName(Name *what)
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
-    if (declaration)
-        return NewType(what);
     return Evaluate(what);
 }
 
@@ -342,17 +340,8 @@ Tree *Types::DoPrefix(Prefix *what)
             return type;
         }
     }
-    if (declaration)
-    {
-        Tree_p leftt = (what->left->Kind() <= KIND_LEAF_LAST)
-            ? what->left
-            : Tree_p(Type(what->left));
-        Tree_p rightt = Type(what->right);
-        if (!leftt || !rightt)
-            return nullptr;
-        return TypeOf(what);
-    }
-    // What really matters is if we can evaluate the top-level expression
+
+    // For other cases, regular declaration
     return Evaluate(what);
 }
 
@@ -362,18 +351,7 @@ Tree *Types::DoPostfix(Postfix *what)
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
 {
-    if (declaration)
-    {
-        Tree_p rightt = (what->right->Kind() <= KIND_LEAF_LAST)
-            ? what->right
-            : Tree_p(Type(what->right));
-        Tree_p leftt = Type(what->left);
-        if (!leftt || !rightt)
-            return nullptr;
-        return TypeOf(what);
-    }
-
-    // What really matters is if we can evaluate the top-level expression
+    // No special forms for postfix, try to look it up
     return Evaluate(what);
 }
 
@@ -400,15 +378,6 @@ Tree *Types::DoInfix(Infix *what)
     if (what->name == "is")
         return TypeOfRewrite(what);
 
-    if (declaration)
-    {
-        Tree_p leftt = Type(what->left);
-        Tree_p rightt = Type(what->right);
-        if (!leftt || !rightt)
-            return nullptr;
-        return TypeOf(what);
-    }
-
     // For all other cases, evaluate the infix
     return Evaluate(what);
 }
@@ -419,14 +388,6 @@ Tree *Types::DoBlock(Block *what)
 //   A block evaluates either as itself, or as its child
 // ----------------------------------------------------------------------------
 {
-    if (declaration)
-    {
-        Tree_p childt = Type(what->child);
-        if (!childt)
-            return nullptr;
-        return TypeOf(what);
-    }
-
     Tree *type = Evaluate(what, true);
     if (!type)
     {
@@ -715,6 +676,8 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     count = rc->candidates.size();
     if (count == 0)
     {
+        if (declaration)
+            return TypeOf(what);
         if (!mayFail)
             Ooops("No form matches $1", what);
         return nullptr;
