@@ -126,6 +126,7 @@ public:
     // Annotate expressions with type variables
     Tree *      AssignType(Tree *expr, Tree *type);
     Tree *      TypeOf(Tree *expr);
+    Tree *      MakeTypesExplicit(Tree *expr);
     Tree *      TypeDeclaration(Infix *decl);
     Tree *      TypeOfRewrite(Infix *rw);
     Tree *      Statements(Tree *expr, Tree *left, Tree *right);

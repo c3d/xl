@@ -468,11 +468,121 @@ Tree *Types::TypeOf(Tree *expr)
     if (it != types.end())
         return (*it).second;
 
-    // Otherwise, return [type X] and assign it to this expr
     TreePosition pos = expr->Position();
-    Tree *type = new Prefix(new Name("type", pos), expr, pos);
+    Tree *type = expr;
+    switch(expr->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+        // For values, the type is the value itself
+        break;
+    case NAME:
+        // For names, assign a new type name
+        type = NewTypeName(pos);
+        break;
+    case INFIX:
+    case PREFIX:
+    case POSTFIX:
+        expr = MakeTypesExplicit(expr);
+        type = new Prefix(new Name("type", pos), expr, pos);
+        break;
+    case BLOCK:
+        type = TypeOf(((Block *) expr)->child);
+        break;
+    }
+
+    // Otherwise, return [type X] and assign it to this expr
     types[expr] = type;
     return type;
+}
+
+
+Tree *Types::MakeTypesExplicit(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Make the types explicit in a tree shape
+// ----------------------------------------------------------------------------
+//   For example, if we have [X,Y], based on current known types, we may
+//   rewrite this as [X:#A, Y:integer].
+{
+    switch(expr->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+        return expr;
+
+    case NAME:
+    {
+        // Replace name with reference type to minimize size of lookup tables
+        if (Tree *def = context->DeclaredForm(expr))
+            if (Name *name = def->AsName())
+                expr = name;
+
+        auto it = types.find(expr);
+        TreePosition pos = expr->Position();
+        Tree *type = it != types.end() ? (*it).second : NewTypeName(pos);
+        Tree *result = new Infix(":", expr, type, pos);
+        return result;
+    }
+
+    case BLOCK:
+    {
+        Block *block = (Block *) expr;
+        Tree *child = MakeTypesExplicit(block->child);
+        if (child != block->child)
+            block = new Block(block, child);
+        return block;
+    }
+
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) expr;
+        Tree *left = prefix->left->AsName()
+            ? (Tree *) prefix->left
+            : MakeTypesExplicit(prefix->left);
+        Tree *right = MakeTypesExplicit(prefix->right);
+        if (left != prefix->left || right != prefix->right)
+            prefix = new Prefix(prefix, left, right);
+        return prefix;
+    }
+
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) expr;
+        Tree *left = MakeTypesExplicit(postfix->left);
+        Tree *right = postfix->right->AsName()
+            ? (Tree *) postfix->right
+            : MakeTypesExplicit(postfix->right);
+        if (left != postfix->left || right != postfix->right)
+            postfix = new Postfix(postfix, left, right);
+        return postfix;
+    }
+
+    case INFIX:
+    {
+        Infix *infix = (Infix *) expr;
+        if (infix->name == ":" || infix->name == "as")
+        {
+            Tree *right = EvaluateType(infix->right);
+            if (right != infix->right)
+                infix = new Infix(infix, infix->left, right);
+            return infix;
+        }
+        if (infix->name == "when")
+        {
+            Tree *left = MakeTypesExplicit(infix->left);
+            if (left != infix->left)
+                infix = new Infix(infix, left, infix->right);
+            return infix;
+        }
+        Tree *left = MakeTypesExplicit(infix->left);
+        Tree *right = MakeTypesExplicit(infix->right);
+        if (left != infix->left || right != infix->right)
+            infix = new Infix(infix, left, right);
+        return infix;
+    }
+    }
 }
 
 
