@@ -138,6 +138,9 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 //   Attempts to bind 'value' to the pattern form given in 'form'
 // ----------------------------------------------------------------------------
 {
+    if (form == value)
+        return PERFECT;
+
     static const char *sname[] = { "impossible", "possible", "unconditional" };
     Tree *vtype = nullptr;
     kind k = form->Kind();
