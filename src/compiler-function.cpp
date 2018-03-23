@@ -1433,6 +1433,9 @@ Value_p CompilerFunction::BoxedTree(Tree *what)
 //   Compute a boxed tree value
 // ----------------------------------------------------------------------------
 {
+    if (Name *name = what->AsName())
+        what = context->Bound(name);
+
     // Compute the boxed type for the data
     Signature sig;
     BoxedTreeType(sig, what);

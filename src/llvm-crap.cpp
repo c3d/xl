@@ -1201,7 +1201,10 @@ void debugv(XL::Value_p v)
 // ----------------------------------------------------------------------------
 {
     llvm::errs() << "V" << (void *) v << ": ";
-    v->print(llvm::errs());
+    if (v)
+        v->print(llvm::errs());
+    else
+        llvm::errs() << "NULL";
     llvm::errs() << "\n";
 }
 
@@ -1212,6 +1215,9 @@ void debugv(XL::Type_p t)
 // ----------------------------------------------------------------------------
 {
     llvm::errs() << "T" << (void *) t << ": ";
-    t->print(llvm::errs());
+    if (t)
+        t->print(llvm::errs());
+    else
+        llvm::errs() << "NULL";
     llvm::errs() << "\n";
 }
