@@ -475,9 +475,9 @@ Value_p CompilerFunction::Compile(Tree *call,
                 // Constructor for a 'data' form, e.g. [X,Y is self]
                 unsigned index = 0;
                 Tree *form = RewriteDefined(rewrite->left);
-                Value_p returned = rewriteFunction->Data(form, index);
-                rewriteFunction->Return(value, returned);
-                data = true;
+                Value_p box = rewriteFunction->returned;
+                Value_p retv = rewriteFunction->Data(form, box, index);
+                rewriteFunction->Return(value, retv);
             }
 
             rewriteFunction->Finalize(false);
@@ -489,7 +489,7 @@ Value_p CompilerFunction::Compile(Tree *call,
 }
 
 
-Value_p CompilerFunction::Data(Tree *expr, unsigned &index)
+Value_p CompilerFunction::Data(Tree *expr, Value_p box, unsigned &index)
 // ----------------------------------------------------------------------------
 //    Generate a constructor for a data form, e.g. [X,Y is self]
 // ----------------------------------------------------------------------------
@@ -505,68 +505,60 @@ Value_p CompilerFunction::Data(Tree *expr, unsigned &index)
         // For all these cases, simply compute the corresponding value
         CompilerExpression subexpr(*this);
         Value_p result = subexpr.Evaluate(expr);
+        Value_p ptr = code.StructGEP(box, index++, "resultp");
+        result = code.Store(result, ptr);
         return result;
     }
 
     case NAME:
     {
-        Scope_p   scope;
-        Rewrite_p rw;
-        Tree      *existing;
-
         // Bound names are returned as is, parameters are evaluated
         record(parameter_bindings, "Looking up %t in context %p",
                expr, (Context *) context);
-        existing = context->Bound(expr, true, &rw, &scope);
+        Tree *existing = context->DeclaredForm(expr);
         assert (existing || !"TypeAnalysis didn't realize a name was missing");
 
         // Arguments bound here are returned directly as a tree
-        Tree *defined = RewriteDefined(rw->left);
-        Scope *locals = context->CurrentScope();
-        Scope *params = ScopeParent(locals);
-        if (scope == params)
+        if (Value_p result = Known(existing))
         {
-            if (Value_p result = Known(defined))
-            {
-                // Store that in the result tree
-                Value_p ptr = code.StructGEP(returned, index++, "resultp");
-                result = code.Store(result, ptr);
-                return result;
-            }
+            // Store that in the result tree
+            Value_p ptr = code.StructGEP(box, index++, "resultp");
+            result = code.Store(result, ptr);
+            return result;
         }
 
         // Arguments not bound here are returned as a constant
-        return ConstantTree(defined);
+        return ConstantTree(existing);
     }
 
     case INFIX:
     {
         Infix *infix = (Infix *) expr;
-        left = Data(infix->left, index);
-        right = Data(infix->right, index);
+        left = Data(infix->left, box, index);
+        right = Data(infix->right, box, index);
         return right;
     }
 
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) expr;
-        left = Data(prefix->left, index);
-        right = Data(prefix->right, index);
+        left = Data(prefix->left, box, index);
+        right = Data(prefix->right, box, index);
         return right;
     }
 
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) expr;
-        left = Data(postfix->left, index);
-        right = Data(postfix->right, index);
+        left = Data(postfix->left, box, index);
+        right = Data(postfix->right, box, index);
         return right;
     }
 
     case BLOCK:
     {
         Block *block = (Block *) expr;
-        child = Data(block->child, index);
+        child = Data(block->child, box, index);
         return child;
     }
     }
@@ -737,7 +729,7 @@ Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *pattern)
             pattern = inner;
 
         // Get original form representing that data type
-        Type_p mtype = compiler.TreeMachineType(pattern);
+        Type_p mtype = compiler.treePtrTy;
         Type_p ptype = unit.jit.PointerType(type);
 
         // Create a function that looks like [Tree *unboxfn(boxtype *)]
@@ -1433,6 +1425,60 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
     UnboxFunction(stype, rwform);
 
     return stype;
+}
+
+
+Value_p CompilerFunction::BoxedTree(Tree *what)
+// ----------------------------------------------------------------------------
+//   Compute a boxed tree value
+// ----------------------------------------------------------------------------
+{
+    // Compute the boxed type for the data
+    Signature sig;
+    BoxedTreeType(sig, what);
+    Type_p sty = StructureType(sig, what);
+    record(compiler_function, "Boxed tree %t is type %v", what, sty);
+
+    // Generate the data
+    unsigned index = 0;
+    Value_p box = NeedStorage(what);
+    Value_p result = Data(what, box, index);
+
+    result = code.Load(box);
+    return result;
+}
+
+
+void CompilerFunction::BoxedTreeType(Signature &sig, Tree *what)
+// ----------------------------------------------------------------------------
+//  Compute the signature for a boxed tree
+// ----------------------------------------------------------------------------
+{
+    switch(what->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    case NAME:
+        sig.push_back(ValueMachineType(what));
+        break;
+
+    case BLOCK:
+        BoxedTreeType(sig, ((Block *) what)->child);
+        break;
+    case PREFIX:
+        BoxedTreeType(sig, ((Prefix *) what)->left);
+        BoxedTreeType(sig, ((Prefix *) what)->right);
+        break;
+    case POSTFIX:
+        BoxedTreeType(sig, ((Postfix *) what)->left);
+        BoxedTreeType(sig, ((Postfix *) what)->right);
+        break;
+    case INFIX:
+        BoxedTreeType(sig, ((Infix *) what)->left);
+        BoxedTreeType(sig, ((Infix *) what)->right);
+        break;
+    }
 }
 
 

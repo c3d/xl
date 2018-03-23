@@ -142,13 +142,15 @@ private:
     CompilerFunction *  RewriteFunction(RewriteCandidate *rc);
     Type_p              ReturnType(Tree *form);
     Type_p              StructureType(const Signature &signature, Tree *source);
+    Value_p             BoxedTree(Tree *what);
+    void                BoxedTreeType(Signature &sig, Tree *what);
     static bool         IsValidCName(Tree *tree, text &label);
 
 private:
     // Compilation of rewrites and data
     Value_p             Compile(Tree *call,
                                 RewriteCandidate *rc, const Values &args);
-    Value_p             Data(Tree *form, unsigned &index);
+    Value_p             Data(Tree *form, Value_p box, unsigned &index);
     Value_p             Autobox(Tree *source, Value_p value, Type_p requested);
     Function_p          UnboxFunction(Type_p type, Tree *form);
     Value_p             Unbox(Value_p arg, Tree *form, uint &index);
@@ -161,7 +163,6 @@ private:
     bool                IsKnown(Tree *tree, uint which = knowAll);
     Value_p             Known(Tree *tree, uint which = knowAll );
     void                ImportClosureInfo(const CompilerUnit &other);
-
 
     // Creating constants
     Value_p             ConstantInteger(Integer *what);

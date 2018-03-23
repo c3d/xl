@@ -284,7 +284,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
     else if (max == 0)
     {
         // If it passed type check and there is no candidate, return tree as is
-        result = function.ConstantTree(call);
+        result = function.BoxedTree(call);
         return result;
     }
 
