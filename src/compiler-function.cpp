@@ -1459,7 +1459,11 @@ void CompilerFunction::BoxedTreeType(Signature &sig, Tree *what)
     case INTEGER:
     case REAL:
     case TEXT:
+        sig.push_back(ValueMachineType(what));
+        break;
+
     case NAME:
+        what = context->DeclaredForm(what);
         sig.push_back(ValueMachineType(what));
         break;
 

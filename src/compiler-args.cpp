@@ -531,7 +531,10 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
     }
 
     // Otherwise, do type inference
-    return btypes->Unify(valueType, formType);
+    Tree *unified = btypes->Unify(valueType, formType);
+    unified = btypes->AssignType(value, unified);
+    unified = btypes->AssignType(form, unified);
+    return unified;
 }
 
 
