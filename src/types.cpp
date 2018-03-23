@@ -316,7 +316,22 @@ Tree *Types::DoName(Name *what)
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
-    return Evaluate(what);
+    Tree *type = Evaluate(what);
+    if (type)
+    {
+        if (Rewrite *rw = context->Reference(what))
+        {
+            Tree *decl = rw->left;
+            Tree *def = RewriteDefined(decl);
+            Tree *init = rw->right;
+            type = AssignType(decl, type);
+            type = AssignType(init, type);
+            if (def != decl)
+                type = AssignType(def, type);
+        }
+    }
+
+    return type;
 }
 
 
