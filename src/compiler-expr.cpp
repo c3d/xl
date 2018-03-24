@@ -481,7 +481,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     if (result)
     {
         Types *vtypes = cand->vtypes;
-        Tree *base = vtypes->ValueType(call);
+        Tree *base = vtypes->CodegenType(call);
         Type_p retTy = JIT::Type(result);
         unit.types = vtypes;
         function.AddBoxedType(base, retTy);

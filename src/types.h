@@ -86,6 +86,7 @@ class Types
     TreeMap     unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
     bool        declaration;    // Analyzing type of a declaration
+    bool        codegen;        // Code generation started
     static uint id;             // Id of next type
 
 public:
@@ -98,9 +99,11 @@ public:
     // Main entry point
     Tree *      TypeAnalysis(Tree *source);
     Tree *      Type(Tree *expr);
-    Tree *      DeclarationType(Tree *expr);
-    Tree *      NewType(Tree *expr);
+    Tree *      KnownType(Tree *expr);
     Tree *      ValueType(Tree *expr);
+    Tree *      DeclarationType(Tree *expr);
+    Tree *      CodegenType(Tree *expr);
+    Tree *      NewType(Tree *expr);
     Tree *      BaseType(Tree *expr);
     rcall_map & TypesRewriteCalls();
     RewriteCalls *HasRewriteCalls(Tree *what);
@@ -127,8 +130,8 @@ public:
     Tree *      AssignType(Tree *expr, Tree *type);
     Tree *      TypeOf(Tree *expr);
     Tree *      MakeTypesExplicit(Tree *expr);
-    Tree *      TypeDeclaration(Infix *decl);
-    Tree *      TypeOfRewrite(Infix *rw);
+    Tree *      TypeDeclaration(Rewrite *decl);
+    Tree *      TypeOfRewrite(Rewrite *rw);
     Tree *      Statements(Tree *expr, Tree *left, Tree *right);
 
     // Attempt to evaluate an expression and perform required unifications

@@ -860,7 +860,7 @@ Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
     {
         // Figure out the return type and function type
         Types *types = unit.types;
-        Tree *rtype = types->ValueType(expr);
+        Tree *rtype = types->CodegenType(expr);
         Type_p retTy = BoxedType(rtype);
         PointerType_p closurePtrTy = jit.PointerType(closureTy);
         Signature sig { closurePtrTy };
@@ -1102,7 +1102,7 @@ Type_p CompilerFunction::ValueMachineType(Tree *tree)
         return type;
 
     // Find the base type for the expression
-    Tree *base = types->ValueType(tree);
+    Tree *base = types->CodegenType(tree);
     if (!base)
     {
         Ooops("Internal: No type deduced for $1, using integer", tree);
@@ -1395,7 +1395,7 @@ Type_p CompilerFunction::ReturnType(Tree *parmForm)
 {
     // Type inference gives us the return type for this form
     Types *types = unit.types;
-    Tree *type = types->ValueType(parmForm);
+    Tree *type = types->CodegenType(parmForm);
     Type_p mtype = BoxedType(type);
     if (!mtype)
         mtype = jit.VoidType();
@@ -1410,7 +1410,7 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
 {
     Types *types = unit.types;
     MachineTypes &m = mty[types];
-    Tree *base = types->ValueType(rwform);
+    Tree *base = types->CodegenType(rwform);
 
     // Check if we already had this signature
     auto it = m.mtypes.find(base);

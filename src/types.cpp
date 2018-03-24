@@ -68,7 +68,8 @@ Types::Types(Scope *scope)
       types(),
       unifications(),
       rcalls(),
-      declaration(false)
+      declaration(false),
+      codegen(false)
 {
     // Pre-assign some types
     types[xl_true] = boolean_type;
@@ -85,7 +86,8 @@ Types::Types(Scope *scope, Types *parent)
       types(parent->types),
       unifications(parent->unifications),
       rcalls(parent->rcalls),
-      declaration(false)
+      declaration(false),
+      codegen(false)
 {
     context->CreateScope();
     scope = context->CurrentScope();
@@ -111,6 +113,7 @@ Tree *Types::TypeAnalysis(Tree *program)
     record(types, "Type analysis for %t in %p", program, this);
     Tree *result = Type(program);
     record(types, "Type for %t in %p is %t", program, this, result);
+    codegen = true;
 
     // Dump debug information if approriate
     if (RECORDER_TRACE(types_ids))
@@ -146,37 +149,63 @@ Tree *Types::BaseType(Tree *type)
 }
 
 
+Tree *Types::KnownType(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the type for the expression if it's already known
+// ----------------------------------------------------------------------------
+{
+    auto it = types.find(expr);
+    Tree *type = it != types.end() ? it->second : nullptr;
+    record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
+    return type;
+}
+
+
 Tree *Types::Type(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type associated with a given expression
 // ----------------------------------------------------------------------------
 {
     // Check type, make sure we don't destroy a nullptr type
-    Tree *type = nullptr;
-    auto it = types.find(expr);
-    if (it == types.end())
-    {
-        type = expr->Do(this);
-        type = AssignType(expr, type);
-        record(types_ids, "Created type for %t in %p is %t", expr, this, type);
-    }
-    else
-    {
-        type = it->second;
-        record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
-    }
+    Tree *type = KnownType(expr);
+    if (type)
+        return type;
+    if (codegen)
+        Ooops("Internal error: No type for $1", expr);
+    type = expr->Do(this);
+    type = AssignType(expr, type);
+    record(types_ids, "Created type for %t in %p is %t", expr, this, type);
     return type;
+}
+
+
+Tree *Types::ValueType(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the type associated with something known to be a value
+// ----------------------------------------------------------------------------
+{
+    Save<bool> save(declaration, false);
+    return Type(expr);
 }
 
 
 Tree *Types::DeclarationType(Tree *expr)
 // ----------------------------------------------------------------------------
-//   Return the type for a declaration, e.g. for [X] in [X is 0]
+//   Return the type associated with something known to be a declaration
 // ----------------------------------------------------------------------------
 {
     Save<bool> save(declaration, true);
-    Tree *result = Type(expr);
-    return result;
+    return Type(expr);
+}
+
+
+Tree *Types::CodegenType(Tree *expr)
+// ----------------------------------------------------------------------------
+//   Return the type associated during code generation
+// ----------------------------------------------------------------------------
+{
+    codegen = true;
+    return Type(expr);
 }
 
 
@@ -186,26 +215,12 @@ Tree *Types::NewType(Tree *expr)
 // ----------------------------------------------------------------------------
 {
     // Protect against case where type would already exist
-    auto it = types.find(expr);
-    if (it != types.end())
-        return it->second;
-
-    Tree *type = NewTypeName(expr->Position());
-    types[expr] = type;
-    return type;
-}
-
-
-Tree *Types::ValueType(Tree *expr)
-// ----------------------------------------------------------------------------
-//   Return the value type associated with 'expr', or an error
-// ----------------------------------------------------------------------------
-{
-    auto it = types.find(expr);
-    if (it != types.end())
-        return it->second;
-    Ooops("Internal error, no type found for $1, trying deduction", expr);
-    Tree *type = Type(expr);
+    Tree *type = KnownType(expr);
+    if (!type)
+    {
+        type = NewTypeName(expr->Position());
+        types[expr] = type;
+    }
     return type;
 }
 
@@ -323,11 +338,15 @@ Tree *Types::DoName(Name *what)
         {
             Tree *decl = rw->left;
             Tree *def = RewriteDefined(decl);
-            Tree *init = rw->right;
-            type = AssignType(decl, type);
-            type = AssignType(init, type);
-            if (def != decl)
-                type = AssignType(def, type);
+            if (def != what)
+            {
+                Tree *rwtype = TypeOfRewrite(rw);
+                if (!rwtype)
+                    return nullptr;
+                type = AssignType(decl, type);
+                if (def != decl)
+                    type = AssignType(def, type);
+            }
         }
     }
 
@@ -562,7 +581,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
 }
 
 
-Tree *Types::TypeDeclaration(Infix *decl)
+Tree *Types::TypeDeclaration(Rewrite *decl)
 // ----------------------------------------------------------------------------
 //   Explicitely define the type for an expression
 // ----------------------------------------------------------------------------
@@ -577,7 +596,7 @@ Tree *Types::TypeDeclaration(Infix *decl)
 }
 
 
-Tree *Types::TypeOfRewrite(Infix *what)
+Tree *Types::TypeOfRewrite(Rewrite *what)
 // ----------------------------------------------------------------------------
 //   Assign an [A => B] type to a rewrite
 // ----------------------------------------------------------------------------
@@ -621,7 +640,7 @@ Tree *Types::TypeOfRewrite(Infix *what)
     initt = Unify(declt, initt);
 
     // If the left side has a complex shape, e.g. [X+Y], return [DT => I]
-    Tree *type = new Infix("=> ", declt, initt, what->Position());
+    Tree *type = new Infix("=>", declt, initt, what->Position());
     type = AssignType(what, type);
 
     record(types_calls, "Rewrite for %t is %t (%t => %t)",
@@ -669,6 +688,12 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
 // ----------------------------------------------------------------------------
 {
     record(types_calls, "Evaluating %t in types %p", what, this);
+    if (declaration)
+    {
+        if (what->AsName())
+            return NewTypeName(what->Position());
+        return TypeOf(what);
+    }
 
     // Test if we are already trying to evaluate this particular form
     rcall_map::iterator found = rcalls.find(what);
@@ -1263,9 +1288,17 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
     for (auto &t : types)
     {
         if (t.second == t1)
+        {
             x1 = t.first;
+            if (x2)
+                break;
+        }
         if (t.second == t2)
+        {
             x2 = t.first;
+            if (x1)
+                break;
+        }
     }
 
     if (x1 == x2)
@@ -1284,7 +1317,7 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
         if (x2)
             Ooops("with type $2 of $1", x2, t2);
         else
-            Ooops("with type $1", t1);
+            Ooops("with type $1", t2);
     }
 
     return nullptr;
