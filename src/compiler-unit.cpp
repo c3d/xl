@@ -196,7 +196,7 @@ Value_p CompilerUnit::Global(Tree *tree)
 {
     auto it = globals.find(tree);
     if (it != globals.end())
-        return (*it).second;
+        return it->second;
     return nullptr;
 }
 

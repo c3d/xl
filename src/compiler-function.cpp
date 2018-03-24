@@ -1019,19 +1019,19 @@ Value_p CompilerFunction::Known(Tree *tree, uint which)
     {
         auto it = m.storage.find(tree);
         if (it != m.storage.end())
-            return code.Load((*it).second, "loc");
+            return code.Load(it->second, "loc");
     }
     if (which & knowValues)
     {
         auto it = m.values.find(tree);
         if (it != m.values.end())
-            return (*it).second;
+            return it->second;
     }
     if (which & knowGlobals)
     {
         auto it = unit.globals.find(tree);
         if (it != unit.globals.end())
-            return code.Load((*it).second, "glob");
+            return code.Load(it->second, "glob");
     }
     return nullptr;
 }
@@ -1162,7 +1162,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     auto it = m.boxed.find(base);
     if (it != m.boxed.end())
     {
-        mtype = (*it).second;
+        mtype = it->second;
         record(boxed_types, "Boxed %t (%t) is %T", type, base, mtype);
         return mtype;
     }
@@ -1415,7 +1415,7 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
     // Check if we already had this signature
     auto it = m.mtypes.find(base);
     if (it != m.mtypes.end())
-        return (*it).second;
+        return it->second;
 
     // Build the corresponding structure type
     StructType_p stype = jit.StructType(signature, "boxed");

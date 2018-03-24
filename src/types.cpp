@@ -141,7 +141,7 @@ Tree *Types::BaseType(Tree *type)
     // Check if we have a type as input and if there is a base type for it
     auto it = unifications.find(type);
     if (it != unifications.end())
-        return (*it).second;
+        return it->second;
     return type;
 }
 
@@ -162,7 +162,7 @@ Tree *Types::Type(Tree *expr)
     }
     else
     {
-        type = (*it).second;
+        type = it->second;
         record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
     }
     return type;
@@ -188,7 +188,7 @@ Tree *Types::NewType(Tree *expr)
     // Protect against case where type would already exist
     auto it = types.find(expr);
     if (it != types.end())
-        return (*it).second;
+        return it->second;
 
     Tree *type = NewTypeName(expr->Position());
     types[expr] = type;
@@ -203,7 +203,7 @@ Tree *Types::ValueType(Tree *expr)
 {
     auto it = types.find(expr);
     if (it != types.end())
-        return (*it).second;
+        return it->second;
     Ooops("Internal error, no type found for $1, trying deduction", expr);
     Tree *type = Type(expr);
     return type;
@@ -226,7 +226,7 @@ RewriteCalls *Types::HasRewriteCalls(Tree *what)
 // ----------------------------------------------------------------------------
 {
     auto it = rcalls.find(what);
-    RewriteCalls *result = (it != rcalls.end()) ? (*it).second : nullptr;
+    RewriteCalls *result = (it != rcalls.end()) ? it->second : nullptr;
     record(types_calls, "In %p, calls for %t are %p (%u entries)",
            this, what, result, result ? result->candidates.size() : 0);
     return result;
@@ -260,7 +260,7 @@ bool Types::HasCaptures(Tree *form, TreeList &captured)
     if (it == rcalls.end())
         return false;
 
-    RewriteCalls_p calls = (*it).second;
+    RewriteCalls_p calls = it->second;
     Scope *scope = context->CurrentScope();
     for (RewriteCandidate *rc : calls->candidates)
         if (rc->scope != scope)
@@ -425,7 +425,7 @@ Tree *Types::AssignType(Tree *expr, Tree *type)
         auto it = types.find(expr);
         if (it != types.end())
         {
-            Tree *existing = (*it).second;
+            Tree *existing = it->second;
             type = Unify(existing, type);
         }
     }
@@ -442,7 +442,7 @@ Tree *Types::TypeOf(Tree *expr)
     // Check if we know a type for this expression, if so return it
     auto it = types.find(expr);
     if (it != types.end())
-        return (*it).second;
+        return it->second;
 
     TreePosition pos = expr->Position();
     Tree *type = expr;
@@ -497,7 +497,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
 
         auto it = types.find(expr);
         TreePosition pos = expr->Position();
-        Tree *type = it != types.end() ? (*it).second : NewTypeName(pos);
+        Tree *type = it != types.end() ? it->second : NewTypeName(pos);
         Tree *result = new Infix(":", expr, type, pos);
         return result;
     }
