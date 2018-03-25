@@ -611,7 +611,7 @@ Tree *RewriteCalls::Check (Scope *scope,
             else if (!declType)
             {
                 // No type specified, assign a generic type
-                type = btypes->NewType(init);
+                type = btypes->Type(init);
             }
         }
     }

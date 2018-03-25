@@ -209,22 +209,6 @@ Tree *Types::CodegenType(Tree *expr)
 }
 
 
-Tree *Types::NewType(Tree *expr)
-// ----------------------------------------------------------------------------
-//   Create a new generic type like #T for the given expr
-// ----------------------------------------------------------------------------
-{
-    // Protect against case where type would already exist
-    Tree *type = KnownType(expr);
-    if (!type)
-    {
-        type = NewTypeName(expr->Position());
-        types[expr] = type;
-    }
-    return type;
-}
-
-
 rcall_map & Types::TypesRewriteCalls()
 // ----------------------------------------------------------------------------
 //   Returns the list of rewrite calls for this
@@ -472,19 +456,59 @@ Tree *Types::TypeOf(Tree *expr)
     case TEXT:
         // For values, the type is the value itself
         break;
+
     case NAME:
-        // For names, assign a new type name
-        type = NewTypeName(pos);
+    {
+         // Need to build type name by default
+        type = nullptr;
+
+        // Lookup original name
+        Name *name = (Name *) expr;
+        if (name->value == "self")
+            if (Tree *declared = context->DeclaredForm(expr))
+                if (declared != expr)
+                    type = TypeOf(declared);
         break;
-    case INFIX:
-    case PREFIX:
-    case POSTFIX:
-        expr = MakeTypesExplicit(expr);
-        type = new Prefix(new Name("type", pos), expr, pos);
-        break;
+    }
+
     case BLOCK:
         type = TypeOf(((Block *) expr)->child);
         break;
+
+    case PREFIX:
+        // Case of [X is C name] or [X is builtin Op]
+        if (Prefix *prefix = type->AsPrefix())
+        {
+            if (Name *name = prefix->left->AsName())
+            {
+                if (name->value == "C" || name->value == "builtin")
+                    type = nullptr;
+            }
+        }
+        /* fall-through */
+
+    case INFIX:
+    case POSTFIX:
+        if (type)
+        {
+            TreePosition pos = type->Position();
+            type = MakeTypesExplicit(type);
+            type = new Prefix(new Name("type", pos), expr, pos);
+        }
+        break;
+    }
+
+    // For other names, assign a new generic type name, e.g. #A, #B, #C
+    if (!type)
+    {
+        ulong v = id++;
+        text  name;
+        do
+        {
+            name = char('A' + v % 26) + name;
+            v /= 26;
+        } while (v);
+        type = new Name("#" + name, pos);
     }
 
     // Otherwise, return [type X] and assign it to this expr
@@ -514,10 +538,8 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
             if (Name *name = def->AsName())
                 expr = name;
 
-        auto it = types.find(expr);
-        TreePosition pos = expr->Position();
-        Tree *type = it != types.end() ? it->second : NewTypeName(pos);
-        Tree *result = new Infix(":", expr, type, pos);
+        Tree *type = Type(expr);
+        Tree *result = new Infix(":", expr, type, expr->Position());
         return result;
     }
 
@@ -614,21 +636,9 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
     Tree *decl = what->left;
     Tree *init = what->right;
     Tree *declt = DeclarationType(decl);
-    bool inited = true;        // True if init type can be evaluated
-
-    // Case of [X is self]:
-    if (Name *name = init->AsName())
-        if (name->value == "self")
-            inited = false;
-
-    // Case of [X is C name] or [X is builtin Op]
-    if (Prefix *prefix = init->AsPrefix())
-        if (Name *name = prefix->left->AsName())
-            if (name->value == "C" || name->value == "builtin")
-                inited = false;
 
     // Create a [type Decl => type Init] type
-    Tree *initt = inited ? Type(init) : NewType(init);
+    Tree *initt = ValueType(init);
     if (!declt || !initt)
     {
         record(types_calls, "Failed type for %t declt=%t initt=%t",
@@ -689,20 +699,14 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
 {
     record(types_calls, "Evaluating %t in types %p", what, this);
     if (declaration)
-    {
-        if (what->AsName())
-            return NewTypeName(what->Position());
         return TypeOf(what);
-    }
 
     // Test if we are already trying to evaluate this particular form
     rcall_map::iterator found = rcalls.find(what);
     bool recursive = found != rcalls.end();
     if (recursive)
-    {
         // Need to assign a type name, will be unified by outer Evaluate()
-        return NewType(what);
-    }
+        return TypeOf(what);
 
     // Identify all candidate rewrites in the current context
     RewriteCalls_p rc = new RewriteCalls(this);
@@ -1232,22 +1236,6 @@ bool Types::TreePatternMatchesValue(Tree *pat, Tree *val)
     }
 
     return false;
-}
-
-
-Name * Types::NewTypeName(TreePosition pos)
-// ----------------------------------------------------------------------------
-//   Automatically generate new type names
-// ----------------------------------------------------------------------------
-{
-    ulong v = id++;
-    text  name;
-    do
-    {
-        name = char('A' + v % 26) + name;
-        v /= 26;
-    } while (v);
-    return new Name("#" + name, pos);
 }
 
 

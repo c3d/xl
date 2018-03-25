@@ -103,7 +103,6 @@ public:
     Tree *      ValueType(Tree *expr);
     Tree *      DeclarationType(Tree *expr);
     Tree *      CodegenType(Tree *expr);
-    Tree *      NewType(Tree *expr);
     Tree *      BaseType(Tree *expr);
     rcall_map & TypesRewriteCalls();
     RewriteCalls *HasRewriteCalls(Tree *what);
@@ -163,9 +162,6 @@ public:
     Infix *     IsRewriteType(Tree *type);
     Infix *     IsRangeType(Tree *type);
     Infix *     IsUnionType(Tree *type);
-
-    // Generation of type names
-    Name *      NewTypeName(TreePosition pos);
 
     // Lookup a type name in the given context
     Tree *      DeclaredTypeName(Tree *input);
