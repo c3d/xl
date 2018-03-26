@@ -66,9 +66,6 @@ struct MachineTypes
 //   The machine types associated with trees and types
 // ----------------------------------------------------------------------------
 {
-    value_map           values;     // Tree -> LLVM value
-    value_map           storage;    // Tree -> LLVM storage (alloca)
-    value_map           closures;   // Tree -> LLVM storage (alloca)
     mtype_map           mtypes;     // Value tree -> machine type
     box_map             boxed;      // Tree type -> machine type
 };
@@ -96,6 +93,9 @@ class CompilerFunction
     JITBlock            exit;       // A basic block for shared exit
     BasicBlock_p        entry;      // The entry point for the function code
     Value_p             returned;   // Returned value
+    value_map           values;     // Tree -> LLVM value
+    value_map           storage;    // Tree -> LLVM storage (alloca)
+    value_map           closures;   // Tree -> LLVM storage (alloca)
 
     friend class CompilerExpression;
 

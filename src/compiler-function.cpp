@@ -369,10 +369,8 @@ void CompilerFunction::InitializeArgs()
     Value_p self = &*args++;
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
-    Types *types = unit.types;
-    MachineTypes &m = mty[types];
-    m.values[xl_scope] = scope;
-    m.values[xl_self] = self;
+    values[xl_scope] = scope;
+    values[xl_self] = self;
 }
 
 
@@ -421,17 +419,16 @@ void CompilerFunction::InitializeArgs(const Parameters &parms)
     }
 
     // Then read the actual parameters
-    MachineTypes &m = mty[types];
     for (auto &parm : parms)
     {
         Value_p inputArg = &*args++;
-        m.values[parm.name] = inputArg;
+        values[parm.name] = inputArg;
     }
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
     Scope *scope = context->CurrentScope();
-    m.values[xl_scope] = data.PointerConstant(compiler.scopePtrTy, scope);
-    m.values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
+    values[xl_scope] = data.PointerConstant(compiler.scopePtrTy, scope);
+    values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
 }
 
 
@@ -948,9 +945,7 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
-    MachineTypes &m = mty[types];
-    Value_p result = m.storage[tree];
+    Value_p result = storage[tree];
     if (!result)
     {
         // Get the associated machine type
@@ -958,12 +953,12 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
 
         // Create alloca to store the new form
         result = data.Alloca(mtype, "loc");
-        m.storage[tree] = result;
+        storage[tree] = result;
 
         // If this started with a value, initialize it here
-        if (m.values.count(tree))
+        if (values.count(tree))
         {
-            Value_p initializer = m.values[tree];
+            Value_p initializer = values[tree];
             assert(initializer && initializer->getType() == mtype);
             code.Store(initializer, result);
         }
@@ -978,13 +973,11 @@ Value_p CompilerFunction::NeedClosure(Tree *tree)
 //   Allocate a closure variable
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
-    MachineTypes &m = mty[types];
-    Value_p storage = m.closures[tree];
+    Value_p storage = closures[tree];
     if (!storage)
     {
         storage = NeedStorage(tree);
-        m.closures[tree] = storage;
+        closures[tree] = storage;
     }
     Value_p result = code.Load(storage);
     return result;
@@ -996,11 +989,9 @@ bool CompilerFunction::IsKnown(Tree *tree, uint which)
 //   Check if the tree has a known local or global value
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
-    MachineTypes &m = mty[types];
-    if ((which & knowLocals) && m.storage.count(tree) > 0)
+    if ((which & knowLocals) && storage.count(tree) > 0)
         return true;
-    else if ((which & knowValues) && m.values.count(tree) > 0)
+    else if ((which & knowValues) && values.count(tree) > 0)
         return true;
     else if ((which & knowGlobals) && unit.globals.count(tree) > 0)
         return true;
@@ -1013,18 +1004,16 @@ Value_p CompilerFunction::Known(Tree *tree, uint which)
 //   Return the known local or global value if any
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
-    MachineTypes &m = mty[types];
     if (which & knowLocals)
     {
-        auto it = m.storage.find(tree);
-        if (it != m.storage.end())
+        auto it = storage.find(tree);
+        if (it != storage.end())
             return code.Load(it->second, "loc");
     }
     if (which & knowValues)
     {
-        auto it = m.values.find(tree);
-        if (it != m.values.end())
+        auto it = values.find(tree);
+        if (it != values.end())
             return it->second;
     }
     if (which & knowGlobals)
