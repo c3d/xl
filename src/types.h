@@ -52,6 +52,7 @@
 
 #include "tree.h"
 #include "context.h"
+#include "llvm-crap.h"
 #include <map>
 
 
@@ -66,6 +67,7 @@ XL_BEGIN
 struct RewriteCalls;
 typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
+typedef std::map<Tree_p, Type_p>         box_map;
 
 extern Name_p tree_type;
 
@@ -85,6 +87,7 @@ class Types
     TreeMap     types;          // Map an expression to its type
     TreeMap     unifications;   // Map a type to its reference type
     rcall_map   rcalls;         // Rewrites to call for a given tree
+    box_map     boxed;          // Tree type -> machine type
     bool        declaration;    // Analyzing type of a declaration
     bool        codegen;        // Code generation started
     static uint id;             // Id of next type
@@ -109,6 +112,10 @@ public:
     Scope *     TypesScope();
     Context *   TypesContext();
     bool        HasCaptures(Tree *form, TreeList &captured);
+
+    // Machine types management
+    void        AddBoxedType(Tree *treeType, Type_p machineType);
+    Type_p      BoxedType(Tree *type);
 
 public:
     // Interface for Tree::Do() to annotate the tree
@@ -255,5 +262,6 @@ RECORDER_DECLARE(types);
 RECORDER_DECLARE(types_ids);
 RECORDER_DECLARE(types_unifications);
 RECORDER_DECLARE(types_calls);
+RECORDER_DECLARE(types_boxing);
 
 #endif // TYPES_H

@@ -86,6 +86,7 @@ Types::Types(Scope *scope, Types *parent)
       types(parent->types),
       unifications(parent->unifications),
       rcalls(parent->rcalls),
+      boxed(parent->boxed),
       declaration(false),
       codegen(false)
 {
@@ -1306,6 +1307,41 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
 
 // ============================================================================
 //
+//   Boxed type management
+//
+// ============================================================================
+
+void Types::AddBoxedType(Tree *type, Type_p mtype)
+// ----------------------------------------------------------------------------
+//   Associate a tree type to a boxed machine type
+// ----------------------------------------------------------------------------
+///  The tree type could be a named type, e.g. [integer], or data, e.g. [X,Y]
+//   The machine type could be integerTy or StructType({integerTy, realTy})
+{
+    Tree *base = BaseType(type);
+    record(types_boxing, "Add %T boxing %t (%t)", mtype, type, base);
+    assert(!boxed[base] || boxed[base] == mtype);
+    boxed[base] = mtype;
+}
+
+
+Type_p Types::BoxedType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return the boxed type if there is one
+// ----------------------------------------------------------------------------
+{
+    // Check if we already had this signature
+    Tree *base = BaseType(type);
+    auto it = boxed.find(base);
+    Type_p mtype = (it != boxed.end()) ? it->second : nullptr;
+    record(types_boxing, "Type %T is boxing %t (%t)", mtype, type, base);
+    return mtype;
+}
+
+
+
+// ============================================================================
+//
 //   Debug utilities
 //
 // ============================================================================
@@ -1325,9 +1361,9 @@ void Types::DumpTypes()
         Tree *base = BaseType(type);
         std::cout << "#" << ++i
                   << "\t" << ShortTreeForm(value)
-                  << "\t: " << type;
+                  << "\t: " << type << " (" << (void *) type << ")";
         if (base != type)
-            std::cout << "\t= " << base;
+            std::cout << "\t= " << base << " (" << (void *) base << ")";
         std::cout << "\n";
     }
 }
@@ -1345,8 +1381,8 @@ void Types::DumpUnifications()
         Tree *type = t.first;
         Tree *base = t.second;
         std::cout << "#" << ++i
-                  << "\t" << type
-                  << "\t= " << base << "\n";
+                  << "\t" << type << " (" << (void *) type << ")"
+                  << "\t= " << base << " (" << (void *) base << ")\n";
     }
 }
 
@@ -1432,4 +1468,5 @@ void *xldebug(uintptr_t address)
 RECORDER(types,                 64, "Type analysis");
 RECORDER(types_ids,             64, "Assigned type identifiers");
 RECORDER(types_unifications,    64, "Type unifications");
-RECORDER(types_calls,           64, "Type deductions in rewrites (calls)")
+RECORDER(types_calls,           64, "Type deductions in rewrites (calls)");
+RECORDER(types_boxing,          64, "Machine type boxing and unboxing");

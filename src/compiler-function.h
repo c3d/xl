@@ -58,20 +58,6 @@ typedef std::map<uint, adapter_fn> adapter_map;
 typedef std::set<Type_p>           type_set;
 typedef std::set<Tree_p>           data_set;
 typedef std::map<Tree_p, Type_p>   mtype_map;
-typedef std::map<Tree_p, Type_p>   box_map;
-
-
-struct MachineTypes
-// ----------------------------------------------------------------------------
-//   The machine types associated with trees and types
-// ----------------------------------------------------------------------------
-{
-    mtype_map           mtypes;     // Value tree -> machine type
-    box_map             boxed;      // Tree type -> machine type
-};
-
-
-typedef std::map<Types_p, MachineTypes> machine_types;
 
 
 class CompilerFunction
@@ -85,7 +71,7 @@ class CompilerFunction
     Context_p           context;    // Context for this function
     Tree_p              form;       // Interface for this function
     Tree_p              source;     // Source code for this function
-    machine_types       mty;        // Machine types info for given Types
+    Types_p             types;      // Machine types info for given Types
     StructType_p        closureTy;  // A structure type for closure data
     Function_p          function;   // The LLVM function we are building
     JITBlock            data;       // A basic block for local variables
@@ -137,6 +123,7 @@ private:
 
     // Machine types management
     void                AddBoxedType(Tree *treeType, Type_p machineType);
+    Type_p              HasBoxedType(Tree *type);
 
     // Create a function for a given rewrite candidate
     CompilerFunction *  RewriteFunction(RewriteCandidate *rc);
@@ -205,6 +192,5 @@ XL_END
 
 RECORDER_DECLARE(compiler_function);
 RECORDER_DECLARE(parameter_bindings);
-RECORDER_DECLARE(boxed_types);
 
 #endif // COMPILER_FUNCTION_H
