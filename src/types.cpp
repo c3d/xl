@@ -485,7 +485,7 @@ Tree *Types::TypeOf(Tree *expr)
         {
             TreePosition pos = type->Position();
             type = MakeTypesExplicit(type);
-            type = new Prefix(new Name("type", pos), expr, pos);
+            type = new Prefix(new Name("type", pos), type, pos);
         }
         break;
     }
