@@ -429,8 +429,8 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
             function.ValueMachineType(b.value, mtype);
             if (unit.IsClosureType(mtype))
                 b.closure = value;
-            record(compiler_expr, "Rewrite %t arg %t value %v",
-                   rw, tree, value);
+            record(compiler_expr, "Rewrite %t arg %t value %v machine type %T",
+                   rw, tree, value, mtype);
         }
         else
         {

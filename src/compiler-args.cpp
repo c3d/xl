@@ -541,6 +541,33 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
 }
 
 
+void RewriteCandidate::Dump()
+// ----------------------------------------------------------------------------
+//   Dump a rewrite candidate
+// ----------------------------------------------------------------------------
+{
+    std::cout << "\t" << rewrite->left
+              << "\t: " << type << "\n";
+
+    for (auto &t : conditions)
+        std::cout << "\t\tWhen " << ShortTreeForm(t.value)
+                  << "\t= " << ShortTreeForm(t.test) << "\n";
+
+    for (auto &b : bindings)
+    {
+        std::cout << "\t\t" << b.name;
+        std::cout << "\t= " << ShortTreeForm(b.value) << "\n";
+    }
+}
+
+
+
+// ============================================================================
+//
+//   Rewrite Calls
+//
+// ============================================================================
+
 RewriteCalls::RewriteCalls(Types *types)
 // ----------------------------------------------------------------------------
 //   Create a new type context to evaluate the calls for a rewrite
@@ -651,4 +678,66 @@ Tree *RewriteCalls::Check (Scope *scope,
     return NULL;
 }
 
+
+void RewriteCalls::Dump()
+// ----------------------------------------------------------------------------
+//   Dump the rewrite calls for debugging purpose
+// ----------------------------------------------------------------------------
+{
+    uint j = 0;
+    for (RewriteCandidate *r : candidates)
+    {
+        std::cout << "\t#" << ++j;
+        r->Dump();
+    }
+}
+
 XL_END
+
+
+XL::RewriteCalls *xldebug(XL::RewriteCalls *rc)
+// ----------------------------------------------------------------------------
+//   Debug rewrite calls
+// ----------------------------------------------------------------------------
+{
+    if (!XL::Allocator<XL::RewriteCalls>::IsAllocated(rc))
+        std::cout << "Cowardly refusing to show bad RewriteCalls pointer "
+                  << (void *) rc << "\n";
+    else
+        rc->Dump();
+    return rc;
+
+}
+
+
+XL::RewriteCalls *xldebug(XL::RewriteCalls_p rc)
+// ----------------------------------------------------------------------------
+//   Debug the GCPtr version
+// ----------------------------------------------------------------------------
+{
+    return xldebug((XL::RewriteCalls *) rc);
+}
+
+
+XL::RewriteCandidate *xldebug(XL::RewriteCandidate *rc)
+// ----------------------------------------------------------------------------
+//   Debug rewrite calls
+// ----------------------------------------------------------------------------
+{
+    if (!XL::Allocator<XL::RewriteCandidate>::IsAllocated(rc))
+        std::cout << "Cowardly refusing to show bad RewriteCandidate pointer "
+                  << (void *) rc << "\n";
+    else
+        rc->Dump();
+    return rc;
+
+}
+
+
+XL::RewriteCandidate *xldebug(XL::RewriteCandidate_p rc)
+// ----------------------------------------------------------------------------
+//   Debug the GCPtr version
+// ----------------------------------------------------------------------------
+{
+    return xldebug((XL::RewriteCandidate *) rc);
+}

@@ -257,10 +257,6 @@ int Main::ParseOptions()
 {
     text cmd, end = "";
 
-    // Make sure debug function is linked in...
-    if (getenv("SHOW_INITIAL_DEBUG"))
-        debugp((Tree *) NULL);
-
     // Initialize the locale
     if (!setlocale(LC_CTYPE, ""))
         std::cerr << "WARNING: Cannot set locale.\n"

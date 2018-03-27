@@ -51,8 +51,6 @@
 #include <stdint.h>
 #include <typeinfo>
 
-extern void debuggc(void *);
-
 XL_BEGIN
 
 struct GarbageCollector;
@@ -152,7 +150,6 @@ protected:
     uint                collectedCount;
     uint                totalCount;
 
-    friend void ::debuggc(void *ptr);
     friend struct GarbageCollector;
 
 public:
@@ -307,6 +304,8 @@ struct GarbageCollector
     static bool                 SafePoint();
     static bool                 Sweep();
 
+    static void *               DebugPointer(void *ptr);
+
     void                        Statistics(uint &totalBytes,
                                            uint &allocBytes,
                                            uint &availableBytes,
@@ -329,8 +328,6 @@ private:
     Allocators                  allocators;
     Atomic<uint>                mustRun;
     Atomic<uint>                running;
-
-    friend void ::debuggc(void *ptr);
 };
 
 

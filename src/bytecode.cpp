@@ -2131,38 +2131,42 @@ int CodeBuilder::Bind(Name *name, Tree *value, Tree *type)
 XL_END
 
 
-extern "C" void debugo(XL::Op *op)
+XL::Op *xldebug(XL::Op *op)
 // ----------------------------------------------------------------------------
 //   Show an opcode alone
 // ----------------------------------------------------------------------------
 {
     std::cerr << op << "\n";;
+    return op;
 }
 
 
-extern "C" void debugop(XL::Op *op)
+XL::Op &xldebug(XL::Op &op)
 // ----------------------------------------------------------------------------
 //   Show an opcode and all children
 // ----------------------------------------------------------------------------
 {
-    std::cerr << *op << "\n";
+    std::cerr << op << "\n";
+    return op;
 }
 
 
-extern "C" void debugob(XL::CodeBuilder *cb)
+XL::CodeBuilder *xldebug(XL::CodeBuilder *cb)
 // ----------------------------------------------------------------------------
 //   Show an opcode and all children as a listing
 // ----------------------------------------------------------------------------
 {
     std::cerr << cb->instrs << "\n";
+    return cb;
 }
 
 
-extern "C" void debugti(XL::TreeIDs &tids)
+XL::TreeIDs& xldebug(XL::TreeIDs &tids)
 // ----------------------------------------------------------------------------
 //   Show the contents of a tree IDs map
 // ----------------------------------------------------------------------------
 {
     for (XL::TreeIDs::iterator i = tids.begin(); i != tids.end(); i++)
         std::cerr << (*i).first << " @index " << (*i).second << "\n";
+    return tids;
 }

@@ -1195,7 +1195,7 @@ Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
 //
 // ============================================================================
 
-void debugv(XL::Value_p v)
+XL::Value_p xldebug(XL::Value_p v)
 // ----------------------------------------------------------------------------
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
@@ -1206,10 +1206,11 @@ void debugv(XL::Value_p v)
     else
         llvm::errs() << "NULL";
     llvm::errs() << "\n";
+    return v;
 }
 
 
-void debugv(XL::Type_p t)
+XL::Type_p xldebug(XL::Type_p t)
 // ----------------------------------------------------------------------------
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
@@ -1220,4 +1221,5 @@ void debugv(XL::Type_p t)
     else
         llvm::errs() << "NULL";
     llvm::errs() << "\n";
+    return t;
 }

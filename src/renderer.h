@@ -156,7 +156,16 @@ size_t recorder_render(intptr_t tracing,
 XL_END
 
 // For use in a debugger
-extern "C" XL::Tree *debugp(XL::Tree *);
-extern "C" XL::Tree *debugd(XL::Tree *);
+extern bool xldebug_verbose;
+XL::Tree *xldebug(XL::Tree *);
+XL::Tree *xldebug(XL::Tree_p);
+XL::Tree *xldebug(XL::Integer_p);
+XL::Tree *xldebug(XL::Real_p);
+XL::Tree *xldebug(XL::Text_p);
+XL::Tree *xldebug(XL::Name_p);
+XL::Tree *xldebug(XL::Block_p);
+XL::Tree *xldebug(XL::Prefix_p);
+XL::Tree *xldebug(XL::Postfix_p);
+XL::Tree *xldebug(XL::Infix_p);
 
 #endif // RENDERER_H

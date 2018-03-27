@@ -127,6 +127,7 @@ struct RewriteCandidate
     bool                Unify(Tree *valueType, Tree *formType,
                               Tree *value, Tree *form,
                               bool declaration = false);
+    void                Dump();
 
     Infix_p             rewrite;
     Scope_p             scope;
@@ -152,6 +153,7 @@ struct RewriteCalls
     RewriteCalls(Types *ti);
 
     Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
+    void                Dump();
 
 public:
     Types_p             types;

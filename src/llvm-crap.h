@@ -274,7 +274,7 @@ public:
 
 } // namespace XL
 
-extern void debugv(XL::Value_p);
-extern void debugv(XL::Type_p);
+extern XL::Value_p xldebug(XL::Value_p);
+extern XL::Type_p  xldebug(XL::Type_p);
 
 #endif // LLVM_CRAP_H

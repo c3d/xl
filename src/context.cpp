@@ -935,65 +935,49 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
 
 XL_END
 
-
-extern "C"
-{
-void debugg(XL::Scope *scope)
+XL::Scope *xldebug(XL::Scope *scope)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scope in a symbol table
 // ----------------------------------------------------------------------------
 {
     if (XL::Allocator<XL::Scope>::IsAllocated(scope))
-        XL::Context::Dump(std::cerr, scope, true);
+    {
+        XL::Context::Dump(std::cerr, scope, false);
+        scope = ScopeParent(scope);
+    }
     else
+    {
         std::cerr << "Cowardly refusing to render unknown scope pointer "
                   << (void *) scope << "\n";
+    }
+    return scope;
 }
 
 
-void debugl(XL::Tree *rw)
+XL::Rewrite *xldebug(XL::Rewrite *rw)
 // ----------------------------------------------------------------------------
 //   Helper to show an infix as a local symbol table for debugging purpose
 // ----------------------------------------------------------------------------
 //   The infix can be shown using debug(), but it's less convenient
 {
     if (XL::Allocator<XL::Rewrite>::IsAllocated(rw))
-    {
         XL::Context::Dump(std::cerr, (XL::Rewrite *) rw);
-    }
-    else if (XL::Allocator<XL::Scope>::IsAllocated(rw))
-    {
-        XL::Context::Dump(std::cerr, (XL::Scope *) rw, false);
-    }
     else
-    {
         std::cerr << "Cowardly refusing to render unknown rewrite pointer "
                   << (void *) rw << "\n";
-    }
+    return rw;
 }
 
 
-XL::Scope *debugs(XL::Context *context)
+XL::Scope *xldebug(XL::Context *context)
 // ----------------------------------------------------------------------------
-//   Helper to show a single context for debugging purpose
+//   Helper to show a context for debugging purpose
 // ----------------------------------------------------------------------------
-//   A context symbols can also be shown with debug(), but it's less convenient
 {
     if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
         XL::Scope *scope = context->CurrentScope();
-        if (XL::Allocator<XL::Scope>::IsAllocated(scope))
-        {
-            debugl(ScopeRewrites(scope));
-            scope = ScopeParent(scope);
-            return scope;
-        }
-        else
-        {
-            std::cerr << "Cowardly refusing to render unknown scope pointer "
-                      << (void *) scope << "\n";
-            return nullptr;
-        }
+        return xldebug(scope);
     }
     else
     {
@@ -1001,42 +985,5 @@ XL::Scope *debugs(XL::Context *context)
                   << (void *) context << "\n";
         return nullptr;
     }
-
 }
-
-
-XL::Context *debugc(XL::Context *context)
-// ----------------------------------------------------------------------------
-//   Helper to show a complete context for debugging purpose
-// ----------------------------------------------------------------------------
-//   A context symbols can also be shown with debug(), but it's less convenient
-{
-    if (XL::Allocator<XL::Context>::IsAllocated(context))
-    {
-        XL::Scope *scope = context->CurrentScope();
-        if (XL::Allocator<XL::Scope>::IsAllocated(scope))
-        {
-            ulong depth = 0;
-            while (scope)
-            {
-                std::cerr << "\n\nSYMBOLS #" << depth++
-                          << " AT " << (void *) scope << "\n";
-                debugl(ScopeRewrites(scope));
-                scope = ScopeParent(scope);
-            }
-        }
-        else
-        {
-            std::cerr << "Cowardly refusing to render unknown scope pointer "
-                      << (void *) scope << "\n";
-        }
-    }
-    else
-    {
-            std::cerr << "Cowardly refusing to render unknown context pointer "
-                      << (void *) context << "\n";
-    }
-    return context;
-}
-
-}
+XL::Scope *xldebug(XL::Context_p c) { return xldebug((XL::Context *) c); }

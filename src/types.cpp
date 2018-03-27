@@ -117,20 +117,11 @@ Tree *Types::TypeAnalysis(Tree *program)
 
     // Dump debug information if approriate
     if (RECORDER_TRACE(types_ids))
-    {
-        std::cout << "TYPES:\n";
-        debugt(this);
-    }
+        DumpTypes();
     if (RECORDER_TRACE(types_unifications))
-    {
-        std::cout << "UNIFICATIONS:\n";
-        debugu(this);
-    }
+        DumpUnifications();
     if (RECORDER_TRACE(types_calls))
-    {
-        std::cout << "CALLS:\n";
-        debugr(this);
-    }
+        DumpRewriteCalls();
 
     return result;
 }
@@ -1326,6 +1317,7 @@ void Types::DumpTypes()
 {
     uint i = 0;
 
+    std::cout << "TYPES:\n";
     for (auto &t : types)
     {
         Tree *value = t.first;
@@ -1347,6 +1339,7 @@ void Types::DumpUnifications()
 // ----------------------------------------------------------------------------
 {
     uint i = 0;
+    std::cout << "UNIFICATIONS:\n";
     for (auto &t : unifications)
     {
         Tree *type = t.first;
@@ -1364,39 +1357,21 @@ void Types::DumpRewriteCalls()
 // ----------------------------------------------------------------------------
 {
     uint i = 0;
+    std::cout << "CALLS:\n";
     for (auto &t : rcalls)
     {
         Tree *expr = t.first;
         std::cout << "#" << ++i << "\t" << ShortTreeForm(expr) << "\n";
 
-        uint j = 0;
         RewriteCalls *calls = t.second;
-        RewriteCandidates &rc = calls->candidates;
-        for (RewriteCandidate *r : rc)
-        {
-            std::cout << "\t#" << ++j
-                      << "\t" << r->rewrite->left
-                      << "\t: " << r->type << "\n";
-
-            RewriteConditions &rt = r->conditions;
-            for (auto &t : rt)
-                std::cout << "\t\tWhen " << ShortTreeForm(t.value)
-                          << "\t= " << ShortTreeForm(t.test) << "\n";
-
-            RewriteBindings &rb = r->bindings;
-            for (auto &b : rb)
-            {
-                std::cout << "\t\t" << b.name;
-                std::cout << "\t= " << ShortTreeForm(b.value) << "\n";
-            }
-        }
+        calls->Dump();
     }
 }
 
 XL_END
 
 
-XL::Types *debugt(XL::Types *ti)
+XL::Types *xldebug(XL::Types *ti)
 // ----------------------------------------------------------------------------
 //   Dump a type inference
 // ----------------------------------------------------------------------------
@@ -1408,47 +1383,51 @@ XL::Types *debugt(XL::Types *ti)
     }
     else
     {
+        ti->DumpRewriteCalls();
+        ti->DumpUnifications();
         ti->DumpTypes();
     }
     return ti;
 }
+XL::Types *xldebug(XL::Types_p ti)      { return xldebug((XL::Types *) ti); }
+
+XL::Tree *xldebug(XL::Tree *);
+XL::Context *xldebug(XL::Context *);
+XL::RewriteCalls *xldebug(XL::RewriteCalls *);
+XL::RewriteCandidate *xldebug(XL::RewriteCandidate *);
 
 
-XL::Types *debugu(XL::Types *ti)
+void *xldebug(uintptr_t address)
 // ----------------------------------------------------------------------------
-//   Dump type unifications in a given inference system
-// ----------------------------------------------------------------------------
-{
-    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
-    {
-        std::cout << "Cowardly refusing to show bad Types pointer "
-                  << (void *) ti << "\n";
-    }
-    else
-    {
-        ti->DumpUnifications();
-    }
-    return ti;
-}
-
-
-
-XL::Types *debugr(XL::Types *ti)
-// ----------------------------------------------------------------------------
-//   Dump rewrite calls associated with each tree in this type inference system
+//   Debugger entry point to debug a garbage-collected pointer
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
-    {
-        std::cout << "Cowardly refusing to show bad Types pointer "
-                  << (void *) ti << "\n";
+    void *ptr = (void *) address;
+
+#define CHECK_ALLOC(T)                                  \
+    if (XL::Allocator<XL::T>::IsAllocated(ptr))         \
+    {                                                   \
+        std::cout << "Pointer " << ptr                  \
+                  << " appears to be a " #T "\n";       \
+        return xldebug((XL::T *) ptr);                  \
     }
-    else
-    {
-        ti->DumpRewriteCalls();
-    }
-    return ti;
+
+    CHECK_ALLOC(Integer);
+    CHECK_ALLOC(Real);
+    CHECK_ALLOC(Text);
+    CHECK_ALLOC(Name);
+    CHECK_ALLOC(Block);
+    CHECK_ALLOC(Prefix);
+    CHECK_ALLOC(Postfix);
+    CHECK_ALLOC(Infix);
+    CHECK_ALLOC(Types);
+    CHECK_ALLOC(Context);
+    CHECK_ALLOC(RewriteCalls);
+    CHECK_ALLOC(RewriteCandidate);
+
+    return XL::GarbageCollector::DebugPointer(ptr);
 }
+
 
 RECORDER(types,                 64, "Type analysis");
 RECORDER(types_ids,             64, "Assigned type identifiers");

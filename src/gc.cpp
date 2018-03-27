@@ -651,9 +651,8 @@ void GarbageCollector::Delete()
     }
 }
 
-XL_END
 
-void debuggc(void *ptr)
+void *GarbageCollector::DebugPointer(void *ptr)
 // ----------------------------------------------------------------------------
 //   Show allocation information about the given pointer
 // ----------------------------------------------------------------------------
@@ -790,4 +789,16 @@ void debuggc(void *ptr)
     {
         std::cerr << "Pointer " << ptr << " is not dynamically allocated\n";
     }
+    return ptr;
+}
+
+XL_END
+
+
+void *xldebug(void *ptr)
+// ----------------------------------------------------------------------------
+//   Debugger entry point to debug a garbage-collected pointer
+// ----------------------------------------------------------------------------
+{
+    return XL::GarbageCollector::DebugPointer(ptr);
 }

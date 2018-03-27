@@ -857,7 +857,9 @@ std::ostream& operator<< (std::ostream &out, XL::TreeList &list)
 
 XL_END
 
-XL::Tree *debugp(XL::Tree *tree)
+bool xldebug_verbose = false;
+
+XL::Tree *xldebug(XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
@@ -872,6 +874,8 @@ XL::Tree *debugp(XL::Tree *tree)
         XL::Allocator<XL::Block>::IsAllocated(tree))
     {
         XL::Renderer render(std::cerr);
+        if (xldebug_verbose)
+            render.SelectStyleSheet("debug.stylesheet");
         render.RenderFile(tree);
         std::cerr << "\n";
 
@@ -884,33 +888,15 @@ XL::Tree *debugp(XL::Tree *tree)
     return tree;
 }
 
-
-XL::Tree *debugd(XL::Tree *tree)
-// ----------------------------------------------------------------------------
-//    Emit for debugging purpose
-// ----------------------------------------------------------------------------
-{
-    if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
-        XL::Allocator<XL::Real>::IsAllocated(tree)      ||
-        XL::Allocator<XL::Text>::IsAllocated(tree)      ||
-        XL::Allocator<XL::Name>::IsAllocated(tree)      ||
-        XL::Allocator<XL::Infix>::IsAllocated(tree)     ||
-        XL::Allocator<XL::Prefix>::IsAllocated(tree)    ||
-        XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
-        XL::Allocator<XL::Block>::IsAllocated(tree))
-    {
-        XL::Renderer render(std::cerr);
-        render.SelectStyleSheet("debug.stylesheet");
-        render.RenderFile(tree);
-    }
-    else
-    {
-        std::cerr << "Cowardly refusing to render unknown pointer "
-                  << (void *) tree << "\n";
-    }
-    return tree;
-}
-
+XL::Tree *xldebug(XL::Tree_p t)         { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Integer_p t)      { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Real_p t)         { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Text_p t)         { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Name_p t)         { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Block_p t)        { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Prefix_p t)       { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Postfix_p t)      { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Infix_p t)        { return xldebug((XL::Tree *) t); }
 
 RECORDER_TWEAK_DEFINE(recorder_dump_symbolic, 40,
                       "Size of symbolic information to show, 0=none, -1=all");
