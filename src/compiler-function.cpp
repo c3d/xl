@@ -142,7 +142,6 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       entry(nullptr),
       returned(nullptr)
 {
-    InitializePrimitives();
     InitializeArgs(parms);
     record(compiler_function, "Created external %p for %t in scope %t",
            this, source, scope);
@@ -172,7 +171,6 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       entry(code.Block()),
       returned(data.AllocateReturnValue(function))
 {
-    InitializePrimitives();
     record(compiler_function, "Created sys %p for %t in scope %t",
            this, source, scope);
 }
