@@ -86,13 +86,8 @@ class CompilerFunction
     friend class CompilerExpression;
 
 public:
+    // Constructors for the top-level functions
     CompilerFunction(CompilerUnit &unit, Scope *, Tree *, FunctionType_p type);
-    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form, Tree *body,
-                     text name, Type_p ret, const Parameters &parms);
-    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
-                     text name, Type_p ret, const Parameters &parms);
-    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
-                     text name, Type_p ret, const Signature &sig);
     ~CompilerFunction();
 
     Function_p          Function();
@@ -134,6 +129,13 @@ private:
     static bool         IsValidCName(Tree *tree, text &label);
 
 private:
+    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form, Tree *body,
+                     text name, Type_p ret, const Parameters &parms);
+    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
+                     text name, Type_p ret, const Parameters &parms);
+    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
+                     text name, Type_p ret, const Signature &sig);
+
     // Compilation of rewrites and data
     Value_p             Compile(Tree *call,
                                 RewriteCandidate *rc, const Values &args);
