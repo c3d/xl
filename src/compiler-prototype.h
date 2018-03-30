@@ -1,20 +1,24 @@
-#ifndef COMPILER_PARMS_H
-#define COMPILER_PARMS_H
+#ifndef COMPILER_PROTOTYPE_H
+#define COMPILER_PROTOTYPE_H
 // ****************************************************************************
-//  compiler-parms.h                                               XL project
+//  compiler-prototype.h                             XL - An extensible language
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Actions collecting parameters on the left of a rewrite
+//     A function prototype generated in the compiler unit
+//
+//     Prototypes are generated for references to external functions
+//     They are also used as a base class for CompilerFunction
 //
 //
 //
 //
 //
-//
-//
-//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
 // ****************************************************************************
 // This document is released under the GNU General Public License, with the
 // following clarification and exception.
@@ -35,59 +39,50 @@
 // do so, delete this exception statement from your version.
 //
 // See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
-//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 1992-2018 Christophe de Dinechin <christophe@taodyne.com>
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
 #include "compiler.h"
+#include "compiler-unit.h"
+#include "compiler-args.h"
+#include "types.h"
+
 
 XL_BEGIN
 
-class CompilerFunction;
-
-struct Parameter
+class CompilerPrototype
 // ----------------------------------------------------------------------------
-//   Internal representation of a parameter
+//    A function generated in a compile unit
 // ----------------------------------------------------------------------------
 {
-    Parameter(Name *name, Type_p type = 0) : name(name), type(type) {}
-    Name_p name;
-    Type_p type;
-};
-typedef std::vector<Parameter> Parameters;
+protected:
+    CompilerUnit &      unit;       // The unit we compile from
+    Tree_p              form;       // Interface for this function
+    Types_p             types;      // Type system for this function
+    Function_p          function;   // The LLVM function we are building
 
-
-struct ParameterList
-// ----------------------------------------------------------------------------
-//   Collect parameters on the left of a rewrite
-// ----------------------------------------------------------------------------
-{
-    typedef bool value_type;
+    friend class CompilerExpression;
 
 public:
-    ParameterList(CompilerFunction &function)
-        : function(function), defined(nullptr), returned(nullptr) {}
+    // Constructors for the top-level functions
+    CompilerPrototype(CompilerUnit &unit,
+                      Tree *form,
+                      Types *types,
+                      FunctionType_p ftype,
+                      text name);
+    CompilerPrototype(CompilerPrototype &caller, RewriteCandidate *rc);
+    ~CompilerPrototype();
 
 public:
-    bool                EnterName(Name *what, Type_p declaredType = nullptr);
-
-    bool                DoInteger(Integer *what);
-    bool                DoReal(Real *what);
-    bool                DoText(Text *what);
-    bool                DoName(Name *what);
-    bool                DoPrefix(Prefix *what);
-    bool                DoPostfix(Postfix *what);
-    bool                DoInfix(Infix *what);
-    bool                DoBlock(Block *what);
-
-public:
-    CompilerFunction &  function;       // Current function
-    Tree_p              defined;        // Tree being defined, 'sin' in sin X
-    text                name;           // Name being given to the LLVM function
-    Parameters          parameters;     // Parameters and their order
-    Type_p              returned;       // Returned type if specified
+    Function_p          Function();
+    virtual bool        IsInterfaceOnly();
+    Scope *             FunctionScope();
+    Context *           FunctionContext();
 };
 
 XL_END
 
-#endif // COMPILER_PARMS_H
+RECORDER_DECLARE(compiler_prototype);
+
+#endif // COMPILER_FUNCTION_H

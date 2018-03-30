@@ -46,82 +46,62 @@
 #include "compiler.h"
 #include "compiler-unit.h"
 #include "compiler-args.h"
-#include "compiler-parms.h"
+#include "compiler-prototype.h"
 #include "types.h"
 
 
 XL_BEGIN
 
-typedef Tree *(*adapter_fn) (eval_fn callee,Context *ctx,Tree *src,Tree **args);
-typedef std::map<uint, eval_fn>    closure_map;
-typedef std::map<uint, adapter_fn> adapter_map;
-typedef std::set<Type_p>           type_set;
-typedef std::set<Tree_p>           data_set;
-typedef std::map<Tree_p, Type_p>   mtype_map;
-
-
-class CompilerFunction
+class CompilerFunction : public CompilerPrototype
 // ----------------------------------------------------------------------------
 //    A function generated in a compile unit
 // ----------------------------------------------------------------------------
 {
-    CompilerUnit &      unit;       // The unit we compile from
+protected:
     Compiler &          compiler;   // The compiler environment we use
     JIT &               jit;        // The JIT compiler (LLVM API stabilizer)
-    Context_p           context;    // Context for this function
-    Tree_p              form;       // Interface for this function
-    Tree_p              source;     // Source code for this function
-    Types_p             types;      // Machine types info for given Types
-    StructType_p        closureTy;  // A structure type for closure data
-    Function_p          function;   // The LLVM function we are building
+    Tree_p              body;       // Body for this function
     JITBlock            data;       // A basic block for local variables
     JITBlock            code;       // A basic block for current code
     JITBlock            exit;       // A basic block for shared exit
     BasicBlock_p        entry;      // The entry point for the function code
     Value_p             returned;   // Returned value
+    Type_p              closure;    // Closure type if any
     value_map           values;     // Tree -> LLVM value
     value_map           storage;    // Tree -> LLVM storage (alloca)
-    value_map           closures;   // Tree -> LLVM storage (alloca)
 
     friend class CompilerExpression;
 
 public:
     // Constructors for the top-level functions
-    CompilerFunction(CompilerUnit &unit, Scope *, Tree *, FunctionType_p type);
+    CompilerFunction(CompilerUnit &unit,
+                     Tree *form,
+                     Tree *body,
+                     Types *types,
+                     FunctionType_p ftype,
+                     text name);
+    CompilerFunction(CompilerFunction &caller, RewriteCandidate *rc);
     ~CompilerFunction();
 
-    Function_p          Function();
+    bool                IsInterfaceOnly() override;
+
     Function_p          Compile(Tree *tree, bool forceEvaluation = false);
     Value_p             Return(Tree *tree, Value_p value);
     eval_fn             Finalize(bool createCode);
 
-    Value_p             NamedClosure(Name *name, Tree *value);
     Type_p              ValueMachineType(Tree *expr);
-    Scope *             FunctionScope();
-    Context *           FunctionContext();
-
     void                ValueMachineType(Tree *expr, Type_p type);
     Type_p              BoxedType(Tree *type);
 
-    bool                IsInterfaceOnly();
-
 private:
     // Function interface creation
-    Function_p          OptimizedFunction(text n, Type_p r, const Parameters &);
     void                InitializeArgs();
-    void                InitializeArgs(const Parameters &parms);
-
-    // Closure management
-    StructType_p        ClosureType(Tree *form);
-    Value_p             InvokeClosure(Value_p result, Value_p fnPtr);
-    Value_p             InvokeClosure(Value_p result);
+    void                InitializeArgs(RewriteCandidate *rc);
 
     // Machine types management
     void                AddBoxedType(Tree *treeType, Type_p machineType);
     Type_p              HasBoxedType(Tree *type);
 
-    // Create a function for a given rewrite candidate
-    CompilerFunction *  RewriteFunction(RewriteCandidate *rc);
     Type_p              ReturnType(Tree *form);
     Type_p              StructureType(const Signature &signature, Tree *source);
     Value_p             BoxedTree(Tree *what);
@@ -129,13 +109,6 @@ private:
     static bool         IsValidCName(Tree *tree, text &label);
 
 private:
-    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form, Tree *body,
-                     text name, Type_p ret, const Parameters &parms);
-    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
-                     text name, Type_p ret, const Parameters &parms);
-    CompilerFunction(CompilerFunction &caller, Scope *, Tree *form,
-                     text name, Type_p ret, const Signature &sig);
-
     // Compilation of rewrites and data
     Value_p             Compile(Tree *call,
                                 RewriteCandidate *rc, const Values &args);
@@ -148,10 +121,8 @@ private:
     // Storage management
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
     Value_p             NeedStorage(Tree *tree);
-    Value_p             NeedClosure(Tree *tree);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     Value_p             Known(Tree *tree, uint which = knowAll );
-    void                ImportClosureInfo(const CompilerUnit &other);
 
     // Creating constants
     Value_p             ConstantInteger(Integer *what);
@@ -162,7 +133,7 @@ private:
     // Error management
     Value_p             CallFormError(Tree *what);
 
-private:
+protected:
     // Primitives, i.e. functions generating native LLVM code
     typedef Value_p (CompilerFunction::*primitive_fn)(Tree *, Value_p *args);
     struct PrimitiveInfo
@@ -172,6 +143,7 @@ private:
     };
     typedef std::map<text,PrimitiveInfo> Primitives;
     static Primitives   primitives;
+
     static void         InitializePrimitives();
 
     // Define LLVM accessors for primitives
@@ -188,6 +160,19 @@ private:
 #define EXTERNAL(Name, ...)
 
 #include "compiler-primitives.tbl"
+};
+
+
+class CompilerEval : public CompilerFunction
+// ----------------------------------------------------------------------------
+//   A compiler eval function
+// ----------------------------------------------------------------------------
+{
+public:
+    CompilerEval(CompilerUnit &unit,
+                 Tree *body,
+                 Types *types);
+
 };
 
 XL_END

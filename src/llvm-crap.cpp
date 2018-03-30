@@ -635,24 +635,6 @@ StructType_p JIT::StructType(const Signature &items, kstring name)
 }
 
 
-ModuleID JIT::CreateModule(text name)
-// ----------------------------------------------------------------------------
-//   Create a module in the JIT
-// ----------------------------------------------------------------------------
-{
-    return p.CreateModule(name);
-}
-
-
-void JIT::DeleteModule(ModuleID modID)
-// ----------------------------------------------------------------------------
-//   Delete a module in the JIT
-// ----------------------------------------------------------------------------
-{
-    p.DeleteModule(modID);
-}
-
-
 FunctionType_p JIT::FunctionType(Type_p rty, const Signature &parms, bool va)
 // ----------------------------------------------------------------------------
 //    Create a function type
@@ -677,6 +659,24 @@ Type_p JIT::VoidType()
 // ----------------------------------------------------------------------------
 {
     return llvm::Type::getVoidTy(p.context);
+}
+
+
+ModuleID JIT::CreateModule(text name)
+// ----------------------------------------------------------------------------
+//   Create a module in the JIT
+// ----------------------------------------------------------------------------
+{
+    return p.CreateModule(name);
+}
+
+
+void JIT::DeleteModule(ModuleID modID)
+// ----------------------------------------------------------------------------
+//   Delete a module in the JIT
+// ----------------------------------------------------------------------------
+{
+    p.DeleteModule(modID);
 }
 
 

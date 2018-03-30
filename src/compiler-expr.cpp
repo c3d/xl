@@ -80,7 +80,9 @@ Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
     {
         Type_p resultTy = JIT::Type(result);
         if (unit.IsClosureType(resultTy))
-            result = function.InvokeClosure(result);
+        {
+            /* Invoke closure */
+        }
     }
     return result;
 }
@@ -127,7 +129,7 @@ Value_p CompilerExpression::DoName(Name *what)
 {
     Scope_p    where;
     Rewrite_p  rewrite;
-    Context   *context  = function.context;
+    Context   *context  = function.FunctionContext();
     Tree      *existing = context->Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
@@ -146,10 +148,6 @@ Value_p CompilerExpression::DoName(Name *what)
         return global;
     if (Value_p global = unit.Global(from))
         return global;
-
-    // If we are in a context building a closure, record dependency
-    if (function.closureTy)
-        return function.NeedClosure(from);
 
     return DoCall(what);
 }
@@ -415,27 +413,12 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     for (RewriteBinding &b : bnds)
     {
         Tree *tree = b.value;
-        if (Value_p closure = b.Closure(function))
-        {
-            record(compiler_expr, "Rewrite %t arg %t closure %v",
-                   rw, tree, closure);
-            args.push_back(closure);
-        }
-        else if (Value_p value = Value(tree))
-        {
-            args.push_back(value);
-            Type_p mtype = JIT::Type(value);
-            function.ValueMachineType(b.name, mtype);
-            // function.ValueMachineType(b.value, mtype);
-            if (unit.IsClosureType(mtype))
-                b.closure = value;
-            record(compiler_expr, "Rewrite %t arg %t value %v machine type %T",
-                   rw, tree, value, mtype);
-        }
-        else
-        {
-            record(compiler_expr, "Rewrite %t arg %t not found", rw, tree);
-        }
+        Value_p value = Value(tree);
+        args.push_back(value);
+        Type_p mtype = JIT::Type(value);
+        function.ValueMachineType(b.name, mtype);
+        record(compiler_expr, "Rewrite %t arg %t value %v machine type %T",
+               rw, tree, value, mtype);
     }
 
     // Check if this is an LLVM builtin

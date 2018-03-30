@@ -37,7 +37,6 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "compiler-parms.h"
 #include "compiler-args.h"
 #include "compiler-unit.h"
 #include "compiler-function.h"

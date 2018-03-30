@@ -81,18 +81,6 @@ bool RewriteBinding::IsDeferred()
 }
 
 
-Value_p RewriteBinding::Closure(CompilerFunction &function)
-// ----------------------------------------------------------------------------
-//   Return closure for this value if we need one
-// ----------------------------------------------------------------------------
-{
-    if (!closure && IsDeferred())
-        closure = function.NamedClosure(name, value);
-
-    return closure;
-}
-
-
 RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
 // ----------------------------------------------------------------------------
 //   Create a rewrite candidate within the given types
@@ -103,7 +91,9 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
       vtypes(types),
       btypes(new Types(scope, types)),
       context(btypes->TypesContext()),
-      type(NULL)
+      type(nullptr),
+      defined(nullptr),
+      defined_name()
 {}
 
 
@@ -189,6 +179,8 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         Tree *fname = RewriteDefined(rewrite->left);
         if (fname == name)
         {
+            defined = name;
+            defined_name = name->value;
             record(argument_bindings,
                    "Binding identical name %t to %t in %p is unconditional",
                    form, value, this);
@@ -338,6 +330,13 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
                    "Binding conditional %t to %t in %p added condition",
                    form, value, this);
             return POSSIBLE;
+        }
+
+        // Check if this infix is what we are defining
+        if (!defined)
+        {
+            defined = fi;
+            defined_name = "infix[" + fi->name + "]";
         }
 
         // If we match the infix name, we can bind left and right
@@ -538,6 +537,45 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
     unified = btypes->AssignType(value, unified);
     unified = btypes->AssignType(form, unified);
     return unified;
+}
+
+
+Function_p RewriteCandidate::Prototype(JIT &jit)
+// ----------------------------------------------------------------------------
+//   Build the prototype for the rewrite function
+// ----------------------------------------------------------------------------
+{
+    FunctionType_p fty = SignatureType(jit);
+    text fname = SignatureName();
+    Function_p function = jit.Function(fty, fname);
+    return function;
+}
+
+
+FunctionType_p RewriteCandidate::SignatureType(JIT &jit)
+// ----------------------------------------------------------------------------
+//   Build the signature type for the function
+// ----------------------------------------------------------------------------
+{
+    Signature signature;
+    for (RewriteBinding &binding : bindings)
+    {
+        Tree *valueType = ValueType(binding.name);
+        Type_p valueTy = btypes->BoxedType(valueType);
+        signature.push_back(valueTy);
+    }
+
+    Type_p retTy = btypes->BoxedType(type);
+    return jit.FunctionType(retTy, signature);
+}
+
+
+text RewriteCandidate::SignatureName()
+// ----------------------------------------------------------------------------
+//   Return the signature name for the given rewrite candidate
+// ----------------------------------------------------------------------------
+{
+    return "xl." + defined_name;
 }
 
 

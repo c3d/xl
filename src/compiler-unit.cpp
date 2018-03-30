@@ -161,7 +161,7 @@ eval_fn CompilerUnit::Compile()
         return xl_identity;
     }
 
-    CompilerFunction function(*this, scope, source, compiler.evalTy);
+    CompilerEval function(*this, source, types);
     Value_p global = function.Function();
     Global(source, global);
 

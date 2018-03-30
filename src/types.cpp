@@ -242,25 +242,6 @@ Scope *Types::TypesScope()
 }
 
 
-bool Types::HasCaptures(Tree *form, TreeList &captured)
-// ----------------------------------------------------------------------------
-//   Check if a given form has captured things from the environment
-// ----------------------------------------------------------------------------
-{
-    auto it = rcalls.find(form);
-    if (it == rcalls.end())
-        return false;
-
-    RewriteCalls_p calls = it->second;
-    Scope *scope = context->CurrentScope();
-    for (RewriteCandidate *rc : calls->candidates)
-        if (rc->scope != scope)
-            captured.push_back(rc->rewrite->left);
-
-    return captured.size() != 0;
-}
-
-
 Tree *Types::DoInteger(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value

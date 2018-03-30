@@ -64,12 +64,10 @@ struct RewriteBinding
 //   of [X] to [2].
 {
     RewriteBinding(Name *name, Tree *value)
-        : name(name), value(value), closure(NULL) {}
+        : name(name), value(value) {}
     bool       IsDeferred();
-    Value_p    Closure(CompilerFunction &function);
     Name_p     name;
     Tree_p     value;
-    Value_p    closure;
 };
 typedef std::vector<RewriteBinding> RewriteBindings;
 
@@ -120,6 +118,7 @@ struct RewriteCandidate
 
     bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
 
+    // Argument binding
     Tree *              ValueType(Tree *value);
     BindingStrength     Bind(Tree *ref, Tree *what);
     BindingStrength     BindBinary(Tree *form1, Tree *value1,
@@ -127,8 +126,17 @@ struct RewriteCandidate
     bool                Unify(Tree *valueType, Tree *formType,
                               Tree *value, Tree *form,
                               bool declaration = false);
+
+    // Code generation
+    Tree *              RewriteForm()           { return rewrite->left; }
+    Tree *              RewriteBody()           { return rewrite->right; }
+    Function_p          Prototype(JIT &jit);
+    FunctionType_p      SignatureType(JIT &jit);
+    text                SignatureName();
+
     void                Dump();
 
+public:
     Infix_p             rewrite;
     Scope_p             scope;
     RewriteBindings     bindings;
@@ -138,6 +146,8 @@ struct RewriteCandidate
     Types_p             btypes; // Types for bindings (local)
     Context_p           context;
     Tree_p              type;
+    Tree_p              defined;
+    text                defined_name;
 
     GARBAGE_COLLECT(RewriteCandidate);
 };

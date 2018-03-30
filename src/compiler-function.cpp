@@ -53,126 +53,56 @@ RECORDER(parameter_bindings, 64, "Looking up parameters in functions");
 XL_BEGIN
 
 CompilerFunction::CompilerFunction(CompilerUnit &unit,
-                                   Scope *scope,
-                                   Tree *source,
-                                   FunctionType_p type)
+                                   Tree *form,
+                                   Tree *body,
+                                   Types *types,
+                                   FunctionType_p ftype,
+                                   text name)
 // ----------------------------------------------------------------------------
 //   Create new compiler function for standard evaluation functions (eval_fn)
 // ----------------------------------------------------------------------------
 //  This is used for a top-level function, which is turned into an eval_fn
 //  There is no closure since nothing can be captured from enclosing scope
-    : unit(unit),
+    : CompilerPrototype(unit, form, types, ftype, name),
       compiler(unit.compiler),
       jit(unit.jit),
-      context(new Context(scope)),
-      form(nullptr),
-      source(source),
-      types(unit.types),
-      closureTy(nullptr),
-      function(jit.Function(type, "xl.eval")),
+      body(body),
       data(jit, function, "data"),
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function))
+      returned(data.AllocateReturnValue(function)),
+      closure(nullptr)
 {
-    InitializePrimitives();
     InitializeArgs();
-    record(compiler_function, "Created eval %p with scope %t type %T",
-           this, scope, type);
+    record(compiler_function, "Created %p for %t in %p value %v",
+           this, form, types, function);
 }
 
 
 CompilerFunction::CompilerFunction(CompilerFunction &caller,
-                                   Scope *scope,
-                                   Tree *form,
-                                   Tree *body,
-                                   text name,
-                                   Type_p ret,
-                                   const Parameters &parms)
+                                   RewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Create new compiler function for optimized evaluation functions
 // ----------------------------------------------------------------------------
 //   This is used by rewrites like [Form is Body].
 //   In that case, 'parms' have been generated to match [Form] free parms,
 //   and we build a closure type if [Body] had captures from the environment
-    : unit(caller.unit),
-      compiler(unit.compiler),
-      jit(unit.jit),
-      context(new Context(scope)),
-      form(form),
-      source(body),
-      types(new Types(scope, caller.types)),
-      closureTy(ClosureType(form)),
-      function(OptimizedFunction(name, ret, parms)),
+    : CompilerPrototype(caller, rc),
+      compiler(caller.compiler),
+      jit(caller.jit),
+      body(rc->RewriteBody()),
       data(jit, function, "data"),
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
-      returned(data.AllocateReturnValue(function))
+      returned(data.AllocateReturnValue(function)),
+      closure(nullptr)
 {
-    InitializeArgs(parms);
-    record(compiler_function, "Created opt %p for %t in scope %t",
-           this, source, scope);
-}
-
-
-CompilerFunction::CompilerFunction(CompilerFunction &caller,
-                                   Scope *scope,
-                                   Tree *form,
-                                   text name,
-                                   Type_p ret,
-                                   const Parameters &parms)
-// ----------------------------------------------------------------------------
-//   Create new interface function for a C function
-// ----------------------------------------------------------------------------
-//   This is used by rewrites to interface to C code, i.e. [C strcmp]
-    : unit(caller.unit),
-      compiler(unit.compiler),
-      jit(unit.jit),
-      context(new Context(scope)),
-      form(form),
-      source(form),
-      types(new Types(scope, caller.types)),
-      closureTy(nullptr),
-      function(OptimizedFunction(name, ret, parms)),
-      data(jit),
-      code(jit),
-      exit(jit),
-      entry(nullptr),
-      returned(nullptr)
-{
-    InitializeArgs(parms);
-    record(compiler_function, "Created external %p for %t in scope %t",
-           this, source, scope);
-}
-
-
-CompilerFunction::CompilerFunction(CompilerFunction &caller,
-                                   Scope *scope,
-                                   Tree *form,
-                                   text name, Type_p ret, const Signature &sig)
-// ----------------------------------------------------------------------------
-//   Create a new function with given signature
-// ----------------------------------------------------------------------------
-//   This is used for example when generating unbox functions
-    : unit(caller.unit),
-      compiler(unit.compiler),
-      jit(unit.jit),
-      context(new Context(scope)),
-      form(form),
-      source(form),
-      types(new Types(scope, caller.types)),
-      closureTy(nullptr),
-      function(jit.Function(jit.FunctionType(ret, sig), name)),
-      data(jit, function, "data"),
-      code(jit, function, "code"),
-      exit(jit, function, "exit"),
-      entry(code.Block()),
-      returned(data.AllocateReturnValue(function))
-{
-    record(compiler_function, "Created sys %p for %t in scope %t",
-           this, source, scope);
+    InitializeArgs(rc);
+    record(compiler_function,
+           "Created optimized %p called by %p for %t function %v",
+           this, &caller, form, function);
 }
 
 
@@ -181,7 +111,7 @@ CompilerFunction::~CompilerFunction()
 //   Delete compiler function
 // ----------------------------------------------------------------------------
 {
-    record(compiler_unit, "Deleted function %p for %t", this, source);
+    record(compiler_unit, "Deleted function %p for %t", this, form);
 }
 
 
@@ -214,39 +144,12 @@ void CompilerFunction::InitializePrimitives()
 }
 
 
-Function_p CompilerFunction::Function()
-// ----------------------------------------------------------------------------
-//   The LLVM function associated with the function
-// ----------------------------------------------------------------------------
-{
-    return function;
-}
-
-
 bool CompilerFunction::IsInterfaceOnly()
 // ----------------------------------------------------------------------------
 //   Check if the function is an interface-only function (for C calls)
 // ----------------------------------------------------------------------------
 {
     return entry == nullptr;
-}
-
-
-Scope *CompilerFunction::FunctionScope()
-// ----------------------------------------------------------------------------
-//   The declaration scope associated with the function
-// ----------------------------------------------------------------------------
-{
-    return context->CurrentScope();
-}
-
-
-Context *CompilerFunction::FunctionContext()
-// ----------------------------------------------------------------------------
-//   The declaration context for the function
-// ----------------------------------------------------------------------------
-{
-    return context;
 }
 
 
@@ -307,7 +210,7 @@ eval_fn CompilerFunction::Finalize(bool createCode)
         jit.Print("LLVM IR before verification and optimizations", function);
     if (jit.VerifyFunction(function))
     {
-        Ooops("Generated code verification failed for $1 (internal)", source);
+        Ooops("Generated code verification failed for $1 (internal)", form);
         return nullptr;
     }
     jit.Finalize(function);
@@ -324,34 +227,6 @@ eval_fn CompilerFunction::Finalize(bool createCode)
 
     record(llvm_functions, "Function code %p for %v", result, function);
     return (eval_fn) result;
-}
-
-
-Function_p CompilerFunction::OptimizedFunction(text name,
-                                               Type_p ret,
-                                               const Parameters &parms)
-// ----------------------------------------------------------------------------
-//   Create an "optimized" function when we know the parameters
-// ----------------------------------------------------------------------------
-{
-    // Create a signature that begins with closure if needed, then parms
-    Signature signature;
-    if (closureTy)
-    {
-        PointerType_p ptr = jit.PointerType(closureTy);
-        signature.push_back(ptr);
-    }
-    for (auto &parm : parms)
-    {
-        signature.push_back(parm.type);
-    }
-
-    // Create the function with that signature
-    FunctionType_p ft = jit.FunctionType(ret, signature);
-    Function_p f = jit.Function(ft, name);
-    record(compiler_function, "Function %v type %T closure %v",
-           f, ft, closureTy);
-    return f;
 }
 
 
@@ -372,7 +247,7 @@ void CompilerFunction::InitializeArgs()
 }
 
 
-void CompilerFunction::InitializeArgs(const Parameters &parms)
+void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Initialize the arguments and return statements for optimized functions
 // ----------------------------------------------------------------------------
@@ -382,49 +257,17 @@ void CompilerFunction::InitializeArgs(const Parameters &parms)
 {
     // Associate the value for the additional arguments (read-only, no alloca)
     Function::arg_iterator args = function->arg_begin();
-    Types *types = unit.types;
 
-    // If we had closure information, finish building the closure type
-    // then read the closure content and initialize values[] with it
-    if (closureTy)
-    {
-        TreeList captured;
-        bool capt = types->HasCaptures(form, captured);
-        assert(capt && captured.size() && "Where are the captured items?");
-
-        // First item in closure is the pointer to the closure fn
-        Type_p fnTy = function->getType();
-        Signature sig { jit.PointerType(fnTy) };
-
-        // Loop over actual captured items and add them to closure type
-        for (Tree *tree : captured)
-        {
-            Type_p type = ValueMachineType(tree);
-            sig.push_back(type);
-        }
-        closureTy = jit.StructType(closureTy, sig);
-
-        // Load the elements from the closure during function data prologue
-        Value_p closureArg = &*args++;
-        unsigned field = 1;     // Start at #1 since 0 is function ptr
-        for (Tree *tree : captured)
-        {
-            Value_p storage = NeedStorage(tree);
-            Value_p ptr = data.StructGEP(closureArg, field++, "closure_in");
-            Value_p input = data.Load(ptr);
-            data.Store(input, storage);
-        }
-    }
-
-    // Then read the actual parameters
-    for (auto &parm : parms)
+    // Read the actual parameters
+    for (RewriteBinding &binding : rc->bindings)
     {
         Value_p inputArg = &*args++;
-        values[parm.name] = inputArg;
+        values[binding.name] = inputArg;
     }
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
-    Scope *scope = context->CurrentScope();
+    Scope *scope = rc->vtypes->TypesScope();
+    Tree *form = rc->RewriteForm();
     values[xl_scope] = data.PointerConstant(compiler.scopePtrTy, scope);
     values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
 }
@@ -438,49 +281,107 @@ Value_p CompilerFunction::Compile(Tree *call,
 // ----------------------------------------------------------------------------
 {
     // Check if cache already contains a compilation for this function
-    Scope *scope = context->CurrentScope();
+    Scope *scope = types->TypesScope();
     Function_p &function = unit.Compiled(scope, rc, args);
     if (function == NULL)
     {
-        Rewrite *rewrite = rc->rewrite;
-        CompilerFunction *rewriteFunction = RewriteFunction(rc);
+        Tree *body = rc->RewriteBody();
 
-        // Make sure we don't recompile in case of recursive evaluation
-        function = rewriteFunction->Function();
+        // Check if we have C or data forms
+        bool isC = false;
+        bool isData = false;
+        text label = rc->defined_name;
 
-        // Compile the body
-        record(parameter_bindings,
-               "Selecting context %p from candidate %p for evaluation",
-               (Context *) rc->context, &rc);
-        Save<Context_p> fnContext(rewriteFunction->context, rc->context);
-        Tree *value = rewrite->right;
-        if (!rewriteFunction->IsInterfaceOnly())
+        // Case of [sin X is C]: Use the name 'sin'
+        if (Name *bodyname = body->AsName())
         {
-            bool data = false;
-            if (Name *self = value->AsName())
-                if (self->value == "self")
-                    data = true;
-            if (!data)
+            if (bodyname->value == "C")
+                if (Name *defname = rc->defined->AsName())
+                    if (IsValidCName(defname, label))
+                        isC = true;
+            if (bodyname->value == "self")
+                isData = true;
+        }
+
+        // Case of [alloc X is C "_malloc"]: Use "_malloc"
+        if (Prefix *prefix = body->AsPrefix())
+            if (Name *name = prefix->left->AsName())
+                if (name->value == "C")
+                    if (IsValidCName(prefix->right, label))
+                        isC = true;
+
+
+        if (isC)
+        {
+            CompilerPrototype proto(*this, rc);
+            function = proto.Function();
+        }
+        else
+        {
+            CompilerFunction evalfn(*this, rc);
+
+            // Make sure we don't recompile in case of recursive evaluation
+            function = evalfn.Function();
+
+            // Compile the body
+            if (!isData)
             {
                 // Regular function body: compile it
-                rewriteFunction->Compile(value);
+                evalfn.Compile(body);
             }
             else
             {
                 // Constructor for a 'data' form, e.g. [X,Y is self]
                 unsigned index = 0;
-                Tree *form = RewriteDefined(rewrite->left);
-                Value_p box = rewriteFunction->returned;
-                Value_p retv = rewriteFunction->Data(form, box, index);
-                rewriteFunction->Return(value, retv);
+                Tree *form = RewriteDefined(rc->RewriteForm());
+                Value_p box = evalfn.returned;
+                Value_p retv = evalfn.Data(form, box, index);
+                evalfn.Return(body, retv);
             }
 
-            rewriteFunction->Finalize(false);
-            function = rewriteFunction->Function();
+            evalfn.Finalize(false);
         }
     }
 
     return function;
+}
+
+
+bool CompilerFunction::IsValidCName(Tree *tree, text &label)
+// ----------------------------------------------------------------------------
+//   Check if the name is valid for C
+// ----------------------------------------------------------------------------
+{
+    uint len = 0;
+
+    if (Name *name = tree->AsName())
+    {
+        label = name->value;
+        len = label.length();
+    }
+    else if (Text *text = tree->AsText())
+    {
+        label = text->value;
+        len = label.length();
+    }
+
+    if (len == 0)
+    {
+        Ooops("No valid C name in $1", tree);
+        return false;
+    }
+
+    // We will NOT call functions beginning with _ (internal functions)
+    for (uint i = 0; i < len; i++)
+    {
+        char c = label[i];
+        if (!isalpha(c) && c != '_' && !(i && isdigit(c)))
+        {
+            Ooops("C name $1 contains invalid characters", tree);
+            return false;
+        }
+    }
+    return true;
 }
 
 
@@ -508,6 +409,7 @@ Value_p CompilerFunction::Data(Tree *expr, Value_p box, unsigned &index)
     case NAME:
     {
         // Bound names are returned as is, parameters are evaluated
+        Context *context = types->TypesContext();
         record(parameter_bindings, "Looking up %t in context %p",
                expr, (Context *) context);
         Tree *existing = context->DeclaredForm(expr);
@@ -719,7 +621,6 @@ Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *pattern)
 
     if (!function)
     {
-        Types *types = unit.types;
         if (Tree *inner = types->IsTypeOf(pattern))
             pattern = inner;
 
@@ -728,9 +629,9 @@ Function_p CompilerFunction::UnboxFunction(Type_p type, Tree *pattern)
         Type_p ptype = unit.jit.PointerType(type);
 
         // Create a function that looks like [Tree *unboxfn(boxtype *)]
-        Scope *scope = context->CurrentScope();
         Signature sig { compiler.ulongTy, ptype };
-        CompilerFunction unbox(*this, scope, pattern, "xl.unbox", mtype, sig);
+        FunctionType_p fty = jit.FunctionType(mtype, sig);
+        CompilerFunction unbox(unit, pattern, pattern, types, fty, "xl.unbox");
 
         // Find the first input argument, which is the boxed value pointer
         function = unbox.Function();
@@ -842,102 +743,6 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *pattern, uint &index)
 }
 
 
-Value_p CompilerFunction::NamedClosure(Name *name, Tree *expr)
-// ----------------------------------------------------------------------------
-//    Compile code to pass a given tree as a closure
-// ----------------------------------------------------------------------------
-//    Closures are represented as functions taking a pointer to a structure
-//    that will contain the values being used by the closure code
-{
-    Scope *scope = context->CurrentScope();
-    Function_p &function = unit.CompiledClosure(scope, expr);
-    if (!function)
-    {
-        // Figure out the return type and function type
-        Types *types = unit.types;
-        Tree *rtype = types->CodegenType(expr);
-        Type_p retTy = BoxedType(rtype);
-        PointerType_p closurePtrTy = jit.PointerType(closureTy);
-        Signature sig { closurePtrTy };
-        CompilerFunction closure(*this, scope, expr, "xl.closure", retTy, sig);
-        function = closure.Function();
-        closure.Compile(expr);
-        closure.Finalize(false);
-    }
-
-    // Allocate a local structure to pass as the closure
-    Type_p closureType = ClosureType(name);
-    Value_p closureData = data.Alloca(closureType);
-
-    // First, store the function pointer
-    uint field = 0;
-    Value_p fptr = code.StructGEP(closureData, field++, "closurep");
-    code.Store(function, fptr);
-
-    // Then loop over all values that were detected while evaluating expr
-    Types *types = unit.types;
-    TreeList captured;
-    types->HasCaptures(expr, captured);
-    for (Tree *subexpr : captured)
-    {
-        Value_p subval = Known(subexpr);
-        fptr = code.StructGEP(closureData, field++, "closureitem");
-        code.Store(subval, fptr);
-    }
-
-    // Return the stack pointer that we'll use later to evaluate the closure
-    return closureData;
-}
-
-
-StructType_p CompilerFunction::ClosureType(Tree *form)
-// ----------------------------------------------------------------------------
-//    Check if we need a closure type, and if so, create and record it
-// ----------------------------------------------------------------------------
-{
-    Types *types = unit.types;
-    StructType_p ctype = nullptr;
-    TreeList captured;
-    if (types->HasCaptures(form, captured))
-    {
-        ctype = jit.OpaqueType("xl.closure");
-        unit.AddClosureType(ctype);
-        ValueMachineType(form, ctype);
-    }
-    return ctype;
-}
-
-
-Value_p CompilerFunction::InvokeClosure(Value_p result, Value_p fnPtr)
-// ----------------------------------------------------------------------------
-//   Invoke a closure with a known closure function
-// ----------------------------------------------------------------------------
-{
-    result = code.Call(fnPtr, result);
-    return result;
-}
-
-
-Value_p CompilerFunction::InvokeClosure(Value_p result)
-// ----------------------------------------------------------------------------
-//   Invoke a closure loading the function pointer dynamically
-// ----------------------------------------------------------------------------
-{
-    // Get function pointer and argument
-    Value_p fnPtrPtr = data.StructGEP(result, 0, "closurepp");
-    Value_p fnPtr = data.Load(fnPtrPtr, "closurep");
-
-    // Call the closure callback
-    result = InvokeClosure(result, fnPtr);
-
-    // Overwrite the function pointer to its original value
-    // (actually improves optimizations by showing it doesn't change)
-    code.Store(fnPtr, fnPtrPtr);
-
-    return result;
-}
-
-
 Value_p CompilerFunction::NeedStorage(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Allocate storage for a given tree
@@ -962,22 +767,6 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
         }
     }
 
-    return result;
-}
-
-
-Value_p CompilerFunction::NeedClosure(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Allocate a closure variable
-// ----------------------------------------------------------------------------
-{
-    Value_p storage = closures[tree];
-    if (!storage)
-    {
-        storage = NeedStorage(tree);
-        closures[tree] = storage;
-    }
-    Value_p result = code.Load(storage);
     return result;
 }
 
@@ -1070,7 +859,7 @@ Value_p CompilerFunction::CallFormError(Tree *what)
 // ----------------------------------------------------------------------------
 {
     Value_p ptr = ConstantTree(what);
-    Value_p scope = ConstantTree(context->CurrentScope());
+    Value_p scope = ConstantTree(types->TypesScope());
     Value_p callVal = code.Call(unit.xl_form_error, scope, ptr);
     return callVal;
 }
@@ -1081,9 +870,6 @@ Type_p CompilerFunction::ValueMachineType(Tree *tree)
 //    Return machine type associated to a type name or expression, if any
 // ----------------------------------------------------------------------------
 {
-    // Check if we already found it
-    Types *types = unit.types;
-
     // Find the base type for the expression
     Tree *base = types->CodegenType(tree);
     if (!base)
@@ -1109,7 +895,6 @@ void CompilerFunction::ValueMachineType(Tree *tree, Type_p type)
 //    Record the global value associated to a type name or expression
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
     Tree *base = types->CodegenType(tree);
     AddBoxedType(base, type);
 }
@@ -1146,6 +931,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     if (mtype)
         return mtype;
     Tree *base = types->BaseType(type);
+    Context *context = types->TypesContext();
 
     // Check if we have one of the basic types
 #define CTYPE(name, cty)        if (base==name##_type) mtype = compiler.cty##Ty
@@ -1241,141 +1027,12 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 }
 
 
-CompilerFunction *CompilerFunction::RewriteFunction(RewriteCandidate *rc)
-// ----------------------------------------------------------------------------
-//   Create a function for a tree rewrite
-// ----------------------------------------------------------------------------
-{
-    Rewrite *rewrite = rc->rewrite;
-
-    Tree *rwform = RewriteDefined(rewrite->left);
-    Tree *def = rewrite->right;
-    record(compiler_function, "RewriteFunction %t defined as %t", rwform, def);
-    if (Name *self = def->AsName())
-        if (self->value == "self")
-            def = nullptr;
-
-    // Extract parameters from source form
-    Save<Types_p> saveTypes(unit.types, rc->btypes);
-    ParameterList plist(*this);
-    if (!rwform->Do(plist))
-    {
-        record(compiler_function,
-               "RewriteFunction could not extract parameters for %t", rwform);
-        return NULL;
-    }
-    Parameters &parms = plist.parameters;
-
-    // Create the function signature, one entry per parameter
-    Signature signature;
-    bool hasClosures = false;
-    RewriteBindings &bnds = rc->bindings;
-    RewriteBindings::iterator b = bnds.begin();
-    for (Parameters::iterator p = parms.begin(); p != parms.end(); p++, b++)
-    {
-        assert (b != bnds.end());
-        RewriteBinding &binding = *b;
-        if (Value_p closure = binding.closure)
-        {
-            // Deferred evaluation: pass evaluation function pointer and arg
-            Type_p argTy = closure->getType();
-            signature.push_back(argTy);
-            hasClosures = true;
-        }
-        else
-        {
-            // Regular evaluation: just pass argument around
-            signature.push_back((*p).type);
-        }
-    }
-
-    // Name for the generated function
-    text label = "xl." + plist.name;
-
-    // Compute return type:
-    // - If explicitly specified, use that (already checked by TypeAnalysis)
-    // - For definitions, infer from definition
-    // - For data forms, this is the type of the data form
-    Type_p retTy;
-    if (Type_p specifiedRetTy = plist.returned)
-        retTy = specifiedRetTy;
-    else if (def)
-        retTy = ReturnType(def);
-    else
-        retTy = StructureType(signature, rwform);
-
-    // Check if we are actually declaring a C function
-    bool isC = false;
-    if (Tree *defined = plist.defined)
-    {
-        if (Name *name = def->AsName())
-            if (name->value == "C")
-                if (IsValidCName(defined, label))
-                    isC = true;
-
-        if (Prefix *prefix = def->AsPrefix())
-            if (Name *name = prefix->left->AsName())
-                if (name->value == "C")
-                    if (IsValidCName(prefix->right, label))
-                        isC = true;
-    }
-
-    Scope *scope = context->CurrentScope();
-    CompilerFunction *f = isC
-        ? new CompilerFunction(*this, scope, rwform, label, retTy, parms)
-        : new CompilerFunction(*this, scope, def, rwform,
-                               label, retTy, parms);
-    record(compiler_unit, "Rewrite function for %t is %p %+s",
-           rwform, f, isC ? "is C" : "from XL source");
-    return f;
-}
-
-
-bool CompilerFunction::IsValidCName(Tree *tree, text &label)
-// ----------------------------------------------------------------------------
-//   Check if the name is valid for C
-// ----------------------------------------------------------------------------
-{
-    uint len = 0;
-
-    if (Name *name = tree->AsName())
-    {
-        label = name->value;
-        len = label.length();
-    }
-    else if (Text *text = tree->AsText())
-    {
-        label = text->value;
-        len = label.length();
-    }
-
-    if (len == 0)
-    {
-        Ooops("No valid C name in $1", tree);
-        return false;
-    }
-
-    // We will NOT call functions beginning with _ (internal functions)
-    for (uint i = 0; i < len; i++)
-    {
-        char c = label[i];
-        if (!isalpha(c) && c != '_' && !(i && isdigit(c)))
-        {
-            Ooops("C name $1 contains invalid characters", tree);
-            return false;
-        }
-    }
-    return true;
-}
-
-
 Type_p CompilerFunction::ReturnType(Tree *parmForm)
 // ----------------------------------------------------------------------------
 //   Compute the return type associated with the given form
 // ----------------------------------------------------------------------------
 {
     // Type inference gives us the return type for this form
-    Types *types = unit.types;
     Tree *type = types->CodegenType(parmForm);
     Type_p mtype = BoxedType(type);
     if (!mtype)
@@ -1389,7 +1046,6 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
 //   Compute the return type associated with a data form
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
     Tree *base = types->CodegenType(rwform);
 
     if (Type_p mtype = HasBoxedType(base))
@@ -1412,7 +1068,10 @@ Value_p CompilerFunction::BoxedTree(Tree *what)
 // ----------------------------------------------------------------------------
 {
     if (Name *name = what->AsName())
+    {
+        Context *context = types->TypesContext();
         what = context->Bound(name);
+    }
 
     // Compute the boxed type for the data
     Signature sig;
@@ -1444,7 +1103,7 @@ void CompilerFunction::BoxedTreeType(Signature &sig, Tree *what)
         break;
 
     case NAME:
-        what = context->DeclaredForm(what);
+        what = types->TypesContext()->DeclaredForm(what);
         sig.push_back(ValueMachineType(what));
         break;
 
@@ -1534,5 +1193,26 @@ Value_p CompilerFunction::llvm_##Name(Tree *source, Value_p *args)      \
 #define EXTERNAL(Name, ...)
 
 #include "compiler-primitives.tbl"
+
+
+
+// ============================================================================
+//
+//    Compiler evaluation function
+//
+// ============================================================================
+
+CompilerEval::CompilerEval(CompilerUnit &unit,
+                           Tree *body,
+                           Types *types)
+// ----------------------------------------------------------------------------
+//   Build a compiler eval function
+// ----------------------------------------------------------------------------
+    : CompilerFunction(unit, body, body, types, unit.compiler.evalTy, "xl.eval")
+{
+    InitializePrimitives();
+    record(compiler_function, "Created evaluation %p for %t in %p as %v",
+           this, body, types, function);
+}
 
 XL_END

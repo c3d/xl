@@ -41,7 +41,6 @@
 
 #include "compiler.h"
 #include "compiler-args.h"
-#include "compiler-parms.h"
 #include "llvm-crap.h"
 #include "types.h"
 #include <map>
@@ -67,7 +66,9 @@ class CompilerUnit
     compiled_map        compiled;       // Already compiled functions
     closure_set         clotypes;       // Closure types
 
+    friend class        CompilerPrototype;
     friend class        CompilerFunction;
+    friend class        CompilerEval;
     friend class        CompilerExpression;
 
 public:

@@ -111,7 +111,6 @@ public:
     RewriteCalls *HasRewriteCalls(Tree *what);
     Scope *     TypesScope();
     Context *   TypesContext();
-    bool        HasCaptures(Tree *form, TreeList &captured);
 
     // Machine types management
     void        AddBoxedType(Tree *treeType, Type_p machineType);
