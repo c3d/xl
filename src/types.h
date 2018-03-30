@@ -148,6 +148,7 @@ public:
     // Indicates that two trees must have compatible types
     Tree *      Unify(Tree *t1, Tree *t2);
     Tree *      Join(Tree *old, Tree *replacement);
+    Tree *      JoinedType(Tree *type, Tree *old, Tree *replacement);
     Tree *      UnionType(Tree *t1, Tree *t2);
 
     // Check attributes of the given name

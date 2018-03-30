@@ -912,8 +912,15 @@ Tree *Types::Join(Tree *old, Tree *replace)
 
     // Replace the type in the types map
     for (auto &t : types)
-        if (t.second == old)
-            t.second = replace;
+    {
+        Tree *joined = JoinedType(t.second, old, replace);
+        if (joined != t.second)
+        {
+            Tree *original = t.second;
+            t.second = joined;
+            Join(original, joined);
+        }
+    }
 
     // Replace the type in the 'unifications' map
     for (auto &u : unifications)
@@ -929,6 +936,66 @@ Tree *Types::Join(Tree *old, Tree *replace)
                 rc->type = replace;
 
     return replace;
+}
+
+
+Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
+// ----------------------------------------------------------------------------
+//   Build a type after joining, in case that's necessary
+// ----------------------------------------------------------------------------
+{
+    if (type == old)
+        return replace;
+
+    switch (type->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    case NAME:
+        return type;
+
+    case BLOCK:
+    {
+        Block *block = (Block *) type;
+        Tree *child = JoinedType(block->child, old, replace);
+        if (child != block->child)
+            return new Block(block, child);
+        return block;
+    }
+
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) type;
+        Tree *left = JoinedType(prefix->left, old, replace);
+        Tree *right = JoinedType(prefix->right, old, replace);
+        if (left != prefix->left || right != prefix->right)
+            return new Prefix(prefix, left, right);
+        return prefix;
+    }
+
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) type;
+        Tree *left = JoinedType(postfix->left, old, replace);
+        Tree *right = JoinedType(postfix->right, old, replace);
+        if (left != postfix->left || right != postfix->right)
+            return new Postfix(postfix, left, right);
+        return postfix;
+    }
+
+    case INFIX:
+    {
+        Infix *infix = (Infix *) type;
+        Tree *left = JoinedType(infix->left, old, replace);
+        Tree *right = JoinedType(infix->right, old, replace);
+        if (left != infix->left || right != infix->right)
+            return new Infix(infix, left, right);
+        return infix;
+    }
+
+    }
+
 }
 
 
