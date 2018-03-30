@@ -603,7 +603,7 @@ void RewriteCandidate::RewriteType(Type_p ty)
 //   Set the boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    btypes->AddBoxedType(RewriteForm(), ty);
+    btypes->AddBoxedType(type, ty);
 }
 
 

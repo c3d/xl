@@ -89,7 +89,7 @@ public:
     Value_p             Return(Tree *tree, Value_p value);
     eval_fn             Finalize(bool createCode);
 
-    Type_p              ValueMachineType(Tree *expr);
+    Type_p              ValueMachineType(Tree *expr, bool mayfail = false);
     void                ValueMachineType(Tree *expr, Type_p type);
     Type_p              BoxedType(Tree *type);
 

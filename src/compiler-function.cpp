@@ -318,7 +318,9 @@ Value_p CompilerFunction::Compile(Tree *call,
                 retTy = StructureType(rc->RewriteSignature(),
                                       rc->RewriteForm());
             else
-                retTy = ValueMachineType(rc->RewriteForm());
+                retTy = ValueMachineType(rc->RewriteForm(), true);
+            if (!retTy)
+                retTy = jit.VoidType();
             rc->RewriteType(retTy);
         }
 
@@ -877,7 +879,7 @@ Value_p CompilerFunction::CallFormError(Tree *what)
 }
 
 
-Type_p CompilerFunction::ValueMachineType(Tree *tree)
+Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
 // ----------------------------------------------------------------------------
 //    Return machine type associated to a type name or expression, if any
 // ----------------------------------------------------------------------------
@@ -886,6 +888,8 @@ Type_p CompilerFunction::ValueMachineType(Tree *tree)
     Tree *base = types->CodegenType(tree);
     if (!base)
     {
+        if (mayfail)
+            return nullptr;
         Ooops("Internal: No type deduced for $1, using integer", tree);
         return compiler.integerTy;
     }
@@ -894,6 +898,8 @@ Type_p CompilerFunction::ValueMachineType(Tree *tree)
     Type_p type = BoxedType(base);
     if (!type)
     {
+        if (mayfail)
+            return nullptr;
         Ooops("Internal: No type associated to $1", tree);
         return compiler.integerTy;
     }
