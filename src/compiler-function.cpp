@@ -290,7 +290,7 @@ Value_p CompilerFunction::Compile(Tree *call,
         // Check if we have C or data forms
         bool isC = false;
         bool isData = false;
-        text label = rc->defined_name;
+        text label = "xl." + rc->defined_name;
 
         // Case of [sin X is C]: Use the name 'sin'
         if (Name *bodyname = body->AsName())
@@ -310,26 +310,26 @@ Value_p CompilerFunction::Compile(Tree *call,
                     if (IsValidCName(prefix->right, label))
                         isC = true;
 
+        // Identify the return type for the rewrite
+        Type_p retTy = rc->RewriteType();
+        if (!retTy)
+        {
+            if (isData)
+                retTy = StructureType(rc->RewriteSignature(),
+                                      rc->RewriteForm());
+            else
+                retTy = ValueMachineType(rc->RewriteForm());
+            rc->RewriteType(retTy);
+        }
 
         if (isC)
         {
+            rc->defined_name = label;
             CompilerPrototype proto(*this, rc);
             function = proto.Function();
         }
         else
         {
-            if (isData)
-            {
-                Type_p retTy = rc->RewriteType();
-                if (!retTy)
-                {
-                    retTy = StructureType(rc->RewriteSignature(),
-                                          rc->RewriteForm());
-                    rc->RewriteType(retTy);
-                }
-            }
-
-
             CompilerFunction evalfn(*this, rc);
 
             // Make sure we don't recompile in case of recursive evaluation

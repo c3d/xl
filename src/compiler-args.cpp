@@ -568,7 +568,7 @@ text RewriteCandidate::FunctionName()
 //   Return the signature name for the given rewrite candidate
 // ----------------------------------------------------------------------------
 {
-    return "xl." + defined_name;
+    return defined_name;
 }
 
 
@@ -580,7 +580,7 @@ Signature RewriteCandidate::RewriteSignature()
     Signature signature;
     for (RewriteBinding &binding : bindings)
     {
-        Tree *valueType = ValueType(binding.name);
+        Tree *valueType = ValueType(binding.value);
         Type_p valueTy = btypes->BoxedType(valueType);
         signature.push_back(valueTy);
     }
