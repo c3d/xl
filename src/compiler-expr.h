@@ -47,18 +47,13 @@ XL_BEGIN
 struct RewriteCandidate;
 class  JITBlock;
 
-typedef std::map<Types_p, value_map>    typed_value_map;
-
 class CompilerExpression
 // ----------------------------------------------------------------------------
 //   Collect parameters on the left of a rewrite
 // ----------------------------------------------------------------------------
 {
     CompilerFunction &  function;       // Current compilation function
-    CompilerUnit &      unit;           // Compilation unit
-    Compiler &          compiler;       // The compiler being used
-    JITBlock &          code;           // Code block used to generate stuff
-    typed_value_map     computed;       // Values we already computed
+    value_map           computed;       // Values we already computed
 
 public:
     typedef Value_p value_type;

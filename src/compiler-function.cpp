@@ -318,6 +318,18 @@ Value_p CompilerFunction::Compile(Tree *call,
         }
         else
         {
+            if (isData)
+            {
+                Type_p retTy = rc->RewriteType();
+                if (!retTy)
+                {
+                    retTy = StructureType(rc->RewriteSignature(),
+                                          rc->RewriteForm());
+                    rc->RewriteType(retTy);
+                }
+            }
+
+
             CompilerFunction evalfn(*this, rc);
 
             // Make sure we don't recompile in case of recursive evaluation
@@ -1047,7 +1059,6 @@ Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
 // ----------------------------------------------------------------------------
 {
     Tree *base = types->CodegenType(rwform);
-
     if (Type_p mtype = HasBoxedType(base))
         return mtype;
 

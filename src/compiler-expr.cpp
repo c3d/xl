@@ -62,10 +62,7 @@ CompilerExpression::CompilerExpression(CompilerFunction &function)
 // ----------------------------------------------------------------------------
 //   Constructor for a compiler expression
 // ----------------------------------------------------------------------------
-    : function(function),
-      unit(function.unit),
-      compiler(function.compiler),
-      code(function.code)
+    : function(function)
 {}
 
 
@@ -78,6 +75,7 @@ Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
     Value_p result = expr->Do(this);
     if (result && force)
     {
+        CompilerUnit &unit = function.unit;
         Type_p resultTy = JIT::Type(result);
         if (unit.IsClosureType(resultTy))
         {
@@ -95,6 +93,8 @@ Value_p CompilerExpression::DoInteger(Integer *what)
 //   Compile an integer constant
 // ----------------------------------------------------------------------------
 {
+    Compiler &compiler = function.compiler;
+    JITBlock &code = function.code;
     return code.IntegerConstant(compiler.integerTy, what->value);
 }
 
@@ -104,6 +104,8 @@ Value_p CompilerExpression::DoReal(Real *what)
 //   Compile a real constant
 // ----------------------------------------------------------------------------
 {
+    Compiler &compiler = function.compiler;
+    JITBlock &code = function.code;
     return code.FloatConstant(compiler.realTy, what->value);
 }
 
@@ -113,6 +115,8 @@ Value_p CompilerExpression::DoText(Text *what)
 //   Compile a text constant
 // ----------------------------------------------------------------------------
 {
+    Compiler &compiler = function.compiler;
+    JITBlock &code = function.code;
     if (what->IsCharacter())
     {
         char c = what->value.length() ? what->value[0] : 0;
@@ -127,10 +131,12 @@ Value_p CompilerExpression::DoName(Name *what)
 //   Compile a name
 // ----------------------------------------------------------------------------
 {
-    Scope_p    where;
-    Rewrite_p  rewrite;
-    Context   *context  = function.FunctionContext();
-    Tree      *existing = context->Bound(what, true, &rewrite, &where);
+    CompilerUnit &unit     = function.unit;
+    JITBlock     &code     = function.code;
+    Scope_p       where;
+    Rewrite_p     rewrite;
+    Context      *context  = function.FunctionContext();
+    Tree         *existing = context->Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
     if (where == context->CurrentScope())
@@ -255,7 +261,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
     Value_p result = nullptr;
 
     record(compiler_expr, "Call %t", call);
-    Types *types = unit.types;
+    Types *types = function.types;
     rcall_map &rcalls = types->TypesRewriteCalls();
     rcall_map::iterator found = rcalls.find(call);
     record(types_calls, "Looking up %t in %p (%u entries)",
@@ -272,7 +278,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
     {
         // We now evaluate in that rewrite's type system
         RewriteCandidate* cand = calls[0];
-        Save<Types_p> saveTypes(unit.types, cand->btypes);
+        Save<Types_p> saveTypes(function.types, cand->btypes);
         if (cand->Unconditional())
         {
             result = DoRewrite(call, cand);
@@ -291,13 +297,14 @@ Value_p CompilerExpression::DoCall(Tree *call)
     JITBlock isDone(code, "done");
     Value_p storage = function.NeedStorage(call);
     Type_p storageType = function.ValueMachineType(call);
+    Compiler &compiler = function.compiler;
 
     for (i = 0; i < max; i++)
     {
         // Now evaluate in that candidate's type system
         RewriteCandidate *cand = calls[i];
-        Save<typed_value_map> saveComputed(computed, computed);
-        Save<Types_p> saveTypes(unit.types, cand->btypes);
+        Save<value_map> saveComputed(computed, computed);
+        Save<Types_p> saveTypes(function.types, cand->btypes);
         Value_p condition = nullptr;
 
         // Perform tree-kind tests to check if this candidate is valid
@@ -362,7 +369,7 @@ Value_p CompilerExpression::DoCall(Tree *call)
             JITBlock isGood(code, "good");
             code.IfBranch(condition, isGood, isBad);
             code.SwitchTo(isGood);
-            typed_value_map saveComputed = computed;
+            value_map saveComputed = computed;
             result = DoRewrite(call, cand);
             computed = saveComputed;
             result = function.Autobox(call, result, storageType);
@@ -403,7 +410,8 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
 {
     Rewrite *rw = cand->rewrite;
     Value_p result = nullptr;
-    Save<Types_p> saveTypes(unit.types, cand->btypes);
+    JITBlock &code = function.code;
+    Save<Types_p> saveTypes(function.types, cand->btypes);
 
     record(compiler_expr, "Rewrite: %t", rw);
 
@@ -466,7 +474,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
         Types *vtypes = cand->vtypes;
         Tree *base = vtypes->CodegenType(call);
         Type_p retTy = JIT::Type(result);
-        unit.types = vtypes;
+        function.types = vtypes;
         function.AddBoxedType(base, retTy);
         record(compiler_expr, "Transporting type %t (%T) of %t into %p",
                base, retTy, call, vtypes);
@@ -481,12 +489,11 @@ Value_p CompilerExpression::Value(Tree *expr)
 //   Evaluate an expression once
 // ----------------------------------------------------------------------------
 {
-    Types *types = unit.types;
-    Value_p value = computed[types][expr];
+    Value_p value = computed[expr];
     if (!value)
     {
         value = Evaluate(expr);
-        computed[types][expr] = value;
+        computed[expr] = value;
     }
     return value;
 }
@@ -497,17 +504,20 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
 //   Perform a comparison between the two values and check if this matches
 // ----------------------------------------------------------------------------
 {
-    JITBlock &code = function.code;
+    JITBlock     &code      = function.code;
+    Compiler     &compiler  = function.compiler;
+    CompilerUnit &unit      = function.unit;
 
     if (Name *vt = valueTree->AsName())
         if (Name *tt = testTree->AsName())
             if (vt->value == tt->value)
                 return code.BooleanConstant(true);
 
-    Value_p value = Value(valueTree);
-    Value_p test = Value(testTree);
-    Type_p valueType = JIT::Type(value);
-    Type_p testType = JIT::Type(test);
+    Value_p       value     = Value(valueTree);
+    Value_p       test      = Value(testTree);
+    Type_p        valueType = JIT::Type(value);
+    Type_p        testType  = JIT::Type(test);
+
 
     // Comparison of boolean values
     if (testType == compiler.booleanTy)

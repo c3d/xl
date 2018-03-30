@@ -545,16 +545,36 @@ Function_p RewriteCandidate::Prototype(JIT &jit)
 //   Build the prototype for the rewrite function
 // ----------------------------------------------------------------------------
 {
-    FunctionType_p fty = SignatureType(jit);
-    text fname = SignatureName();
+    FunctionType_p fty = FunctionType(jit);
+    text fname = FunctionName();
     Function_p function = jit.Function(fty, fname);
     return function;
 }
 
 
-FunctionType_p RewriteCandidate::SignatureType(JIT &jit)
+FunctionType_p RewriteCandidate::FunctionType(JIT &jit)
 // ----------------------------------------------------------------------------
 //   Build the signature type for the function
+// ----------------------------------------------------------------------------
+{
+    Signature signature = RewriteSignature();
+    Type_p retTy = RewriteType();
+    return jit.FunctionType(retTy, signature);
+}
+
+
+text RewriteCandidate::FunctionName()
+// ----------------------------------------------------------------------------
+//   Return the signature name for the given rewrite candidate
+// ----------------------------------------------------------------------------
+{
+    return "xl." + defined_name;
+}
+
+
+Signature RewriteCandidate::RewriteSignature()
+// ----------------------------------------------------------------------------
+//   Build the signature for the rewrite
 // ----------------------------------------------------------------------------
 {
     Signature signature;
@@ -564,18 +584,26 @@ FunctionType_p RewriteCandidate::SignatureType(JIT &jit)
         Type_p valueTy = btypes->BoxedType(valueType);
         signature.push_back(valueTy);
     }
-
-    Type_p retTy = btypes->BoxedType(type);
-    return jit.FunctionType(retTy, signature);
+    return signature;
 }
 
 
-text RewriteCandidate::SignatureName()
+Type_p RewriteCandidate::RewriteType()
 // ----------------------------------------------------------------------------
-//   Return the signature name for the given rewrite candidate
+//   Boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    return "xl." + defined_name;
+    Type_p ty = btypes->BoxedType(type);
+    return ty;
+}
+
+
+void RewriteCandidate::RewriteType(Type_p ty)
+// ----------------------------------------------------------------------------
+//   Set the boxed type for the rewrite
+// ----------------------------------------------------------------------------
+{
+    btypes->AddBoxedType(RewriteForm(), ty);
 }
 
 

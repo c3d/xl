@@ -131,8 +131,11 @@ struct RewriteCandidate
     Tree *              RewriteForm()           { return rewrite->left; }
     Tree *              RewriteBody()           { return rewrite->right; }
     Function_p          Prototype(JIT &jit);
-    FunctionType_p      SignatureType(JIT &jit);
-    text                SignatureName();
+    FunctionType_p      FunctionType(JIT &jit);
+    text                FunctionName();
+    Signature           RewriteSignature();
+    Type_p              RewriteType();
+    void                RewriteType(Type_p type);
 
     void                Dump();
 
