@@ -492,6 +492,12 @@ BindingStrength RewriteCandidate::BindBinary(Tree *form1, Tree *value1,
         return FAILED;
     if (formName->value != valueName->value)
         return FAILED;
+    if (!defined)
+    {
+        defined = formName;
+        defined_name = "xl." + formName->value;
+    }
+
 
     return Bind(form2, value2);
 }
