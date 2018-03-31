@@ -669,6 +669,7 @@ Tree *RewriteCalls::Check (Scope *scope,
 
     // If argument/parameters binding worked, try to typecheck the definition
     Tree *init = candidate->right;
+
     bool builtin = false;
     if (init)
     {
@@ -684,14 +685,7 @@ Tree *RewriteCalls::Check (Scope *scope,
         // Check built-ins and C functions
         if (binding != FAILED)
         {
-            if (Name *name = init->AsName())
-                if (name->value == "C")
-                    builtin = true;
-            if (Prefix *prefix = init->AsPrefix())
-                if (Name *pfname = prefix->left->AsName())
-                    if (pfname->value == "builtin" || pfname->value == "C")
-                        builtin = true;
-
+            builtin = Types::RewriteCategory(rc) != Types::Decl::NORMAL;
             if (!builtin)
             {
                 // Process declarations in the initializer
