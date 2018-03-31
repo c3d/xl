@@ -1362,10 +1362,16 @@ Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
 
     // Case of [alloc X is C "_malloc"]: Use "_malloc"
     if (Prefix *prefix = body->AsPrefix())
+    {
         if (Name *name = prefix->left->AsName())
+        {
             if (name->value == "C")
                 if (IsValidCName(prefix->right, label))
                     decl = Types::Decl::C;
+            if (name->value == "builtin")
+                decl = Types::Decl::BUILTIN;
+        }
+    }
 
     return decl;
 }

@@ -176,7 +176,7 @@ public:
     Tree *      DeclaredTypeName(Tree *input);
 
     // Checking if a declaration is data or a C declaration
-    enum class Decl { NORMAL, C, DATA };
+    enum class Decl { NORMAL, C, DATA, BUILTIN };
     static Decl RewriteCategory(RewriteCandidate *rc);
     static Decl RewriteCategory(Rewrite *rw, Tree *defined, text &label);
     static bool IsValidCName(Tree *tree, text &label);
