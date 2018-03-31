@@ -288,22 +288,48 @@ Tree *Types::DoName(Name *what)
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
-    Tree *type = Evaluate(what);
-    if (type)
+    if (declaration)
+        return TypeOf(what);
+
+    Scope_p scope;
+    Rewrite_p rw;
+    Tree *type = nullptr;
+    Tree *body = context->Bound(what, true, &rw, &scope);
+    if (body && body != what)
     {
-        if (Rewrite *rw = context->Reference(what))
+        Tree *defined = RewriteDefined(rw->left);
+        if (defined != what)
         {
-            Tree *decl = rw->left;
-            Tree *def = RewriteDefined(decl);
-            if (def != what)
-            {
-                Tree *rwtype = TypeOfRewrite(rw);
-                if (!rwtype)
-                    return nullptr;
-                type = AssignType(decl, type);
-                if (def != decl)
-                    type = AssignType(def, type);
-            }
+            if (scope != context->CurrentScope())
+                captured[what] = defined;
+            text label;
+            if (RewriteCategory(rw, defined, label) == Types::Decl::NORMAL)
+                type = Type(body);
+            else
+                type = Type(defined);
+        }
+        else
+        {
+            type = Evaluate(what);
+        }
+    }
+    else
+    {
+        type = Evaluate(what);
+    }
+
+    if (type && rw)
+    {
+        Tree *decl = rw->left;
+        Tree *def = RewriteDefined(decl);
+        if (def != what)
+        {
+            Tree *rwtype = TypeOfRewrite(rw);
+            if (!rwtype)
+                return nullptr;
+            type = AssignType(decl, type);
+            if (def != decl)
+                type = AssignType(def, type);
         }
     }
 
@@ -762,10 +788,10 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         return Unify(t1, b2->child);
 
     // Check if we have a unification for this type
-    TreeMap::iterator i1 = unifications.find(t1);
+    auto i1 = unifications.find(t1);
     if (i1 != unifications.end())
         return Unify((*i1).second, t2);
-    TreeMap::iterator i2 = unifications.find(t2);
+    auto i2 = unifications.find(t2);
     if (i2 != unifications.end())
         return Unify(t1, (*i2).second);
 
@@ -1303,6 +1329,83 @@ Tree *Types::DeclaredTypeName(Tree *type)
 
     // By default, return input type
     return type;
+}
+
+
+Types::Decl Types::RewriteCategory(RewriteCandidate *rc)
+// ----------------------------------------------------------------------------
+//   Check if the rewrite candidate is of a special kind
+// ----------------------------------------------------------------------------
+{
+    return RewriteCategory(rc->rewrite, rc->defined, rc->defined_name);
+}
+
+
+Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
+// ----------------------------------------------------------------------------
+//   Check if the declaration is of a special kind
+// ----------------------------------------------------------------------------
+{
+    Types::Decl decl = Types::Decl::NORMAL;
+    Tree *body = rw->right;
+
+    // Case of [sin X is C]: Use the name 'sin'
+    if (Name *bodyname = body->AsName())
+    {
+        if (bodyname->value == "C")
+            if (Name *defname = defined->AsName())
+                if (IsValidCName(defname, label))
+                    decl = Types::Decl::C;
+        if (bodyname->value == "self")
+            decl = Types::Decl::DATA;
+    }
+
+    // Case of [alloc X is C "_malloc"]: Use "_malloc"
+    if (Prefix *prefix = body->AsPrefix())
+        if (Name *name = prefix->left->AsName())
+            if (name->value == "C")
+                if (IsValidCName(prefix->right, label))
+                    decl = Types::Decl::C;
+
+    return decl;
+}
+
+
+bool Types::IsValidCName(Tree *tree, text &label)
+// ----------------------------------------------------------------------------
+//   Check if the name is valid for C
+// ----------------------------------------------------------------------------
+{
+    uint len = 0;
+
+    if (Name *name = tree->AsName())
+    {
+        label = name->value;
+        len = label.length();
+    }
+    else if (Text *text = tree->AsText())
+    {
+        label = text->value;
+        len = label.length();
+    }
+
+    if (len == 0)
+    {
+        Ooops("No valid C name in $1", tree);
+        return false;
+    }
+
+    // We will NOT call functions beginning with _ (internal functions)
+    for (uint i = 0; i < len; i++)
+    {
+        char c = label[i];
+        if (!isalpha(c) && c != '_' && !(i && isdigit(c)))
+        {
+            Ooops("C name $1 contains invalid characters", tree);
+            return false;
+        }
+    }
+    return true;
 }
 
 

@@ -90,7 +90,6 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
       bindings(),
       vtypes(types),
       btypes(new Types(scope, types)),
-      context(btypes->TypesContext()),
       type(nullptr),
       defined(nullptr),
       defined_name()
@@ -198,6 +197,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Test if the name is already bound, and if so, if trees fail to match
+        Context *context = btypes->TypesContext();
         if (Tree *bound = context->DeclaredForm(name))
         {
             if (bound != name)
@@ -695,8 +695,8 @@ Tree *RewriteCalls::Check (Scope *scope,
             if (!builtin)
             {
                 // Process declarations in the initializer
-                rc->context->CreateScope();
-                rc->context->ProcessDeclarations(init);
+                Context *bcontext = btypes->TypesContext();
+                bcontext->ProcessDeclarations(init);
                 type = btypes->Type(init);
                 if (!type)
                     binding = FAILED;

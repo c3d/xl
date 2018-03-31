@@ -65,6 +65,7 @@ XL_BEGIN
 // ============================================================================
 
 struct RewriteCalls;
+struct RewriteCandidate;
 typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 typedef std::map<Tree_p, Type_p>         box_map;
@@ -84,8 +85,9 @@ class Types
 // ----------------------------------------------------------------------------
 {
     Context_p   context;        // Context in which we lookup things
-    TreeMap     types;          // Map an expression to its type
-    TreeMap     unifications;   // Map a type to its reference type
+    tree_map    types;          // Map an expression to its type
+    tree_map    unifications;   // Map a type to its reference type
+    tree_map    captured;       // Trees captured from enclosing context
     rcall_map   rcalls;         // Rewrites to call for a given tree
     box_map     boxed;          // Tree type -> machine type
     bool        declaration;    // Analyzing type of a declaration
@@ -172,6 +174,12 @@ public:
 
     // Lookup a type name in the given context
     Tree *      DeclaredTypeName(Tree *input);
+
+    // Checking if a declaration is data or a C declaration
+    enum class Decl { NORMAL, C, DATA };
+    static Decl RewriteCategory(RewriteCandidate *rc);
+    static Decl RewriteCategory(Rewrite *rw, Tree *defined, text &label);
+    static bool IsValidCName(Tree *tree, text &label);
 
     // Error messages
     Tree *      TypeError(Tree *t1, Tree *t2);

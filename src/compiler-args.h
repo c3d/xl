@@ -147,7 +147,6 @@ public:
     RewriteConditions   conditions;
     Types_p             vtypes; // Types for values (enclosing)
     Types_p             btypes; // Types for bindings (local)
-    Context_p           context;
     Tree_p              type;
     Tree_p              defined;
     text                defined_name;

@@ -288,27 +288,9 @@ Value_p CompilerFunction::Compile(Tree *call,
         Tree *body = rc->RewriteBody();
 
         // Check if we have C or data forms
-        bool isC = false;
-        bool isData = false;
-        text label = "xl." + rc->defined_name;
-
-        // Case of [sin X is C]: Use the name 'sin'
-        if (Name *bodyname = body->AsName())
-        {
-            if (bodyname->value == "C")
-                if (Name *defname = rc->defined->AsName())
-                    if (IsValidCName(defname, label))
-                        isC = true;
-            if (bodyname->value == "self")
-                isData = true;
-        }
-
-        // Case of [alloc X is C "_malloc"]: Use "_malloc"
-        if (Prefix *prefix = body->AsPrefix())
-            if (Name *name = prefix->left->AsName())
-                if (name->value == "C")
-                    if (IsValidCName(prefix->right, label))
-                        isC = true;
+        Types::Decl d = Types::RewriteCategory(rc);
+        bool isC = d == Types::Decl::C;
+        bool isData = d == Types::Decl::DATA;
 
         // Identify the return type for the rewrite
         Type_p retTy = rc->RewriteType();
@@ -326,7 +308,6 @@ Value_p CompilerFunction::Compile(Tree *call,
 
         if (isC)
         {
-            rc->defined_name = label;
             CompilerPrototype proto(*this, rc);
             function = proto.Function();
         }
@@ -358,44 +339,6 @@ Value_p CompilerFunction::Compile(Tree *call,
     }
 
     return function;
-}
-
-
-bool CompilerFunction::IsValidCName(Tree *tree, text &label)
-// ----------------------------------------------------------------------------
-//   Check if the name is valid for C
-// ----------------------------------------------------------------------------
-{
-    uint len = 0;
-
-    if (Name *name = tree->AsName())
-    {
-        label = name->value;
-        len = label.length();
-    }
-    else if (Text *text = tree->AsText())
-    {
-        label = text->value;
-        len = label.length();
-    }
-
-    if (len == 0)
-    {
-        Ooops("No valid C name in $1", tree);
-        return false;
-    }
-
-    // We will NOT call functions beginning with _ (internal functions)
-    for (uint i = 0; i < len; i++)
-    {
-        char c = label[i];
-        if (!isalpha(c) && c != '_' && !(i && isdigit(c)))
-        {
-            Ooops("C name $1 contains invalid characters", tree);
-            return false;
-        }
-    }
-    return true;
 }
 
 

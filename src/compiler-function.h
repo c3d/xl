@@ -106,7 +106,6 @@ private:
     Type_p              StructureType(const Signature &signature, Tree *source);
     Value_p             BoxedTree(Tree *what);
     void                BoxedTreeType(Signature &sig, Tree *what);
-    static bool         IsValidCName(Tree *tree, text &label);
 
 private:
     // Compilation of rewrites and data
