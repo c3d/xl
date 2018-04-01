@@ -307,6 +307,10 @@ Tree *Types::DoName(Name *what)
                 type = Type(body);
             else
                 type = Type(defined);
+            if (RewriteCalls *rc = HasRewriteCalls(defined))
+                rcalls[what] = rc;
+            else if (RewriteCalls *rc = HasRewriteCalls(body))
+                rcalls[what] = rc;
         }
         else
         {
