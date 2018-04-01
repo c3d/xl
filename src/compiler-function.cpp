@@ -294,6 +294,17 @@ Value_p CompilerFunction::Compile(Tree *call,
 
         // Identify the return type for the rewrite
         Type_p retTy = rc->RewriteType();
+        if (!retTy && rc->type)
+        {
+            Types *btypes = rc->binding_types;
+            Tree *base = btypes->BaseType(rc->type);
+            retTy = BoxedType(base);
+            if (retTy)
+            {
+                btypes->AddBoxedType(base, retTy);
+                rc->RewriteType(retTy);
+            }
+        }
         if (!retTy)
         {
             if (isData)
