@@ -156,7 +156,11 @@ Value_p CompilerExpression::DoName(Name *what)
     if (Value_p global = unit.Global(from))
         return global;
 
-    return DoCall(what);
+    Value_p result = DoCall(what, true);
+    if (!result)
+        result = Evaluate(existing);
+
+    return result;
 }
 
 
@@ -254,7 +258,7 @@ Value_p CompilerExpression::DoBlock(Block *block)
 }
 
 
-Value_p CompilerExpression::DoCall(Tree *call)
+Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 // ----------------------------------------------------------------------------
 //   Compile expressions into calls for the right expression
 // ----------------------------------------------------------------------------
@@ -267,6 +271,8 @@ Value_p CompilerExpression::DoCall(Tree *call)
     rcall_map::iterator found = rcalls.find(call);
     record(types_calls, "Looking up %t in %p (%u entries)",
            call, types, rcalls.size());
+    if (mayfail && found == rcalls.end())
+        return nullptr;
     assert(found != rcalls.end() || !"Type analysis botched on expression");
 
     RewriteCalls *rc = (*found).second;

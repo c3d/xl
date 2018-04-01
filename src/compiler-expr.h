@@ -71,7 +71,7 @@ public:
     Value_p             DoInfix(Infix *what);
     Value_p             DoBlock(Block *what);
 
-    Value_p             DoCall(Tree *call);
+    Value_p             DoCall(Tree *call, bool mayfail = false);
     Value_p             DoRewrite(Tree *call, RewriteCandidate *candidate);
     Value_p             Value(Tree *expr);
     Value_p             Compare(Tree *value, Tree *test);
