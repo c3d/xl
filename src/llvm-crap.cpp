@@ -549,8 +549,20 @@ void JIT::Print(kstring label, Value_p value)
 //   Print the tree on the error output
 // ----------------------------------------------------------------------------
 {
-    llvm::errs() << label << ":\n";
-    value->print(llvm::errs());
+    if (label)
+        llvm::outs() << label;
+    value->print(llvm::outs());
+}
+
+
+void JIT::Print(kstring label, Type_p type)
+// ----------------------------------------------------------------------------
+//   Print the tree on the error output
+// ----------------------------------------------------------------------------
+{
+    if (label)
+        llvm::outs() << label;
+    type->print(llvm::outs());
 }
 
 

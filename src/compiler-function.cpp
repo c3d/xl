@@ -207,7 +207,7 @@ eval_fn CompilerFunction::Finalize(bool createCode)
 
     // Verify the function we built
     if (RECORDER_TRACE(llvm_code) & 2)
-        jit.Print("LLVM IR before verification and optimizations", function);
+        jit.Print("LLVM IR before verification and optimizations:\n", function);
     if (jit.VerifyFunction(function))
     {
         Ooops("Generated code verification failed for $1 (internal)", form);
@@ -215,14 +215,14 @@ eval_fn CompilerFunction::Finalize(bool createCode)
     }
     jit.Finalize(function);
     if (RECORDER_TRACE(llvm_code) & 4)
-        jit.Print("LLVM IR after optimizations", function);
+        jit.Print("LLVM IR after optimizations:\n", function);
 
     void *result = NULL;
     if (createCode)
     {
         result = jit.ExecutableCode(function);
         if (RECORDER_TRACE(llvm_code) & 8)
-            jit.Print("LLVM IR after machine code generation", function);
+            jit.Print("LLVM IR after machine code generation:\n", function);
     }
 
     record(llvm_functions, "Function code %p for %v", result, function);
