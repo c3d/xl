@@ -587,7 +587,9 @@ Signature RewriteCandidate::RewriteSignature()
     for (RewriteBinding &binding : bindings)
     {
         Tree *valueType = ValueType(binding.value);
-        Type_p valueTy = btypes->BoxedType(valueType);
+        assert(valueType && "Type for bound value is required during codegen");
+        Type_p valueTy = vtypes->BoxedType(valueType);
+        assert(valueTy && "Machine type for bound value should exist");
         signature.push_back(valueTy);
     }
     return signature;

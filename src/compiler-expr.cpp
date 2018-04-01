@@ -73,11 +73,12 @@ Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
 // ----------------------------------------------------------------------------
 {
     Value_p result = expr->Do(this);
-    if (result && force)
+    if (result)
     {
         CompilerUnit &unit = function.unit;
-        Type_p resultTy = JIT::Type(result);
-        if (unit.IsClosureType(resultTy))
+        Type_p mtype = JIT::Type(result);
+        function.ValueMachineType(expr, mtype);
+        if (force && unit.IsClosureType(mtype))
         {
             /* Invoke closure */
         }
@@ -409,7 +410,6 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     Rewrite *rw = cand->rewrite;
     Value_p result = nullptr;
     JITBlock &code = function.code;
-    Save<Types_p> saveTypes(function.types, cand->btypes);
 
     record(compiler_expr, "Rewrite: %t", rw);
 
@@ -421,10 +421,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
         Tree *tree = b.value;
         Value_p value = Value(tree);
         args.push_back(value);
-        Type_p mtype = JIT::Type(value);
-        function.ValueMachineType(b.name, mtype);
-        record(compiler_expr, "Rewrite %t arg %t value %v machine type %T",
-               rw, tree, value, mtype);
+        record(compiler_expr, "Rewrite %t arg %t value %v", rw, tree, value);
     }
 
     // Check if this is an LLVM builtin
