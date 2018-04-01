@@ -145,8 +145,8 @@ public:
     RewriteBindings     bindings;
     RewriteKinds        kinds;
     RewriteConditions   conditions;
-    Types_p             vtypes; // Types for values (enclosing)
-    Types_p             btypes; // Types for bindings (local)
+    Types_p             value_types;
+    Types_p             binding_types;
     Tree_p              type;
     Tree_p              defined;
     text                defined_name;

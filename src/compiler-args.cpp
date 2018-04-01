@@ -88,8 +88,8 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
     : rewrite(rewrite),
       scope(scope),
       bindings(),
-      vtypes(types),
-      btypes(new Types(scope, types)),
+      value_types(types),
+      binding_types(new Types(scope, types)),
       type(nullptr),
       defined(nullptr),
       defined_name()
@@ -101,14 +101,14 @@ Tree *RewriteCandidate::ValueType(Tree *value)
 //   Return the value type for this value, and associated calls
 // ----------------------------------------------------------------------------
 {
-    Tree *vtype = vtypes->Type(value);
+    Tree *vtype = value_types->Type(value);
     if (vtype)
     {
         while (value)
         {
-            if (RewriteCalls *calls = vtypes->HasRewriteCalls(value))
+            if (RewriteCalls *calls = value_types->HasRewriteCalls(value))
             {
-                rcall_map &bcalls = btypes->TypesRewriteCalls();
+                rcall_map &bcalls = binding_types->TypesRewriteCalls();
                 bcalls[value] = calls;
             }
             if (Block *block = value->AsBlock())
@@ -197,7 +197,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Test if the name is already bound, and if so, if trees fail to match
-        Context *context = btypes->TypesContext();
+        Context *context = binding_types->TypesContext();
         if (Tree *bound = context->DeclaredForm(name))
         {
             if (bound != name)
@@ -226,7 +226,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         }
 
         // Check if we can unify the value and name types
-        Tree *nameType = btypes->DeclarationType(name);
+        Tree *nameType = binding_types->DeclarationType(name);
         if (!Unify(vtype, nameType, value, form))
         {
             record(argument_bindings,
@@ -263,7 +263,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             // Assign the given type to the declared expression
             Tree *form = fi->left;
             Tree *declType = fi->right;
-            vtype = btypes->AssignType(form, declType);
+            vtype = binding_types->AssignType(form, declType);
 
             // Check if we can bind the value from what we know
             if (Bind(form, value) == FAILED)
@@ -275,7 +275,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             }
 
             // Add type binding with the given type
-            Tree *valueType = btypes->Type(value);
+            Tree *valueType = binding_types->Type(value);
             if (!Unify(valueType, vtype, value, form, true))
             {
                 record(argument_bindings,
@@ -304,7 +304,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             }
 
             // Check if we can evaluate the guard
-            if (!btypes->Type(fi->right))
+            if (!binding_types->Type(fi->right))
             {
                 record(argument_bindings,
                        "Guard of conditional %t to %t in %p type mismatch",
@@ -313,7 +313,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             }
 
             // Check that the type of the guard is a boolean
-            Tree *guardType = btypes->Type(fi->right);
+            Tree *guardType = binding_types->Type(fi->right);
             if (!Unify(guardType, boolean_type, fi->right, fi->left))
             {
                 record(argument_bindings,
@@ -363,7 +363,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         // We may have an expression that evaluates as an infix
 
         // Check if what we have as an expression evaluates correctly
-        vtype = btypes->Type(value);
+        vtype = binding_types->Type(value);
         if (!vtype)
         {
             record(argument_bindings,
@@ -392,7 +392,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
         // Add a condition on the infix name
         Tree *infixName = new Prefix(new Name("name", pos), value);
-        if (!btypes->Type(infixName))
+        if (!binding_types->Type(infixName))
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p name mismatch",
@@ -400,7 +400,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             return FAILED;
         }
         Tree *infixRequiredName = new Text(fi->name, pos);
-        if (!btypes->Type(infixRequiredName))
+        if (!binding_types->Type(infixRequiredName))
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p text mismatch",
@@ -510,7 +510,7 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
 //   Check unification for types in a given candidate
 // ----------------------------------------------------------------------------
 {
-    Tree *refType = btypes->DeclaredTypeName(valueType);
+    Tree *refType = binding_types->DeclaredTypeName(valueType);
 
     record(call_types,
            "Unify %t as %t with %t as %t", value, valueType, form, formType);
@@ -518,7 +518,7 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)
     {
-        Tree *vrefType = btypes->DeclaredTypeName(formType);
+        Tree *vrefType = binding_types->DeclaredTypeName(formType);
         kind k = valueType->Kind();
         if (k == INTEGER || vrefType == integer_type)
             KindCondition(value, INTEGER);
@@ -539,9 +539,9 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
     }
 
     // Otherwise, do type inference
-    Tree *unified = btypes->Unify(valueType, formType);
-    unified = btypes->AssignType(value, unified);
-    unified = btypes->AssignType(form, unified);
+    Tree *unified = binding_types->Unify(valueType, formType);
+    unified = binding_types->AssignType(value, unified);
+    unified = binding_types->AssignType(form, unified);
     return unified;
 }
 
@@ -588,7 +588,7 @@ Signature RewriteCandidate::RewriteSignature()
     {
         Tree *valueType = ValueType(binding.value);
         assert(valueType && "Type for bound value is required during codegen");
-        Type_p valueTy = vtypes->BoxedType(valueType);
+        Type_p valueTy = value_types->BoxedType(valueType);
         assert(valueTy && "Machine type for bound value should exist");
         signature.push_back(valueTy);
     }
@@ -601,7 +601,7 @@ Type_p RewriteCandidate::RewriteType()
 //   Boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    Type_p ty = btypes->BoxedType(type);
+    Type_p ty = binding_types->BoxedType(type);
     return ty;
 }
 
@@ -611,7 +611,7 @@ void RewriteCandidate::RewriteType(Type_p ty)
 //   Set the boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    btypes->AddBoxedType(type, ty);
+    binding_types->AddBoxedType(type, ty);
 }
 
 
@@ -663,7 +663,9 @@ Tree *RewriteCalls::Check (Scope *scope,
 
     // Create local type inference deriving from ours
     RewriteCandidate *rc = new RewriteCandidate(candidate, scope, types);
-    Types *btypes = rc->btypes;    // All the following is in candidate types
+
+    // All the following is in candidate types
+    Types *binding_types = rc->binding_types;
 
     // Attempt binding / unification of parameters to arguments
     Tree *form = candidate->left;
@@ -684,8 +686,8 @@ Tree *RewriteCalls::Check (Scope *scope,
         // Check if we have a type to match
         if (type)
         {
-            type = btypes->AssignType(init, type);
-            type = btypes->AssignType(what, type);
+            type = binding_types->AssignType(init, type);
+            type = binding_types->AssignType(what, type);
             if (!type)
                 binding = FAILED;
         }
@@ -697,16 +699,16 @@ Tree *RewriteCalls::Check (Scope *scope,
             if (!builtin)
             {
                 // Process declarations in the initializer
-                Context *bcontext = btypes->TypesContext();
+                Context *bcontext = binding_types->TypesContext();
                 bcontext->ProcessDeclarations(init);
-                type = btypes->Type(init);
+                type = binding_types->Type(init);
                 if (!type)
                     binding = FAILED;
             }
             else if (!declType)
             {
                 // No type specified, assign a generic type
-                type = btypes->Type(init);
+                type = binding_types->Type(init);
             }
         }
     }
@@ -714,9 +716,9 @@ Tree *RewriteCalls::Check (Scope *scope,
     // Match the type of the form and declared entity
     if (binding != FAILED && type != nullptr)
     {
-        type = btypes->AssignType(form, type);
+        type = binding_types->AssignType(form, type);
         if (defined && form != defined)
-            type = btypes->AssignType(defined, type);
+            type = binding_types->AssignType(defined, type);
     }
 
     // If we had some errors in the process, binding fails,
@@ -727,7 +729,7 @@ Tree *RewriteCalls::Check (Scope *scope,
     // If everything went well, define the type for the expression
     if (binding != FAILED)
     {
-        type = btypes->AssignType(what, type);
+        type = binding_types->AssignType(what, type);
         if (!type)
             binding = FAILED;
     }

@@ -74,7 +74,7 @@ CompilerPrototype::CompilerPrototype(CompilerPrototype &caller,
 // ----------------------------------------------------------------------------
     : unit(caller.unit),
       form(rc->RewriteForm()),
-      types(rc->btypes),
+      types(rc->binding_types),
       function(rc->Prototype(unit.jit))
 {
     record(compiler_prototype, "Created rewrite %p for %t as %v",

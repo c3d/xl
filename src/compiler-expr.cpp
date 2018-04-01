@@ -466,7 +466,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     // Save the type of the return value
     if (result)
     {
-        Types *vtypes = cand->vtypes;
+        Types *vtypes = cand->value_types;
         Tree *base = vtypes->CodegenType(call);
         Type_p retTy = JIT::Type(result);
         function.types = vtypes;

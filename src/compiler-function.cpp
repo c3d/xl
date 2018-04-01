@@ -266,7 +266,7 @@ void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
     }
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
-    Scope *scope = rc->vtypes->TypesScope();
+    Scope *scope = rc->value_types->TypesScope();
     Tree *form = rc->RewriteForm();
     values[xl_scope] = data.PointerConstant(compiler.scopePtrTy, scope);
     values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
