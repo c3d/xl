@@ -629,8 +629,10 @@ void RewriteCandidate::Dump()
 
     for (auto &b : bindings)
     {
-        std::cout << "\t\t" << b.name;
-        std::cout << "\t= " << ShortTreeForm(b.value) << "\n";
+        std::cout << "\t\t" << b.name << " (" << (void *) b.name << ") ";
+        std::cout << "\t= "
+                  << ShortTreeForm(b.value)
+                  << " (" << (void *) b.value << ")\n";
     }
 }
 
