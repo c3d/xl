@@ -475,7 +475,6 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
         Types *vtypes = cand->value_types;
         Tree *base = vtypes->CodegenType(call);
         Type_p retTy = JIT::Type(result);
-        function.types = vtypes;
         function.AddBoxedType(base, retTy);
         record(compiler_expr, "Transporting type %t (%T) of %t into %p",
                base, retTy, call, vtypes);
