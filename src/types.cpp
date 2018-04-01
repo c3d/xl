@@ -123,6 +123,8 @@ Tree *Types::TypeAnalysis(Tree *program)
         DumpUnifications();
     if (RECORDER_TRACE(types_calls))
         DumpRewriteCalls();
+    if (RECORDER_TRACE(types_boxing))
+        DumpMachineTypes();
 
     return result;
 }
@@ -1530,6 +1532,27 @@ void Types::DumpTypes()
 }
 
 
+void Types::DumpMachineTypes()
+// ----------------------------------------------------------------------------
+//   Dump the list of machine types in this
+// ----------------------------------------------------------------------------
+{
+    uint i = 0;
+    Save<intptr_t> saveTrace(RECORDER_TRACE(types_boxing), 0);
+
+    std::cout << "MACHINE TYPES:\n";
+    for (auto &b : boxed)
+    {
+        Tree *type = b.first;
+        Type_p mtype = b.second;
+        std::cout << "#" << ++i
+                  << "\t" << type;
+        JIT::Print("\t= ", mtype);
+        std::cout << "\n";
+    }
+}
+
+
 void Types::DumpUnifications()
 // ----------------------------------------------------------------------------
 //   Dump the current unifications
@@ -1584,6 +1607,7 @@ XL::Types *xldebug(XL::Types *ti)
         ti->DumpRewriteCalls();
         ti->DumpUnifications();
         ti->DumpTypes();
+        ti->DumpMachineTypes();
     }
     return ti;
 }

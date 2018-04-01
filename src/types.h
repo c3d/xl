@@ -186,6 +186,7 @@ public:
 
     // Debug utilities
     void        DumpTypes();
+    void        DumpMachineTypes();
     void        DumpUnifications();
     void        DumpRewriteCalls();
 
