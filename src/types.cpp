@@ -1554,7 +1554,8 @@ void Types::DumpRewriteCalls()
     for (auto &t : rcalls)
     {
         Tree *expr = t.first;
-        std::cout << "#" << ++i << "\t" << ShortTreeForm(expr) << "\n";
+        std::cout << "#" << ++i << "\t"
+                  << ShortTreeForm(expr) << " (" << (void *) expr << ")\n";
 
         RewriteCalls *calls = t.second;
         calls->Dump();
