@@ -301,8 +301,8 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     // More general case: we need to generate expression reduction
     JITBlock &code = function.code;
     JITBlock isDone(code, "done");
-    Value_p storage = function.NeedStorage(call);
     Type_p storageType = function.ValueMachineType(call);
+    Value_p storage = function.NeedStorage(call, storageType);
     Compiler &compiler = function.compiler;
 
     for (i = 0; i < max; i++)

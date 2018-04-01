@@ -103,7 +103,8 @@ private:
     Type_p              HasBoxedType(Tree *type);
 
     Type_p              ReturnType(Tree *form);
-    Type_p              StructureType(const Signature &signature, Tree *source);
+    Type_p              StructureType(const Signature &signature,
+                                      Tree *rwform, Tree *type);
     Value_p             BoxedTree(Tree *what);
     void                BoxedTreeType(Signature &sig, Tree *what);
 
@@ -119,7 +120,7 @@ private:
 
     // Storage management
     enum { knowAll = -1, knowGlobals = 1, knowLocals = 2, knowValues = 4 };
-    Value_p             NeedStorage(Tree *tree);
+    Value_p             NeedStorage(Tree *tree, Type_p ty = nullptr);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     Value_p             Known(Tree *tree, uint which = knowAll );
 

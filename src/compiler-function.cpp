@@ -293,11 +293,11 @@ Value_p CompilerFunction::Compile(Tree *call,
         bool isData = d == Types::Decl::DATA;
 
         // Identify the return type for the rewrite
+        Types *btypes = rc->binding_types;
+        Tree *base = btypes->BaseType(rc->type);
         Type_p retTy = rc->RewriteType();
         if (!retTy && rc->type)
         {
-            Types *btypes = rc->binding_types;
-            Tree *base = btypes->BaseType(rc->type);
             retTy = BoxedType(base);
             if (retTy)
             {
@@ -309,7 +309,8 @@ Value_p CompilerFunction::Compile(Tree *call,
         {
             if (isData)
                 retTy = StructureType(rc->RewriteSignature(),
-                                      rc->RewriteForm());
+                                      rc->RewriteForm(),
+                                      base);
             else
                 retTy = ValueMachineType(rc->RewriteForm(), true);
             if (!retTy)
@@ -542,7 +543,7 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
         boxFn = unit.CompiledUnbox(type);
         if (boxFn)
         {
-            Value_p storage = NeedStorage(source);
+            Value_p storage = NeedStorage(source, type);
             code.Store(result, storage);
             result = storage;
         }
@@ -711,7 +712,7 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *pattern, uint &index)
 }
 
 
-Value_p CompilerFunction::NeedStorage(Tree *tree)
+Value_p CompilerFunction::NeedStorage(Tree *tree, Type_p mtype)
 // ----------------------------------------------------------------------------
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
@@ -720,7 +721,8 @@ Value_p CompilerFunction::NeedStorage(Tree *tree)
     if (!result)
     {
         // Get the associated machine type
-        Type_p mtype = ValueMachineType(tree);
+        if (!mtype)
+            mtype = ValueMachineType(tree);
 
         // Create alloca to store the new form
         result = data.Alloca(mtype, "loc");
@@ -1013,12 +1015,13 @@ Type_p CompilerFunction::ReturnType(Tree *parmForm)
 }
 
 
-Type_p CompilerFunction::StructureType(const Signature &signature, Tree *rwform)
+Type_p CompilerFunction::StructureType(const Signature &signature,
+                                       Tree *rwform,
+                                       Tree *base)
 // ----------------------------------------------------------------------------
 //   Compute the return type associated with a data form
 // ----------------------------------------------------------------------------
 {
-    Tree *base = types->CodegenType(rwform);
     if (Type_p mtype = HasBoxedType(base))
         return mtype;
 
@@ -1047,12 +1050,13 @@ Value_p CompilerFunction::BoxedTree(Tree *what)
     // Compute the boxed type for the data
     Signature sig;
     BoxedTreeType(sig, what);
-    Type_p sty = StructureType(sig, what);
+    Tree *base = types->BaseType(what);
+    Type_p sty = StructureType(sig, what, base);
     record(compiler_function, "Boxed tree %t is type %v", what, sty);
 
     // Generate the data
     unsigned index = 0;
-    Value_p box = NeedStorage(what);
+    Value_p box = NeedStorage(what, sty);
     Value_p result = Data(what, box, index);
 
     result = code.Load(box);
