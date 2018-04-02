@@ -976,7 +976,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 //   Build a type after joining, in case that's necessary
 // ----------------------------------------------------------------------------
 {
-    if (type == old)
+    if (type == old || type == replace)
         return replace;
 
     switch (type->Kind())
