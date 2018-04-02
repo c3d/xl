@@ -1100,12 +1100,14 @@ void CompilerFunction::BoxedTreeType(Signature &sig, Tree *what)
         BoxedTreeType(sig, ((Block *) what)->child);
         break;
     case PREFIX:
-        BoxedTreeType(sig, ((Prefix *) what)->left);
+        if (((Prefix *) what)->left->Kind() != NAME)
+            BoxedTreeType(sig, ((Prefix *) what)->left);
         BoxedTreeType(sig, ((Prefix *) what)->right);
-        break;
+       break;
     case POSTFIX:
+        if (((Postfix *) what)->right->Kind() != NAME)
+            BoxedTreeType(sig, ((Postfix *) what)->right);
         BoxedTreeType(sig, ((Postfix *) what)->left);
-        BoxedTreeType(sig, ((Postfix *) what)->right);
         break;
     case INFIX:
         BoxedTreeType(sig, ((Infix *) what)->left);
