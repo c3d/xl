@@ -807,12 +807,6 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     if (t1 == t2)
         return t1;
 
-    // If either is a generic, unify with the other
-    if (IsGeneric(t1))
-        return Join(t1, t2);
-    if (IsGeneric(t2))
-        return Join(t2, t1);
-
     // Success if t1 covers t2 or t2 covers t1
     if (TypeCoversType(t1, t2))
         return Join(t2, t1);
@@ -834,6 +828,12 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     if (Tree *pat2 = IsTypeOf(t2))
         if (TreePatternMatchesValue(pat2, t1))
             return Join(t1, t2);
+
+    // If either is a generic, unify with the other
+    if (IsGeneric(t1))
+        return Join(t1, t2);
+    if (IsGeneric(t2))
+        return Join(t2, t1);
 
     // Check functions [X => Y]
     if (Infix *r1 = IsRewriteType(t1))
