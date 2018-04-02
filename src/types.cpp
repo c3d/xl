@@ -1524,7 +1524,9 @@ void Types::DumpTypes()
         Tree *base = BaseType(type);
         std::cout << "#" << ++i
                   << "\t" << ShortTreeForm(value)
-                  << "\t: " << type << " (" << (void *) type << ")";
+                  << " (" << (void *) value << ")"
+                  << "\t: " << type
+                  << " (" << (void *) type << ")";
         if (base != type)
             std::cout << "\t= " << base << " (" << (void *) base << ")";
         std::cout << "\n";
