@@ -980,6 +980,8 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     case INFIX:
         if (Infix *range = types->IsRangeType(type))
             mtype = BoxedType(range->left);
+        if (Tree *pattern = types->TypeOf(type))
+            mtype = StructureType(pattern, type);
         break;
 
     case PREFIX:
@@ -1012,6 +1014,18 @@ Type_p CompilerFunction::ReturnType(Tree *parmForm)
     if (!mtype)
         mtype = jit.VoidType();
     return mtype;
+}
+
+
+Type_p CompilerFunction::StructureType(Tree *rwform,
+                                       Tree *base)
+// ----------------------------------------------------------------------------
+//   Build a structure type when the signature is not known
+// ----------------------------------------------------------------------------
+{
+    Signature signature;
+    BoxedTreeType(signature, rwform);
+    return StructureType(signature, rwform, base);
 }
 
 

@@ -103,6 +103,7 @@ private:
     Type_p              HasBoxedType(Tree *type);
 
     Type_p              ReturnType(Tree *form);
+    Type_p              StructureType(Tree *rwform, Tree *type);
     Type_p              StructureType(const Signature &signature,
                                       Tree *rwform, Tree *type);
     Value_p             BoxedTree(Tree *what);
