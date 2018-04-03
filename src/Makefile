@@ -22,7 +22,6 @@
 
 # Define where the build files are located (needs the trailing /)
 TOP=../
-BUILD=$(TOP)build/
 
 # Set to 'none' to disable LLVM
 COMPILER=none
@@ -85,7 +84,7 @@ CONFIG=		struct_sigaction		\
 		<regex.h>			\
 		<sys/mman.h>
 
-include $(BUILD)rules.mk
+include make-it-quick/rules.mk
 
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
 LLVM_CONFIG=llvm-config
@@ -163,5 +162,9 @@ prebuild: 				\
 llvm:
 	(cd .. && make llvm)
 
-$(BUILD)rules.mk recorder/recorder.cpp recorder/recorder.h:
+recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
+
+make-it-quick/rules.mk:
+	@echo "This project uses Make-It-Quick"
+	@echo "Download and install from http://github.com/c3d/make-it-quick"
