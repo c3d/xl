@@ -908,6 +908,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
         return mtype;
     Tree *base = types->BaseType(type);
     Context *context = types->TypesContext();
+    bool isConstant = false;
 
     // Check if we have one of the basic types
 #define CTYPE(name, cty)        if (base==name##_type) mtype = compiler.cty##Ty
@@ -918,14 +919,17 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     switch(type->Kind())
     {
     case INTEGER:
+        isConstant = true;
         mtype = compiler.integerTy;
         base = integer_type;
         break;
     case REAL:
+        isConstant = true;
         mtype = compiler.realTy;
         base = real_type;
         break;
     case TEXT:
+        isConstant = true;
         if (((Text *)type)->IsCharacter())
         {
             mtype = compiler.characterTy;
@@ -1000,6 +1004,8 @@ Type_p CompilerFunction::BoxedType(Tree *type)
 
     if (mtype)
         types->AddBoxedType(type, mtype);
+    if (isConstant)
+        types->AssignType(type, base);
 
     return mtype;
 }
@@ -1090,7 +1096,7 @@ void CompilerFunction::BoxedTreeType(Signature &sig, Tree *what)
     case INTEGER:
     case REAL:
     case TEXT:
-        sig.push_back(ValueMachineType(what));
+        sig.push_back(BoxedType(what));
         break;
 
     case NAME:

@@ -290,12 +290,17 @@ Tree *Types::DoName(Name *what)
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
 {
+    Tree *type = nullptr;
     if (declaration)
-        return TypeOf(what);
+    {
+        type = TypeOf(what);
+        if (type)
+            context->Define(what, what);
+        return type;
+    }
 
     Scope_p scope;
     Rewrite_p rw;
-    Tree *type = nullptr;
     Tree *body = context->Bound(what, true, &rw, &scope);
     if (body && body != what)
     {
@@ -324,7 +329,7 @@ Tree *Types::DoName(Name *what)
         type = Evaluate(what);
     }
 
-    if (type && rw)
+    if (type && rw && rw->left != rw->right)
     {
         Tree *decl = rw->left;
         Tree *def = RewriteDefined(decl);
@@ -638,12 +643,15 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
 {
     record(types_calls, "Processing rewrite %t in %p", what, this);
 
+    // Evaluate types for the declaration and the body in a new context
+    context->CreateScope(what->Position());
     Tree *decl = what->left;
     Tree *init = what->right;
     Tree *declt = DeclarationType(decl);
+    Tree *initt = ValueType(init);
+    context->PopScope();
 
     // Create a [type Decl => type Init] type
-    Tree *initt = ValueType(init);
     if (!declt || !initt)
     {
         record(types_calls, "Failed type for %t declt=%t initt=%t",
