@@ -816,6 +816,10 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     // Check type patterns, i.e. [type X] as in [type(X:integer, Y:real)]
     if (Tree *pat1 = IsTypeOf(t1))
     {
+        // If we have [foo X:#A] and [#A], unify to #A
+        if (IsGeneric(t2) && TreePatternDependsOn(pat1, t2))
+            return Join(t1, t2);
+
         // If we have two type patterns, they must be structurally identical
         if (Tree *pat2 = IsTypeOf(t2))
             if (TreePatternsMatch(pat1, pat2))
@@ -826,8 +830,13 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
             return Join(t2, t1);
     }
     if (Tree *pat2 = IsTypeOf(t2))
+    {
+        // If we have [foo X:#A] and [#A], unify to #A
+        if (IsGeneric(t1) && TreePatternDependsOn(pat2, t1))
+            return Join(t2, t1);
         if (TreePatternMatchesValue(pat2, t1))
             return Join(t1, t2);
+    }
 
     // If either is a generic, unify with the other
     if (IsGeneric(t1))
@@ -1308,6 +1317,53 @@ bool Types::TreePatternMatchesValue(Tree *pat, Tree *val)
     }
 
     return false;
+}
+
+
+bool Types::TreePatternDependsOn(Tree *pattern, Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if we have something like [foo X:#A] that depends on [#A]
+// ----------------------------------------------------------------------------
+{
+    if (pattern == type)
+        return true;
+    switch (pattern->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+    case NAME:
+        return false;
+
+    case BLOCK:
+    {
+        Block *block = (Block *) pattern;
+        return TreePatternDependsOn(block->child, type);
+
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) pattern;
+        return (TreePatternDependsOn(prefix->left, type) ||
+                TreePatternDependsOn(prefix->right, type));
+
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) pattern;
+        return (TreePatternDependsOn(postfix->left, type) ||
+                TreePatternDependsOn(postfix->right, type));
+
+    }
+    case INFIX:
+    {
+        Infix *infix = (Infix *) pattern;
+        return (TreePatternDependsOn(infix->left, type) ||
+                TreePatternDependsOn(infix->right, type));
+
+    }
+
+    }
 }
 
 
