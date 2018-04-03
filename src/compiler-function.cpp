@@ -408,7 +408,8 @@ Value_p CompilerFunction::Data(Tree *expr, Value_p box, unsigned &index)
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) expr;
-        left = Data(prefix->left, box, index);
+        if (prefix->left->Kind() != NAME)
+            left = Data(prefix->left, box, index);
         right = Data(prefix->right, box, index);
         return right;
     }
@@ -416,9 +417,10 @@ Value_p CompilerFunction::Data(Tree *expr, Value_p box, unsigned &index)
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) expr;
+        if (postfix->right->Kind() != NAME)
+            right = Data(postfix->right, box, index);
         left = Data(postfix->left, box, index);
-        right = Data(postfix->right, box, index);
-        return right;
+        return left;
     }
 
     case BLOCK:
