@@ -241,7 +241,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             record(argument_bindings,
                    "Binding name %t to %t in %p context %p",
                    form, value, this, (Context *) context);
-            context->Define(form, value);
+            context->Define(form, value, true);
             bindings.push_back(RewriteBinding(name, value));
         }
         else
