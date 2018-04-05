@@ -121,21 +121,14 @@ CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 test: run-all-xl-tests
 run-all-xl-tests: $(TARGET)
 	cd ../tests; ./alltests
-hello: show_$(COMPILER)_version
-show_llvm_version:
+.hello: .show_$(COMPILER)_version
+.show_llvm_version:
 	@$(INFO) "[INFO]" Building with LLVM version $(LLVM_VERSION)
-show_none_version:
+.show_none_version:
 	@$(INFO) "[INFO]" Building in interpreter-only mode
 
-opt_tests opt-tests:
-	cd ../tests;		\
-	./alltests -r O0;	\
-	./alltests -r O1;	\
-	./alltests -r O2;	\
-	./alltests -r O3
-
-
 # Module-related rules
+ifndef RECURSE
 clean: modules-clean
 
 modules-clean:
@@ -145,6 +138,8 @@ interp-%:
 	$(MAKE) COMPILER=none $*
 ionly-%:
 	$(MAKE) COMPILER=none $*
+endif
+
 
 %_module.cpp: %.tbl %_module.h Makefile
 	$(PRINT_GENERATE) ./generate-module-body $* > $@
@@ -152,7 +147,7 @@ ionly-%:
 %_module.h: %.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-prebuild: 				\
+.prebuild: 				\
 	$(MODULES_HEADERS) 		\
 	$(MODULES_SOURCES) 		\
 	recorder/recorder.h 		\
