@@ -23,6 +23,13 @@
 # Define where the build files are located (needs the trailing /)
 TOP=../
 
+# For pkg-config generation
+PACKAGE_NAME=xl
+PACKAGE_VERSION=0.01
+PACKAGE_DESCRIPTION=An extensible programming language
+PACKAGE_URL="http://github.com/c3d/xl"
+PACKAGE_REQUIRES=
+
 # Set to 'none' to disable LLVM
 COMPILER=none
 #COMPILER=llvm
