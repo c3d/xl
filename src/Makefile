@@ -31,8 +31,8 @@ PACKAGE_URL="http://github.com/c3d/xl"
 PACKAGE_REQUIRES=
 
 # Set to 'none' to disable LLVM
-COMPILER=none
-#COMPILER=llvm
+#COMPILER=none
+COMPILER=llvm
 
 # List of modules to build
 MODULES=basics io math text remote time_functions temperature
@@ -94,7 +94,7 @@ CONFIG=		struct_sigaction		\
 include make-it-quick/rules.mk
 
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
-LLVM_CONFIG=llvm-config
+LLVM_CONFIG=llvm-config-llvm6.0
 
 LLVM_VERSION=$(LLVM_VERSION_$(COMPILER))
 LLVM_FLAGS=$(LLVM_FLAGS_$(COMPILER))
@@ -168,5 +168,4 @@ recorder/recorder.cpp recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
 
 make-it-quick/rules.mk:
-	@echo "This project uses Make-It-Quick"
-	@echo "Download and install from http://github.com/c3d/make-it-quick"
+	git clone http://github.com/c3d/make-it-quick
