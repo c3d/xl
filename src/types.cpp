@@ -993,6 +993,10 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 //   Build a type after joining, in case that's necessary
 // ----------------------------------------------------------------------------
 {
+    XL_REQUIRE (type != NULL);
+    XL_REQUIRE (old != NULL);
+    XL_REQUIRE (replace != NULL);
+
     if (type == old || type == replace)
         return replace;
 
@@ -1008,6 +1012,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
     {
         Block *block = (Block *) type;
         Tree *child = JoinedType(block->child, old, replace);
+        XL_ASSERT (child);
         if (child != block->child)
             return new Block(block, child);
         return block;
@@ -1018,6 +1023,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
         Prefix *prefix = (Prefix *) type;
         Tree *left = JoinedType(prefix->left, old, replace);
         Tree *right = JoinedType(prefix->right, old, replace);
+        XL_ASSERT (left && right);
         if (left != prefix->left || right != prefix->right)
             return new Prefix(prefix, left, right);
         return prefix;
@@ -1028,6 +1034,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
         Postfix *postfix = (Postfix *) type;
         Tree *left = JoinedType(postfix->left, old, replace);
         Tree *right = JoinedType(postfix->right, old, replace);
+        XL_ASSERT (left && right);
         if (left != postfix->left || right != postfix->right)
             return new Postfix(postfix, left, right);
         return postfix;
@@ -1038,6 +1045,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
         Infix *infix = (Infix *) type;
         Tree *left = JoinedType(infix->left, old, replace);
         Tree *right = JoinedType(infix->right, old, replace);
+        XL_ASSERT (left && right);
         if (left != infix->left || right != infix->right)
             return new Infix(infix, left, right);
         return infix;
