@@ -163,13 +163,28 @@ typedef const wchar *   wkstring;
 #endif
 
 #ifdef XL_DEBUG
-#define XL_ASSERT(x)   { if (!(x)) xl_assert_failed(#x, __FILE__, __LINE__); }
-#define XL_CASSERT(x)  struct __dummy { char foo[((int) (x))*2-1]; }
-externc void xl_assert_failed(kstring msg, kstring file, uint line);
+#define XL_ASSERT(x)    XL_ASSERT_(x,"assertion")
+#define XL_REQUIRE(x)   XL_ASSERT_(x,"precondition")
+#define XL_ENSURE(x)    XL_ASSERT_(x,"postcondition")
+
+#define XL_ASSERT_(x,kind)                                              \
+    do                                                                  \
+    {                                                                   \
+        if (!(x))                                                       \
+        {                                                               \
+            xl_assert_failed(kind, #x, __FILE__, __LINE__);             \
+        }                                                               \
+    } while (0)
+
+/* Compile-time assert */
+#define XL_CASSERT(x) struct __dummy { char foo[((int) (x))*2-1]; }
+externc void xl_assert_failed(kstring kind, kstring msg, kstring file, uint line);
 #define XL_DEBUG_CODE(x)        x
 
 #else
 #define XL_ASSERT(x)
+#define XL_REQUIRE(x)
+#define XL_ENSURE(x)
 #define XL_CASSERT(x)
 #define XL_DEBUG_CODE(x)
 #endif

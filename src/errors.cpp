@@ -418,13 +418,16 @@ XL_END
 //
 // ============================================================================
 
+RECORDER_DEFINE(xl_assert, 16, "XL assertions checks");
 
-void xl_assert_failed(kstring msg, kstring file, uint line)
+void xl_assert_failed(kstring kind, kstring msg, kstring file, unsigned line)
 // ----------------------------------------------------------------------------
 //   Report an assertion failure
 // ----------------------------------------------------------------------------
 {
-    fprintf(stderr, "%s:%u: Assertion failed: %s\n",
-            file, line, msg);
+    fprintf(stderr, "%s:%u: %s failed: %s\n",
+            file, line, kind, msg);
+    record(xl_assert, "%+s %+s failed (%+s:%u)", kind, msg, file, line);
+    recorder_dump();
     abort();
 }
