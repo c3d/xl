@@ -661,6 +661,8 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
 
     // Unify with the type of the right hand side
     initt = Unify(declt, initt);
+    if (!initt)
+        return nullptr;
 
     // If the left side has a complex shape, e.g. [X+Y], return [DT => I]
     Tree *type = new Infix("=>", declt, initt, what->Position());
