@@ -275,6 +275,11 @@ struct GCPtr
     DEFINE_CMP(>)
     DEFINE_CMP(>=)
 
+    friend uintptr_t _recorder_arg(const GCPtr &p)
+    {
+        return (uintptr_t) p.pointer;
+    }
+
 protected:
     Object *    pointer;
 };
