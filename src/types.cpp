@@ -278,9 +278,14 @@ Tree *Types::DoConstant(Tree *what, kind k)
 {
     Tree *type = what;
     if (context->HasRewritesFor(k))
+    {
         type = Evaluate(what);
+    }
     else
-        type = AssignType(what, what); // Assign the value itself as a type
+    {
+        type = TypeOf(what);
+        type = AssignType(what, type);
+    }
     return type;
 }
 
@@ -462,9 +467,11 @@ Tree *Types::TypeOf(Tree *expr)
     switch(expr->Kind())
     {
     case INTEGER:
+        return integer_type;
     case REAL:
+        return real_type;
     case TEXT:
-        // For values, the type is the value itself
+        return ((Text *) expr)->IsCharacter() ? character_type : text_type;
         break;
 
     case NAME:
@@ -990,11 +997,14 @@ Tree *Types::Join(Tree *old, Tree *replace)
 }
 
 
+RECORDER_DEFINE(joined_type, 64, "Joined types");
+
 Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 // ----------------------------------------------------------------------------
 //   Build a type after joining, in case that's necessary
 // ----------------------------------------------------------------------------
 {
+    record(joined_type, "Replace %t with %t in %t", old, replace, type);
     XL_REQUIRE (type != NULL);
     XL_REQUIRE (old != NULL);
     XL_REQUIRE (replace != NULL);
