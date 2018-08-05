@@ -262,6 +262,7 @@ done
 done
 
 
+IFS=$SAVEIFS
 if [ "$ONE_FAILED" ]; then
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
     echo "  Positive success           : " $POSITIVE_SUCCESS
@@ -274,6 +275,7 @@ if [ "$ONE_FAILED" ]; then
     echo "  Missing references         : " $MISSING_REFERENCE
     echo "  Missing patterns           : " $MISSING_PATTERN
     echo "  Excluded from run          : " $EXCLUDED
+    exit 1
 else
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: SUCCESS ***"
     echo "  Positive success           : " $POSITIVE_SUCCESS
@@ -281,4 +283,3 @@ else
     echo "  Expected test failures     : " $EXPECTED_FAILURES
     echo "  Excluded from run          : " $EXCLUDED
 fi
-IFS=$SAVEIFS
