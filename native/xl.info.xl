@@ -1,0 +1,29 @@
+// ****************************************************************************
+//  xl.info.xl                                      XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Information that can be attached to source trees
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+import XL.ATOMIC
+
+module XL.INFO is
+
+    type info is
+        next : atomic[info]
+        if DEBUG then
+            owner : atomic[info]
