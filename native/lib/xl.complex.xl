@@ -1,0 +1,51 @@
+// ****************************************************************************
+//  xl.complex.xl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Basic complex arithmetic
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+module XL.COMPLEX[type value] is
+
+    use XL.MATH
+
+    C(re:value,im:value)                        is complex(re, im)
+
+    X:complex + Y:complex       as complex      is C(X.re+Y.re, X.im+Y.im)
+    X:complex - Y:complex       as complex      is C(X.re-Y.re, X.im-Y.im)
+    X:complex * Y:complex       as complex      is C(X.re*Y.re - X.im*Y.im,
+                                                     X.re*Y.im + X.im*Y.re)
+    X:complex / Y:complex       as complex      is
+        N is C(X.re*Y.re + X.im*Y.im, X.im*Y.re - X.re*Y.im)
+        D is Y.re^2 + Y.im^2
+        N / D
+
+    X:complex + Y:value         as complex      is C(X.re + Y, X.im)
+    X:complex - Y:value         as complex      is C(X.re - Y, X.im)
+    X:complex * Y:value         as complex      is C(X.re * Y, X.im * Y)
+    X:complex / Y:value         as complex      is C(X.re / Y, X.im / Y)
+
+    X:value + Y:complex         as complex      is C(X + Y.re, Y.im)
+    X:value - Y:copmlex         as complex      is C(X - Y.re, -Y.im)
+    X:value * Y:complex         as complex      is C(X * Y.re, X * Y.im)
+    X:value / Y:complex         as complex      is
+        N is C(X*Y.re, -X*Y.im)
+        D is Y.re^2 + Y.im^2
+        N / D
+
+    length Z:complex            as value        is sqrt(Z.re^2+Z.im^2)
+    angle  Z:complex            as value        is atan(Z.im, Z.re)
