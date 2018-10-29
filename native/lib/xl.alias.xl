@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  xl.info.xs                                      XL - An extensible language
+//  xl.alias.xl                                     XL - An extensible language
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Infomration that can be attached to source trees
+//     An alias can be used to access another entity
 //
 //
 //
@@ -19,13 +19,6 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-module XL.Info with
+module XL.ALIAS[type value] is
 
-    type info with
-        next : info
-        if DEBUG then
-            owner : info
-
-
-    X:info := Y:info is
-        compile_error "Cannot copy info data"
+    type alias                                  is builtin pointer

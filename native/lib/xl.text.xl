@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  xl.info.xl                                      XL - An extensible language
+//  xl.text.xl                                      XL - An extensible language
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Information that can be attached to source trees
+//     The basic text operations
 //
 //
 //
@@ -19,11 +19,11 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import XL.ATOMIC
+module XL.TEXT[value:type] is
 
-module XL.INFO is
-
-    type info is
-        next : atomic[info]
-        if DEBUG then
-            owner : atomic[info]
+    X:text = Y:text                 as boolean is C xl_text_eq
+    X:text <> Y:text                as boolean is C xl_text_ne
+    X:text > Y:text                 as boolean is C xl_text_gt
+    X:text >= Y:text                as boolean is C xl_text_ge
+    X:text < Y:text                 as boolean is C xl_text_lt
+    X:text <= Y:text                as boolean is C xl_text_le

@@ -1,0 +1,79 @@
+// ****************************************************************************
+//  xl.unsigned.xl                                 XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Basic unsigned type and arithmetic
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+use XL.BOOLEAN
+
+module XL.UNSIGNED[value:type] is
+    x:value + y:value           as value        is builtin Add
+    x:value - y:value           as value        is builtin Sub
+    x:value * y:value           as value        is builtin Mul
+    x:value / y:value           as value        is builtin UDiv
+    x:value rem y:value         as value        is builtin URem
+    x:value mod y:value         as value        is builtin UMod
+    x:value and y:value         as value        is builtin And
+    x:value or y:value          as value        is builtin Or
+    x:value xor y:value         as value        is builtin Xor
+    x:value shl  y:unsigned     as value        is builtin Shl
+    x:value shr  y:unsigned     as value        is builtin LShr
+    x:value ashr y:unsigned     as value        is builtin AShr
+    x:value lshr y:unsigned     as value        is builtin LShr
+    -x:value                    as value        is builtin Neg
+    not x:value                 as value        is builtin Not
+
+    x:value ^ y:unsigned        as value        is
+    // ------------------------------------------------------------------------
+    //   Compute x to the power of y
+    // ------------------------------------------------------------------------
+        result : value := 1
+        while y > 0 loop
+            if (y and 1) <> 0 then
+                result *= x
+            x *= x
+            y := y ashr 1
+        return result
+
+    out x:value := y:value      as value        is builtin Copy
+
+    in out x:value += y:value   as value        is x := x + y; return x
+    in out x:value -= y:value   as value        is x := x - y; return x
+    in out x:value *= y:value   as value        is x := x * y; return x
+    in out x:value /= y:value   as value        is x := x / y; return x
+
+    in out x:value++            as value        is { o is x; x += 1; return o }
+    in out x:value--            as value        is { o is x; x -= 1; return o }
+    ++in out x:value            as value        is x += 1
+    --in out x:value            as value        is x -= 1
+
+    X:value = Y:value           as boolean      is builtin ICmpEQ
+    X:value <> Y:value          as boolean      is builtin ICmpNE
+    X:value > Y:value           as boolean      is builtin ICmpUGT
+    X:value >= Y:value          as boolean      is builtin ICmpUGE
+    X:value < Y:value           as boolean      is builtin ICmpULT
+    X:value <= Y:value          as boolean      is builtin ICmpULE
+
+module XL.UNSIGNED is
+    type unsigned                               is builtin i64
+    type unsigned1                              is builtin i1
+    type unsigned8                              is builtin i8
+    type unsigned16                             is builtin i16
+    type unsigned32                             is builtin i32
+    type unsigned64                             is builtin i64
+    type unsigned128                            is builtin i128

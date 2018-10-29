@@ -1,0 +1,62 @@
+// ****************************************************************************
+//  xl.pointer.xl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Machine low-level pointers
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+module XL.POINTER[type value] is
+
+    use XL.INTEGER
+    use XL.UNSIGNED
+
+    type pointer                                        is builtin pointer
+    type offset                                         is integer64
+    type size                                           is unsigned64
+    type address                                        is unsigned64
+
+    value_size                                          is byte_size value
+    address P:pointer                   as address      is builtin Cast
+    pointer A:address                   as pointer      is builtin Cast
+
+    *P:pointer                          as alias[value] is builtin Cast
+
+    ++in out P:pointer                  as pointer      is P += 1
+    --in out P:pointer                  as pointer      is P -= 1
+    in out P:pointer++                  as pointer      is { O is P; ++P; O }
+    in out P:pointer--                  as pointer      is { O is P; --P; O }
+
+    P:pointer + O:offset                as pointer      is
+        pointer(address P + O*value_size)
+    P:pointer - O:offset                as pointer      is
+        pointer(address P - O*value_size)
+    P:pointer - Q:pointer               as offset       is
+        (address P - address Q) / value_size
+
+    out x:pointer := y:pointer          as pointer      is builtin Copy
+
+    in out x:pointer += y:offset        as pointer      is x := x + y
+    in out x:pointer -= y:offset        as pointer      is x := x - y
+
+    P:pointer[O:offset]                 as alias[value] is *(P + O)
+
+    P:pointer.(Name:name)                               is (*P).Name
+
+    bit_size  pointer                   as size         is bit_size  address
+    bit_align pointer                   as size         is bit_align address
+    bit_size  X:pointer                 as size         is bit_size  address
+    bit_align X:pointer                 as size         is bit_align address

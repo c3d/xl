@@ -1,0 +1,76 @@
+// ****************************************************************************
+//  xl.integer.xl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Basic integer type and arithmetic
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+use XL.BOOLEAN
+
+module XL.INTEGER[value:type] is
+    x:value + y:value           as value        is builtin Add
+    x:value - y:value           as value        is builtin Sub
+    x:value * y:value           as value        is builtin Mul
+    x:value / y:value           as value        is builtin SDiv
+    x:value rem y:value         as value        is builtin SRem
+    x:value mod y:value         as value        is builtin SMod
+    x:value and y:value         as value        is builtin And
+    x:value or y:value          as value        is builtin Or
+    x:value xor y:value         as value        is builtin Xor
+    x:value shl  y:unsigned     as value        is builtin Shl
+    x:value shr  y:unsigned     as value        is builtin AShr
+    x:value ashr y:unsigned     as value        is builtin AShr
+    x:value lshr y:unsigned     as value        is builtin LShr
+    -x:value                    as value        is builtin Neg
+    not x:value                 as value        is builtin Not
+
+    x:value ^ y:unsigned        as value        is
+        result : value := 1
+        while y > 0 loop
+            if (y and 1) <> 0 then
+                result *= x
+            x *= x
+            y := y ashr 1
+        return result
+
+    out x:value := y:value      as value        is builtin Copy
+
+    in out x:value += y:value   as value        is x := x + y
+    in out x:value -= y:value   as value        is x := x - y
+    in out x:value *= y:value   as value        is x := x * y
+    in out x:value /= y:value   as value        is x := x / y
+
+    ++in out x:value            as value        is x += 1
+    --in out x:value            as value        is x -= 1
+    in out x:value++            as value        is { O is x; ++x; O }
+    in out x:value--            as value        is { O is x; --x; O }
+
+    X:value = Y:value           as boolean      is builtin ICmpEQ
+    X:value <> Y:value          as boolean      is builtin ICmpNE
+    X:value > Y:value           as boolean      is builtin ICmpSGT
+    X:value >= Y:value          as boolean      is builtin ICmpSGE
+    X:value < Y:value           as boolean      is builtin ICmpSLT
+    X:value <= Y:value          as boolean      is builtin ICmpSLE
+
+module XL.INTEGER is
+    type integer                                is builtin i64
+    type integer1                               is builtin i1
+    type integer8                               is builtin i8
+    type integer16                              is builtin i16
+    type integer32                              is builtin i32
+    type integer64                              is builtin i64
+    type integer128                             is builtin i128

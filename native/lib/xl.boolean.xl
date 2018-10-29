@@ -1,0 +1,38 @@
+// ****************************************************************************
+//  xl.boolean.xl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     The basic boolean operations
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+using XL.INTEGER
+
+module XL.BOOLEAN is
+    type boolean                                is builtin i1
+    false : boolean                             is boolean 0
+    true  : boolean                             is boolean 1
+
+    X:boolean = Y:boolean       as boolean      is builtin BCmpEQ
+    X:boolean <> Y:boolean      as boolean      is builtin BCmpNE
+    X:boolean > Y:boolean       as boolean      is builtin BCmpGT
+    X:boolean >= Y:boolean      as boolean      is builtin BCmpGE
+    X:boolean < Y:boolean       as boolean      is builtin BCmpLT
+    X:boolean <= Y:boolean      as boolean      is builtin BCmpLE
+    X:boolean and Y:boolean     as boolean      is builtin BAnd
+    X:boolean or  Y:boolean     as boolean      is builtin BOr
+    X:boolean xor Y:boolean     as boolean      is builtin BXor
+    not X:boolean               as boolean      is builtin BNot
