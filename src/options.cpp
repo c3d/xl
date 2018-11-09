@@ -47,7 +47,7 @@ XL_BEGIN
 /* ========================================================================= */
 
 Options *Options::options = NULL;
-RECORDER(options, 128, "Options passed to the compiler");
+RECORDER_DEFINE(options, 64, "Compiler options");
 
 Options::Options(int argc, char **argv):
 /*---------------------------------------------------------------------------*/
@@ -64,7 +64,7 @@ Options::Options(int argc, char **argv):
     // Check if some options are given from environment
     if (kstring envopt = getenv("XL_OPT"))
     {
-        RECORD(options, "Environment variable XL_OPT='%+s'", envopt);
+        record(options, "Environment variable XL_OPT='%+s'", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -75,14 +75,14 @@ Options::Options(int argc, char **argv):
     }
     else
     {
-        RECORD(options, "Environment variable XL_OPT is not set");
+        record(options, "Environment variable XL_OPT is not set");
     }
 
     // Add options from the command-line
-    RECORD(options, "Command line has %d options", argc-1);
+    record(options, "Command line has %d options", argc-1);
     for (int a = 1; a < argc; a++)
     {
-        RECORD(options, "  Option #%d is '%+s'", a, argv[a]);
+        record(options, "  Option #%d is '%+s'", a, argv[a]);
         args.push_back(argv[a]);
     }
 }

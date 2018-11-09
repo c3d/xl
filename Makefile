@@ -16,9 +16,9 @@
 # (C) 2015-2018 Christophe de Dinechin <christophe@dinechin.org>
 #******************************************************************************
 
-SUBDIRS=	src xl2
+SUBDIRS=	src
 
 MIQ=make-it-quick/
 include $(MIQ)rules.mk
 $(MIQ)rules.mk:
-	@git submodule update --init --recursive
+	$(PRINT_BUILD) git submodule update --init --recursive

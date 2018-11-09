@@ -80,15 +80,16 @@ LIB_INSTALL=builtins.xl xl.syntax C.syntax *.stylesheet
 DEFINES=XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
 INCLUDES=. includes recorder
 
-CONFIG=		struct_sigaction		\
-		struct_stat			\
-		sbrk				\
-		posix_memalign			\
-		mingw_aligned_malloc		\
-		<regex.h>			\
-		<sys/mman.h>
+CONFIG= sigaction                       \
+        struct_stat                     \
+        sbrk                            \
+        posix_memalign                  \
+        mingw_aligned_malloc            \
+        <regex.h>                       \
+        <sys/mman.h>                    \
+        drand48                         \
+        libregex
 
-MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
@@ -123,8 +124,8 @@ LDFLAGS_mingw  = -lpthread -lm -lws2_32
 CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
-test: run-all-xl-tests
-run-all-xl-tests: $(TARGET)
+.tests: run-all-xl-tests
+run-all-xl-tests:
 	cd ../tests; ./alltests
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:
@@ -134,7 +135,7 @@ run-all-xl-tests: $(TARGET)
 
 # Module-related rules
 ifndef RECURSE
-clean: modules-clean
+.clean: modules-clean
 
 modules-clean:
 	rm -f $(MODULES_SOURCES) $(MODULES_HEADERS)
@@ -160,3 +161,4 @@ endif
 
 $(MIQ)rules.mk recorder/recorder.c recorder/recorder_ring.c recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
+$(MIQ_DEPENDENCIES): $(MODULES_HEADERS) recorder/recorder.h recorder/ring.h
