@@ -152,12 +152,9 @@ endif
 %_module.h: %.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header $* >  $@
 
-.prebuild: 				\
-	$(MODULES_HEADERS) 		\
-	$(MODULES_SOURCES) 		\
-	recorder/recorder.h
 .PRECIOUS: $(MODULE_HEADERS) $(MODULE_SOURCES)
 
 $(MIQ)rules.mk recorder/recorder.c recorder/recorder_ring.c recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
-$(MIQ_DEPENDENCIES): $(MODULES_HEADERS) recorder/recorder.h recorder/ring.h
+$(MIQ_DEPENDENCIES): 	$(MODULES_HEADERS) 	\
+			recorder/recorder.h recorder/recorder_ring.h
