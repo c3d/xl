@@ -264,6 +264,7 @@ done
 
 IFS=$SAVEIFS
 if [ "$ONE_FAILED" ]; then
+    cat $FAILURE
     echo "*** SUMMARY OF" $TOTAL_TESTS "TESTS: FAILURE ***"
     echo "  Positive success           : " $POSITIVE_SUCCESS
     echo "  Negative success           : " $NEGATIVE_SUCCESS
