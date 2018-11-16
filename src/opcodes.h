@@ -154,6 +154,7 @@ struct NameOpcode : Opcode
     NameOpcode(kstring name, Name_p &toDefine)
         : toDefine(toDefine)
     {
+        Allocator<Name>::CreateSingleton();
         toDefine = new Name(name);
     }
 
