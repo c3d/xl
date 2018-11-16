@@ -48,16 +48,14 @@ struct Error
     ~Error() {}
 
     // Adding arguments to an error message
-    Error &             Arg(int x)      { return Arg(Integer::value_t(x)); }
-    Error &             Arg(uint x)     { return Arg(Integer::value_t(x)); }
-    Error &             Arg(long x)     { return Arg(Integer::value_t(x)); }
-    Error &             Arg(ulong x)    { return Arg(Integer::value_t(x)); }
-    Error &             Arg(ulonglong x){ return Arg(Integer::value_t(x)); }
     Error &             Arg(Integer::value_t value);
     Error &             Arg(Real::value_t value);
     Error &             Arg(Text::value_t t, text delim="\"");
     Error &             Arg(Text::value_t t, text open, text close);
     Error &             Arg(Tree *arg);
+    template <typename num, typename =
+              typename std::enable_if<std::is_integral<num>::value>::type>
+    Error &             Arg(num x) { return Arg(Integer::value_t(x)); }
 
     // Displaying the message
     void                Display();
