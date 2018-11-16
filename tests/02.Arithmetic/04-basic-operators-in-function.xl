@@ -8,9 +8,10 @@ run_test x,y is
     writeln x and y
     writeln x or y
     writeln x xor y
-    writeln x shl y
-    writeln x ashr y
-    writeln x lshr y
+    if x > 0 and y > 0 then
+        writeln x shl y
+        writeln x ashr y
+        writeln x lshr y
     writeln -x
     writeln not x
     writeln abs x
