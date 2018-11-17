@@ -47,7 +47,7 @@
 #include <stdint.h>
 
 /* Include the configuration file */
-#include "configuration.h"
+#include "config.h"
 
 
 /* ========================================================================= */
@@ -111,15 +111,37 @@
 /* Used for some byte manipulation, where it is more explicit that uchar */
 typedef unsigned char   byte;
 
-/* Shortcuts for unsigned numbers - Quite uneasy to figure out in general */
+
+/* Shortcuts for unsigned unumbers - Quite uneasy to figure out in general */
+#ifndef HAVE_UCHAR
 typedef unsigned char   uchar;
+#endif
+
+#ifndef HAVE_USHORT
 typedef unsigned short  ushort;
+#endif
+
+#ifndef HAVE_UINT
 typedef unsigned int    uint;
+#endif
+
+#ifndef HAVE_ULONG
 typedef unsigned long   ulong;
- /* The largest available integer type */
+#endif
+
+/* The largest available integer type */
+#ifdef HAVE_LONGLONG
 typedef long long          longlong;
 typedef unsigned long long ulonglong;
- /* Sized integers (dependent on the compiler...) - Only when needed */
+#elif HAVE_INT64
+typedef __int64          longlong;
+typedef unsigned __int64 ulonglong;
+#else
+typedef long            longlong;
+typedef unsigned long   ulonglong;
+#endif /* LONGLONG or INT64 */
+
+/* Sized integers (dependent on the compiler...) - Only when needed */
 typedef int8_t          int8;
 typedef int16_t         int16;
 typedef int32_t         int32;
@@ -190,19 +212,15 @@ externc void xl_assert_failed(kstring kind, kstring msg, kstring file, uint line
 #endif
 
 
+
 /* ========================================================================= */
 /*                                                                           */
 /*   Namespace support                                                       */
 /*                                                                           */
 /* ========================================================================= */
 
-#if CONFIG_HAS_NAMESPACE
 #define XL_BEGIN                namespace XL {
 #define XL_END                  }
-#else   /* !CONFIG_HAS_NAMESPACE */
-#define XL_BEGIN
-#define XL_END
-#endif  /* ?CONFIG_HAS_NAMESPACE */
 
 
 #endif /* ELEMENTALS_H */

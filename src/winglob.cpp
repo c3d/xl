@@ -37,9 +37,9 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "configuration.h"
+#include "config.h"
 
-#ifdef CONFIG_MINGW
+#ifndef HAVE_GLOB
 
 #include "base.h"
 #include "winglob.h"
@@ -110,5 +110,4 @@ void globfree(glob_t *pglob)
     pglob->gl_pathv.clear();
 }
 
-#endif // CONFIG_MINGW
-
+#endif // !HAVE_GLOB

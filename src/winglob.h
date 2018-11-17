@@ -39,11 +39,11 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#ifndef CONFIG_MINGW
+#ifdef HAVE_GLOB
 
 #include <glob.h>
 
-#else
+#else // !HAVE_GLOB
 
 #include <vector>
 #include <string>
@@ -71,7 +71,6 @@ extern void     globfree(glob_t *pglob);
 /* Only define those we need */
 #define	GLOB_MARK	0x0008
 
-#endif // CONFIG_MINGW
+#endif // !HAVE_GLOB
 
 #endif // WINGLOB_H
-

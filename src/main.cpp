@@ -38,7 +38,6 @@
 //  (C) 2010 Taodyne SAS
 // ****************************************************************************
 
-#include "configuration.h"
 #include "tree-clone.h"
 #include "main.h"
 #include "scanner.h"
@@ -77,7 +76,6 @@ XL_BEGIN
 Main *MAIN = NULL;
 
 
-
 // ============================================================================
 //
 //    Source file data
@@ -114,15 +112,6 @@ SourceFile::~SourceFile()
 //   Delete info
 // ----------------------------------------------------------------------------
 {}
-
-
-
-// ============================================================================
-//
-//    Recorder helpers
-//
-// ============================================================================
-
 
 
 
@@ -236,6 +225,7 @@ int Main::LoadAndRun()
         return xl_listen(scope, options.listen_forks, options.listen);
     }
 
+    record(compiler, "LoadAndRun returns %d", rc);
     return rc;
 }
 
@@ -274,6 +264,7 @@ int Main::ParseOptions()
 }
 
 
+RECORDER(file_load, 64, "Files being loaded");
 int Main::LoadFiles()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
@@ -283,14 +274,17 @@ int Main::LoadFiles()
     bool hadError = false;
 
     // Loop over files we will process
-    for (file = file_names.begin(); file != file_names.end(); file++)
-        hadError |= LoadFile(*file);
+    for (auto &file : file_names)
+    {
+        hadError |= LoadFile(file);
+        record(file_load,
+               "Load file %s code %d, errors %d", file.c_str(), rc, hadError);
+    }
 
     return hadError;
 }
 
 
-RECORDER(file_load, 64, "Files being loaded");
 int Main::LoadFile(const text &file, text modname)
 // ----------------------------------------------------------------------------
 //   Load an individual file
@@ -644,7 +638,7 @@ RECORDER(main, 32, "Compiler main entry point");
 RECORDER_TWEAK_DEFINE(gc_statistics, 0, "Display garbage collector stats");
 
 
- int main(int argc, char **argv)
+int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------

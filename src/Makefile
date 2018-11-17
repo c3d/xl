@@ -87,8 +87,10 @@ CONFIG= sigaction                       \
         mingw_aligned_malloc            \
         <regex.h>                       \
         <sys/mman.h>                    \
+        libregex                        \
         drand48                         \
-        libregex
+        glob                            \
+        uchar ushort uint ulong longlong
 
 include $(MIQ)rules.mk
 
