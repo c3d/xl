@@ -172,6 +172,24 @@
 #endif /* MINGW */
 
 
+#ifdef CONFIG_MSYS
+/* ========================================================================= */
+/*                                                                           */
+/*   MSYS configuration                                                     */
+/*                                                                           */
+/* ========================================================================= */
+
+#define CONFIG_HAS_UCHAR                1
+#define CONFIG_HAS_UINT                 1
+#define CONFIG_HAS_ULONG                1
+#define CONFIG_HAS_USHORT               1
+#define CONFIG_HAS_LONGLONG             0
+#define CONFIG_HAS_INT64                0
+#define CONFIG_USE_SBRK                 0
+
+#endif /* MSYS */
+
+
 #ifdef CONFIG_MSVC
 /* ========================================================================= */
 /*                                                                           */
