@@ -1,7 +1,7 @@
-#ifndef UTF8_IFSTREAM_H
-#define UTF8_IFSTREAM_H
+#ifndef UTF8_FILEUTILS_H
+#define UTF8_FILEUTILS_H
 // ****************************************************************************
-//  utf8_ifstream.h                                              XL project
+//  utf8_fileutils.h                                              XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -89,7 +89,7 @@ inline bool isDirectorySeparator(int c)
     return c == '/' || c == '\\';
 }
 
-#else
+#else // HAVE_STRUCT_STAT
 
 // Real systems
 typedef struct stat   utf8_filestat_t;
@@ -107,4 +107,4 @@ inline bool isDirectorySeparator(int c)
 
 #endif // HAVE_STRUCT_STAT
 
-#endif // UTF8_FSTREAM_H
+#endif // UTF8_FILEUTILS_H
