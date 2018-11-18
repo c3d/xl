@@ -386,7 +386,7 @@ static bool isAbsolute(text path)
 {
     if (path == "")
         return false;
-#if defined (CONFIG_MINGW)
+#ifdef HAVE_WINDOWS_H
     if (path[0] == '/' || path[0] == '\\')
         return true;
     if (path.length() >= 2 && path[1] == ':')
