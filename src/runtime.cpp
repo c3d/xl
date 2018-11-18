@@ -1147,11 +1147,11 @@ real_t xl_random()
 //    Return a pseudo-random number in the low..high range
 // ----------------------------------------------------------------------------
 {
-#ifndef CONFIG_MINGW
+#ifdef HAVE_DRAND48
     return drand48();
-#else
+#else // !HAVE_DRAND48
     return real_t(rand()) / RAND_MAX;
-#endif // CONFIG_MINGW
+#endif // HAVE_DRAND48
 }
 
 
@@ -1160,11 +1160,11 @@ bool xl_random_seed(int seed)
 //    Initialized random number generator using the argument passed as seed
 // ----------------------------------------------------------------------------
 {
-#ifndef CONFIG_MINGW
+#ifndef HAVE_DRAND48
     srand48(seed);
-#else
+#else // !HAVE_DRAND48
     srand(seed);
-#endif // CONFIG_MINGW
+#endif // HAVE_DRAND48
 
     return true;
 }
