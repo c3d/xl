@@ -276,7 +276,8 @@ int Main::LoadFiles()
     // Loop over files we will process
     for (auto &file : file_names)
     {
-        hadError |= LoadFile(file);
+        int rc = LoadFile(file);
+        hadError |= rc;
         record(file_load,
                "Load file %s code %d, errors %d", file.c_str(), rc, hadError);
     }
