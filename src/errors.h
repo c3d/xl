@@ -30,6 +30,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 XL_BEGIN
 

@@ -1,0 +1,2 @@
+writeln "This file is OK, the other one does not exist"
+some-random-nonexistent-file.xl:1: Input stream cannot be read: "No such file or directory"
