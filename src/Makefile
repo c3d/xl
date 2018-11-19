@@ -126,7 +126,7 @@ CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
 .tests: run-all-xl-tests
-run-all-xl-tests:
+run-all-xl-tests: .product
 	cd ../tests; ./alltests
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:
