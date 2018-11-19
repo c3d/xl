@@ -1160,7 +1160,7 @@ bool xl_random_seed(int seed)
 //    Initialized random number generator using the argument passed as seed
 // ----------------------------------------------------------------------------
 {
-#ifndef HAVE_DRAND48
+#ifdef HAVE_DRAND48
     srand48(seed);
 #else // !HAVE_DRAND48
     srand(seed);
