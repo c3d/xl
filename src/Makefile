@@ -87,6 +87,7 @@ CONFIG= sigaction                       \
         mingw_aligned_malloc            \
         <regex.h>                       \
         <sys/mman.h>                    \
+        <sys/socket.h>                  \
         libregex                        \
         drand48                         \
         glob                            \

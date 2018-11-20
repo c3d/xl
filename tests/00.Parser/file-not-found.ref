@@ -1,2 +1,2 @@
 writeln "This file is OK, the other one does not exist"
-some-random-nonexistent-file.xl:1: Input stream "some-random-nonexistent-file.xl" cannot be read: "No such file or directory"
+some-random-nonexistent-file.xl:1:1: Input stream "some-random-nonexistent-file.xl" cannot be read: "No such file or directory"
