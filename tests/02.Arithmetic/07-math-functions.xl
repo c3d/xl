@@ -1,9 +1,10 @@
 run_test x is
     writeln abs x
     writeln sqrt x
-    writeln sin x
-    writeln cos x
-    writeln tan x
+    // Avoid platform-dependent rounding errors for very small values
+    writeln 0.25 + sin x
+    writeln 0.25 + cos x
+    writeln 0.25 + tan x
     writeln asin x
     writeln acos x
     writeln atan x
