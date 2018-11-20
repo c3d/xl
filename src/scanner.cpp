@@ -158,7 +158,8 @@ Scanner::Scanner(std::istream &input,
     indents.push_back(0);       // We start with an indent of 0
     position = positions.OpenFile(fileName);
     if (input.fail())
-        err.Log(Error("Input stream cannot be read: $1", position)
+        err.Log(Error("Input stream $1 cannot be read: $2", position)
+                .Arg(fileName)
                 .Arg(strerror(errno)));
 }
 
