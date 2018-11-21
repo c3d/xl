@@ -20,9 +20,6 @@
 #  (C) 2010-2015 Taodyne SAS
 #******************************************************************************
 
-# Define where the build files are located (needs the trailing /)
-TOP=../
-
 # For pkg-config generation
 PACKAGE_NAME=xl
 PACKAGE_VERSION=0.01
@@ -91,7 +88,8 @@ CONFIG=		struct_sigaction		\
 		<regex.h>			\
 		<sys/mman.h>
 
-include make-it-quick/rules.mk
+MIQ=../make-it-quick/
+include $(MIQ)rules.mk
 
 # Name of 'llvm-config' to use (e.g. llvm-config-2.9)
 LLVM_CONFIG=llvm-config-llvm6.0
@@ -157,15 +155,8 @@ endif
 .prebuild: 				\
 	$(MODULES_HEADERS) 		\
 	$(MODULES_SOURCES) 		\
-	recorder/recorder.h 		\
-	recorder/recorder_ring.h
+	recorder/recorder.h
 .PRECIOUS: $(MODULE_HEADERS) $(MODULE_SOURCES)
 
-llvm:
-	(cd .. && make llvm)
-
-recorder/recorder.cpp recorder/recorder.h:
+$(MIQ)rules.mk recorder/recorder.c recorder/recorder_ring.c recorder/recorder.h:
 	cd .. && git submodule update --init --recursive
-
-make-it-quick/rules.mk:
-	git clone http://github.com/c3d/make-it-quick

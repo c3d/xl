@@ -13,20 +13,12 @@
 #
 #
 #******************************************************************************
-# (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
-# (C) 2015 Taodyne SAS
+# (C) 2015-2018 Christophe de Dinechin <christophe@dinechin.org>
 #******************************************************************************
 
-all:
+SUBDIRS=	src xl2
 
-check:
-	cd tests; ./alltests
-
-llvm:	.ALWAYS
-	mkdir -p llvm/build;						\
-	cd llvm/build;							\
-	cmake -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_RTTI=true ..;	\
-	cmake --build . --target install
-
-%:
-	cd src; $(MAKE) $@
+MIQ=make-it-quick/
+include $(MIQ)rules.mk
+$(MIQ)rules.mk:
+	@git submodule update --init --recursive
