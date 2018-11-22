@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.semantics.declarations.xl    (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.semantics.declarations.xl    (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
 //
-//     Implementation of semantic declarations 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//     Implementation of semantic declarations
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -159,7 +159,7 @@ module XL.SEMANTICS.DECLARATIONS is
                 result := FN.EnterFunction (Name, decl_type, Value, Name)
             decl := GetDeclaration(result)
             isFunction := true
-            
+
 
         // Tests that do not apply to functions or iterators
         if not isFunction then
@@ -227,7 +227,7 @@ module XL.SEMANTICS.DECLARATIONS is
             else if decl.is_local or decl.is_global then
                 // Constructor generation will be processed at semantics time
                 result := parse_tree(@@defctor 'Name')
-                
+
 
         // Make sure we have a result to attach the decl to
         if result = nil then
@@ -384,7 +384,7 @@ module XL.SEMANTICS.DECLARATIONS is
         // Check that it has a machine name
         if decl.machine_name = nil then
             ERR.Error "Internal: declaration without machine name", Name
-            decl.machine_name = SYM.Temporary("mname")
+            decl.machine_name := SYM.Temporary("mname")
 
         // Return original name (which should have type info set)
         return decl.machine_name
@@ -923,7 +923,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     return nil
                 dtorCall : PT.tree := parse_tree(delete 'mname')
                 ERR.PushErrorContext()
-                in_destruction[mname] = 1
+                in_destruction[mname] := 1
                 dtorCall := XLT.XLSemantics(dtorCall)
                 erase in_destruction, mname
                 if not ERR.PopErrorContext() then
@@ -987,4 +987,3 @@ module XL.SEMANTICS.DECLARATIONS is
         assert name <> nil
         key  : text := "KEEP:" + name.value
         SYM.SetProperty table, key, name
-

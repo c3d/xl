@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.symbols.xl                   (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.symbols.xl                   (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Implementation of XL symbol tables
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -164,9 +164,9 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
-    // 
+    //
     //    Score adjustment for the various lookup kinds
-    // 
+    //
     // ========================================================================
 
     SCORE_RENAMES_FACTOR        : integer := 16#1
@@ -425,14 +425,14 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //    Debug hook to be used in the compiler, entry to rewrite
     // ------------------------------------------------------------------------
-        what := what
+        if false then DebugEntry what
 
 
     procedure DebugExit(what : PT.tree) is
     // ------------------------------------------------------------------------
     //    Debug hook to be used in the compiler, entry to rewrite
     // ------------------------------------------------------------------------
-        what := what
+        if false then DebugExit what
 
 
     function  LookupRewrite (table     : symbol_table;
@@ -826,7 +826,7 @@ module XL.SYMBOLS is
         return PT.NewName (base, pos)
 
 
-    
+
     procedure Debug(S : symbol_table; kind : lookup_kind) is
     // ------------------------------------------------------------------------
     //   Dump a symbol table
@@ -861,7 +861,7 @@ module XL.SYMBOLS is
                 IO.WriteLn ""
             for name in S.properties loop
                 IO.Write " Prop ", name, ": "
-                prop : PT.tree := S.properties[name] 
+                prop : PT.tree := S.properties[name]
                 if prop = nil then
                     IO.WriteLn "nil"
                 else if (prop.kind = PT.xlINTEGER or prop.kind = PT.xlREAL or

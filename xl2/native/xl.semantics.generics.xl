@@ -429,7 +429,6 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //    This should never be called?
     // ------------------------------------------------------------------------
-        assert InstantiatedTypeMatch = nil
         return false
 
 
@@ -556,7 +555,7 @@ module XL.SEMANTICS.GENERICS is
             trace[-inst] "Instantiation in progress", key
             return ERR.ErrorTree()
         SYM.Enter XLT.main_context, "IN_INSTANCE", key, Decl.name
-        
+
         if instantiations > max_instantiations then
             ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
             trace[-inst] "Too many recursions: ", instantiations
@@ -1127,7 +1126,7 @@ module XL.SEMANTICS.GENERICS is
                         TY.SetType arg, tgt
                         return Deduce(FunType, RetDecl, arg, Gargs)
 
-        return false        
+        return false
 
 
     function InstantiateType (Name : PT.tree;
@@ -1317,7 +1316,7 @@ module XL.SEMANTICS.GENERICS is
                     instOf   : PT.tree := InstanceOf(instType)
                     if instOf = GDecl.name then
                         return decl
-                    
+
         return nil
 
 

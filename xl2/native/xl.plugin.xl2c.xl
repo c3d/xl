@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.plugin.xl2c.xl               (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.plugin.xl2c.xl               (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Plug-in to do a simple transformation of C headers into XL
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -75,18 +75,18 @@ module XL.PLUGIN.XL2C is
     //    the priorities set in C.syntax are different than usual for XL
 
         TyName     : PT.tree
-        PtrCnt     : integer := 0
-        LongCnt    : integer := 0
-        IsShort    : boolean := false
-        IsExtern   : boolean := false
-        IsStatic   : boolean := false
-        IsStruct   : boolean := false
-        IsConst    : boolean := false
-        IsUnsigned : boolean := false
-        IsTypedef  : boolean := false
-        FnArgs     : PT.tree := false
-        FnPtrCnt   : integer := 0
-        IsMacro    : integer := 0
+        PtrCnt     : integer
+        LongCnt    : integer
+        IsShort    : boolean
+        IsExtern   : boolean
+        IsStatic   : boolean
+        IsStruct   : boolean
+        IsConst    : boolean
+        IsUnsigned : boolean
+        IsTypedef  : boolean
+        FnArgs     : PT.tree
+        FnPtrCnt   : integer
+        IsMacro    : integer
 
         loop
             pre : input as PT.prefix_tree
@@ -249,7 +249,7 @@ module XL.PLUGIN.XL2C is
 
             // All other cases are dealt with using recursion
             return XLT.Recurse(input, Convert)
-                
+
 
         ERR.Error "Don't know how to deal with $1", input
 
@@ -291,7 +291,7 @@ module XL.PLUGIN.XL2C is
                 RT := XLT.XL2C(Ty)
                 Name := X
                 ConvertFunctionName Name, RT, IsPtr
-                
+
 
     function ConvertFunction(Name : PT.tree;
                              Args : PT.tree) return PT.tree is

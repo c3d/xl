@@ -1,6 +1,6 @@
 #******************************************************************************
-#  Makefile                        (C) 1992-2000 Christophe de Dinechin (ddd)  
-#                                                                 XL2 Project  
+#  Makefile                        (C) 1992-2000 Christophe de Dinechin (ddd)
+#                                                                 XL2 Project
 #******************************************************************************
 #
 #  File Description:
@@ -24,29 +24,30 @@
 #******************************************************************************
 
 # List of source files to process
-SOURCES     =					\
-	main.cpp				\
-	scanner.cpp				\
-	tree.cpp				\
-	context.cpp				\
-	parser.cpp				\
-	ctrans.cpp				\
-	options.cpp				\
-	errors.cpp
+SOURCES=                                        \
+        main.cpp                                \
+        scanner.cpp                             \
+        tree.cpp                                \
+        context.cpp                             \
+        parser.cpp                              \
+        ctrans.cpp                              \
+        options.cpp                             \
+        errors.cpp
 
-PRODUCT=xl$(EXE)
+PRODUCTS=xl2c.exe
 
-include $(BROOT)Makefile.config
+MIQ=../make-it-quick/
+include $(MIQ)rules.mk
+$(MIR)rules.mk:
+	$(PRINT_BUILD) cd ..; git submodule update --init --recursive
 
-qtest: all
+.postbuild:	bootstrap_compiler native_compiler
 
-postbuild: bootstrap_compiler native_compiler
-
-bootstrap_compiler:
-	cd $(BROOT)bootstrap && $(MAKE) test
+bootstrap_compiler: .product
+	$(PRINT_GENERATE) cd bootstrap && $(MIQ_RECURSE)
 
 native_compiler:
-	cd $(BROOT)native && $(MAKE) test
+	$(PRINT_GENERATE) cd $(BROOT)native && $(MIQ_RECURSE)
 
 errors.tbl: errors.txt
 	@echo Generating errors messages table

@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.parser.xl                    (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.parser.xl                    (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     The basic XL0 parser
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -536,7 +536,7 @@ module XL.PARSER is
                     P.prefix_priority[txt] := priority
                 else if stxst = inPostfix then
                     // Ignored in bootstrap compiler
-                    priority := priority
+                    priority := priority + 0
                 else if stxst = inInfix then
                     P.infix_priority[txt] := priority
                 else if stxst = inComment then

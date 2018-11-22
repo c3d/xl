@@ -1,6 +1,6 @@
 #******************************************************************************
-# Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd) 
-#                                                                  XL2 project 
+# Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd)
+#                                                                  XL2 project
 #******************************************************************************
 #
 #  File Description:
@@ -23,8 +23,6 @@
 #* Date       : $Date$
 #******************************************************************************
 
-BROOT=../
-
 SOURCES=compiler.xl
 OTHER_SOURCES=					\
 	xl.scanner.xs				\
@@ -41,37 +39,51 @@ OTHER_SOURCES=					\
 	../xl_lib.h				\
 	../xl.syntax
 
-TOCLEAN=bxl$(EXE) bbxl$(EXE) bbbxl$(EXE)
-PRODUCT=bxl$(EXE)
-XL=../xl$(EXE)
+VARIANTS=	cplusplus			\
+		bootstrap			\
+		reboot				\
+		stability
 
-include $(BROOT)Makefile.config
+PRODUCTS=		$(PRODUCTS_$(VARIANT))
+PRODUCTS_cplusplus=	cxl.exe
+PRODUCTS_bootstrap=	bxl.exe
+PRODUCTS_reboot=	rxl.exe
+PRODUCTS_stability=	sxl.exe
 
-test: debug bootstrap bootstrap_test bootstrap_stability_test
-	echo ------ Differences: -----------------------------------------
-	diff $(OBJROOT)bbxl_test/bootstrap/compiler.xl.C \
-	     $(OBJROOT)bbxl_stability/bootstrap/compiler.xl.C
-	echo ------ End of Differences -----------------------------------
+XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXE_EXT)
+XL_cplusplus=		xl2c
+XL_bootstrap=		cxl
+XL_reboot=		bxl
+XL_stability=		rxl
 
-bootstrap:
-	$(MAKE) PRODUCT=bbxl$(EXE) XL=./bxl$(EXE) OBJROOT="$(OBJROOT)bbxl"
-bootstrap_test:
-	$(MAKE) PRODUCT=bbbxl$(EXE) XL=./bbxl$(EXE) OBJROOT="$(OBJROOT)bbxl_test"
-bootstrap_stability_test:
-	$(MAKE) PRODUCT=bbbbxl$(EXE) XL=./bbbxl$(EXE) OBJROOT="$(OBJROOT)bbxl_stability"
+INCLUDES=.
 
+MIQ=../../make-it-quick/
+include $(MIQ)rules.mk
+$(MIQ)rules.mk:
+	$(PRINT_COMMAND) cd ../.. && git submodule update --init --recursive
 
-prebuild: xl_lib.h xl.syntax
+ifeq ($(VARIANT),)
+.tests: three-run-diff
+three-run-diff:
+	$(PRINT_TEST)	$(XL_DIFF)
+XL_DIFF= diff								\
+	$(MIQ_OBJDIR:%$(MIQ_DIR)=%/bootstrap/$(MIQ_DIR))/compiler.xl.cpp \
+	$(MIQ_OBJDIR:%$(MIQ_DIR)=%/stability/$(MIQ_DIR))/compiler.xl.cpp
+endif
+
+.prebuild: xl_lib.h xl.syntax
 # MinGW's unable to follow symlinks, so we have to copy dependencies
-xl_lib.h:
-	cp ../xl_lib.h .
-xl.syntax:
-	cp ../xl.syntax .
+xl_lib.h: ../xl_lib.h
+	$(PRINT_COPY) cp $< $@
+xl.syntax: ../xl.syntax
+	$(PRINT_COPY) cp $< $@
 
-.PRECIOUS: $(OBJDIR)/%.xl.C
+$(MIQ_OBJDIR)%.xl$(OBJ_EXT): $(MIQ_OBJDIR)%.xl.cpp
+	$(PRINT_COMPILE) $(MAKE_CXX)
 
-$(OBJDIR)/%.xl.o: $(OBJDIR)/%.xl.C
-	$V $(CXX) -I . $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
+$(MIQ_OBJDIR)%.xl.cpp: %.xl $(XL) $(OTHER_SOURCES)
+	$(PRINT_COMPILE) $(XL) $< > $@
+.PRECIOUS: $(MIQ_OBJDIR)%.xl.cpp
 
-$(OBJDIR)/%.xl.C: %.xl $(XL) $(OTHER_SOURCES)
-	$V $(XL) $< > $@
+LD=$(CXX)

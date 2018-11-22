@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.parser.tree.xl               (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.parser.tree.xl               (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Implementation of the parser tree
-// 
+//
 //     This file actually only provides debug support
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -32,6 +32,19 @@ module XL.PARSER.TREE is
 // ----------------------------------------------------------------------------
 //    Implementation of parse tree functions
 // ----------------------------------------------------------------------------
+
+    function XLNormalize (name : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return the normalized name (lower-case, no underscores)
+    // ------------------------------------------------------------------------
+        result := ""
+        Max : integer := length(name)
+        I : integer
+        for I in 0..Max-1 loop
+            C : character := name[I]
+            if C <> '_' then
+                result += ASCII.tolower C
+
 
     function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer is
     // ------------------------------------------------------------------------
@@ -94,7 +107,7 @@ module XL.PARSER.TREE is
         if test.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(test)
             R : PT.name_tree := PT.name_tree(ref)
-            if T.value = R.value then
+            if XLNormalize(T.value) = XLNormalize(R.value) then
                 return 1
             if verbose then IO.Writeln "/* Failed nameval */"
             return 0

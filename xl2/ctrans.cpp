@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  ctrans.cpp                      (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  ctrans.cpp                      (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     XL to C translator
-// 
+//
 //     This is a very bare-bones translator, designed only to allow
 //     low-cost bootstrap of the XL compiler.
-// 
+//
 //     We care here only about the subset of XL that has the
 //     same semantics than C, or semantics that "look and feel" like C
-// 
-// 
+//
+//
 // ****************************************************************************
 // This program is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -34,9 +34,9 @@
 
 
 // ============================================================================
-// 
+//
 //    Typedefs and globals
-// 
+//
 // ============================================================================
 
 struct XL2CTranslation;
@@ -73,9 +73,9 @@ text in_enum = "";
 
 
 // ============================================================================
-// 
+//
 //   Initialization
-// 
+//
 // ============================================================================
 
 void XLInitCTrans()
@@ -97,9 +97,9 @@ void XLInitCTrans()
 
 
 // ============================================================================
-// 
+//
 //   Translation engine
-// 
+//
 // ============================================================================
 
 text XLNormalize (text name)
@@ -255,7 +255,7 @@ bool XL2CTranslation::Block(XLBlock *input)
         out << input->opening;
         XL2C(input->child);
         out << input->closing;
-    }        
+    }
     return true;
 }
 
@@ -299,14 +299,12 @@ bool XL2CTranslation::Infix(XLInfix *input)
     }
     else
     {
-        out << '(';
         XL2C(input->left);
         if (XLNames.count(nname))
             out << ' ' << XLNames[nname] << ' ';
         else
             out << ' ' << nname << ' ';
         XL2C(input->right);
-        out << ')';
     }
     return true;
 }
@@ -335,9 +333,9 @@ void XL2C(XLTree *tree)
 
 
 // ****************************************************************************
-// 
+//
 //   Implementation of the various callbacks
-// 
+//
 // ****************************************************************************
 
 #define PREFIX(x)       void Prefix_##x(XLPrefix *tree)
@@ -345,9 +343,9 @@ void XL2C(XLTree *tree)
 
 
 // ============================================================================
-// 
+//
 //   Declarations
-// 
+//
 // ============================================================================
 
 template<class T> struct ScopeSaver
@@ -468,7 +466,7 @@ PREFIX(module)
         (is_tree->name == text("is") || is_tree->name == text("with")))
     {
         XLModule2Namespace(is_tree->left);
-        XL2C(is_tree->right);        
+        XL2C(is_tree->right);
     }
     else
     {
@@ -538,7 +536,7 @@ INFIX(scope)
         out << "::";
     else
         out << ".";
-    XL2C(tree->right);    
+    XL2C(tree->right);
 }
 
 
@@ -750,7 +748,7 @@ PREFIX(type)
     else
     {
         out << "*** Bad typedef ";
-        XL2C(tree->right);    
+        XL2C(tree->right);
     }
 }
 
@@ -781,9 +779,9 @@ PREFIX(enumeration)
 
 
 // ============================================================================
-// 
+//
 //   Statements
-// 
+//
 // ============================================================================
 
 INFIX(then)
@@ -792,7 +790,7 @@ INFIX(then)
 // ----------------------------------------------------------------------------
 {
     XL2C(tree->left); // The 'if'
-    XL2C(tree->right); // The block    
+    XL2C(tree->right); // The block
 }
 
 
@@ -803,7 +801,7 @@ INFIX(else)
 {
     XL2C(tree->left); // The 'if - then'
     out << "else\n";
-    XL2C(tree->right); // The block    
+    XL2C(tree->right); // The block
 }
 
 
@@ -939,9 +937,9 @@ INFIX(to)
 
 
 // ============================================================================
-// 
+//
 //   The 'translate' extension
-// 
+//
 // ============================================================================
 
 typedef std::map< text, int > args_map;
@@ -1068,7 +1066,7 @@ void TranslateClauses(XLTree *clauses, XLTree *to_translate)
                     return;
                 }
             }
-            
+
         }
 
         if (infix->name == text("else"))
@@ -1077,7 +1075,7 @@ void TranslateClauses(XLTree *clauses, XLTree *to_translate)
             out << "if (!XLtranslateDone) {\n";
             XL2C(infix->right);
             out << "}\n";
-            return;                
+            return;
         }
     }
 
