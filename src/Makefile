@@ -77,7 +77,11 @@ PRODUCTS=xl.exe
 PREFIX_LIB=$(PREFIX)lib/xl/
 LIB_INSTALL=builtins.xl xl.syntax C.syntax *.stylesheet
 
-DEFINES=XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
+DEFINES=	$(DEFINES_$(COMPILER))		\
+		XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
+DEFINES_llvm=	LLVM_VERSION=$(LLVM_VERSION)
+DEFINES_none=	INTERPRETER_ONLY
+
 INCLUDES=. includes recorder
 
 CONFIG= sigaction                       \
@@ -105,10 +109,10 @@ LLVM_LDFLAGS=$(LLVM_LDFLAGS_$(COMPILER))
 
 # When LLVM is enabled, we get those
 LLVM_VERSION_llvm=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
-LLVM_FLAGS_llvm=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
-		  -DLLVM_VERSION=$(LLVM_VERSION)
-LLVM_LIBS_llvm=$(shell $(LLVM_CONFIG) --libs --system-libs)
-LLVM_LDFLAGS_llvm=$(shell $(LLVM_CONFIG) --ldflags) $(LDFLAGS_llvm$(LLVM_VERSION))
+LLVM_FLAGS_llvm=    $(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g)
+LLVM_LIBS_llvm=     $(shell $(LLVM_CONFIG) --libs --system-libs)
+LLVM_LDFLAGS_llvm=  $(shell $(LLVM_CONFIG) --ldflags)   \
+                    $(LDFLAGS_llvm$(LLVM_VERSION))
 
 # When LLVM is not enabled
 LLVM_FLAGS_none=-DINTERPRETER_ONLY

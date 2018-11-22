@@ -52,7 +52,9 @@
 
 #include "tree.h"
 #include "context.h"
+#ifndef INTERPRETER_ONLY
 #include "llvm-crap.h"
+#endif // INTERPRETER_ONLY
 #include <map>
 
 
@@ -63,6 +65,10 @@ XL_BEGIN
 //   Forward classes
 //
 // ============================================================================
+
+#ifdef INTERPRETER_ONLY
+typedef struct llvm_type Type_p;
+#endif // INTERPRETER_ONLY
 
 struct RewriteCalls;
 struct RewriteCandidate;
