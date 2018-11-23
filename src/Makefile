@@ -99,8 +99,8 @@ CONFIG= sigaction                       \
 
 include $(MIQ)rules.mk
 
-# Name of 'llvm-config' to use (e.g. llvm-config-2.9)
-LLVM_CONFIG=llvm-config-llvm6.0
+# Name of 'llvm-config' to use - Note that XL now requires llvm 6.0 or above
+LLVM_CONFIG=llvm-config
 
 LLVM_VERSION=$(LLVM_VERSION_$(COMPILER))
 LLVM_FLAGS=$(LLVM_FLAGS_$(COMPILER))

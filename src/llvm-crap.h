@@ -53,10 +53,15 @@
 
 #ifndef LLVM_VERSION
 #error "Sorry, no can do anything without knowing the LLVM version"
-#elif LLVM_VERSION < 500
+#elif LLVM_VERSION < 700
+// I tried *really hard* to keep source code compatibility through releases
+// 2.7 through 7.0. It proved an overly arduous challenge, and, believe it
+// or not, not the primary objective of the work done on XL.
 // At some point, I have only so much time to waste on this.
 // Feel free to enhance if you care about earlier versions of LLVM.
-#error "LLVM versions that do not support ORC are no longer supported."
+// If you are interested, you can recover older versions of llvm-crap.h
+// to figure out how to do it.
+#error "LLVM is source-incompatible between releases. I stopped trying."
 #endif
 
 
