@@ -116,7 +116,7 @@ $(MIQ)rules.mk:
 	$(PRINT_COMMAND) cd ../.. && git submodule update --init --recursive
 
 ifeq ($(VARIANT),)
-.tests: three-run-diff regression
+.tests: three-run-diff
 three-run-diff:
 	$(PRINT_TEST)	$(XL_DIFF)
 XL_DIFF= diff								\
