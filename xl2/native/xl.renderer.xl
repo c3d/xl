@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.renderer.xl                  (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.renderer.xl                  (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Renders an XL tree to (configurable) text form
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -562,6 +562,7 @@ module XL.RENDERER is
             W : what as PT.wildcard_tree
             RenderFormat output, W.name, "?wildcard?", "error "
         else
+            IO.Write "/* ERROR: Rendering kind ", what.kind, " */ "
             RenderFormat output, "?unknown?", "?unknown?", "error "
 
         output.self := old_self
@@ -591,9 +592,9 @@ module XL.RENDERER is
 
 
 // ============================================================================
-// 
+//
 //    I/O customization
-// 
+//
 // ============================================================================
 
 module XL.TEXT_IO with

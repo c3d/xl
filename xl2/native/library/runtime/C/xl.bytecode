@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.bytecode                     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.bytecode                     (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Bytecode format strings
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU Genral Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -54,6 +54,7 @@ init            "#include <stdio.h>"
                 "typedef struct {} /* !ANSIC */ xlrecord, xlmodule;"
                 "typedef FILE *                 xlfile;"
                 "jmp_buf *                      XL_exception_stack = NULL;"
+                "#define NOP                    (void) 0;"
 
 term            "/*end*/"
 
@@ -109,7 +110,7 @@ fn_ptr_end     ";"
 fn_body_begin   ""
 fn_body         "{"
 fn_entry        ""
-fn_exit         "exit_$1: 0;"
+fn_exit         "exit_$1: NOP;"
 fn_body_end     "}"
 
 fn_ptr_copy     "$1 = $2;"
@@ -132,7 +133,7 @@ call_arg_retN   ""
 call_arg        "$[, ]$2 "
 call_args_end   ")$};"
 call_outtype    ""
-call_outarg1    "$1 = $2;"
+call_outarg1    "$1 = $3;"
 call_outargN    "$1 = $2.$3;"
 call_end        ""
 
@@ -148,13 +149,13 @@ goto_exit       "goto exit_$1;"
 if              "if($1) goto else_$2;"
 ifnot           "if(!($1)) goto else_$2;"
 ifelse          "goto endif_$1;"
-                "else_$1: 0;"
-ifend           "endif_$1: 0;"
-ifendelse       "else_$1: 0;"
+                "else_$1: NOP;"
+ifend           "endif_$1: NOP;"
+ifendelse       "else_$1: NOP;"
 
 cases           ""
 caseskip        "goto end_$1;"
-casesend        "end_$1: 0;"
+casesend        "end_$1: NOP;"
 
 case_begin      "switch($2) {"
 case_label      ""
@@ -170,35 +171,35 @@ restart_loop    "goto loop_$1;"
 
 loop_begin      "loop_$1:"
 loop_end        "goto loop_$1;"
-                "loopexit_$1: 0;"
+                "loopexit_$1: NOP;"
 
 non_loop_begin  "loop_$1:"
-non_loop_end    "loopexit_$1: 0;"
+non_loop_end    "loopexit_$1: NOP;"
 
 do_while_begin  "loop_$1:"
 do_while_test   "/* Test code for $1 in $2 */"
 do_while_end    "if ($2) goto loop_$1;"
-                "loopexit_$1: 0;"
+                "loopexit_$1: NOP;"
 
 do_until_begin  "loop_$1:"
 do_until_test   "/* Test code for $1 in $2 */"
 do_until_end    "if (!$2) goto loop_$1;"
-                "loopexit_$1: 0;"
+                "loopexit_$1: NOP;"
 
 while_begin     "loop_$1:"
 while_test      "if (!$2) goto loopexit_$1;"
 while_end       "goto loop_$1;"
-                "loopexit_$1: 0;"
+                "loopexit_$1: NOP;"
 
 until_begin     "loop_$1:"
 until_test      "if ($2) goto loopexit_$1;"
 until_end       "goto loop_$1;"
-                "loopexit_$1: 0;"
+                "loopexit_$1: NOP;"
 
 once_decl       "static int $1_Once = 0; // Single-threaded"
 once_begin      "if ($1_Once) goto $1_endOnce;"
                 "$1_Once = 1;"
-once_end        "$1_endOnce: 0;"
+once_end        "$1_endOnce: NOP;"
 
 type_info       "#define $1_id $2"
 
@@ -218,7 +219,7 @@ unwind_land     "case $2_id: /* $1 */ "
 unwind_resume   "goto $1_end; /* $2 */"
 unwind_caught   "} /* $1 */"
                 "longjmp(*XL_exception_stack, $1_exc);"
-unwind_end      "$1_end: 0;"
+unwind_end      "$1_end: NOP;"
 unwind_raise    "longjmp(*XL_exception_stack, $1);"
 unwind_reraise  "longjmp(*XL_exception_stack, $1_exc);"
 
@@ -243,7 +244,7 @@ div_uint        "$1 = $2 / $3;"
 mod_uint        "$1 = $2 % $3; if ($1 && ($2 ^ $3) < 0) $1 += $3;"
 rem_uint        "$1 = $2 % $3; // Assume C99 remainder"
 power_uint      "if ($3 < 0) $1 = 0; else {"
-                "  xluint64 x = $2, y = $3;" 
+                "  xluint64 x = $2, y = $3;"
                 "  $1 = 1; while (y) { if (y&1) $1 *= x; x *= x; y >>= 1; }"
                 "}"
 and_uint        "$1 = $2 & $3;"
@@ -416,4 +417,3 @@ uint64_from_bool "$1 = (xluint64) $2;"
 // Sized integer and real types
 uint     ->     int int8 int16 int32 int64 uint8 uint16 uint32 uint64
 real    ->      real32 real64 real80
-

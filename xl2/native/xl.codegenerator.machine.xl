@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.codegenerator.machine.xl     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  xl.codegenerator.machine.xl     (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //      Machine-dependent part of the code generator
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -709,9 +709,9 @@ module XL.CODE_GENERATOR.MACHINE is
 
 
     // ========================================================================
-    // 
+    //
     //   Declaring types in the generated code
-    // 
+    //
     // ========================================================================
 
     function DeclareType(tp   : TY.any_type;
@@ -728,5 +728,3 @@ module XL.CODE_GENERATOR.MACHINE is
         MDecl : PT.tree := parse_tree(@type_decl 'MName' 'MName')
         XLT.AddGlobalDecl MDecl
         return MName
-
-
