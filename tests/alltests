@@ -48,16 +48,17 @@ TOTAL_TESTS=0
 while [ $# -gt 0 ]
 do
     case $1 in
-        -xl)                    XL="$2";                shift; shift;;
-        -r|-runtime)            RUNTIME="$2";           shift; shift;;
-        -i|-interactive)        RUNTIME="O0";           shift;;
-        -I|-installed)          XL="xl"; INSTALLED=1;   shift;;
-        -O0|-O1|-O2|-O3)        RUNTIME="${1/-/}";      shift;;
-        -d|-dir)                SUBDIRS="$2";           shift; shift;;
-        -b|-baseline)           BASELINE="*";           shift;;
-        -u|-update)             UPDATE='*'"$2"'*';      shift; shift;;
-        *)                      PATTERN='*'"$1"'*';     shift;;
+        -xl)                    XL="$2"                 ; shift;;
+        -r|-runtime)            RUNTIME="$2"            ; shift;;
+        -i|-interactive)        RUNTIME="O0"            ;;
+        -I|-installed)          XL="xl"; INSTALLED=1    ;;
+        -O0|-O1|-O2|-O3)        RUNTIME="${1/-/}"       ;;
+        -d|-dir)                SUBDIRS="$2"            ; shift;;
+        -b|-baseline)           BASELINE="*"            ;;
+        -u|-update)             UPDATE='*'"$2"'*'       ; shift;;
+        *)                      PATTERN='*'"$1"'*'      ;;
     esac
+    shift
 done
 
 # If we update the baseline, then select all patterns
@@ -85,7 +86,6 @@ SUCCESS="$TESTDIR/success-"$RUNTIME".out"
 FAILURE="$TESTDIR/failure-"$RUNTIME".out"
 EXPECTED="$TESTDIR/expected-"$RUNTIME".out"
 BASEFILE="$TESTDIR/baseline-"$RUNTIME".txt"
-XL="$XL $LIBOPT"
 
 export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 
