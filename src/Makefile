@@ -97,6 +97,7 @@ CONFIG= sigaction                       \
         glob                            \
         uchar ushort uint ulong longlong
 
+MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
 # Name of 'llvm-config' to use - Note that XL now requires llvm 6.0 or above
