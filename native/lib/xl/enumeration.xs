@@ -14,14 +14,19 @@
 //
 //
 // ****************************************************************************
-//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
 //   This software is licensed under the GNU General Public License v3
 //   See LICENSE file for details.
 // ****************************************************************************
 
-module XL.ENUMERATION with
+use UNSIGNED
 
-    enumeration [type reptype] Body with
+ENUMERATION[unsigned:type is unsigned] has
+// ----------------------------------------------------------------------------
+//   Interface for the enumeration types
+// ----------------------------------------------------------------------------
+
+    enumeration [type reptype] Body has
         type value
 
         text    Value:value     as text

@@ -14,7 +14,7 @@
 //
 //
 // ****************************************************************************
-//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
 //   This software is licensed under the GNU General Public License v3
 //   See LICENSE file for details.
 // ****************************************************************************
@@ -66,11 +66,28 @@ module XL.INTEGER[value:type] is
     X:value < Y:value           as boolean      is builtin ICmpSLT
     X:value <= Y:value          as boolean      is builtin ICmpSLE
 
+    bit_count X:value           as unsigned     is
+        result := 0
+        while X <> 0 loop
+            if X and 1 <> 0 then
+                result++
+            X /= 2
+        result
+
+    low_bit X:value             as unsigned     is
+        result := 0
+        if X = 0 then
+    high_bit X:value            as unsigned
+
 module XL.INTEGER is
-    type integer                                is builtin i64
-    type integer1                               is builtin i1
-    type integer8                               is builtin i8
-    type integer16                              is builtin i16
-    type integer32                              is builtin i32
-    type integer64                              is builtin i64
-    type integer128                             is builtin i128
+    type integer                                is builtin integer 64
+    type integer1                               is builtin integer 1
+    type integer8                               is builtin integer 8
+    type integer16                              is builtin integer 16
+    type integer32                              is builtin integer 32
+    type integer64                              is builtin integer 64
+    type integer128                             is builtin integer 128
+    type integer_max                            is builtin integer 128
+
+    type integer[Low..High] is
+        num_bits is log2i

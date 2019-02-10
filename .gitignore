@@ -31,7 +31,6 @@ tests/**/success-*.out
 src/[a-z].xl
 src/[a-z].xl
 src/config.h
-xl
 xl2/*/TESTS/**/*.c
 src/make-it-quick/
 xl2/bootstrap/xl.syntax

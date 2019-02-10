@@ -14,7 +14,7 @@
 //
 //
 // ****************************************************************************
-//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
 //   This software is licensed under the GNU General Public License v3
 //   See LICENSE file for details.
 // ****************************************************************************
@@ -27,3 +27,11 @@ module XL.TEXT[value:type] is
     X:text >= Y:text                as boolean is C xl_text_ge
     X:text < Y:text                 as boolean is C xl_text_lt
     X:text <= Y:text                as boolean is C xl_text_le
+
+    for Variable in Text:slice loop Body is
+        I               : index         := 0
+        Length          : size          := length Text
+        while I < Length loop
+            [[Variable]] is Text[I]
+            Body
+            I++

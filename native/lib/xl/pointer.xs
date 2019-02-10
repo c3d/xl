@@ -14,12 +14,15 @@
 //
 //
 // ****************************************************************************
-//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
 //   This software is licensed under the GNU General Public License v3
 //   See LICENSE file for details.
 // ****************************************************************************
 
-module XL.POINTER[type value] with
+POINTER[item:type] has
+// ----------------------------------------------------------------------------
+//   Interface for machine-level pointers
+// ----------------------------------------------------------------------------
 
     use XL.ALIAS[value]
 
@@ -53,6 +56,10 @@ module XL.POINTER[type value] with
     bit_align X:pointer                 as size
 
 
-module XL.POINTER with
+POINTER has
+// ----------------------------------------------------------------------------
+//   Interface to easily create pointer types
+// ----------------------------------------------------------------------------
 
-    type pointer[type value]            is XL.POINTER[value].pointer
+    pointer[item:type]                  is POINTER[item].pointer
+    pointer to item:type                is pointer[item]

@@ -14,13 +14,17 @@
 //
 //
 // ****************************************************************************
-//  (C) 2018 Christophe de Dinechin <christophe@dinechin.org>
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
 //   This software is licensed under the GNU General Public License v3
 //   See LICENSE file for details.
 // ****************************************************************************
 
-module XL.ALIAS[type value] with
+module XL.ALIAS[value:type] has
+// ----------------------------------------------------------------------------
+//    Interface for the module implementing aliases
+// ----------------------------------------------------------------------------
 
-    type alias
+    alias:type
+
     X:alias := Y:value          as value        is builtin Store
     X:alias                     as value        is builtin Load
