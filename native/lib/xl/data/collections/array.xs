@@ -6,8 +6,8 @@
 //
 //     Interface for the `array` type
 //
-//
-//
+//     An array is a fixed-size collection of items of the same type,
+//     which is guaranteed to be contiguous in memory
 //
 //
 //
@@ -18,10 +18,6 @@
 //   This software is licensed under the GNU General Public License v3
 //   See LICENSE file for details.
 // ****************************************************************************
-
-import SLICE
-import STREAM
-
 
 // The `array` type is a fixed-size collection of items of the same type
 type array[item:type, index:enumerated, Range:range of index]
@@ -38,13 +34,16 @@ array.index                             is another array.size
 // Index range type
 array.range                             is range of array.index
 
+// Size of an array type, i.e. number of elements
+array.Size                              as array.range.size
+
 // Actual index range associated to an array type
 array.Range                             as array.range
 
 with
     Array       : array
     Index       : array.index
-    MyArray     : my array
+    OwnArray    : own array
     Variable    : local array.item
 do
     // The range type associated with an array value
@@ -56,20 +55,14 @@ do
     // The size of an array
     Array.Size                          is array.Range.Size
 
-    // Implicitly convert an array to a slice
-    Array                               as slice[array.item]
-
-    // Implicitly convert an array to a stream
-    Array                               as stream[array.item]
-
     // Implicitly convert an owned array to an owned slice
-    MyArray                             as my slice[array.item]
+    OwnArray                            as own slice[array.item]
 
     // Index an array, returning an element by value
     Array[Index]                        as array.item
 
     // Index an owned array, returning an owned element
-    MyArray[Index]                      as my array.item
+    OwnArray[Index]                     as own array.item
 
     // Create an iterator over array value
     Variable in Array                   as iterator

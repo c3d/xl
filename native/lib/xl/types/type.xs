@@ -136,7 +136,7 @@ module TYPE with
     mutable T:type              as type
 
     // For arguments, constrain the direction for argument passing
-    my  T:type                  as type // Take ownership to modify ('mine')
+    own T:type                  as type // Take ownership to modify
     in  T:type                  as type // Input only, destroyed in caller
     out T:type                  as type // Output only, create in caller
 

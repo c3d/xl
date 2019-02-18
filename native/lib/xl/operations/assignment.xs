@@ -19,15 +19,40 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-interface XL.ASSIGNMENT[value:type] is
-// ----------------------------------------------------------------------------
-//    Assignment operations (copy and move)
-// ----------------------------------------------------------------------------
+use ARITHMETIC
 
-    out x:value := y:value              as value // Copy
-    out x:value <- in out y:value       as value // Move
+type copiable[type source is copiable] with
+// ----------------------------------------------------------------------------
+//    Copy assignment
+// ----------------------------------------------------------------------------
+//    A copy assignment makes a copy of the source into the target.
+//    It will `delete` the target if necessary
+//    It will `copy` the source if necessary, which may be expensive
+//    If copy is too expensive, consider using a move `<-` instead
 
-    in out x:value += y:value           as value // Add to target
-    in out x:value -= y:value           as value // Subtract from target
-    in out x:value *= y:value           as value // Multiply with target
-    in out x:value /= y:value           as value // Divide with target
+    with
+        Target  : out copiable
+        Source  : source
+    do
+        Target := Source                as nil
+
+    // Indicate if copy can be made bitwise
+    BITWISE_COPY                        as boolean is true
+
+
+type movable[type source is movable] with
+// ----------------------------------------------------------------------------
+//    Move assignment
+// ----------------------------------------------------------------------------
+//    A move assignment transfers the copy from the source to the target
+//    It will `delete` the target if necessary
+//    It will undefine the source and define the target with the value
+
+    with
+        Target  : out movable
+        Source  : in  source
+    do
+        Target <- Source                as nil
+
+    // Indicate if move can be made bitwise
+    BITWISE_MOVE                        as boolean is true

@@ -19,13 +19,14 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import POINTER
-import CONTRACT
+use POINTER
+use CONTRACT
 
-type array[Size:size, item:type] is
+type array[item:type, index:enumerated, Range:range of index] is
 // ----------------------------------------------------------------------------
 //    Implementation of the array type
 // ----------------------------------------------------------------------------
+    Size                is Range.Size
     BitSize             is Size * bit_count(item.ByteSize)
     BitAlign            is item.BitAlign
     ByteSize            is Size * MEMORY.Align(item.ByteSize, item.ByteAlign)
@@ -37,7 +38,7 @@ array.Range as array.range is
 // ----------------------------------------------------------------------------
 //   The range of indexes for the array
 // ----------------------------------------------------------------------------
-    0..array.Size-1
+
 
 
 with

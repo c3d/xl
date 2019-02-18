@@ -6,9 +6,9 @@
 //
 //     Specification for bitwise operations
 //
-//
-//
-//
+//     Bitwise operations apply on the individual bits in a data type.
+//     Operations in this module are common to a variety of data types,
+//     notably integer, unsigned and boolean, as well as arrays of such types
 //
 //
 //
@@ -19,36 +19,60 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-interface XL.BITWISE[type value] is
+use ASSIGNMENT
+
+type bitwise with
 // ----------------------------------------------------------------------------
 //   Specification for bitwise arithmetic operations
 // ----------------------------------------------------------------------------
-//   Bitwise operations apply on the individual bits in a data type.
-//   Operations in this module are common to a variety of data types,
-//   notably integer, unsigned and boolean, as well as arrays of such types
 
     type bit_count              is unsigned
 
-    // Bitwise operations
-    X:value and  Y:value        as value // Boolean and
-    X:value or   Y:value        as value // Boolean or
-    X:value xor  Y:value        as value // Boolean exclusive or
+    with
+        Value   : bitwise
+        Left    : bitwise
+        Right   : bitwise
+        Owned   : copiable and own bitwise
+        Shift   : bit_count
+    do
+        Left and  Right         as bitwise // Boolean and
+        Left or   Right         as bitwise // Boolean or
+        Left xor  Right         as bitwise // Boolean exclusive or
 
-    // Shifts
-    X:value shl  Y:bit_count    as value // Shift left
-    X:value shr  Y:bit_count    as value // Shift right
-    X:value ashr Y:bit_count    as value // Arithmetic (signed) shift right
-    X:value lshr Y:bit_count    as value // Logical shift right
+        // Shifts
+        Left shl  Shift         as bitwise // Shift left
+        Left shr  Shift         as bitwise // Shift right
+        Left ashr Shift         as bitwise // Arithmetic (signed) shift right
+        Left lshr Shift         as bitwise // Logical shift right
 
-    // Rotations
-    X:value rol  Y:bit_count    as value // Rotate left
-    X:value ror  Y:bit_count    as value // Rotate right
+        // Rotations
+        Left rol  Shift         as bitwise // Rotate left
+        Left ror  Shift         as bitwise // Rotate right
 
-    little_endian X:value       as value // Byte swap if big-endian
-    big_endian X:value          as value // Byte swap if little-endian
-    not X:value                 as value // Bitwise not
+        // Unary operators
+        Not Value               as bitwise // Bitwise not
 
-    count_one_bits   X:value    as bit_count
-    count_zero_bits  X:value    as bit_count
-    lowest_bit       X:value    as bit_count
-    highest_bit      X:value    as bit_count
+        // Traditional C-style operator notations
+        Left  &   Right         as bitwise      is Left and Right
+        Left  |   Right         as bitwise      is Left or  Right
+        Left  ^   Right         as bitwise      is Left xor Right
+        Left  <<  Shift         as bitwise      is Left shl Shift
+        Left  >>  Shift         as bitwise      is Left shr Shift
+        ~Value                  as bitwise      is Not Value
+        !Value                  as bitwise      is Not Value
+
+        // In-place operators with a default implementation
+        Owned &=  Right         as nil          is Owned := Owned & Right
+        Owned |=  Right         as nil          is Owned := Owned | Right
+        Owned ^=  Right         as nil          is Owned := Owned ^ Right
+        Owned <<= Shift         as nil          is Owned := Owned << Shift
+        Owned >>= Shift         as nil          is Owned := Owned >> Shift
+
+        // Endianness adjustments
+        LittleEndian Value      as bitwise // Byte swap if big-endian
+        BigEndian Value         as bitwise // Byte swap if little-endian
+
+        CountOneBits     Value  as bit_count
+        CountZeroBits    Value  as bit_count
+        LowestBit        Value  as bit_count
+        HighestBit       Value  as bit_count

@@ -6,7 +6,7 @@
 //
 //     Specification for comparisons between types
 //
-//
+//     Comparisons are binary operators returning boolean values
 //
 //
 //
@@ -34,67 +34,67 @@
 // 2) XL splits the `real` and `ieee` types (see REAL module)
 
 
-use BOOLEAN, FLAGS
+use BOOLEAN
 
-module COMPARISON[value:type] with
+type equatable with
 // ----------------------------------------------------------------------------
-//    Specification for comparisons between values
+//   Type that has equality operators
 // ----------------------------------------------------------------------------
-//    Comparisons relate values of the same type.
+//   For many basic types, this can be implemented using a bitwise comparison
+//   If not, it is usually only necessary to implement `Left=Right` as long
+//   as there is a guarantee that `X<>Y` is the opposite, although for
+//   optimization reasons, it may be useful to provide both.
 
-    module EQUALITY with
-    // ------------------------------------------------------------------------
-    //   Equality operators
-    // ------------------------------------------------------------------------
+    with
+        Left    : equatable
+        Right   : equatable
+    do
+        Left =  Right           as boolean
+        Left <> Right           as boolean is not Left = Right
 
-        // Base operator
-        X:value = Y:value       as boolean
-
-        // Derived operator
-        X:value <> Y:value      as boolean
-
-        // Indicates if equality is symmetric, transitive and reflexive
-        SYMMETRIC               as boolean // X = Y  => Y = X
-        REFLEXIVE               as boolean // X = X is true
-        TRANSITIVE              as boolean // X = Y and Y = Z => X = Z
-        EXCLUSIVE               as boolean // (X=Y) and (X<>Y) are not both true
-        TOTAL                   as boolean // (X = Y) xor (X <> Y) is true
-
-
-    module IDENTITY with
-    // ------------------------------------------------------------------------
-    //   Identity operators (same entity for the computer)
-    // ------------------------------------------------------------------------
-
-        // Base operator
-        X:value == Y:value      as boolean
-
-        // Derived operator if not overriden
-        X:value != Y:value      as boolean
+    // Indicate if behaves like a true mathematical equality (default is true)
+    SYMMETRIC                   as boolean is true // X = Y  => Y = X
+    REFLEXIVE                   as boolean is true // X = X is true
+    TRANSITIVE                  as boolean is true // X = Y and Y = Z => X = Z
+    EXCLUSIVE                   as boolean is true // not ((X=Y) and (X<>Y))
+    TOTAL                       as boolean is true // (X = Y) xor (X <> Y)
+    BITWISE                     as boolean is true // Bitwise comparison works
 
 
-    module ORDER with
-    // ------------------------------------------------------------------------
-    //   Total ordering between elements
-    // ------------------------------------------------------------------------
+type identifiable with
+// ----------------------------------------------------------------------------
+//   A type that has identity operators (same entity for the computer)
+// ----------------------------------------------------------------------------
+//   For references, the "equality" checks that the objects have the same value
+//   whereas the "identity" checks that the objects have the same address
+//   If your equality is reflexive, identity implies equality
 
-        // Base operator
-        X:value <= Y:value      as boolean
-
-        // Derived operator
-        X:value >= Y:value      as boolean
-        X:value < Y:value       as boolean
-        X:value > Y:value       as boolean
-
-        // Min and Max values
-        Max Args:list[value]    as value
-        Min Args:list[value]    as value
-
-        // Indicate what kind of order we are dealing with
-        ANTISYMMETRIC           as boolean // X<=Y and Y<=X => X=Y
-        TRANSITIVE              as boolean // X<=Y and Y<=Z => X<=Z
-        CONNEX                  as boolean // X<=Y or Y<=X is true
+    with
+        Left    : identifiable
+        Right   : identifiable
+    do
+        Left == Right           as boolean
+        Left != Right           as boolean is Left == Right
 
 
-    // If you use XL.COMPARISON, you get all modules by default
-    use EQUALITY, IDENTITY, ORDER
+type ordered with
+// ----------------------------------------------------------------------------
+//   Type with an ordering between elements
+// ----------------------------------------------------------------------------
+//   In general, it is sufficient to implement a <= operator for the type
+//   to become ordered. Other operators can be implemented as optimizations.
+
+    with
+        Left    : ordered
+        Right   : ordered
+    do
+        Left <= Right           as boolean
+
+        Left >= Right           as boolean is     Right <= Left
+        Left <  Right           as boolean is not Right <= Left
+        Left >  Right           as boolean is not Left  <= Right
+
+    // Indicate what kind of order we are dealing with
+    ANTISYMMETRIC           as boolean // X<=Y and Y<=X => X=Y
+    TRANSITIVE              as boolean // X<=Y and Y<=Z => X<=Z
+    CONNEX                  as boolean // X<=Y or Y<=X is true
