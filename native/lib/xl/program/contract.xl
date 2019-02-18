@@ -1,0 +1,107 @@
+// ****************************************************************************
+//  contract.xl                                     XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation for software contracts
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+use SOURCE
+use COMPILER
+use RUNTIME
+use MODULE
+use SYMBOL
+
+module CONTRACT is
+// ----------------------------------------------------------------------------
+//    Contracts between entities
+// ----------------------------------------------------------------------------
+
+    require Module:source[module]       as COMPILER.error or nil is
+    // ------------------------------------------------------------------------
+    // Require that a module be present (typically used in generic code)
+    // ------------------------------------------------------------------------
+        case Lookup(CurrentScope, Module) is
+            symbol X    then nil
+            nil         then COMPILER.Error "Requirement $1 not met: ", Module
+
+
+    assume Condition:source[boolean]    as source[nil] is
+    // ------------------------------------------------------------------------
+    //   Pre-condition for some body of code
+    // ------------------------------------------------------------------------
+        Check "Precondition", Condition
+
+
+    ensure Condition:source[boolean]    as source[nil] is
+    // ------------------------------------------------------------------------
+    //    Post-condition for some body of code
+    // ------------------------------------------------------------------------
+        Check "Postcondition", Condition
+
+
+    assert Condition:source[boolean]    as source[nil] is
+    // ------------------------------------------------------------------------
+    //   General assertion for all other conditions
+    // ------------------------------------------------------------------------
+        Check "Assertion", Condition
+
+
+    Check Type:text, Condition:source[boolean] as source[nil] is
+    // ------------------------------------------------------------------------
+    //   Identify form of condition to decide if we split it
+    // ------------------------------------------------------------------------
+
+        case Condition is
+            X = Y       then Check Type, "=", X, Y
+            X < Y       then Check Type, "<", X, Y
+            X > Y       then Check Type, ">", X, Y
+            X <= Y      then Check Type, "<=", X, Y
+            X >= Y      then Check Type, ">=", X, Y
+            X == Y      then Check Type, "==", X, Y
+            X != Y      then Check Type, "!=", X, Y
+
+            Other       then
+                Source is source
+                    if [[Condition]] = false then
+                        RUNTIME.Error [[Type]] & " $1 failed", [[Condition]]
+                case Type is
+                    "Precondition"      then entry_code Source
+                    "Postcondition"     then exit_code Source
+                    "Assertion"         then Source
+
+
+    Check Type:text,
+          Symbol:text,
+          Left:source,
+          Right:source          as source[nil] is
+    // ------------------------------------------------------------------------
+    //   Check a binary condition
+    // ------------------------------------------------------------------------
+        LeftName        is TemporaryName("AssertionLeft")
+        RightName       is TemporaryName("AssertionRight")
+        Condition       is infix(Symbol, LeftName, RightName)
+        Source          is source
+            [[LeftName]] is [[Left]]
+            [[RightName]] is [[Right]]
+            if [[Condition]] = false then
+                RUNTIME.Error [[Type]] & " $1 failed.", [[Condition]]
+                RUNTIME.Error "Left value was $1", [[LeftName]]
+                RUNTIME.Error "Right value was $1", [[RightName]]
+        case Type is
+            "Precondition"      then entry_code Source
+            "Postcondition"     then exit_code Source
+            "Assertion"         then Source

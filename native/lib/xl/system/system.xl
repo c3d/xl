@@ -1,0 +1,72 @@
+// ****************************************************************************
+//  system.xl                                       XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of system configuration
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+import COMPILER
+use CASE, ERROR, INTEGER, UNSIGNED
+
+module SYSTEM is
+// ----------------------------------------------------------------------------
+//    Interface for system configuration
+// ----------------------------------------------------------------------------
+
+    // Defer all builtins to the compiler
+    builtin Operation           is COMPILER.builtin Operation
+    runtime Operation           is COMPILER.builtin Operation
+
+
+    module CONFIGURATION is
+    // ------------------------------------------------------------------------
+    //    System configuration (filled by the compiler)
+    // ------------------------------------------------------------------------
+        ADDRESS_SIZE            is builtin ADDRESS_SIZE
+        DATA_SIZE               is builtin DATA_SIZE
+        ENDIANNESS              is builtin ENDIANNESS
+        BITS_PER_BYTE           is builtin BITS_PER_BYTE
+
+
+    module TYPES is
+    // ------------------------------------------------------------------------
+    //    Native system types exposed by the SYSTEM module
+    // ------------------------------------------------------------------------
+
+        // Select `integer` and `unsigned` types for this machine
+        case DATA_SIZE is
+            64 then
+                unsigned        is unsigned64
+                integer         is integer64
+            32 then
+                unsigned        is unsigned32
+                integer         is integer32
+            Other then
+                error "Unexpected configuration, data size is $1", Other
+
+        // Select `address`, `offset` and `size` types for this machine
+        case CONFIGURATION.ADDRESS_SIZE is
+            64 then
+                address         is unsigned64
+                offset          is integer64
+                size            is unsigned64
+            32 then
+                address         is unsigned64
+                offset          is integer32
+                size            is unsigned32
+            Other then
+                error "Unexpected configuration, address size is $1", Other

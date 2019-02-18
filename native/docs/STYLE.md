@@ -17,9 +17,10 @@ identify the purpose or intent of a given symbol.
 
 1. Symbols in `lowercase` normally denote data types, or functions
    that return a data type, for example `integer` or `address`. By
-   extension, prefix operators (functions) that either take or return
-   a type will often also be spelled in lowercase, for example
-   `new integer`, `like datagram`, `byte_size integer`.
+   extension, prefix operators (functions) that either make a type
+   (e.g. `new integer`, `ref integer`) or convert between types
+   (e.g. `unsigned X:integer as unsigned`) are also normally
+   spelled using lowercase.
 
 2. Symbols in `UPPERCASE` normally denote modules or other
    compile-time constants. For example, `INTEGER` is the module

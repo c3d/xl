@@ -19,14 +19,27 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-use INTEGER
+module ARBITRARY_PRECISION
 
-MATH[number:type] has
+module COMPLEX
+module QUATERNION
+module VECTOR
+module MATRIX
+module STATISTICS
+
+
+// Using the `MATH` module by default uses `real` functions and constants
+use REAL
+use MATH[real].FUNCTIONS
+use MATH[real].CONSTANTS
+
+
+module MATH[type number] with
 // ----------------------------------------------------------------------------
 //  Interface of the math module for a given number type
 // ----------------------------------------------------------------------------
 
-    FUNCTIONS has
+    module FUNCTIONS with
     // ------------------------------------------------------------------------
     //    Interface for basic math functions
     // ------------------------------------------------------------------------
@@ -59,7 +72,7 @@ MATH[number:type] has
         Log1p X:number                  as number
 
 
-    CONSTANTS has
+    module CONSTANTS is
     // ------------------------------------------------------------------------
     //    Interface for math constants
     // ------------------------------------------------------------------------
@@ -67,24 +80,3 @@ MATH[number:type] has
         ONE                             is number 1
         TWO                             is number 2
         PI                              is number 3.1415926535897932384626433
-
-
-MATH has
-// ----------------------------------------------------------------------------
-//   Interface for the basic math module
-// ----------------------------------------------------------------------------
-
-    // Using the `MATH` module by default uses `real` functions and constants
-    use MATH[real].FUNCTIONS
-    use MATH[real].CONSTANTS
-
-    // Advanced mathematical topics
-    module BIG_INTEGER          // Big integer
-    module FIXED_POINT          // Fixed-point computations
-    module FLOATING_POINT       // Generic floating-point operations
-
-    module COMPLEX              // Complex numbers
-    module QUATERNION           // Quaternions
-    module VECTOR               // Numerical vectors
-    module MATRIX               // Numerical matrices
-    module STATISTICS           // Statistics
