@@ -25,4 +25,5 @@ module CLONE                // Clone operations
 module DELETE               // Delete operation
 module ARITHMETIC           // Arithmetic operations, e.g. +, -, *, /
 module BITWISE              // Bitwise operations, e.g. and, or, xor
+module BITSHIFT             // Bitwise shifts and rotations
 module COMPARISON           // Comparisons, e.g. <, >, =
