@@ -22,6 +22,7 @@
 use NUMBER
 use SYSTEM
 use BITWISE
+use BITSHIFT
 use LIST
 
 
@@ -34,6 +35,7 @@ type integer[Low..High] with
     // Interfaces that 'integer' implements
     as number
     as bitwise
+    as bitshift
 
     // Implement the necessary interface for `type`
     BitSize                     as bit_count
