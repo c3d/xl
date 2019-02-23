@@ -41,7 +41,7 @@ type number with
     as CLONE.clonable
     as DELETE.deletable
     as COMPARISON.equatable
-    as COMPARISION.ordered
+    as COMPARISON.ordered
     as MEMORY.sized
     as MEMORY.aligned
 
