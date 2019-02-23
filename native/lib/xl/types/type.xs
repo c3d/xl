@@ -34,6 +34,37 @@
     The second difference is that `X as T` denotes that X is not mutable,
     whereas `X : T` denotes that X is mutable.
 
+    The difference matters in particular in the interface of a type, as
+    declared by `with`. The non-mutable declarations using `as` are
+    considered as belonging only to the type, whereas mutable declarations
+    using `:` are considered as belonging to values of the type. As a result,
+    much like C++ class member declarations, "functions" belong to the type,
+    whereas "values" belong to type instances.
+
+    For example, consider a `person` type declaration like the following:
+
+        type person with
+            Name : text
+            Citizenship as text
+
+    This means that the `Name` belongs to each value of the `person` type,
+    but that the `Citizenship` belongs to the type, not to values. If `P`
+    is a `person`, then `P.Name` depends on the person, but `P.Citizenship`
+    is really a shortcut for `person.Citizenship`.
+
+    However, note that for declarations that take a value of the type as
+    their first argument, that value can be passed when using the dot
+    field notation above. It is often called `Self` to indicate that
+    intent. For example, if you have
+
+        type person with
+            First : text
+            Last  : text
+            FullName Self:person as text
+
+    In that case, it is possible to write `P.FullName` which will be a
+    shortcut for `person.FullName P`.
+
     A given piece of code can belong to multiple types. For example,
     code like `2 + 3` could belong to an `addition` type defined as
     `addition is type A+B`, but also be considered an `infix` type before
@@ -62,15 +93,44 @@
     passed around, and so on. The compiler will determine if a specific
     use of a type variable should be treated like "template code" to use
     C++ terminology, or if there is a better way to implement it.
+
     For example, consider an allocation of memory for type `T`:
         Allocate[type T] as pointer[T]
+
     The compiler is free to implement this as a generic function, similar
     to a C++ template, or as a function taking some pointer to type data,
     using for example `T.ByteSize` to allocate memory.
+
+    A type has an *interface* and an *implementation*. An interface is
+    described using the `with` operator, whereas an implementation is given
+    using the `is` operator. The compiler checks that the implementation
+    matches the interface, but there are many ways to implement the interface.
+
+    Consider for example the following interface:
+        type complex with
+            Re          : real
+            Im          : real
+            Modulus     : real
+            Argument    : real
+
+    This does not imply anything about the actual representation of
+    complex numbers. It only implies that if `Z` is a complex number,
+    it is possible to read and write all four fields.
+
+    A valid implementation of this type could be storing data in cartesian
+    form and performing computation when reading or writing Modulus and
+    Arguments. It could also switch back and forth between polar and cartesian
+    form based on actual field accesses, and have an implementation that
+    looks like:
+        type complex is either
+            cartesian   Re:real, Im:real
+            polar       Modulus:real, Argument:real
+    The latter is closer to how the type is actually implemented in the
+    standard library
 */
 
 
-use BITWISE, MEMORY, TEXT, BOOLEAN, SYMBOLS, PARSER
+use BITWISE, MEMORY, TEXT, BOOLEAN
 
 type type with
 // ----------------------------------------------------------------------------
@@ -137,17 +197,20 @@ type type with
     LifeTime                    as lifetime
 
     // Returns actual form type if the type matches the pattern
-    Matches Form:pattern        as optional type
+    Matches Value:anything      as boolean
 
     // Return conversion function to convert to another type, if any
-    Convert ToType:type         as optional (Value:anything -> anything)
+    type conversion             is optional (Value:anything -> target)
+    Convert target:type         as conversion
 
     // Return the N-th operation for that type, in declaration order
-    Operation Index:unsigned    as optional (Value:anything -> anything)
+    type operation              is optional code
+    Operation Index:unsigned    as operation
 
 
 // Return a type matching the pattern
 type Form:pattern               as type
+
 
 // Static subtype without any automatic conversion (must be explicit)
 //   unix_file_descriptor is another integer
@@ -156,6 +219,9 @@ another T:type                  as type
 // Dynamic reference subtype preserving the original type of the value
 //   intersect (S1:any shape, S2:any shape) as any shape
 any T:type                      as type
+
+// A type that is either a value of the type of a given value, or nil
+optional T:type                 as type         is T or nil
 
 // Return a type that matches either of the children forms
 //   type complex is either { rectangular(Re, Im); polar(Modulus, Argument) }
@@ -198,17 +264,6 @@ out T:type                      as type // Output only, move value from callee
 // Check if a type contains a value or pattern
 T:type contains F:pattern       as boolean
 
-// Operations on types
-T1:type and T2:type             as type // Must belong to both types
-T1:type or  T2:type             as type // Union of two types
-T1:type xor T2:type             as type // One or the other
-not T:type                      as type // Does not belong to the given type
-T1:type & T2:type               is T1 and T2
-T1:type | T2:type               is T1 or  T2
-T1:type ^ T2:type               is T1 xor T2
-~T:type                         is not T
-!T:type                         is not T
-
 // A specific type holding no value
 nil                             as type is type(nil)
 
@@ -216,21 +271,6 @@ nil                             as type is type(nil)
 anything                        as type is type(Anything)
 nothing                         is not anything
 
-
-type pattern with
-// ----------------------------------------------------------------------------
-//    A `pattern` identifies specific forms in the code
-// ----------------------------------------------------------------------------
-    Shape                   as parse_tree
-    Tree:parse_tree         as pattern // Implicitly created from parse tree
-
-
-type patterns with
-// ----------------------------------------------------------------------------
-//    A sequence of patterns, either new-line or semi-colon separated
-// ----------------------------------------------------------------------------
-    Patterns                as sequence of pattern
-    Seq:sequence of pattern as patterns // Implicitly created from sequence
 
 
 type lifetime with

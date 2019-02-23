@@ -21,26 +21,26 @@
 
 use TEXT, LIST
 
-module ERROR with
+type error with
 // ----------------------------------------------------------------------------
-//    Interface for handling errors
+//    A type representing an error
 // ----------------------------------------------------------------------------
 
-    // Type used to report an error
-    type error with
-        Message as text
-
-    // Conversion to text
-    text Error:error is Error.Message
+    // The message associated to the error
+    Message                             as text
 
     // Generate an error, possibly capturing some arguments
     error Message:text                  as error
     error Format:text, Args:list        as error
 
-    // The opposite of an error is called success
-    success                             is not error
+    // Conversion to text
+    text Error:error                    as text         is Error.Message
 
-    // Try evaluating an expression that may return an error
-    // This is NOT exception handling, but type matching
-    try Error  :error   catch Body      is Body
-    try Success:success catch Body      is Success
+
+// The opposite of an error is called success
+type success                            is not error
+
+// Try evaluating an expression that may return an error
+// This is NOT exception handling, but type matching
+try Error  :error   catch Body      is Body
+try Success:success catch Body      is Success

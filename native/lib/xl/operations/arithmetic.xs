@@ -22,7 +22,6 @@
 // ****************************************************************************
 
 use UNSIGNED
-use ASSIGNMENT
 
 type arithmetic with
 // ----------------------------------------------------------------------------
@@ -33,27 +32,31 @@ type arithmetic with
         Value   : arithmetic
         Left    : arithmetic
         Right   : arithmetic
-        Owned   : copiable and own arithmetic
+        Owned   : own arithmetic
     do
-        Left  +  Right          as arithmetic // Addition
-        Left  -  Right          as arithmetic // Subtraction
-        Left  *  Right          as arithmetic // Multiplication
-        Left  /  Right          as arithmetic // Division
-        Left rem Right          as arithmetic // Remainder
-        Left mod Right          as arithmetic // Modulo
-        Left  ^  Right          as arithmetic // Power
-        Left  ^  Right:unsigned as arithmetic // Positive power
-        -Left                   as arithmetic // Negation
+        Left  +  Right          as arithmetic   // Addition
+        Left  -  Right          as arithmetic   // Subtraction
+        Left  *  Right          as arithmetic   // Multiplication
+        Left  /  Right          as arithmetic   // Division
+        Left rem Right          as arithmetic   // Remainder of division
+        Left mod Right          as arithmetic   // Euclidean Modulo
+        Left  ^  Right          as arithmetic   // Power
+        Left  ^  Power:unsigned as arithmetic   // Positive power
+        -Left                   as arithmetic   // Negation
 
-        Abs  Value              as arithmetic // Absolute value
-        Sign Value              as arithmetic // Sign
+        Abs  Value              as arithmetic   // Absolute value
+        Sign Value              as arithmetic   // -1, 0 or 1
 
-        ++Owned                 as arithmetic // Pre-incrementation
-        --Owned                 as arithmetic // Pre-decrementation
-        Owned++                 as arithmetic // Post-incrementation
-        Owned--                 as arithmetic // Post-decrementation
+        ++Owned                 as arithmetic   // Pre-incrementation
+        --Owned                 as arithmetic   // Pre-decrementation
+        Owned++                 as arithmetic   // Post-incrementation
+        Owned--                 as arithmetic   // Post-decrementation
 
-        Owned += Right          as nil  is Owned := Owned + Right
-        Owned -= Right          as nil  is Owned := Owned - Right
-        Owned *= Right          as nil  is Owned := Owned * Right
-        Owned /= Right          as nil  is Owned := Owned / Right
+        Owned += Right          as nil          // In-place addition
+        Owned -= Right          as nil          // In-place subtraction
+        Owned *= Right          as nil          // In-place multiplication
+        Owned /= Right          as nil          // In-place division
+
+    // Values 0 and 1 should always be convertible to arithmetic values
+    0                           as arithmetic
+    1                           as arithmetic

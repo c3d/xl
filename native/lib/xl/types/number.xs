@@ -19,39 +19,33 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-use MEMORY, ENUMERATION, LIST, FLAG
+import ARITHMETIC
+import BITWISE
+import COPY
+import MOVE
+import CLONE
+import DELETE
+import COMPARISON
+import MEMORY
 
-module NUMBER[number    : type,
-              Size      : bit_count,
-              Align     : bit_count,
-              Kind      : flag(INTEGER, SIGNED, FLOAT, FIXED, UNORDERED)] with
+
+type number with
 // ----------------------------------------------------------------------------
-//   Interface for aspects common to all numbers
+//    Type representing some kind of number (from integer to complex)
 // ----------------------------------------------------------------------------
 
-    number has
-    // ------------------------------------------------------------------------
-    //    Attributes for number types (in addition to basic type attributes)
-    // ------------------------------------------------------------------------
-        use type               // Expose all attributes of `type`
-        use Kind               // Expose all `Kind` bits
+    // The 'number' type is primarily a shortcut for all interfaces below
+    as ARITHMETIC.arithmetic
+    as COPY.copiable
+    as MOVE.movable
+    as CLONE.clonable
+    as DELETE.deletable
+    as COMPARISON.equatable
+    as COMPARISION.ordered
+    as MEMORY.sized
+    as MEMORY.aligned
 
-        MinValue                as number
-        MaxValue                as number
-        Epsilon X:number        as number
-
-    // Numbers support some kind of arithmetic
-    use ARITHMETIC[number]
-
-    // Bitwise arithmetic for integer numbers
-    use BITWISE[number]         if Kind.INTEGER
-    use ASSIGN[number]
-    use COPY[number]
-
-    // Comparisons have an order, except for ordered types
-    use COMPARISON[number].EQUALITY
-    use COMPARISON[number]      if not Kind.UNORDERED
-
-    // Numbers have a fixed memory size
-    use MEMORY.SIZE [number, Size]
-    use MEMORY.ALIGN[number, Align]
+    // Range of values for the type
+    MinValue                as number
+    MaxValue                as number
+    Epsilon X:number        as number

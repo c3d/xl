@@ -95,6 +95,26 @@ type ordered with
         Left >  Right           as boolean is not Left  <= Right
 
     // Indicate what kind of order we are dealing with
-    ANTISYMMETRIC           as boolean // X<=Y and Y<=X => X=Y
-    TRANSITIVE              as boolean // X<=Y and Y<=Z => X<=Z
-    CONNEX                  as boolean // X<=Y or Y<=X is true
+    ANTISYMMETRIC               as boolean is true // X<=Y and Y<=X => X=Y
+    TRANSITIVE                  as boolean is true // X<=Y and Y<=Z => X<=Z
+    CONNEX                      as boolean is true // X<=Y or Y<=X is true
+    TOTAL                       as boolean is true
+
+    // For a total order, a simple algorithm gives maximum and minimum
+    if TOTAL then
+
+        Max Value:ordered       as ordered is Value
+        Max Value:ordered, Rest as ordered is
+            RestMax is Max Rest
+            if Value <= RestMax then
+                RestMax
+            else
+                Value
+
+        Min Value:ordered       as ordered is Value
+        Min Value:ordered, Rest as ordered is
+            RestMin is Min Rest
+            if Value <= RestMin then
+                Value
+            else
+                RestMin

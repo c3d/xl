@@ -19,16 +19,25 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import NUMBER
-import SYSTEM
-use LIST
+use NUMBER
+use SYS = XL.SYSTEM.TYPES
 
 
-module UNSIGNED[number:type, Size, Align] with
+type unsigned with
 // ----------------------------------------------------------------------------
-//    A generic interface for unsigned types
+//   The most basic unsigned type uses the system default size
 // ----------------------------------------------------------------------------
-    use NUMBER[number, Size, Align, Kind is UNSIGNED]
+    use SYS.unsigned
+    use number
+
+
+type unsigned[Low..High] with
+// ----------------------------------------------------------------------------
+//    Define a general unsigned type in the given range
+// ----------------------------------------------------------------------------
+    Range               as range of SYS.unsigned
+    MinValue            as unsigned
+    MaxValue            as unsigned
 
 
 module UNSIGNED with

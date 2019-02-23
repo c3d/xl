@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  integer.xs                                      XL - An extensible language
+//  pattern.xs                                      XL - An extensible language
 // ****************************************************************************
 //
 //   File Description:
 //
-//     XL integer types and related arithmetic
+//     Description of type patterns
 //
 //
 //
@@ -19,34 +19,19 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import NUMBER
-import SYSTEM
-use LIST
+use parse_tree from XL.COMPILER.PARSER
 
-
-
-module INTEGER[number:type, Size, Align] with
+type pattern with
 // ----------------------------------------------------------------------------
-//    A generic interface for integer types
+//    A `pattern` identifies specific forms in the code
 // ----------------------------------------------------------------------------
-    use NUMBER[number, Size, Align, Kind is INTEGER + SIGNED]
+    Shape                   as parse_tree
+    Tree:parse_tree         as pattern // Implicitly created from parse tree
 
 
-module INTEGER with
+type patterns with
 // ----------------------------------------------------------------------------
-//   Definition of the basic integer types
+//    A sequence of patterns, either new-line or semi-colon separated
 // ----------------------------------------------------------------------------
-    type integer8
-    type integer16
-    type integer32
-    type integer64
-    type integer128
-
-    use INTEGER[integer8,     8,   8]
-    use INTEGER[integer16,   16,  16]
-    use INTEGER[integer32,   32,  32]
-    use INTEGER[integer64,   64,  64]
-    use INTEGER[integer128, 128, 128]
-
-    integer             is SYSTEM.integer
-    types               is list of type
+    Patterns                as sequence of pattern
+    Seq:sequence of pattern as patterns // Implicitly created from sequence

@@ -4,7 +4,7 @@
 //
 //   File Description:
 //
-//      Complex numbers
+//      interface for complex numbers
 //
 //
 //
@@ -19,42 +19,82 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-COMPLEX[real:type] has
+use R = XL.TYPES.REAL
+
+type complex[type real is R.real] with
 // ----------------------------------------------------------------------------
-//   Interface of the complex number module
+//    Complex numbers taking the given `real` type
 // ----------------------------------------------------------------------------
 
-    // A complex number can be represented in cartesian or polar form
-    complex                     is cartesian or polar
-    cartesian                   is type cartesian(re:real, im:real)
-    polar                       is type polar(rho:real, theta:real)
+    // Complex numbers implement all of 'number'
+    as number
 
-    // Complex numbers have arithmetic and equality operators
-    use ARITHMETIC[complex]
-    use COMPARISON[complex].EQUALITY
+    // Two common representations
+    type cartesian              is type cartesian(Re:real, Im:real)
+    type polar                  is type polar(Mod:real, Arg:real)
+
+    // Converting to one of the representations is implicit
+    Z:complex                   as cartesian
+    Z:complex                   as polar
+    Z:cartesian                 as complex
+    Z:polar                     as complex
+    X:real                      as complex
 
     // Special operations with real numbers as one operand
-    X:complex + Y:real          as complex
-    X:complex - Y:real          as complex
-    X:complex * Y:real          as complex
-    X:complex / Y:real          as complex
+    Z:complex + X:real          as complex
+    Z:complex - X:real          as complex
+    Z:complex * X:real          as complex
+    Z:complex / X:real          as complex
+    X:real + Z:complex          as complex
+    X:real - Z:complex          as complex
+    X:real * Z:complex          as complex
+    X:real / Z:complex          as complex
 
-    // Getting real, imaginary, modulus and argument
-    real        Z:complex       as real
-    imaginary   Z:complex       as real
-    modulus     Z:complex       as real
-    argument    Z:complex       as real
+    // Notation for complex conjugate
+    Conjugate Z:complex         as complex
+    ~Z:complex                  as complex      is Conjugate Z
 
-    // Converting to polar and cartesian form
-    cartesian   Z:complex       as cartesian
-    polar       Z:complex       as polar
+
+    // Real, imaginary, modulus and argument can be read or written
+    Re                          : real
+    Im                          : real
+    Mod                         : real
+    Arg                         : real
 
     // Unit imaginary real
-    i                           is cartesian(real 0, real 1)
-    j                           is i
+    i                           as complex
+    j                           as complex      is i
 
-    // Shortcut notation for things like `2 + 3i`
-    syntax
-        postfix 400, "i"
-    Re:real + Im:real i         is cartesian(Re, Im)
-    Im:real i                   is cartesian(real 0, Im)
+    // Shortcut notation for cartesian notation like `2 + 3i`
+    syntax { postfix 400 "i" "j" }
+    Re:real + Im:real i         as cartesian    is cartesian(Re, Im)
+    Im:real i                   as cartesian    is cartesian(0, Im)
+    Re:real + Im:real j         as cartesian    is cartesian(Re, Im)
+    Im:real j                   as cartesian    is cartesian(0, Im)
+
+    // Shortcut notation for polar notation like 2∠3
+    syntax { infix 400 "∠" }
+    syntax { postfix 400 "°" }
+    Mod:real ∠ Arg:real°        as polar
+    Mod:real ∠ Arg:real         as polar        is polar(Mod, Arg)
+
+    // Some elementaty functions on complex numbers
+    Abs     Z:complex           as real
+    Sqrt    Z:complex           as complex
+
+    Sin     Z:complex           as complex
+    Cos     Z:complex           as complex
+    Tan     Z:complex           as complex
+    ArcSin  Z:complex           as complex
+    ArcCos  Z:complex           as complex
+    ArcTan  Z:complex           as complex
+
+    SinH    Z:complex           as complex
+    CosH    Z:complex           as complex
+    TanH    Z:complex           as complex
+    ArcSinH Z:complex           as complex
+    ArcCosH Z:complex           as complex
+    ArcTanH Z:complex           as complex
+
+    Exp     Z:complex           as complex
+    Log     Z:complex           as complex

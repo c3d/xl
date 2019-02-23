@@ -44,32 +44,32 @@ module MATH[type number] with
     //    Interface for basic math functions
     // ------------------------------------------------------------------------
 
-        Abs   X:number                  as number
-        Sign  X:number                  as integer
-        Sqrt  X:number                  as number
+        Abs     X:number                as number
+        Sign    X:number                as integer
+        Sqrt    X:number                as number
 
-        Sin   X:number                  as number
-        Cos   X:number                  as number
-        Tan   X:number                  as number
-        Asin  X:number                  as number
-        Acos  X:number                  as number
-        Atan  X:number                  as number
-        Atan  Y:number, X:number        as number
+        Sin     X:number                as number
+        Cos     X:number                as number
+        Tan     X:number                as number
+        ArcSin  X:number                as number
+        ArcCos  X:number                as number
+        ArcTan  X:number                as number
+        ArcTan  Y:number, X:number      as number
 
-        Sinh  X:number                  as number
-        Cosh  X:number                  as number
-        Tanh  X:number                  as number
-        Asinh X:number                  as number
-        Acosh X:number                  as number
-        Atanh X:number                  as number
+        SinH    X:number                as number
+        CosH    X:number                as number
+        TanH    X:number                as number
+        ArcSinH X:number                as number
+        ArcCosH X:number                as number
+        ArcTanH X:number                as number
 
-        Exp   X:number                  as number
-        Expm1 X:number                  as number
-        Log   X:number                  as number
-        Log10 X:number                  as number
-        Log2  X:number                  as number
-        Log2i X:number                  as integer
-        Log1p X:number                  as number
+        Exp     X:number                as number
+        Exp     X:number - 1            as number
+        Log     X:number                as number
+        Log10   X:number                as number
+        Log2    X:number                as number
+        Log2i   X:number                as integer
+        Log     (1 + X:number)          as number
 
 
     module CONSTANTS is
