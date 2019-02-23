@@ -21,6 +21,7 @@
 
 module RECORD               // Records for holding data
 module MODULE               // Module interface, specification, etc
+module PACKED               // Packed data types
 module ENUMERATION          // Enumerations
 module FLAGS                // Boolean flags
 module ACCESS               // Access to other data (refs, pointers, etc)
@@ -29,7 +30,7 @@ module REFERENCE            // Reference to another object (including counted)
 module OWN                  // Owning pointer
 module BOX                  // Boxing items
 module TUPLE                // Tuples of values
-module ATOMIC               // Atomic operations
+module ATOMIC               // Data types with atomic operations
 module SEQUENCE             // Sequence of items
 module CONTAINER            // Container of items
 module ARRAY                // Fixed-size sequence of same-type items
