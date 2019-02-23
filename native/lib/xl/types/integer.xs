@@ -19,34 +19,54 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import NUMBER
-import SYSTEM
+use NUMBER
+use SYSTEM
+use BITWISE
 use LIST
 
 
 
-module INTEGER[number:type, Size, Align] with
+type integer[Low..High] with
 // ----------------------------------------------------------------------------
-//    A generic interface for integer types
+//    Description of a generic integer type
 // ----------------------------------------------------------------------------
-    use NUMBER[number, Size, Align, Kind is INTEGER + SIGNED]
+
+    // Interfaces that 'integer' implements
+    as number
+    as bitwise
+
+    // Implement the necessary interface for `type`
+    BitSize                     as bit_count
+    BitAlign                    as bit_count
 
 
-module INTEGER with
-// ----------------------------------------------------------------------------
-//   Definition of the basic integer types
-// ----------------------------------------------------------------------------
-    type integer8
-    type integer16
-    type integer32
-    type integer64
-    type integer128
+with
+    // Some local definitions for convenience
+    IMin Bits                                   is -(1 << (Bits - 1))
+    IMax Bits                                   is  (1 << (Bits - 1)) - 1
+    IRange Bits                                 is IMin Bits..IMax Bits
+    UMin Bits                                   is  0
+    UMax Bits                                   is  (1 << Bits) - 1
+    URange Bits                                 is UMin Bits..UMax Bits
 
-    use INTEGER[integer8,     8,   8]
-    use INTEGER[integer16,   16,  16]
-    use INTEGER[integer32,   32,  32]
-    use INTEGER[integer64,   64,  64]
-    use INTEGER[integer128, 128, 128]
 
-    integer             is SYSTEM.integer
-    types               is list of type
+// Other notations for integer types
+type integer range Low..High                    is integer[Low..High]
+type integer bits Bits                          is integer[IRange Bits]
+type unsigned[Low..High]        when Low >=0    is another integer[Low..High]
+type unsigned range Low..High   when Low >= 0   is unsigned[Low..High]
+
+// Sized types
+type integer8                                   is integer bits 8
+type integer16                                  is integer bits 16
+type integer32                                  is integer bits 32
+type integer64                                  is integer bits 64
+
+type unsigned8                                  is unsigned bits 8
+type unsigned16                                 is unsigned bits 16
+type unsigned32                                 is unsigned bits 32
+type unsigned64                                 is unsigned bits 64
+
+// System types are optimized for the natural register size on the machine
+type integer                                    is SYSTEM.integer
+type unsigned                                   is SYSTEM.unsigned

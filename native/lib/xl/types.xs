@@ -25,8 +25,7 @@ module LIFETIME                 // Lifetime of entities
 module NUMBER                   // Common aspects of numbers
 module ENUMERATED               // Enumerated values
 module BOOLEAN                  // Boolean type (true / false)
-module INTEGER                  // Signed integer types
-module UNSIGNED                 // Unsigned integer types
+module INTEGER                  // Signed and unsigned integer types
 module REAL                     // Real numbers (floating-point representation)
 module CHARACTER                // Representation of characters
 module TEXT                     // Text (sequence of characters)

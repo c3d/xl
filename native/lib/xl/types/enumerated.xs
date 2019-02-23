@@ -37,3 +37,6 @@ type enumerated with
     Last                                as enumerated
     Successor   Value:enumerated        as enumerated
     Predecessor Value:enumerated        as enumerated
+
+    // The underlying representation type
+    representation                      as type like unsigned

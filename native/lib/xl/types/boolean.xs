@@ -4,7 +4,7 @@
 //
 //   File Description:
 //
-//     The basic boolean type, with two values, true and false
+//     The boolean type, with two values, true and false
 //
 //
 //
@@ -19,14 +19,25 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import ENUMERATION
-import NUMBER
+import ENUMERATED
+import BITWISE
 
-module BOOLEAN with
+
+type boolean with
 // ----------------------------------------------------------------------------
-//    Interface for the boolean type
+//    Description of the boolean type
 // ----------------------------------------------------------------------------
 
-    boolean is enumeration (false, true)
+    false                       as boolean
+    true                        as boolean
 
-    use NUMBER[number is boolean, Size is 1, Align is 1, Kind is INTEGER]
+    as ENUMERATED.enumerated
+    as BITWISE.bitwis
+    as COPY.copiable
+    as MOVE.movable
+    as CLONE.clonable
+    as DELETE.deletable
+    as COMPARISON.equatable
+    as COMPARISON.ordered
+    as MEMORY.sized
+    as MEMORY.aligned
