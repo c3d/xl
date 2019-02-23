@@ -20,18 +20,23 @@
 // ****************************************************************************
 
 module TYPE                     // Representation of types
+
 module COMBINATIONS             // Combinations oftypes
 module LIFETIME                 // Lifetime of entities
+
 module NUMBER                   // Common aspects of numbers
 module ENUMERATED               // Enumerated values
+
 module BOOLEAN                  // Boolean type (true / false)
 module INTEGER                  // Signed and unsigned integer types
 module REAL                     // Real numbers (floating-point representation)
 module CHARACTER                // Representation of characters
 module TEXT                     // Text (sequence of characters)
-module RANGE                    // Range of elements (and range arithmetic)
-module ITERATOR                 // Iterator
+
 module CONVERSION               // Implicit and explicit conversions
 module CONVERSIONS              // Standard conversions
+
+module RANGE                    // Range of elements (and range arithmetic)
+module ITERATOR                 // Iterator
 
 module UNSAFE                   // Unsafe data types
