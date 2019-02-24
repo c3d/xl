@@ -30,6 +30,7 @@ module ENUMERATED               // Enumerated values
 module BOOLEAN                  // Boolean type (true / false)
 module INTEGER                  // Signed and unsigned integer types
 module REAL                     // Real numbers (floating-point representation)
+module DECIMAL                  // Decimal floating-point numbers
 module CHARACTER                // Representation of characters
 module TEXT                     // Text (sequence of characters)
 
