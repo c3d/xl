@@ -48,4 +48,4 @@ type number with
     // Range of values for the type
     MinValue                as number
     MaxValue                as number
-    Epsilon X:number        as number
+    Epsilon Value:number    as number
