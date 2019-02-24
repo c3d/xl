@@ -34,7 +34,6 @@ module DECIMAL                  // Decimal floating-point numbers
 module CHARACTER                // Representation of characters
 module TEXT                     // Text (sequence of characters)
 
-module CONVERSION               // Implicit and explicit conversions
 module CONVERSIONS              // Standard conversions
 
 module RANGE                    // Range of elements (and range arithmetic)

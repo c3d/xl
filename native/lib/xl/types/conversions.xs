@@ -23,62 +23,50 @@ use BOOLEAN
 use INTEGER
 use INTEGER
 use REAL
+use DECIMAL
 use TEXT
 use SYMBOL
 
-module CONVERSIONS with
-// ----------------------------------------------------------------------------
-//    List of standard conversions
-// ----------------------------------------------------------------------------
 
-    implicit To, From is
-    // ------------------------------------------------------------------------
-    //    Declare an implicit conversion in `CONVERSIONS`
-    // ------------------------------------------------------------------------
-        CONVERSIONS.{use CONVERSIONS[To,From].IMPLICIT}
+with
+    type itype          like integer
+    type isource        like integer
+    type rtype          like real
+    type rsource        like real
+    type dtype          like decimal
+    type dsource        like decimal
+    type etype          like enumerated
+    type esource        like enumerated
+    type ctype          like character
+    type csource        like character
 
+    IntToIntImplicit    is ( isource.BitSize < itype.BitSize or
+                             (isource.BitSize = itype.BitSize and
+                              isource.Signed  = itype.Signed))
 
-    explicit To, From is
-    // ------------------------------------------------------------------------
-    //    Declare an explicit conversion in `CONVERSIONS`
-    // ------------------------------------------------------------------------
-        CONVERSIONS.{use CONVERSIONS[To,From]}
+    IntToRealImplicit   is (isource.BitSize < rtype.MantissaBits)
 
+// Explicit numerical conversions
+itype Value:isource     as itype
+itype Value:rsource     as itype
+itype Value:dsource     as itype
 
-    // Add explicit conversions, make them implicit if no data loss
-    for I in INTEGER.types, UNSIGNED.types loop
-        for J in INTEGER.types, UNSIGNED.types loop
-            explicit I, J
-            if I.BitSize >= J.BitSize and I.Signed = J.Signed then
-                implicit I, J
+rtype Value:isource     as itype
+rtype Value:rsource     as itype
+rtype Value:dsource     as itype
 
-        // Conversion from and to a real type are explicit unless no data loss
-        for R in REAL.types loop
-            explicit R, I
-            explicit I, R
-            if R.MantissaBits >= J.BitSize then
-                implicit R, I
+dtype Value:isource     as itype
+dtype Value:rsource     as itype
+dtype Value:dsource     as itype
 
-        // Conversion from and to character types, always explicit
-        for C in CHARACTER.types loop
-            explicit C, I
-            explicit I, C
+// Explicit enumerated conversions
+itype   Value:boolean   as itype
+boolean Value:isource   as boolean
+itype   Value:esource   as itype
+etype   Value:isource   as etype
+itype   Value:csource   as itype
+ctype   Value:isource   as ctype
 
-        // Conversion from and to text
-        explicit text, I
-        explicit I, text
-
-        // Conversion from and to boolean type
-        explicit boolean, I
-        explicit I, boolean
-
-    // Conversions between real types
-    for R in REAL.types loop
-        for S in REAL.types loop
-            explicit R, S
-            if R.MantissaBits >= S.MantissaBits then
-                if R.ExponentBits >= S.ExponentBits then
-                    implicit R, S
-
-        explicit text, R
-        explicit R, text
+// Implicit numerical conversions
+Value:isource           as itype        when IntToIntImplicit
+Value:isource           as rtype        when IntToRealImplicit
