@@ -19,75 +19,102 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-use XL.BOOLEAN
+BitsForRange Low..High is
+// ----------------------------------------------------------------------------
+//   Compute the number of bits that cover the given interval
+// ----------------------------------------------------------------------------
+    1 + HighestBit (Low or High)
 
-module XL.INTEGER[value:type] is
-    x:value + y:value           as value        is builtin Add
-    x:value - y:value           as value        is builtin Sub
-    x:value * y:value           as value        is builtin Mul
-    x:value / y:value           as value        is builtin SDiv
-    x:value rem y:value         as value        is builtin SRem
-    x:value mod y:value         as value        is builtin SMod
-    x:value and y:value         as value        is builtin And
-    x:value or y:value          as value        is builtin Or
-    x:value xor y:value         as value        is builtin Xor
-    x:value shl  y:unsigned     as value        is builtin Shl
-    x:value shr  y:unsigned     as value        is builtin AShr
-    x:value ashr y:unsigned     as value        is builtin AShr
-    x:value lshr y:unsigned     as value        is builtin LShr
-    -x:value                    as value        is builtin Neg
-    not x:value                 as value        is builtin Not
 
-    x:value ^ y:unsigned        as value        is
-        result : value := 1
-        while y > 0 loop
-            if (y and 1) <> 0 then
-                result *= x
-            x *= x
-            y := y ashr 1
-        return result
+AlignForRange Low..High is
+// ----------------------------------------------------------------------------
+//    Compute a power-of-two size that covers the given interval
+// ----------------------------------------------------------------------------
+    Bits is BitsForRange(Low..High)
+    1 << (1 + HighestBit (Bits-1))
 
-    out x:value := y:value      as value        is builtin Copy
 
-    in out x:value += y:value   as value        is x := x + y
-    in out x:value -= y:value   as value        is x := x - y
-    in out x:value *= y:value   as value        is x := x * y
-    in out x:value /= y:value   as value        is x := x / y
+type integer[Low..High] is type
+// ----------------------------------------------------------------------------
+//    Description of a generic integer type
+// ----------------------------------------------------------------------------
 
-    ++in out x:value            as value        is x += 1
-    --in out x:value            as value        is x -= 1
-    in out x:value++            as value        is { O is x; ++x; O }
-    in out x:value--            as value        is { O is x; --x; O }
+    if Low >= High then
+        RANGE_ERROR "Integer type with empty range $1..$2", Low, High
 
-    X:value = Y:value           as boolean      is builtin ICmpEQ
-    X:value <> Y:value          as boolean      is builtin ICmpNE
-    X:value > Y:value           as boolean      is builtin ICmpSGT
-    X:value >= Y:value          as boolean      is builtin ICmpSGE
-    X:value < Y:value           as boolean      is builtin ICmpSLT
-    X:value <= Y:value          as boolean      is builtin ICmpSLE
+    BitSize                                     is BitsForRange Low..High
+    BitAlign                                    is AlignForRange Low..High
 
-    bit_count X:value           as unsigned     is
-        result := 0
-        while X <> 0 loop
-            if X and 1 <> 0 then
-                result++
-            X /= 2
-        result
+    Signed                      as boolean      is Low >= 0
 
-    low_bit X:value             as unsigned     is
-        result := 0
-        if X = 0 then
-    high_bit X:value            as unsigned
+    with
+        Target  : own integer
+        Value   : integer
+        Left    : integer
+        Right   : integer
+        Shift   : bit_count
+        Power   : unsigned
 
-module XL.INTEGER is
-    type integer                                is builtin integer 64
-    type integer1                               is builtin integer 1
-    type integer8                               is builtin integer 8
-    type integer16                              is builtin integer 16
-    type integer32                              is builtin integer 32
-    type integer64                              is builtin integer 64
-    type integer128                             is builtin integer 128
-    type integer_max                            is builtin integer 128
+    // Implement the 'number' interface
+    MinValue                                    is Low
+    MaxValue                                    is High
+    Epsilon Value               as integer      is 1
+    type representation                         is integer
 
-    type integer[Low..High] is
-        num_bits is log2i
+    // Implement the 'enumerated' interface
+    First                       as integer      is Low
+    Last                        as integer      is High
+    Successor   Value           as integer      is Value + 1
+    Predecessor Value           as integer      is Value - 1
+
+    // The underlying representation type
+    representation                      as type like unsigned
+
+
+    // Implement the 'arithmetic' interface
+    Left  +  Right              as integer      is builtin Add
+    Left  -  Right              as integer      is builtin Sub
+    Left  *  Right              as integer      is builtin Mul
+
+    if Signed then
+        Left  /  Right          as integer      is builtin SDiv
+        Left rem Right          as integer      is builtin SRem
+        Left mod Right          as integer      is builtin SMod
+    else
+        Left  /  Right          as integer      is builtin UDiv
+        Left rem Right          as integer      is builtin URem
+        Left mod Right          as integer      is builtin UMod
+    -Value                      as integer      is builtin Neg
+
+    // Implement the 'bitwise' interface
+    Left and Right              as integer      is builtin And
+    Left or  Right              as integer      is builtin Or
+    Left xor Right              as integer      is builtin Xor
+    not Value                   as integer      is builtin Not
+
+    // Implement the 'bitshift' interface
+    Left shl  Shift             as integer      is builtin Shl
+    if Signed then
+        Left shr  Shift         as integer      is builtin AShr
+    else
+        Left shr  Shift         as integer      is builtin LShr
+    Left ashr Shift             as integer      is builtin AShr
+    Left lshr Shift             as integer      is builtin LShr
+
+    // Implement the 'copiable' and 'movable' interface
+    Target := Value             as nil          is builtin Copy
+    Target :< Value             as nil          is builtin Copy
+
+    // Implement the 'comparable' interface
+    Left  =  Right              as boolean      is builtin ICmpEQ
+    Left <>  Right              as boolean      is builtin ICmpNE
+    if Signed then
+        Left  >  Right          as boolean      is builtin ICmpSGT
+        Left >=  Right          as boolean      is builtin ICmpSGE
+        Left  <  Right          as boolean      is builtin ICmpSLT
+        Left <=  Right          as boolean      is builtin ICmpSLE
+    else
+        Left  >  Right          as boolean      is builtin ICmpUGT
+        Left >=  Right          as boolean      is builtin ICmpUGE
+        Left  <  Right          as boolean      is builtin ICmpULT
+        Left <=  Right          as boolean      is builtin ICmpULE

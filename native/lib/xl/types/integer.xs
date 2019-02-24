@@ -26,7 +26,6 @@ use BITSHIFT
 use LIST
 
 
-
 type integer[Low..High] with
 // ----------------------------------------------------------------------------
 //    Description of a generic integer type
@@ -36,10 +35,14 @@ type integer[Low..High] with
     as number
     as bitwise
     as bitshift
+    as enumerated
 
     // Implement the necessary interface for `type`
     BitSize                     as bit_count
     BitAlign                    as bit_count
+
+    // Indicates if the type is signed
+    Signed                      as boolean
 
 
 with
@@ -55,7 +58,7 @@ with
 // Other notations for integer types
 type integer range Low..High                    is integer[Low..High]
 type integer bits Bits                          is integer[IRange Bits]
-type unsigned[Low..High]        when Low >=0    is another integer[Low..High]
+type unsigned[Low..High]        when Low >= 0   is another integer[Low..High]
 type unsigned range Low..High   when Low >= 0   is unsigned[Low..High]
 
 // Sized types
@@ -68,7 +71,3 @@ type unsigned8                                  is unsigned bits 8
 type unsigned16                                 is unsigned bits 16
 type unsigned32                                 is unsigned bits 32
 type unsigned64                                 is unsigned bits 64
-
-// System types are optimized for the natural register size on the machine
-type integer                                    is SYSTEM.integer
-type unsigned                                   is SYSTEM.unsigned

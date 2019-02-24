@@ -21,6 +21,7 @@
 
 import ENUMERATED
 import BITWISE
+import COMPARISON
 
 
 type boolean with
@@ -32,12 +33,6 @@ type boolean with
     true                        as boolean
 
     as ENUMERATED.enumerated
-    as BITWISE.bitwis
-    as COPY.copiable
-    as MOVE.movable
-    as CLONE.clonable
-    as DELETE.deletable
+    as BITWISE.bitwise
     as COMPARISON.equatable
     as COMPARISON.ordered
-    as MEMORY.sized
-    as MEMORY.aligned
