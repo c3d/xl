@@ -34,7 +34,6 @@ type bitwise with
         Left and  Right         as bitwise // Boolean and
         Left or   Right         as bitwise // Boolean or
         Left xor  Right         as bitwise // Boolean exclusive or
-
         Not Value               as bitwise // Bitwise not
 
         // Traditional C-style operator notations
