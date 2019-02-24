@@ -4,12 +4,12 @@
 //
 //   File Description:
 //
-//     The basic real number operations
+//     Floating-point representation for real-numbers
 //
 //     Real numbers are actually stored using a floating-point representation
-//     XL distinguishes the `real` type, which cannot hold special values
-//     like NaN, and consequently is fully ordered, and the `ieee` types
-//     which support NaN values
+//     XL is designed to support floating-point types based on IEEE-754
+//
+//
 //
 //
 //
@@ -19,64 +19,34 @@
 //   See LICENSE file for details.
 // ****************************************************************************
 
-import NUMBER
-use SET
-
-module REAL[number:type, Size, Align, Kind] with
+type real[MantissaBits, ExponentBits] with
 // ----------------------------------------------------------------------------
 //    A generic interface for real types
 // ----------------------------------------------------------------------------
-    use NUMBER[number, Size, Align, Kind]
 
-    number has
-    // ------------------------------------------------------------------------
-    //    Add interfaces specific to floating-point types
-    // ------------------------------------------------------------------------
-        MantissaBits        as bit_count
-        ExponentBits        as bit_count
+    // Interfaces that 'real' implements
+    as number
 
+    // Implement the necessary interface for `type`
+    BitSize                     as bit_count
+    BitAlign                    as bit_count
 
-    module CONSTANTS with
-    // ------------------------------------------------------------------------
-    //    Export common constants for the type
-    // ------------------------------------------------------------------------
-        pi                              as value
-        if number.UNORDERED then
-            quiet_NaN                   as value
-            signaling_NaN               as value
-            infinity                    as value
-
-    use CONSTANTS
+    // Special IEEE-754 "values"
+    Infinity                    as real
+    QuietNaN                    as real
+    SignalingNaN                as real
+    QuietNaN     Data:unsigned  as real
+    SignalingNaN Data:unsigned  as real
+    IsInfinity   Value:real     as boolean
+    IsNaN        Value:real     as boolean
 
 
-module REAL with
-// ----------------------------------------------------------------------------
-//   Definition of the basic real types
-// ----------------------------------------------------------------------------
+type real digits Digits exponent Exponent
+type real mantissa MantissaBits Digits exponent ExponentBits
 
-    type real16
-    type real32
-    type real64
-    type real128
 
-    use REAL[real16,   16,  16, FLOAT]
-    use REAL[real32,   32,  32, FLOAT]
-    use REAL[real64,   64,  64, FLOAT]
-    use REAL[real128, 128, 128, FLOAT]
-
-    module IEEE with
-    // ------------------------------------------------------------------------
-    //    The IEEE-754 standard supports NaN values, but is not ordered
-    // ------------------------------------------------------------------------
-        type float16
-        type float32
-        type float64
-        type float128
-
-        use REAL[float16,   16,  16, FLOAT + UNORDERED]
-        use REAL[float32,   32,  32, FLOAT + UNORDERED]
-        use REAL[float64,   64,  64, FLOAT + UNORDERED]
-        use REAL[float128, 128, 128, FLOAT + UNORDERED]
-
-    real                is SYSTEM.real
-    types               is list of types
+// Standard IEEE-754 types
+type real16                     is real[ 11,  5]
+type real32                     is real[ 24,  8]
+type real64                     is real[ 53, 11]
+type real128                    is real[113, 15]
