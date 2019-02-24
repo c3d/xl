@@ -118,3 +118,7 @@ type ordered with
                 Value
             else
                 RestMin
+
+
+// The 'comparable' type covers values that have both equality and order
+type comparable is equatable and ordered
