@@ -23,23 +23,27 @@ import SLICE
 import STRING
 import MEMORY
 
-module TEXT[character:type] with
+type text[type character is UTF8] with
 // ----------------------------------------------------------------------------
-//   Generic interface for text functions
+//    A basic representation for text
 // ----------------------------------------------------------------------------
 
-    // A `text` is represented as a string of characters
-    type text with
-        character       is character
-        slice           is slice of character
-        Characters      as slice
-        Length          is characters.Length
+    as copiable
+    as movable
+    as clonable
+    as deletable
+    as comparable
+    as sized
+    as aligned
 
-    // Implicit conversion from text to slice
-    Text:text           as text.slice
+    type representation                 is string of character
+    type slice                          is slice  of character
 
-    use CLONE[text]
-    use COPY[text]
-    use MOVE[text]
-    use DELETE[text]
-    use FORMAT[text]
+    with
+        Text    : text
+        Owned   : own text
+
+    Length Text         as size         // Number of characters
+    Size   Text         as size         // Number of bytes
+
+    Text                as slice

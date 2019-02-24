@@ -40,8 +40,7 @@ type number with
     as MOVE.movable
     as CLONE.clonable
     as DELETE.deletable
-    as COMPARISON.equatable
-    as COMPARISON.ordered
+    as COMPARISON.comparable
     as MEMORY.sized
     as MEMORY.aligned
 
