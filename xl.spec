@@ -20,7 +20,7 @@ Summary:        The XL programming language implemented as a library
 XL programming language implemented as a library for use in other programs
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup -n %{name}-tao-%{version}
 
 %build
 (cd xlr && %make_build opt BUILDENV=linux)
@@ -30,7 +30,7 @@ XL programming language implemented as a library for use in other programs
 
 %install
 %{__install} -d %{?buildroot}%{_bindir}/ && \
-%{__install} xl %{?buildroot}%{_bindir}/ )
+%{__install} xlr/xlr %{?buildroot}%{_bindir}/xl
 
 %files
 %{_bindir}/xl
