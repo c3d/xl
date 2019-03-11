@@ -23,14 +23,13 @@ XL programming language implemented as a library for use in other programs
 %autosetup -n %{name}-tao-%{version}
 
 %build
-(cd xlr && %make_build opt BUILDENV=linux)
+%make_build opt COLORIZE=
 
 %check
-(cd xlr && %make_build test || true)
+%make_build test COLORIZE= || true
 
 %install
-%{__install} -d %{?buildroot}%{_bindir}/ && \
-%{__install} xlr/xlr %{?buildroot}%{_bindir}/xl
+
 
 %files
 %{_bindir}/xl

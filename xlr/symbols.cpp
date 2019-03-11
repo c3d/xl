@@ -52,7 +52,7 @@
 #include "basics.h"
 #include "compiler.h"
 #include "runtime.h"
-#include "main.h"
+#include "sources.h"
 #include "types.h"
 #include "tree-clone.h"
 #include "llvm-crap.h"

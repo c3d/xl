@@ -58,7 +58,7 @@ struct Infix;
 struct Prefix;
 struct Postfix;
 struct Context;
-struct Main;
+struct Sources;
 struct SourceFile;
 
 
@@ -154,8 +154,8 @@ Real *xl_springify(Real &value, Real &target, Real &time,
 //
 // ============================================================================
 
-void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms, eval_fn);
-void xl_enter_global(Main *main, Name *name, Name_p *address);
+void xl_enter_builtin(Sources *main, text name, Tree *to, TreeList parms, eval_fn);
+void xl_enter_global(Sources *main, Name *name, Name_p *address);
 
 
 

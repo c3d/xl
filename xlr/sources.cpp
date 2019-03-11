@@ -1,10 +1,10 @@
 // ****************************************************************************
-//  main.cpp                                                        XLR project
+//  sources.cpp                                                    XLR project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    Main entry point of the XL runtime and compiler
+//    Dealing with source files
 //
 //
 //
@@ -47,7 +47,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <sys/stat.h>
-#include "main.h"
+#include "sources.h"
 #include "scanner.h"
 #include "parser.h"
 #include "renderer.h"
@@ -71,8 +71,6 @@
 XL_DEFINE_TRACES
 
 XL_BEGIN
-
-Main *MAIN = NULL;
 
 SourceFile::SourceFile(text n, Tree *t, Context *c, Symbols *s, bool ro)
 // ----------------------------------------------------------------------------
@@ -134,7 +132,7 @@ void SourceFile::ListNames(text begin,
 }
 
 
-Main::Main(int inArgc, char **inArgv, text compilerName,
+Sources::Sources(int inArgc, char **inArgv, text compilerName,
            text syntaxName, text styleSheetName, text builtinsName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
@@ -165,7 +163,7 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
 }
 
 
-Main::~Main()
+Sources::~Sources()
 // ----------------------------------------------------------------------------
 //   Destructor
 // ----------------------------------------------------------------------------
@@ -175,7 +173,7 @@ Main::~Main()
 }
 
 
-Errors *Main::InitErrorsAndMAIN()
+Errors *Sources::InitErrorsAndMAIN()
 // ----------------------------------------------------------------------------
 //   Make sure MAIN is set so that its globals can be accessed
 // ----------------------------------------------------------------------------
@@ -185,7 +183,7 @@ Errors *Main::InitErrorsAndMAIN()
 }
 
 
-int Main::ParseOptions()
+int Sources::ParseOptions()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
@@ -220,7 +218,7 @@ int Main::ParseOptions()
 }
 
 
-void Main::SetupCompiler()
+void Sources::SetupCompiler()
 // ----------------------------------------------------------------------------
 //    Setup the compiler once all possible options have been set
 // ----------------------------------------------------------------------------
@@ -229,7 +227,7 @@ void Main::SetupCompiler()
 }
 
 
-void Main::CreateScope()
+void Sources::CreateScope()
 // ----------------------------------------------------------------------------
 //   Create a new scope containing a new symbol table and context
 // ----------------------------------------------------------------------------
@@ -240,7 +238,7 @@ void Main::CreateScope()
 }
 
 
-void Main::PopScope()
+void Sources::PopScope()
 // ----------------------------------------------------------------------------
 //   Pop one-level of scope off the scope stack
 // ----------------------------------------------------------------------------
@@ -250,7 +248,7 @@ void Main::PopScope()
 }
 
 
-int Main::LoadFiles()
+int Sources::LoadFiles()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
@@ -266,7 +264,7 @@ int Main::LoadFiles()
 }
 
 
-SourceFile *Main::NewFile(text path)
+SourceFile *Sources::NewFile(text path)
 // ----------------------------------------------------------------------------
 //   Allocate an entry for updating programs (untitled)
 // ----------------------------------------------------------------------------
@@ -278,7 +276,7 @@ SourceFile *Main::NewFile(text path)
 }
 
 
-int Main::LoadContextFiles(source_names &ctxFiles)
+int Sources::LoadContextFiles(source_names &ctxFiles)
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
@@ -310,7 +308,7 @@ int Main::LoadContextFiles(source_names &ctxFiles)
 }
 
 
-void Main::EvaluateContextFiles(source_names &ctxFiles)
+void Sources::EvaluateContextFiles(source_names &ctxFiles)
 // ----------------------------------------------------------------------------
 //   Evaluate the context files
 // ----------------------------------------------------------------------------
@@ -340,7 +338,7 @@ void Main::EvaluateContextFiles(source_names &ctxFiles)
 }
 
 
-void Main::ListNames(text begin,
+void Sources::ListNames(text begin,
                      XL::name_set &names,
                      XL::name_set &infix,
                      XL::name_set &prefix,
@@ -355,7 +353,7 @@ void Main::ListNames(text begin,
 }    
 
 
-text Main::SearchFile(text file)
+text Sources::SearchFile(text file)
 // ----------------------------------------------------------------------------
 //   Default is to use the file name directly
 // ----------------------------------------------------------------------------
@@ -364,7 +362,7 @@ text Main::SearchFile(text file)
 }
 
 
-text Main::ParentDir(text path)
+text Sources::ParentDir(text path)
 // ----------------------------------------------------------------------------
 //   Return path of parent directory
 // ----------------------------------------------------------------------------
@@ -383,7 +381,7 @@ text Main::ParentDir(text path)
 }
 
 
-bool Main::Refresh(double delay)
+bool Sources::Refresh(double delay)
 // ----------------------------------------------------------------------------
 //   Tell that the program won't execute again after the given delay
 // ----------------------------------------------------------------------------
@@ -393,7 +391,7 @@ bool Main::Refresh(double delay)
 }
 
 
-text Main::Decrypt(text file)
+text Sources::Decrypt(text file)
 // ----------------------------------------------------------------------------
 //   Decryption hook
 // ----------------------------------------------------------------------------
@@ -403,7 +401,7 @@ text Main::Decrypt(text file)
 }
 
 
-Tree *Main::Normalize(Tree *input)
+Tree *Sources::Normalize(Tree *input)
 // ----------------------------------------------------------------------------
 //   Tree normalization hook
 // ----------------------------------------------------------------------------
@@ -414,7 +412,7 @@ Tree *Main::Normalize(Tree *input)
 }
 
 
-int Main::LoadFile(text file,
+int Sources::LoadFile(text file,
                    bool updateContext,
                    Context *importContext,
                    Symbols *importSymbols)
@@ -595,7 +593,7 @@ int Main::LoadFile(text file,
 }
 
 
-int Main::Run()
+int Sources::Run(bool print)
 // ----------------------------------------------------------------------------
 //   Run all files given on the command line
 // ----------------------------------------------------------------------------
@@ -645,12 +643,10 @@ int Main::Run()
         }
         else
         {
-#ifdef LIBXLR
             if (options.verbose)
                 std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
-#else
-            std::cout << result << "\n";
-#endif // LIBXLR
+            else if (print)
+                std::cout << result << "\n";
         }
     }
 
@@ -658,7 +654,7 @@ int Main::Run()
 }
 
 
-int Main::Diff()
+int Sources::Diff()
 // ----------------------------------------------------------------------------
 //   Perform a tree diff between the two loaded files
 // ----------------------------------------------------------------------------
@@ -677,53 +673,6 @@ int Main::Diff()
     return d.Diff(std::cout);
 }
 
+Sources *MAIN = NULL;
 
 XL_END
-
-
-#ifndef LIBXLR
-int main(int argc, char **argv)
-// ----------------------------------------------------------------------------
-//   Parse the command line and run the compiler phases
-// ----------------------------------------------------------------------------
-{
-    XL::FlightRecorder::Initialize();
-    RECORD(ALWAYS, "Compiler starting");
-
-#if CONFIG_USE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
-
-    using namespace XL;
-    source_names noSpecificContext;
-    Main main(argc, argv);
-    EnterBasics();
-    main.SetupCompiler();
-    int rc = MAIN->LoadContextFiles(noSpecificContext);
-    if (rc)
-    {
-        delete MAIN;
-        return rc;
-    }
-    rc = MAIN->LoadFiles();
-
-    if (!rc && Options::options->doDiff)
-        rc = MAIN->Diff();
-    else if (!rc && !Options::options->parseOnly)
-        rc = MAIN->Run();
-
-    if (!rc && MAIN->HadErrors())
-        rc = 1;
-
-    MAIN->compiler->Dump();
-
-#if CONFIG_USE_SBRK
-    IFTRACE(memory)
-        fprintf(stderr, "Total memory usage: %ldK\n",
-                long ((char *) malloc(1) - low_water) / 1024);
-#endif
-
-    return rc;
-}
-
-#endif // LIBXLR

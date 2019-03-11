@@ -49,7 +49,7 @@
 #include "opcodes.h"
 #include "compiler.h"
 #include "compiler-gc.h"
-#include "main.h"
+#include "sources.h"
 #include "types.h"
 #include "save.h"
 #include "tree-clone.h"
@@ -1147,7 +1147,7 @@ Real *xl_springify(Real &value, Real &target, Real &time,
 //
 // ============================================================================
 
-void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms,
+void xl_enter_builtin(Sources *main, text name, Tree *to, TreeList parms,
                       eval_fn code)
 // ----------------------------------------------------------------------------
 //   Add a new builtin
@@ -1157,7 +1157,7 @@ void xl_enter_builtin(Main *main, text name, Tree *to, TreeList parms,
 }
 
 
-void xl_enter_global(Main *main, Name *name, Name_p *address)
+void xl_enter_global(Sources *main, Name *name, Name_p *address)
 // ----------------------------------------------------------------------------
 //   Add a new global
 // ----------------------------------------------------------------------------

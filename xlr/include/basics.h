@@ -42,7 +42,7 @@
 #include "tree.h"
 #include "context.h"
 #include "opcodes.h"
-#include "main.h"
+#include "sources.h"
 #include <cmath>
 #include <cstdlib>
 #include <ctime>

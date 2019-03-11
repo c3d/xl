@@ -51,7 +51,7 @@
 #include "runtime.h"
 #include "symbols.h"
 #include "types.h"
-#include "main.h"
+#include "sources.h"
 #include "hash.h"
 
 
