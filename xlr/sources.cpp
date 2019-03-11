@@ -593,7 +593,7 @@ int Sources::LoadFile(text file,
 }
 
 
-int Sources::Run()
+int Sources::Run(bool print)
 // ----------------------------------------------------------------------------
 //   Run all files given on the command line
 // ----------------------------------------------------------------------------
@@ -645,6 +645,8 @@ int Sources::Run()
         {
             if (options.verbose)
                 std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
+            else if (print)
+                std::cout << result << "\n";
         }
     }
 
