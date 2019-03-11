@@ -48,7 +48,7 @@
 #include "basics.h"
 #include "compiler.h"
 #include "runtime.h"
-#include "main.h"
+#include "sources.h"
 #include "opcodes.h"
 #include "types.h"
 #include "save.h"

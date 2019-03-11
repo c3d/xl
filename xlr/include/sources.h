@@ -1,13 +1,13 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef SOURCES_H
+#define SOURCES_H
 // ****************************************************************************
-//  main.h                          (C) 1992-2009 Christophe de Dinechin (ddd)
+//  sources.h                       (C) 1992-2009 Christophe de Dinechin (ddd)
 //                                                                 XL2 project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     The global variables defined in main.cpp
+//     Management of the global settings and list of source files
 //
 //
 //
@@ -101,18 +101,18 @@ typedef std::map<text, SourceFile> source_files;
 typedef std::vector<text> source_names;
 
 
-struct Main
+struct Sources
 // ----------------------------------------------------------------------------
 //    The main entry point and associated data
 // ----------------------------------------------------------------------------
 {
-    Main(int argc, char **argv,
-         text compiler_name = "xl",
-         text syntax = "xl.syntax",
-         text style = "xl.stylesheet",
-         text builtins = "builtins.xl");
-    virtual ~Main();
-
+    Sources(int argc, char **argv,
+            text compiler_name = "xl",
+            text syntax = "xl.syntax",
+            text style = "xl.stylesheet",
+            text builtins = "builtins.xl");
+    virtual ~Sources();
+    
     int          ParseOptions();
     void         SetupCompiler();
     void         CreateScope();
@@ -158,7 +158,7 @@ public:
     Serializer   *writer;
 };
 
-extern Main *MAIN;
+extern Sources *MAIN;
 
 
 
@@ -248,4 +248,4 @@ template <class I> inline I* SourceFile::Remove(I *toFind)
 
 XL_END
 
-#endif // MAIN_H
+#endif // SOURCES_H

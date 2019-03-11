@@ -29,7 +29,7 @@
 #include "scanner.h" // for Positions
 #include "context.h" // For error display
 #include "tree.h"
-#include "main.h"
+#include "sources.h"
 
 XL_BEGIN
 
