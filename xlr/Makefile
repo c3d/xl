@@ -28,7 +28,7 @@ VARIANTS=lib exe
 # For pkg-config generation
 PACKAGE_NAME=xl
 PACKAGE_DESCRIPTION=An extensible programming language
-PACKAGE_VERSION=1.7.0
+PACKAGE_VERSION=1.70.0
 PACKAGE_URL="http://github.com/c3d/xl"
 PACKAGE_REQUIRES=
 
