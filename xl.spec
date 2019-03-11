@@ -1,5 +1,5 @@
 Name:		xl
-Version:	1.61.0
+Version:	1.70.0
 Release:	1%{?dist}
 Summary:	An extensible programming language based on parse-tree rewrites
 License:	LGPLv3+
