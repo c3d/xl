@@ -1,0 +1,7 @@
+v1.70           Release 1.70 - Tao3D packaging on Fedora29
+    
+    - Update to LLVM 3.52
+    - Split xl compiler into a shared library and a tiny driver
+    - Some hacks to improve how the test suite works
+
+
