@@ -447,7 +447,7 @@ uint Symbols::EnterProperty(Context *context,
         setArg = new Infix(":", setArg, type, pos);
     Prefix *setPrefix = new Prefix(setName, setArg, pos);
     symbols->EnterRewrite(setPrefix, setName);
-    setName->code = (eval_fn) xl_write_property;
+    setName->code = (eval_fn) (void *) xl_write_property;
     setName->SetSymbols(symbols);
 
     // Adjust information for the property

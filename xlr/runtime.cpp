@@ -428,7 +428,7 @@ Tree *xl_type_check(Context *context, Tree *value, Tree *type)
 
         Infix *typeExpr = symbols->CompileTypeTest(type);
         assert(typeExpr->code && "xl_type_check needs compiled type check");
-        typecheck_fn typecheck = (typecheck_fn) typeExpr->code;
+        typecheck_fn typecheck = (typecheck_fn) (void *) typeExpr->code;
         Tree *afterTypeCast = typecheck(context, typeExpr, value);
         if (afterTypeCast && afterTypeCast != original)
             xl_set_source(afterTypeCast, value);
@@ -2292,7 +2292,7 @@ Tree *MapFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
 {
     ListIterator li(context, symbols, what);
-    map_fn map = (map_fn) function;
+    map_fn map = (map_fn) (void *) function;
     Tree_p result = NULL;
     Tree_p *parent = &result;
 
@@ -2337,7 +2337,7 @@ Tree *ReduceFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
 {
     ListIterator li(context, symbols, what);
-    reduce_fn reduce = (reduce_fn) function;
+    reduce_fn reduce = (reduce_fn) (void *) function;
     Tree_p result = NULL;
 
     // Loop on all elements
@@ -2370,7 +2370,7 @@ Tree *FilterFunctionInfo::Apply(Tree *what)
 // ----------------------------------------------------------------------------
 {
     ListIterator li(context, symbols, what);
-    filter_fn filter = (map_fn) function;
+    filter_fn filter = (map_fn) (void *) function;
     Tree_p result = NULL;
     Tree_p *parent = &result;
 

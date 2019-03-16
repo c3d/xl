@@ -348,7 +348,7 @@ void xl_enter_type(Symbols *symbols, Name *name,
     Infix *from = new Infix(":", new Name("V"), new Name(nv));
     Name *to = new Name(nv);
     Rewrite *rw = symbols->EnterRewrite(from, to);
-    eval_fn typeTestFn = (eval_fn) tc;
+    eval_fn typeTestFn = (eval_fn) (void *) tc;
     to->code = typeTestFn;
     to->SetSymbols(symbols);
     xl_enter_builtin(MAIN, castfnname, to,rw->parameters,typeTestFn);

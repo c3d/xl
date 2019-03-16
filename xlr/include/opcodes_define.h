@@ -97,7 +97,8 @@
     do                                                                  \
     {                                                                   \
         DOC(name, #t1 " " symbol " " #t2, XDOC(docinfo));               \
-        xl_enter_infix(context, XL_SCOPE #name, (native_fn) xl_##name,  \
+        xl_enter_infix(context, XL_SCOPE #name,                         \
+                       (native_fn) (void *) xl_##name,                  \
                        rtype##_type, #t1, symbol, #t2, doc);            \
     } while(0);
 
@@ -120,7 +121,8 @@
     {                                                                   \
         TreeList parameters;                                            \
         DOC(name, #symbol, XDOC(docinfo ;) parms);                      \
-        xl_enter_prefix(context, XL_SCOPE #name, (native_fn) xl_##name, \
+        xl_enter_prefix(context, XL_SCOPE #name,                        \
+                        (native_fn) (void *) xl_##name,                 \
                         rtype##_type, parameters, symbol, doc);         \
     } while(0);
 
@@ -130,7 +132,8 @@
         TreeList  parameters;                                           \
         DOC(name, #symbol,                                              \
             XDOC(docinfo ;) parms XDOC(; docsyntax += " " #symbol));    \
-        xl_enter_postfix(context, XL_SCOPE #name,(native_fn) xl_##name, \
+        xl_enter_postfix(context, XL_SCOPE #name,                       \
+                         (native_fn) (void *) xl_##name,                \
                          rtype##_type, parameters, symbol, doc);        \
     } while(0);
 
@@ -138,8 +141,9 @@
     do                                                                  \
     {                                                                   \
         DOC(name, #open " " #type " " #close, docinfo);                 \
-        xl_enter_block(context, XL_SCOPE #name, (native_fn) xl_##name,  \
-                       rtype##_type, open, #type, close, doc);    \
+        xl_enter_block(context, XL_SCOPE #name,                         \
+                       (native_fn) (void *) xl_##name,                  \
+                       rtype##_type, open, #type, close, doc);          \
     } while (0);
 
 #define FORM(name, rtype, form, parms, _code, docinfo)                  \
@@ -147,7 +151,8 @@
     {                                                                   \
         TreeList parameters;                                            \
         DOC(name, form, XDOC(docinfo;) parms);                          \
-        xl_enter_form(context, XL_SCOPE #name, (native_fn) xl_##name,   \
+        xl_enter_form(context, XL_SCOPE #name,                          \
+                      (native_fn) (void *) xl_##name,                   \
                       rtype##_type, form, parameters, doc);             \
     } while(0);
 

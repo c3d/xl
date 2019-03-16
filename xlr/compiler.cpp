@@ -404,7 +404,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
         return NULL;
     if (!topUnit.Return(returned))
         return NULL;
-    return (program_fn) topUnit.Finalize(true);
+    return (program_fn) (void *) topUnit.Finalize(true);
 }
 
 
