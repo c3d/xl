@@ -1247,7 +1247,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         // but only if we attempt to actually evaluate the tree
         if (!symbols->Compile(source, subUnit, true))
             subUnit.CallTypeError(source);
-        if (eval_fn fn = subUnit.Finalize(false))
+        if (eval_fn fn = subUnit.Finalize(isCallableDirectly))
             if (isCallableDirectly)
                 source->code = fn;
     }
