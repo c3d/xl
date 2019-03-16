@@ -679,7 +679,7 @@ Constant *Compiler::TreeConstant(Tree *constant)
            "tree", (intptr_t) constant, "kind", constant->Kind());
     IFTRACE(llvm)
         std::cerr << "TreeConstant "
-                  << "[" << constant << "]=" << (void *) constant << "\n";
+                  << "[" << ShortTreeForm(constant) << "]=" << (void *) constant << "\n";
     return llvm.CreateConstant(treePtrTy, constant);
 }
 
