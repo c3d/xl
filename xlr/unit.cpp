@@ -234,7 +234,7 @@ Function *CompiledUnit::RewriteFunction(RewriteCandidate &rc)
 Function *CompiledUnit::InitializeFunction(FunctionType *fnTy,
                                            Parameters *parameters,
                                            kstring label,
-                                           bool global, bool isC)
+                                           bool /* global */, bool isC)
 // ----------------------------------------------------------------------------
 //   Build the LLVM function, create entry points, ...
 // ----------------------------------------------------------------------------
