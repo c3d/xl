@@ -391,7 +391,22 @@ inline JIT::JIT()
 #endif
 
 #ifndef LLVM_CRAP_MCJIT
-    ExecutionEngine *runtime = engineBuilder.create();
+    module = new llvm::Module("xl", context);
+    
+#if LLVM_VERSION < 360
+    // Select the fast JIT
+    EngineBuilder engineBuilder(module);
+#else
+    // WTF version of the above
+    EngineBuilder engineBuilder(std::move(moduleOwner));
+#endif
+#if LLVM_VERSION >= 31
+    TargetOptions targetOpts;
+    // targetOpts.JITEmitDebugInfo = true;
+    engineBuilder.setEngineKind(EngineKind::JIT);
+    engineBuilder.setTargetOptions(targetOpts);
+#endif
+    runtime = engineBuilder.create();
 
     // Check if we were successful in the creation of the runtime
     if (!runtime)
@@ -677,7 +692,7 @@ inline void *JIT::FunctionPointer(llvm::Function* f)
 {
 #ifndef LLVM_CRAP_MCJIT
     if (optimizer)
-        optimizer->run(*adapter);
+        optimizer->run(*f);
     return runtime->getPointerToFunction(f);
 #else // LLVM_CRAP_MCJIT
     for (auto engine : engines)
@@ -742,6 +757,8 @@ inline void JIT::SetOptimizationLevel(uint opt)
 //   Set the optimization level
 // ----------------------------------------------------------------------------
 {
+    using namespace llvm;
+    
     optimizeLevel = opt;
 
 #if LLVM_VERSION < 30
@@ -810,7 +827,7 @@ inline void JIT::SetOptimizationLevel(uint opt)
 
 
     // If we use the old compiler, we need lazy compilation, see bug #718
-    if (optLevel == 1)
+    if (opt == 1)
         runtime->DisableLazyCompilation(false);
 #endif // LLVM_CRAP_MCJIT
 }
