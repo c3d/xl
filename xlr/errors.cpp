@@ -318,19 +318,18 @@ text ShortTreeForm(Tree *tree, uint maxWidth)
     text t = *tree;
     size_t length = t.length();
 
-    size_t first = t.find("\n");
-    if (first != t.npos)
-    {
-        size_t last = t.rfind("\n");
-        t.replace(first, last-first+1, "...");
-        length = t.length();
-    }
-
     if (length > maxWidth)
     {
         uint extra = length - maxWidth;
-        first = maxWidth / 2;
+        size_t first = maxWidth / 2;
         t.replace(first, extra+1, "...");
+    }
+
+    size_t first = t.find("\n");
+    while (first != t.npos)
+    {
+        t.replace(first, 1, "|");
+        first = t.find("\n");
     }
 
     return t;
