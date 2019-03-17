@@ -68,7 +68,7 @@ XL_BEGIN
 #define wipememory(_ptr,_len) wipememory2(_ptr,0,_len)
 
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__) || defined(__arm__)
 #elif defined(__ppc__) || defined(__ppc64__)
 #define BIG_ENDIAN_HOST 1
 #else
