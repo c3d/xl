@@ -2987,6 +2987,7 @@ OCompiledUnit::OCompiledUnit(Compiler *comp,
     Value *resultStorage = data->CreateAlloca(treePtrTy, 0, "result");
     data->CreateStore(inputArg, resultStorage);
     storage[src] = resultStorage;
+    value[src] = inputArg;
 
     // Associate the value for the additional arguments (read-only, no alloca)
     TreeList::iterator parm;
