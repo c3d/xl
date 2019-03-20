@@ -170,7 +170,7 @@ static ulong OptionInteger(Options &opt, ulong low, ulong high)
 
     if (result < low || result > high)
     {
-        char lowstr[15], highstr[15];
+        char lowstr[32], highstr[32];
         sprintf(lowstr, "%lu", low);
         sprintf(highstr, "%lu", high);
         Ooops("Option $1 is out of range $2..$3", Error::COMMAND_LINE)
