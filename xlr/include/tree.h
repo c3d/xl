@@ -1,11 +1,10 @@
 #ifndef TREE_H
 #define TREE_H
-// ****************************************************************************
-//  tree.h                          (C) 1992-2003 Christophe de Dinechin (ddd)
-//                                                            XL2 project
-// ****************************************************************************
+// *****************************************************************************
+// include/tree.h                                                     XL project
+// *****************************************************************************
 //
-//   File Description:
+// File description:
 //
 //     Basic representation of parse tree.
 //
@@ -17,12 +16,28 @@
 //
 //
 //
-// ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
-//  (C) 2010 Taodyne SAS
-// ****************************************************************************
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2010-2011, Catherine Burvelle <catherine@taodyne.com>
+// (C) 2003-2005,2009-2012,2014-2015,2017,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2011, Jérôme Forissier <jerome@taodyne.com>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 #include "base.h"
 #include "gc.h"

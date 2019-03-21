@@ -1,11 +1,10 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
-/* ************************************************************************* */
-/*   configuration.h            (C) 1992-2000 Christophe de Dinechin (ddd)   */
-/*                                                          XL2 project      */
-/* ************************************************************************* */
-/*                                                                           */
-/*   File Description:                                                       */
+// *****************************************************************************
+// include/configuration.h                                            XL project
+// *****************************************************************************
+//
+// File description:
 /*                                                                           */
 /*     Configuration file for various systems                                */
 /*                                                                           */
@@ -16,12 +15,28 @@
 /*                                                                           */
 /*                                                                           */
 /*                                                                           */
-/* ************************************************************************* */
-/* This document is distributed under the GNU General Public License         */
-/* See the enclosed COPYING file or http://www.gnu.org for information       */
-/*  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>            */
-/*  (C) 2010 Taodyne SAS                                                     */
-/* ***************************************************************************/
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003,2009-2010,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010, Lionel Schaffhauser <lionel@taodyne.com>
+// (C) 2003, Juan Carlos Arevalo Baeza <thejcab@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 
 // ============================================================================
