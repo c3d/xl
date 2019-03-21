@@ -741,12 +741,17 @@ eval_fn CompiledUnit::Finalize(bool createCode)
     // Connect the "allocas" to the actual entry point
     data->CreateBr(entrybb);
 
-    if (XLTRACE(unoptimized_code) || XLTRACE(code))
+    if (XLTRACE(unoptimized_code))
     {
         errs() << "UNOPTIMIZED (CompiledUnit):\n";
         function->print(errs());
     }
     llvm.FinalizeFunction(function);
+    if (XLTRACE(code))
+    {
+        errs() << "OPTIMIZED (CompiledUnit):\n";
+        function->print(errs());
+    }
 
     void *result = NULL;
     if (createCode)

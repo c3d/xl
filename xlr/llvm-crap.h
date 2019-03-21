@@ -676,6 +676,10 @@ inline void JIT::FinalizeFunction(llvm::Function* f)
     IFTRACE(llvm)
         llvm::errs() << "Finalizing " << f->getName() << "\n";
     llvm::verifyFunction(*f);
+#ifndef LLVM_CRAP_MCJIT
+    if (optimizer)
+        optimizer->run(*f);
+#endif
 }
 
 
@@ -688,8 +692,6 @@ inline void *JIT::FunctionPointer(llvm::Function* f)
 //   since we can't just incremently add functions to modules.
 {
 #ifndef LLVM_CRAP_MCJIT
-    if (optimizer)
-        optimizer->run(*f);
     return runtime->getPointerToFunction(f);
 #else // LLVM_CRAP_MCJIT
     for (auto engine : engines)
