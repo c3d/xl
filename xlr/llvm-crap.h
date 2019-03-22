@@ -186,7 +186,7 @@
 #endif
 
 // This is perfectly logical, trust me!
-#if LLVM_VERSION < 352
+#if LLVM_VERSION < 342
 #include <llvm/Target/TargetSelect.h>
 #else
 #include <llvm/Support/TargetSelect.h>
