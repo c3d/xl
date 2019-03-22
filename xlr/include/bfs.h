@@ -1,7 +1,7 @@
 #ifndef BFS_H
 #define BFS_H
 // *****************************************************************************
-// include/bfs.h                                                      XL project
+// bfs.h                                                              XL project
 // *****************************************************************************
 //
 // File description:
@@ -81,7 +81,7 @@ struct BreadthFirstSearch
             if (!fullScan && res)
                 return res;
             nodes.pop();
-            
+
             if (Block   *bl = curr->AsBlock())
             {
                 nodes.push(bl->child);

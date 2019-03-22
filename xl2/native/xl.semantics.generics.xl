@@ -1,9 +1,8 @@
-// ****************************************************************************
-//  xl.semantics.generics.xl        (C) 1992-2004 Christophe de Dinechin (ddd)
-//                                                                 XL2 project
-// ****************************************************************************
+// *****************************************************************************
+// xl.semantics.generics.xl                                           XL project
+// *****************************************************************************
 //
-//   File Description:
+// File description:
 //
 //     Implementation of generic instantiation
 //
@@ -14,14 +13,26 @@
 //
 //
 //
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2006-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 import PT = XL.PARSER.TREE
 import TY = XL.SEMANTICS.TYPES
@@ -556,7 +567,7 @@ module XL.SEMANTICS.GENERICS is
             trace[-inst] "Instantiation in progress", key
             return ERR.ErrorTree()
         SYM.Enter XLT.main_context, "IN_INSTANCE", key, Decl.name
-        
+
         if instantiations > max_instantiations then
             ERR.Error "Too many recursive instantitiations at '$1'", Decl.name
             trace[-inst] "Too many recursions: ", instantiations
@@ -1127,7 +1138,7 @@ module XL.SEMANTICS.GENERICS is
                         TY.SetType arg, tgt
                         return Deduce(FunType, RetDecl, arg, Gargs)
 
-        return false        
+        return false
 
 
     function InstantiateType (Name : PT.tree;
@@ -1317,7 +1328,7 @@ module XL.SEMANTICS.GENERICS is
                     instOf   : PT.tree := InstanceOf(instType)
                     if instOf = GDecl.name then
                         return decl
-                    
+
         return nil
 
 

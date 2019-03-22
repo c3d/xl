@@ -389,7 +389,7 @@ inline JIT::JIT()
 
 #ifndef LLVM_CRAP_MCJIT
     module = new llvm::Module("xl", context);
-    
+
 #if LLVM_VERSION < 360
     // Select the fast JIT
     EngineBuilder engineBuilder(module);
@@ -757,7 +757,7 @@ inline void JIT::SetOptimizationLevel(uint opt)
 // ----------------------------------------------------------------------------
 {
     using namespace llvm;
-    
+
     optimizeLevel = opt;
 
 #if LLVM_VERSION < 30

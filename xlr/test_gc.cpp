@@ -3,14 +3,14 @@
 // *****************************************************************************
 //
 // File description:
-//                                                                             
-//                                                                             
-//                                                                             
-//                                                                             
-//                                                                             
-//                                                                             
-//                                                                             
-//                                                                             
+//
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2010,2019, Christophe de Dinechin <christophe@dinechin.org>

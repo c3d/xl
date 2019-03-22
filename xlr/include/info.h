@@ -1,7 +1,7 @@
 #ifndef INFO_H
 #define INFO_H
 // *****************************************************************************
-// include/info.h                                                     XL project
+// info.h                                                             XL project
 // *****************************************************************************
 //
 // File description:
@@ -18,6 +18,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2004,2006,2010,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2012, Jérôme Forissier <jerome@taodyne.com>
 // (C) 2004, Sébastien Brochet <sebbrochet@sourceforge.net>
 // *****************************************************************************
 // This file is part of XL

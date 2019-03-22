@@ -1,29 +1,40 @@
 #ifndef PARSER_H
 #define PARSER_H
-// ****************************************************************************
-//  parser.h                        (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                            Activity project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// parser.h                                                           XL project
+// *****************************************************************************
+//
+// File description:
+//
 //      XL language parser
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003-2004,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 /*
   Parsing XL is extremely simple. The source code is transformed into
   a tree with only three type of nodes and four types of leafs:
@@ -78,9 +89,9 @@
 
 
 // ============================================================================
-// 
+//
 //    The parser itself
-// 
+//
 // ============================================================================
 
 class XLParser

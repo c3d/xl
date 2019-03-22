@@ -17,6 +17,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2004,2009-2011,2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2013, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -267,7 +268,7 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
     ulong key = HashForm(form);
 
     // Walk through existing rewrites
-    Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE]; 
+    Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE];
 
     // Check if we insert a name. If so, we shouldn't redefine
     if (Name *name = form->AsName())
@@ -299,7 +300,7 @@ Rewrite *Context::Define(Tree *form, Tree *value, Tree *type)
             REWRITE_HASH_SHIFT(key);
             parent = &where->hash[key % REWRITE_HASH_SIZE];
         }
-    }           
+    }
     else
     {
         // Not a name, won't check for redefinitions
@@ -351,7 +352,7 @@ Rewrite *Context::DefineData(Tree *data)
             nextContext = context->stack;                       \
     }                                                           \
 }
-        
+
 
 Tree *Context::Assign(Tree *tgt, Tree *src, lookup_mode lookup)
 // ----------------------------------------------------------------------------
@@ -443,7 +444,7 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
                                 return st->AssignTree(tname,value,type,lookup);
                             }
                         }
-                        
+
                         // Can't assign if this already existed
                         Ooops("Assigning to $1", name);
                         Ooops("previously defined as $1", from);
@@ -471,7 +472,7 @@ Tree *Context::AssignTree(Tree *tgt, Tree *val, Tree *tp,
 
         // Walk through existing rewrites (we already checked for redefinitions)
         ulong key = hkey;
-        Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE]; 
+        Rewrite_p *parent = &rewrites[key % REWRITE_HASH_SIZE];
         while (Rewrite *where = *parent)
         {
             REWRITE_HASH_SHIFT(key);
@@ -620,7 +621,7 @@ inline Tree *RegularEvaluator::operator() (Context *context,
         // Case where we have an assigned value
         if (fn == xl_assigned_value)
             return candidate->to;
-        
+
         // Bind native context
         TreeList args;
         if (eval->Bind(candidate->from, what, values, &args))
@@ -650,7 +651,7 @@ inline Tree *RegularEvaluator::operator() (Context *context,
                     candidate->type == name_type
                     ? (Context *) context->stack
                     : (Context *) stack;
-                
+
                 if (tailContext)
                 {
                     *tailContext = eval;
@@ -1504,7 +1505,7 @@ Tree *Context::Attribute(Tree *form, lookup_mode lookup, text kind)
                         arg = Attribute(prefix, lookup, kind);
                     }
                     else
-                    {                    
+                    {
                         if (Block *block = arg->AsBlock())
                             arg = block->child;
                     }
@@ -1932,7 +1933,7 @@ Tree *Constraint::SolveFor(Name *name)
             uint cleft = CountName(name, left);
             uint cright = CountName(name, right);
 
-            // Make sure the requested variable is on the left            
+            // Make sure the requested variable is on the left
             if (cleft == 0 && cright == 1)
             {
                 std::swap(left, right);
@@ -2061,7 +2062,7 @@ Tree *Constraint::SolveFor(Name *name)
                     return NULL;
                 }
             }
-                
+
         }
     }
 

@@ -17,6 +17,7 @@
 // This software is licensed under the GNU General Public License v3
 // (C) 2010, Catherine Burvelle <catherine@taodyne.com>
 // (C) 2009-2013,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2011-2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -423,7 +424,7 @@ bool TypeInference::Evaluate(Tree *what)
     Errors errors;
     errors.Log (Error("Unable to evaluate $1 because", what), true);
     context->Evaluate(what, *rc, key, Context::NORMAL_LOOKUP);
-        
+
     // If we have no candidate, this is a failure
     count = rc->candidates.size();
     if (count == 0)
@@ -558,10 +559,10 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
                     return
                         Unify(i1->left, i2->left, i1, i2) &&
                         Unify(i1->right, i2->right, i1, i2);
-            
+
             return TypeError(i1, t2);
         }
-        
+
         // Union types: Unify with either side
         if (i1->name == "|" || i1->name == ",")
         {
@@ -576,7 +577,7 @@ bool TypeInference::Unify(Tree *t1, Tree *t2, unify_mode mode)
             }
             return TypeError(t1, t2);
         }
-        
+
         Ooops("Malformed type definition $2 for $1", left, i1);
         return false;
     }
@@ -701,7 +702,7 @@ bool TypeInference::JoinConstant(Tree *cst, Name *type)
 
     case REAL:
         if (type == real_type   ||
-            type == real64_type || 
+            type == real64_type ||
             type == real32_type)
             return Join(type, cst, true);
         return Unify(real_type, type) && Join(cst, real_type);

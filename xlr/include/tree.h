@@ -1,7 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 // *****************************************************************************
-// include/tree.h                                                     XL project
+// tree.h                                                             XL project
 // *****************************************************************************
 //
 // File description:
@@ -469,15 +469,15 @@ inline Infix *Infix::LastStatement()
 
 
 // ============================================================================
-// 
+//
 //   Template members for recursive operations on trees
-// 
+//
 // ============================================================================
 
 template<typename Action>
 typename Action::value_type Tree::Do(Action &action)
 // ----------------------------------------------------------------------------
-//   Perform an action on the tree 
+//   Perform an action on the tree
 // ----------------------------------------------------------------------------
 {
     switch(Kind())

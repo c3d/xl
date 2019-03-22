@@ -1,27 +1,39 @@
-// ****************************************************************************
-//  xl.semantics.declarations.xl    (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
+// *****************************************************************************
+// xl.semantics.declarations.xl                                       XL project
+// *****************************************************************************
 //
-//     Implementation of semantic declarations 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision: 361 $
-// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
-// ****************************************************************************
+// File description:
+//
+//     Implementation of semantic declarations
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2004-2005, Sébastien Brochet <sebbrochet@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 import XLT = XL.TRANSLATOR
 import TYP = XL.SEMANTICS.TYPES
@@ -159,7 +171,7 @@ module XL.SEMANTICS.DECLARATIONS is
                 result := FN.EnterFunction (Name, decl_type, Value, Name)
             decl := GetDeclaration(result)
             isFunction := true
-            
+
 
         // Tests that do not apply to functions or iterators
         if not isFunction then
@@ -227,7 +239,7 @@ module XL.SEMANTICS.DECLARATIONS is
             else if decl.is_local or decl.is_global then
                 // Constructor generation will be processed at semantics time
                 result := parse_tree(@@defctor 'Name')
-                
+
 
         // Make sure we have a result to attach the decl to
         if result = nil then

@@ -1,7 +1,7 @@
 #ifndef BASE_H
 #define BASE_H
 // *****************************************************************************
-// include/base.h                                                     XL project
+// base.h                                                             XL project
 // *****************************************************************************
 //
 // File description:
@@ -18,6 +18,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003,2009-2010,2017,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010,2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -186,9 +187,9 @@ externc void xl_assert_failed(kstring msg, kstring file, uint line);
 
 
 // ============================================================================
-// 
+//
 //   Tracing information
-// 
+//
 // ============================================================================
 
 #ifdef XL_DEBUG
@@ -214,9 +215,9 @@ externc void xl_assert_failed(kstring msg, kstring file, uint line);
 
 
 // ============================================================================
-// 
+//
 //   Other utilities
-// 
+//
 // ============================================================================
 
 #if defined(__GNUC__)

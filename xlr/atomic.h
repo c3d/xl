@@ -18,6 +18,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2010,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -214,33 +215,33 @@ int Atomic<int,OrderedAtomicMode>::Decrement<1>()
                  : "m" (value)
                  : "memory");
     return value;
-    
+
 }
 
 
 #elif defined(__i386__)
 // ============================================================================
-// 
+//
 //   Implementation for "regular" x86
-// 
+//
 // ============================================================================
 
 #error "Not yet implemented"
 
 #elif defined(__ppc__)
 // ============================================================================
-// 
+//
 //   Implementation for PowerPC
-// 
+//
 // ============================================================================
 
 #error "Not yet implemented"
 
 #else
 // ============================================================================
-// 
+//
 //   Default implementation (pure C)
-// 
+//
 // ============================================================================
 
 #include <pthread.h>

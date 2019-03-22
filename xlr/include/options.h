@@ -1,7 +1,7 @@
 #ifndef XL_OPTIONS_H
 #define XL_OPTIONS_H
 // *****************************************************************************
-// include/options.h                                                  XL project
+// options.h                                                          XL project
 // *****************************************************************************
 //
 // File description:
@@ -18,6 +18,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003,2009-2012,2017,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //

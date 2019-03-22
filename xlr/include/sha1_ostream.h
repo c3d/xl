@@ -1,20 +1,20 @@
 #ifndef SHA1_OSTREAM_H
 #define SHA1_OSTREAM_H
 // *****************************************************************************
-// include/sha1_ostream.h                                             XL project
+// sha1_ostream.h                                                     XL project
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Ostream operations on a SHA-1 class
-// 
+//
 //     The only reasons they are not in sha1.h is because putthing them
 //     at that spot apparently 'disables' another operator<< (os&, Tree *)
 //     I have not spent enough time to know if it's a GCC bug or a C++ feature
-// 
-// 
-// 
-// 
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2009-2010,2019, Christophe de Dinechin <christophe@dinechin.org>

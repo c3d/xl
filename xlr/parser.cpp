@@ -3,20 +3,21 @@
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     XL language parser
-// 
+//
 //      See detailed description in parser.h
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2004,2009-2011,2013-2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2011, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -48,9 +49,9 @@
 
 XL_BEGIN
 // ============================================================================
-// 
+//
 //    Parser class itself
-// 
+//
 // ============================================================================
 
 struct Pending
@@ -520,7 +521,7 @@ Tree *Parser::Parse(text closing)
             // Instead, we defer the comment to the next 'right'
             commented = NULL;
         }
-            
+
 
         // Check what is the current result
         if (!result)

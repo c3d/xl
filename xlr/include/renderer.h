@@ -1,23 +1,24 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 // *****************************************************************************
-// include/renderer.h                                                 XL project
+// renderer.h                                                         XL project
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Rendering of XL trees
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2007,2009-2010,2012-2013,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //

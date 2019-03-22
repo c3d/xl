@@ -16,6 +16,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2010-2012,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2011-2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -602,7 +603,7 @@ void debuggc(void *ptr)
                 }
             }
         }
-        
+
         // Check how many times we found the item
         if (allocated)
         {

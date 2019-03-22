@@ -1,27 +1,39 @@
-// ****************************************************************************
-//  xl.semantics.overload.xl        (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// xl.semantics.overload.xl                                           XL project
+// *****************************************************************************
+//
+// File description:
+//
 //     Implementation of overload resolution
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision: 370 $
-// * Date       : $Date: 2008-04-08 02:08:47 -0400 (Tue, 08 Apr 2008) $
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2004-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2004-2005, Sébastien Brochet <sebbrochet@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 import PT = XL.PARSER.TREE
 import TY = XL.SEMANTICS.TYPES
@@ -526,7 +538,7 @@ module XL.SEMANTICS.OVERLOAD is
             CGM.ExitCall callDepth, result
             TY.SetType result, TY.InvalidType("overload set")
             trace[-overload] "Return overload set"
-            return result            
+            return result
 
         // Otherwise, check which one we would call
         if best <> nil then
@@ -753,7 +765,7 @@ module XL.SEMANTICS.OVERLOAD is
                     ERR.Error "different variadicity in '$1'", toTypeExpr
                     trace[overload] "FAIL: Variadicity mismatch"
                     restart
-                    
+
 
             // Check type of parameters
             D        : DCL.declaration

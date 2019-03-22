@@ -1,11 +1,11 @@
 #ifndef SHA1_H
 #define SHA1_H
 // *****************************************************************************
-// include/sha1.h                                                     XL project
+// sha1.h                                                             XL project
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Function prototypes for the SHA-1 algorithm.
 //
 //

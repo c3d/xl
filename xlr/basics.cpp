@@ -3,19 +3,20 @@
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Basic operations (arithmetic, ...)
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2009-2012,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010,2012, Jérôme Forissier <jerome@taodyne.com>
 // (C) 2010, Lionel Schaffhauser <lionel@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
@@ -55,9 +56,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Top-level operation
-// 
+//
 // ============================================================================
 
 #include "opcodes_declare.h"

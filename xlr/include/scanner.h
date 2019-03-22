@@ -1,23 +1,24 @@
 #ifndef SCANNER_H
 #define SCANNER_H
 // *****************************************************************************
-// include/scanner.h                                                  XL project
+// scanner.h                                                          XL project
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Interface for the XL scanner
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2004,2009-2012,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2011, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -182,12 +183,12 @@ public:
     Scanner(std::istream &input, Syntax &stx, Positions &pos, Errors &err);
     Scanner(const Scanner &parent);
     ~Scanner();
-    
+
 public:
     // Scanning
     token_t     NextToken(bool hungry = false);
     text        Comment(text EndOfComment, bool stripIndent = true);
-    
+
     // Access to scanned data
     text        TokenText()             { return tokenText; }
     text        NameValue()             { return textValue; }
@@ -197,7 +198,7 @@ public:
     uint        Base()                  { return base; }
     void        SetTextValue(text t)    { textValue = t; }
     void        SetTokenText(text t)    { tokenText = t; }
- 
+
     // Access to location information
     uint        Indent()                { return indent; }
     void        SetPosition(ulong pos)  { position = pos; }

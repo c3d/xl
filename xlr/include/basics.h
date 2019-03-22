@@ -1,6 +1,6 @@
 #ifndef BASICS_H
 // *****************************************************************************
-// include/basics.h                                                   XL project
+// basics.h                                                           XL project
 // *****************************************************************************
 //
 // File description:
@@ -18,6 +18,7 @@
 // This software is licensed under the GNU General Public License v3
 // (C) 2012, Baptiste Soulisse <baptiste.soulisse@taodyne.com>
 // (C) 2009-2011,2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010,2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -62,9 +63,9 @@ void DeleteBasics();
 
 
 // ============================================================================
-// 
+//
 //    Some utility functions used in basics.tbl
-// 
+//
 // ============================================================================
 
 inline longlong xl_text2int(text_r t)

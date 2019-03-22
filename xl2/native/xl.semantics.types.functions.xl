@@ -1,27 +1,39 @@
-// ****************************************************************************
-//  xl.semantics.types.functions.xl (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// xl.semantics.types.functions.xl                                    XL project
+// *****************************************************************************
+//
+// File description:
+//
 //     Translation of function types
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2004-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2004, Sébastien Brochet <sebbrochet@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
 import PT = XL.PARSER.TREE
@@ -207,7 +219,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
         ftp : function_type
 
         // Create a new context for the parameters
-        oldContext : SYM.symbol_table := XLT.context 
+        oldContext : SYM.symbol_table := XLT.context
         XLT.context := SYM.NewSymbolTable (XLT.context)
         SYM.SetInteger XLT.context, "FNPARM", 1
 
@@ -324,7 +336,7 @@ module XL.SEMANTICS.TYPES.FUNCTIONS is
     function EnterDefaults(fnName : PT.name_tree;
                            ftp    : any_type) return BC.bytecode is
     // ------------------------------------------------------------------------
-    //   Enter the defaults 
+    //   Enter the defaults
     // ------------------------------------------------------------------------
         result := XLT.Append(result, EnterFunctionCopy(fnName, ftp))
 

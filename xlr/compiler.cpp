@@ -79,7 +79,7 @@ static void* unresolved_external(const std::string& name)
     if (auto SymAddr = RTDyldMemoryManager::getSymbolAddressInProcess(name))
         return (void *) SymAddr;
 #endif // LLVM_CRAP_MCJIT (LLVM crap is everywhere!!!)
-    
+
     std::cout.flush();
     std::cerr << "Unable to resolve external: " << name << std::endl;
     assert(0);

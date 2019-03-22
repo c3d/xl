@@ -350,7 +350,7 @@ void Main::ListNames(text begin,
     XL::source_files &files = XL::MAIN->files;
     for (XL::source_files::iterator f = files.begin(); f != files.end(); ++f)
         (*f).second.ListNames(begin, names, infix, prefix, postfix);
-}    
+}
 
 
 text Main::SearchFile(text file)
@@ -561,7 +561,7 @@ int Main::LoadFile(text file,
 
             // TODO: At -O3, do we need to do anything here?
         }
-       
+
         // Graph of the input tree
         if (options.showGV)
         {

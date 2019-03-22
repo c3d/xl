@@ -1,20 +1,20 @@
 #ifndef HASH_H
 #define HASH_H
 // *****************************************************************************
-// include/hash.h                                                     XL project
+// hash.h                                                             XL project
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Tools to run cryptographic hash functions over XL trees.
 //     Hashing is a convenient way to verify the integrity of a tree.
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2010,2019, Christophe de Dinechin <christophe@dinechin.org>
@@ -116,7 +116,7 @@ public:
 
     void Compute(uint64 v)
     // ------------------------------------------------------------------------
-    //   Compute the hash for integer values 
+    //   Compute the hash for integer values
     // ------------------------------------------------------------------------
     {
         byte   buf[sizeof v];

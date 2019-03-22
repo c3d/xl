@@ -16,6 +16,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2011,2013-2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2011-2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -95,7 +96,7 @@ void FlightRecorder::Dump(int fd, bool kill)
 #define AUTOFORMAT(x)                           \
         (((x) < 1000000 && (x) > -1000000)      \
          ? "%8s=%10" PRIdPTR " "                 \
-         : "%8s=%#10" PRIxPTR " ")            
+         : "%8s=%#10" PRIxPTR " ")
 
         if (e.label1[0])
             size += snprintf(buffer + size, sizeof buffer - size,

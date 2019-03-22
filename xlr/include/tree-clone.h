@@ -1,23 +1,24 @@
 #ifndef TREE_CLONE_H
 #define TREE_CLONE_H
 // *****************************************************************************
-// include/tree-clone.h                                               XL project
+// tree-clone.h                                                       XL project
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //    Tree clone and copy operations
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2010-2012,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -68,7 +69,7 @@ template <typename CloneMode> struct TreeCloneTemplate : CloneMode
     Tree *DoText(Text *what)
     {
         return Adjust(what, new Text(what->value,
-                                     what->opening, what->closing, 
+                                     what->opening, what->closing,
                                      what->Position()));
     }
     Tree *DoName(Name *what)

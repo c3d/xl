@@ -1,34 +1,45 @@
-// ****************************************************************************
-//  context.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// context.cpp                                                        XL project
+// *****************************************************************************
+//
+// File description:
+//
 //     Description of an execution context
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This document is confidential.
-// Do not redistribute without written permission
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003-2004,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 #include "context.h"
 
 // ============================================================================
-// 
+//
 //    XLContext class : Context of execution for trees
-// 
+//
 // ============================================================================
 
 int XLContext::InfixPriority(text n)
@@ -148,7 +159,7 @@ bool XLContext::IsTextDelimiter(text Begin, text &End)
 
 bool XLContext::IsBlock(text Begin, text &End)
 // ----------------------------------------------------------------------------
-// 
+//
 // ----------------------------------------------------------------------------
 {
     for (XLContext *c = this; c; c = c->parent)

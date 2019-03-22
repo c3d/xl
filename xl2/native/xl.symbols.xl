@@ -1,27 +1,39 @@
-// ****************************************************************************
-//  xl.symbols.xl                   (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// xl.symbols.xl                                                      XL project
+// *****************************************************************************
+//
+// File description:
+//
 //     Implementation of XL symbol tables
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2004-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2004, Sébastien Brochet <sebbrochet@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 import PT = XL.PARSER.TREE
 import ERR = XL.ERRORS
@@ -164,9 +176,9 @@ module XL.SYMBOLS is
 
 
     // ========================================================================
-    // 
+    //
     //    Score adjustment for the various lookup kinds
-    // 
+    //
     // ========================================================================
 
     SCORE_RENAMES_FACTOR        : integer := 16#1
@@ -826,7 +838,7 @@ module XL.SYMBOLS is
         return PT.NewName (base, pos)
 
 
-    
+
     procedure Debug(S : symbol_table; kind : lookup_kind) is
     // ------------------------------------------------------------------------
     //   Dump a symbol table
@@ -861,7 +873,7 @@ module XL.SYMBOLS is
                 IO.WriteLn ""
             for name in S.properties loop
                 IO.Write " Prop ", name, ": "
-                prop : PT.tree := S.properties[name] 
+                prop : PT.tree := S.properties[name]
                 if prop = nil then
                     IO.WriteLn "nil"
                 else if (prop.kind = PT.xlINTEGER or prop.kind = PT.xlREAL or

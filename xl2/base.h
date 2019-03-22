@@ -1,11 +1,10 @@
 #ifndef BASE_H
 #define BASE_H
-/* ************************************************************************* */
-/*   base.h                     (C) 1992-2000 Christophe de Dinechin (ddd)   */
-/*                                                          XL2 project     */
-/* ************************************************************************* */
-/*                                                                           */
-/*   File Description:                                                       */
+// *****************************************************************************
+// base.h                                                             XL project
+// *****************************************************************************
+//
+// File description:
 /*                                                                           */
 /*     Most basic things in the Mozart system:                               */
 /*     - Basic types                                                         */
@@ -16,14 +15,26 @@
 /*                                                                           */
 /*                                                                           */
 /*                                                                           */
-/* ************************************************************************* */
-/* This document is distributed under the GNU General Public License         */
-/* See the enclosed COPYING file or http://www.gnu.org for information       */
-/* ****************************************************************************
-   * File       : $RCSFile$
-   * Revision   : $Revision$
-   * Date       : $Date$
-   ************************************************************************* */
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 /* Include the places where conflicting versions of some types may exist */
 #include <sys/types.h>
@@ -174,9 +185,9 @@ externc void mz_assert_failed(kstring msg, kstring file, uint line);
 
 
 // ============================================================================
-// 
+//
 //   Tracing information
-// 
+//
 // ============================================================================
 
 #ifdef MZ_DEBUG

@@ -15,7 +15,7 @@
 #
 # ******************************************************************************
 # This software is licensed under the GNU General Public License v3
-# (C) 2017, Christophe de Dinechin <dinechin@redhat.com>
+# (C) 2017,2019, Christophe de Dinechin <christophe@dinechin.org>
 # ******************************************************************************
 # This file is part of XL
 #

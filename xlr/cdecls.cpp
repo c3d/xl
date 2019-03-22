@@ -16,6 +16,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2011-2012,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -120,7 +121,7 @@ Tree *CDeclaration::TypeAndName(Tree *input,
                                        Name_p &declName,
                                        uint &mods)
 // ----------------------------------------------------------------------------
-//   Incrementally build the return type 
+//   Incrementally build the return type
 // ----------------------------------------------------------------------------
 {
     // Check case of pointers
@@ -401,7 +402,7 @@ Name *CDeclaration::BaroqueTypeMods(Name *first,
         if ((a == cvt[i].first && b == cvt[i].second) ||
             (b == cvt[i].first && a == cvt[i].second))
             return new Name(cvt[i].to, first->Position());
-            
+
     return NULL;
 }
 

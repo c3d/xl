@@ -1,7 +1,7 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 // *****************************************************************************
-// include/context.h                                                  XL project
+// context.h                                                          XL project
 // *****************************************************************************
 //
 // File description:
@@ -19,6 +19,7 @@
 // This software is licensed under the GNU General Public License v3
 // (C) 2012, Catherine Burvelle <catherine@taodyne.com>
 // (C) 2003-2004,2009-2012,2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2011,2013, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //

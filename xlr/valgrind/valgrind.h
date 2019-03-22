@@ -1,3 +1,37 @@
+// *****************************************************************************
+// valgrind.h                                                         XL project
+// *****************************************************************************
+//
+// File description:
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2011, Jérôme Forissier <jerome@taodyne.com>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 /* -*- c -*-
    ----------------------------------------------------------------
 
@@ -21,16 +55,16 @@
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
 
-   2. The origin of this software must not be misrepresented; you must 
-      not claim that you wrote the original software.  If you use this 
-      software in a product, an acknowledgment in the product 
+   2. The origin of this software must not be misrepresented; you must
+      not claim that you wrote the original software.  If you use this
+      software in a product, an acknowledgment in the product
       documentation would be appreciated but is not required.
 
    3. Altered source versions must be plainly marked as such, and must
       not be misrepresented as being the original software.
 
-   4. The name of the author may not be used to endorse or promote 
-      products derived from this software without specific prior written 
+   4. The name of the author may not be used to endorse or promote
+      products derived from this software without specific prior written
       permission.
 
    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
@@ -52,13 +86,13 @@
    the terms of the GNU General Public License, version 2.  See the
    COPYING file in the source distribution for details.
 
-   ---------------------------------------------------------------- 
+   ----------------------------------------------------------------
 */
 
 
 /* This file is for inclusion into client (your!) code.
 
-   You can use these macros to manipulate and query Valgrind's 
+   You can use these macros to manipulate and query Valgrind's
    execution inside your own programs.
 
    The resulting executables will still run without Valgrind, just a
@@ -203,8 +237,8 @@
    this is executed not under Valgrind.  Args are passed in a memory
    block, and so there's no intrinsic limit to the number that could
    be passed, but it's currently five.
-   
-   The macro args are: 
+
+   The macro args are:
       _zzq_rlval    result lvalue
       _zzq_default  default value (result returned when running on real CPU)
       _zzq_request  request code
@@ -231,7 +265,7 @@
     ||  (defined(PLAT_x86_win32) && defined(__GNUC__))
 
 typedef
-   struct { 
+   struct {
       unsigned int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -286,7 +320,7 @@ typedef
 #if defined(PLAT_x86_win32) && !defined(__GNUC__)
 
 typedef
-   struct { 
+   struct {
       unsigned int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -352,7 +386,7 @@ valgrind_do_client_request_expr(uintptr_t _zzq_default, uintptr_t _zzq_request,
 #if defined(PLAT_amd64_linux)  ||  defined(PLAT_amd64_darwin)
 
 typedef
-   struct { 
+   struct {
       unsigned long long int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -407,7 +441,7 @@ typedef
 #if defined(PLAT_ppc32_linux)
 
 typedef
-   struct { 
+   struct {
       unsigned int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -468,7 +502,7 @@ typedef
 #if defined(PLAT_ppc64_linux)
 
 typedef
-   struct { 
+   struct {
       unsigned long long int nraddr; /* where's the code? */
       unsigned long long int r2;  /* what tocptr do we need? */
    }
@@ -540,7 +574,7 @@ typedef
 #if defined(PLAT_arm_linux)
 
 typedef
-   struct { 
+   struct {
       unsigned int nraddr; /* where's the code? */
    }
    OrigFn;
@@ -1726,7 +1760,7 @@ typedef
    "r0", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10",   \
    "r11", "r12", "r13"
 
-/* These CALL_FN_ macros assume that on ppc32-linux, 
+/* These CALL_FN_ macros assume that on ppc32-linux,
    sizeof(unsigned long) == 4. */
 
 #define CALL_FN_W_v(lval, orig)                                   \
@@ -3598,7 +3632,7 @@ typedef
 #define VG_IS_TOOL_USERREQ(a, b, v) \
    (VG_USERREQ_TOOL_BASE(a,b) == ((v) & 0xffff0000))
 
-/* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !! 
+/* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !!
    This enum comprises an ABI exported by Valgrind to programs
    which use client requests.  DO NOT CHANGE THE ORDER OF THESE
    ENTRIES, NOR DELETE ANY -- add new ones at the end. */
@@ -3733,7 +3767,7 @@ VALGRIND_PRINTF(const char *format, ...)
    _qzz_res = VALGRIND_DO_CLIENT_REQUEST_EXPR(0,
                               VG_USERREQ__PRINTF_VALIST_BY_REF,
                               (unsigned long)format,
-                              (unsigned long)&vargs, 
+                              (unsigned long)&vargs,
                               0, 0, 0);
 #endif
    va_end(vargs);
@@ -3771,7 +3805,7 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
    _qzz_res = VALGRIND_DO_CLIENT_REQUEST_EXPR(0,
                               VG_USERREQ__PRINTF_BACKTRACE_VALIST_BY_REF,
                               (unsigned long)format,
-                              (unsigned long)&vargs, 
+                              (unsigned long)&vargs,
                               0, 0, 0);
 #endif
    va_end(vargs);
@@ -3782,7 +3816,7 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
 
 /* These requests allow control to move from the simulated CPU to the
    real CPU, calling an arbitary function.
-   
+
    Note that the current ThreadId is inserted as the first argument.
    So this call:
 
@@ -3868,7 +3902,7 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
    - It marks the block as being addressable and undefined (if 'is_zeroed' is
      not set), or addressable and defined (if 'is_zeroed' is set).  This
      controls how accesses to the block by the program are handled.
-   
+
    'addr' is the start of the usable block (ie. after any
    redzone), 'sizeB' is its size.  'rzB' is the redzone size if the allocator
    can apply redzones -- these are blocks of padding at the start and end of
@@ -3876,7 +3910,7 @@ VALGRIND_PRINTF_BACKTRACE(const char *format, ...)
    Valgrind will spot block overruns.  `is_zeroed' indicates if the memory is
    zeroed (or filled with another predictable value), as is the case for
    calloc().
-   
+
    VALGRIND_MALLOCLIKE_BLOCK should be put immediately after the point where a
    heap block -- that will be used by the client program -- is allocated.
    It's best to put it at the outermost level of the allocator if possible;

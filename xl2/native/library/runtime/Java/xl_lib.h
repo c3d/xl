@@ -1,27 +1,39 @@
-// ****************************************************************************
-//  xl_lib.h                        (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// xl_lib.h                                                           XL project
+// *****************************************************************************
+//
+// File description:
+//
 //      Default support library for XL
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision: 196 $
-// * Date       : $Date: 2006-02-15 20:42:49 +0100 (Wed, 15 Feb 2006) $
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2005, Sébastien Brochet <sebbrochet@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 #include <cassert>
 #include <cstdio>
@@ -46,9 +58,9 @@
 
 
 // ============================================================================
-// 
+//
 //    Instructions
-// 
+//
 // ============================================================================
 
 #define restart() continue
@@ -56,9 +68,9 @@
 
 
 // ============================================================================
-// 
+//
 //    Basic types
-// 
+//
 // ============================================================================
 
 typedef std::string text;
@@ -104,7 +116,7 @@ inline T & back(std::vector<T> &v)
         std::cerr << "Ouch, trying to get back of empty vector";
         abort();
     }
-    
+
     return v.back();
 }
 
@@ -116,7 +128,7 @@ inline bool back(std::vector<bool> &v)
         std::cerr << "Ouch, trying to get back of empty vector";
         abort();
     }
-    
+
     return v.back();
 }
 
@@ -136,7 +148,7 @@ void popback(std::vector<T> &v)
         std::cerr << "Ouch, trying to pop last vector element";
         abort();
     }
-    
+
     v.pop_back();
 }
 
@@ -159,9 +171,9 @@ void copy(T *output, T *input)
 
 
 // ============================================================================
-// 
+//
 //    Text I/O
-// 
+//
 // ============================================================================
 
 namespace xl
@@ -171,7 +183,7 @@ namespace xl
             struct treenode;
         }
     }
-   
+
     namespace textio
     {
         typedef std::iostream *file;
@@ -212,7 +224,7 @@ namespace xl
         template <class A, class B>
         inline void write(const A& a, const B& b)
         { write(a); write(b); }
-        
+
         template <class A, class B, class C>
         inline void write(const A& a, const B& b, const C& c)
         { write(a); write(b, c); }
@@ -254,7 +266,7 @@ namespace xl
         template <class A, class B>
         inline void writeln(const A& a, const B& b)
         { write(a, b); writeln(); }
-        
+
         template <class A, class B, class C>
         inline void writeln(const A& a, const B& b, const C& c)
         { write(a, b, c); writeln(); }
@@ -327,7 +339,7 @@ namespace xl
         inline std::vector<std::string> directory(std::string where)
         {
         	  assert(0);
-            std::vector<std::string> result;            
+            std::vector<std::string> result;
             return result;
         }
     }
@@ -377,9 +389,9 @@ template <class T>
 
 
 // ============================================================================
-// 
+//
 //   Iterators (for loops)
-// 
+//
 // ============================================================================
 
 struct XLIterator
@@ -438,7 +450,7 @@ struct XLMapIterator : XLIterator
     virtual void first() { it = range.begin(); }
     virtual bool more() {
         bool has_more = it != range.end();
-        if (has_more) value = it->first; 
+        if (has_more) value = it->first;
         return has_more;
     }
     virtual void next() { it++; }
@@ -464,7 +476,7 @@ struct XLVectorIterator : XLIterator
     virtual void first() { it = range.begin(); }
     virtual bool more() {
         bool has_more = it != range.end();
-        if (has_more) value = *it; 
+        if (has_more) value = *it;
         return has_more;
     }
     virtual void next() { it++; }
@@ -500,9 +512,9 @@ inline text range (text &from, std::pair<int,int> range)
 
 
 // ============================================================================
-// 
+//
 //   Default initialization
-// 
+//
 // ============================================================================
 
 template<class T>struct XLDefaultInit
@@ -517,9 +529,9 @@ template<class T>struct XLDefaultInit<T*>
 
 
 // ============================================================================
-// 
+//
 //    Pointer automatic dereferencing
-// 
+//
 // ============================================================================
 
 template <class T> inline T& XLDeref(T& x)
@@ -536,9 +548,9 @@ template <class T> inline T& XLDeref(T * &x)
 
 
 // ============================================================================
-// 
+//
 //    Main entry point...
-// 
+//
 // ============================================================================
 
 extern void XLMain();

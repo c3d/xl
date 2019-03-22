@@ -761,7 +761,7 @@ static void MatchOneKind(Matching &M, node_vector &S1, node_vector &S2)
         return;
 
     IFTRACE(diff)
-        std::cout << "  Matching (kind = " 
+        std::cout << "  Matching (kind = "
                   << S1.front().GetTree()->Kind() << ")\n";
 
     // Compute the Longest Common Subsequence in the node chains of
@@ -1132,7 +1132,7 @@ void TreeDiff::DoEditScript()
                 if (!Tree::Equal(wptr, xptr, false))
                 {
                     // ii. If v(w) != v(x)
-                    
+
                     NullClone clone;
                     Tree *t = xptr->Do(clone);
                     EditOperation::Update *upd;
@@ -1140,20 +1140,20 @@ void TreeDiff::DoEditScript()
 
                     // A. Append UPD(w, v(x)) to E
                     E.push_back(upd);
-                    
+
                     // B. Apply UPD(w, v(x)) to T1
                     upd->Apply(nodes1);
                 }
                 if (y != Mprime.to[v])
                 {
                     // iii. If (y, v) not in M'
-                    
+
                     // A. Let z be the partner of y in M'
                     node_id z = Mprime.fro[y];
-                    
+
                     // B. k <- FindPos(x)
                     unsigned k = FindPos(x);
-                    
+
                     EditOperation::Move *mov;
                     mov = new EditOperation::Move(w, z, k);
 
@@ -1169,11 +1169,11 @@ void TreeDiff::DoEditScript()
                 }
             }
         }
-        
+
         // (d) AlignChildren(w, x)
         AlignChildren(w, x);
     }
-    
+
     // 3. Do a post-order traversal of T1
     std::list<Tree_p> list;
     AddPtr< std::list<Tree_p> > act(list);

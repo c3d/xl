@@ -3,19 +3,20 @@
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //    Actions collecting parameters on the left of a rewrite
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2004,2006,2010-2011,2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -78,7 +79,7 @@ bool ParameterList::EnterName(Name *what,
     if (untyped)
         if (unit->context->scope->Bound(what))
             return true;
-        
+
     // We need to record a new parameter
     parameters.push_back(Parameter(what, type));
     return true;

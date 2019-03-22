@@ -1,27 +1,38 @@
-// ****************************************************************************
-//  scanner.cpp                     (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// scanner.cpp                                                        XL project
+// *****************************************************************************
+//
+// File description:
+//
 //     This is the file scanner for the XL project
-// 
+//
 //     See detailed documentation in scanner.h
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003-2004,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 #include <stdio.h>
 #include <ctype.h>
@@ -33,9 +44,9 @@
 
 
 // ============================================================================
-// 
+//
 //    Helper classes
-// 
+//
 // ============================================================================
 
 class DigitValue
@@ -45,7 +56,7 @@ class DigitValue
 {
 public:
     enum { SIZE = 128, INVALID = 999 };
-    
+
 public:
     DigitValue()
     {
@@ -71,9 +82,9 @@ private:
 
 
 // ============================================================================
-// 
+//
 //    Class XLScanner
-// 
+//
 // ============================================================================
 
 XLScanner::XLScanner(kstring name)
@@ -197,7 +208,7 @@ token_t XLScanner::NextToken()
             MZ_ASSERT(indents.size());
             indents.pop_back();
             indent = column;
-            
+
             // If we unindented, but did not go as far as the
             // most recent indent, report inconsistency.
             if (indents.back() < column)
@@ -205,7 +216,7 @@ token_t XLScanner::NextToken()
                 XLError(E_ScanInconsistent, fileName, fileLine);
                 return tokERROR;
             }
-            
+
             // Otherwise, report that we unindented
             // We may report multiple tokUNINDENT if we unindented deep
             return tokUNINDENT;
@@ -245,7 +256,7 @@ token_t XLScanner::NextToken()
                         XLError(E_ScanDoubleUnder, fileName, fileLine);
                 }
             }
-            
+
             // Check if this is a based number
             if (c == '#' && !basedNumber)
             {
@@ -371,7 +382,7 @@ token_t XLScanner::NextToken()
             return endMarker == "" ? tokPARCLOSE : tokPAROPEN;
         return tokNAME;
     }
-    
+
     // Look for strings
     else if (c == '"' || c == '\'')
     {

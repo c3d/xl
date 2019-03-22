@@ -1,7 +1,7 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 // *****************************************************************************
-// include/runtime.h                                                  XL project
+// runtime.h                                                          XL project
 // *****************************************************************************
 //
 // File description:
@@ -19,6 +19,7 @@
 // (C) 2012, Baptiste Soulisse <baptiste.soulisse@taodyne.com>
 // (C) 2011, Catherine Burvelle <catherine@taodyne.com>
 // (C) 2009-2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010-2013, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //

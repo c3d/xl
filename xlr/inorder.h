@@ -69,7 +69,7 @@ struct InOrderTraversal
         return what->Do(action);
     }
     value_type DoInfix(Infix *what)
-    {    
+    {
         value_type ret = what->left->Do(this);
         if (!fullScan && ret)
             return ret;

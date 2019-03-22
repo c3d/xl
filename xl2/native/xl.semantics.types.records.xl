@@ -1,9 +1,8 @@
-// ****************************************************************************
-//  xl.semantics.types.records.xl   (C) 1992-2004 Christophe de Dinechin (ddd)
-//                                                                 XL2 project
-// ****************************************************************************
+// *****************************************************************************
+// xl.semantics.types.records.xl                                      XL project
+// *****************************************************************************
 //
-//   File Description:
+// File description:
 //
 //    Implementation of record types
 //
@@ -14,14 +13,27 @@
 //
 //
 //
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision: 373 $
-// * Date       : $Date: 2008-04-09 07:23:58 -0400 (Wed, 09 Apr 2008) $
-// ****************************************************************************
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2004-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2004, Sébastien Brochet <sebbrochet@sourceforge.net>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 import TY = XL.SEMANTICS.TYPES
 import PT = XL.PARSER.TREE
@@ -223,9 +235,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
 
     // ========================================================================
-    // 
+    //
     //   Properties of record types
-    // 
+    //
     // ========================================================================
 
     function GetRecordBaseType(Record : PT.tree) return TY.any_type is
@@ -316,9 +328,9 @@ module XL.SEMANTICS.TYPES.RECORDS is
 
 
     // ========================================================================
-    // 
+    //
     //   Type evaluation
-    // 
+    //
     // ========================================================================
 
     function IndexType(Record : PT.tree;

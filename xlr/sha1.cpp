@@ -3,16 +3,16 @@
 // *****************************************************************************
 //
 // File description:
-// 
+//
 //     Implementation of the SHA-1 algorithm
 //     Adapted from the GnuPG project, http://www.gnupg.org/
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2010,2019, Christophe de Dinechin <christophe@dinechin.org>
@@ -50,9 +50,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //   Utilities, macros, ...
-// 
+//
 // ============================================================================
 
 #define wipememory2(_ptr,_set,_len) do {                             \
@@ -104,9 +104,9 @@ static void burn_stack (int bytes)
 
 
 // ============================================================================
-// 
+//
 //    Sha1::Computation class
-// 
+//
 // ============================================================================
 
 Sha1::Computation::Computation()
@@ -146,7 +146,7 @@ Sha1::Computation& Sha1::Computation::transform(byte *data)
     c = this->h2;
     d = this->h3;
     e = this->h4;
-    
+
 #ifdef BIG_ENDIAN_HOST
     memcpy(x, data, sizeof x);
 #else
@@ -363,7 +363,7 @@ Sha1::Computation& Sha1::Computation::finalize()
         (*this) (NULL, 0);                      // Flush
 	memset(this->buf, 0, 56);               // Fill next block with zeroes
     }
-    
+
     // Append the 64 bit count
     this->buf[56] = msb >> 24;
     this->buf[57] = msb >> 16;

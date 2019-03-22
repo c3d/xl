@@ -1,29 +1,40 @@
 #ifndef SCANNER_H
 #define SCANNER_H
-// ****************************************************************************
-//  scanner.h                       (C) 1992-2003 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
-// ****************************************************************************
-// 
-//   File Description:
-// 
+// *****************************************************************************
+// scanner.h                                                          XL project
+// *****************************************************************************
+//
+// File description:
+//
 //     Interface for the XL scanner
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// ****************************************************************************
-// This program is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision$
-// * Date       : $Date$
-// ****************************************************************************
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003-2004,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 /*
   XL scanning is quite simple. There are only five types of tokens:
 
@@ -134,12 +145,12 @@ class XLScanner
 public:
     XLScanner(kstring fileName);
     ~XLScanner();
-    
+
 public:
     // Scanning
     token_t     NextToken();
     text        Comment(text EndOfComment);
-    
+
     // Access to scanned data
     text        TokenText()     { return tokenText; }
     text        NameValue()     { return stringValue; }
@@ -147,12 +158,12 @@ public:
     double      RealValue()     { return realValue; }
     ulong       IntegerValue()  { return intValue; }
     uint        Base()          { return base; }
- 
+
     // Access to location information
     uint        Indent()        { return indent; }
     text        FileName()      { return fileName; }
     ulong       FileLine()      { return fileLine; }
-    
+
 private:
     text        fileName;
     ulong       fileLine;

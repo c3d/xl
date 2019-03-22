@@ -1,7 +1,7 @@
 #ifndef FLIGHT_RECORDER_H
 #define FLIGHT_RECORDER_H
 // *****************************************************************************
-// include/flight_recorder.h                                          XL project
+// flight_recorder.h                                                  XL project
 // *****************************************************************************
 //
 // File description:
@@ -18,6 +18,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2011,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
@@ -42,9 +43,9 @@
 XL_BEGIN
 
 // ============================================================================
-// 
+//
 //    Higher-evel interface
-// 
+//
 // ============================================================================
 
 enum FlightRecorderChannels
@@ -74,7 +75,7 @@ enum FlightRecorderChannels
 
 struct FlightRecorder
 // ----------------------------------------------------------------------------
-//    Record events 
+//    Record events
 // ----------------------------------------------------------------------------
 {
     struct Entry

@@ -1,7 +1,7 @@
 #ifndef TRACES_BASE_H
 #define TRACES_BASE_H
 // *****************************************************************************
-// include/traces_base.h                                              XL project
+// traces_base.h                                                      XL project
 // *****************************************************************************
 //
 // File description:
@@ -19,6 +19,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2012,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2010,2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //

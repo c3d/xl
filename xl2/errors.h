@@ -1,12 +1,9 @@
-// For GNUers only... this is really -*- C++ -*-
 #ifndef XL_ERRORS_H
-#define XL_ERRORS_H
-/* ************************************************************************* */
-/*   Christophe de Dinechin                                     XL2 PROJECT  */
-/*   XL COMPILER: errors.h                                      UTILITIES    */
-/* ************************************************************************* */
-/*                                                                           */
-/*   File Description:                                                       */
+// *****************************************************************************
+// errors.h                                                           XL project
+// *****************************************************************************
+//
+// File description:
 /*                                                                           */
 /*      Type of errors that the compiler may generate                        */
 /*                                                   l                       */
@@ -17,14 +14,26 @@
 /*                                                                           */
 /*                                                                           */
 /*                                                                           */
-/* ************************************************************************* */
-/* This document is distributed under the GNU General Public License         */
-/* See the enclosed COPYING file or http://www.gnu.org for information       */
-/* ****************************************************************************
-   * File       : $RCSFile$
-   * Revision   : $Revision$
-   * Date       : $Date$
-   ************************************************************************* */
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2003,2008,2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +82,7 @@ inline void XLError(XLErrorNumber err, text file, uint line,
 {
     XLError(err, file, line, XLErrorArguments(), severity);
 }
-       
+
 
 inline void XLError(XLErrorNumber err, text file, uint line,
                     text arg1,
@@ -86,7 +95,7 @@ inline void XLError(XLErrorNumber err, text file, uint line,
     args.push_back(arg1);
     XLError(err, file, line, args, severity);
 }
-       
+
 
 inline void XLError(XLErrorNumber err, text file, uint line,
                     text arg1, text arg2,
@@ -100,7 +109,7 @@ inline void XLError(XLErrorNumber err, text file, uint line,
     args.push_back(arg2);
     XLError(err, file, line, args, severity);
 }
-       
+
 
 inline void XLError(XLErrorNumber err, text file, uint line,
                     text arg1, text arg2, text arg3,
