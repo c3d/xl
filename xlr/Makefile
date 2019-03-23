@@ -73,8 +73,8 @@ SOURCES     =					\
 
 PRODUCTS=xl.exe
 
-BUILD=../build/
-include $(BUILD)rules.mk
+MIQ=../make-it-quick/
+include $(MIQ)rules.mk
 
 LLVM_CONFIG=llvm-config
 LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
@@ -90,6 +90,7 @@ CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 CPPFLAGS_llvm342=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm350=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
+CPPFLAGS_llvm352=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 
 # LLVM 3.9 has the good idea of defining DEBUG!!!
@@ -97,18 +98,14 @@ DEFINES_debug=      XL_DEBUG
 DEFINES_opt=        XL_DEBUG OPTIMIZED
 DEFINES_release=    NDEBUG OPTIMIZED RELEASE
 
-test: unit_tests xl_tests
-
-unit_tests: sha1_test lcs_test
-
-%_test: %.cpp
-	$(CXX) -DUNIT_TEST -Iinclude $(CXXFLAGS) -o $*.exe $*.cpp && ./$*.exe && rm ./$*.exe
+TESTS= sha1.cpp lcs.cpp
+.tests: xl_tests
 
 xl_tests: tests/xl
 	cd tests; ./alltests
 
-tests/xl: $(TARGET)
-	$(PRINT_COPY) cp $(OUTPUT_EXE) $@
+tests/xl: $(MIQ_OUTEXE)
+	$(PRINT_COPY) cp $(MIQ_OUTEXE) $@
 
-$(BUILD)rules.mk:
+$(MIQ)rules.mk:
 	cd .. && git submodule update --init --recursive

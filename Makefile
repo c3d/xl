@@ -34,10 +34,9 @@
 # If not, see <https://www.gnu.org/licenses/>.
 # ******************************************************************************
 
-all:
+SUBDIRS=	xlr
 
-check:
-	cd src/tests; ./alltests
-
-%:
-	cd xlr; $(MAKE) $@
+MIQ=make-it-quick/
+include $(MIQ)rules.mk
+$(MIQ)rules.mk:
+	$(PRINT_BUILD) git submodule update --init --recursive
