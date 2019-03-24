@@ -125,7 +125,7 @@ struct Main
     virtual bool Refresh(double delay);
     virtual text Decrypt(text input);
     virtual Tree*Normalize(Tree *input);
-    int          Run();
+    int          Run(bool print=false);
     int          Diff();
     void         Log(Error &e)   { errors->Log(e); }
     Errors *     InitErrorsAndMAIN();

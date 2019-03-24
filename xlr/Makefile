@@ -36,8 +36,12 @@
 # If not, see <https://www.gnu.org/licenses/>.
 # ******************************************************************************
 
+VARIANTS=lib exe
+
 # List of source files to process
-SOURCES     =					\
+SOURCES_VARIANT_exe=				\
+	xl.cpp
+SOURCES_VARIANT_lib=				\
 	basics.cpp				\
 	flight_recorder.cpp			\
 	main.cpp				\
@@ -71,21 +75,34 @@ SOURCES     =					\
 	opcodes.cpp				\
 	winglob.cpp
 
-PRODUCTS=xl.exe
+HEADERS=$(HEADERS_$(VARIANT))
+HEADERS_lib=$(wildcard include/*.h include/*.tbl)
+
+PRODUCTS=$(PRODUCTS_$(VARIANT))
+PRODUCTS_exe=xl.exe
+PRODUCTS_lib=xl.dll
 
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
+# Name of the 'llvm-config' to use (could be e.g. llvm-config-64-3.5)
 LLVM_CONFIG=llvm-config
 LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
 
 LLVM_FLAGS=$(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g) \
 	   -DLLVM_VERSION=$(LLVM_VERSION)
-LLVM_LIBS=$(shell $(LLVM_CONFIG) --libs --system-libs)
+
+# LLVM 3.4 and before have no --system-libs.
+# So LLVM did not only develop source code incompatibility to an art form,
+# they even made sure the configuration command-line was itself incompatible!
+LLVM_SYSLIBS=$(shell $(LLVM_CONFIG) --system-libs 2> /dev/null || true)
+
+LLVM_LIBS=$(shell $(LLVM_CONFIG) --libs) $(LLVM_SYSLIBS)
 LLVM_LDFLAGS=$(shell $(LLVM_CONFIG) --ldflags)
 
 CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
-LDFLAGS=$(LLVM_LIBS) $(LLVM_LDFLAGS)
+LDFLAGS_VARIANT_lib=$(LLVM_LIBS) $(LLVM_LDFLAGS)
+LDFLAGS_VARIANT_exe=-lxl
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 CPPFLAGS_llvm342=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))

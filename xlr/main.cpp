@@ -593,7 +593,7 @@ int Main::LoadFile(text file,
 }
 
 
-int Main::Run()
+int Main::Run(bool print)
 // ----------------------------------------------------------------------------
 //   Run all files given on the command line
 // ----------------------------------------------------------------------------
@@ -641,14 +641,9 @@ int Main::Run()
         {
             hadError = true;
         }
-        else
+        else if (print)
         {
-#ifdef LIBXLR
-            if (options.verbose)
-                std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
-#else
             std::cout << result << "\n";
-#endif // LIBXLR
         }
     }
 
@@ -675,53 +670,4 @@ int Main::Diff()
     return d.Diff(std::cout);
 }
 
-
 XL_END
-
-
-#ifndef LIBXLR
-int main(int argc, char **argv)
-// ----------------------------------------------------------------------------
-//   Parse the command line and run the compiler phases
-// ----------------------------------------------------------------------------
-{
-    XL::FlightRecorder::Initialize();
-    RECORD(ALWAYS, "Compiler starting");
-
-#if CONFIG_USE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
-
-    using namespace XL;
-    source_names noSpecificContext;
-    Main main(argc, argv);
-    EnterBasics();
-    main.SetupCompiler();
-    int rc = MAIN->LoadContextFiles(noSpecificContext);
-    if (rc)
-    {
-        delete MAIN;
-        return rc;
-    }
-    rc = MAIN->LoadFiles();
-
-    if (!rc && Options::options->doDiff)
-        rc = MAIN->Diff();
-    else if (!rc && !Options::options->parseOnly)
-        rc = MAIN->Run();
-
-    if (!rc && MAIN->HadErrors())
-        rc = 1;
-
-    MAIN->compiler->Dump();
-
-#if CONFIG_USE_SBRK
-    IFTRACE(memory)
-        fprintf(stderr, "Total memory usage: %ldK\n",
-                long ((char *) malloc(1) - low_water) / 1024);
-#endif
-
-    return rc;
-}
-
-#endif // LIBXLR
