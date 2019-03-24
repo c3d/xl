@@ -36,6 +36,9 @@
 
 SUBDIRS=	xlr
 
+# Disable generation of .pc file at top-level
+PACKAGE_NAME=
+
 MIQ=make-it-quick/
 include $(MIQ)rules.mk
 $(MIQ)rules.mk:
