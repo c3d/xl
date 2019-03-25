@@ -49,7 +49,6 @@
 #include "options.h"
 #include "errors.h"
 #include "renderer.h"
-#include "flight_recorder.h"
 
 
 XL_BEGIN
@@ -62,6 +61,8 @@ XL_BEGIN
 
 Options *Options::options = NULL;
 
+RECORDER(options, 64, "Compiler options");
+
 Options::Options(int argc, char **argv):
 /*---------------------------------------------------------------------------*/
 /*  Set the default values for all options                                   */
@@ -73,11 +74,12 @@ Options::Options(int argc, char **argv):
 {
     // Store name of the program
     args.push_back(argv[0]);
+    record(options, "Program name: %+s", argv[0]);
 
     // Check if some options are given from environment
     if (kstring envopt = getenv("XLOPT"))
     {
-        RECORD(INFO, "Options from XLOPT", envopt);
+        record(options, "Options from XLOPT: %+s", envopt);
 
         // Split space-separated input options and prepend them to args[]
         text envtext = envopt;
@@ -88,10 +90,10 @@ Options::Options(int argc, char **argv):
     }
 
     // Add options from the command-line
-    RECORD(INFO, "Options list", "Count", argc);
+    record(options, "%u options", argc);
     for (int a = 1; a < argc; a++)
     {
-        RECORD(INFO, "Option", "Index", a, argv[a]);
+        record(options, "Option %d: %+s", a, argv[a]);
         args.push_back(argv[a]);
     }
 }
@@ -239,7 +241,7 @@ text Options::ParseNext(bool consumeFiles)
             kstring option = args[arg].c_str();
             kstring argval = option + 1;
 
-            RECORD(INFO, "Parse option", "Index", arg, option);
+            record(options, "Parse option #%d: %+s", arg, option);
 
             selected = OPTION_INVALID;
 

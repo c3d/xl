@@ -37,8 +37,8 @@
 
 #include "gc.h"
 #include "options.h"
-#include "flight_recorder.h"
 #include "valgrind/memcheck.h"
+#include <recorder/recorder.h>
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -47,6 +47,14 @@
 #include <malloc.h>
 #endif // CONFIG_MINGW
 
+
+RECORDER(gc,            64, "Garbage collector");
+RECORDER(gc_types,      16, "Garbage collector types");
+RECORDER(gc_alloc,      16, "Garbage collector allocations");
+RECORDER(gc_stats,      16, "Garbage collector statistics (totals)");
+RECORDER(gc_stats_all,  16, "Garbage collector statistics (per allocator)");
+RECORDER(gc_error,      16, "Garbage collector errors");
+RECORDER(gc_warning,    16, "Garbage collector warnings");
 
 XL_BEGIN
 
@@ -73,8 +81,8 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
       chunkSize(1022), objectSize(os), alignedSize(os), available(0),
       allocatedCount(0), freedCount(0), totalCount(0)
 {
-    RECORD(MEMORY, "New type allocator",
-           tn, os, "this", (intptr_t) this);
+    record(gc_types,
+           "New allocator for type %+s objsize %u this=%p", tn, os, this);
 
     // Make sure we align everything on Chunk boundaries
     if ((alignedSize + sizeof (Chunk)) & CHUNKALIGN_MASK)
@@ -110,7 +118,8 @@ TypeAllocator::~TypeAllocator()
 //   Delete all the chunks we allocated
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY, "Destroy type allocator", "this", (intptr_t) this);
+    record(gc_types,
+           "Destroy type allocator %p", this);
 
     VALGRIND_DESTROY_MEMPOOL(this);
 
@@ -125,7 +134,7 @@ void *TypeAllocator::Allocate()
 //   Allocate a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Allocate", "free", (intptr_t) freeList);
+    record(gc_alloc, "In %p allocate with freelist %p", this, freeList);
 
     Chunk *result = freeList;
     if (!result)
@@ -137,7 +146,7 @@ void *TypeAllocator::Allocate()
         void   *allocated = malloc(allocSize);
         (void)VALGRIND_MAKE_MEM_NOACCESS(allocated, allocSize);
 
-        RECORD(MEMORY_DETAILS, "New Chunk", "addr", (intptr_t) allocated);
+        record(gc_alloc, "In %p new chunk %p", this, allocated);
 
         char   *chunkBase = (char *) allocated + alignedSize;
         chunks.push_back((Chunk *) allocated);
@@ -182,7 +191,7 @@ void TypeAllocator::Delete(void *ptr)
 //   Free a chunk of the given size
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Delete", "ptr", (intptr_t) ptr);
+    record(gc_alloc, "In %p delete %p", this, ptr);
 
     if (!ptr)
         return;
@@ -224,7 +233,7 @@ void TypeAllocator::Finalize(void *ptr)
 //   We should never reach this one
 // ----------------------------------------------------------------------------
 {
-    std::cerr << "No finalizer installed for " << ptr << "\n";
+    record(gc_error, "Finalize %p, no finalizer in %p", ptr, this);
     assert(!"No finalizer installed");
 }
 
@@ -234,7 +243,7 @@ void TypeAllocator::Sweep()
 //   Once we have marked everything, sweep what is not in use
 // ----------------------------------------------------------------------------
 {
-    RECORD(MEMORY_DETAILS, "Sweep");
+    record(gc, "Sweep");
 
     allocatedCount = freedCount = totalCount = 0;
     std::vector<Chunk *>::iterator chunk;
@@ -267,7 +276,7 @@ void TypeAllocator::Sweep()
         }
     }
 
-    RECORD(MEMORY_DETAILS, "Sweep Done", "freed", freedCount);
+    record(gc, "Sweep done, freed %d items", freedCount);
 }
 
 
@@ -314,8 +323,7 @@ bool TypeAllocator::CanDelete(void *obj)
     for (i = listeners.begin(); i != listeners.end(); i++)
         if (!(*i)->CanDelete(obj))
             result = false;
-    RECORD(MEMORY_DETAILS, "Can delete",
-           "addr", (intptr_t) obj, "ok", result);
+    record(gc, "Can%+s delete %p", result ? "" : "not", obj);
     return result;
 }
 
@@ -408,7 +416,7 @@ void GarbageCollector::RunCollection(bool force)
 {
     if (mustRun || force)
     {
-        RECORD(MEMORY, "Garbage collection", "force", force);
+        record(gc, "Garbage collection%+s begins", force ? " (forced)" : "");
 
         std::vector<TypeAllocator *>::iterator a;
         std::set<TypeAllocator::Listener *> listeners;
@@ -442,27 +450,24 @@ void GarbageCollector::RunCollection(bool force)
         for (l = listeners.begin(); l != listeners.end(); l++)
             (*l)->EndCollection();
 
-        IFTRACE(memory)
+        // Statistics
+        uint tot = 0, alloc = 0, freed = 0;
+        for (a = allocators.begin(); a != allocators.end(); a++)
         {
-            uint tot = 0, alloc = 0, freed = 0;
-            printf("%15s %8s %8s %8s\n", "NAME", "TOTAL", "ALLOC", "FREED");
-            for (a = allocators.begin(); a != allocators.end(); a++)
-            {
-                TypeAllocator *ta = *a;
-                printf("%15s %8u %8u %8u\n",
-                       ta->name, ta->totalCount,
-                       ta->allocatedCount, ta->freedCount);
-                tot   += ta->totalCount     * ta->alignedSize;
-                alloc += ta->allocatedCount * ta->alignedSize;
-                freed += ta->freedCount     * ta->alignedSize;
-            }
-            printf("%15s %8s %8s %8s\n", "=====", "=====", "=====", "=====");
-            printf("%15s %7uK %7uK %7uK\n",
-                   "Kilobytes", tot >> 10, alloc >> 10, freed >> 10);
+            TypeAllocator *ta = *a;
+            record(gc_stats_all,"%15+s: total=%8u alloc=%8u free=%8u",
+                   ta->name, ta->totalCount,
+                   ta->allocatedCount, ta->freedCount);
+            tot   += ta->totalCount     * ta->alignedSize;
+            alloc += ta->allocatedCount * ta->alignedSize;
+            freed += ta->freedCount     * ta->alignedSize;
         }
 
+        record(gc_stats, "total: %8u  alloc: %8u  freed: %8u",
+               tot, alloc, freed);
+
         running = false;
-        RECORD(MEMORY, "Garbage collection", "force", force);
+        record(gc, "Garbage collection%s ends", force ? " (forced)" : "");
     }
 }
 

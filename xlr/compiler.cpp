@@ -46,15 +46,19 @@
 #include "runtime.h"
 #include "errors.h"
 #include "types.h"
-#include "flight_recorder.h"
 #include "llvm-crap.h"
 
 #include <iostream>
 #include <sstream>
 #include <cstdarg>
 
-XL_BEGIN
 
+RECORDER(compiler, 32, "Compiler generating using LLVM JIT");
+RECORDER(compiler_builtin, 16, "Compiler built-in operations");
+RECORDER(compiler_extern, 16, "Compiler extern functions");
+RECORDER(compiler_tree_constants, 16, "Tree constants");
+
+XL_BEGIN
 
 // ============================================================================
 //
@@ -123,18 +127,23 @@ Compiler::Compiler(kstring moduleName, int argc, char **argv)
       xl_array_index(NULL), xl_new_closure(NULL),
       xl_recursion_count_ptr(NULL)
 {
+    record(compiler, "Creating compiler");
+
     std::vector<char *> llvmArgv;
     llvmArgv.push_back(argv[0]);
     for (int arg = 1; arg < argc; arg++)
+    {
         if (strncmp(argv[arg], "-llvm", 5) == 0)
+        {
+            record(compiler, "LLVM option %+s", argv[arg] + 5);
             llvmArgv.push_back(argv[arg] + 5);
-
+        }
+    }
     llvm::cl::ParseCommandLineOptions(llvmArgv.size(), &llvmArgv[0]);
 
 #ifdef CONFIG_MINGW
     llvm::sys::PrintStackTraceOnErrorSignal();
 #endif
-    RECORD(COMPILER, "Creating compiler");
 
     // Register a listener with the garbage collector
     CompilerGarbageCollectionListener *cgcl =
@@ -385,7 +394,7 @@ program_fn Compiler::CompileProgram(Context *context, Tree *program)
 //   It will process all the declarations in the program and then compile
 //   the rest of the code as a function taking no arguments.
 {
-    RECORD(COMPILER, "CompileProgram", "program", (intptr_t) program);
+    record(compiler, "Compiling %t in context %t", program, context);
 
     if (!program)
         return NULL;
@@ -412,7 +421,7 @@ void Compiler::Setup(Options &options)
 // ----------------------------------------------------------------------------
 {
     uint optLevel = options.optimize_level;
-    RECORD(COMPILER, "Compiler setup", "opt", optLevel);
+    record(compiler, "Compiler setup, optlevel %d", optLevel);
 
     LLVMLinkInMCJIT();
     llvm.SetOptimizationLevel(optLevel);
@@ -492,14 +501,8 @@ llvm::Function *Compiler::EnterBuiltin(text name,
 //   The input is not technically an eval_fn, but has as many parameters as
 //   there are variables in the form
 {
-    RECORD(COMPILER, "Enter Builtin",
-           "parms", parms.size(),
-           "src", (intptr_t) to,
-           "code", (intptr_t) code);
-
-    IFTRACE(llvm)
-        std::cerr << "EnterBuiltin " << name
-                  << " C" << (void *) code << " T" << (void *) to;
+    record(compiler_builtin, "Enter %t with %d args code %p",
+           to, parms.size(), code);
 
     llvm::Function *result = builtins[name];
     if (result)
@@ -639,12 +642,8 @@ llvm::Function *Compiler::ExternFunction(kstring name, void *address,
 //   Return a Function for some given external symbol
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER, "Extern Function",
-           name, parmCount, "addr", (intptr_t) address);
-    IFTRACE(llvm)
-        std::cerr << "ExternFunction " << name
-                  << " has " << parmCount << " parameters "
-                  << " C" << address;
+    record(compiler_extern, "Function %+s has %d parameters address %p ret %v",
+           name, parmCount, address, retType);
 
     va_list va;
     llvm_types parms;
@@ -675,11 +674,7 @@ Constant *Compiler::TreeConstant(Tree *constant)
 //   Enter a constant (i.e. an Integer, Real or Text) into global map
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER_DETAILS, "Tree Constant",
-           "tree", (intptr_t) constant, "kind", constant->Kind());
-    IFTRACE(llvm)
-        std::cerr << "TreeConstant "
-                  << "[" << ShortTreeForm(constant) << "]=" << (void *) constant << "\n";
+    record(compiler_tree_constants, "Tree %t", constant);
     return llvm.CreateConstant(treePtrTy, constant);
 }
 

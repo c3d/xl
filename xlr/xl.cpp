@@ -39,21 +39,25 @@
 // ****************************************************************************
 
 #include "main.h"
-#include "flight_recorder.h"
 #include "basics.h"
 #include "compiler.h"
+#include <recorder/recorder.h>
 
 #if CONFIG_USE_SBRK
 #include <unistd.h>
 #endif // CONFIG_USE_SBRK
+
+RECORDER(main, 32, "Main entry point of the compiler");
 
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-    XL::FlightRecorder::Initialize();
-    RECORD(ALWAYS, "Compiler starting");
+    recorder_dump_on_common_signals(0, 0);
+    record(main, "Starting %+s", argv[0]);
+    for (int a = 1; a < argc; a++)
+        record(main, "Argument %d is %+s", a, argv[a]);
 
 #if CONFIG_USE_SBRK
     char *low_water = (char *) sbrk(0);
@@ -80,9 +84,8 @@ int main(int argc, char **argv)
     sources.compiler->Dump();
 
 #if CONFIG_USE_SBRK
-    IFTRACE(memory)
-        fprintf(stderr, "Total memory usage: %ldK\n",
-                long ((char *) malloc(1) - low_water) / 1024);
+    record(main, "Total memory usage %ldK\n",
+           long ((char *) sbrk(1) - low_water) / 1024);
 #endif
 
     return rc;

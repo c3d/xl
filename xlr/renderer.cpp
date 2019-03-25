@@ -817,6 +817,35 @@ std::ostream& operator<< (std::ostream &out, XL::Tree *t)
     return out;
 }
 
+
+std::ostream& operator<< (std::ostream &out, XL::Tree &t)
+// ----------------------------------------------------------------------------
+//   Just in case you want to emit a tree using normal ostream interface
+// ----------------------------------------------------------------------------
+{
+    XL::Renderer render(out);
+    render.RenderFile(&t);
+    return out;
+}
+
+
+std::ostream& operator<< (std::ostream &out, XL::TreeList &list)
+// ----------------------------------------------------------------------------
+//   Just in case you want to emit a tree using normal ostream interface
+// ----------------------------------------------------------------------------
+{
+    bool separator = false;
+    for (XL::TreeList::iterator it = list.begin(); it != list.end(); it++)
+    {
+        if (separator)
+            out << ",";
+        else
+            separator = true;
+        out << *it;
+    }
+    return out;
+}
+
 XL_END
 
 
@@ -897,3 +926,6 @@ const char *debugp(XL::Tree *tree)
     std::cerr << debugBuffer;
     return debugBuffer.c_str();
 }
+
+RECORDER_TWEAK_DEFINE(recorder_dump_symbolic, 40,
+                      "Size of symbolic information to show, 0=none, -1=all");

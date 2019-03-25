@@ -40,23 +40,19 @@
 //
 
 #include "compiler-gc.h"
-#include "flight_recorder.h"
+#include <recorder/recorder.h>
 
 XL_BEGIN
+
+RECORDER(compiler_info, 32, "Garbage-collected compiler information");
 
 CompilerInfo::~CompilerInfo()
 // ----------------------------------------------------------------------------
 //   Notice when we lose a compiler info
 // ----------------------------------------------------------------------------
 {
-    RECORD(COMPILER_DETAILS, "Compiler info deleted",
-           "function", (intptr_t) function,
-           "tree", (intptr_t) tree);
-
-    IFTRACE(llvm)
-        std::cerr << "CompilerInfo deleted F" << (void *) function
-                  << " T" << (void *) tree
-                  << "\n";
+    record(compiler_info, "Compiler info for %t deleted, function %v",
+           tree, function);
 }
 
 

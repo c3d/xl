@@ -40,7 +40,10 @@
 
 #include "base.h"
 #include "tree.h"
+#include <recorder/recorder.h>
 #include <ostream>
+
+RECORDER_TWEAK_DECLARE(recorder_dump_symbolic);
 
 XL_BEGIN
 
@@ -102,6 +105,49 @@ struct Renderer
 };
 
 std::ostream& operator<< (std::ostream&out, XL::Tree *t);
+std::ostream& operator<< (std::ostream&out, XL::Tree &t);
+std::ostream& operator<< (std::ostream&out, XL::TreeList &list);
+
+template <typename stream_t, typename arg_t>
+size_t recorder_render(intptr_t tracing,
+                       const char *format,
+                       char *buffer, size_t size,
+                       uintptr_t arg)
+// ----------------------------------------------------------------------------
+//   Render a value during a recorder dump (%O, %t, %T and %v format)
+// ----------------------------------------------------------------------------
+//   The '%t' is for Tree *, renders XL source code
+//   The '%v' is for llvm::Value *, renders JIT code
+//   The '%T' is for llvm::Type *, renders JIT types
+//   The '%O' is for Op * (bytecode mode ony)
+{
+    const unsigned max_len = RECORDER_TWEAK(recorder_dump_symbolic);
+    arg_t value = (arg_t) arg;
+    size_t result = format ? 0 : 0;
+    if (max_len && tracing)
+    {
+        text t;
+        stream_t os(t);
+        if (value)
+            os << *value;
+        else
+            os << "NULL";
+
+        t = os.str();
+        size_t len = t.length();
+        if (max_len > 8 && len > max_len)
+            t.replace(max_len/2, len - max_len/2 + 1, "…");
+        result = snprintf(buffer, size, "%p [%s]", (void *) value, t.c_str());
+        for (unsigned i = 0; i < result; i++)
+            if (buffer[i] == '\n')
+                buffer[i] = '|';
+    }
+    else
+    {
+        result = snprintf(buffer, size, "%p", (void *) value);
+    }
+    return result;
+}
 
 XL_END
 

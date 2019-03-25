@@ -62,7 +62,6 @@
 #include "gv.h"
 #include "runtime.h"
 #include "traces.h"
-#include "flight_recorder.h"
 #include "utf8_fileutils.h"
 
 
@@ -149,6 +148,11 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
       renderer(std::cout, styleSheetName, syntax),
       reader(NULL), writer(NULL)
 {
+    recorder_dump_on_common_signals(0, 0);
+    recorder_trace_set(".*_(error|warning)");
+    recorder_trace_set(getenv("XL_TRACES"));
+    recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
+
     XL_INIT_TRACES();
     Options::options = &options;
     Renderer::renderer = &renderer;
@@ -156,9 +160,6 @@ Main::Main(int inArgc, char **inArgv, text compilerName,
     MAIN = this;
     options.builtins = builtinsName;
     ParseOptions();
-    FlightRecorder::SResize(options.flightRecorderSize);
-    if (options.flightRecorderFlags)
-        FlightRecorder::SFlags(options.flightRecorderFlags);
     globals->is_global = true; // Duh...
 }
 
