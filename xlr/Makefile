@@ -85,6 +85,14 @@ PRODUCTS_lib=xl.dll
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
+INCLUDES=. .. include
+
+# LLVM 3.9 has the good idea of defining DEBUG!!! Switch to XL_DEBUG
+DEFINES=XLR $(DEFINES_$(VARIANT))
+DEFINES_debug=      XL_DEBUG
+DEFINES_opt=        XL_DEBUG OPTIMIZED
+DEFINES_release=    NDEBUG OPTIMIZED RELEASE
+
 # Name of the 'llvm-config' to use (could be e.g. llvm-config-64-3.5)
 LLVM_CONFIG=llvm-config
 LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
@@ -100,20 +108,15 @@ LLVM_SYSLIBS=$(shell $(LLVM_CONFIG) --system-libs 2> /dev/null || true)
 LLVM_LIBS=$(shell $(LLVM_CONFIG) --libs) $(LLVM_SYSLIBS)
 LLVM_LDFLAGS=$(shell $(LLVM_CONFIG) --ldflags)
 
-CPPFLAGS+=-DXLR $(LLVM_FLAGS) -I . -I include $(CPPFLAGS_llvm$(LLVM_VERSION))
-LDFLAGS_VARIANT_lib=$(LLVM_LIBS) $(LLVM_LDFLAGS)
-LDFLAGS_VARIANT_exe=-lxl
+CPPFLAGS+=$(LLVM_FLAGS) $(CPPFLAGS_llvm$(LLVM_VERSION))
+LDFLAGS_VARIANT_lib=$(LLVM_LIBS) $(LLVM_LDFLAGS) -lrecorder
+LDFLAGS_VARIANT_exe=-lxl -lrecorder
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
 CPPFLAGS_llvm342=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm350=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm352=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
-
-# LLVM 3.9 has the good idea of defining DEBUG!!!
-DEFINES_debug=      XL_DEBUG
-DEFINES_opt=        XL_DEBUG OPTIMIZED
-DEFINES_release=    NDEBUG OPTIMIZED RELEASE
 
 TESTS= sha1.cpp lcs.cpp
 .tests: xl_tests

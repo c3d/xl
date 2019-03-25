@@ -125,7 +125,7 @@ ulong            FlightRecorder::enabled  = REC_ALWAYS|REC_CRITICAL|REC_DEBUG;
 
 XL_END
 
-void recorder_dump()
+void flight_recorder_dump()
 // ----------------------------------------------------------------------------
 //   Dump the recorder to standard error (for use in the debugger)
 // ----------------------------------------------------------------------------

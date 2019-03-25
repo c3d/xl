@@ -152,6 +152,6 @@ private:
 XL_END
 
 // For use within a debugger session
-extern void recorder_dump();
+extern void flight_recorder_dump();
 
 #endif // FLIGHT_RECORDER_H
