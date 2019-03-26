@@ -440,7 +440,6 @@ module XL.SEMANTICS.GENERICS is
     // ------------------------------------------------------------------------
     //    This should never be called?
     // ------------------------------------------------------------------------
-        assert InstantiatedTypeMatch = nil
         return false
 
 

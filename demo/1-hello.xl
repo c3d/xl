@@ -1,0 +1,5 @@
+// Check the communication
+// Replace "localhost" with any target you want
+tell "localhost",
+    writeln "Hello World"
+    

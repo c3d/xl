@@ -740,5 +740,3 @@ module XL.CODE_GENERATOR.MACHINE is
         MDecl : PT.tree := parse_tree(@type_decl 'MName' 'MName')
         XLT.AddGlobalDecl MDecl
         return MName
-
-

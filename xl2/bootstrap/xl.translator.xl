@@ -161,6 +161,7 @@ module XL.TRANSLATOR is
         rename "real",       "double"
         rename "boolean",    "bool"
         rename "main",       "XLMain"
+        rename "decltype",   "XLDeclType"
 
         rename ":=",         "="
         rename "=",          "=="
@@ -995,13 +996,9 @@ module XL.TRANSLATOR is
                     if count(name_changes, N) > 0 then
                         N := name_changes[N]
 
-                    IO.write "("
                     XL2C T.left
                     IO.write " ", N, " "
                     XL2C T.right
-                    IO.write ")"
-
-
 
 
     function XLModuleName (name : PT.tree) return text is
@@ -1218,7 +1215,7 @@ module XL.TRANSLATOR is
                 else
                     // We should check that it's a single name
                     IO.Write XLNormalize(T.value)
-            args[T.value] = 1
+            args[T.value] := 1
 
         if form.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(form)
@@ -1278,7 +1275,7 @@ module XL.TRANSLATOR is
             Nm : text := XLNormalize(N)
             IO.Write "xl::parser::tree::tree ", Nm
             IO.WriteLn " = args",loop_index,"[text(", '"', Nm,'"', ")];"
-            IO.WriteLn Nm, "=", Nm, ";"
+            IO.WriteLn "XLDeref(", Nm, ");"
 
         if Condition <> nil then
             IO.Write "if ("
@@ -1415,7 +1412,7 @@ module XL.TRANSLATOR is
             Nm : text := XLNormalize(N)
             IO.Write "xl::parser::tree::tree ", Nm
             IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
-            IO.WriteLn Nm, "=", Nm, ";"
+            IO.WriteLn "XLDeref(", Nm, ");"
         IO.WriteLn "xl::parser::tree::tree result = input;"
 
         XL2C_Body Body, true
@@ -1435,7 +1432,7 @@ module XL.TRANSLATOR is
                 Nm : text := XLNormalize(N)
                 IO.Write "xl::parser::tree::tree ", Nm
                 IO.WriteLn " = Args[text(", '"',Nm,'"', ")];"
-                IO.WriteLn Nm, "=", Nm, ";"
+                IO.WriteLn "XLDeref(", Nm, ");"
             IO.WriteLn "int result = Score + 0x80;"
             IO.Write "if (!("
             XL2C Condition

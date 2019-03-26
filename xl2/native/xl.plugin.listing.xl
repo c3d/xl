@@ -63,15 +63,11 @@ module XL.PLUGIN.LISTING is
                    syntax_name : Stx as PT.text_tree
                    format := XLT.RuntimePath(style_name.value + ".stylesheet")
                    syntax := XLT.RuntimePath(syntax_name.value + ".syntax")
-                   Base := Base
 
                when ('Base' 'Style') where Style.kind = PT.xlTEXT then
                    style_name : Style as PT.text_tree
                    format := XLT.RuntimePath(style_name.value + ".stylesheet")
-                   Base := Base
 
            R : RD.renderer := RD.Open(format, syntax)
            RD.Render R, input
            RD.Close R
-
-

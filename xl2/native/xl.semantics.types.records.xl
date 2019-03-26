@@ -196,8 +196,8 @@ module XL.SEMANTICS.TYPES.RECORDS is
         if TY.IsModuleType(rtp.base) then
             if GEN.IsGenericContext() then
                 // Do not make modules generic
-                voided : any_type := GEN.MakeGeneric(rtp)
-                voided := voided // Keep compiler quiet
+                GEN.MakeGeneric(rtp)
+
             rtp.machine_name := CGM.DeclareRecord(rtp)
             result := rtp
         else if GEN.IsGenericContext() then

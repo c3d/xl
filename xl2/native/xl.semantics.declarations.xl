@@ -1,9 +1,19 @@
+<<<<<<< HEAD
 // *****************************************************************************
 // xl.semantics.declarations.xl                                       XL project
 // *****************************************************************************
 //
 // File description:
 //
+=======
+// ****************************************************************************
+//  xl.semantics.declarations.xl    (C) 1992-2003 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
+// ****************************************************************************
+//
+//   File Description:
+//
+>>>>>>> native
 //     Implementation of semantic declarations
 //
 //
@@ -13,6 +23,7 @@
 //
 //
 //
+<<<<<<< HEAD
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2003-2008,2019, Christophe de Dinechin <christophe@dinechin.org>
@@ -34,6 +45,16 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+=======
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 361 $
+// * Date       : $Date: 2007-12-20 10:07:49 +0100 (Thu, 20 Dec 2007) $
+// ****************************************************************************
+>>>>>>> native
 
 import XLT = XL.TRANSLATOR
 import TYP = XL.SEMANTICS.TYPES
@@ -396,7 +417,7 @@ module XL.SEMANTICS.DECLARATIONS is
         // Check that it has a machine name
         if decl.machine_name = nil then
             ERR.Error "Internal: declaration without machine name", Name
-            decl.machine_name = SYM.Temporary("mname")
+            decl.machine_name := SYM.Temporary("mname")
 
         // Return original name (which should have type info set)
         return decl.machine_name
@@ -935,7 +956,7 @@ module XL.SEMANTICS.DECLARATIONS is
                     return nil
                 dtorCall : PT.tree := parse_tree(delete 'mname')
                 ERR.PushErrorContext()
-                in_destruction[mname] = 1
+                in_destruction[mname] := 1
                 dtorCall := XLT.XLSemantics(dtorCall)
                 erase in_destruction, mname
                 if not ERR.PopErrorContext() then
@@ -999,4 +1020,3 @@ module XL.SEMANTICS.DECLARATIONS is
         assert name <> nil
         key  : text := "KEEP:" + name.value
         SYM.SetProperty table, key, name
-

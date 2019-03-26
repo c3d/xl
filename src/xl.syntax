@@ -1,0 +1,62 @@
+INFIX
+        11      NEWLINE
+        21      -> is has
+        31      else into
+        40      loop while until
+        50      then require ensure
+        61      ;
+        75      with as
+        85      := += -= *= /= ^= |= &=
+        100     STATEMENT
+        110     =>
+        120     written
+        130     where
+        200     DEFAULT
+        211     when
+        231     ,
+        240     return
+        250     and or xor
+        260     in at contains
+        271     of to
+        280     .. by
+        290     = < > <= >= <> !=
+        300     & |
+        310     + -
+        320     * / mod rem
+        330     shl ashr lshr
+        381     ^
+        480     .
+        600     :
+
+PREFIX
+        30      data
+        40      loop while until
+        50      property
+        121     case if return yield transform
+        350     not in out constant variable const var
+        360     ! ~
+        370     - + * /
+        401     FUNCTION
+        410     function procedure to type iterator
+        420     ++ --
+        430     &
+
+POSTFIX
+        400     ! ? % cm inch mm pt px h m s ms us
+        420     ++ --
+
+BLOCK
+        5       INDENT UNINDENT
+        25      '{' '}'
+        500     '(' ')' '[' ']'
+
+TEXT
+        "<<" ">>"
+
+COMMENT
+        "//" NEWLINE
+        "/*" "*/"
+
+
+SYNTAX "C"
+        extern ;

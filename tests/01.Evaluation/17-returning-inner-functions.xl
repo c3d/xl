@@ -1,0 +1,11 @@
+adder X:integer is (Y is Y + X)
+
+add3 := adder 3
+add5 := adder 5
+
+writeln "3+2=", add3 2
+writeln "3+17=", add3 17
+writeln "5+2=", add5 2
+writeln "5+17=", add5 17
+writeln "8+2=", (adder 8) 2
+writeln "8+17=", (adder 8) 17

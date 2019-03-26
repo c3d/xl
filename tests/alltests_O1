@@ -1,0 +1,26 @@
+# *****************************************************************************
+#  alltests_O3                      (C) 1992-2006 Christophe de Dinechin (ddd) 
+#                                                                  XL2 project 
+# *****************************************************************************
+# 
+#   File Description:
+# 
+#    Parameters for alltest for 'O1' runtime (run at medium optimization levels)
+# 
+# 
+# 
+# 
+# 
+# 
+# *****************************************************************************
+# This document is released under the GNU General Public License.
+# See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+# *****************************************************************************
+# * File       : $RCSFile$
+# * Revision   : $Revision$
+# * Date       : $Date$
+# *****************************************************************************
+
+RUN="./a.out"
+TO_REMOVE="./a.out"
+RT_OPT="-O1"

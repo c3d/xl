@@ -1,0 +1,93 @@
+// ****************************************************************************
+//  array.xl                                        XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+use POINTER
+use CONTRACT
+
+type array[item:type, index:enumerated, Range:range of index] is
+// ----------------------------------------------------------------------------
+//    Implementation of the array type
+// ----------------------------------------------------------------------------
+    Size                is Range.Size
+    BitSize             is Size * bit_count(item.ByteSize)
+    BitAlign            is item.BitAlign
+    ByteSize            is Size * MEMORY.Align(item.ByteSize, item.ByteAlign)
+    ByteAlign           is item.ByteAlign
+    Mutable             is item.Mutable
+
+
+array.Range as array.range is
+// ----------------------------------------------------------------------------
+//   The range of indexes for the array
+// ----------------------------------------------------------------------------
+
+
+
+with
+    Array       : array
+    Index       : array.index
+    MyArray     : my array
+    Variable    : local array.item
+// ----------------------------------------------------------------------------
+//    A number of declarations that use the same parameters
+// ----------------------------------------------------------------------------
+do
+    // Range of an array value
+    Array.Range                         is array.Range
+
+    // Size of an array
+    Array.Size                          is Array.RAnge.Size
+
+    // Private: pointer to items
+    Array.Data as pointer to item       is address(Array)
+
+    // Private: Creating a slice from an array
+    Array.Slice                         is slice(Array.Data, Array.Size)
+
+    // Implicit conversion of array to slice
+    Array as slice[array.item]          is Array.Slice
+
+    // Implicit conversion of array to stream
+    Array as stream[array.item]         is stream(Array.Slice)
+
+    // Own array to own slice
+    MyArray as my slice[array.item]     is slice(MyArray.Data, MyArray.Size)
+
+    // Index array to return a value
+    Array[Index] as array.item          is
+        assume Index in Array.Range
+        Address is Array.Data + Index
+        *Address
+
+    // Index array to return an owned reference
+    MyArray[Index] as my array.item     is
+        assume Index in Array.Range
+        Address is Array.Data + Index
+        my Address
+
+    // Iterator on arrays
+    Variable in Array as iterator       is
+        type array_iterator is another array.index
+        Done I:array_iterator is I >= array.Size
+        Next I:my Iterator is
+            if not Done(I) then
+                Variable := Array[I]
+                I++

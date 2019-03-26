@@ -1,9 +1,0 @@
-/* Hello, World! program */
-#include <stdio.h>
-
-int main(int argc, char *argv[])
-{
-    float f = 0.0;
-    printf("Hello, World!\n");
-    return 0;
-}

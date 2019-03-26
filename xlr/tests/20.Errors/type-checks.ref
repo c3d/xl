@@ -1,4 +1,0 @@
-error "Couldn't compile $1", 'cos "A"'
-20.Errors/type-checks.xl:2: No rewrite candidate for 'cos "A"'
-20.Errors/type-checks.xl:2: Couldn't compile 'cos "A"'
-20.Errors/type-checks.xl:2: Error compiling 'cos "A"'

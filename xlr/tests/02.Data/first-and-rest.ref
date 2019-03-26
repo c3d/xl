@@ -1,7 +1,0 @@
-The list is 12345
-First=1 Rest=2345 Second=2
-First=2 Rest=345 Second=3
-First=3 Rest=45 Second=4
-First=4 Rest=5 Second=5
-First=5 Rest=nil Second=nil
-true

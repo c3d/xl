@@ -1,3 +1,0 @@
-X:integer := 3
-20.Errors/local-variables-redeclaration.xl:2: No form match 'X:integer := 5'
-20.Errors/local-variables-redeclaration.xl:3: No form match 'X:integer := 3'

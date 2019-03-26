@@ -45,6 +45,19 @@ module XL.PARSER.TREE is
 //    Implementation of parse tree functions
 // ----------------------------------------------------------------------------
 
+    function XLNormalize (name : text) return text is
+    // ------------------------------------------------------------------------
+    //    Return the normalized name (lower-case, no underscores)
+    // ------------------------------------------------------------------------
+        result := ""
+        Max : integer := length(name)
+        I : integer
+        for I in 0..Max-1 loop
+            C : character := name[I]
+            if C <> '_' then
+                result += ASCII.tolower C
+
+
     function Matches (test : PT.tree; ref : PT.tree; in out arg : tree_map) return integer is
     // ------------------------------------------------------------------------
     //   Check if the test tree matches the reference tree, return score
@@ -106,7 +119,7 @@ module XL.PARSER.TREE is
         if test.kind = PT.xlNAME then
             T : PT.name_tree := PT.name_tree(test)
             R : PT.name_tree := PT.name_tree(ref)
-            if T.value = R.value then
+            if XLNormalize(T.value) = XLNormalize(R.value) then
                 return 1
             if verbose then IO.Writeln "/* Failed nameval */"
             return 0

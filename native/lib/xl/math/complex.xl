@@ -1,0 +1,539 @@
+// ****************************************************************************
+//  complex.xl                                      XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Complex numbers
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+type complex[type real is R.real] is either
+// ----------------------------------------------------------------------------
+//    A generic `complex` type
+// ----------------------------------------------------------------------------
+    cartesian (Re:real, Im:real)
+    polar (Mod:real, Arg:real)
+
+
+
+// ============================================================================
+//
+//    Implementation of complex.number
+//
+// ============================================================================
+/*
+    The 'number' interface requires the following:
+        as ARITHMETIC.arithmetic
+        as COPY.copiable
+        as MOVE.movable
+        as CLONE.clonable
+        as DELETE.deletable
+        as COMPARISON.equatable
+        as COMPARISION.ordered
+        as MEMORY.sized
+        as MEMORY.aligned
+    All but the first one are implemented by `either`
+*/
+
+with
+    C           : complex
+    Left        : complex
+    Right       : complex
+    Writable    : own complex
+    Z           : cartesian
+    Z1          : cartesian
+    Z2          : cartesian
+    P           : polar
+    P1          : polar
+    P2          : polar
+    X           : real
+
+
+use MATH[complex.real].FUNCTIONS
+use MATH[complex.real].CONSTANTS
+
+
+
+// ============================================================================
+//
+//    Implementation of complex.number.arithmetic interface
+//
+// ============================================================================
+
+Z1 + Z2 as cartesian is
+// ----------------------------------------------------------------------------
+//   Default implementation for addition in cartesian form
+// ----------------------------------------------------------------------------
+//   If there is no polar addition available, this may force the compiler
+//   to first (implicitly) convert the complex numbers to cartesian form.
+//   This is not much more expensive than a polar addition anyway.
+    cartesian(Z1.Re + Z2.Re, Z1.Im + Z2.Im)
+
+
+Z1 - Z2 as cartesian is
+// ----------------------------------------------------------------------------
+//   Default implementation for subtraction in cartesian form
+// ----------------------------------------------------------------------------
+//   If there is no polar implementation available, this may force the compiler
+//   to first convert the complex numbers to cartesian form using the implicit
+//   conversion. This is about as expensive as a polar addition...
+    cartesian(Z1.Re - Z2.Re, Z1.Im - Z2.Im)
+
+
+Z1 * Z2 as cartesian is
+// ----------------------------------------------------------------------------
+//   Default implementation for multiplication in cartesian form
+// ----------------------------------------------------------------------------
+    cartesian (Z1.Re * Z2.Re - Z1.Im * Z2.Im, Z1.Re * Z2.Im + Z1.Im * Z2.Re)
+
+
+P1 * P2 as polar is
+// ----------------------------------------------------------------------------
+//   Default implementation for multiplication in polar form
+// ----------------------------------------------------------------------------
+    polar (P1.Mod * P2.Mod, P1.Arg + P2.Arg)
+
+
+Z1 / Z2 as cartesian is
+// ----------------------------------------------------------------------------
+//   Default implementation for multiplication in cartesian form
+// ----------------------------------------------------------------------------
+    Numerator is cartesian(Z1.Re*Z2.Re + Z1.Im*Z2.Im, Z1.Im*Z2.Re - Z1.Re*Z2.Im)
+    Denominator is Z2.Re^2 + Z2.Im^2
+    Numerator / Denominator
+
+
+P1 / P2 as polar is
+// ----------------------------------------------------------------------------
+//   Default implementation for division in polar form
+// ----------------------------------------------------------------------------
+    polar (P1.Mod / P2.Mod, P1.Arg - P2.Arg)
+
+
+Left rem Right as complex is
+// ----------------------------------------------------------------------------
+//   Asking for a complex remainder is probably by mistake - Flag it
+// ----------------------------------------------------------------------------
+    ILL_DEFINED_WARNING "Remainder of two complex numbers"
+    cartesian(0, 0)
+
+
+Left mod Right as complex is
+// ----------------------------------------------------------------------------
+//   Asking for modulo between two complex is probably by mistake - Flag it
+// ----------------------------------------------------------------------------
+    ILL_DEFINED_WARNING "Modulo of two complex numbers"
+    cartesian(0, 0)
+
+
+Left ^ Right as complex is
+// ----------------------------------------------------------------------------
+//   Exponentiation of two complex numbers
+// ----------------------------------------------------------------------------
+    Exp(Log(Left) * Right)
+
+
+Left  ^  Power:unsigned as complex is
+// ----------------------------------------------------------------------------
+//   Reuse the default 'arithmetic' implementation
+// ----------------------------------------------------------------------------
+    complex.number.arithmetic.(Left ^ Power)
+
+
+-Z as complex is
+// ----------------------------------------------------------------------------
+//   Negation in cartesian form
+// ----------------------------------------------------------------------------
+    cartesian(-Z.Re, -Z.Im)
+
+
+-P as complex is
+// ----------------------------------------------------------------------------
+//   Negation in polar form
+// ----------------------------------------------------------------------------
+    polar(P.Mod, P.Arg + PI)
+
+
+Abs Z as real is
+// ----------------------------------------------------------------------------
+//   Return the modulus
+// ----------------------------------------------------------------------------
+//   Note that since there is an implicit conversion of real to complex,
+//   this also satisfies the 'Abs' interface in ARITHMETIC.arithmetic
+    Z.Mod
+
+
+Sign Z as integer is
+// ----------------------------------------------------------------------------
+//   Return the sign of a complex number (ill-defined)
+// ----------------------------------------------------------------------------
+    ILL_DEFINED_WARNING "Sign of a complex number"
+    Sign Z.Re
+
+
+
+// Pre-incrementation, post-incrementation and in-place arithmetic can all
+// use the default implementation in XL.ARITHMETIC
+
+
+0 as complex is
+// ----------------------------------------------------------------------------
+//   Satisfy arithmetic requirement for 0
+// ----------------------------------------------------------------------------
+//   This is not strictly necessary, since implicit conversions would work
+    cartesian(0, 0)
+
+
+1 as complex is
+// ----------------------------------------------------------------------------
+//   Satisfy arithmetic requirement for 1
+// ----------------------------------------------------------------------------
+    cartesian(1, 0)
+
+
+
+// ============================================================================
+//
+//   Implement form conversions in the complex type
+//
+// ============================================================================
+
+Z as cartesian is
+// ----------------------------------------------------------------------------
+//   Conversion from cartesian to cartesian
+// ----------------------------------------------------------------------------
+    Z
+
+
+P as cartesian is
+// ----------------------------------------------------------------------------
+//   Conversion from polar to cartesian
+// ----------------------------------------------------------------------------
+    cartesian(P.Mod * Cos(P.Arg), P.Mod * Sin(P.Arg))
+
+
+Z as polar is
+// ----------------------------------------------------------------------------
+//   Conversion from cartesian to polar
+// ----------------------------------------------------------------------------
+    polar(Sqrt(Z.Re^2 + Z.Im^2), Atan(Z.Im, Z.Re))
+
+
+P as polar is
+// ----------------------------------------------------------------------------
+//   Conversion from polar to polar
+// ----------------------------------------------------------------------------
+    P
+
+
+// Conversions from polar or cartesian to complex must be specified in the
+// interface, since in the interface the internal implementation for the
+// complex type is not known. However, given the implementation, the compiler
+// can deduce how to satisfy the requirements of the interface for:
+//  Z:cartesian                 as complex
+//  Z:polar                     as complex
+
+X as cartesian is
+// ----------------------------------------------------------------------------
+//   Conversion of real to cartesian
+// ----------------------------------------------------------------------------
+    cartesian(X, 0)
+
+
+X as polar is
+// ----------------------------------------------------------------------------
+//   Conversion of real to polar
+// ----------------------------------------------------------------------------
+    polar(X, 0)
+
+
+
+
+// ============================================================================
+//
+//    Optimized real/complex operations
+//
+// ============================================================================
+
+Z + X as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(Z.Re + X, Z.Im)
+
+
+Z - X as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(Z.Re - X, Z.Im)
+
+
+Z * X as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(Z.Re * X, Z.Im * X)
+
+
+P * X as polar is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    polar(P.Mod * X, P.Arg)
+
+
+Z / X as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(Z.Re / X, Z.Im / X)
+
+
+P / X as polar is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    polar(P.Mod / X, P.Arg)
+
+
+X + Z as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(X + Z.Re, Z.Im)
+
+
+X - Z as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(X - Z.Re, -Z.Im)
+
+
+X * Z as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    cartesian(X * Z.Re, X * Z.Im)
+
+
+X * P as polar is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    polar(X * P.Mod, P.Arg)
+
+
+
+X / Z as cartesian is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    Denominator is Z.Re^2 + Z.Im^2
+    cartesian(X*Z.Re, -X*Z.Im) / Denominator
+
+
+X / P as polar is
+// ----------------------------------------------------------------------------
+//   Optimized implementation when one of the arguments is real
+// ----------------------------------------------------------------------------
+    polar(X / P.Mod, -P.Arg)
+
+
+
+// ============================================================================
+//
+//    Field access in both cartesian and polar form
+//
+// ============================================================================
+
+// Based on the type implementation, the compiler can automatically infer
+// reading and writing Z.Re, Z.Im, P.Mod and P.Arg.
+// It can also infer reading P.Re, P.Im, Z.Mod and Z.Arg with implicit
+// conversions between polar and cartesian forms.
+// It cannot however deduce what to do when writing the above fields,
+// because implicit conversions do not extend to `own` types
+// The implementation below changes the form based on last write.
+
+Writable.Re := X is
+// ----------------------------------------------------------------------------
+//   Switch to cartesian form if necessary, then update real part
+// ----------------------------------------------------------------------------
+    Z : cartesian is Writable
+    Z.Re := X
+    Writable := Z
+
+
+Writable.Im := X is
+// ----------------------------------------------------------------------------
+//   Switch to cartesian form if necessary, then update imaginary part
+// ----------------------------------------------------------------------------
+    Z : cartesian is Writable
+    Z.Im := X
+    Writable := Z
+
+
+Writable.Mod := X is
+// ----------------------------------------------------------------------------
+//   Switch to polar form if necessary, then update modulus
+// ----------------------------------------------------------------------------
+    P : polar is Writable
+    P.Mod := X
+    Writable := P
+
+
+Writable.Arg := X is
+// ----------------------------------------------------------------------------
+//   Switch to polar form if necessary, then update argument
+// ----------------------------------------------------------------------------
+    P : polar is Writable
+    P.Arg := X
+    Writable := P
+
+
+Mod:real ∠ Arg:real° as polar is
+// ----------------------------------------------------------------------------
+//   Return a complex form with conversion from degrees to radian
+// ----------------------------------------------------------------------------
+    polar(Mod, Arg * PI / 180)
+
+
+
+// ============================================================================
+//
+//    Elementary complex functions
+//
+// ============================================================================
+
+Conjugate Z as cartesian is
+// ----------------------------------------------------------------------------
+//   Complex in cartesian form
+// ----------------------------------------------------------------------------
+    cartesian (Z.Re, -Z.Im)
+
+
+Conjugate P as polar is
+// ----------------------------------------------------------------------------
+//   Complex in polar form
+// ----------------------------------------------------------------------------
+    polar (P.Mod, -P.Arg)
+
+
+Sqrt P as polar is
+// ----------------------------------------------------------------------------
+//   Implementation of square root is simpler in polar form
+// ----------------------------------------------------------------------------
+    polar (Sqrt(P.Mod), P.Arg / 2)
+
+
+Sin Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Prolongation of Euler formula to complex numbers
+// ----------------------------------------------------------------------------
+    SinH(i*Z) / i
+
+
+Cos Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Prolongation of Euler formula to complex numbers
+// ----------------------------------------------------------------------------
+    CosH(i*Z)
+
+
+Tan Z:complex as complex is
+// ----------------------------------------------------------------------------
+//    Complex tangent (there may be a more efficient way to compute it)
+// ----------------------------------------------------------------------------
+    TanH(i*Z) / i
+
+
+ArcSin Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Arc-sin for complex numbers
+// ----------------------------------------------------------------------------
+    Log(i * Z + Sqrt(1-Z^2)) / i
+
+
+ArcCos Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Arc-cos for complex numbers
+// ----------------------------------------------------------------------------
+    Log(Z + i * Sqrt(1-Z^2)) / i
+
+
+ArcTan Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Arc-tan for complex numbers
+// ----------------------------------------------------------------------------
+    Log((i - Z) / (i + Z)) / (2 * i)
+
+
+SinH Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Hyperbolic sine for complex numbers
+// ----------------------------------------------------------------------------
+    (Exp(Z) - Exp(-Z)) / 2
+
+
+CosH Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Hyperbolic cosine for complex numbers
+// ----------------------------------------------------------------------------
+    (Exp(Z) + Exp(-Z)) / 2
+
+
+TanH Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Hyperbolic tangent
+// ----------------------------------------------------------------------------
+    ExpP is Exp(Z)
+    ExpM is Exp(-Z)
+    (ExpP - ExpM) / (ExpP + ExpM)
+
+
+ArcSinH Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Arc-hyperbolic sine
+// ----------------------------------------------------------------------------
+    Log(Z + Sqrt(Z^2 + 1))
+
+
+ArcCosH Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Arc-hyperbolic cosine
+// ----------------------------------------------------------------------------
+    Log(Z + Sqrt(Z^2 - 1))
+
+
+ArcTanH Z:complex as complex is
+// ----------------------------------------------------------------------------
+//   Arc-hyperbolic tangent
+// ----------------------------------------------------------------------------
+    Log((Z + 1) / (Z - 1)) / 2
+
+
+Exp Z as complex is
+// ----------------------------------------------------------------------------
+//   Complex exponential
+// ----------------------------------------------------------------------------
+    polar(Exp(Z.Re), Z.Im)
+
+
+Log P as complex is
+// ----------------------------------------------------------------------------
+//    Complex logarithm
+// ----------------------------------------------------------------------------
+    cartesian(Log(P.Mod), Arg)

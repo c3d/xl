@@ -574,6 +574,7 @@ module XL.RENDERER is
             W : what as PT.wildcard_tree
             RenderFormat output, W.name, "?wildcard?", "error "
         else
+            IO.Write "/* ERROR: Rendering kind ", what.kind, " */ "
             RenderFormat output, "?unknown?", "?unknown?", "error "
 
         output.self := old_self

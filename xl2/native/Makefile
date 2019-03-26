@@ -1,6 +1,6 @@
 #******************************************************************************
-# Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd) 
-#                                                                  XL2 project 
+# Makefile                          (C) 1992-2003 Christophe de Dinechin (ddd)
+#                                                                  XL2 project
 #******************************************************************************
 #
 #  File Description:
@@ -94,50 +94,54 @@ OTHER_SOURCES=					\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
 
-TOCLEAN=nxl$(EXE)
-PRODUCT=nxl$(EXE)
-XL=../bootstrap/bxl$(EXE)
+VARIANTS=	native				\
+		reboot				\
+		stability
 
-include $(BROOT)Makefile.config
+PRODUCTS=		$(PRODUCTS_$(VARIANT))
+PRODUCTS_native=	nxl.exe
+PRODUCTS_reboot=	nrxl.exe
+PRODUCTS_stability=	nsxl.exe
 
-qtest: debug regression
-otest: opt regression
+XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXE_EXT)
+XL_native=		sxl
+XL_reboot=		nxl
+XL_stability=		nrxl
 
-test: debug regression				\
-      native native_test native_regression	\
-      native_stability_test
-	echo ------ Differences: -----------------------------------------
-	diff $(OBJROOT)nnxl_test/native/compiler.xl.C \
-	     $(OBJROOT)nnxl_stability/native/compiler.xl.C
-	echo ------ End of Differences -----------------------------------
+INCLUDES=.
 
-# For now, we rely on mere transcoding to get the next generation compiler
-# We disable semantics, which is incomplete enough to cause more harm than good
-native:
-	$(MAKE) PRODUCT=nnxl$(EXE) XL="./nxl$(EXE)" XLOPTS="-bootstrap -g" OBJROOT="$(OBJROOT)nnxl"
-native_test: 
-	$(MAKE) PRODUCT=nnnxl$(EXE) XL="./nnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_test"
-native_regression:
-	cd TESTS; time ./alltests -xl "../nnxl$(EXE)"
-native_stability_test: 
-	$(MAKE) PRODUCT=nnnnxl$(EXE) XL="./nnnxl$(EXE)" XLOPTS="-bootstrap" OBJROOT="$(OBJROOT)nnxl_stability"
-regression: ALWAYS
-	cd TESTS; time ./alltests
-ALWAYS:
+MIQ=../../make-it-quick/
+include $(MIQ)rules.mk
+$(MIQ)rules.mk:
+	$(PRINT_COMMAND) cd ../.. && git submodule update --init --recursive
 
-prebuild: xl_lib.h xl.syntax # These are used for the native build
+ifeq ($(VARIANT),)
+.tests: three-run-diff
+three-run-diff:
+	$(PRINT_TEST)	$(XL_DIFF)
+XL_DIFF= diff								\
+	$(MIQ_OBJDIR:%$(MIQ_DIR)=%/reboot/$(MIQ_DIR))/compiler.xl.cpp   \
+	$(MIQ_OBJDIR:%$(MIQ_DIR)=%/stability/$(MIQ_DIR))/compiler.xl.cpp
+else
+.tests: regression
+regression:
+	$(PRINT_TEST)	cd TESTS && ./alltests -xl "$(MIQ_OUTEXE)"
+endif
+
+
+
+.prebuild: xl_lib.h xl.syntax
 # MinGW's unable to follow symlinks, so we have to copy dependencies
-xl_lib.h:
-	cp ../xl_lib.h .
-xl.syntax:
-	cp ../xl.syntax .
+xl_lib.h: ../xl_lib.h
+	$(PRINT_COPY) cp $< $@
+xl.syntax: ../xl.syntax
+	$(PRINT_COPY) cp $< $@
 
-.PRECIOUS: $(OBJDIR)/%.xl.C
+$(MIQ_OBJDIR)%.xl$(OBJ_EXT): $(MIQ_OBJDIR)%.xl.cpp
+	$(PRINT_COMPILE) $(MAKE_CXX)
 
-$(OBJDIR)/%.xl.o: $(OBJDIR)/%.xl.C
-	$V $(CXX) -I . $(CXXFLAGS) $(CPPFLAGS_$*) $(CXXFLAGS_$*) -o $@ -c $<
+$(MIQ_OBJDIR)%.xl.cpp: %.xl $(XL) $(OTHER_SOURCES)
+	$(PRINT_COMPILE) $(XL) -bootstrap -g $< > $@
+.PRECIOUS: $(MIQ_OBJDIR)%.xl.cpp
 
-$(OBJDIR)/%.xl.C: %.xl $(XL)
-	$V $(XL) $(XLOPTS) $< > $@
-
-$(OBJDIR)/compiler.xl.C :  $(OTHER_SOURCES)
+LD=$(CXX)

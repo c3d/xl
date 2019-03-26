@@ -1,3 +1,0 @@
-3.2
-20.Errors/local-variables-type-error.xl:3: Value '3.2' is not compatible
-20.Errors/local-variables-type-error.xl:2: with type 'integer' of 'Y'

@@ -1,0 +1,3 @@
+// OPT=-O3 -nobuiltins
+X is 42
+X

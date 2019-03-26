@@ -34,7 +34,7 @@
 # If not, see <https://www.gnu.org/licenses/>.
 # ******************************************************************************
 
-SUBDIRS=	recorder xlr
+SUBDIRS=	recorder src
 
 # Disable generation of .pc file at top-level
 PACKAGE_NAME=

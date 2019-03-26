@@ -1,0 +1,4 @@
+writeln "Len(ABCD)=4=", length "ABCD"
+writeln "Len()=0=", length ""
+writeln "10 chars=", 10 * "chars"
+writeln "Len(10 chars)=10=", length (10 * "ABC")

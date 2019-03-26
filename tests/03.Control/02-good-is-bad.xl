@@ -1,0 +1,5 @@
+writeln good 0
+writeln good 0.0
+writeln good ""
+writeln good false
+writeln good nil

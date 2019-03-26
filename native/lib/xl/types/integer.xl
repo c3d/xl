@@ -1,0 +1,120 @@
+// ****************************************************************************
+//  xl.integer.xl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Basic integer type and arithmetic
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+BitsForRange Low..High is
+// ----------------------------------------------------------------------------
+//   Compute the number of bits that cover the given interval
+// ----------------------------------------------------------------------------
+    1 + HighestBit (Low or High)
+
+
+AlignForRange Low..High is
+// ----------------------------------------------------------------------------
+//    Compute a power-of-two size that covers the given interval
+// ----------------------------------------------------------------------------
+    Bits is BitsForRange(Low..High)
+    1 << (1 + HighestBit (Bits-1))
+
+
+type integer[Low..High] is type
+// ----------------------------------------------------------------------------
+//    Description of a generic integer type
+// ----------------------------------------------------------------------------
+
+    if Low >= High then
+        RANGE_ERROR "Integer type with empty range $1..$2", Low, High
+
+    BitSize                                     is BitsForRange Low..High
+    BitAlign                                    is AlignForRange Low..High
+
+    Signed                      as boolean      is Low >= 0
+
+    with
+        Target  : own integer
+        Value   : integer
+        Left    : integer
+        Right   : integer
+        Shift   : bit_count
+        Power   : unsigned
+
+    // Implement the 'number' interface
+    MinValue                                    is Low
+    MaxValue                                    is High
+    Epsilon Value               as integer      is 1
+    type representation                         is integer
+
+    // Implement the 'enumerated' interface
+    First                       as integer      is Low
+    Last                        as integer      is High
+    Successor   Value           as integer      is Value + 1
+    Predecessor Value           as integer      is Value - 1
+
+    // The underlying representation type
+    representation                      as type like unsigned
+
+
+    // Implement the 'arithmetic' interface
+    Left  +  Right              as integer      is builtin Add
+    Left  -  Right              as integer      is builtin Sub
+    Left  *  Right              as integer      is builtin Mul
+
+    if Signed then
+        Left  /  Right          as integer      is builtin SDiv
+        Left rem Right          as integer      is builtin SRem
+        Left mod Right          as integer      is builtin SMod
+    else
+        Left  /  Right          as integer      is builtin UDiv
+        Left rem Right          as integer      is builtin URem
+        Left mod Right          as integer      is builtin UMod
+    -Value                      as integer      is builtin Neg
+
+    // Implement the 'bitwise' interface
+    Left and Right              as integer      is builtin And
+    Left or  Right              as integer      is builtin Or
+    Left xor Right              as integer      is builtin Xor
+    not Value                   as integer      is builtin Not
+
+    // Implement the 'bitshift' interface
+    Left shl  Shift             as integer      is builtin Shl
+    if Signed then
+        Left shr  Shift         as integer      is builtin AShr
+    else
+        Left shr  Shift         as integer      is builtin LShr
+    Left ashr Shift             as integer      is builtin AShr
+    Left lshr Shift             as integer      is builtin LShr
+
+    // Implement the 'copiable' and 'movable' interface
+    Target := Value             as nil          is builtin Copy
+    Target :< Value             as nil          is builtin Copy
+
+    // Implement the 'comparable' interface
+    Left  =  Right              as boolean      is builtin ICmpEQ
+    Left <>  Right              as boolean      is builtin ICmpNE
+    if Signed then
+        Left  >  Right          as boolean      is builtin ICmpSGT
+        Left >=  Right          as boolean      is builtin ICmpSGE
+        Left  <  Right          as boolean      is builtin ICmpSLT
+        Left <=  Right          as boolean      is builtin ICmpSLE
+    else
+        Left  >  Right          as boolean      is builtin ICmpUGT
+        Left >=  Right          as boolean      is builtin ICmpUGE
+        Left  <  Right          as boolean      is builtin ICmpULT
+        Left <=  Right          as boolean      is builtin ICmpULE

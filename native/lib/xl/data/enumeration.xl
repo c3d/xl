@@ -1,0 +1,44 @@
+// ****************************************************************************
+//  xl.enumeration.xl                              XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Definition of enumerations
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+module XL.ENUMERATION is
+
+    enumeration [type reptype] Body is
+
+        // Use the representation type for the values
+        type value is reptype
+
+        text Value:value as text is
+            enumeration_body Body,
+                source First:name, Rep:reptype is
+                    EnumName is text First
+                    source_code
+                        if Value = [[Rep]] then return [[EnumName]]
+
+        value Text:text as value is
+            enumeration_body Body,
+                source First:name, Rep:reptype is
+                    EnumName is text First
+                    source_code
+                        if Text = [[EnumName]] then return [[Rep]]
+
+        reptype Value:value     as reptype      is Value
+        value   Rep:reptype     as value        is Rep

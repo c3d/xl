@@ -1,0 +1,3 @@
+// OPT=-O3
+// Test both - and not operator
+-not 41

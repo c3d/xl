@@ -1,0 +1,103 @@
+// ****************************************************************************
+//  llvm-crap.tbl                                   XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//    List of LLVM operations implemeented by our JIT interface
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2017 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+BINARY(GEP)
+
+BINARY(Add)
+BINARY(Sub)
+BINARY(Mul)
+BINARY(SDiv)
+BINARY(SRem)
+BINARY(URem)
+BINARY(UDiv)
+
+BINARY(Shl)
+BINARY(LShr)
+BINARY(AShr)
+
+BINARY(And)
+BINARY(Or)
+BINARY(Xor)
+
+BINARY(FAdd)
+BINARY(FSub)
+BINARY(FMul)
+BINARY(FDiv)
+BINARY(FRem)
+
+UNARY(Neg)
+UNARY(Not)
+UNARY(FNeg)
+
+UNARY(Load)
+BINARY(Store)
+
+CAST(Trunc)
+CAST(ZExt)
+CAST(SExt)
+CAST(ZExtOrTrunc)
+CAST(SExtOrTrunc)
+CAST(FPToUI)
+CAST(FPToSI)
+CAST(UIToFP)
+CAST(SIToFP)
+CAST(FPTrunc)
+CAST(FPExt)
+CAST(PtrToInt)
+CAST(IntToPtr)
+CAST(BitCast)
+CAST(ZExtOrBitCast)
+CAST(SExtOrBitCast)
+CAST(TruncOrBitCast)
+CAST(PointerCast)
+CAST(BitOrPointerCast)
+CAST(FPCast)
+
+BINARY(ICmpEQ)
+BINARY(ICmpNE)
+BINARY(ICmpUGT)
+BINARY(ICmpUGE)
+BINARY(ICmpULT)
+BINARY(ICmpULE)
+BINARY(ICmpSGT)
+BINARY(ICmpSGE)
+BINARY(ICmpSLT)
+BINARY(ICmpSLE)
+
+BINARY(FCmpORD)
+BINARY(FCmpOEQ)
+BINARY(FCmpONE)
+BINARY(FCmpOGT)
+BINARY(FCmpOGE)
+BINARY(FCmpOLT)
+BINARY(FCmpOLE)
+
+BINARY(FCmpUNO)
+BINARY(FCmpUEQ)
+BINARY(FCmpUNE)
+BINARY(FCmpUGT)
+BINARY(FCmpUGE)
+BINARY(FCmpULT)
+BINARY(FCmpULE)
+
+#undef UNARY
+#undef BINARY
+#undef CAST

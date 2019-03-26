@@ -1,2 +1,0 @@
-error "Name '$1' already exists", 37
-00.Parser/bug357.xl:2: Name 'foo' already exists

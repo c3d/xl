@@ -1,0 +1,282 @@
+// ****************************************************************************
+//  llvm.tbl                                                      XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//    Description of all the LLVM operators we support from rewrite forms
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License, with the
+// following clarification and exception.
+//
+// Linking this library statically or dynamically with other modules is making
+// a combined work based on this library. Thus, the terms and conditions of the
+// GNU General Public License cover the whole combination.
+//
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent modules,
+// and to copy and distribute the resulting executable under terms of your
+// choice, provided that you also meet, for each linked independent module,
+// the terms and conditions of the license of that module. An independent
+// module is a module which is not derived from or based on this library.
+// If you modify this library, you may extend this exception to your version
+// of the library, but you are not obliged to do so. If you do not wish to
+// do so, delete this exception statement from your version.
+//
+// See http://www.gnu.org/copyleft/gpl.html and Matthew 25:22 for details
+//  (C) 1992-2010 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2010 Taodyne SAS
+// ****************************************************************************
+
+// ============================================================================
+//
+//   Special opcodes that perform XL-specific operations
+//
+// ============================================================================
+
+SPECIAL(TreeKind, 1,
+// ----------------------------------------------------------------------------
+//   Return the kind for the input tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        Value_p ptr = code.StructGEP(treeValue, TAG_INDEX, "tagp");
+        Value_p tag = code.Load(ptr, "tag");
+        Value_p mask = code.IntegerConstant(code.Type(tag), Tree::KINDMASK);
+        Value_p kind = code.And(tag, mask, "tagAndMask");
+        return kind;
+    )
+
+
+SPECIAL(TreeLeft, 1,
+// ----------------------------------------------------------------------------
+//   Return the left for an infix, prefix, or postfix trees
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        Value_p prefixValue = code.BitCast(treeValue, compiler.prefixTreePtrTy);
+        Value_p ptr = code.StructGEP(prefixValue, LEFT_VALUE_INDEX, "leftp");
+        Value_p result = code.Load(ptr, "left");
+        return result;
+    )
+
+
+SPECIAL(TreeRight, 1,
+// ----------------------------------------------------------------------------
+//   Return the right for the infix, prefix or postfix trees
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        Value_p prefixValue = code.BitCast(treeValue, compiler.prefixTreePtrTy);
+        Value_p ptr = code.StructGEP(prefixValue, RIGHT_VALUE_INDEX, "rightp");
+        Value_p result = code.Load(ptr, "right");
+        return result;
+    )
+
+
+SPECIAL(InfixName, 1,
+// ----------------------------------------------------------------------------
+//   Return the name for an infix tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        Value_p infixValue = code.BitCast(treeValue, compiler.infixTreePtrTy);
+        Value_p ptr = code.StructGEP(infixValue, INFIX_NAME_INDEX, "namep");
+        Value_p result = code.Load(ptr, "name");
+        return result;
+    )
+
+
+SPECIAL(TextOpening, 1,
+// ----------------------------------------------------------------------------
+//   Return the text opening for a text tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        Value_p textValue = code.BitCast(treeValue, compiler.textTreePtrTy);
+        Value_p ptr = code.StructGEP(textValue, TEXT_OPENING_INDEX, "openingp");
+        Value_p result = code.Load(ptr, "opening");
+        return result;
+    )
+
+
+SPECIAL(TextClosing, 1,
+// ----------------------------------------------------------------------------
+//   Return the text closing for a text tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        Value_p textValue = code.BitCast(treeValue, compiler.textTreePtrTy);
+        Value_p ptr = code.StructGEP(textValue, TEXT_CLOSING_INDEX, "closingp");
+        Value_p result = code.Load(ptr, "closing");
+        return result;
+    )
+
+
+SPECIAL(BlockChild, 1,
+// ----------------------------------------------------------------------------
+//   Return the child for a block tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
+        Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
+        Value_p ptr = code.StructGEP(blockValue, BLOCK_CHILD_INDEX, "childp");
+        Value_p result = code.Load(ptr, "child");
+        return result;
+    )
+
+
+SPECIAL(BlockOpening, 1,
+// ----------------------------------------------------------------------------
+//   Return the opening text for a block tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
+        Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
+        Value_p ptr = code.StructGEP(blockValue, BLOCK_OPENING_INDEX, "bopenp");
+        Value_p result = code.Load(ptr, "bopen");
+        return result;
+    )
+
+
+SPECIAL(BlockClosing, 1,
+// ----------------------------------------------------------------------------
+//   Return the closing text for a block tree
+// ----------------------------------------------------------------------------
+        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
+        Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
+        Value_p ptr = code.StructGEP(blockValue, BLOCK_CLOSING_INDEX, "bclosep");
+        Value_p result = code.Load(ptr, "bclose");
+        return result;
+    )
+
+
+
+// ============================================================================
+//
+//   External declarations used by generated code
+//
+// ============================================================================
+
+//       Name                   Return          Arguments
+EXTERNAL(strcmp,                integerTy,      charPtrTy, charPtrTy)
+EXTERNAL(xl_evaluate,           treePtrTy,      scopePtrTy, treePtrTy)
+EXTERNAL(xl_same_shape,         booleanTy,      treePtrTy, treePtrTy)
+EXTERNAL(xl_infix_match_check,  treePtrTy,      scopePtrTy, treePtrTy, charPtrTy)
+EXTERNAL(xl_typecheck,          treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_form_error,         treePtrTy,      scopePtrTy, treePtrTy)
+EXTERNAL(xl_stack_overflow,     treePtrTy,      treePtrTy)
+EXTERNAL(xl_new_integer,        integerTreePtrTy, ulongTy, ulonglongTy)
+EXTERNAL(xl_new_real,           realTreePtrTy,  ulongTy, realTy)
+EXTERNAL(xl_new_character,      textTreePtrTy,  ulongTy, characterTy)
+EXTERNAL(xl_new_text,           textTreePtrTy,  ulongTy, textTy)
+EXTERNAL(xl_new_ctext,          textTreePtrTy,  ulongTy, charPtrTy)
+EXTERNAL(xl_new_xtext,          textTreePtrTy,  charPtrTy, integerTy, charPtrTy, charPtrTy)
+EXTERNAL(xl_new_block,          blockTreePtrTy, blockTreePtrTy,treePtrTy)
+EXTERNAL(xl_new_prefix,         prefixTreePtrTy, prefixTreePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_new_postfix,        postfixTreePtrTy, postfixTreePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_new_infix,          infixTreePtrTy, infixTreePtrTy,treePtrTy,treePtrTy)
+EXTERNAL(xl_fill_block,         blockTreePtrTy, blockTreePtrTy,treePtrTy)
+EXTERNAL(xl_fill_prefix,        prefixTreePtrTy, prefixTreePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_fill_postfix,       postfixTreePtrTy, postfixTreePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_fill_infix,         infixTreePtrTy, infixTreePtrTy,treePtrTy,treePtrTy)
+EXTERNAL(xl_integer2real,       treePtrTy,      treePtrTy)
+EXTERNAL(xl_array_index,        treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
+EXTERNAL(xl_new_closure,        treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
+
+
+
+// ============================================================================
+//
+//    Types
+//
+// ============================================================================
+
+
+
+// ============================================================================
+//
+//   Standard LLVM opcodes (must be at end, undefines UNARY, BINARY and CAST)
+//
+// ============================================================================
+
+#include "llvm-crap.tbl"
+
+
+// ============================================================================
+//
+//   Some opcodes that are simple enough (and multi-typed)
+//
+// ============================================================================
+//   If you have a runtime function for these, you would need one per int type
+
+SPECIAL(IAbs, 1,
+// ----------------------------------------------------------------------------
+//   Return the absolute value for an integer input
+// ----------------------------------------------------------------------------
+        Value_p value = args[0];
+        Type_p type = JIT::Type(value);
+        Value_p zero = code.IntegerConstant(type, 0);
+        Value_p cmp = code.ICmpSLT(value, zero);
+        Value_p neg = code.Neg(value);
+        Value_p result = code.Select(cmp, neg, value);
+        return result;
+    )
+
+SPECIAL(FAbs, 1,
+// ----------------------------------------------------------------------------
+//   Return the absolute value for a floating-point input
+// ----------------------------------------------------------------------------
+        Value_p value = args[0];
+        Type_p type = JIT::Type(value);
+        Value_p zero = code.FloatConstant(type, 0.0);
+        Value_p cmp = code.FCmpOLT(value, zero);
+        Value_p neg = code.FNeg(value);
+        Value_p result = code.Select(cmp, neg, value);
+        return result;
+    )
+
+
+SPECIAL(SMod, 2,
+// ----------------------------------------------------------------------------
+//   Compute a mathematical 'mod' from the 'SRem' operator
+// ----------------------------------------------------------------------------
+//   See equivalent code in interpreter's xl_mod support function
+
+        Value_p left = args[0];
+        Value_p right = args[1];
+        Value_p rem = code.SRem(left, right);
+        Value_p xored = code.Xor(left, right);
+        Value_p zero = code.IntegerConstant(JIT::Type(xored), 0);
+        Value_p cmp1 = code.ICmpSLT(xored, zero);
+        Value_p cmp2 = code.ICmpNE(rem, zero);
+        Value_p cmp = code.And(cmp1, cmp2);
+        Value_p mod = code.Add(rem, right);
+        Value_p result = code.Select(cmp, mod, rem);
+        return result;
+    )
+
+
+
+// ============================================================================
+//
+//   Some aliases for binary opcodes
+//
+// ============================================================================
+
+ALIAS(BCmpEQ, 2, ICmpEQ)
+ALIAS(BCmpNE, 2, ICmpNE)
+ALIAS(BCmpGT, 2, ICmpUGT)
+ALIAS(BCmpGE, 2, ICmpUGE)
+ALIAS(BCmpLT, 2, ICmpULT)
+ALIAS(BCmpLE, 2, ICmpULE)
+
+ALIAS(BAnd,   2, And)
+ALIAS(BOr,    2, Or)
+ALIAS(BXor,   2, Xor)
+ALIAS(BNot,   1, Not)
+
+#undef EXTERNAL
+#undef SPECIAL
+#undef ALIAS

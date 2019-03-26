@@ -437,14 +437,14 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //    Debug hook to be used in the compiler, entry to rewrite
     // ------------------------------------------------------------------------
-        what := what
+        if false then DebugEntry what
 
 
     procedure DebugExit(what : PT.tree) is
     // ------------------------------------------------------------------------
     //    Debug hook to be used in the compiler, entry to rewrite
     // ------------------------------------------------------------------------
-        what := what
+        if false then DebugExit what
 
 
     function  LookupRewrite (table     : symbol_table;

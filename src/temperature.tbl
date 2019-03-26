@@ -1,0 +1,30 @@
+// ****************************************************************************
+//  temperature.tbl                                              XL project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     The module for temperature
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+//  (C) 2015 Christophe de Dinechin <christophe@taodyne.com>
+//  (C) 2015 Taodyne SAS
+// ****************************************************************************
+
+NAME_FN(Temperature,            // Unique internal name
+        real,                   // Return value
+        "temperature",          // Name for XL programmers
+// ----------------------------------------------------------------------------
+//    Return the core temperature as reported by the Linux kernel
+// ----------------------------------------------------------------------------
+        std::ifstream is("/sys/class/thermal/thermal_zone0/temp");
+        int tval;
+        is >> tval;
+        R_REAL(tval * 0.001));

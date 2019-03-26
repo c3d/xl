@@ -1,0 +1,37 @@
+// ****************************************************************************
+//  debug.stylesheet                (C) 1992-2004 Christophe de Dinechin (ddd) 
+//                                                               XL project 
+// ****************************************************************************
+// 
+//   File Description:
+// 
+//     Stylesheet used to debug parse trees
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 70 $
+// * Date       : $Date: 2004-09-09 23:05:57 +0200 (Thu, 09 Sep 2004) $
+// ****************************************************************************
+
+// Display in lispish notation
+infix  = '(infix' self indent newline left newline right unindent ')'
+prefix = '(prefix' indent newline left newline right unindent ')'
+postfix = '(postfix' indent newline left newline right unindent ')'
+block  = '(block' opening " " closing indent newline child unindent ')'
+
+indents = " "
+"block I+ I-" = '(block indent' indent newline child unindent ')'
+"block  ( ) " = '(implicit ()' indent newline child unindent ')'
+"infix cr" = '(infix CR' indent newline left newline right unindent ')'
+
+"?wildcard?" = '(wildcard' self ')'

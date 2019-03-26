@@ -1,4 +1,0 @@
-error "Couldn't compile $1", 'cos "This is a very long long ...hould be shortened in errors"'
-20.Errors/long_error_messages.xl:2: No rewrite candidate for 'cos "This is a very long long ...hould be shortened in errors"'
-20.Errors/long_error_messages.xl:2: Couldn't compile 'cos "This is a very long long ...hould be shortened in errors"'
-20.Errors/long_error_messages.xl:2: Error compiling 'cos "This is a very long long ...hould be shortened in errors"'

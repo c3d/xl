@@ -1,0 +1,195 @@
+// *****************************************************************************
+// builtins.xl                                                        XL project
+// *****************************************************************************
+//
+// File description:
+//
+//
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3
+// (C) 2009-2011,2013,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2013, Jérôme Forissier <jerome@taodyne.com>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can r redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
+
+// Binary operations on integers
+x:integer + y:integer           as integer is builtin Add
+x:integer - y:integer           as integer is builtin Sub
+x:integer * y:integer           as integer is builtin Mul
+x:integer / y:integer           as integer is builtin SDiv
+x:integer rem y:integer         as integer is builtin SRem
+x:integer mod y:integer         as integer is builtin SMod
+x:integer and y:integer         as integer is builtin And
+x:integer or y:integer          as integer is builtin Or
+x:integer xor y:integer         as integer is builtin Xor
+x:integer shl y:integer         as integer is builtin Shl
+x:integer ashr y:integer        as integer is builtin AShr
+x:integer lshr y:integer        as integer is builtin LShr
+-x:integer                      as integer is builtin Neg
+not x:integer                   as integer is builtin Not
+
+// Binary operation on real numbers
+x:real + y:real                 as real is builtin FAdd
+x:real - y:real                 as real is builtin FSub
+x:real * y:real                 as real is builtin FMul
+x:real / y:real                 as real is builtin FDiv
+x:real rem y:real               as real is C fmod
+x:real mod y:real               as real is C xl_modf
+-x:real                         as real is builtin FNeg
+
+// Comparison operators
+X:integer = Y:integer           as boolean is builtin ICmpEQ
+X:integer <> Y:integer          as boolean is builtin ICmpNE
+X:integer > Y:integer           as boolean is builtin ICmpSGT
+X:integer >= Y:integer          as boolean is builtin ICmpSGE
+X:integer < Y:integer           as boolean is builtin ICmpSLT
+X:integer <= Y:integer          as boolean is builtin ICmpSLE
+
+X:real = Y:real                 as boolean is builtin FCmpOEQ
+X:real <> Y:real                as boolean is builtin FCmpONE
+X:real > Y:real                 as boolean is builtin FCmpOGT
+X:real >= Y:real                as boolean is builtin FCmpOGE
+X:real < Y:real                 as boolean is builtin FCmpOLT
+X:real <= Y:real                as boolean is builtin FCmpOLE
+
+X:text = Y:text                 as boolean is C xl_text_eq
+X:text <> Y:text                as boolean is C xl_text_ne
+X:text > Y:text                 as boolean is C xl_text_gt
+X:text >= Y:text                as boolean is C xl_text_ge
+X:text < Y:text                 as boolean is C xl_text_lt
+X:text <= Y:text                as boolean is C xl_text_le
+
+X:boolean = Y:boolean           as boolean is builtin BCmpEQ
+X:boolean <> Y:boolean          as boolean is builtin BCmpNE
+X:boolean > Y:boolean           as boolean is builtin BCmpGT
+X:boolean >= Y:boolean          as boolean is builtin BCmpGE
+X:boolean < Y:boolean           as boolean is builtin BCmpLT
+X:boolean <= Y:boolean          as boolean is builtin BCmpLE
+X:boolean and Y:boolean         as boolean is builtin BAnd
+X:boolean or  Y:boolean         as boolean is builtin BOr
+X:boolean xor Y:boolean         as boolean is builtin BXor
+not X:boolean                   as boolean is builtin BNot
+
+// Basic math functions
+abs X:integer                   as integer is builtin IAbs
+abs X:real                      as real    is builtin FAbs
+extern real sqrt(real);
+extern real sin(real);
+extern real cos(real);
+extern real tan(real);
+extern real asin(real);
+extern real acos(real);
+extern real atan(real);
+extern real exp(real);
+extern real expm1(real);
+extern real log(real);
+extern real log10(real);
+extern real log2(real);
+extern real log1p(real);
+pi is 3.1415926535897932384626433
+
+// If-then-else statement
+if true  then TrueBody else FalseBody   is TrueBody
+if false then TrueBody else FalseBody   is FalseBody
+
+if true  then TrueBody                  is TrueBody
+if false then TrueBody                  is false
+
+// Console / debugging operations
+write x:text            as boolean      is C xl_write_text
+write x:integer         as boolean      is C xl_write_integer
+write x:real            as boolean      is C xl_write_real
+write x:character       as boolean      is C xl_write_character
+writeln                 as boolean      is C xl_write_cr
+
+write true              is write "true"
+write false             is write "false"
+write head, rest        is write head; write rest
+writeln a               is write a; writeln
+
+// Tree shape and attributes
+kind  X:tree            as integer      is builtin TreeKind
+left  X:prefix          as tree         is builtin TreeLeft
+right X:prefix          as tree         is builtin TreeRight
+left  X:postfix         as tree         is builtin TreeLeft
+right X:postfix         as tree         is builtin TreeRight
+left  X:infix           as tree         is builtin TreeLeft
+right X:infix           as tree         is builtin TreeRight
+name  X:infix           as text         is builtin InfixName
+opening X:text          as text         is builtin TextOpening
+closing X:text          as text         is builtin TextClosing
+child X:block           as tree         is builtin BlockChild
+opening X:block         as text         is builtin BlockOpening
+closing X:block         as text         is builtin BlockClosing
+
+// Min and max functions
+min x, y is if x < min y then x else min y
+min y    is y
+max x, y is if x > max y then x else max y
+max y    is y
+
+// Interval test
+X:real in A:real..B:real is X >= A and X <= B
+
+// Factorial function
+0! is 1
+N:integer! is N * (N-1)!
+
+// Boolean to text conversion
+text true  is "true"
+text false is "false"
+
+// A few additional text notations
+Source:text / From:text /  To:text      is text_replace Source, From, To
+Pat:text in Src:text                    is text_index Src, Pat, 0
+Pat:text in Src:text from Idx:integer   is text_index Src, Pat, Idx
+
+// A utility function for C-style testing
+good false is false
+good 0     is false
+good 0.0   is false
+good ""    is false
+good nil   is false
+good Other is true
+
+bad X      is not good X
+
+// Loops
+while Condition loop Body is
+    if Condition then
+        Body
+        while Condition loop Body
+until Condition loop Body               is while not Condition loop Body
+loop Body                               is Body; loop Body
+for Var in Low..High loop Body is
+    Var := Low
+    while Var < High loop
+        Body
+        Var := Var + 1
+
+every Duration, Body is loop { Body; sleep Duration}
+Duration:real h  is Duration * 3600
+Duration:real m  is Duration * 60
+Duration:real s  is Duration
+Duration:real ms is Duration * 0.001

@@ -1,0 +1,24 @@
+A is "Outer A"
+C is "Outer C"
+
+foo is
+    A is "Inner A"
+    B is "Inner B"
+
+    "Outer A" is "Indexed by Outer A"
+
+writeln "foo.A=", foo.A
+writeln "foo.B=", foo.B
+writeln "foo.C=", foo.C
+
+writeln "foo[A]=", foo[A]
+writeln "foo[B]=", foo[B]
+writeln "foo[C]=", foo[C]
+
+writeln "foo(A)=", foo(A)
+writeln "foo(B)=", foo(B)
+writeln "foo(C)=", foo(C)
+
+writeln "foo A=", foo A
+writeln "foo B=", foo B
+writeln "foo C=", foo C

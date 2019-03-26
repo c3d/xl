@@ -1,0 +1,3 @@
+// OPT=-O3 -nobuiltins
+X, Y is self
+"Hello", "World", 1, '2', 3, 42.420000000000000000000001

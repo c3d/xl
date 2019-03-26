@@ -1,7 +1,0 @@
-{printf fmt:text, arg:integer, arg2:integer}:integer -> C
-printf "The value of fib %lld is %lld", N, fib N
-09.Compiler/missing-name-in-optimizer.xl:4: Unable to evaluate printf "The value of fib %lld is %lld", N, fib N because
-09.Compiler/missing-name-in-optimizer.xl:3:  printf fmt:text, arg:integer, arg2:integer doesn't match because
-09.Compiler/missing-name-in-optimizer.xl:4:   Unable to evaluate N because
-09.Compiler/missing-name-in-optimizer.xl:4:    No form matches 'N'
-09.Compiler/missing-name-in-optimizer.xl:4:  No form matches 'printf "The value of fib %lld is %lld", N, fib N'

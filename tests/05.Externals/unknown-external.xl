@@ -1,0 +1,4 @@
+// OPT=-O3 -nobuiltins
+// EXIT=1
+invalid_function X:text is C some_unknown_symbol
+invalid_function "Hello"

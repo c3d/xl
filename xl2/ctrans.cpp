@@ -311,14 +311,12 @@ bool XL2CTranslation::Infix(XLInfix *input)
     }
     else
     {
-        out << '(';
         XL2C(input->left);
         if (XLNames.count(nname))
             out << ' ' << XLNames[nname] << ' ';
         else
             out << ' ' << nname << ' ';
         XL2C(input->right);
-        out << ')';
     }
     return true;
 }

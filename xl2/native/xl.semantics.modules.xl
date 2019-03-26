@@ -390,8 +390,7 @@ module XL.SEMANTICS.MODULES is
     // ------------------------------------------------------------------------
         ERR.PushErrorContext()
         result := WantToEvaluate(Value)
-        ignored : boolean := ERR.PopErrorContext()
-        ignored := ignored
+        ERR.PopErrorContext()
 
 
     function InXlBuiltinsModule() return boolean is
@@ -593,4 +592,3 @@ module XL.SEMANTICS.MODULES is
              result := ProcessImport (LongName, nil)
              result := XLT.Append(result, REC.EnterUsing(LongName))
              PT.AttachTree(result, "REPROCESSMACROS", result)
-

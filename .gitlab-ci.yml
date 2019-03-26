@@ -1,14 +1,14 @@
 image: fedora:latest
 
 before_script:
-  - dnf install -y llvm-devel git gcc gcc-c++
+  - dnf install -y llvm35-devel git gcc gcc-c++
   - git submodule update --init --recursive
 
 test:
   script:
-  - make PREFIX=/tmp/xlr/
-  - make PREFIX=/tmp/xlr/ install
-  - export PATH=$PATH:/tmp/xlr/bin
+  - make PREFIX=/tmp/xl/
+  - make PREFIX=/tmp/xl/ install
+  - export PATH=$PATH:/tmp/xl/bin
   - make test
 
 make_only:

@@ -1,0 +1,267 @@
+// ****************************************************************************
+//  combinations.xl                                 XL - An extensible language
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Implementation of combination types
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//  (C) 2019 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+//   See LICENSE file for details.
+// ****************************************************************************
+
+with
+    T : type
+    U : type
+
+
+
+// ============================================================================
+//
+//    Some special cases with "border" types
+//
+// ============================================================================
+
+// Any type and nil can only contain nil
+T and nil               is nil
+nil and U               is nil
+
+// Combinations with anything and nothing
+T and nothing           is nothing
+nothing and T           is nothing
+T and anything          is T
+anything and T          is T
+T or nothing            is T
+nothing or T            is T
+T or anything           is anything
+anything or T           is anything
+
+
+
+// ============================================================================
+//
+//    Common case of 'T or nil' is optimized with a null ponter for nil
+//
+// ============================================================================
+
+nil or T                is T or nil
+T or nil                is type with
+// ----------------------------------------------------------------------------
+//   Any type or nil is a represented as a possibly null pointer
+// ----------------------------------------------------------------------------
+    pointer is record with
+        Optional : pointer to T
+
+    BitSize     is pointer.BitSize
+    BitAlign    is pointer.BitAlign
+    ByteSize    is pointer.ByteSize
+    ByteAlign   is pointer.ByteAlign
+    Mutable     is T.Mutable
+    Constant    is T.Constant
+    Indirect    is T
+
+    Matches Value as boolean is
+        Value = nil or T.Matches Value
+
+    Convert nil as conversion is
+        Result : conversion is
+            nil         is nil
+            Value       is T.Convert
+    Convert T as conversion is
+        Result : conversion is
+            Value:T     is Value
+            Other       is T.
+
+
+
+// ============================================================================
+//
+//   Intersection of types
+//
+// ============================================================================
+
+T and U as type is
+// ----------------------------------------------------------------------------
+//   Return a type whose elements must belong to both input types
+// ----------------------------------------------------------------------------
+
+    // The two types must either be both indirect, or both direct
+    if (T.Indirect = nil) <> (U.Indirect = nil)
+        nil
+    else
+        type with
+
+            BitSize     is Min(T.BitSize,   U.BitSize)
+            BitAlign    is Max(T.BitAlign,  U.BitAlign)
+            ByteSize    is Min(T.ByteSize,  U.ByteSize)
+            ByteAlign   is Max(T.ByteAlign, U.ByteAlign)
+            Mutable     is T.Mutable and U.Mutable
+            Constant    is T.Constant or U.Constant
+
+            Indirect as optional type is
+            // ----------------------------------------------------------------
+            //    If any of the types requires a pointer type, use that
+            // ----------------------------------------------------------------
+                IndirT is T.Indirect
+                IndirU is U.Indirect
+
+                // If indirect, then return 'and' of the indirect types
+                if IndirT <> nil then
+                    IndirT and IndirU
+                else
+                    nil
+
+
+            Matches Value:anything as boolean is
+            // ----------------------------------------------------------------
+            //   A value matches if it matches both types
+            // ----------------------------------------------------------------
+                MatchesT is T.Matches(Form)
+                MatchesU is U.Matches(Form)
+                MatchesT and MatchesU
+
+
+            Convert ToType:type as optional (Value:anything -> anything) is
+            // ----------------------------------------------------------------
+            //   Can automatically convert to T or U
+            // ----------------------------------------------------------------
+                case ToType is
+                    T then return T.Convert ToType
+                    U then return U.Convert ToType
+                nil
+
+            Operation Index:unsigned as optional (Value:anything -> anything) is
+
+
+
+// ============================================================================
+//
+//   Union of types
+//
+// ============================================================================
+
+T or U as type is either
+// ----------------------------------------------------------------------------
+//   Return a type whose elements belong to either input types
+// ----------------------------------------------------------------------------
+
+    type tagged is record with
+    // ------------------------------------------------------------------------
+    //    The internal representation is a tagged type
+    // ------------------------------------------------------------------------
+
+
+    // The two types must either be both indirect, or both direct
+    if (T.Indirect = nil) <> (U.Indirect = nil)
+        nil
+    else
+        type with
+
+            BitSize     is Min(T.BitSize,   U.BitSize)
+            BitAlign    is Max(T.BitAlign,  U.BitAlign)
+            ByteSize    is Min(T.ByteSize,  U.ByteSize)
+            ByteAlign   is Max(T.ByteAlign, U.ByteAlign)
+            Mutable     is T.Mutable and U.Mutable
+            Constant    is T.Constant or U.Constant
+
+            Indirect as optional type is
+            // ----------------------------------------------------------------
+            //    If any of the types requires a pointer type, use that
+            // ----------------------------------------------------------------
+                IndirT is T.Indirect
+                IndirU is U.Indirect
+
+                // If indirect, then return 'and' of the indirect types
+                if IndirT <> nil then
+                    IndirT and IndirU
+                else
+                    nil
+
+
+            Matches Value:anything as boolean is
+            // ----------------------------------------------------------------
+            //   A value matches if it matches both types
+            // ----------------------------------------------------------------
+                MatchesT is T.Matches(Form)
+                MatchesU is U.Matches(Form)
+                MatchesT and MatchesU
+
+
+            Convert ToType:type as optional (Value:anything -> anything) is
+            // ----------------------------------------------------------------
+            //   Can automatically convert to T or U
+            // ----------------------------------------------------------------
+                case ToType is
+                    T then return T.Convert ToType
+                    U then return U.Convert ToType
+                nil
+
+            Operation Index:unsigned as optional (Value:anything -> anything) is
+
+
+// ============================================================================
+//
+//   Intersection of types
+//
+// ============================================================================
+
+T and U as type is
+// ----------------------------------------------------------------------------
+//   Return a type whose elements must belong to both input types
+// ----------------------------------------------------------------------------
+
+    // The two types must either be both indirect, or both direct
+    if (T.Indirect = nil) <> (U.Indirect = nil)
+        nil
+    else
+        type with
+
+            BitSize     is Min(T.BitSize,   U.BitSize)
+            BitAlign    is Max(T.BitAlign,  U.BitAlign)
+            ByteSize    is Min(T.ByteSize,  U.ByteSize)
+            ByteAlign   is Max(T.ByteAlign, U.ByteAlign)
+            Mutable     is T.Mutable and U.Mutable
+            Constant    is T.Constant or U.Constant
+
+            Indirect as optional type is
+            // ----------------------------------------------------------------
+            //    If any of the types requires a pointer type, use that
+            // ----------------------------------------------------------------
+                IndirT is T.Indirect
+                IndirU is U.Indirect
+
+                // If indirect, then return 'and' of the indirect types
+                if IndirT <> nil then
+                    IndirT and IndirU
+                else
+                    nil
+
+
+            Matches Value:anything as boolean is
+            // ----------------------------------------------------------------
+            //   A value matches if it matches both types
+            // ----------------------------------------------------------------
+                MatchesT is T.Matches(Form)
+                MatchesU is U.Matches(Form)
+                MatchesT and MatchesU
+
+
+            Convert ToType:type as optional (Value:anything -> anything) is
+            // ----------------------------------------------------------------
+            //   Can automatically convert to T or U
+            // ----------------------------------------------------------------
+                case ToType is
+                    T then return T.Convert ToType
+                    U then return U.Convert ToType
+                nil
+
+            Operation Index:unsigned as optional (Value:anything -> anything) is

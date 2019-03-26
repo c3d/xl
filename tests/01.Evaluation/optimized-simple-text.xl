@@ -1,0 +1,3 @@
+// OPT=-O3 -nobuiltins
+X is "Hello world"
+X

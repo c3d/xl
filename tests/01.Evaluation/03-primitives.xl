@@ -1,0 +1,4 @@
+// EXIT=1
+foo X:integer as integer is builtin Nonexistent
+
+foo 3
