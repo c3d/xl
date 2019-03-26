@@ -15,7 +15,7 @@
 //
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
-// (C) 2003,2009-2012,2014,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2003,2009-2012,2014-2019, Christophe de Dinechin <christophe@dinechin.org>
 // (C) 2003, Juan Carlos Arevalo Baeza <thejcab@sourceforge.net>
 // *****************************************************************************
 // This file is part of XL

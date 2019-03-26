@@ -16,7 +16,7 @@
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
 // (C) 2011, Catherine Burvelle <catherine@taodyne.com>
-// (C) 2003-2004,2009-2011,2013-2014,2017,2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2003-2004,2009-2011,2013-2019, Christophe de Dinechin <cdedinechin@dxo.com>
 // (C) 2010, Jérôme Forissier <jerome@taodyne.com>
 // (C) 2003, Juan Carlos Arevalo Baeza <thejcab@sourceforge.net>
 // *****************************************************************************

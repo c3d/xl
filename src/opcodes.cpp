@@ -1,8 +1,8 @@
-// ****************************************************************************
-//  opcodes.cpp                                                      XL project
-// ****************************************************************************
+// *****************************************************************************
+// opcodes.cpp                                                        XL project
+// *****************************************************************************
 //
-//   File Description:
+// File description:
 //
 //    Opcodes are native trees generated as part of compilation/optimization
 //    to speed up execution. They represent a step in the evaluation of
@@ -13,9 +13,9 @@
 //
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
-// (C) 2009-2012,2019, Christophe de Dinechin <christophe@dinechin.org>
-// (C) 2010,2012, Jérôme Forissier <jerome@taodyne.com>
-// (C) 2010, Lionel Schaffhauser <lionel@taodyne.com>
+// (C) 2010-2011, Catherine Burvelle <catherine@taodyne.com>
+// (C) 2003-2004,2006-2007,2009-2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2012, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
