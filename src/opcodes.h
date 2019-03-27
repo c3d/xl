@@ -98,6 +98,7 @@ typedef Block   Block_r;
 typedef Prefix  Prefix_r;
 typedef Postfix Postfix_r;
 typedef Infix   Infix_r;
+typedef Scope   Scope_r;
 
 
 // ============================================================================
