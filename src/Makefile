@@ -91,7 +91,7 @@ SOURCES_llvm =					\
 	types.cpp				\
 
 HEADERS=$(HEADERS_$(VARIANT))
-HEADERS_lib=$(wildcard *.h *.tbl)
+HEADERS_lib=$(wildcard ../include/*.h *.tbl)
 
 PRODUCTS=$(PRODUCTS_$(VARIANT))
 PRODUCTS_exe=xl.exe
@@ -104,7 +104,7 @@ DEFINES=	$(DEFINES_$(COMPILER))		\
 DEFINES_llvm=	LLVM_VERSION=$(LLVM_VERSION)
 DEFINES_none=	INTERPRETER_ONLY
 
-INCLUDES=. ..
+INCLUDES=. .. ../include
 
 CONFIG= sigaction                       \
         struct_stat                     \
@@ -185,11 +185,11 @@ ionly-%:
 endif
 
 # Module generation
-%_module.cpp: %.tbl %_module.h Makefile
+%_module.cpp: ../include/%.tbl %_module.h Makefile
 	$(PRINT_GENERATE) ./generate-module-body $* > $@
 
-%_module.h: %.tbl Makefile
-	$(PRINT_GENERATE) ./generate-module-header $* >  $@
+%_module.h: ../include/%.tbl Makefile
+	$(PRINT_GENERATE) ./generate-module-header ../include/$* >  $@
 
 .PRECIOUS: $(MODULE_HEADERS) $(MODULE_SOURCES)
 
