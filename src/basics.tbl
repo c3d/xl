@@ -55,13 +55,6 @@ INIT_ALLOCATOR(Infix);
 
 INIT_ALLOCATOR(Context);
 
-#ifndef INTERPRETER_ONLY
-INIT_ALLOCATOR(Types);
-INIT_ALLOCATOR(RewriteCalls);
-INIT_ALLOCATOR(RewriteCandidate);
-#endif // INTERPRETER_ONLY
-
-
 
 // ============================================================================
 //

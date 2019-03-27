@@ -210,5 +210,9 @@ PointerType_p Compiler::TreeMachineType(Tree *tree)
     return treePtrTy;
 }
 
+#include "opcodes.h"
+INIT_ALLOCATOR(Types);
+INIT_ALLOCATOR(RewriteCalls);
+INIT_ALLOCATOR(RewriteCandidate);
 
 XL_END
