@@ -51,10 +51,10 @@
 
 #include "tree.h"
 #include "context.h"
-#ifndef INTERPRETER_ONLY
-#include "llvm-crap.h"
-#endif // INTERPRETER_ONLY
 #include <map>
+
+
+namespace llvm { class Type; class Value; }
 
 
 XL_BEGIN
@@ -65,12 +65,10 @@ XL_BEGIN
 //
 // ============================================================================
 
-#ifdef INTERPRETER_ONLY
-typedef struct llvm_type Type_p;
-#endif // INTERPRETER_ONLY
-
 struct RewriteCalls;
 struct RewriteCandidate;
+typedef llvm::Type  *Type_p;
+typedef llvm::Value *Value_p;
 typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 typedef std::map<Tree_p, Type_p>         box_map;
