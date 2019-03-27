@@ -111,7 +111,7 @@ public:
     Op *                success;
 public:
     // The action to perform
-    virtual Op *        Run(Data data)          { return success; }
+    virtual Op *        Run(Data data XL_UNUSED) { return success; }
 
 public:
                         Op()                    : success(NULL) {}

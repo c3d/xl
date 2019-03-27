@@ -91,13 +91,6 @@
 #endif
 
 
-#if defined(__GNUC__)
-#define XL_MAYBE_UNUSED     __attribute((unused))
-#elif __cplusplus > 201103L
-#define XL_MAYBE_UNUSED     [[maybe_unused]]
-#else
-#define XL_MAYBE_UNUSED
-#endif
 
 /*===========================================================================*/
 /*                                                                           */
@@ -228,11 +221,11 @@ externc void xl_assert_failed(kstring kind, kstring msg, kstring file, uint line
 // ============================================================================
 
 #if defined(__GNUC__)
-#define XL_MAYBE_UNUSED     __attribute((unused))
+#define XL_UNUSED     __attribute((unused))
 #elif __cplusplus > 201103L
-#define XL_MAYBE_UNUSED     [[maybe_unused]]
+#define XL_UNUSED     [[maybe_unused]]
 #else
-#define XL_MAYBE_UNUSED
+#define XL_UNUSED
 #endif
 
 

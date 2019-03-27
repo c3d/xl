@@ -138,7 +138,7 @@ public:
     virtual Tree *              Shape() { return NULL; }
     virtual Opcode *            Clone() = 0;
     virtual Op *                Run(Data data) = 0;
-    virtual void                SetParms(ParmOrder &parms)  {}
+    virtual void                SetParms(ParmOrder &parms XL_UNUSED)  { }
 
 public:
     static void                 Enter(Context *context);
@@ -185,7 +185,7 @@ struct TypeCheckOpcode : NameOpcode
     TypeCheckOpcode(kstring name, Name_p &toDefine)
         : NameOpcode(name, toDefine) {}
     virtual Opcode *            Clone() { return new TypeCheckOpcode(*this); }
-    virtual Tree *              Check(Scope *scope, Tree *what)
+    virtual Tree *              Check(Scope *scope XL_UNUSED, Tree *what)
     {
         return what;
     }
