@@ -1,9 +1,11 @@
 #!/bin/bash
 
+BASE=${1/.tbl/}
+MODULE=$(basename $BASE)
 echo '#include "runtime.h"'
-echo '#include "'$1'_module.h"'
+echo '#include "'$MODULE'_module.h"'
 echo '#include "opcodes.h"'
-[ -f $1'.cpp' ] && echo '#include "'$1'.cpp"'
+[ -f $BASE'.cpp' ] && echo '#include "'$MODULE'.cpp"'
 echo 'XL_BEGIN'
-echo '#include "'$1'.tbl"'
+echo '#include "'$MODULE'.tbl"'
 echo 'XL_END'
