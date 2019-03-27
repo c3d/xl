@@ -5,9 +5,9 @@ MODULE=$(basename $BASE)
 GUARD=$(echo $MODULE | sed -e s/[-.]/_/g | tr "[:lower:]" "[:upper:]")_MODULE_H
 echo '#ifndef' $GUARD
 echo '#define' $GUARD
+[ -f $BASE'.h' ] && echo '#include "'$MODULE'.h"'
 echo '#define TBL_HEADER'
 echo '#include "opcodes.h"'
-[ -f $BASE'.h' ] && echo '#include "'$MODULE'.h"'
 echo 'XL_BEGIN'
 echo '#include "'$MODULE'.tbl"'
 echo 'XL_END'

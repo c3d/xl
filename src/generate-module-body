@@ -5,7 +5,11 @@ MODULE=$(basename $BASE)
 echo '#include "runtime.h"'
 echo '#include "'$MODULE'_module.h"'
 echo '#include "opcodes.h"'
-[ -f $BASE'.cpp' ] && echo '#include "'$MODULE'.cpp"'
+if [ -f $BASE'.cpp' ] ; then
+    echo '#include "'$MODULE'.cpp"'
+elif [ -f ${BASE/include/src}'.cpp' ]; then
+     echo '#include "../src/'$MODULE'.cpp"'
+fi
 echo 'XL_BEGIN'
 echo '#include "'$MODULE'.tbl"'
 echo 'XL_END'
