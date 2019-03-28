@@ -73,7 +73,7 @@ struct SourceFile
 
     text        name;
     Tree_p      tree;
-    Scope_p   scope;
+    Scope_p     scope;
     time_t      modified;
     text        hash;
     bool        changed;
@@ -103,6 +103,7 @@ struct Main
 
     // Evaluate a tree in the given context
     Tree *       Evaluate(Scope *scope, Tree *value);
+    bool         TypeAnalysis(Scope *scope, Tree *value);
     Tree *       TypeCheck(Scope *scope, Tree *type, Tree *value);
 
     // Individual phases of the above

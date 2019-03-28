@@ -219,6 +219,60 @@ typedef enum { PARSING_PHASE, DECLARATION_PHASE, EXECUTION_PHASE } phase_t;
 typedef Tree * (*decl_fn) (Scope *, Tree *source, phase_t phase);
 Name *  xl_set_override_priority(Scope *scope, Tree *self, float priority);
 
+
+
+// ============================================================================
+//
+//    Call management
+//
+// ============================================================================
+
+struct XLCall
+// ----------------------------------------------------------------------------
+//    A structure that encapsulates a call to an XL tree
+// ----------------------------------------------------------------------------
+{
+    XLCall(text name):
+        name(new Name(name)), arguments(NULL), pointer(&arguments), call() {}
+
+    // Adding arguments
+    XLCall &operator, (Tree *tree)
+    {
+        call = NULL;
+        if (*pointer)
+        {
+            Infix *infix = new Infix(",", *pointer, tree);
+            *pointer = infix;
+            pointer = (Tree_p *) &infix->right;
+        }
+        else
+        {
+            *pointer = tree;
+        }
+        args.push_back(tree);
+        return *this;
+    }
+    XLCall &operator, (Tree &tree) { return *this, &tree; }
+    XLCall &operator, (longlong v) { return *this, new Integer(v); }
+    XLCall &operator, (double  v)  { return *this, new Real(v); }
+    XLCall &operator, (text  v)    { return *this, new Text(v); }
+
+    // Calling in a given symbol context
+    Tree *  operator() (SourceFile *sf);
+    bool    build(SourceFile *sf);
+
+    // Calling in a given symbol context
+    Tree *  operator() (Scope *syms);
+    bool    build(Scope *syms);
+
+public:
+    Name_p      name;
+    TreeList    args;
+    Tree_p      arguments;
+    Tree_p *    pointer;
+    Prefix_p    call;
+};
+
 XL_END
 
 

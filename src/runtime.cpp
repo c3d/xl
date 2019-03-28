@@ -1170,6 +1170,60 @@ bool xl_random_seed(int seed)
 
 } // extern "C"
 
+
+// ============================================================================
+//
+//   Managing calls to/from XL
+//
+// ============================================================================
+
+Tree *XLCall::operator() (SourceFile *sf)
+// ----------------------------------------------------------------------------
+//   Invoke the call in the context of a given source file
+// ----------------------------------------------------------------------------
+{
+    Scope *scope = sf->scope;
+    return operator()(scope);
+}
+
+
+bool XLCall::build(SourceFile *sf)
+// ----------------------------------------------------------------------------
+//   Invoke the call in the context of a given source file
+// ----------------------------------------------------------------------------
+{
+    Scope *scope = sf->scope;
+    return build(scope);
+}
+
+
+Tree *XLCall::operator() (Scope *scope)
+// ----------------------------------------------------------------------------
+//    Perform the given call in the given context
+// ----------------------------------------------------------------------------
+{
+    Tree *result = xl_nil;
+    if (build(scope))
+    {
+        assert(call);
+        result = MAIN->Evaluate(scope, call);
+    }
+    return result;
+}
+
+
+bool XLCall::build(Scope *scope)
+// ----------------------------------------------------------------------------
+//    Perform the given call in the given context
+// ----------------------------------------------------------------------------
+{
+    assert(scope);
+    if (!call)
+        call = new Prefix(name, arguments);
+    bool result = MAIN->TypeAnalysis(scope, call);
+    return result;
+}
+
 XL_END
 
 
