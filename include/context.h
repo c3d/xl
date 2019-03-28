@@ -245,7 +245,7 @@ struct Context
 
 public:
     // Create and delete a local scope
-    void                CreateScope(TreePosition pos = Tree::NOWHERE);
+    Scope *             CreateScope(TreePosition pos = Tree::NOWHERE);
     void                PopScope();
     Scope *             CurrentScope()          { return symbols; }
     void                SetScope(Scope *s)      { symbols = s; }

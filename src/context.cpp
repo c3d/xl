@@ -124,12 +124,13 @@ Context::~Context()
 //
 // ============================================================================
 
-void Context::CreateScope(TreePosition pos)
+Scope *Context::CreateScope(TreePosition pos)
 // ----------------------------------------------------------------------------
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
     symbols = new Scope(symbols, xl_nil, pos);
+    return symbols;
 }
 
 
