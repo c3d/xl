@@ -191,7 +191,7 @@ endif
 %_module.h: ../include/%.tbl Makefile
 	$(PRINT_GENERATE) ./generate-module-header ../include/$* >  $@
 
-.PRECIOUS: $(MODULE_HEADERS) $(MODULE_SOURCES)
+.PRECIOUS: $(MODULES_HEADERS) $(MODULES_SOURCES)
 
 $(MIQ)rules.mk:
 	$(PRINT_COMMAND) cd .. && git submodule update --init --recursive
