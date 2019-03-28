@@ -90,7 +90,7 @@ bool ParameterList::EnterName(Name *what, Type_p declaredType)
 }
 
 
-bool ParameterList::DoInteger(Integer *)
+bool ParameterList::Do(Integer *)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
 // ----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ bool ParameterList::DoInteger(Integer *)
 }
 
 
-bool ParameterList::DoReal(Real *)
+bool ParameterList::Do(Real *)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
 // ----------------------------------------------------------------------------
@@ -108,7 +108,7 @@ bool ParameterList::DoReal(Real *)
 }
 
 
-bool ParameterList::DoText(Text *)
+bool ParameterList::Do(Text *)
 // ----------------------------------------------------------------------------
 //   Nothing to do for leaves
 // ----------------------------------------------------------------------------
@@ -117,7 +117,7 @@ bool ParameterList::DoText(Text *)
 }
 
 
-bool ParameterList::DoName(Name *what)
+bool ParameterList::Do(Name *what)
 // ----------------------------------------------------------------------------
 //    Identify the named parameters being defined in the shape
 // ----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ bool ParameterList::DoName(Name *what)
 }
 
 
-bool ParameterList::DoBlock(Block *what)
+bool ParameterList::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   Parameters may be in a block, we just look inside
 // ----------------------------------------------------------------------------
@@ -143,7 +143,7 @@ bool ParameterList::DoBlock(Block *what)
 }
 
 
-bool ParameterList::DoInfix(Infix *what)
+bool ParameterList::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   Check if we match an infix operator
 // ----------------------------------------------------------------------------
@@ -201,7 +201,7 @@ bool ParameterList::DoInfix(Infix *what)
 }
 
 
-bool ParameterList::DoPrefix(Prefix *what)
+bool ParameterList::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   For prefix expressions, simply test left then right
 // ----------------------------------------------------------------------------
@@ -227,7 +227,7 @@ bool ParameterList::DoPrefix(Prefix *what)
 }
 
 
-bool ParameterList::DoPostfix(Postfix *what)
+bool ParameterList::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //    For postfix expressions, simply test right, then left
 // ----------------------------------------------------------------------------

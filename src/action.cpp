@@ -40,82 +40,82 @@
 
 XL_BEGIN
 
-Tree *Action::DoInteger(Integer *what)
+Tree *Action::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'
 // ----------------------------------------------------------------------------
 {
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoReal(Real *what)
+Tree *Action::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'
 // ----------------------------------------------------------------------------
 {
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoText(Text *what)
+Tree *Action::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'
 // ----------------------------------------------------------------------------
 {
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoName(Name *what)
+Tree *Action::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   Default is simply to invoke 'Do'
 // ----------------------------------------------------------------------------
 {
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoBlock(Block *what)
+Tree *Action::Do(Block *what)
 // ----------------------------------------------------------------------------
 //    Default is to firm perform action on block's child, then on self
 // ----------------------------------------------------------------------------
 {
     what->child = what->child->Do(this);
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoPrefix(Prefix *what)
+Tree *Action::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Default is to run the action on the left, then on right
 // ----------------------------------------------------------------------------
 {
     what->left = what->left->Do(this);
     what->right = what->right->Do(this);
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoPostfix(Postfix *what)
+Tree *Action::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Default is to run the action on the right, then on the left
 // ----------------------------------------------------------------------------
 {
     what->right = what->right->Do(this);
     what->left = what->left->Do(this);
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 
-Tree *Action::DoInfix(Infix *what)
+Tree *Action::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   Default is to run the action on children first
 // ----------------------------------------------------------------------------
 {
     what->left = what->left->Do(this);
     what->right = what->right->Do(this);
-    return Do(what);
+    return Do((Tree *) what);
 }
 
 XL_END

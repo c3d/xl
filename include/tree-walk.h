@@ -95,7 +95,7 @@ struct FindParentAction : Action
         return NULL;
     }
 
-    Tree *DoInteger(Integer *what)
+    Tree *Do(Integer *what)
     {
         if (child == what)
         {
@@ -103,7 +103,7 @@ struct FindParentAction : Action
         }
         return NULL;
     }
-    Tree *DoReal(Real *what)
+    Tree *Do(Real *what)
     {
         if (child == what)
         {
@@ -111,7 +111,7 @@ struct FindParentAction : Action
         }
         return NULL;
     }
-    Tree *DoText(Text *what)
+    Tree *Do(Text *what)
     {
         if (child == what)
         {
@@ -119,7 +119,7 @@ struct FindParentAction : Action
         }
         return NULL;
     }
-    Tree *DoName(Name *what)
+    Tree *Do(Name *what)
     {
         if (child == what)
         {
@@ -128,7 +128,7 @@ struct FindParentAction : Action
         return NULL;
     }
 
-    Tree *DoPrefix(Prefix *what)
+    Tree *Do(Prefix *what)
     {
         if (child == what)
         {
@@ -141,7 +141,7 @@ struct FindParentAction : Action
         return NULL;
     }
 
-    Tree *DoPostfix(Postfix *what)
+    Tree *Do(Postfix *what)
     {
         if (child == what)
         {
@@ -154,7 +154,7 @@ struct FindParentAction : Action
         return NULL;
     }
 
-    Tree *DoInfix(Infix *what)
+    Tree *Do(Infix *what)
     {
         if (child == what)
         {
@@ -166,7 +166,7 @@ struct FindParentAction : Action
             return right;
         return NULL;
     }
-    Tree *DoBlock(Block *what)
+    Tree *Do(Block *what)
     {
         if (child == what)
         {
@@ -218,24 +218,24 @@ struct FindChildAction : Action
         return result;
     }
 
-    Tree *DoInteger(Integer *)
+    Tree *Do(Integer *)
     {
         return NULL;
     }
-    Tree *DoReal(Real *)
+    Tree *Do(Real *)
     {
         return NULL;
     }
-    Tree *DoText(Text *)
+    Tree *Do(Text *)
     {
         return NULL;
     }
-    Tree *DoName(Name *)
+    Tree *Do(Name *)
     {
         return NULL;
     }
 
-    Tree *DoPrefix(Prefix *what)
+    Tree *Do(Prefix *what)
     {
         if (Name * n = what->left->AsName())
         {
@@ -247,14 +247,14 @@ struct FindChildAction : Action
         return NULL;
     }
 
-    Tree *DoPostfix(Postfix *what)
+    Tree *Do(Postfix *what)
     {
         if (Tree *left = FindChild(what->left, "l", -1))
             return left;
         return NULL;
     }
 
-    Tree *DoInfix(Infix *what)
+    Tree *Do(Infix *what)
     {
         if (Tree *left = FindChild(what->left, "l", 0))
             return left;
@@ -262,7 +262,7 @@ struct FindChildAction : Action
             return right;
         return NULL;
     }
-    Tree *DoBlock(Block *what)
+    Tree *Do(Block *what)
     {
         if (Tree *aChild = FindChild(what->child, "c", 0))
             return aChild;

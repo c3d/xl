@@ -68,14 +68,14 @@ public:
 public:
     bool                EnterName(Name *what, Type_p declaredType = nullptr);
 
-    bool                DoInteger(Integer *what);
-    bool                DoReal(Real *what);
-    bool                DoText(Text *what);
-    bool                DoName(Name *what);
-    bool                DoPrefix(Prefix *what);
-    bool                DoPostfix(Postfix *what);
-    bool                DoInfix(Infix *what);
-    bool                DoBlock(Block *what);
+    bool                Do(Integer *what);
+    bool                Do(Real *what);
+    bool                Do(Text *what);
+    bool                Do(Name *what);
+    bool                Do(Prefix *what);
+    bool                Do(Postfix *what);
+    bool                Do(Infix *what);
+    bool                Do(Block *what);
 
 public:
     CompilerFunction &  function;       // Current function

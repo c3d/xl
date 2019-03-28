@@ -123,14 +123,14 @@ public:
 
 public:
     // Interface for Tree::Do() to annotate the tree
-    Tree *      DoInteger(Integer *what);
-    Tree *      DoReal(Real *what);
-    Tree *      DoText(Text *what);
-    Tree *      DoName(Name *what);
-    Tree *      DoPrefix(Prefix *what);
-    Tree *      DoPostfix(Postfix *what);
-    Tree *      DoInfix(Infix *what);
-    Tree *      DoBlock(Block *what);
+    Tree *      Do(Integer *what);
+    Tree *      Do(Real *what);
+    Tree *      Do(Text *what);
+    Tree *      Do(Name *what);
+    Tree *      Do(Prefix *what);
+    Tree *      Do(Postfix *what);
+    Tree *      Do(Infix *what);
+    Tree *      Do(Block *what);
 
 public:
     // Common code for all constants (integer, real, text)

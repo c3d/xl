@@ -65,23 +65,25 @@ typedef std::map<text, longlong>        text_map;
 typedef std::map<longlong, text>        text_ids;
 
 
-struct Serializer : Action
+struct Serializer
 // ----------------------------------------------------------------------------
 //    Serialize a tree to a stream
 // ----------------------------------------------------------------------------
 {
+    typedef Tree *value_type;
+
     Serializer(std::ostream &out);
     ~Serializer() {}
 
     // Serialization of the canonical nodes
-    Tree *      DoInteger(Integer *what);
-    Tree *      DoReal(Real *what);
-    Tree *      DoText(Text *what);
-    Tree *      DoName(Name *what);
-    Tree *      DoPrefix(Prefix *what);
-    Tree *      DoPostfix(Postfix *what);
-    Tree *      DoInfix(Infix *what);
-    Tree *      DoBlock(Block *what);
+    Tree *      Do(Integer *what);
+    Tree *      Do(Real *what);
+    Tree *      Do(Text *what);
+    Tree *      Do(Name *what);
+    Tree *      Do(Prefix *what);
+    Tree *      Do(Postfix *what);
+    Tree *      Do(Infix *what);
+    Tree *      Do(Block *what);
     Tree *      DoChild(Tree *child);
     Tree *      Do(Tree *what);
 

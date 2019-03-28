@@ -70,44 +70,44 @@ public:
 
 public:
     // Do interface
-    Tree *DoInteger(Integer *what)
+    Tree *Do(Integer *what)
     {
         return Adjust(what, new Integer(what->value, what->Position()));
     }
-    Tree *DoReal(Real *what)
+    Tree *Do(Real *what)
     {
         return Adjust(what, new Real(what->value, what->Position()));
 
     }
-    Tree *DoText(Text *what)
+    Tree *Do(Text *what)
     {
         return Adjust(what, new Text(what->value,
                                      what->opening, what->closing,
                                      what->Position()));
     }
-    Tree *DoName(Name *what)
+    Tree *Do(Name *what)
     {
         return Adjust(what, new Name(what->value, what->Position()));
     }
 
-    Tree *DoBlock(Block *what)
+    Tree *Do(Block *what)
     {
         return Adjust(what, new Block(Clone(what->child),
                                       what->opening, what->closing,
                                       what->Position()));
     }
-    Tree *DoInfix(Infix *what)
+    Tree *Do(Infix *what)
     {
         return Adjust(what, new Infix (what->name,
                                        Clone(what->left), Clone(what->right),
                                        what->Position()));
     }
-    Tree *DoPrefix(Prefix *what)
+    Tree *Do(Prefix *what)
     {
         return Adjust(what, new Prefix(Clone(what->left), Clone(what->right),
                                        what->Position()));
     }
-    Tree *DoPostfix(Postfix *what)
+    Tree *Do(Postfix *what)
     {
         return Adjust(what, new Postfix(Clone(what->left), Clone(what->right),
                                         what->Position()));
@@ -197,7 +197,7 @@ template <CopyMode mode> struct TreeCopyTemplate
 
     typedef Tree *value_type;
 
-    Tree *DoInteger(Integer *what)
+    Tree *Do(Integer *what)
     {
         if (Integer *it = dest->AsInteger())
         {
@@ -207,7 +207,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         }
         return NULL;
     }
-    Tree *DoReal(Real *what)
+    Tree *Do(Real *what)
     {
         if (Real *rt = dest->AsReal())
         {
@@ -217,7 +217,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         }
         return NULL;
     }
-    Tree *DoText(Text *what)
+    Tree *Do(Text *what)
     {
         if (Text *tt = dest->AsText())
         {
@@ -227,7 +227,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         }
         return NULL;
     }
-    Tree *DoName(Name *what)
+    Tree *Do(Name *what)
     {
         if (Name *nt = dest->AsName())
         {
@@ -238,7 +238,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         return NULL;
     }
 
-    Tree *DoBlock(Block *what)
+    Tree *Do(Block *what)
     {
         if (Block *bt = dest->AsBlock())
         {
@@ -256,7 +256,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         }
         return NULL;
     }
-    Tree *DoInfix(Infix *what)
+    Tree *Do(Infix *what)
     {
         if (Infix *it = dest->AsInfix())
         {
@@ -279,7 +279,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         }
         return NULL;
     }
-    Tree *DoPrefix(Prefix *what)
+    Tree *Do(Prefix *what)
     {
         if (Prefix *pt = dest->AsPrefix())
         {
@@ -301,7 +301,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         }
         return NULL;
     }
-    Tree *DoPostfix(Postfix *what)
+    Tree *Do(Postfix *what)
     {
         if (Postfix *pt = dest->AsPostfix())
         {

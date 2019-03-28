@@ -1825,7 +1825,7 @@ struct InfixMatchOp : FailOp
 //
 // ============================================================================
 
-CodeBuilder::strength CodeBuilder::DoInteger(Integer *what)
+CodeBuilder::strength CodeBuilder::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains an integer: check we have the same
 // ----------------------------------------------------------------------------
@@ -1840,7 +1840,7 @@ CodeBuilder::strength CodeBuilder::DoInteger(Integer *what)
 }
 
 
-CodeBuilder::strength CodeBuilder::DoReal(Real *what)
+CodeBuilder::strength CodeBuilder::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
@@ -1857,7 +1857,7 @@ CodeBuilder::strength CodeBuilder::DoReal(Real *what)
 }
 
 
-CodeBuilder::strength CodeBuilder::DoText(Text *what)
+CodeBuilder::strength CodeBuilder::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
@@ -1872,7 +1872,7 @@ CodeBuilder::strength CodeBuilder::DoText(Text *what)
 }
 
 
-CodeBuilder::strength CodeBuilder::DoName(Name *what)
+CodeBuilder::strength CodeBuilder::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
@@ -1903,7 +1903,7 @@ CodeBuilder::strength CodeBuilder::DoName(Name *what)
 }
 
 
-CodeBuilder::strength CodeBuilder::DoBlock(Block *what)
+CodeBuilder::strength CodeBuilder::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
@@ -1918,7 +1918,7 @@ CodeBuilder::strength CodeBuilder::DoBlock(Block *what)
 
 
 
-CodeBuilder::strength CodeBuilder::DoPrefix(Prefix *what)
+CodeBuilder::strength CodeBuilder::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains prefix: check that the left part matches
 // ----------------------------------------------------------------------------
@@ -1954,7 +1954,7 @@ CodeBuilder::strength CodeBuilder::DoPrefix(Prefix *what)
 }
 
 
-CodeBuilder::strength CodeBuilder::DoPostfix(Postfix *what)
+CodeBuilder::strength CodeBuilder::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains posfix: check that the right part matches
 // ----------------------------------------------------------------------------
@@ -1990,7 +1990,7 @@ CodeBuilder::strength CodeBuilder::DoPostfix(Postfix *what)
 }
 
 
-CodeBuilder::strength CodeBuilder::DoInfix(Infix *what)
+CodeBuilder::strength CodeBuilder::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   The complicated case: various declarations
 // ----------------------------------------------------------------------------

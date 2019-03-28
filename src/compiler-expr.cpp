@@ -87,7 +87,7 @@ Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
 
 
 
-Value_p CompilerExpression::DoInteger(Integer *what)
+Value_p CompilerExpression::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Compile an integer constant
 // ----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ Value_p CompilerExpression::DoInteger(Integer *what)
 }
 
 
-Value_p CompilerExpression::DoReal(Real *what)
+Value_p CompilerExpression::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   Compile a real constant
 // ----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ Value_p CompilerExpression::DoReal(Real *what)
 }
 
 
-Value_p CompilerExpression::DoText(Text *what)
+Value_p CompilerExpression::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   Compile a text constant
 // ----------------------------------------------------------------------------
@@ -125,7 +125,7 @@ Value_p CompilerExpression::DoText(Text *what)
 }
 
 
-Value_p CompilerExpression::DoName(Name *what)
+Value_p CompilerExpression::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   Compile a name
 // ----------------------------------------------------------------------------
@@ -162,7 +162,7 @@ Value_p CompilerExpression::DoName(Name *what)
 }
 
 
-Value_p CompilerExpression::DoInfix(Infix *infix)
+Value_p CompilerExpression::Do(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Compile infix expressions
 // ----------------------------------------------------------------------------
@@ -195,7 +195,7 @@ Value_p CompilerExpression::DoInfix(Infix *infix)
 }
 
 
-Value_p CompilerExpression::DoPrefix(Prefix *what)
+Value_p CompilerExpression::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Compile prefix expressions
 // ----------------------------------------------------------------------------
@@ -238,7 +238,7 @@ Value_p CompilerExpression::DoPrefix(Prefix *what)
 }
 
 
-Value_p CompilerExpression::DoPostfix(Postfix *what)
+Value_p CompilerExpression::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Compile postfix expressions
 // ----------------------------------------------------------------------------
@@ -247,7 +247,7 @@ Value_p CompilerExpression::DoPostfix(Postfix *what)
 }
 
 
-Value_p CompilerExpression::DoBlock(Block *block)
+Value_p CompilerExpression::Do(Block *block)
 // ----------------------------------------------------------------------------
 //   Compile blocks
 // ----------------------------------------------------------------------------

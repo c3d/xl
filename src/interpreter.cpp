@@ -169,14 +169,14 @@ struct Bindings
           test(test), cache(cache), resultType(NULL), args(args) {}
 
     // Tree::Do interface
-    bool  DoInteger(Integer *what);
-    bool  DoReal(Real *what);
-    bool  DoText(Text *what);
-    bool  DoName(Name *what);
-    bool  DoPrefix(Prefix *what);
-    bool  DoPostfix(Postfix *what);
-    bool  DoInfix(Infix *what);
-    bool  DoBlock(Block *what);
+    bool  Do(Integer *what);
+    bool  Do(Real *what);
+    bool  Do(Text *what);
+    bool  Do(Name *what);
+    bool  Do(Prefix *what);
+    bool  Do(Postfix *what);
+    bool  Do(Infix *what);
+    bool  Do(Block *what);
 
     // Evaluation and binding of values
     void  MustEvaluate(bool updateContext = false);
@@ -196,7 +196,7 @@ public:
 };
 
 
-inline bool Bindings::DoInteger(Integer *what)
+inline bool Bindings::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains an integer: check we have the same
 // ----------------------------------------------------------------------------
@@ -210,7 +210,7 @@ inline bool Bindings::DoInteger(Integer *what)
 }
 
 
-inline bool Bindings::DoReal(Real *what)
+inline bool Bindings::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
@@ -224,7 +224,7 @@ inline bool Bindings::DoReal(Real *what)
 }
 
 
-inline bool Bindings::DoText(Text *what)
+inline bool Bindings::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
@@ -238,7 +238,7 @@ inline bool Bindings::DoText(Text *what)
 }
 
 
-inline bool Bindings::DoName(Name *what)
+inline bool Bindings::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
@@ -270,7 +270,7 @@ inline bool Bindings::DoName(Name *what)
 }
 
 
-bool Bindings::DoBlock(Block *what)
+bool Bindings::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
@@ -284,7 +284,7 @@ bool Bindings::DoBlock(Block *what)
 }
 
 
-bool Bindings::DoPrefix(Prefix *what)
+bool Bindings::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains prefix: check that the left part matches
 // ----------------------------------------------------------------------------
@@ -326,7 +326,7 @@ bool Bindings::DoPrefix(Prefix *what)
 }
 
 
-bool Bindings::DoPostfix(Postfix *what)
+bool Bindings::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains posfix: check that the right part matches
 // ----------------------------------------------------------------------------
@@ -368,7 +368,7 @@ bool Bindings::DoPostfix(Postfix *what)
 }
 
 
-bool Bindings::DoInfix(Infix *what)
+bool Bindings::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   The complicated case: various declarations
 // ----------------------------------------------------------------------------
@@ -912,19 +912,11 @@ struct Expansion
 
     typedef Tree *value_type;
 
-    Tree *  DoInteger(Integer *what)
+    Tree *  Do(Tree *what)
     {
         return what;
     }
-    Tree *  DoReal(Real *what)
-    {
-        return what;
-    }
-    Tree *  DoText(Text *what)
-    {
-        return what;
-    }
-    Tree *  DoName(Name *what)
+    Tree *  Do(Name *what)
     {
         if (Tree *bound = context->Bound(what))
         {
@@ -934,7 +926,7 @@ struct Expansion
         }
         return what;
     }
-    Tree *  DoPrefix(Prefix *what)
+    Tree *  Do(Prefix *what)
     {
         Tree *left  = what->left->Do(this);
         Tree *right = what->right->Do(this);
@@ -942,7 +934,7 @@ struct Expansion
             return new Prefix(left, right, what->Position());
         return what;
     }
-    Tree *  DoPostfix(Postfix *what)
+    Tree *  Do(Postfix *what)
     {
         Tree *left  = what->left->Do(this);
         Tree *right = what->right->Do(this);
@@ -951,7 +943,7 @@ struct Expansion
         return what;
 
     }
-    Tree *  DoInfix(Infix *what)
+    Tree *  Do(Infix *what)
     {
         if (what->name == ":" || what->name == "as" || what->name == "when")
             return what->left->Do(this);
@@ -962,7 +954,7 @@ struct Expansion
         return what;
     }
 
-    Tree *  DoBlock(Block *what)
+    Tree *  Do(Block *what)
     {
         Tree *chld = what->child->Do(this);
         if (chld != what->child)

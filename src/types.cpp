@@ -243,7 +243,7 @@ Scope *Types::TypesScope()
 }
 
 
-Tree *Types::DoInteger(Integer *what)
+Tree *Types::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value
 // ----------------------------------------------------------------------------
@@ -252,7 +252,7 @@ Tree *Types::DoInteger(Integer *what)
 }
 
 
-Tree *Types::DoReal(Real *what)
+Tree *Types::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   Annotate a real tree with its value
 // ----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ Tree *Types::DoReal(Real *what)
 }
 
 
-Tree *Types::DoText(Text *what)
+Tree *Types::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   Annotate a text tree with its own value
 // ----------------------------------------------------------------------------
@@ -289,7 +289,7 @@ Tree *Types::DoConstant(Tree *what, kind k)
 }
 
 
-Tree *Types::DoName(Name *what)
+Tree *Types::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
@@ -352,7 +352,7 @@ Tree *Types::DoName(Name *what)
 }
 
 
-Tree *Types::DoPrefix(Prefix *what)
+Tree *Types::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a prefix and then to its children
 // ----------------------------------------------------------------------------
@@ -378,7 +378,7 @@ Tree *Types::DoPrefix(Prefix *what)
 }
 
 
-Tree *Types::DoPostfix(Postfix *what)
+Tree *Types::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
@@ -388,7 +388,7 @@ Tree *Types::DoPostfix(Postfix *what)
 }
 
 
-Tree *Types::DoInfix(Infix *what)
+Tree *Types::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   Assign type to infix forms
 // ----------------------------------------------------------------------------
@@ -415,7 +415,7 @@ Tree *Types::DoInfix(Infix *what)
 }
 
 
-Tree *Types::DoBlock(Block *what)
+Tree *Types::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   A block evaluates either as itself, or as its child
 // ----------------------------------------------------------------------------

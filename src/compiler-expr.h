@@ -60,14 +60,14 @@ public:
 public:
     Value_p             Evaluate(Tree *tree, bool force = false);
 
-    Value_p             DoInteger(Integer *what);
-    Value_p             DoReal(Real *what);
-    Value_p             DoText(Text *what);
-    Value_p             DoName(Name *what);
-    Value_p             DoPrefix(Prefix *what);
-    Value_p             DoPostfix(Postfix *what);
-    Value_p             DoInfix(Infix *what);
-    Value_p             DoBlock(Block *what);
+    Value_p             Do(Integer *what);
+    Value_p             Do(Real *what);
+    Value_p             Do(Text *what);
+    Value_p             Do(Name *what);
+    Value_p             Do(Prefix *what);
+    Value_p             Do(Postfix *what);
+    Value_p             Do(Infix *what);
+    Value_p             Do(Block *what);
 
     Value_p             DoCall(Tree *call, bool mayfail = false);
     Value_p             DoRewrite(Tree *call, RewriteCandidate *candidate);

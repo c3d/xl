@@ -456,14 +456,14 @@ typename Action::value_type Tree::Do(Action *action)
 {
     switch(Kind())
     {
-    case INTEGER:       return action->DoInteger((Integer *) this);
-    case REAL:          return action->DoReal((Real *) this);
-    case TEXT:          return action->DoText((Text *) this);
-    case NAME:          return action->DoName((Name *) this);
-    case BLOCK:         return action->DoBlock((Block *) this);
-    case PREFIX:        return action->DoPrefix((Prefix *) this);
-    case POSTFIX:       return action->DoPostfix((Postfix *) this);
-    case INFIX:         return action->DoInfix((Infix *) this);
+    case INTEGER:       return action->Do((Integer *) this);
+    case REAL:          return action->Do((Real *) this);
+    case TEXT:          return action->Do((Text *) this);
+    case NAME:          return action->Do((Name *) this);
+    case BLOCK:         return action->Do((Block *) this);
+    case PREFIX:        return action->Do((Prefix *) this);
+    case POSTFIX:       return action->Do((Postfix *) this);
+    case INFIX:         return action->Do((Infix *) this);
     default:            assert(!"Unexpected tree kind");
     }
     return typename Action::value_type();

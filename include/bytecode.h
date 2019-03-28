@@ -199,14 +199,14 @@ public:
     enum strength { NEVER, SOMETIMES, ALWAYS };
     typedef strength value_type;
 
-    strength    DoInteger(Integer *what);
-    strength    DoReal(Real *what);
-    strength    DoText(Text *what);
-    strength    DoName(Name *what);
-    strength    DoPrefix(Prefix *what);
-    strength    DoPostfix(Postfix *what);
-    strength    DoInfix(Infix *what);
-    strength    DoBlock(Block *what);
+    strength    Do(Integer *what);
+    strength    Do(Real *what);
+    strength    Do(Text *what);
+    strength    Do(Name *what);
+    strength    Do(Prefix *what);
+    strength    Do(Postfix *what);
+    strength    Do(Infix *what);
+    strength    Do(Block *what);
     strength    DoLeftRight(Tree *wl, Tree *wr, Tree *l, Tree *r);
 
     // Evaluation and binding of values

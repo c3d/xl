@@ -64,14 +64,14 @@ struct Action
     virtual Tree *Do (Tree *what) = 0;
 
     // Specialization for the canonical nodes, default is to run them
-    virtual Tree *DoInteger(Integer *what);
-    virtual Tree *DoReal(Real *what);
-    virtual Tree *DoText(Text *what);
-    virtual Tree *DoName(Name *what);
-    virtual Tree *DoPrefix(Prefix *what);
-    virtual Tree *DoPostfix(Postfix *what);
-    virtual Tree *DoInfix(Infix *what);
-    virtual Tree *DoBlock(Block *what);
+    virtual Tree *Do(Integer *what);
+    virtual Tree *Do(Real *what);
+    virtual Tree *Do(Text *what);
+    virtual Tree *Do(Name *what);
+    virtual Tree *Do(Prefix *what);
+    virtual Tree *Do(Postfix *what);
+    virtual Tree *Do(Infix *what);
+    virtual Tree *Do(Block *what);
 };
 
 XL_END

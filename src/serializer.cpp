@@ -111,7 +111,7 @@ Tree *Serializer::Do(Tree *what)
 }
 
 
-Tree *Serializer::DoInteger(Integer *what)
+Tree *Serializer::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Serialize an integer leaf
 // ----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ Tree *Serializer::DoInteger(Integer *what)
 }
 
 
-Tree *Serializer::DoReal(Real *what)
+Tree *Serializer::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   Serialize a real leaf
 // ----------------------------------------------------------------------------
@@ -133,7 +133,7 @@ Tree *Serializer::DoReal(Real *what)
 }
 
 
-Tree *Serializer::DoText(Text *what)
+Tree *Serializer::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   Serialize a text leaf
 // ----------------------------------------------------------------------------
@@ -146,7 +146,7 @@ Tree *Serializer::DoText(Text *what)
 }
 
 
-Tree *Serializer::DoName(Name *what)
+Tree *Serializer::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   Serialize a name/symbol leaf
 // ----------------------------------------------------------------------------
@@ -157,7 +157,7 @@ Tree *Serializer::DoName(Name *what)
 }
 
 
-Tree *Serializer::DoPrefix(Prefix *what)
+Tree *Serializer::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Serialize a prefix tree
 // ----------------------------------------------------------------------------
@@ -169,7 +169,7 @@ Tree *Serializer::DoPrefix(Prefix *what)
 }
 
 
-Tree *Serializer::DoPostfix(Postfix *what)
+Tree *Serializer::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Serialize a postfix tree
 // ----------------------------------------------------------------------------
@@ -181,7 +181,7 @@ Tree *Serializer::DoPostfix(Postfix *what)
 }
 
 
-Tree *Serializer::DoInfix(Infix *what)
+Tree *Serializer::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   Serialize an infix tree
 // ----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ Tree *Serializer::DoInfix(Infix *what)
 }
 
 
-Tree *Serializer::DoBlock(Block *what)
+Tree *Serializer::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   Serialize a block tree
 // ----------------------------------------------------------------------------

@@ -53,12 +53,9 @@ struct PostOrderTraversal
 
     typedef typename Action::value_type value_type;
 
-    value_type DoInteger(Integer *what)         { return what->Do(action); }
-    value_type DoReal(Real *what)               { return what->Do(action); }
-    value_type DoText(Text *what)               { return what->Do(action); }
-    value_type DoName(Name *what)               { return what->Do(action); }
+    value_type Do(Tree *what)                { return what->Do(action); }
 
-    value_type DoBlock(Block *what)
+    value_type Do(Block *what)
     {
         // REVISIT: Why do we need to test what->child? Test fail otherwise?!?
         value_type ret = value_type();
@@ -68,7 +65,7 @@ struct PostOrderTraversal
             return ret;
         return what->Do(action);
     }
-    value_type DoInfix(Infix *what)
+    value_type Do(Infix *what)
     {
         value_type ret = what->left->Do(this);
         if (!fullScan && ret)
@@ -78,7 +75,7 @@ struct PostOrderTraversal
             return ret;
         return what->Do(action);
     }
-    value_type DoPrefix(Prefix *what)
+    value_type Do(Prefix *what)
     {
         value_type ret = what->left->Do(this);
         if (!fullScan && ret)
@@ -88,7 +85,7 @@ struct PostOrderTraversal
             return ret;
         return what->Do(action);
     }
-    value_type DoPostfix(Postfix *what)
+    value_type Do(Postfix *what)
     {
         value_type   ret;
         ret = what->left->Do(this);

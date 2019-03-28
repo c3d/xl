@@ -60,15 +60,16 @@ XL_BEGIN
 
 Renderer *Renderer::renderer = NULL;
 
-struct EnterFormatsAction : Action
+struct EnterFormatsAction
 // ----------------------------------------------------------------------------
 //   Enter formats in a format table
 // ----------------------------------------------------------------------------
 {
+    typedef Tree *value_type;
     EnterFormatsAction (formats_table &fmt): formats(fmt) {}
 
     Tree *Do (Tree *what)                       { return what; }
-    Tree *DoInfix(Infix *what)
+    Tree *Do(Infix *what)
     {
         if (what->name == "=")
         {
@@ -90,7 +91,7 @@ struct EnterFormatsAction : Action
                 return what;
             }
         }
-        return Action::DoInfix(what);
+        return Do((Tree *) what);
     }
 
     formats_table &     formats;
