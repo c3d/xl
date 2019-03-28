@@ -75,7 +75,7 @@ struct SourceFile
     Tree_p      tree;
     Scope_p     scope;
     time_t      modified;
-    text        hash;
+    uint64      hash;
     bool        changed;
     bool        readOnly;
 };
