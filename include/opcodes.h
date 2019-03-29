@@ -449,7 +449,7 @@ XL_END
 #define POSTFIX(Name, ResTy, RightTy, Symbol, Code)
 #define OVERLOAD(Name, Symbol, ResTy, Parms, Code)
 #define FUNCTION(Name, ResTy, Parms, Code)
-#define PARM(Name, Type)
+#define PARM(Name, Type, ...)
 #define NAME(symbol)            extern Name_p xl_##symbol;
 #define NAME_FN(Name, ResTy, Symbol, Code)
 
@@ -778,7 +778,7 @@ XL_END
         OVERLOAD(Name, #Name, ResTy, Parms, Code)
 
 
-#define PARM(Name, Type)                                                \
+#define PARM(Name, Type, ...)                                           \
 /* ------------------------------------------------------------ */      \
 /*  Declare a parameter for the FUNCTION macro above            */      \
 /* ------------------------------------------------------------ */      \
