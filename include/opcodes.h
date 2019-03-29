@@ -447,7 +447,7 @@ XL_END
 #define PREFIX_FN(Name, ResTy, RightTy, Code)
 #define PREFIX_SCOPE(Name, ResTy, Symbol, RightTy, Code)
 #define POSTFIX(Name, ResTy, RightTy, Symbol, Code)
-#define OVERLOAD(Name, Symbol, ResTy, Parms, Code)
+#define OVERLOAD(Name, ResTy, Symbol, Parms, Code)
 #define FUNCTION(Name, ResTy, Parms, Code)
 #define PARM(Name, Type, ...)
 #define NAME(symbol)            extern Name_p xl_##symbol;
@@ -722,7 +722,7 @@ XL_END
     static Opcode_p_##PName init_opcode_p_##PName;
 
 
-#define OVERLOAD(FName, Symbol, ResTy, Parms, Code)                     \
+#define OVERLOAD(FName, ResTy, Symbol, Parms, Code)                     \
 /* ------------------------------------------------------------ */      \
 /*  Create a function opcode, also generates prefix declaration */      \
 /* ------------------------------------------------------------ */      \
@@ -775,7 +775,7 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a function with the given name                      */      \
 /* ------------------------------------------------------------ */      \
-        OVERLOAD(Name, #Name, ResTy, Parms, Code)
+    OVERLOAD(Name, ResTy, #Name, Parms, Code)
 
 
 #define PARM(Name, Type, ...)                                           \
