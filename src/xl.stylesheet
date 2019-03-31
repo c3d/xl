@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  xl.stylesheet                (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  xl.stylesheet                (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Default renderer for XL
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -40,4 +40,3 @@ indents = "    "
 "longtext "" """ = "<<" unindented_self ">>"
 "longtext << >>" = "<<" unindented_self ">>"
 "comment " = ""
-

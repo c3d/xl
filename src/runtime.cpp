@@ -554,7 +554,7 @@ Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
     bool exists = MAIN->files.count(path);
     if (!exists)
     {
-        record(file_load, "Loading %s", path.c_str());
+        record(fileload, "Loading %s", path.c_str());
         bool hadError = MAIN->LoadFile(path);
         if (hadError)
         {

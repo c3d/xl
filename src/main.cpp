@@ -69,6 +69,10 @@
 #include <sys/stat.h>
 
 
+RECORDER(fileload,                      64, "Files being loaded");
+RECORDER(main,                          32, "Compiler main entry point");
+RECORDER_TWEAK_DEFINE(gc_statistics,    0, "Display garbage collector stats");
+
 XL_BEGIN
 
 Main *MAIN = NULL;
@@ -232,7 +236,7 @@ int Main::LoadAndRun()
         return xl_listen(scope, options.listen_forks, options.listen);
     }
 
-    record(compiler, "LoadAndRun returns %d", rc);
+    record(main, "LoadAndRun returns %d", rc);
     return rc;
 }
 
@@ -271,7 +275,6 @@ int Main::ParseOptions()
 }
 
 
-RECORDER(file_load, 64, "Files being loaded");
 int Main::LoadFiles()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
@@ -285,7 +288,7 @@ int Main::LoadFiles()
     {
         int rc = LoadFile(file);
         hadError |= rc;
-        record(file_load,
+        record(fileload,
                "Load file %s code %d, errors %d", file.c_str(), rc, hadError);
     }
 
@@ -309,12 +312,12 @@ int Main::LoadFile(const text &file, text modname)
     // See if we read from standard input
     if (file == "-")
     {
-        record(file_load, "Loading from standard input");
+        record(fileload, "Loading from standard input");
         input = &std::cin;
     }
     else
     {
-        record(file_load, "Loading from %s", file.c_str());
+        record(fileload, "Loading from %s", file.c_str());
         input = &inputFile;
     }
 
@@ -325,7 +328,7 @@ int Main::LoadFile(const text &file, text modname)
         text decrypted = Decrypt(inputStream.str());
         if (decrypted != "")
         {
-            record(file_load, "Input was encrypted");
+            record(fileload, "Input was encrypted");
             inputStream.str(decrypted);
         }
         input = &inputStream;
@@ -338,7 +341,7 @@ int Main::LoadFile(const text &file, text modname)
         tree = deserializer.ReadTree();
         if (deserializer.IsValid())
         {
-            record(file_load, "Input was in serialized format");
+            record(fileload, "Input was in serialized format");
         }
     }
 
@@ -356,7 +359,7 @@ int Main::LoadFile(const text &file, text modname)
     // If at this stage we don't have a tree, this is an error
     if (!tree)
     {
-        record(file_load, "File load error for %s", file.c_str());
+        record(fileload, "File load error for %s", file.c_str());
         return false;
     }
 
@@ -372,18 +375,18 @@ int Main::LoadFile(const text &file, text modname)
             text crypted = Encrypt(packed);
             if (crypted == "")
             {
-                record(file_load, "No encryption, output is packed");
+                record(fileload, "No encryption, output is packed");
                 std::cout << packed;
             }
             else
             {
-                record(file_load, "Encrypted output");
+                record(fileload, "Encrypted output");
                 std::cout << crypted;
             }
         }
         else
         {
-            record(file_load, "Packed output");
+            record(fileload, "Packed output");
             std::cout << packed;
         }
     }
@@ -422,8 +425,8 @@ int Main::LoadFile(const text &file, text modname)
     sf = SourceFile (file, tree, context.CurrentScope());
 
     // Process declarations from the program
-    record(file_load, "File loaded as %t", tree);
-    record(file_load, "File loaded in %t", context.CurrentScope());
+    record(fileload, "File loaded as %t", tree);
+    record(fileload, "File loaded in %t", context.CurrentScope());
 
     // We were OK, done
     return false;
@@ -642,8 +645,6 @@ XL_END
 
 #ifndef LIBXL
 
-RECORDER(main, 32, "Compiler main entry point");
-RECORDER_TWEAK_DEFINE(gc_statistics, 0, "Display garbage collector stats");
 
 
 int main(int argc, char **argv)

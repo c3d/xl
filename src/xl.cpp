@@ -36,7 +36,6 @@
 
 #include "main.h"
 #include "basics.h"
-#include "compiler.h"
 #include <recorder/recorder.h>
 
 #if HAVE_SBRK

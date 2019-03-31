@@ -25,6 +25,7 @@ OS=$(uname)
 TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
 XL=../xl
+LIBPATH=..
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z0-9]*'
@@ -49,6 +50,7 @@ while [ $# -gt 0 ]
 do
     case $1 in
         -xl)                    XL="$2"                 ; shift;;
+        -lib)                   LIBPATH="$2"            ; shift;;
         -r|-runtime)            RUNTIME="$2"            ; shift;;
         -i|-interactive)        RUNTIME="O0"            ;;
         -I|-installed)          XL="xl"; INSTALLED=1    ;;
@@ -97,6 +99,8 @@ $LN ../*.stylesheet .
 $LN ../xl.syntax .
 $LN ../builtins.xl .
 $LN ../opt-builtins.xl .
+export LD_LIBRARY_PATH=$LIBPATH
+export DYLD_LIBRARY_PATH=$LIBPATH
 
 # Cleanup the test results
 echo Tests successfully run on $(date) on $HOSTNAME > "$SUCCESS"

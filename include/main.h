@@ -151,8 +151,10 @@ public:
 
 extern Main *MAIN;
 
-RECORDER_DECLARE(file_load);
-
 XL_END
+
+RECORDER_DECLARE(fileload);
+RECORDER_DECLARE(main);
+RECORDER_TWEAK_DECLARE(gc_statistics);
 
 #endif // MAIN_H
