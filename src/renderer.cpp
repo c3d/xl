@@ -50,6 +50,8 @@
 #include <sstream>
 #include <cctype>
 
+RECORDER(renderer, 16, "Rendering parse trees as source code");
+
 XL_BEGIN
 
 // ============================================================================
@@ -71,6 +73,7 @@ struct EnterFormatsAction
     Tree *Do (Tree *what)                       { return what; }
     Tree *Do(Infix *what)
     {
+        record(renderer, "Enter format %t", what);
         if (what->name == "=")
         {
             if (Name *nmt = what->left->AsName())
@@ -90,6 +93,11 @@ struct EnterFormatsAction
                 formats[txt->value] = what->right;
                 return what;
             }
+        }
+        else
+        {
+            what->left->Do(this);
+            what->right->Do(this);
         }
         return Do((Tree *) what);
     }
