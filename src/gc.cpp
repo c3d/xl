@@ -382,7 +382,7 @@ void TypeAllocator::ResetStatistics()
 //    Reset the statistics counters
 // ----------------------------------------------------------------------------
 {
-    freedCount -= freedCount;
+    freedCount = 0;
     allocatedCount = 0;
     scannedCount = 0;
     collectedCount = 0;
