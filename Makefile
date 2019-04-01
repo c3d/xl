@@ -43,3 +43,6 @@ MIQ=make-it-quick/
 include $(MIQ)rules.mk
 $(MIQ)rules.mk:
 	$(PRINT_BUILD) git submodule update --init --recursive
+
+# Do not run tests in the recorder
+RECURSE_FLAGS_recorder=RUN_TESTS=
