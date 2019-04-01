@@ -31,5 +31,8 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+//
 // CMD=%x -nobuiltins -parse %f -show
+// EXIT=1
+
 return 0;
