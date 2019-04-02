@@ -161,20 +161,20 @@ static kstring OptionString(Options &opt)
 //   Check if we find an integer between low and high on the command line
 // ----------------------------------------------------------------------------
 {
+    record(options, "String argument from %s", opt.argt);
     if (*opt.argt == 0)
     {
         if (opt.arg + 1 < opt.args.size())
         {
             opt.arg++;
             opt.argt = opt.args[opt.arg].c_str();
+            record(options, "Taking argt from next argument '%s'", opt.argt);
         }
         if (*opt.argt == 0)
             Ooops("Option #$1 does not exist", Tree::COMMAND_LINE)
                 .Arg(opt.arg);
     }
-    Ooops("Option #$1 does not exist", Tree::COMMAND_LINE)
-        .Arg(opt.arg);
-    return "";
+    return opt.argt;
 }
 
 
