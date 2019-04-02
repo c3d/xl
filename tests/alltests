@@ -39,6 +39,7 @@ TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
 XL=../xl
 LIBPATH=..
+SRC="../src"
 PASS="pass"
 ONE_FAILED=
 PATTERN='[A-Za-z0-9]*'
@@ -108,10 +109,10 @@ export TESTDIR XL SUCCESS FAILURE PASS UPDATE BASELINE
 # MinGW's unable to follow symlinks, so we have to copy dependencies
 LN="ln -sf"
 if (echo "$OS" | grep -iq "mingw"); then LN="cp"; fi
-$LN ../*.stylesheet .
-$LN ../xl.syntax .
-$LN ../builtins.xl .
-$LN ../opt-builtins.xl .
+$LN $SRC/*.stylesheet .
+$LN $SRC/xl.syntax .
+$LN $SRC/builtins.xl .
+$LN $SRC/opt-builtins.xl .
 export LD_LIBRARY_PATH=$LIBPATH
 export DYLD_LIBRARY_PATH=$LIBPATH
 
@@ -129,7 +130,7 @@ fi
 # Look for all possible tests in the test directory
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
-for SUBDIR in $(find "$TESTDIR" -type d -a -name '*'$SUBDIRS'*')
+for SUBDIR in $(find "$TESTDIR" -type d -a -name "$SUBDIRS")
 do
 for TEST in $(find "$SUBDIR" -name "$PATTERN".xl -print)
 do
