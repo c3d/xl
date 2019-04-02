@@ -137,14 +137,21 @@ static inline bool OptionMatches(Options &options,
 // Single character options may accept argument as same or next parameter
 {
     const unsigned size = sizeof(optdescr) - 1;
+    record(options, "Matching '%s' against '%s'", command_line, optdescr);
     bool matches = true;
     for (unsigned i = 0; matches && i < size && command_line[i]; i++)
         matches = command_line[i] == optdescr[i];
     if (matches)
     {
         options.argt = command_line + size;
+        record(options,
+               "Successfully matched '%s' against '%s', remainder='%s'",
+               command_line, optdescr, options.argt);
         return true;
     }
+    record(options,
+           "Did not match '%s' against '%s'",
+           command_line, optdescr);
     return false;
 }
 
@@ -283,16 +290,23 @@ text Options::ParseNext(bool consumeFiles)
                         .Arg(argval)                                    \
                         .Arg(option_name[selected]);                    \
                 selected = OPTION_##name;                               \
+                record(options,                                         \
+                       "Selected OPTION_" #name " = %d", selected);     \
             }                                                           \
             else
 #include "options.tbl"
+            {
+                record(options, "No option was selected for %s", argval);
+            }
 
+            record(options, "Selected option %d", selected);
             switch(selected)
             {
 #define OPTVAR(name, type, value)
 #define OPTION(name, descr, code)                                       \
                 case OPTION_##name:                                     \
                 {                                                       \
+                    record(options, "Executing code for " #name);       \
                     code;                                               \
                 }                                                       \
                 break;
