@@ -138,7 +138,7 @@ size_t recorder_render(intptr_t tracing,
         t = os.str();
         size_t len = t.length();
         if (max_len > 8 && len > max_len)
-            t.replace(max_len/2, len - max_len/2 + 1, "…");
+            t.replace(max_len/2, len - max_len + 1, "…");
         result = snprintf(buffer, size, "%p [%s]", (void *) value, t.c_str());
         for (unsigned i = 0; i < result; i++)
             if (buffer[i] == '\n')
