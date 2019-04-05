@@ -235,20 +235,20 @@
 //
 // ============================================================================
 
-RECORDER(llvm, 64, "LLVM general operations");
-RECORDER(llvm_prototypes, 64, "LLVM function prototypes");
-RECORDER(llvm_externals, 64, "LLVM external functions");
-RECORDER(llvm_functions, 64, "LLVM functions");
-RECORDER(llvm_constants, 64, "LLVM constant values");
-RECORDER(llvm_builtins, 64, "LLVM builtin functions");
-RECORDER(llvm_globals, 64, "LLVM global variables");
-RECORDER(llvm_blocks, 64, "LLVM basic blocks");
-RECORDER(llvm_labels, 64, "LLVM labels for trees");
-RECORDER(llvm_calls, 64, "LLVM calls");
-RECORDER(llvm_stats, 64, "LLVM statistics");
-RECORDER(llvm_code, 64, "LLVM code generation");
-RECORDER(llvm_gc, 64, "LLVM garbage collection");
-RECORDER(llvm_ir, 64, "LLVM intermediate representation");
+RECORDER(llvm,                  16, "LLVM general operations");
+RECORDER(llvm_prototypes,       16, "LLVM function prototypes");
+RECORDER(llvm_externals,        16, "LLVM external functions");
+RECORDER(llvm_functions,        16, "LLVM functions");
+RECORDER(llvm_constants,        16, "LLVM constant values");
+RECORDER(llvm_builtins,         16, "LLVM builtin functions");
+RECORDER(llvm_globals,          16, "LLVM global variables");
+RECORDER(llvm_blocks,           16, "LLVM basic blocks");
+RECORDER(llvm_labels,           16, "LLVM labels for trees");
+RECORDER(llvm_calls,            16, "LLVM calls");
+RECORDER(llvm_stats,            16, "LLVM statistics");
+RECORDER(llvm_code,             16, "LLVM code generation");
+RECORDER(llvm_gc,               16, "LLVM garbage collection");
+RECORDER(llvm_ir,               16, "LLVM intermediate representation");
 
 
 
