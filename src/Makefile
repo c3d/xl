@@ -162,10 +162,21 @@ MINGW_LIBS_mingw=-lws2_32
 CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
-XL_TESTS_exe=run-all-xl-tests
+# Which kind of test we run for each kind of build
+XL_TESTS_COMPILER_none=interactive
+XL_TESTS_COMPILER_llvm=interactive O3
+XL_TESTS_exe=$(XL_TESTS_COMPILER_$(COMPILER):%=.alltests.%)
 .tests: $(XL_TESTS_$(VARIANT))
-run-all-xl-tests: .product
-	cd ../tests; $(TEST_ENV) ./alltests
+
+# Which kind of arguments are passed to alltests
+ALLTESTS_ARG_normal=
+ALLTESTS_ARG_interactive=-i
+ALLTESTS_ARG_O1=-O1
+ALLTESTS_ARG_O2=-O2
+ALLTESTS_ARG_O3=-O3
+.alltests.%: .product
+	cd ../tests; $(TEST_ENV) ./alltests $(ALLTESTS_ARG_$*)
+
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:
 	@$(INFO) "[INFO]" Building with LLVM version $(LLVM_VERSION)
