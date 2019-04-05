@@ -162,7 +162,8 @@ MINGW_LIBS_mingw=-lws2_32
 CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
-.tests: run-all-xl-tests
+XL_TESTS_exe=run-all-xl-tests
+.tests: $(XL_TESTS_$(VARIANT))
 run-all-xl-tests: .product
 	cd ../tests; $(TEST_ENV) ./alltests
 .hello: .show_$(COMPILER)_version
