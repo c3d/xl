@@ -65,6 +65,28 @@
 
 // ============================================================================
 //
+//   Diagnostic interactively adjusting progressive emergency response (DIAPER)
+//
+// ============================================================================
+//
+//   This wonderful code is designed to contain the diagnostic-related damage
+//   introduced, with ever increasing creativity, by the various iterations
+//   of the LLVM headers, e.g. LLVM clang warnings against LLVM headers,
+//   abuse and misuse of common macro names, and so on.
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+// Some recent drops of LLVM have the EXTRAORINARY idea of defining DEBUG(x)
+#ifdef DEBUG
+#define LLVM_CRAP_DIAPER_DEBUG       DEBUG
+#undef DEBUG
+#endif // DEBUG
+
+
+
+// ============================================================================
+//
 //   LLVM data types
 //
 // ============================================================================
@@ -279,5 +301,19 @@ public:
 
 extern XL::Value_p xldebug(XL::Value_p);
 extern XL::Type_p  xldebug(XL::Type_p);
+
+
+
+// ============================================================================
+//
+//    DIAPER cleanup
+//
+// ============================================================================
+
+#pragma GCC diagnostic pop
+#undef DEBUG
+#ifdef LLVM_CRAP_DIAPER_DEBUG
+#define DEBUG LLVM_CRAP_DIAPER_DEBUG
+#endif
 
 #endif // LLVM_CRAP_H

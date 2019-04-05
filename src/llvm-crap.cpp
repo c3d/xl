@@ -41,6 +41,7 @@
 #include "renderer.h"
 #include "errors.h"
 
+#undef DEBUG // DIAPER
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
@@ -72,6 +73,11 @@
 
 #include "llvm/LinkAllIR.h"
 #include "llvm/LinkAllPasses.h"
+
+#ifdef LLVM_CRAP_DIAPER_DEBUG
+#undef DEBUG
+#define DEBUG LLVM_CRAP_DIAPER_DEBUG
+#endif // LLVM_CRAP_DIAPER_DEBUG
 
 #include <algorithm>
 #include <cassert>
