@@ -39,6 +39,18 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+#ifndef LLVM_VERSION
+#error "Sorry, no can do anything without knowing the LLVM version"
+#elif LLVM_VERSION < 27
+// At some point, I have only so much time to waste on this.
+// Feel free to enhance if you care about earlier versions of LLVM.
+#error "LLVM 2.6 and earlier are not supported in this code."
+#endif
+
+#define LLVM_CRAP_DIAPER_BEGIN
+#include "llvm-crap.h"
+
+
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -47,42 +59,8 @@
 #include <recorder/recorder.h>
 #include <string>
 
-
-#ifndef LLVM_VERSION
-#error "Sorry, no can do anything without knowing the LLVM version"
-#elif LLVM_VERSION < 700
-// I tried *really hard* to keep source code compatibility through releases
-// 2.7 through 7.0. It proved an overly arduous challenge, and, believe it
-// or not, not the primary objective of the work done on XL.
-// At some point, I have only so much time to waste on this.
-// Feel free to enhance if you care about earlier versions of LLVM.
-// If you are interested, you can recover older versions of llvm-crap.h
-// to figure out how to do it.
-#error "LLVM is source-incompatible between releases. I stopped trying."
-#endif
-
-
-
-// ============================================================================
-//
-//   Diagnostic interactively adjusting progressive emergency response (DIAPER)
-//
-// ============================================================================
-//
-//   This wonderful code is designed to contain the diagnostic-related damage
-//   introduced, with ever increasing creativity, by the various iterations
-//   of the LLVM headers, e.g. LLVM clang warnings against LLVM headers,
-//   abuse and misuse of common macro names, and so on.
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
-// Some recent drops of LLVM have the EXTRAORINARY idea of defining DEBUG(x)
-#ifdef DEBUG
-#define LLVM_CRAP_DIAPER_DEBUG       DEBUG
-#undef DEBUG
-#endif // DEBUG
-
+#define LLVM_CRAP_DIAPER_END
+#include "llvm-crap.h"
 
 
 // ============================================================================
@@ -302,18 +280,58 @@ public:
 extern XL::Value_p xldebug(XL::Value_p);
 extern XL::Type_p  xldebug(XL::Type_p);
 
-
-
-// ============================================================================
-//
-//    DIAPER cleanup
-//
-// ============================================================================
-
-#pragma GCC diagnostic pop
-#undef DEBUG
-#ifdef LLVM_CRAP_DIAPER_DEBUG
-#define DEBUG LLVM_CRAP_DIAPER_DEBUG
-#endif
-
 #endif // LLVM_CRAP_H
+
+
+
+// ============================================================================
+//
+//   Diagnostic interactively adjusting progressive emergency response (DIAPER)
+//
+// ============================================================================
+//
+//   This wonderful code is designed to contain the diagnostic-related damage
+//   introduced, with ever increasing creativity, by the various iterations
+//   of the LLVM headers, e.g. LLVM clang warnings against LLVM headers,
+//   abuse and misuse of common macro names, and so on.
+
+
+// ----------------------------------------------------------------------------
+#ifdef LLVM_CRAP_DIAPER_BEGIN
+// ----------------------------------------------------------------------------
+# pragma GCC diagnostic push
+
+// It's getting harder and harder to ignore a warning
+# pragma GCC diagnostic ignored "-Wpragmas"
+# pragma GCC diagnostic ignored "-Wunknown-pragmas"
+# pragma GCC diagnostic ignored "-Wunknown-warning-option"
+
+// Ignore badly indented 'if' in 3.52
+# pragma GCC diagnostic ignored "-Wmisleading-indentation"
+
+// All over the place
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+
+// Binding dereferenced null pointer in 3.7.1 LinkAllPasses.h
+# pragma GCC diagnostic ignored "-Wnull-dereference"
+
+// Some recent drops of LLVM have the EXTRAORINARY idea of defining DEBUG(x)
+# ifdef DEBUG
+#  define LLVM_CRAP_DIAPER_DEBUG       DEBUG
+#  undef DEBUG
+# endif // DEBUG
+
+# undef LLVM_CRAP_DIAPER_BEGIN
+#endif // LLVM_CRAP_DIAPER_BEGIN
+
+
+// ----------------------------------------------------------------------------
+#ifdef LLVM_CRAP_DIAPER_END
+// ----------------------------------------------------------------------------
+# pragma GCC diagnostic pop
+# undef DEBUG
+# ifdef LLVM_CRAP_DIAPER_DEBUG
+#  define DEBUG LLVM_CRAP_DIAPER_DEBUG
+# endif
+# undef LLVM_CRAP_DIAPER_END
+#endif // LLVM_CRAP_DIAPER_END

@@ -41,20 +41,161 @@
 #include "renderer.h"
 #include "errors.h"
 
-#undef DEBUG // DIAPER
+
+
+// ============================================================================
+//
+//                          HEADER FILE ADJUSTMENTS
+//
+// ============================================================================
+
+// Where any sane library would offer something like #include <llvm.h>,
+// LLVM insists on you loading every single header file they have.
+// And then changes their name regularly, just for fun. When they don't
+// simply remove them! It's not like anybody is using header names, right?
+// The wise man says: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARGH!
+//
+// SURGEON GENERAL WARNING: Do not read the code below, or else.
+
+#define LLVM_CRAP_DIAPER_BEGIN
+#include "llvm-crap.h"
+
+// Apparently, nobody complained loudly enough that LLVM would stop moving
+// headers around. This is the most recent damage.
+#if LLVM_VERSION < 370
+#undef LLVM_CRAP_MCJIT
+#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/PassManager.h>
+#else // >= 370
+#define LLVM_CRAP_MCJIT         1
+#include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
+#include <llvm/IR/LegacyPassManager.h>
+#if LLVM_VERSION > 381
+#include <llvm/Transforms/Scalar/GVN.h>
+#endif // > 371
+#endif // >= 370
+#include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/DynamicLibrary.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/IPO.h>
+#include <llvm/Transforms/Utils/BasicBlockUtils.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/Signals.h>
+
+
+// Ignore badly indented 'if' in 3.52
+// (and it's getting harder and harder to ignore a warning)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#include <llvm/Support/CommandLine.h>
+#pragma GCC diagnostic pop
+
+#include <llvm/ADT/Statistic.h>
+
+// Sometimes, headers magically disappear
+#if LLVM_VERSION < 27
+#include <llvm/ModuleProvider.h>
+#endif
+
+#if LLVM_VERSION < 30
+#include <llvm/Support/StandardPasses.h>
+#else
+#include <llvm/Transforms/IPO/PassManagerBuilder.h>
+#endif
+
+// Sometimes, key headers magically appear. This one appeared in 2.6.
+// Don't bother supporting anything earlier.
+#if LLVM_VERSION < 33
+#include <llvm/CallingConv.h>
+#include <llvm/Constants.h>
+#include <llvm/LLVMContext.h>
+#else
+#include <llvm/IR/CallingConv.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/LLVMContext.h>
+#endif
+
+
+// It's also funny to move headers around for really no good reason at all,
+// including core features that absolutely everybody has to use.
+#if LLVM_VERSION < 33
+#include <llvm/DerivedTypes.h>
+#include <llvm/Module.h>
+#include <llvm/GlobalValue.h>
+#include <llvm/Instructions.h>
+#else
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/GlobalValue.h>
+#include <llvm/IR/Instructions.h>
+#endif
+
+// While we are at it, why not also change the name of headers providing a
+// given feature, just for additional humorous obfuscation?
+#if LLVM_VERSION < 32
+#include <llvm/Support/IRBuilder.h>
+#elif LLVM_VERSION < 33
+#include <llvm/IRBuilder.h>
+#else
+#include <llvm/IR/IRBuilder.h>
+#endif
+
+// For example, knowing your target is completely unoptional.
+// Is it IR? Well, everything is IR, since LLVM is an IR.
+// IMHO, target data layout belongs more to 'target' than to 'IR',
+// but who am I to say?
+#if LLVM_VERSION < 32
+#include <llvm/Target/TargetData.h>
+#elif LLVM_VERSION < 33
+#include <llvm/DataLayout.h>
+#else
+#include <llvm/IR/DataLayout.h>
+#endif
+
+// Repeat at nauseam. If you can figure out why the verifier moved
+// from "analysis" to "IR", let me know.
+#if LLVM_VERSION < 350
+#include <llvm/Analysis/Verifier.h>
+#else
+#include <llvm/IR/Verifier.h>
+#endif
+
+// This is perfectly logical, trust me!
+#if LLVM_VERSION < 342
+#include <llvm/Target/TargetSelect.h>
+#else
+#include <llvm/Support/TargetSelect.h>
+#endif
+
+#ifdef LLVM_CRAP_MCJIT
+#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
+#include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
+#include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
+#include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
+#include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
+#if LLVM_VERSION >= 381
+#include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
+#endif // 381
+#if LLVM_VERSION >= 500
+#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#endif
+#endif
+
+#if 0
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
-#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
-#include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
-#include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
-#include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
-#include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
-#include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
-#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+
 #include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/IR/DataLayout.h"
@@ -70,14 +211,13 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#endif // 0
 
 #include "llvm/LinkAllIR.h"
 #include "llvm/LinkAllPasses.h"
 
-#ifdef LLVM_CRAP_DIAPER_DEBUG
-#undef DEBUG
-#define DEBUG LLVM_CRAP_DIAPER_DEBUG
-#endif // LLVM_CRAP_DIAPER_DEBUG
+#define LLVM_CRAP_DIAPER_END
+#include "llvm-crap.h"
 
 #include <algorithm>
 #include <cassert>
@@ -123,9 +263,10 @@ namespace XL
 
 // The Kaleidoscope JIT code does not bother with namespaces...
 using namespace llvm;
-using namespace llvm::orc;
 using namespace llvm::legacy;
-
+#ifdef LLVM_CRAP_MCJIT
+using namespace llvm::orc;
+#endif // LLVM_CRAP_MCJIT
 
 typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
