@@ -177,7 +177,7 @@ do
         EXCLUDED=$(($EXCLUDED+1))
         RC=$EXIT
     else
-        ( echo $CMD  | bash ) > $LOG 2>&1
+        bash -c "$CMD" > $LOG 2>&1
         RC=$?
 
         # Analyze the results
