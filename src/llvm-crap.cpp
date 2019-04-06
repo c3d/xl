@@ -157,6 +157,7 @@
 # include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
 # include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
 # include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
+# include "llvm/ExecutionEngine/Orc/SymbolStringPool.h"
 #endif // >= 370
 
 #if LLVM_VERSION >= 381
@@ -165,10 +166,7 @@
 #endif // 381
 
 #if LLVM_VERSION >= 500
-# define LLVM_CRAP_LAYERED_CAKE
 # include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
-#else // LLVM_VERSION < 500
-# undef LLVM_CRAP_LAYERED_CAKE
 #endif // LLVM_VERSION 500
 
 
@@ -210,6 +208,7 @@ RECORDER(llvm_externals,        16, "LLVM external functions");
 RECORDER(llvm_functions,        16, "LLVM functions");
 RECORDER(llvm_constants,        16, "LLVM constant values");
 RECORDER(llvm_builtins,         16, "LLVM builtin functions");
+RECORDER(llvm_modules,          16, "LLVM modules");
 RECORDER(llvm_globals,          16, "LLVM global variables");
 RECORDER(llvm_blocks,           16, "LLVM basic blocks");
 RECORDER(llvm_labels,           16, "LLVM labels for trees");
@@ -237,46 +236,22 @@ using namespace llvm::legacy;
 using namespace llvm::orc;
 #endif // LLVM_CRAP_MCJIT
 
-#ifdef LLVM_CRAP_LAYERED_CAKE
 typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
-#else
-struct LinkingLayer {};
-struct CompileLayer {};
-#endif // LLVM_CRAP_LAYERED_CAKE
-
-#if LLVM_VERSION < 400
-typedef RuntimeDyld::SymbolResolver                  SymbolResolver;
-#endif // LLVM_VERSION < 400
-
-#if LLVM_VERSION >= 400
-#define LLVM_CRAP_COMPILE_CALLBACKS 1
-#endif // LLVM_VERSION
-
-typedef std::shared_ptr<SymbolResolver>              SymbolResolver_s;
 typedef std::unique_ptr<TargetMachine>               TargetMachine_u;
 typedef std::shared_ptr<Module>                      Module_s;
 typedef std::shared_ptr<Function>                    Function_s;
 typedef std::function<Module_s(Module_s)>            Optimizer;
 typedef IRTransformLayer<CompileLayer, Optimizer>    OptimizeLayer;
-#ifdef LLVM_CRAP_COMPILE_CALLBACKS
 typedef std::unique_ptr<JITCompileCallbackManager>   CompileCallbacks_u;
-#else // !LLVM_CRAP_COMPILE_CALLBACKS
-struct CompileCallbacks_u {};
-#endif // LLVM_CRAP_COMPILE_CALLBACKS
-#if LLVM_VERSION >= 380
 typedef std::unique_ptr<IndirectStubsManager>        IndirectStubs_u;
-#else // <= 380
-struct IndirectStubs_u {};
-#endif // LLVM_VERSION >= 380
-
-#if LLVM_VERSION < 600
-struct SymbolStringPool {};
-#endif // LLVM_VERSION < 600
 
 #if LLVM_VERSION < 700
-struct ExecutionSession {};
-#endif // LLVM_VERSION < 800
+typedef CompileLayer::ModuleHandleT                  ModuleHandle;
+#else // LLVM_VERSION >= 700
+typedef std::shared_ptr<SymbolResolver>              SymbolResolver_s;
+typedef VModuleKey                                   ModuleHandle;
+#endif // LLVM_VERSION vs. 700
 
 
 
@@ -335,11 +310,14 @@ class JITPrivate
     JITInitializer      initializer;
     unsigned            optLevel;
     LLVMContext         context;
-    SymbolStringPool    strings;
-    ExecutionSession    session;
-    SymbolResolver_s    resolver;
     TargetMachine_u     target;
     const DataLayout    layout;
+#if LLVM_VERSION >= 700
+    SymbolStringPool    strings;
+    ExecutionSession    session;
+    typedef std::shared_ptr<SymbolResolver> SymbolResolver_s;
+    SymbolResolver_s    resolver;
+#endif // LLVM_VERSION >= 700
     LinkingLayer        linker;
     CompileLayer        compiler;
     OptimizeLayer       optimizer;
@@ -347,7 +325,7 @@ class JITPrivate
     IndirectStubs_u     stubs;
 
     Module_s            module;
-    VModuleKey          key;
+    ModuleHandle        moduleHandle;
 
 public:
     JITPrivate(int argc, char **argv);
@@ -382,11 +360,7 @@ static inline CompileCallbacks_u createCallbacks(TargetMachine &target)
 //   Built a callbacks manager
 // ----------------------------------------------------------------------------
 {
-#ifdef LLVM_CRAP_COMPILE_CALLBACKS
     return createLocalCompileCallbackManager(target.getTargetTriple(), 0);
-#else
-    return CompileCallbacks_u();
-#endif // LLVM_CRAP_COMPILE_CALLBACKS
 }
 
 static inline IndirectStubs_u createStubs(TargetMachine &target)
@@ -411,6 +385,11 @@ JITPrivate::JITPrivate(int argc, char **argv)
     : initializer(argc, argv),
       optLevel(3),
       context(),
+      target(EngineBuilder().selectTarget()),
+      layout(target->createDataLayout()),
+#if LLVM_VERSION < 700
+      linker([]() { return std::make_shared<SectionMemoryManager>(); }),
+#else // LLVM_VERSION >= 700
       strings(),
       session(strings),
       resolver(createLegacyLookupResolver(
@@ -430,8 +409,6 @@ JITPrivate::JITPrivate(int argc, char **argv)
                    {
                        cantFail(std::move(err), "lookupFlags failed");
                    })),
-      target(EngineBuilder().selectTarget()),
-      layout(target->createDataLayout()),
       linker(session,
              [this](VModuleKey key)
              {
@@ -441,6 +418,7 @@ JITPrivate::JITPrivate(int argc, char **argv)
                      resolver
                  };
              }),
+#endif // LLVM_VERSION >= 700
       compiler(linker, SimpleCompiler(*target)),
       optimizer(compiler,
                 [this](Module_s module) {
@@ -449,7 +427,7 @@ JITPrivate::JITPrivate(int argc, char **argv)
       callbacks(createCallbacks(*target)),
       stubs(createStubs(*target)),
       module(),
-      key()
+      moduleHandle()
 {
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
     record(llvm, "JITPrivate %p constructed", this);
@@ -461,8 +439,7 @@ JITPrivate::~JITPrivate()
 //    Destructor for JIT private helper
 // ----------------------------------------------------------------------------
 {
-    if (key)
-        DeleteModule(key);
+    DeleteModule((intptr_t) &moduleHandle);
     record(llvm, "JITPrivate %p destroyed", this);
 }
 
@@ -472,6 +449,7 @@ Module_p JITPrivate::Module()
 //   Return the current module if there is any
 // ----------------------------------------------------------------------------
 {
+    record(llvm_modules, "Module %p in %p", module.get(), this);
     return module.get();
 }
 
@@ -481,13 +459,15 @@ ModuleID JITPrivate::CreateModule(text name)
 //   Add a module to the JIT
 // ----------------------------------------------------------------------------
 {
-    assert (!module.get() && !key && "Creating module while module is active");
+    assert (!module.get() && "Creating module while module is active");
 
     module = std::make_shared<llvm::Module>(name, context);
+    record(llvm_modules, "Created module %p in %p", module.get(), this);
     module->setDataLayout(layout);
-    key = session.allocateVModule();
-
-    return key;
+#if LLVM_VERSION >= 700
+    moduleHandle = session.allocateVModule();
+#endif
+    return (intptr_t) &moduleHandle;
 }
 
 
@@ -496,16 +476,38 @@ void JITPrivate::DeleteModule(ModuleID modID)
 //   Remove the last module from the JIT
 // ----------------------------------------------------------------------------
 {
-    assert(modID == key && "Removing an unknown module");
-    if (key)
-    {
-        // If we have transferred the module, let the optimizer cleanup,
-        // else simply delete it here
-        if (!module.get())
-            cantFail(optimizer.removeModule(key), "Unable to remove module");
-        key = 0;
-    }
+    assert(modID == (intptr_t) &moduleHandle && "Removing an unknown module");
+#if LLVM_VERSION >= 700
+    assert(moduleHandle && "Removing a module with null VModKey");
+#endif
+
+    // If we have transferred the module, let the optimizer cleanup,
+    // else simply delete it here
+    if (!module.get())
+        cantFail(optimizer.removeModule(moduleHandle),
+                 "Unable to remove module");
+
+#if LLVM_VERSION >= 700
+    moduleHandle = 0;
+#endif // LLVM_VERSION >= 700
+
     module = nullptr;
+}
+
+
+static void dumpModule(Module_s module, kstring message)
+// ----------------------------------------------------------------------------
+//   Dump a module for debugging purpose
+// ----------------------------------------------------------------------------
+//   This happens to compile but not link on brew version of LLVM 6.0.1
+//   (not sure yet about earlier versions)
+{
+    llvm::errs() << message << ":\n";
+#if LLVM_VERSION == 601
+    llvm::errs() << "Disabled (not present in libraries)\n";
+#else
+    module->dump();
+#endif
 }
 
 
@@ -515,10 +517,7 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 // ----------------------------------------------------------------------------
 {
     if (RECORDER_TRACE(llvm_code) & 0x10)
-    {
-        llvm::errs() << "Dump of module before optimizations:\n";
-        module->dump();
-    }
+        dumpModule(module, "Dump of module before optimizations");
 
     // Create a function pass manager.
     legacy::FunctionPassManager fpm(module.get());
@@ -569,10 +568,7 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
         fpm.run(f);
 
     if (RECORDER_TRACE(llvm_code) & 0x20)
-    {
-        llvm::errs() << "Dump of module after optimizations:\n";
-        module->dump();
-    }
+        dumpModule(module, "Dump of module after optimizations");
 
     return module;
 }
@@ -604,18 +600,51 @@ JITTargetAddress JITPrivate::Address(text name)
 //   Return the address for the given symbol
 // ----------------------------------------------------------------------------
 {
+#if LLVM_VERSION >= 700
     if (module.get())
-        cantFail(optimizer.addModule(key, std::move(module)));
-    auto r = Symbol(name).getAddress();
-    if (!r)
+        cantFail(optimizer.addModule(moduleHandle, std::move(module)));
+#define hadError(r)     (!(r))
+#define errorMsg(r)     (toString((r).takeError()))
+#else // LLVM_VERSION < 700
+    static text hadErrorWith = "";
+    if (module.get())
     {
-        text message = toString(r.takeError());
+        auto resolver = createLambdaResolver(
+            [&](const std::string &name) {
+                if (auto sym = stubs->findStub(name, false))
+                    return sym;
+                if (auto sym = optimizer.findSymbol(name, false))
+                    return sym;
+                return JITSymbol(nullptr);
+            },
+            [](const std::string &name) {
+                if (auto addr = globalSymbolAddress(name))
+                    return JITSymbol(addr, JITSymbolFlags::Exported);
+                hadErrorWith = name;
+                return JITSymbol(make_error<JITSymbolNotFound>(name));
+            });
+        moduleHandle = cantFail(optimizer.addModule(std::move(module),
+                                                    std::move(resolver)));
+    }
+#define hadError(r)     (!(r) || hadErrorWith.length())
+#define errorMsg(r)     (hadErrorWith.length()                          \
+                         ? "Unresolved symbols: " + hadErrorWith        \
+                         : toString((r).takeError()));                  \
+                        hadErrorWith = ""
+
+#endif // LLVM_VERSION < 700
+    auto r = Symbol(name).getAddress();
+    if (hadError(r))
+    {
+        text message = errorMsg(r);
         Ooops("Generating machine code for $1 failed: $2")
             .Arg(name, "'")
             .Arg(message, "");
         return 0;
     }
     return *r;
+#undef hadError
+#undef errorMsg
 }
 
 
