@@ -63,17 +63,19 @@
 // Apparently, nobody complained loudly enough that LLVM would stop moving
 // headers around. This is the most recent damage.
 #if LLVM_VERSION < 370
-#undef LLVM_CRAP_MCJIT
-#include <llvm/ExecutionEngine/JIT.h>
-#include <llvm/PassManager.h>
+# undef LLVM_CRAP_MCJIT
+# include <llvm/ExecutionEngine/JIT.h>
+# include <llvm/PassManager.h>
 #else // >= 370
-#define LLVM_CRAP_MCJIT         1
-#include <llvm/ExecutionEngine/MCJIT.h>
-#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
-#include <llvm/IR/LegacyPassManager.h>
-#if LLVM_VERSION > 381
-#include <llvm/Transforms/Scalar/GVN.h>
-#endif // > 371
+# define LLVM_CRAP_MCJIT         1
+# include <llvm/ExecutionEngine/MCJIT.h>
+# include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
+# include "llvm/ExecutionEngine/SectionMemoryManager.h"
+# include <llvm/IR/LegacyPassManager.h>
+# include <llvm/IR/Mangler.h>
+# if LLVM_VERSION > 381
+# include <llvm/Transforms/Scalar/GVN.h>
+# endif // > 371
 #endif // >= 370
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -85,66 +87,55 @@
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Signals.h>
-
-
-// Ignore badly indented 'if' in 3.52
-// (and it's getting harder and harder to ignore a warning)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"
-#pragma GCC diagnostic ignored "-Wunknown-pragmas"
-#pragma GCC diagnostic ignored "-Wunknown-warning-option"
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include <llvm/Support/CommandLine.h>
-#pragma GCC diagnostic pop
-
 #include <llvm/ADT/Statistic.h>
 
 // Sometimes, headers magically disappear
 #if LLVM_VERSION < 27
-#include <llvm/ModuleProvider.h>
+# include <llvm/ModuleProvider.h>
 #endif
 
 #if LLVM_VERSION < 30
-#include <llvm/Support/StandardPasses.h>
+# include <llvm/Support/StandardPasses.h>
 #else
-#include <llvm/Transforms/IPO/PassManagerBuilder.h>
+# include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #endif
 
 // Sometimes, key headers magically appear. This one appeared in 2.6.
 // Don't bother supporting anything earlier.
 #if LLVM_VERSION < 33
-#include <llvm/CallingConv.h>
-#include <llvm/Constants.h>
-#include <llvm/LLVMContext.h>
+# include <llvm/CallingConv.h>
+# include <llvm/Constants.h>
+# include <llvm/LLVMContext.h>
 #else
-#include <llvm/IR/CallingConv.h>
-#include <llvm/IR/Constants.h>
-#include <llvm/IR/LLVMContext.h>
+# include <llvm/IR/CallingConv.h>
+# include <llvm/IR/Constants.h>
+# include <llvm/IR/LLVMContext.h>
 #endif
 
 
 // It's also funny to move headers around for really no good reason at all,
 // including core features that absolutely everybody has to use.
 #if LLVM_VERSION < 33
-#include <llvm/DerivedTypes.h>
-#include <llvm/Module.h>
-#include <llvm/GlobalValue.h>
-#include <llvm/Instructions.h>
+# include <llvm/DerivedTypes.h>
+# include <llvm/Module.h>
+# include <llvm/GlobalValue.h>
+# include <llvm/Instructions.h>
 #else
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/GlobalValue.h>
-#include <llvm/IR/Instructions.h>
+# include <llvm/IR/DerivedTypes.h>
+# include <llvm/IR/Module.h>
+# include <llvm/IR/GlobalValue.h>
+# include <llvm/IR/Instructions.h>
 #endif
 
 // While we are at it, why not also change the name of headers providing a
 // given feature, just for additional humorous obfuscation?
 #if LLVM_VERSION < 32
-#include <llvm/Support/IRBuilder.h>
+# include <llvm/Support/IRBuilder.h>
 #elif LLVM_VERSION < 33
-#include <llvm/IRBuilder.h>
+# include <llvm/IRBuilder.h>
 #else
-#include <llvm/IR/IRBuilder.h>
+# include <llvm/IR/IRBuilder.h>
 #endif
 
 // For example, knowing your target is completely unoptional.
@@ -152,11 +143,11 @@
 // IMHO, target data layout belongs more to 'target' than to 'IR',
 // but who am I to say?
 #if LLVM_VERSION < 32
-#include <llvm/Target/TargetData.h>
+# include <llvm/Target/TargetData.h>
 #elif LLVM_VERSION < 33
-#include <llvm/DataLayout.h>
+# include <llvm/DataLayout.h>
 #else
-#include <llvm/IR/DataLayout.h>
+# include <llvm/IR/DataLayout.h>
 #endif
 
 // Repeat at nauseam. If you can figure out why the verifier moved
@@ -169,23 +160,26 @@
 
 // This is perfectly logical, trust me!
 #if LLVM_VERSION < 342
-#include <llvm/Target/TargetSelect.h>
+# include <llvm/Target/TargetSelect.h>
 #else
-#include <llvm/Support/TargetSelect.h>
+# include <llvm/Support/TargetSelect.h>
 #endif
 
 #ifdef LLVM_CRAP_MCJIT
-#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
-#include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
-#include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
-#include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
-#include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
-#if LLVM_VERSION >= 381
-#include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
-#endif // 381
-#if LLVM_VERSION >= 500
-#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
-#endif
+# include "llvm/ExecutionEngine/Orc/CompileUtils.h"
+# include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
+# include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
+# include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
+# include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
+# if LLVM_VERSION >= 381
+#  include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
+# endif // 381
+# if LLVM_VERSION >= 500
+#  define LLVM_CRAP_LAYERED_CAKE
+#  include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+# else // LLVM_VERSION < 500
+#  undef LLVM_CRAP_LAYERED_CAKE
+# endif // LLVM_VERSION 500
 #endif
 
 #if 0
@@ -197,10 +191,8 @@
 #include "llvm/ExecutionEngine/JITSymbol.h"
 
 #include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
-#include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/Mangler.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/DynamicLibrary.h"
@@ -257,28 +249,65 @@ namespace XL
 
 // ============================================================================
 //
-//    Implementation of an ORC-based LLVM JIT
+//     Adjust types, namespaces, etc
 //
 // ============================================================================
 
 // The Kaleidoscope JIT code does not bother with namespaces...
 using namespace llvm;
-using namespace llvm::legacy;
 #ifdef LLVM_CRAP_MCJIT
+using namespace llvm::legacy;
 using namespace llvm::orc;
 #endif // LLVM_CRAP_MCJIT
 
+#ifdef LLVM_CRAP_LAYERED_CAKE
 typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
+#else
+struct LinkingLayer {};
+struct CompileLayer {};
+#endif // LLVM_CRAP_LAYERED_CAKE
+
+#if LLVM_VERSION < 400
+typedef RuntimeDyld::SymbolResolver                  SymbolResolver;
+#endif // LLVM_VERSION < 400
+
+#if LLVM_VERSION >= 400
+#define LLVM_CRAP_COMPILE_CALLBACKS 1
+#endif // LLVM_VERSION
+
 typedef std::shared_ptr<SymbolResolver>              SymbolResolver_s;
 typedef std::unique_ptr<TargetMachine>               TargetMachine_u;
 typedef std::shared_ptr<Module>                      Module_s;
 typedef std::shared_ptr<Function>                    Function_s;
 typedef std::function<Module_s(Module_s)>            Optimizer;
 typedef IRTransformLayer<CompileLayer, Optimizer>    OptimizeLayer;
+#ifdef LLVM_CRAP_COMPILE_CALLBACKS
 typedef std::unique_ptr<JITCompileCallbackManager>   CompileCallbacks_u;
+#else // !LLVM_CRAP_COMPILE_CALLBACKS
+struct CompileCallbacks_u {};
+#endif // LLVM_CRAP_COMPILE_CALLBACKS
+#if LLVM_VERSION >= 380
 typedef std::unique_ptr<IndirectStubsManager>        IndirectStubs_u;
+#else // <= 380
+struct IndirectStubs_u {};
+#endif // LLVM_VERSION >= 380
 
+#if LLVM_VERSION < 600
+struct SymbolStringPool {};
+#endif // LLVM_VERSION < 600
+
+#if LLVM_VERSION < 700
+struct ExecutionSession {};
+#endif // LLVM_VERSION < 800
+
+
+
+// ============================================================================
+//
+//    Implementation of an LLVM JIT, ORC-based if ORC is there
+//
+// ============================================================================
 
 struct JITInitializer
 // ----------------------------------------------------------------------------
@@ -376,7 +405,11 @@ static inline CompileCallbacks_u createCallbacks(TargetMachine &target)
 //   Built a callbacks manager
 // ----------------------------------------------------------------------------
 {
+#ifdef LLVM_CRAP_COMPILE_CALLBACKS
     return createLocalCompileCallbackManager(target.getTargetTriple(), 0);
+#else
+    return CompileCallbacks_u();
+#endif // LLVM_CRAP_COMPILE_CALLBACKS
 }
 
 static inline IndirectStubs_u createStubs(TargetMachine &target)
