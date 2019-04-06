@@ -164,7 +164,9 @@
 # include <llvm/Transforms/Scalar/GVN.h>
 #endif // 381
 
-#if LLVM_VERSION >= 500
+#if LLVM_VERSION < 500
+#include "llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h"
+#else // LLVM_VERSION >= 500
 # include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
 #endif // LLVM_VERSION 500
 
@@ -238,17 +240,25 @@ using namespace llvm::legacy;
 using namespace llvm::orc;
 #endif // LLVM_CRAP_MCJIT
 
+#if LLVM_VERSION < 500
+typedef std::unique_ptr<Module>                      Module_s;
+typedef ObjectLinkingLayer<>                         LinkingLayer;
+typedef IRCompileLayer<LinkingLayer>                 CompileLayer;
+#else // LLVM_VERSION >= 500
+typedef std::shared_ptr<Module>                      Module_s;
 typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
+#endif // LLVM_VERSION >= 500
 typedef std::unique_ptr<TargetMachine>               TargetMachine_u;
-typedef std::shared_ptr<Module>                      Module_s;
 typedef std::shared_ptr<Function>                    Function_s;
 typedef std::function<Module_s(Module_s)>            Optimizer;
 typedef IRTransformLayer<CompileLayer, Optimizer>    OptimizeLayer;
 typedef std::unique_ptr<JITCompileCallbackManager>   CompileCallbacks_u;
 typedef std::unique_ptr<IndirectStubsManager>        IndirectStubs_u;
 
-#if LLVM_VERSION < 700
+#if LLVM_VERSION < 500
+typedef CompileLayer::ModuleSetHandleT               ModuleHandle;
+#elif LLVM_VERSION < 700
 typedef CompileLayer::ModuleHandleT                  ModuleHandle;
 #else // LLVM_VERSION >= 700
 typedef std::shared_ptr<SymbolResolver>              SymbolResolver_s;
@@ -389,7 +399,9 @@ JITPrivate::JITPrivate(int argc, char **argv)
       context(),
       target(EngineBuilder().selectTarget()),
       layout(target->createDataLayout()),
-#if LLVM_VERSION < 700
+#if LLVM_VERSION < 500
+      linker(),
+#elif LLVM_VERSION < 700
       linker([]() { return std::make_shared<SectionMemoryManager>(); }),
 #else // LLVM_VERSION >= 700
       strings(),
@@ -463,7 +475,11 @@ ModuleID JITPrivate::CreateModule(text name)
 {
     assert (!module.get() && "Creating module while module is active");
 
+#if LLVM_VERSION < 500
+    module = llvm::make_unique<llvm::Module>(name, context);
+#else // LLVM_VERSION >= 500
     module = std::make_shared<llvm::Module>(name, context);
+#endif // LLVM_VERSION 500
     record(llvm_modules, "Created module %p in %p", module.get(), this);
     module->setDataLayout(layout);
 #if LLVM_VERSION >= 700
@@ -486,11 +502,16 @@ void JITPrivate::DeleteModule(ModuleID modID)
     // If we have transferred the module, let the optimizer cleanup,
     // else simply delete it here
     if (!module.get())
-        cantFail(optimizer.removeModule(moduleHandle)
-#if LLVM_VERSION >= 600
-                 , "Unable to remove module"
-#endif
-            );
+    {
+#if LLVM_VERSION < 500
+        optimizer.removeModuleSet(moduleHandle);
+#elif LLVM_VERSION < 600
+        cantFail(optimizer.removeModule(moduleHandle));
+#else
+        cantFail(optimizer.removeModule(moduleHandle),
+                 "Unable to remove module");
+#endif // LLVM_VERSION
+    }
 
 #if LLVM_VERSION >= 700
     moduleHandle = 0;
@@ -500,7 +521,7 @@ void JITPrivate::DeleteModule(ModuleID modID)
 }
 
 
-static void dumpModule(Module_s module, kstring message)
+static void dumpModule(Module_p module, kstring message)
 // ----------------------------------------------------------------------------
 //   Dump a module for debugging purpose
 // ----------------------------------------------------------------------------
@@ -522,7 +543,7 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 // ----------------------------------------------------------------------------
 {
     if (RECORDER_TRACE(llvm_code) & 0x10)
-        dumpModule(module, "Dump of module before optimizations");
+        dumpModule(module.get(), "Dump of module before optimizations");
 
     // Create a function pass manager.
     legacy::FunctionPassManager fpm(module.get());
@@ -573,7 +594,7 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
         fpm.run(f);
 
     if (RECORDER_TRACE(llvm_code) & 0x20)
-        dumpModule(module, "Dump of module after optimizations");
+        dumpModule(module.get(), "Dump of module after optimizations");
 
     return module;
 }
@@ -605,12 +626,7 @@ JITTargetAddress JITPrivate::Address(text name)
 //   Return the address for the given symbol
 // ----------------------------------------------------------------------------
 {
-#if LLVM_VERSION >= 700
-    if (module.get())
-        cantFail(optimizer.addModule(moduleHandle, std::move(module)));
-#define hadError(r)     (!(r))
-#define errorMsg(r)     (toString((r).takeError()))
-#else // LLVM_VERSION < 700
+#if LLVM_VERSION < 700
     static text hadErrorWith = "";
     if (module.get())
     {
@@ -626,17 +642,40 @@ JITTargetAddress JITPrivate::Address(text name)
                 if (auto addr = globalSymbolAddress(name))
                     return JITSymbol(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
+#if LLVM_VERSION < 500
+                return JITSymbol(UINT64_MAX, JITSymbolFlags::None);
+#else // LLVM_VERSION >= 500
                 return JITSymbol(make_error<JITSymbolNotFound>(name));
+#endif // LLVM_VERSION 500
             });
+#if LLVM_VERSION < 500
+        std::vector< std::unique_ptr<llvm::Module> > modules;
+        modules.push_back(std::move(module));
+        moduleHandle = optimizer
+                   .addModuleSet(std::move(modules),
+                                 make_unique<SectionMemoryManager>(),
+                                 std::move(resolver));
+#else // LLVM_VERSION >= 500
         moduleHandle = cantFail(optimizer.addModule(std::move(module),
                                                     std::move(resolver)));
+#endif
     }
 #define hadError(r)     (!(r) || hadErrorWith.length())
+#if LLVM_VERSION < 500
+#define errorMsg(r)     ("Unresolved symbols: " + hadErrorWith);        \
+                        hadErrorWith = ""
+#else // LLVM_VERSION >= 500
 #define errorMsg(r)     (hadErrorWith.length()                          \
                          ? "Unresolved symbols: " + hadErrorWith        \
                          : toString((r).takeError()));                  \
                         hadErrorWith = ""
+#endif // LLVM_VERSION 500
 
+#else // LLVM_VERSION >= 700
+    if (module.get())
+        cantFail(optimizer.addModule(moduleHandle, std::move(module)));
+#define hadError(r)     (!(r))
+#define errorMsg(r)     (toString((r).takeError()))
 #endif // LLVM_VERSION < 700
     auto r = Symbol(name).getAddress();
     if (hadError(r))
@@ -647,7 +686,11 @@ JITTargetAddress JITPrivate::Address(text name)
             .Arg(message, "");
         return 0;
     }
+#if LLVM_VERSION < 500
+    return r;
+#else // LLVM_VERSION >= 500
     return *r;
+#endif // LLVM_VERSION 500
 #undef hadError
 #undef errorMsg
 }
@@ -1340,7 +1383,11 @@ Value_p JITBlock::Alloca(Type_p type, kstring name)
 //  Do a local allocation
 // ----------------------------------------------------------------------------
 {
+#if LLVM_VERSION < 500
+    auto inst = b->CreateAlloca(type, 0, name);
+#else // LLVM_VERSION >= 500
     auto inst = b->CreateAlloca(type, 0, nullptr, name);
+#endif // LLVM_VERSION 500
     record(llvm_ir, "Alloca %s(%T) is %v", name, type, inst);
     return inst;
 }
