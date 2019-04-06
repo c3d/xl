@@ -60,23 +60,7 @@
 #define LLVM_CRAP_DIAPER_OPEN
 #include "llvm-crap.h"
 
-// Apparently, nobody complained loudly enough that LLVM would stop moving
-// headers around. This is the most recent damage.
-#if LLVM_VERSION < 370
-# undef LLVM_CRAP_MCJIT
-# include <llvm/ExecutionEngine/JIT.h>
-# include <llvm/PassManager.h>
-#else // >= 370
-# define LLVM_CRAP_MCJIT         1
-# include <llvm/ExecutionEngine/MCJIT.h>
-# include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
-# include "llvm/ExecutionEngine/SectionMemoryManager.h"
-# include <llvm/IR/LegacyPassManager.h>
-# include <llvm/IR/Mangler.h>
-# if LLVM_VERSION > 381
-# include <llvm/Transforms/Scalar/GVN.h>
-# endif // > 371
-#endif // >= 370
+// Below are the headers that I did not really sort yet
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/Support/raw_ostream.h>
@@ -90,126 +74,119 @@
 #include <llvm/Support/CommandLine.h>
 #include <llvm/ADT/Statistic.h>
 
+
 // Sometimes, headers magically disappear
 #if LLVM_VERSION < 27
 # include <llvm/ModuleProvider.h>
 #endif
 
+// Sometimes, headers are renamed. With a really different name.
+// Not that it contains exactly the same thing, but it's the replacement.
 #if LLVM_VERSION < 30
 # include <llvm/Support/StandardPasses.h>
 #else
 # include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #endif
 
-// Sometimes, key headers magically appear. This one appeared in 2.6.
-// Don't bother supporting anything earlier.
-#if LLVM_VERSION < 33
-# include <llvm/CallingConv.h>
-# include <llvm/Constants.h>
-# include <llvm/LLVMContext.h>
+// It sometimes takes more than one version to decide where to put things
+// For example, knowing your target is completely unoptional.
+// Is it IR? Well, everything is IR, since LLVM is an IR.
+// IMHO, target data layout belongs more to 'target' than to 'IR',
+// but who am I to say? Someone else thought it was funny to change twice.
+#if LLVM_VERSION < 32
+# include <llvm/Support/IRBuilder.h>
+# include <llvm/Target/TargetData.h>
+#elif LLVM_VERSION < 33
+# include <llvm/IRBuilder.h>
+# include <llvm/DataLayout.h>
 #else
-# include <llvm/IR/CallingConv.h>
-# include <llvm/IR/Constants.h>
-# include <llvm/IR/LLVMContext.h>
+# include <llvm/IR/IRBuilder.h>
+# include <llvm/IR/DataLayout.h>
 #endif
-
 
 // It's also funny to move headers around for really no good reason at all,
 // including core features that absolutely everybody has to use.
 #if LLVM_VERSION < 33
+# include <llvm/CallingConv.h>
+# include <llvm/Constants.h>
 # include <llvm/DerivedTypes.h>
-# include <llvm/Module.h>
 # include <llvm/GlobalValue.h>
 # include <llvm/Instructions.h>
+# include <llvm/LLVMContext.h>
+# include <llvm/Module.h>
 #else
+# include <llvm/IR/CallingConv.h>
+# include <llvm/IR/Constants.h>
 # include <llvm/IR/DerivedTypes.h>
-# include <llvm/IR/Module.h>
 # include <llvm/IR/GlobalValue.h>
 # include <llvm/IR/Instructions.h>
+# include <llvm/IR/LLVMContext.h>
+# include <llvm/IR/Module.h>
 #endif
 
-// While we are at it, why not also change the name of headers providing a
-// given feature, just for additional humorous obfuscation?
-#if LLVM_VERSION < 32
-# include <llvm/Support/IRBuilder.h>
-#elif LLVM_VERSION < 33
-# include <llvm/IRBuilder.h>
-#else
-# include <llvm/IR/IRBuilder.h>
-#endif
-
-// For example, knowing your target is completely unoptional.
-// Is it IR? Well, everything is IR, since LLVM is an IR.
-// IMHO, target data layout belongs more to 'target' than to 'IR',
-// but who am I to say?
-#if LLVM_VERSION < 32
-# include <llvm/Target/TargetData.h>
-#elif LLVM_VERSION < 33
-# include <llvm/DataLayout.h>
-#else
-# include <llvm/IR/DataLayout.h>
-#endif
-
-// Repeat at nauseam. If you can figure out why the verifier moved
-// from "analysis" to "IR", let me know.
-#if LLVM_VERSION < 350
-#include <llvm/Analysis/Verifier.h>
-#else
-#include <llvm/IR/Verifier.h>
-#endif
-
-// This is perfectly logical, trust me!
+// Let's avoid doing all the renaming at once.
+// TargetSelect no longer in Target? This is perfectly logical, trust me!
 #if LLVM_VERSION < 342
 # include <llvm/Target/TargetSelect.h>
 #else
 # include <llvm/Support/TargetSelect.h>
 #endif
 
-#ifdef LLVM_CRAP_MCJIT
+// Repeat at nauseam. Can you figure out why "Verifier" is not "Analysis" ?
+#if LLVM_VERSION < 350
+#include <llvm/Analysis/Verifier.h>
+#else
+#include <llvm/IR/Verifier.h>
+#endif
+
+// Apparently, nobody complained loudly enough that LLVM would stop moving
+// headers around. So around 370, they thought they needed to step things up.
+// Time to not just move headers, but really change how things work inside.
+#if LLVM_VERSION < 370
+# include <llvm/ExecutionEngine/JIT.h>
+# include <llvm/PassManager.h>
+#else // >= 370
+# define LLVM_CRAP_MCJIT 1
+# include <llvm/ExecutionEngine/MCJIT.h>
+# include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
+# include "llvm/ExecutionEngine/SectionMemoryManager.h"
+# include <llvm/IR/LegacyPassManager.h>
+# include <llvm/IR/Mangler.h>
 # include "llvm/ExecutionEngine/Orc/CompileUtils.h"
 # include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
 # include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
 # include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
 # include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
-# if LLVM_VERSION >= 381
-#  include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
-# endif // 381
-# if LLVM_VERSION >= 500
-#  define LLVM_CRAP_LAYERED_CAKE
-#  include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
-# else // LLVM_VERSION < 500
-#  undef LLVM_CRAP_LAYERED_CAKE
-# endif // LLVM_VERSION 500
-#endif
+#endif // >= 370
 
-#if 0
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/Statistic.h"
-#include "llvm/ADT/Triple.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JITSymbol.h"
+#if LLVM_VERSION >= 381
+# include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
+# include <llvm/Transforms/Scalar/GVN.h>
+#endif // 381
 
-#include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
-#include "llvm/IR/DataLayout.h"
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/Support/DynamicLibrary.h"
-#include "llvm/Support/Error.h"
-#include "llvm/Support/Signals.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/Transforms/Scalar.h"
-#include "llvm/Transforms/Scalar/GVN.h"
-#endif // 0
+#if LLVM_VERSION >= 500
+# define LLVM_CRAP_LAYERED_CAKE
+# include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#else // LLVM_VERSION < 500
+# undef LLVM_CRAP_LAYERED_CAKE
+#endif // LLVM_VERSION 500
 
+
+// Finally, link everything together.
+// That, apart for the warnings, has remained somewhat stable
 #include "llvm/LinkAllIR.h"
 #include "llvm/LinkAllPasses.h"
 
 #define LLVM_CRAP_DIAPER_CLOSE
 #include "llvm-crap.h"
+
+
+
+// ============================================================================
+//
+//    Sane headers from real professionals
+//
+// ============================================================================
 
 #include <algorithm>
 #include <cassert>

@@ -50,7 +50,8 @@
 #define LLVM_CRAP_DIAPER_OPEN
 #include "llvm-crap.h"
 
-
+// Fortunately, these LLVM headers are sufficient for our interface,
+// and remained somewhat consistent across versions. Lucky us!
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/DerivedTypes.h>
