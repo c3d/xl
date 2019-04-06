@@ -157,7 +157,6 @@
 # include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
 # include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
 # include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
-# include "llvm/ExecutionEngine/Orc/SymbolStringPool.h"
 #endif // >= 370
 
 #if LLVM_VERSION >= 381
@@ -169,6 +168,9 @@
 # include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
 #endif // LLVM_VERSION 500
 
+#if LLVM_VERSION >= 600
+# include "llvm/ExecutionEngine/Orc/SymbolStringPool.h"
+#endif // LLVM_VERSION 600
 
 // Finally, link everything together.
 // That, apart for the warnings, has remained somewhat stable
@@ -484,8 +486,11 @@ void JITPrivate::DeleteModule(ModuleID modID)
     // If we have transferred the module, let the optimizer cleanup,
     // else simply delete it here
     if (!module.get())
-        cantFail(optimizer.removeModule(moduleHandle),
-                 "Unable to remove module");
+        cantFail(optimizer.removeModule(moduleHandle)
+#if LLVM_VERSION >= 600
+                 , "Unable to remove module"
+#endif
+            );
 
 #if LLVM_VERSION >= 700
     moduleHandle = 0;
@@ -503,7 +508,7 @@ static void dumpModule(Module_s module, kstring message)
 //   (not sure yet about earlier versions)
 {
     llvm::errs() << message << ":\n";
-#if LLVM_VERSION == 601
+#if LLVM_VERSION >= 500 && LLVM_VERSION < 700
     llvm::errs() << "Disabled (not present in libraries)\n";
 #else
     module->dump();
