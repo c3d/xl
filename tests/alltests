@@ -68,7 +68,8 @@ do
         -r|-runtime)            RUNTIME="$2"            ; shift;;
         -i|-interactive)        RUNTIME="O0"            ;;
         -I|-installed)          XL="xl"; INSTALLED=1    ;;
-        -O0|-O1|-O2|-O3)        RUNTIME="${1/-/}"       ;;
+        -O0|-O1|-O2|-O3)        RUNTIME="${1/-/}"       ;
+                                SUBDIRS="$RUNTIME"      ;;
         -d|-dir)                SUBDIRS="$2"            ; shift;;
         -b|-baseline)           BASELINE="*"            ;;
         -u|-update)             UPDATE='*'"$2"'*'       ; shift;;

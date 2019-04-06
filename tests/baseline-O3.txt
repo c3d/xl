@@ -1,1 +1,2 @@
-02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
+O3/optimized-library-writeln-list.xl
+O3/optimized-factorial.xl

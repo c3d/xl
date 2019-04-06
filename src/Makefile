@@ -169,7 +169,6 @@ XL_TESTS_exe=$(XL_TESTS_COMPILER_$(COMPILER):%=.alltests.%)
 .tests: $(XL_TESTS_$(VARIANT))
 
 # Which kind of arguments are passed to alltests
-ALLTESTS_ARG_normal=
 ALLTESTS_ARG_interactive=-i
 ALLTESTS_ARG_O1=-O1
 ALLTESTS_ARG_O2=-O2
