@@ -240,6 +240,9 @@ using namespace llvm::legacy;
 using namespace llvm::orc;
 #endif // LLVM_CRAP_MCJIT
 
+#if LLVM_VERSION < 400
+typedef TargetAddress                                JITTargetAddress;
+#endif // LLVM_VERSION
 #if LLVM_VERSION < 500
 typedef std::unique_ptr<Module>                      Module_s;
 typedef ObjectLinkingLayer<>                         LinkingLayer;
@@ -627,23 +630,32 @@ JITTargetAddress JITPrivate::Address(text name)
 // ----------------------------------------------------------------------------
 {
 #if LLVM_VERSION < 700
+#if LLVM_VERSION < 400
+# define rtsym(sym)     ((sym).toRuntimeDyldSymbol())
+# define syminfo        RuntimeDyld::SymbolInfo
+#else // LLVM_VERSION >= 400
+# define rtsym(sym)     (sym)
+# define syminfo        JITSymbol
+#endif // LLVM_VERSION 400
+#define nullsym         syminfo(nullptr)
+
     static text hadErrorWith = "";
     if (module.get())
     {
         auto resolver = createLambdaResolver(
             [&](const std::string &name) {
                 if (auto sym = stubs->findStub(name, false))
-                    return sym;
+                    return rtsym(sym);
                 if (auto sym = optimizer.findSymbol(name, false))
-                    return sym;
-                return JITSymbol(nullptr);
+                    return rtsym(sym);
+                return nullsym;
             },
             [](const std::string &name) {
                 if (auto addr = globalSymbolAddress(name))
-                    return JITSymbol(addr, JITSymbolFlags::Exported);
+                    return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
 #if LLVM_VERSION < 500
-                return JITSymbol(UINT64_MAX, JITSymbolFlags::None);
+                return syminfo(UINT64_MAX, JITSymbolFlags::None);
 #else // LLVM_VERSION >= 500
                 return JITSymbol(make_error<JITSymbolNotFound>(name));
 #endif // LLVM_VERSION 500
@@ -693,6 +705,9 @@ JITTargetAddress JITPrivate::Address(text name)
 #endif // LLVM_VERSION 500
 #undef hadError
 #undef errorMsg
+#undef nullsym
+#undef rtsym
+#undef syminfo
 }
 
 
