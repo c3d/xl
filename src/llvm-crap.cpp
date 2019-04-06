@@ -57,7 +57,7 @@
 //
 // SURGEON GENERAL WARNING: Do not read the code below, or else.
 
-#define LLVM_CRAP_DIAPER_BEGIN
+#define LLVM_CRAP_DIAPER_OPEN
 #include "llvm-crap.h"
 
 // Apparently, nobody complained loudly enough that LLVM would stop moving
@@ -208,7 +208,7 @@
 #include "llvm/LinkAllIR.h"
 #include "llvm/LinkAllPasses.h"
 
-#define LLVM_CRAP_DIAPER_END
+#define LLVM_CRAP_DIAPER_CLOSE
 #include "llvm-crap.h"
 
 #include <algorithm>

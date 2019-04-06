@@ -47,7 +47,7 @@
 #error "LLVM 2.6 and earlier are not supported in this code."
 #endif
 
-#define LLVM_CRAP_DIAPER_BEGIN
+#define LLVM_CRAP_DIAPER_OPEN
 #include "llvm-crap.h"
 
 
@@ -59,7 +59,7 @@
 #include <recorder/recorder.h>
 #include <string>
 
-#define LLVM_CRAP_DIAPER_END
+#define LLVM_CRAP_DIAPER_CLOSE
 #include "llvm-crap.h"
 
 
@@ -297,7 +297,7 @@ extern XL::Type_p  xldebug(XL::Type_p);
 
 
 // ----------------------------------------------------------------------------
-#ifdef LLVM_CRAP_DIAPER_BEGIN
+#ifdef LLVM_CRAP_DIAPER_OPEN
 // ----------------------------------------------------------------------------
 # pragma GCC diagnostic push
 
@@ -321,17 +321,17 @@ extern XL::Type_p  xldebug(XL::Type_p);
 #  undef DEBUG
 # endif // DEBUG
 
-# undef LLVM_CRAP_DIAPER_BEGIN
-#endif // LLVM_CRAP_DIAPER_BEGIN
+# undef LLVM_CRAP_DIAPER_OPEN
+#endif // LLVM_CRAP_DIAPER_OPEN
 
 
 // ----------------------------------------------------------------------------
-#ifdef LLVM_CRAP_DIAPER_END
+#ifdef LLVM_CRAP_DIAPER_CLOSE
 // ----------------------------------------------------------------------------
 # pragma GCC diagnostic pop
 # undef DEBUG
 # ifdef LLVM_CRAP_DIAPER_DEBUG
 #  define DEBUG LLVM_CRAP_DIAPER_DEBUG
 # endif
-# undef LLVM_CRAP_DIAPER_END
-#endif // LLVM_CRAP_DIAPER_END
+# undef LLVM_CRAP_DIAPER_CLOSE
+#endif // LLVM_CRAP_DIAPER_CLOSE
