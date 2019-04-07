@@ -157,6 +157,7 @@
 # include "llvm/ExecutionEngine/Orc/IRTransformLayer.h"
 # include "llvm/ExecutionEngine/Orc/IndirectionUtils.h"
 # include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
+# include "llvm/ExecutionEngine/Orc/LazyEmittingLayer.h"
 #endif // >= 370
 
 #if LLVM_VERSION > 381
@@ -164,7 +165,9 @@
 # include <llvm/Transforms/Scalar/GVN.h>
 #endif // 381
 
-#if LLVM_VERSION < 390
+#if   LLVM_VERSION < 380
+# include "llvm/ExecutionEngine/Orc/OrcTargetSupport.h"
+#elif LLVM_VERSION < 390
 # include "llvm/ExecutionEngine/Orc/OrcArchitectureSupport.h"
 #endif // LLVM_VERSION 390
 
@@ -260,10 +263,20 @@ typedef std::unique_ptr<TargetMachine>               TargetMachine_u;
 typedef std::shared_ptr<Function>                    Function_s;
 typedef std::function<Module_s(Module_s)>            Optimizer;
 typedef IRTransformLayer<CompileLayer, Optimizer>    OptimizeLayer;
+#if LLVM_VERSION < 380
+typedef orc::LazyEmittingLayer<CompileLayer>         LazyEmittingLayer;
+typedef orc::JITCompileCallbackManager<LazyEmittingLayer,
+                                       OrcX86_64>    JITCompileCallbackManager;
+#endif // LLVM_VERSION 380
 typedef std::unique_ptr<JITCompileCallbackManager>   CompileCallbacks_u;
-typedef std::unique_ptr<IndirectStubsManager>        IndirectStubs_u;
 
-#if LLVM_VERSION < 500
+#if LLVM_VERSION >= 380
+typedef std::unique_ptr<IndirectStubsManager>        IndirectStubs_u;
+#endif
+
+#if LLVM_VERSION < 380
+typedef LazyEmittingLayer::ModuleSetHandleT          ModuleHandle;
+#elif LLVM_VERSION < 500
 typedef CompileLayer::ModuleSetHandleT               ModuleHandle;
 #elif LLVM_VERSION < 700
 typedef CompileLayer::ModuleHandleT                  ModuleHandle;
@@ -339,9 +352,16 @@ class JITPrivate
 #endif // LLVM_VERSION >= 700
     LinkingLayer        linker;
     CompileLayer        compiler;
+#if LLVM_VERSION < 380
+    SectionMemoryManager memoryManager;
+    LazyEmittingLayer   lazyEmitter;
+#else // LLVM_VERSION >= 380
     OptimizeLayer       optimizer;
+#endif // LLVM_VERSION 380
     CompileCallbacks_u  callbacks;
+#if LLVM_VERSION >= 380
     IndirectStubs_u     stubs;
+#endif // LLVM_VERSION
 
     Module_s            module;
     ModuleHandle        moduleHandle;
@@ -374,6 +394,7 @@ static inline uint64_t globalSymbolAddress(const text &name)
 }
 
 
+#if LLVM_VERSION >= 380
 #if LLVM_VERSION < 390
 std::unique_ptr<JITCompileCallbackManager>
 createLocalCompileCallbackManager(const Triple &T,
@@ -435,6 +456,7 @@ static inline IndirectStubs_u createStubs(TargetMachine &target)
     auto b = createLocalIndirectStubsManagerBuilder(target.getTargetTriple());
     return b();
 }
+#endif // LLVM_VERSION >= 380
 
 
 JITPrivate::JITPrivate(int argc, char **argv)
@@ -486,12 +508,19 @@ JITPrivate::JITPrivate(int argc, char **argv)
              }),
 #endif // LLVM_VERSION >= 700
       compiler(linker, SimpleCompiler(*target)),
+#if LLVM_VERSION < 380
+      memoryManager(),
+      lazyEmitter(compiler),
+      callbacks(llvm::make_unique<JITCompileCallbackManager>
+                (lazyEmitter, memoryManager, context, 0, 64)),
+#else // LLVM_VERSION >= 380
       optimizer(compiler,
                 [this](Module_s module) {
                     return OptimizeModule(std::move(module));
                 }),
       callbacks(createCallbacks(*target)),
       stubs(createStubs(*target)),
+#endif // LLVM_VERSION 380
       module(),
       moduleHandle()
 {
@@ -555,7 +584,9 @@ void JITPrivate::DeleteModule(ModuleID modID)
     // else simply delete it here
     if (!module.get())
     {
-#if LLVM_VERSION < 500
+#if LLVM_VERSION < 380
+        lazyEmitter.removeModuleSet(moduleHandle);
+#elif LLVM_VERSION < 500
         optimizer.removeModuleSet(moduleHandle);
 #elif LLVM_VERSION < 600
         cantFail(optimizer.removeModule(moduleHandle));
@@ -669,7 +700,11 @@ JITSymbol JITPrivate::Symbol(text name)
 //   Return the symbol associated with the name
 // ----------------------------------------------------------------------------
 {
+#if LLVM_VERSION < 380
+    return lazyEmitter.findSymbol(Mangle(name), true);
+#else // LLVM_VERSION >= 380
     return optimizer.findSymbol(Mangle(name), true);
+#endif // LLVM_VERSION 380
 }
 
 
@@ -679,74 +714,80 @@ JITTargetAddress JITPrivate::Address(text name)
 // ----------------------------------------------------------------------------
 {
 #if LLVM_VERSION < 700
-#if LLVM_VERSION < 390
-# define rtsym(sym)     RuntimeDyld::SymbolInfo((sym).getAddress(),     \
+# if LLVM_VERSION < 390
+#  define rtsym(sym)    RuntimeDyld::SymbolInfo((sym).getAddress(),     \
                                                 (sym).getFlags())
-# define syminfo        RuntimeDyld::SymbolInfo
-#elif LLVM_VERSION < 400
-# define rtsym(sym)     ((sym).toRuntimeDyldSymbol())
-# define syminfo        RuntimeDyld::SymbolInfo
-#else // LLVM_VERSION >= 400
-# define rtsym(sym)     (sym)
-# define syminfo        JITSymbol
-#endif // LLVM_VERSION 400
-#define nullsym         syminfo(nullptr)
+#  define syminfo       RuntimeDyld::SymbolInfo
+# elif LLVM_VERSION < 400
+#  define rtsym(sym)    ((sym).toRuntimeDyldSymbol())
+#  define syminfo       RuntimeDyld::SymbolInfo
+# else // LLVM_VERSION >= 400
+#  define rtsym(sym)    (sym)
+#  define syminfo       JITSymbol
+# endif // LLVM_VERSION 400
+# define nullsym         syminfo(nullptr)
+
+# if LLVM_VERSION < 380
+#  define optimizer lazyEmitter
+# endif
 
     static text hadErrorWith = "";
     if (module.get())
     {
         auto resolver = createLambdaResolver(
             [&](const std::string &name) {
+# if LLVM_VERSION >= 380
                 if (auto sym = stubs->findStub(name, false))
                     return rtsym(sym);
+# endif // LLVM_VERSION 380
                 if (auto sym = optimizer.findSymbol(name, false))
                     return rtsym(sym);
-#if LLVM_VERSION < 390
+# if LLVM_VERSION < 390
                 if (auto addr = globalSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
-#endif // LLVM_VERSION < 390
+# endif // LLVM_VERSION < 390
                 return nullsym;
             },
             [](const std::string &name) {
                 if (auto addr = globalSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
-#if LLVM_VERSION < 500
+# if LLVM_VERSION < 500
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
-#else // LLVM_VERSION >= 500
+# else // LLVM_VERSION >= 500
                 return JITSymbol(make_error<JITSymbolNotFound>(name));
-#endif // LLVM_VERSION 500
+# endif // LLVM_VERSION 500
             });
-#if LLVM_VERSION < 500
+# if LLVM_VERSION < 500
         std::vector< std::unique_ptr<llvm::Module> > modules;
         modules.push_back(std::move(module));
         moduleHandle = optimizer
                    .addModuleSet(std::move(modules),
                                  make_unique<SectionMemoryManager>(),
                                  std::move(resolver));
-#else // LLVM_VERSION >= 500
+# else // LLVM_VERSION >= 500
         moduleHandle = cantFail(optimizer.addModule(std::move(module),
                                                     std::move(resolver)));
-#endif
+# endif // LLVM_VERSION 500
     }
-#define hadError(r)     (!(r) || hadErrorWith.length())
-#if LLVM_VERSION < 500
-#define errorMsg(r)     ("Unresolved symbols: " + hadErrorWith);        \
+# define hadError(r)     (!(r) || hadErrorWith.length())
+# if LLVM_VERSION < 500
+#  define errorMsg(r)   ("Unresolved symbols: " + hadErrorWith);        \
                         hadErrorWith = ""
-#else // LLVM_VERSION >= 500
-#define errorMsg(r)     (hadErrorWith.length()                          \
+# else // LLVM_VERSION >= 500
+#  define errorMsg(r)   (hadErrorWith.length()                          \
                          ? "Unresolved symbols: " + hadErrorWith        \
                          : toString((r).takeError()));                  \
                         hadErrorWith = ""
-#endif // LLVM_VERSION 500
+# endif // LLVM_VERSION 500
 
 #else // LLVM_VERSION >= 700
     if (module.get())
         cantFail(optimizer.addModule(moduleHandle, std::move(module)));
-#define hadError(r)     (!(r))
-#define errorMsg(r)     (toString((r).takeError()))
+# define hadError(r)    (!(r))
+# define errorMsg(r)    (toString((r).takeError()))
 #endif // LLVM_VERSION < 700
     auto r = Symbol(name).getAddress();
     if (hadError(r))
@@ -767,6 +808,7 @@ JITTargetAddress JITPrivate::Address(text name)
 #undef nullsym
 #undef rtsym
 #undef syminfo
+#undef optimizer
 }
 
 
