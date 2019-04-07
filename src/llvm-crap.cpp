@@ -159,10 +159,14 @@
 # include "llvm/ExecutionEngine/Orc/LambdaResolver.h"
 #endif // >= 370
 
-#if LLVM_VERSION >= 381
+#if LLVM_VERSION > 381
 # include "llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h"
 # include <llvm/Transforms/Scalar/GVN.h>
 #endif // 381
+
+#if LLVM_VERSION < 390
+# include "llvm/ExecutionEngine/Orc/OrcArchitectureSupport.h"
+#endif // LLVM_VERSION 390
 
 #if LLVM_VERSION < 500
 #include "llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h"
@@ -370,6 +374,50 @@ static inline uint64_t globalSymbolAddress(const text &name)
 }
 
 
+#if LLVM_VERSION < 390
+std::unique_ptr<JITCompileCallbackManager>
+createLocalCompileCallbackManager(const Triple &T,
+                                  TargetAddress ErrorHandlerAddress)
+// ----------------------------------------------------------------------------
+//   Simplified version of 3.9.1 util function, only x86-64 support in 3.8.1
+// ----------------------------------------------------------------------------
+{
+    switch (T.getArch())
+    {
+    default:
+        return nullptr;
+
+    case Triple::x86_64:
+    {
+        typedef orc::LocalJITCompileCallbackManager<orc::OrcX86_64> CCMgrT;
+        return llvm::make_unique<CCMgrT>(ErrorHandlerAddress);
+    }
+    }
+}
+
+
+std::function<std::unique_ptr<IndirectStubsManager>()>
+createLocalIndirectStubsManagerBuilder(const Triple &T)
+// ----------------------------------------------------------------------------
+//   Simplified version of 3.9.1 util function, only x86-64 support in 3.8.1
+// ----------------------------------------------------------------------------
+{
+    switch (T.getArch())
+    {
+    default:
+        return nullptr;
+
+    case Triple::x86_64:
+        return []()
+        {
+            return llvm::make_unique<
+                orc::LocalIndirectStubsManager<orc::OrcX86_64>>();
+        };
+    }
+}
+#endif // LLVM_VERSION < 390
+
+
 static inline CompileCallbacks_u createCallbacks(TargetMachine &target)
 // ----------------------------------------------------------------------------
 //   Built a callbacks manager
@@ -377,6 +425,7 @@ static inline CompileCallbacks_u createCallbacks(TargetMachine &target)
 {
     return createLocalCompileCallbackManager(target.getTargetTriple(), 0);
 }
+
 
 static inline IndirectStubs_u createStubs(TargetMachine &target)
 // ----------------------------------------------------------------------------
@@ -630,7 +679,11 @@ JITTargetAddress JITPrivate::Address(text name)
 // ----------------------------------------------------------------------------
 {
 #if LLVM_VERSION < 700
-#if LLVM_VERSION < 400
+#if LLVM_VERSION < 390
+# define rtsym(sym)     RuntimeDyld::SymbolInfo((sym).getAddress(),     \
+                                                (sym).getFlags())
+# define syminfo        RuntimeDyld::SymbolInfo
+#elif LLVM_VERSION < 400
 # define rtsym(sym)     ((sym).toRuntimeDyldSymbol())
 # define syminfo        RuntimeDyld::SymbolInfo
 #else // LLVM_VERSION >= 400
@@ -648,6 +701,12 @@ JITTargetAddress JITPrivate::Address(text name)
                     return rtsym(sym);
                 if (auto sym = optimizer.findSymbol(name, false))
                     return rtsym(sym);
+#if LLVM_VERSION < 390
+                if (auto addr = globalSymbolAddress(name))
+                    return syminfo(addr, JITSymbolFlags::Exported);
+                hadErrorWith = name;
+                return syminfo(UINT64_MAX, JITSymbolFlags::None);
+#endif // LLVM_VERSION < 390
                 return nullsym;
             },
             [](const std::string &name) {
