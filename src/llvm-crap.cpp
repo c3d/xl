@@ -254,8 +254,12 @@ typedef TargetAddress                                JITTargetAddress;
 typedef std::unique_ptr<Module>                      Module_s;
 typedef ObjectLinkingLayer<>                         LinkingLayer;
 typedef IRCompileLayer<LinkingLayer>                 CompileLayer;
-#else // LLVM_VERSION >= 500
+#elif LLVM_VERSION < 700
 typedef std::shared_ptr<Module>                      Module_s;
+typedef RTDyldObjectLinkingLayer                     LinkingLayer;
+typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
+#elif LLVM_VERSION >= 700
+typedef std::unique_ptr<Module>                      Module_s;
 typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
 #endif // LLVM_VERSION >= 500
@@ -439,15 +443,6 @@ createLocalIndirectStubsManagerBuilder(const Triple &T)
 #endif // LLVM_VERSION < 390
 
 
-static inline CompileCallbacks_u createCallbacks(TargetMachine &target)
-// ----------------------------------------------------------------------------
-//   Built a callbacks manager
-// ----------------------------------------------------------------------------
-{
-    return createLocalCompileCallbackManager(target.getTargetTriple(), 0);
-}
-
-
 static inline IndirectStubs_u createStubs(TargetMachine &target)
 // ----------------------------------------------------------------------------
 //   Built a sstubs manager
@@ -479,8 +474,15 @@ JITPrivate::JITPrivate(int argc, char **argv)
       linker([]() { return std::make_shared<SectionMemoryManager>(); }),
 #else // LLVM_VERSION >= 700
       strings(),
+# if LLVM_VERSION < 800
+      session(),
+# else // LLVM_VERSION >= 800
       session(strings),
+#endif // LLVM_VERSION
       resolver(createLegacyLookupResolver(
+#if LLVM_VERSION >= 700
+                   session,
+#endif // LLVM_VERSION >= 700
                    [this](const text &name) -> JITSymbol
                    {
                        if (auto sym = stubs->findStub(name, false))
@@ -518,7 +520,11 @@ JITPrivate::JITPrivate(int argc, char **argv)
                 [this](Module_s module) {
                     return OptimizeModule(std::move(module));
                 }),
-      callbacks(createCallbacks(*target)),
+      callbacks(createLocalCompileCallbackManager(target->getTargetTriple(),
+#if LLVM_VERSION >= 700
+                                                  session,
+#endif // LLVM_VERSION >= 700
+                                                  0)),
       stubs(createStubs(*target)),
 #endif // LLVM_VERSION 380
       module(),
@@ -556,10 +562,13 @@ ModuleID JITPrivate::CreateModule(text name)
 {
     assert (!module.get() && "Creating module while module is active");
 
+    // The "Can't make up my mind" school of programming
 #if LLVM_VERSION < 500
     module = llvm::make_unique<llvm::Module>(name, context);
-#else // LLVM_VERSION >= 500
+#elif LLVM_VERSION < 700
     module = std::make_shared<llvm::Module>(name, context);
+#elif LLVM_VERSION >= 700
+    module = llvm::make_unique<llvm::Module>(name, context);
 #endif // LLVM_VERSION 500
     record(llvm_modules, "Created module %p in %p", module.get(), this);
     module->setDataLayout(layout);
@@ -734,32 +743,41 @@ JITTargetAddress JITPrivate::Address(text name)
     static text hadErrorWith = "";
     if (module.get())
     {
+# if LLVM_VERSION < 710
         auto resolver = createLambdaResolver(
             [&](const std::string &name) {
-# if LLVM_VERSION >= 380
+#  if LLVM_VERSION >= 380
                 if (auto sym = stubs->findStub(name, false))
                     return rtsym(sym);
-# endif // LLVM_VERSION 380
+#  endif // LLVM_VERSION 380
                 if (auto sym = optimizer.findSymbol(name, false))
                     return rtsym(sym);
-# if LLVM_VERSION < 390
+#  if LLVM_VERSION < 390
                 if (auto addr = globalSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
-# endif // LLVM_VERSION < 390
+#  endif // LLVM_VERSION < 390
                 return nullsym;
             },
             [](const std::string &name) {
                 if (auto addr = globalSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
-# if LLVM_VERSION < 500
+#  if LLVM_VERSION < 500
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
-# else // LLVM_VERSION >= 500
+#  else // LLVM_VERSION >= 500
                 return JITSymbol(make_error<JITSymbolNotFound>(name));
-# endif // LLVM_VERSION 500
+#  endif // LLVM_VERSION 500
             });
+# else // LLVM_VERSION >= 710
+        auto resolver = createLegacyLookupResolver(
+            session,
+            [this](const std::string &Name) -> JITSymbol {
+                if (auto Sym = CompileLayer.findSymbol(Name, false))
+             return Sym;
+# endif // LLVM_VERSION 710
+
 # if LLVM_VERSION < 500
         std::vector< std::unique_ptr<llvm::Module> > modules;
         modules.push_back(std::move(module));
