@@ -100,7 +100,7 @@ public:
         value = base == 64 ? base64_value : based_value;
     }
 
-    int operator[] (uint8_t c)
+    uint operator[] (uint8_t c)
     {
         return value[c];
     }
@@ -654,7 +654,7 @@ text Scanner::Comment(text EOC, bool stripIndent)
     kstring  eoc     = EOC.c_str();
     kstring  match   = eoc;
     text     comment = "";
-    unsigned c       = 0;
+    int      c       = 0;
     bool     skip    = false;
     ulong    column  = position - lineStart;
 
