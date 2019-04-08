@@ -616,6 +616,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
         return infix;
     }
     }
+    return NULL; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
 }
 
 
@@ -1063,7 +1064,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
     }
 
     }
-
+    return NULL; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
 }
 
 
@@ -1391,6 +1392,7 @@ bool Types::TreePatternDependsOn(Tree *pattern, Tree *type)
     }
 
     }
+    return false; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
 }
 
 
