@@ -156,6 +156,12 @@ CPPFLAGS_llvm350=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm352=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
 
+# Since LLVM is compiled without RTTI, we need to compile llvm-crap.cpp
+# without it as well, or get unresolved symbol on some LLVM RTTI symbols
+# (_ZTIN4llvm3orc14SymbolResolverE aka typeinfo for llvm::orc::SymbolResolver)
+CXXFLAGS_llvm-crap=-fno-rtti
+DEFINES_llvm-crap=DISABLE_RTTI
+
 # Additional dependencies
 MINGW_LIBS_mingw=-lws2_32
 

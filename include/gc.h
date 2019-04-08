@@ -508,6 +508,7 @@ Allocator<Object> *Allocator<Object>::allocator;
 #endif
 
 
+#ifndef DISABLE_RTTI
 template<class Object> inline
 Allocator<Object>::Allocator()
 // ----------------------------------------------------------------------------
@@ -515,6 +516,7 @@ Allocator<Object>::Allocator()
 // ----------------------------------------------------------------------------
     : TypeAllocator(typeid(Object).name(), sizeof (Object))
 {}
+#endif
 
 
 template<class Object> inline
