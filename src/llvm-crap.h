@@ -41,10 +41,10 @@
 
 #ifndef LLVM_VERSION
 #error "Sorry, no can do anything without knowing the LLVM version"
-#elif LLVM_VERSION < 27
+#elif LLVM_VERSION < 370
 // At some point, I have only so much time to waste on this.
 // Feel free to enhance if you care about earlier versions of LLVM.
-#error "LLVM 2.6 and earlier are not supported in this code."
+#error "LLVM 3.6 and earlier are not supported in this code."
 #endif
 
 #define LLVM_CRAP_DIAPER_OPEN

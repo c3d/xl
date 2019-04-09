@@ -60,6 +60,17 @@
 #define LLVM_CRAP_DIAPER_OPEN
 #include "llvm-crap.h"
 
+// llvm-config.h seems quite usable nowadays
+#include <llvm/Config/llvm-config.h>
+
+// Therefore, we can check that this is being built with a sane environment
+#if LLVM_VERSION_MAJOR * 100 +                                    \
+    LLVM_VERSION_MINOR *  10 +                                    \
+    LLVM_VERSION_PATCH          != LLVM_VERSION
+# error "Inconsistent LLVM version (llvm-config vs. headers)"
+#endif // LLVM_VERSION check
+
+
 // Below are the headers that I did not really sort yet
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -617,14 +628,12 @@ static void dumpModule(Module_p module, kstring message)
 // ----------------------------------------------------------------------------
 //   Dump a module for debugging purpose
 // ----------------------------------------------------------------------------
-//   This happens to compile but not link on brew version of LLVM 6.0.1
-//   (not sure yet about earlier versions)
 {
     llvm::errs() << message << ":\n";
-#if LLVM_VERSION >= 500 && LLVM_VERSION < 700
-    llvm::errs() << "Disabled (not present in libraries)\n";
-#else
+#ifdef LLVM_ENABLE_DUMP
     module->dump();
+#else
+    llvm::errs() << "Disabled (not present in LLVM libraries)\n";
 #endif
 }
 
