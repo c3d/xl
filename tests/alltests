@@ -224,6 +224,7 @@ do
                 else
                     diff $REF $LOG > $LOG.diff
                 fi
+                mv $LOG $LOG.output
                 mv $LOG.diff $LOG
                 rm -f $BASE$EXT
             else
