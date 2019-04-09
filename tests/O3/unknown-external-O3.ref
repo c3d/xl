@@ -1,4 +1,6 @@
 invalid_function X:text is C some_unknown_symbol
 invalid_function "Hello"
-<Unknown position>: Generating machine code for 'xl.eval' failed: Unresolved symbols: _some_unknown_symbol
-O3/unknown-external.xl:3:18: Error compiling [invalid_function X:text is C s…mbol|invalid_function "Hello"]
+<Unknown position>: Generating machine code for 'xl.eval' failed: Unresolved symbols: some_unknown_symbol
+O3/unknown-external.xl:4:18: Error compiling [invalid_function X:text is C s…mbol|invalid_function "Hello"]
+<Unknown position>: Generating machine code for 'xl.eval' failed: Unresolved symbols: some_unknown_symbol
+O3/unknown-external.xl:4:18: Error compiling [invalid_function X:text is C s…mbol|invalid_function "Hello"]

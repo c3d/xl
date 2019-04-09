@@ -2,5 +2,7 @@
 // In this variant, we give an int return type for puts,
 // so the compiler has to generate unboxing code for the value and
 // the test result must be an integer (number of characters)
+// We need to filter it because the value returned by puts is not portable
+// FILTER=sed -e 's/[0-9][0-9]*/OK/g'
 writeln X:text as integer is C puts
 writeln "Hello world"

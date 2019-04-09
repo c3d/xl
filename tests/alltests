@@ -145,6 +145,7 @@ do
     LOG=$BASE.log                                   # Log file
     CMD=                                            # Command to execute
     EXIT=0                                          # Expected exit code
+    FILTER=                                         # Filter output
     RUN=                                            # What to run afterwards
     OPT=                                            # XL compiler options
     RT_OPT=                                         # XL options for runtime
@@ -192,6 +193,9 @@ do
                 UNEXPECTED_FAILURES=$(($UNEXPECTED_FAILURES+1))
             fi
         elif [ ! -z "$REF" ]; then
+            if [ ! -z "$FILTER" ]; then
+                bash -c "$FILTER" < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            fi
             sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             sed 's@/usr/local/lib/xl/@@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
