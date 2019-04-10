@@ -308,16 +308,22 @@ extern XL::Type_p  xldebug(XL::Type_p);
 # pragma GCC diagnostic ignored "-Wunknown-warning-option"
 
 // Ignore badly indented 'if' in 3.52
-# pragma GCC diagnostic ignored "-Wmisleading-indentation"
+# if LLVM_VERSION >= 350 && LLVM_VERSION < 360
+#  pragma GCC diagnostic ignored "-Wmisleading-indentation"
+# endif
 
 // All over the place
-# pragma GCC diagnostic ignored "-Wunused-parameter"
+// # pragma GCC diagnostic ignored "-Wunused-parameter"
 
 // Binding dereferenced null pointer in 3.7.1 LinkAllPasses.h
-# pragma GCC diagnostic ignored "-Wnull-dereference"
+# if LLVM_VERSION >= 370 && LLVM_VERSION < 380
+#  pragma GCC diagnostic ignored "-Wnull-dereference"
+# endif
 
-// memcpy in SmallVector for std::pair with non-trivial copy ctor
-# pragma GCC diagnostic ignored "-Wclass-memaccess"
+// memcpy in SmallVector for std::pair with non-trivial copy ctor (ongoing)
+# if LLVM_VERSION >= 400
+#  pragma GCC diagnostic ignored "-Wclass-memaccess"
+# endif
 
 // Some recent drops of LLVM have the EXTRAORINARY idea of defining DEBUG(x)
 # ifdef DEBUG
