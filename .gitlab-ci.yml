@@ -1,19 +1,53 @@
 image: fedora:latest
 
 before_script:
-  - dnf install -y llvm-devel git gcc gcc-c++
+  - dnf install -y llvm-devel git gcc gcc-c++ make findutils gawk
   - git submodule update --init --recursive
+
+install:
+  script:
+  - make PREFIX=/tmp/xl/ install
+
+install-opt:
+  script:
+  - make PREFIX=/tmp/xl-opt/ install-opt
+
+install-debug:
+  script:
+  - make PREFIX=/tmp/xl-debug/ install-debug
+
+install-release:
+  script:
+  - make PREFIX=/tmp/xl-release/ install-release
 
 test:
   script:
-  - make PREFIX=/tmp/xl/
-  - make PREFIX=/tmp/xl/ install
-  - export PATH=$PATH:/tmp/xl/bin
   - make test
 
-make_only:
+test-opt:
+  script:
+  - make test-opt
+
+test-release:
+  script:
+  - make test-release
+
+test-debug:
+  script:
+  - make test-debug
+
+build:
   script:
   - make
+
+build-opt:
+  script:
   - make opt
-  - make release
-  - make debug
+
+build-debug:
+  script:
+  - make opt-debug
+
+build-release:
+  script:
+  - make opt-release
