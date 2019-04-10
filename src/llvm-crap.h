@@ -316,6 +316,9 @@ extern XL::Type_p  xldebug(XL::Type_p);
 // Binding dereferenced null pointer in 3.7.1 LinkAllPasses.h
 # pragma GCC diagnostic ignored "-Wnull-dereference"
 
+// memcpy in SmallVector for std::pair with non-trivial copy ctor
+# pragma GCC diagnostic ignored "-Wclass-memaccess"
+
 // Some recent drops of LLVM have the EXTRAORINARY idea of defining DEBUG(x)
 # ifdef DEBUG
 #  define LLVM_CRAP_DIAPER_DEBUG       DEBUG
