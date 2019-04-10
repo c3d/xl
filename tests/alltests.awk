@@ -18,6 +18,6 @@ BEGIN {
     gsub("%b", base, value);
     gsub("%c", csource, value);
     gsub("%d", subdir, value);
+    gsub("'", "'\"'\"'", value);
     print name "='" value "'";
 }
-
