@@ -271,13 +271,22 @@ typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
 #elif LLVM_VERSION >= 700
 typedef std::unique_ptr<Module>                      Module_s;
+#if LLVM_VERSION < 800
 typedef RTDyldObjectLinkingLayer                     LinkingLayer;
 typedef IRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
+#elif LLVM_VERSION >= 800
+typedef LegacyRTDyldObjectLinkingLayer               LinkingLayer;
+typedef LegacyIRCompileLayer<LinkingLayer, SimpleCompiler> CompileLayer;
+#endif // LLVM_VERSION 800
 #endif // LLVM_VERSION >= 500
 typedef std::unique_ptr<TargetMachine>               TargetMachine_u;
 typedef std::shared_ptr<Function>                    Function_s;
 typedef std::function<Module_s(Module_s)>            Optimizer;
+#if LLVM_VERSION < 800
 typedef IRTransformLayer<CompileLayer, Optimizer>    OptimizeLayer;
+#elif LLVM_VERSION >= 800
+typedef LegacyIRTransformLayer<CompileLayer, Optimizer> OptimizeLayer;
+#endif // LLVM_VERSION 800
 #if LLVM_VERSION < 380
 typedef orc::LazyEmittingLayer<CompileLayer>         LazyEmittingLayer;
 typedef orc::JITCompileCallbackManager<LazyEmittingLayer,
@@ -360,7 +369,9 @@ class JITPrivate
     TargetMachine_u     target;
     const DataLayout    layout;
 #if LLVM_VERSION >= 700
+#if LLVM_VERSION < 800
     SymbolStringPool    strings;
+#endif // LLVM_VERSION 800
     ExecutionSession    session;
     typedef std::shared_ptr<SymbolResolver> SymbolResolver_s;
     SymbolResolver_s    resolver;
@@ -484,12 +495,10 @@ JITPrivate::JITPrivate(int argc, char **argv)
 #elif LLVM_VERSION < 700
       linker([]() { return std::make_shared<SectionMemoryManager>(); }),
 #else // LLVM_VERSION >= 700
+#if LLVM_VERSION < 800
       strings(),
-# if LLVM_VERSION < 800
+#endif // LLVM_VERSION 800
       session(),
-# else // LLVM_VERSION >= 800
-      session(strings),
-#endif // LLVM_VERSION
       resolver(createLegacyLookupResolver(
 #if LLVM_VERSION >= 700
                    session,
@@ -513,7 +522,7 @@ JITPrivate::JITPrivate(int argc, char **argv)
       linker(session,
              [this](VModuleKey key)
              {
-                 return RTDyldObjectLinkingLayer::Resources
+                 return LinkingLayer::Resources
                  {
                      std::make_shared<SectionMemoryManager>(),
                      resolver
@@ -531,11 +540,19 @@ JITPrivate::JITPrivate(int argc, char **argv)
                 [this](Module_s module) {
                     return OptimizeModule(std::move(module));
                 }),
+#if LLVM_VERSION < 800
       callbacks(createLocalCompileCallbackManager(target->getTargetTriple(),
 #if LLVM_VERSION >= 700
                                                   session,
 #endif // LLVM_VERSION >= 700
                                                   0)),
+#else // LLVM_VERSION >= 800
+      callbacks(
+          // Need 'cantFail' now
+          cantFail(
+              createLocalCompileCallbackManager(target->getTargetTriple(),
+                                                session, 0))),
+#endif // LLVM_VERSION 800
       stubs(createStubs(*target)),
 #endif // LLVM_VERSION 380
       module(),
