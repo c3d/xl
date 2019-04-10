@@ -1,7 +1,7 @@
 image: fedora:latest
 
 before_script:
-  - dnf install -y llvm35-devel git gcc gcc-c++
+  - dnf install -y llvm-devel git gcc gcc-c++
   - git submodule update --init --recursive
 
 test:
