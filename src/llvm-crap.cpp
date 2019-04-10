@@ -752,40 +752,32 @@ JITTargetAddress JITPrivate::Address(text name)
     static text hadErrorWith = "";
     if (module.get())
     {
-# if LLVM_VERSION < 710
         auto resolver = createLambdaResolver(
             [&](const std::string &name) {
-#  if LLVM_VERSION >= 380
+# if LLVM_VERSION >= 380
                 if (auto sym = stubs->findStub(name, false))
                     return rtsym(sym);
-#  endif // LLVM_VERSION 380
+# endif // LLVM_VERSION 380
                 if (auto sym = optimizer.findSymbol(name, false))
                     return rtsym(sym);
-#  if LLVM_VERSION < 390
+# if LLVM_VERSION < 390
                 if (auto addr = globalSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
-#  endif // LLVM_VERSION < 390
+# endif // LLVM_VERSION < 390
                 return nullsym;
             },
             [](const std::string &name) {
                 if (auto addr = globalSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
-#  if LLVM_VERSION < 500
+# if LLVM_VERSION < 500
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
-#  else // LLVM_VERSION >= 500
+# else // LLVM_VERSION >= 500
                 return JITSymbol(make_error<JITSymbolNotFound>(name));
-#  endif // LLVM_VERSION 500
+# endif // LLVM_VERSION 500
             });
-# else // LLVM_VERSION >= 710
-        auto resolver = createLegacyLookupResolver(
-            session,
-            [this](const std::string &Name) -> JITSymbol {
-                if (auto Sym = CompileLayer.findSymbol(Name, false))
-             return Sym;
-# endif // LLVM_VERSION 710
 
 # if LLVM_VERSION < 500
         std::vector< std::unique_ptr<llvm::Module> > modules;
