@@ -1,53 +1,123 @@
-image: fedora:latest
-
 before_script:
-  - dnf install -y llvm-devel git gcc gcc-c++ make findutils gawk
+  - dnf install -y llvm-devel git gcc gcc-c++ make findutils gawk || (apt-get update && apt-get install -y llvm-dev git gcc g++ make findutils gawk)
   - git submodule update --init --recursive
 
-install:
+install:fedora:
+  image: fedora:latest
   script:
   - make PREFIX=/tmp/xl/ install
 
-install-opt:
+install-opt:fedora:
+  image: fedora:latest
   script:
   - make PREFIX=/tmp/xl-opt/ install-opt
 
-install-debug:
+install-debug:fedora:
+  image: fedora:latest
   script:
   - make PREFIX=/tmp/xl-debug/ install-debug
 
-install-release:
+install-release:fedora:
+  image: fedora:latest
   script:
   - make PREFIX=/tmp/xl-release/ install-release
 
-test:
+test:fedora:
+  image: fedora:latest
   script:
   - make test
 
-test-opt:
+test-opt:fedora:
+  image: fedora:latest
   script:
   - make test-opt
 
-test-release:
+test-release:fedora:
+  image: fedora:latest
   script:
   - make test-release
 
-test-debug:
+test-debug:fedora:
+  image: fedora:latest
   script:
   - make test-debug
 
-build:
+build:fedora:
+  image: fedora:latest
   script:
   - make
 
-build-opt:
+build-opt:fedora:
+  image: fedora:latest
   script:
   - make opt
 
-build-debug:
+build-debug:fedora:
+  image: fedora:latest
   script:
   - make opt-debug
 
-build-release:
+build-release:fedora:
+  image: fedora:latest
+  script:
+  - make opt-release
+
+install:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make PREFIX=/tmp/xl/ install
+
+install-opt:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make PREFIX=/tmp/xl-opt/ install-opt
+
+install-debug:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make PREFIX=/tmp/xl-debug/ install-debug
+
+install-release:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make PREFIX=/tmp/xl-release/ install-release
+
+test:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make test
+
+test-opt:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make test-opt
+
+test-release:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make test-release
+
+test-debug:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make test-debug
+
+build:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make
+
+build-opt:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make opt
+
+build-debug:ubuntu:
+  image: ubuntu:latest
+  script:
+  - make opt-debug
+
+build-release:ubuntu:
+  image: ubuntu:latest
   script:
   - make opt-release
