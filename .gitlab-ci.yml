@@ -6,21 +6,25 @@ install:fedora:
   image: fedora:latest
   script:
   - make PREFIX=/tmp/xl/ install
+  - /tmp/xl/bin/xl -help
 
 install-opt:fedora:
   image: fedora:latest
   script:
   - make PREFIX=/tmp/xl-opt/ install-opt
+  - /tmp/xl-opt/bin/xl -help
 
 install-debug:fedora:
   image: fedora:latest
   script:
   - make PREFIX=/tmp/xl-debug/ install-debug
+  - /tmp/xl-debug/bin/xl -help
 
 install-release:fedora:
   image: fedora:latest
   script:
   - make PREFIX=/tmp/xl-release/ install-release
+  - /tmp/xl-release/bin/xl -help
 
 test:fedora:
   image: fedora:latest
@@ -66,21 +70,25 @@ install:ubuntu:
   image: ubuntu:latest
   script:
   - make PREFIX=/tmp/xl/ install
+  - /tmp/xl/bin/xl -help
 
 install-opt:ubuntu:
   image: ubuntu:latest
   script:
   - make PREFIX=/tmp/xl-opt/ install-opt
+  - /tmp/xl-opt/bin/xl -help
 
 install-debug:ubuntu:
   image: ubuntu:latest
   script:
   - make PREFIX=/tmp/xl-debug/ install-debug
+  - /tmp/xl-debug/bin/xl -help
 
 install-release:ubuntu:
   image: ubuntu:latest
   script:
   - make PREFIX=/tmp/xl-release/ install-release
+  - /tmp/xl-release/bin/xl -help
 
 test:ubuntu:
   image: ubuntu:latest
