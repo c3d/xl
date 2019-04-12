@@ -139,11 +139,12 @@ static inline bool OptionMatches(Options &options,
     const unsigned size = sizeof(optdescr) - 1;
     record(options, "Matching '%s' against '%s'", command_line, optdescr);
     bool matches = true;
-    for (unsigned i = 0; matches && i < size && command_line[i]; i++)
+    unsigned i;
+    for (i = 0; matches && i < size && command_line[i]; i++)
         matches = command_line[i] == optdescr[i];
     if (matches)
     {
-        options.argt = command_line + size;
+        options.argt = command_line + i;
         record(options,
                "Successfully matched '%s' against '%s', remainder='%s'",
                command_line, optdescr, options.argt);
@@ -186,6 +187,7 @@ static ulong OptionInteger(Options &opt, ulong low, ulong high)
     uint result = low;
     kstring &command_line = opt.argt;
     kstring old = command_line;
+    record(options, "Expecting integer %lu..%lu, input %s", low, high, old);
     if (*command_line)
     {
         if (isdigit(*command_line))
