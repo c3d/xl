@@ -6,6 +6,18 @@ extending the language is a routine operation, much like adding a
 function or creating a class in more traditional programming
 languages.
 
+* [Simple examples](#a-few-simple-examples)
+* [Dialects and use cases](#dialects-and-use-cases)
+* [If you come from another language](#if-you-come-from-another-language)
+* [One operator to rule them all](#one-operator-to-rule-them-all)
+* [Syntax: Look, Ma, no keywords!](#syntax-look-ma-no-keywords)
+* [XL as a functional language](#XL-as-a-functional-language)
+* [Subtelty #1: Expression vs statement](#subtlety-1-expression-vs-statement)
+* [Subtelty #2: Infix vs. Prefix](#subtlety-2-infix-vs-prefix)
+* [Subtelty #3: Delayed evaluation](#subtlety-3-delayed-evaluation)
+* [Subtelty #4: Closures](#subtlety-4-closures)
+
+
 For more information, please consult the [reference manual](doc/XL.md).
 
 
@@ -53,7 +65,7 @@ X:integer + Y:integer is ...
 ```
 
 
-## More complicated examples
+## Dialects and use cases
 
 Two dialects of XL further demonstrate the extensibility of the language
 
@@ -123,60 +135,77 @@ XL has one fundamental operator, `is`, the _definition operator_.
 This operator can be read as *transforms into*, i.e. it transforms the
 code that is on the left into the code that is on the right.
 
-It can define _variables_ with possibly complex structures:
+<details>
+<summary>It can define _variables_ with possibly complex structures</summary>
 
 ```xl
 pi              is      3.1415926
 words           is      "xylophage", "zygomatic", "barfitude"
 ```
+</details>
 
-It can define _functions_:
+<details>
+<summary>It can define _functions_</summary>
 
 ```xl
 abs X           is      if X < 0 then -X else X
 ```
 
-It can define _operators_:
+</details>
+<details>
+<summary>It can define _operators_</summary>
 
 ```xl
 X ≠ Y           is      not X = Y
 ```
 
 
-It can define _specializations_ for particular inputs:
+</details>
+<details>
+<summary>It can define _specializations_ for particular inputs</summary>
 
 ```xl
 0!              is      1
 N!  when N > 0  is      N * (N-1)!
 ```
 
-It can define _notations_ using arbitrary combinations of operators:
+</details>
+<details>
+<summary>It can define _notations_ using arbitrary combinations of operators</summary>
 
 ```xl
 A in B..C       is      A >= B and A <= C
 ```
 
-It can define _optimizations_ using specializations:
+</details>
+<details>
+<summary>It can define _optimizations_ using specializations</summary>
 
 ```xl
 X * 1           is      X
 X + 0           is      X
 ```
 
-It can define _program structures_:
+</details>
+<details>
+<summary>It can define _program structures_</summary>
 
 ```xl
 loop Body       is      Body; loop Body
 ```
 
 
-It can define _types_:
+</details>
+<details>
+<summary>It can define _types_</summary>
 
 ```xl
 complex         is      type(complex(re:real, im:real))
 ```
 
-It can define _higher-order functions_:
+</details>
+<details>
+<summary>It can define _higher-order functions_</summary>
 
 ```xl
 adder N         is      (X is N + X)
@@ -186,7 +215,9 @@ add3            is      adder 3
  add3 5
 ```
 
-It can define _maps_, which are actually just regular functions:
+</details>
+<details>
+<summary>It can define _maps_, which are actually just regular functions</summary>
 
 ```xl
 my_map is
@@ -206,7 +237,9 @@ my_map[27]
 my_map (44)
 ```
 
-It can define _templates_ (C++ terminology), or _generics_ (Ada terminology):_
+</details>
+<details>
+<summary>It can define _templates_ (C++ terminology), or _generics_ (Ada terminology)</summary>_
 
 ```xl
 // An (inefficient) implementation of a generic array type
@@ -223,7 +256,9 @@ A : array[5] of integer
 A[3]
 ```
 
-It can define _variadic functions_:
+</details>
+<details>
+<summary>It can define _variadic functions_</summary>
 
 ```xl
 min X       is X
@@ -232,7 +267,7 @@ min X, Y    is { Z is min Y; if X < Z then X else Z }
 // Computes 4
 min 7, 42, 20, 8, 4, 5, 30
 ```
-
+</details>
 
 ### Syntax: Look, Ma, no keywords!
 
