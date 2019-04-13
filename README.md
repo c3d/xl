@@ -136,10 +136,17 @@ This operator can be read as *transforms into*, i.e. it transforms the
 code that is on the left into the code that is on the right.
 
 <details>
-<summary>It can define variables with possibly complex structures</summary>
+<summary>It can define simple variables</summary>
 
 ```xl
 pi              is      3.1415926
+```
+</details>
+
+<details>
+<summary>It can define lists</summary>
+
+```xl
 words           is      "xylophage", "zygomatic", "barfitude"
 ```
 </details>
