@@ -1,5 +1,5 @@
 // OPT=-O3 -nobuiltins
 // In this variant, we don't give a return type for puts,
 // so the compiler has to assume 'void' and the test must return 'nil'
-writeln X:text is C puts
-writeln "Hello world"
+write_line X:text is C puts
+write_line "Hello world"

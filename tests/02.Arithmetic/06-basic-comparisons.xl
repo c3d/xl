@@ -1,11 +1,11 @@
 run_test x, y is
-    writeln x=y
-    writeln x<>y
-    writeln x<y
-    writeln x>y
-    writeln x<=y
-    writeln x>=y
-    writeln "---"
+    write_line x=y
+    write_line x<>y
+    write_line x<y
+    write_line x>y
+    write_line x<=y
+    write_line x>=y
+    write_line "---"
 
 run_test 0, 0
 run_test 0, 1

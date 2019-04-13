@@ -1,12 +1,12 @@
-writeln "2#1001=", 2#1001
-writeln "2#1111=", 2#1111
-writeln "16#FF_FE=", 16#FF_FE
-writeln "36#1Z=", 36#1Z
+write_line "2#1001=", 2#1001
+write_line "2#1111=", 2#1111
+write_line "16#FF_FE=", 16#FF_FE
+write_line "36#1Z=", 36#1Z
 
-writeln "64#A=", 64#A
-writeln "64#C=", 64#C
-writeln "64#a=", 64#a
-writeln "64#c=", 64#c
-writeln "64#1=", 64#1
-writeln "64#YW55IGN=", 64#YW55IGN
-writeln "64#TWFuIGlzIGRpc=", 64#TWFuIGlzIGRpc
+write_line "64#A=", 64#A
+write_line "64#C=", 64#C
+write_line "64#a=", 64#a
+write_line "64#c=", 64#c
+write_line "64#1=", 64#1
+write_line "64#YW55IGN=", 64#YW55IGN
+write_line "64#TWFuIGlzIGRpc=", 64#TWFuIGlzIGRpc

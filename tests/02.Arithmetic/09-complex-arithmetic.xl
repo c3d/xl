@@ -12,9 +12,9 @@ Z1:complex / Z2:complex is
     numer / denom
 
 write Z:complex         is write "(", Z.re, ",", Z.im, ")"
-writeln T, C:complex    is writeln T, "(", C.re, ", ", C.im, ")"
+write_line T, C:complex    is write_line T, "(", C.re, ", ", C.im, ")"
 
-writeln "(3,4) + (5,6)=", (3,4) + (5,6)
-writeln "(3,4) - (5,6)=", (3,4) - (5,6)
-writeln "(3,4) * (5,6)=", (3,4) * (5,6)
-writeln "(3,4) / (5,6)=", (3,4) / (5,6)
+write_line "(3,4) + (5,6)=", (3,4) + (5,6)
+write_line "(3,4) - (5,6)=", (3,4) - (5,6)
+write_line "(3,4) * (5,6)=", (3,4) * (5,6)
+write_line "(3,4) / (5,6)=", (3,4) / (5,6)

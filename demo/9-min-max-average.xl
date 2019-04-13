@@ -16,5 +16,5 @@ invoke "pi.local",
         compute_stats temperature
 
 report_stats Count, T, Min, Max, Avg is
-    writeln "Sample ", Count, " T=", T,
-            " Min=", Min, " Max=", Max, " Avg=", Avg
+    write_line "Sample ", Count, " T=", T, " ",
+               "Min=", Min, " Max=", Max, " Avg=", Avg

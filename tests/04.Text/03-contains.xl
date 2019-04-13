@@ -1,14 +1,12 @@
 if "ABCDEF" contains "CD" then
-    writeln "PASS"
+    write_line "PASS"
 else
-    writeln "FAIL"
+    write_line "FAIL"
 
 if "ABCDEF" contains "KO" then
-    writeln "FAIL"
+    write_line "FAIL"
 else
-    writeln "PASS"
+    write_line "PASS"
 
-writeln "Index ", "CD" in "ABCDEF ABCDEF"
-writeln "Index ", "CD" in "ABCDEF ABCDEF" from 4
-
-    
+write_line "Index ", "CD" in "ABCDEF ABCDEF"
+write_line "Index ", "CD" in "ABCDEF ABCDEF" from 4

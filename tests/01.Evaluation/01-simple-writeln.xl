@@ -1,1 +1,1 @@
-writeln "Hello World"
+write_line "Hello World"

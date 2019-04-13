@@ -1,5 +1,5 @@
 BankAccount is -100
 if BankAccount < 0 then
-    writeln "Warning shots fired"
+    write_line "Warning shots fired"
 else
-    writeln "Round of cakes and applause"
+    write_line "Round of cakes and applause"

@@ -1,4 +1,4 @@
-writeln good 1
-writeln good 1.3
-writeln good "ABC"
-writeln good true
+write_line good 1
+write_line good 1.3
+write_line good "ABC"
+write_line good true

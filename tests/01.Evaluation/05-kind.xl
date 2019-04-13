@@ -1,7 +1,4 @@
-writeln kind 1
-writeln kind 1.21
-writeln kind "Hello"
-writeln kind false
-
-
-
+write_line kind 1
+write_line kind 1.21
+write_line kind "Hello"
+write_line kind false

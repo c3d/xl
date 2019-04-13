@@ -1,16 +1,13 @@
-writeln 73+3
-writeln 73-3
-writeln 73*3
-writeln 73/3
-writeln 73 mod 3
-writeln 73 and 3
-writeln 73 or 3
-writeln 73 xor 3
-writeln 73 shl 3
-writeln 73 ashr 3
-writeln 73 lshr 3
-writeln -73
-writeln not 73
-
-
-
+write_line 73+3
+write_line 73-3
+write_line 73*3
+write_line 73/3
+write_line 73 mod 3
+write_line 73 and 3
+write_line 73 or 3
+write_line 73 xor 3
+write_line 73 shl 3
+write_line 73 ashr 3
+write_line 73 lshr 3
+write_line -73
+write_line not 73

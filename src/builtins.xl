@@ -121,12 +121,12 @@ write x:text            as boolean      is C xl_write_text
 write x:integer         as boolean      is C xl_write_integer
 write x:real            as boolean      is C xl_write_real
 write x:character       as boolean      is C xl_write_character
-writeln                 as boolean      is C xl_write_cr
+write_line              as boolean      is C xl_write_cr
 
 write true              is write "true"
 write false             is write "false"
 write head, rest        is write head; write rest
-writeln a               is write a; writeln
+write_line Items        is write Items; write_line
 
 // Tree shape and attributes
 kind  X:tree            as integer      is builtin TreeKind

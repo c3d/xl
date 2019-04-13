@@ -32,7 +32,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 if first_condition and second_condition then
-   writeln "both are true"
+   write_line "both are true"
 
 first_condition is true
 second_condition is 1 > 0

@@ -1,3 +1,3 @@
 Var is "Declared on original computer"
 tell "localhost",
-   writeln "The value of Var is ", Var
+   write_line "The value of Var is ", Var

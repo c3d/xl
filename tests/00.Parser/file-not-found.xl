@@ -33,4 +33,4 @@
 // *****************************************************************************
 // CMD=%x -nobuiltins -parse %f some-random-nonexistent-file.xl -show
 // EXIT=1
-writeln "This file is OK, the other one does not exist"
+write_line "This file is OK, the other one does not exist"

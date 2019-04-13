@@ -2,7 +2,7 @@
 // Note that this sends a local variable (defined here) over to target
 I is 0
 while I < 100 loop
-    writeln "Sent request ", I
+    write_line "Sent request ", I
     tell "localhost",
-        writeln "Hello world from PID ", process_id, " request #", I
+        write_line "Hello world from PID ", process_id, " request #", I
     I := I + 1

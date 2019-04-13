@@ -59,7 +59,7 @@
         Redo
   - A sequence of parameters is made of "comma" infix-op, and a statement
     is a prefix-op with this sequence of parameters as argument:
-        WriteLn A,B
+        Write_Line A,B
   - By default, a sequence of tokens is parsed using prefix operator,
     unless a token is recognized as an infix operator.
         A and B or C

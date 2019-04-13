@@ -1,5 +1,5 @@
 // *****************************************************************************
-// 2422-2427-boolean-in-writeln.xl                                    XL project
+// 2422-2427-boolean-in-writeln.xl                                   XL project
 // *****************************************************************************
 //
 // File description:
@@ -32,8 +32,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 A := true
-writeln "A (true)=", A
+write_line "A (true)=", A
 A := not A
-writeln "A (false)=", A
+write_line "A (false)=", A
 A := not A
-writeln "A (true)=", A
+write_line "A (true)=", A

@@ -34,8 +34,8 @@
 
 A is true
 A := true
-writeln "A (true)=", A
+write_line "A (true)=", A
 A := not A
-writeln "A (false)=", A
+write_line "A (false)=", A
 A := not A
-writeln "A (true)=", A
+write_line "A (true)=", A

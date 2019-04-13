@@ -1,7 +1,7 @@
 X := 0
 while X < 42 loop
     X := X + 1
-    writeln "X=", X
+    write_line "X=", X
 
 while X < 50 loop
     X := X + 2
@@ -9,5 +9,4 @@ while X < 50 loop
     while Y < X loop
         write "."
         Y := Y + 1
-    writeln "X=", X
-    
+    write_line "X=", X

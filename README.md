@@ -18,7 +18,7 @@ written as follows:
 N! is N * (N-1)!
 
 for I in 1..5 loop
-    writeln "The factorial of ", N, " is ", N!
+    write_line "The factorial of ", N, " is ", N!
 ```
 
 
@@ -78,7 +78,7 @@ Two dialects of XL further demonstrate the extensibility of the language
    >to replace `is` with `->` for the code above to work as intended.
 
 * [ELFE](http://github.com/c3d/elfe), formerly ELIOT (Extensible
-  Language for the Internet of things) was an experimetn on how to
+  Language for the Internet of things) was an experiment on how to
   write distributed software that looks like a single program, for
   exampel to control swarms of devices in the context of the Internet
   of Things. An example of a simple ELFE program would be:
@@ -94,7 +94,7 @@ Two dialects of XL further demonstrate the extensibility of the language
               display temperature
 
   display Temp:real is
-      writeln "The temperature of ", WORKER, " is ", Temp
+      write_line "The temperature of ", WORKER, " is ", Temp
   ```
 
 > The present branch, `bigmerge`, is an ongoing effort to _reconverge_
@@ -300,9 +300,9 @@ adder X:integer is (Y is Y + X)
 add3 is adder 3
 add5 is adder 5
 
-writeln "3+2=", add3 2
-writeln "5+17=", add5 17
-writeln "8+2=", (adder 8) 2
+write_line "3+2=", add3 2
+write_line "5+17=", add5 17
+write_line "8+2=", (adder 8) 2
 ```
 
 However, it is a bit different in the sense that the core data
@@ -321,20 +321,20 @@ However, being readable for humans requires a few special rules to
 match the way we read expressions. Consider for example the following:
 
 ```xl
-write sin X, cos Y
+write_line sin X, cos Y
 ```
 
-Most human being parse this as meaning `write (sin(X),cos(Y))`,
-i.e. we call `write` with two values resulting from evaluating `sin X`
+Most human being parse this as meaning `write_line (sin(X),cos(Y))`,
+i.e. we call `write_line` with two values resulting from evaluating `sin X`
 and `cos Y`. This is not entirely logical. If `write` takes
 comma-separated arguments, why wouldn't `sin` also take
 comma-separated arguments? In other words, why doesn't this parse as
-`write(sin(X, cos(Y))`?
+`write_line(sin(X, cos(Y))`?
 
 This shows that humans have a notion of *expressions*
 vs. *statements*. Expressions such as `sin X` have higher priority
 than commas and require parentheses if you want multiple arguments. By
-contrast, statements such as `write` have lower priority, and will
+contrast, statements such as `write_line` have lower priority, and will
 take comma-separated argument lists. An indent or `{ }` block begins a
 statement, whereas parentheses `()` or square brackets `[]` begin an
 expression.
@@ -349,8 +349,8 @@ only one side of an operator to disambiguate between an infix or a
 prefix. For example:
 
 ```xl
-write -A    // write (-A)
-B - A       // (B - A)
+write_line -A   // write_line (-A)
+B - A           // (B - A)
 ```
 
 ### Subtlety #3: Delayed evaluation

@@ -2,4 +2,4 @@
 pi1_temp is ask "pi.local",  { temperature }
 pi2_temp is ask "pi2.local", { temperature }
 
-writeln "Temperature on pi=", pi1_temp, " on pi2=", pi2_temp
+write_line "Temperature on pi=", pi1_temp, " on pi2=", pi2_temp

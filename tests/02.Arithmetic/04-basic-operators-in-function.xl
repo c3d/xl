@@ -1,21 +1,21 @@
 run_test x,y is
-    writeln x+y
-    writeln x-y
-    writeln x*y
-    writeln x/y
-    writeln x mod y
-    writeln x rem y
-    writeln x and y
-    writeln x or y
-    writeln x xor y
+    write_line x+y
+    write_line x-y
+    write_line x*y
+    write_line x/y
+    write_line x mod y
+    write_line x rem y
+    write_line x and y
+    write_line x or y
+    write_line x xor y
     if x > 0 and y > 0 then
-        writeln x shl y
-        writeln x ashr y
-        writeln x lshr y
-    writeln -x
-    writeln not x
-    writeln abs x
-    writeln "---"
+        write_line x shl y
+        write_line x ashr y
+        write_line x lshr y
+    write_line -x
+    write_line not x
+    write_line abs x
+    write_line "---"
 
 run_test 75,17
 run_test 75,-17
