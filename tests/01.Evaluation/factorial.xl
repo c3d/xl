@@ -1,0 +1,7 @@
+0! is 1
+N! is N * (N-1)!
+
+I := 0
+while I < 8 loop
+    write_line "The factorial of ", I, " is ", I!
+    I := I + 1
