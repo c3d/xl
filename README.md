@@ -136,7 +136,7 @@ This operator can be read as *transforms into*, i.e. it transforms the
 code that is on the left into the code that is on the right.
 
 <details>
-<summary>It can define _variables_ with possibly complex structures</summary>
+<summary>It can define variables with possibly complex structures</summary>
 
 ```xl
 pi              is      3.1415926
@@ -145,7 +145,7 @@ words           is      "xylophage", "zygomatic", "barfitude"
 </details>
 
 <details>
-<summary>It can define _functions_</summary>
+<summary>It can define functions</summary>
 
 ```xl
 abs X           is      if X < 0 then -X else X
@@ -153,7 +153,7 @@ abs X           is      if X < 0 then -X else X
 
 </details>
 <details>
-<summary>It can define _operators_</summary>
+<summary>It can define operators</summary>
 
 ```xl
 X ≠ Y           is      not X = Y
@@ -162,7 +162,7 @@ X ≠ Y           is      not X = Y
 
 </details>
 <details>
-<summary>It can define _specializations_ for particular inputs</summary>
+<summary>It can define specializations for particular inputs</summary>
 
 ```xl
 0!              is      1
@@ -171,7 +171,7 @@ N!  when N > 0  is      N * (N-1)!
 
 </details>
 <details>
-<summary>It can define _notations_ using arbitrary combinations of operators</summary>
+<summary>It can define notations using arbitrary combinations of operators</summary>
 
 ```xl
 A in B..C       is      A >= B and A <= C
@@ -179,7 +179,7 @@ A in B..C       is      A >= B and A <= C
 
 </details>
 <details>
-<summary>It can define _optimizations_ using specializations</summary>
+<summary>It can define optimizations using specializations</summary>
 
 ```xl
 X * 1           is      X
@@ -188,7 +188,7 @@ X + 0           is      X
 
 </details>
 <details>
-<summary>It can define _program structures_</summary>
+<summary>It can define program structures</summary>
 
 ```xl
 loop Body       is      Body; loop Body
@@ -197,7 +197,7 @@ loop Body       is      Body; loop Body
 
 </details>
 <details>
-<summary>It can define _types_</summary>
+<summary>It can define types</summary>
 
 ```xl
 complex         is      type(complex(re:real, im:real))
@@ -205,7 +205,7 @@ complex         is      type(complex(re:real, im:real))
 
 </details>
 <details>
-<summary>It can define _higher-order functions_</summary>
+<summary>It can define higher-order functions</summary>
 
 ```xl
 adder N         is      (X is N + X)
@@ -217,7 +217,7 @@ add3            is      adder 3
 
 </details>
 <details>
-<summary>It can define _maps_, which are actually just regular functions</summary>
+<summary>It can define maps, which are just regular functions</summary>
 
 ```xl
 my_map is
@@ -239,7 +239,7 @@ my_map (44)
 
 </details>
 <details>
-<summary>It can define _templates_ (C++ terminology), or _generics_ (Ada terminology)</summary>_
+<summary>It can define templates (C++ terminology) or generics (Ada terminology)</summary>_
 
 ```xl
 // An (inefficient) implementation of a generic array type
@@ -258,7 +258,7 @@ A[3]
 
 </details>
 <details>
-<summary>It can define _variadic functions_</summary>
+<summary>It can define variadic functions</summary>
 
 ```xl
 min X       is X
@@ -268,6 +268,11 @@ min X, Y    is { Z is min Y; if X < Z then X else Z }
 min 7, 42, 20, 8, 4, 5, 30
 ```
 </details>
+
+In short, the single `is` operator covers all kinds of declarations
+that are found in other languages, using a single, easy to read
+syntax.
+
 
 ### Syntax: Look, Ma, no keywords!
 
