@@ -30,7 +30,7 @@ written as follows:
 N! is N * (N-1)!
 
 for I in 1..5 loop
-    write_line "The factorial of ", N, " is ", N!
+    write_line "The factorial of ", I, " is ", I!
 ```
 
 
