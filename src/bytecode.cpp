@@ -505,7 +505,7 @@ struct IndexOp : FailOp
                 Tree      *result = NULL;
                 if (Name *lfname = lifx->left->AsName())
                 {
-                    // Case like '(X->X+1) Arg':
+                    // Case like '(X is X+1) Arg':
                     // Bind arg in new context and evaluate body
                     context = new Context(context);
                     context->Define(lfname, arg);
@@ -514,7 +514,7 @@ struct IndexOp : FailOp
                 else
                 {
                     // Otherwise, enter declaration and retry, e.g.
-                    // '(X,Y->X+Y) (2,3)' should evaluate as 5
+                    // '(X,Y is X+Y) (2,3)' should evaluate as 5
                     context = new Context(context);
                     context->Define(lifx->left, lifx->right);
                     result = xl_evaluate(context->CurrentScope(), arg);
