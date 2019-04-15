@@ -1562,8 +1562,19 @@ Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 //   Accessing a struct element used to be complicated. Now it's incompatible.
 // ----------------------------------------------------------------------------
 {
-    auto inst =  b->CreateStructGEP(nullptr, ptr, idx, name);
+    auto inst = b->CreateStructGEP(nullptr, ptr, idx, name);
     record(llvm_ir, "StructGEP %+s(%v, %u) is %v", name, ptr, idx, inst);
+    return inst;
+}
+
+
+Value_p JITBlock::ArrayGEP(Value_p ptr, uint32_t idx, kstring name)
+// ----------------------------------------------------------------------------
+//   Accessing an array element with a fixed index
+// ----------------------------------------------------------------------------
+{
+    auto inst =  b->CreateConstGEP1_32(nullptr, ptr, idx, name);
+    record(llvm_ir, "ArrayGEP %+s(%v, %u) is %v", name, ptr, idx, inst);
     return inst;
 }
 

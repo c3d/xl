@@ -306,6 +306,7 @@ public:
     Value_p             Alloca(Type_p type, kstring name = "");
     Value_p             AllocateReturnValue(Function_p f, kstring name = "");
     Value_p             StructGEP(Value_p ptr, unsigned idx, kstring name="");
+    Value_p             ArrayGEP(Value_p ptr, uint32_t idx, kstring name="");
 
 #define UNARY(Name)                                                     \
     Value_p             Name(Value_p l, kstring name = "");
