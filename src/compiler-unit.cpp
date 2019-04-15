@@ -74,7 +74,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
 // ----------------------------------------------------------------------------
     : compiler(compiler),
       jit(compiler.jit),
-      module(jit.CreateModule("xl.module")),
+      module(jit, "xl.module"),
       context(new Context(scope)),
       source(source),
       types(new Types(scope)),
@@ -127,7 +127,6 @@ CompilerUnit::~CompilerUnit()
 //   Destroy compiler unit
 // ----------------------------------------------------------------------------
 {
-    jit.DeleteModule(module);
     record(compiler_unit, "Deleted unit %p scope %t source %t",
            this, context->CurrentScope(), source);
 }

@@ -247,6 +247,21 @@ inline IntegerType_p JIT::IntegerType()
 }
 
 
+class JITModule
+// ----------------------------------------------------------------------------
+//    Create / delete a JIT module
+// ----------------------------------------------------------------------------
+{
+public:
+    JITModule(JIT &jit, text name)
+        : jit(jit), module(jit.CreateModule(name)) {}
+    ~JITModule()        { jit.DeleteModule(module); }
+private:
+    JIT &               jit;
+    ModuleID            module;
+};
+
+
 class JITBlock
 // ----------------------------------------------------------------------------
 //   Interface to the LLVM IR builder

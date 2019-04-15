@@ -55,7 +55,7 @@ class CompilerUnit
 {
     Compiler &          compiler;       // The compiler environment we use
     JIT &               jit;            // The JIT compiler (LLVM CRAP)
-    ModuleID            module;         // The module we are compiling
+    JITModule           module;         // The module we are compiling
     Context_p           context;        // Context in which we compile
     Tree_p              source;         // The source of the program to compile
     Types_p             types;          // Type inferences for this unit
