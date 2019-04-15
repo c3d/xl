@@ -230,9 +230,9 @@ void CompilerFunction::InitializeArgs()
 //   In that case, the arguments are (Scope *scope, Tree *self)
 {
     // Associate the value for the additional arguments (read-only, no alloca)
-    Function::arg_iterator args = function->arg_begin();
-    Value_p scope = &*args++;
-    Value_p self = &*args++;
+    JITArguments args(function);
+    Value_p scope = *args++;
+    Value_p self = *args++;
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope
     values[xl_scope] = scope;
@@ -249,13 +249,13 @@ void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
 //   the values set during the rest of the code generation
 {
     // Associate the value for the additional arguments (read-only, no alloca)
-    Function::arg_iterator args = function->arg_begin();
+    JITArguments inputs(function);
 
     // Read the actual parameters
     for (RewriteBinding &binding : rc->bindings)
     {
-        Value_p inputArg = &*args++;
-        values[binding.name] = inputArg;
+        Value_p input = *inputs++;
+        values[binding.name] = input;
     }
 
     // Insert 'self', mapping to form, and 'scope' for the evaluation scope

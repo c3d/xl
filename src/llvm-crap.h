@@ -212,6 +212,31 @@ public:
 };
 
 
+struct JITArguments
+// ----------------------------------------------------------------------------
+//   Encapsulate argument lists with a nicer syntax
+// ----------------------------------------------------------------------------
+{
+    JITArguments(Function_p function)
+        : args(function->arg_begin()), count(function->arg_size()) {}
+
+    Value_p             operator*(void)         { return &*args; }
+    JITArguments &      operator++(void)        { ++args; return *this; }
+    JITArguments        operator++(int)
+    {
+        JITArguments copy(*this);
+        ++args;
+        return copy;
+    }
+    size_t              Count()                 { return count; }
+
+private:
+    typedef Function::arg_iterator Args;
+    Args                args;
+    size_t              count;
+};
+
+
 template<typename T>
 inline IntegerType_p JIT::IntegerType()
 // ----------------------------------------------------------------------------

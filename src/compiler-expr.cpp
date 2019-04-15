@@ -219,12 +219,11 @@ Value_p CompilerExpression::Do(Prefix *what)
             // Take args list for current function as input
             Values args;
             Function_p fn = function.Function();
-            uint i, max = fn->arg_size();
-            Function::arg_iterator arg = fn->arg_begin();
-            for (i = 0; i < max; i++)
+            JITArguments inputs(fn);
+            for (size_t i = 0; i < inputs.Count(); i++)
             {
-                Value_p inputArg = &*arg++;
-                args.push_back(inputArg);
+                Value_p input = *inputs++;
+                args.push_back(input);
             }
 
             // Call the primitive (effectively creating a wrapper for it)
