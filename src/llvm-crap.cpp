@@ -1213,11 +1213,14 @@ class JITBlockPrivate
     JIT &               jit;
     BasicBlock_p        block;
     JITBuilder *        builder;
+    kstring             name;
 
     JITBlockPrivate(JIT &jit, Function_p function, kstring name);
     JITBlockPrivate(const JITBlockPrivate &other, kstring name);
     JITBlockPrivate(JIT &jit);
     ~JITBlockPrivate();
+
+    JITBlockPrivate &operator =(const JITBlockPrivate &block);
 
     JITBuilder *        operator->() { return builder; }
 };
@@ -1229,7 +1232,8 @@ JITBlockPrivate::JITBlockPrivate(JIT &jit, Function_p function, kstring name)
 // ----------------------------------------------------------------------------
     : jit(jit),
       block(BasicBlock::Create(jit.p.context, name, function)),
-      builder(new JITBuilder(block))
+      builder(new JITBuilder(block)),
+      name(name)
 {
     record(llvm_blocks, "Create JIT block '%+s' %p for block %p",
            name, this, block);
@@ -1242,7 +1246,8 @@ JITBlockPrivate::JITBlockPrivate(const JITBlockPrivate &other, kstring name)
 // ----------------------------------------------------------------------------
     : jit(other.jit),
       block(BasicBlock::Create(jit.p.context, name, other.block->getParent())),
-      builder(new JITBuilder(block))
+      builder(new JITBuilder(block)),
+      name(name)
 {
     record(llvm_blocks, "Copy JIT block '%+s' %p for block %p from %p",
            name, this, block, &other);
@@ -1255,7 +1260,8 @@ JITBlockPrivate::JITBlockPrivate(JIT &jit)
 // ----------------------------------------------------------------------------
     : jit(jit),
       block(nullptr),
-      builder(nullptr)
+      builder(nullptr),
+      name(nullptr)
 {}
 
 
@@ -1265,6 +1271,20 @@ JITBlockPrivate::~JITBlockPrivate()
 // ----------------------------------------------------------------------------
 {
     delete builder;
+}
+
+
+JITBlockPrivate &JITBlockPrivate::operator=(const JITBlockPrivate &o)
+// ----------------------------------------------------------------------------
+//   Copy data from the other private block
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(&jit == &o.jit);
+    block = BasicBlock::Create(jit.p.context, o.name, o.block->getParent());
+    delete builder;
+    builder = new JITBuilder(block);
+    name = o.name;
+    return *this;
 }
 
 
@@ -1301,6 +1321,17 @@ JITBlock::~JITBlock()
 // ----------------------------------------------------------------------------
 {
     delete &b;
+}
+
+
+JITBlock &JITBlock::operator=(const JITBlock &block)
+// ----------------------------------------------------------------------------
+//   Copy a JIT block
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(&p == &block.p);
+    b = block.b;
+    return *this;
 }
 
 

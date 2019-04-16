@@ -276,6 +276,8 @@ public:
     JITBlock(JIT &jit);
     ~JITBlock();
 
+    JITBlock &          operator=(const JITBlock &o);
+
     static Type_p       Type(Value_p value)      { return JIT::Type(value); }
     static Type_p       ReturnType(Function_p f) { return JIT::ReturnType(f); }
 
