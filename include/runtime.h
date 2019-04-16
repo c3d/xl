@@ -79,6 +79,7 @@ Tree *  xl_call(Scope *c, text prefix, TreeList &args);
 Tree *  xl_assign(Scope *c, Tree *ref, Tree *value);
 Tree *  xl_form_error(Scope *c, Tree *tree);
 Tree *  xl_stack_overflow(Tree *tree);
+bool    xl_same_text(Tree * , const char *);
 bool    xl_same_shape(Tree *t1, Tree *t2);
 
 Integer *xl_new_integer(TreePosition pos, longlong value);
@@ -91,6 +92,8 @@ Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
+Tree *   xl_array_index(Scope *, Tree *data, Tree *index);
+Tree     *xl_new_closure(eval_fn toCall, Tree *expr, size_t ntrees, ...);
 
 
 

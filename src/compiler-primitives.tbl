@@ -34,6 +34,10 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+#ifndef VA_EXTERNAL
+#define VA_EXTERNAL EXTERNAL
+#endif
+
 // ============================================================================
 //
 //   Special opcodes that perform XL-specific operations
@@ -160,6 +164,7 @@ SPECIAL(BlockClosing, 1,
 EXTERNAL(strcmp,                integerTy,      charPtrTy, charPtrTy)
 EXTERNAL(xl_evaluate,           treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_same_shape,         booleanTy,      treePtrTy, treePtrTy)
+EXTERNAL(xl_same_text,         booleanTy,       treePtrTy, charPtrTy)
 EXTERNAL(xl_infix_match_check,  treePtrTy,      scopePtrTy, treePtrTy, charPtrTy)
 EXTERNAL(xl_typecheck,          treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_form_error,         treePtrTy,      scopePtrTy, treePtrTy)
@@ -180,7 +185,8 @@ EXTERNAL(xl_fill_postfix,       postfixTreePtrTy, postfixTreePtrTy, treePtrTy, t
 EXTERNAL(xl_fill_infix,         infixTreePtrTy, infixTreePtrTy,treePtrTy,treePtrTy)
 EXTERNAL(xl_integer2real,       treePtrTy,      treePtrTy)
 EXTERNAL(xl_array_index,        treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
-EXTERNAL(xl_new_closure,        treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
+VA_EXTERNAL(xl_new_closure,     treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
+EXTERNAL(xl_closure_code,       evalFnTy,       treePtrTy)
 
 
 
@@ -274,6 +280,7 @@ ALIAS(BOr,    2, Or)
 ALIAS(BXor,   2, Xor)
 ALIAS(BNot,   1, Not)
 
+#undef VA_EXTERNAL
 #undef EXTERNAL
 #undef SPECIAL
 #undef ALIAS

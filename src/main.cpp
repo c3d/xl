@@ -55,6 +55,7 @@
 #include "interpreter.h"
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
+#include "compiler-fast.h"
 #endif // INTERPRETER_ONLY
 
 #include <recorder/recorder.h>
@@ -164,12 +165,13 @@ Main::Main(int inArgc,
     recorder_configure_type('O', recorder_render<std::ostringstream, Op *>);
     recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
 #ifndef INTERPRETER_ONLY
-    if (options.optimize_level > 1)
-    {
-        compilerName = SearchFile(compilerName, bin_paths);
-        evaluator = new Compiler(compilerName.c_str(), options.optimize_level,
-                                 inArgc, inArgv);
-    }
+    compilerName = SearchFile(compilerName, bin_paths);
+    kstring cname = compilerName.c_str();
+    uint opt = options.optimize_level;
+    if (opt == 1)
+        evaluator = new FastCompiler(cname, opt, inArgc, inArgv);
+    else if (opt >= 2)
+        evaluator = new Compiler(cname, opt, inArgc, inArgv);
     else
 #endif // INTERPRETER_ONLY
         evaluator = new Interpreter;

@@ -251,6 +251,7 @@ public:
     void                SetScope(Scope *s)      { symbols = s; }
     Context *           Parent();
     Context *           Pointer()               { return this; }
+    operator Scope *()                          { return symbols; }
 
     // Special forms of evaluation
     Tree *              Call(text prefix, TreeList &args);

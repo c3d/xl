@@ -114,8 +114,13 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
         FunctionType_p fty = jit.FunctionType(RetTy, sig);      \
         Name = jit.Function(fty, #Name);                        \
     }
+#define VA_EXTERNAL(Name, RetTy, ...)                           \
+    {                                                           \
+        Signature sig { __VA_ARGS__ };                          \
+        FunctionType_p fty = jit.FunctionType(RetTy, sig, true);\
+        Name = jit.Function(fty, #Name);                        \
+    }
 #include "compiler-primitives.tbl"
-
 
     record(compiler_unit, "Created unit %p scope %t source %t",
            this, scope, source);

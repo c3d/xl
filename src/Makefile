@@ -82,6 +82,7 @@ SOURCES_VARIANT_lib     =			\
 
 SOURCES_llvm =					\
 	llvm-crap.cpp				\
+	compiler-fast.cpp			\
 	compiler.cpp				\
 	compiler-unit.cpp			\
 	compiler-prototype.cpp			\

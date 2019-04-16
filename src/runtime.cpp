@@ -161,6 +161,16 @@ Tree *xl_stack_overflow(Tree *what)
 }
 
 
+bool xl_same_text(Tree *what, const char *ref)
+// ----------------------------------------------------------------------------
+//   Compile the tree if necessary, then evaluate it
+// ----------------------------------------------------------------------------
+{
+    Text *tval = what->AsText(); assert(tval);
+    return tval->value == text(ref);
+}
+
+
 bool xl_same_shape(Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Check equality of two trees
