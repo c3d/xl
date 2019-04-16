@@ -299,6 +299,7 @@ public:
     Value_p             Call(Value_p c, Values &args);
 
     BasicBlock_p        Block();
+    BasicBlock_p        NewBlock(kstring name);
     Value_p             Return(Value_p value = nullptr);
     Value_p             Branch(JITBlock &to);
     Value_p             Branch(BasicBlock_p to);

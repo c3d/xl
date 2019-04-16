@@ -1502,6 +1502,15 @@ BasicBlock_p JITBlock::Block()
 }
 
 
+BasicBlock_p JITBlock::NewBlock(kstring name)
+// ----------------------------------------------------------------------------
+//   Create a new basic block in the same function as current block
+// ----------------------------------------------------------------------------
+{
+    return BasicBlock::Create(p.context, name, b.block->getParent());
+}
+
+
 Value_p JITBlock::Return(Value_p value)
 // ----------------------------------------------------------------------------
 //  Return the given value, or RetVoid if nullptr
