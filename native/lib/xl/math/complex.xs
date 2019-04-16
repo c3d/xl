@@ -34,9 +34,9 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use R = XL.TYPES.REAL
+import XL.TYPES.REAL
 
-type complex[type real is R.real] with
+type complex[type real is XL.TYPES.REAL.real] with
 // ----------------------------------------------------------------------------
 //    Complex numbers taking the given `real` type
 // ----------------------------------------------------------------------------
@@ -68,7 +68,6 @@ type complex[type real is R.real] with
     // Notation for complex conjugate
     Conjugate Z:complex         as complex
     ~Z:complex                  as complex      is Conjugate Z
-
 
     // Real, imaginary, modulus and argument can be read or written
     Re                          : real
