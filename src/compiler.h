@@ -53,6 +53,8 @@
 // ============================================================================
 
 RECORDER_DECLARE(compiler);
+RECORDER_DECLARE(compiler_warning);
+RECORDER_DECLARE(compiler_error);
 
 XL_BEGIN
 // ============================================================================
@@ -124,6 +126,7 @@ public:
     FunctionType_p      evalTy;
     PointerType_p       evalFnTy;
 };
+
 
 
 // ============================================================================

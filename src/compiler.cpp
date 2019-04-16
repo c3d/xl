@@ -45,8 +45,9 @@
 #include <cstdarg>
 
 
-RECORDER(compiler, 16, "General information about the XL compiler");
-
+RECORDER(compiler,              16, "Compilation of XL trees");
+RECORDER(compiler_warning,      16, "Warnings during XL compilation");
+RECORDER(compiler_error,        16, "Errors during XL compilation");
 
 XL_BEGIN
 // ============================================================================
