@@ -99,36 +99,36 @@ struct Main
     virtual ~Main();
 
     // Entry point that does everything
-    int          LoadAndRun();
+    int                 LoadAndRun();
 
     // Evaluate a tree in the given context
-    Tree *       Evaluate(Scope *scope, Tree *value);
-    bool         TypeAnalysis(Scope *scope, Tree *value);
-    Tree *       TypeCheck(Scope *scope, Tree *type, Tree *value);
+    Tree *              Evaluate(Scope *scope, Tree *value);
+    bool                TypeAnalysis(Scope *scope, Tree *value);
+    Tree *              TypeCheck(Scope *scope, Tree *type, Tree *value);
 
     // Individual phases of the above
-    Errors *     InitMAIN();
-    int          ParseOptions();
-    int          LoadFiles();
-    int          LoadFile(const text &file, text modname="");
-    int          Run();
+    Errors *            InitMAIN();
+    int                 ParseOptions();
+    int                 LoadFiles();
+    int                 LoadFile(const text &file, text modname="");
+    int                 Run();
 
     // Error checking
-    void         Log(Error &e)   { errors->Log(e); }
-    uint         HadErrors() { return errors->Count(); }
+    void                Log(Error &e)   { errors->Log(e); }
+    uint                HadErrors() { return errors->Count(); }
 
     // Hooks for use as a library in an application
-    virtual text SearchFile(text input);
-    virtual text SearchLibFile(text input);
-    virtual text SearchFile(text input, const path_list &p);
-    virtual text ModuleDirectory(text path);
-    virtual text ModuleBaseName(text path);
-    virtual text ModuleName(text path);
-    virtual bool Refresh(double delay);
-    virtual text Decrypt(text input);
-    virtual text Encrypt(text input);
-    virtual Tree*Normalize(Tree *input);
-
+    virtual text        SearchFile(text input);
+    virtual text        SearchLibFile(text input);
+    virtual text        SearchFile(text input, const path_list &p);
+    virtual text        ModuleDirectory(text path);
+    virtual text        ModuleBaseName(text path);
+    virtual text        ModuleName(text path);
+    virtual bool        Refresh(double delay);
+    virtual text        Decrypt(text input);
+    virtual text        Encrypt(text input);
+    virtual Tree*       Normalize(Tree *input);
+    virtual eval_fn     Declarator(text name);
 
 public:
     int          argc;

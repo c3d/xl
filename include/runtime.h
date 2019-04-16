@@ -203,7 +203,8 @@ bool    xl_file_exists(Scope *scope, Tree_p self, text path);
 //
 // ============================================================================
 
-Tree *  xl_import(Scope *, Tree *self, text name, int phase);
+Tree *  xl_import(Scope *scope, Tree *self);
+Tree *  xl_load(Scope *scope, Tree *self);
 Tree *  xl_load_data(Scope *, Tree *self,
                      text name, text prefix,
                      text fieldSeps = ",;", text recordSeps = "\n",

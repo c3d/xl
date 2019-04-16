@@ -509,11 +509,37 @@ struct ImportedFileInfo : Info
 };
 
 
-Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
+Tree *xl_import(Scope *scope, Tree *self)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
 {
+    Infix *infix = self->AsInfix();
+    if (!infix)
+    {
+        Ooops("Unexpected import: $1", self);
+        return self;
+    }
+    text modname = "";
+    Name *name = infix->right->AsName();
+    if (name)
+    {
+        modname = name->value;
+    }
+    else
+    {
+        Tree *value = xl_evaluate(scope, infix->right);
+        if (Text *text = value->AsText())
+        {
+            modname = text->value;
+        }
+        else
+        {
+            Ooops("Invalid import name $1", infix->right);
+            return self;
+        }
+    }
+
     text path = "";
     ImportedFileInfo *info = self->GetInfo<ImportedFileInfo>();
     if (info)
@@ -523,8 +549,8 @@ Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
     else
     {
         if (path == "")
-            path = MAIN->SearchFile(name);
-        if (path == "" && !isAbsolute(name))
+            path = MAIN->SearchFile(modname);
+        if (path == "" && !isAbsolute(modname))
         {
             // Relative path: look in same directory as parent
             static Name_p module_dir = new Name("module_dir");
@@ -533,7 +559,7 @@ Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
             {
                 if (Text * txt = dir->AsText())
                 {
-                    path = txt->value + "/" + name;
+                    path = txt->value + "/" + modname;
                     utf8_filestat_t st;
                     if (utf8_stat (path.c_str(), &st) < 0)
                         path = "";
@@ -542,7 +568,7 @@ Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
         }
         if (path == "")
         {
-            Ooops("Source file $2 not found for $1", self).Arg(name);
+            Ooops("Source file $2 not found for $1", self).Arg(modname);
             return XL::xl_false;
         }
         info = new ImportedFileInfo(path);
@@ -566,6 +592,15 @@ Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
     return result;
+}
+
+
+Tree *xl_load(Scope *scope, Tree *self)
+// ----------------------------------------------------------------------------
+//    Load a file from disk
+// ----------------------------------------------------------------------------
+{
+    return xl_import(scope, self);
 }
 
 

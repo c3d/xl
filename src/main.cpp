@@ -640,6 +640,18 @@ Tree *Main::Normalize(Tree *input)
 }
 
 
+eval_fn Main::Declarator(text name)
+// ----------------------------------------------------------------------------
+//   Return a declarator for 'import' and 'load'
+// ----------------------------------------------------------------------------
+{
+    if (name == "import")
+        return xl_import;
+    if (name == "load")
+        return xl_load;
+    return nullptr;
+}
+
 XL_END
 
 
