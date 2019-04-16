@@ -478,6 +478,54 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 
 // ============================================================================
 //
+//    Tree attributes
+//
+// ============================================================================
+
+// Set and get per-context tree attributes
+Tree *Context::Info(text key, Tree *what, bool recurse)
+// ----------------------------------------------------------------------------
+//    Return the information associated with the given attribute
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << key << "@" << (void *) what;
+    return Named(out.str(), recurse);
+}
+
+
+Rewrite *Context::SetInfo(text key, Tree *what, Tree *value)
+// ----------------------------------------------------------------------------
+//   Set the information associated with the tree
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << key << "@" << (void *) what;
+    return Define(out.str(), value, false);
+}
+
+
+Tree *Context::Type(Tree *what)
+// ----------------------------------------------------------------------------
+//   Return the type associated with the value
+// ----------------------------------------------------------------------------
+{
+    return Info("type", what);
+}
+
+
+Rewrite *Context::SetType(Tree *what, Tree *type)
+// ----------------------------------------------------------------------------
+//   Set the type associated with the value
+// ----------------------------------------------------------------------------
+{
+    return SetInfo("type", what, type);
+}
+
+
+
+// ============================================================================
+//
 //    Context attributes
 //
 // ============================================================================
@@ -614,12 +662,12 @@ static Tree *findReference(Scope *, Scope *, Tree *what, Infix *decl, void *)
 }
 
 
-Rewrite *Context::Reference(Tree *form)
+Rewrite *Context::Reference(Tree *form, bool recurse)
 // ----------------------------------------------------------------------------
 //   Find an existing definition in the symbol table that matches the form
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(form, findReference, NULL, true))
+    if (Tree *result = Lookup(form, findReference, NULL, recurse))
         if (Rewrite *decl = result->As<Rewrite>())
             return decl;
     return NULL;
@@ -676,7 +724,7 @@ Tree *Context::Bound(Tree *form, bool recurse)
 }
 
 
-Tree *Context::Bound(Tree *form, bool recurse, Infix_p *rewrite, Scope_p *ctx)
+Tree *Context::Bound(Tree *form, bool recurse, Rewrite_p *rewrite, Scope_p *ctx)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------

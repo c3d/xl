@@ -565,8 +565,6 @@ Tree *xl_import(Scope *scope, Tree *self, text name, int phase)
 
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
-    if (phase == EXECUTION_PHASE && result)
-        result = xl_evaluate(scope, result);
     return result;
 }
 
