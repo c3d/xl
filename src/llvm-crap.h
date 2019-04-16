@@ -291,6 +291,7 @@ public:
     Value_p             TextConstant(text value);
 
     void                SwitchTo(JITBlock &block);
+    void                SwitchTo(BasicBlock_p block);
 
     Value_p             Call(Value_p c, Value_p a);
     Value_p             Call(Value_p c, Value_p a1, Value_p a2);

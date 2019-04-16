@@ -1434,6 +1434,17 @@ void JITBlock::SwitchTo(JITBlock &block)
 }
 
 
+void JITBlock::SwitchTo(BasicBlock_p block)
+// ----------------------------------------------------------------------------
+//   Switch the insertion point to the given basic block
+// ----------------------------------------------------------------------------
+{
+    record(llvm_ir, "Switching insertion point of %p to %p",
+           this, block);
+    b->SetInsertPoint(block);
+}
+
+
 Value_p JITBlock::Call(Value_p callee, Value_p arg1)
 // ----------------------------------------------------------------------------
 //   Create a call with one argument
