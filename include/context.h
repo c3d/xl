@@ -320,7 +320,6 @@ public:
 
 public:
     Scope_p             symbols;
-    code_map            compiled;
     static uint         hasRewritesForKind;
     GARBAGE_COLLECT(Context);
 };

@@ -329,9 +329,6 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
                 if (cname->value == "C")
                     return NULL;
 
-    // Updating a symbol in the context invalidates any cached code we may have
-    compiled.clear();
-
     // Find 'from', 'to' and 'hash' for the rewrite
     Tree *from = rewrite->left;
 
