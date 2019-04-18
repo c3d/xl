@@ -118,9 +118,9 @@ struct Main
     uint                HadErrors() { return errors->Count(); }
 
     // Hooks for use as a library in an application
-    virtual text        SearchFile(text input);
-    virtual text        SearchLibFile(text input);
-    virtual text        SearchFile(text input, const path_list &p);
+    virtual text        SearchFile(text input, text ext = "");
+    virtual text        SearchLibFile(text input, text ext = "");
+    virtual text        SearchFile(text input, const path_list &p, text ext="");
     virtual text        ModuleDirectory(text path);
     virtual text        ModuleBaseName(text path);
     virtual text        ModuleName(text path);
@@ -131,30 +131,38 @@ struct Main
     virtual eval_fn     Declarator(text name);
 
 public:
-    int          argc;
-    char **      argv;
-    path_list    bin_paths, lib_paths, paths;
+    int                 argc;
+    char **             argv;
+    path_list           bin_paths, lib_paths, paths;
 
-    Positions    positions;
-    Errors *     errors;
-    Errors       topLevelErrors;
-    Syntax       syntax;
-    Options      options;
-    Context      context;
-    Renderer     renderer;
-    source_files files;
-    source_names file_names;
-    Deserializer *reader;
-    Serializer   *writer;
-    Evaluator *  evaluator;
+    Positions           positions;
+    Errors *            errors;
+    Errors              topLevelErrors;
+    Syntax              syntax;
+    Options             options;
+    Context             context;
+    Renderer            renderer;
+    source_files        files;
+    source_names        file_names;
+    Deserializer *      reader;
+    Serializer   *      writer;
+    Evaluator *         evaluator;
 };
 
 extern Main *MAIN;
+
+namespace Opt
+{
+extern IntegerOption    optimize;
+extern IntegerOption    remoteForks;
+extern TextOption       stylesheet;
+}
 
 XL_END
 
 RECORDER_DECLARE(fileload);
 RECORDER_DECLARE(main);
 RECORDER_TWEAK_DECLARE(gc_statistics);
+RECORDER_TWEAK_DECLARE(dump_on_exit);
 
 #endif // MAIN_H

@@ -86,7 +86,7 @@ FUNCTION(listen, integer, ,
 
 FUNCTION(listen_forking, integer, ,
          int rc = xl_listen(XL_CONTEXT->CurrentScope(),
-                            MAIN->options.listen_forks);
+                            Opt::remoteForks);
          R_INT(rc));
 
 FUNCTION(listen_hook, tree,

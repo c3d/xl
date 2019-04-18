@@ -50,6 +50,22 @@
 
 XL_BEGIN
 
+
+// ============================================================================
+//
+//   Options
+//
+// ============================================================================
+
+namespace Opt
+{
+BooleanOption caseSensitive("case_sensitive",
+                            "Make scanner case sensitive",
+                            true);
+} // namespace Opt
+
+
+
 // ============================================================================
 //
 //    Helper classes
@@ -130,7 +146,6 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
       indents(), indent(0), indentChar(0),
       position(0), lineStart(0),
       positions(pos), errors(err),
-      caseSensitive(Options::options ? Options::options->case_sensitive : true),
       checkingIndent(false), settingIndent(false),
       hadSpaceBefore(false), hadSpaceAfter(false),
       mustDeleteInput(true)
@@ -164,7 +179,6 @@ Scanner::Scanner(std::istream &input,
       indents(), indent(0), indentChar(0),
       position(0), lineStart(0),
       positions(pos), errors(err),
-      caseSensitive(Options::options ? Options::options->case_sensitive : true),
       checkingIndent(false), settingIndent(false),
       hadSpaceBefore(false), hadSpaceAfter(false),
       mustDeleteInput(false)
@@ -191,7 +205,6 @@ Scanner::Scanner(const Scanner &parent)
       indentChar(parent.indentChar),
       position(parent.position), lineStart(parent.lineStart),
       positions(parent.positions), errors(parent.errors),
-      caseSensitive(parent.caseSensitive),
       checkingIndent(false), settingIndent(false),
       hadSpaceBefore(parent.hadSpaceBefore),
       hadSpaceAfter(parent.hadSpaceAfter),
@@ -210,30 +223,43 @@ Scanner::~Scanner()
 }
 
 
+static inline char xlcase(char c)
+// ----------------------------------------------------------------------------
+//   Change the case following XL rules
+// ----------------------------------------------------------------------------
+{
+    if (IS_UTF8_FIRST(c) || IS_UTF8_NEXT(c))
+        return c;
+    if (Opt::caseSensitive)
+        return c;
+    return tolower(c);
+}
+
+
 #define NEXT_CHAR(c)                            \
-do {                                            \
-    tokenText += c;                             \
-    textValue += c;                             \
-    c = input.get();                            \
-    position++;                                 \
-} while(0)
+    do {                                        \
+        tokenText += c;                         \
+        textValue += c;                         \
+        c = input.get();                        \
+        position++;                             \
+    } while(0)
 
 
 #define NEXT_LOWER_CHAR(c)                      \
-do {                                            \
-    tokenText += tolower(c);                    \
-    textValue += c;                             \
-    c = input.get();                            \
-    position++;                                 \
-} while(0)
+    do {                                        \
+        tokenText += xlcase(c);                 \
+        textValue += c;                         \
+        c = input.get();                        \
+        position++;                             \
+    } while(0)
 
 
 #define IGNORE_CHAR(c)                          \
-do {                                            \
-    textValue += c;                             \
-    c = input.get();                            \
-    position++;                                 \
-} while (0)
+    do {                                        \
+        textValue += c;                         \
+        c = input.get();                        \
+        position++;                             \
+    } while (0)
 
 
 token_t Scanner::NextToken(bool hungry)

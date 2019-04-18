@@ -1810,6 +1810,10 @@ Tree *CompileAction::Do(Infix *what)
 }
 
 
+static TextOption debugPrefixOption("debug-prefix",
+                                    "Select a prefix to debug",
+                                    "");
+
 Tree *CompileAction::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //    Deal with data declarations, otherwise translate as a rewrite
@@ -1821,7 +1825,7 @@ Tree *CompileAction::Do(Prefix *what)
             return what;
 
         // A breakpoint location for convenience
-        if (name->value == Options::options->debugPrefix)
+        if (name->value == debugPrefixOption.value)
         {
             Save<char> saveDebugFlag(debugRewrites, debugRewrites+1);
             return Rewrites(what);

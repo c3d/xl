@@ -70,13 +70,90 @@
 #include <sys/stat.h>
 
 
-RECORDER(fileload,                      64, "Files being loaded");
-RECORDER(main,                          32, "Compiler main entry point");
-RECORDER_TWEAK_DEFINE(gc_statistics,    0, "Display garbage collector stats");
+RECORDER(fileload,                      16, "Files being loaded");
+RECORDER(main,                          16, "Compiler main entry point");
+RECORDER(run_results,                   16, "Show run results");
+RECORDER_TWEAK_DEFINE(gc_statistics,     0, "Display garbage collector stats");
+RECORDER_TWEAK_DEFINE(dump_on_exit,  false, "Dump the recorder on exit");
+
 
 XL_BEGIN
 
 Main *MAIN = NULL;
+
+
+// ============================================================================
+//
+//    Options defined in this file
+//
+// ============================================================================
+
+namespace Opt
+{
+TextOption      builtins("builtins",
+                         "Set the path for the XL builtins file",
+                         "builtins.xl");
+
+BooleanOption   compile("compile",
+                        "Only compile the file without evaluating it");
+
+CodeOption      noBuiltins("nobuiltins",
+                           "Ignore builtins file",
+                           [](Option &opt, Options &opts)
+                           {
+                               builtins.value = "";
+                           });
+
+IntegerOption   optimize("optimize",
+                         "Select optimization level",
+                         0, 0, 3);
+AliasOption     optimizeAlias("O", optimize);
+CodeOption      interpreted("interpreted",
+                            "Interpreted mode (same as -O0)",
+                            [](Option &opt, Options &opts)
+                            {
+                                optimize.value = 0;
+                            });
+
+
+BooleanOption   parse("parse",
+                      "Only parse the file without evaluating it");
+
+BooleanOption   remote("remote",
+                       "Listen for remote programs");
+
+IntegerOption   remotePort("remote_port",
+                           "Select the port to listen to for remote access",
+                           1205, 1000, 32767);
+
+IntegerOption   remoteForks("remote_forks",
+                            "Select the number of forks for remote access",
+                            20, 0, 1000);
+
+BooleanOption   showSource("show",
+                           "Show the source code");
+
+TextOption      stylesheet("stylesheet",
+                           "Select the style sheet for rendering XL code",
+                           "xl.stylesheet");
+
+CodeOption      trace("trace",
+                      "Activate recorder traces",
+                      [](Option &opt, Options &opts)
+                      {
+                          kstring arg = opts.Argument();
+                          recorder_trace_set(arg);
+                      });
+AliasOption     traceAlias("t", trace);
+
+BooleanOption   writeEncrypted("write_encrypted",
+                             "Encrypt files as they are written");
+
+BooleanOption   writePacked("write_packed",
+                     "Pack files as they are written");
+
+}
+
 
 
 // ============================================================================
@@ -153,11 +230,10 @@ Main::Main(int inArgc,
     recorder_dump_on_common_signals(0, 0);
     recorder_trace_set(".*_(error|warning)");
     recorder_trace_set(getenv("XL_TRACES"));
-    Options::options = &options;
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
-    options.builtins = SearchLibFile(builtinsName);
+    Opt::builtins.value = SearchLibFile(builtinsName);
     ParseOptions();
     Opcode::Enter(&context);
 
@@ -167,7 +243,7 @@ Main::Main(int inArgc,
 #ifndef INTERPRETER_ONLY
     compilerName = SearchFile(compilerName, bin_paths);
     kstring cname = compilerName.c_str();
-    uint opt = options.optimize_level;
+    uint opt = Opt::optimize.value;
     if (opt == 1)
         evaluator = new FastCompiler(cname, opt, inArgc, inArgv);
     else if (opt >= 2)
@@ -227,15 +303,15 @@ int Main::LoadAndRun()
 // ----------------------------------------------------------------------------
 {
     int rc = LoadFiles();
-    if (!rc && !options.parseOnly)
+    if (!rc && !Opt::parse)
         rc = Run();
     if (!rc && HadErrors())
         rc = 1;
 
-    if (!rc && options.listen)
+    if (!rc && Opt::remote)
     {
         Scope *scope = context.CurrentScope();
-        return xl_listen(scope, options.listen_forks, options.listen);
+        return xl_listen(scope, Opt::remoteForks, Opt::remotePort);
     }
 
     record(main, "LoadAndRun returns %d", rc);
@@ -270,8 +346,20 @@ int Main::ParseOptions()
         file_names.push_back(cmd);
 
     // Load builtins before the rest (only after parsing options for builtins)
-    if (!options.builtins.empty())
-        file_names.insert(file_names.begin(), options.builtins);
+    if (!Opt::builtins.value.empty())
+        file_names.insert(file_names.begin(), Opt::builtins);
+
+    // Check if there were errors parsing it
+    if (topLevelErrors.HadErrors())
+    {
+        options.Usage();
+        fprintf(stderr, "\n");
+        topLevelErrors.Display();
+        exit(1);
+    }
+
+    // Update style sheet
+    renderer.SelectStyleSheet(SearchLibFile(Opt::stylesheet, ".stylesheet"));
 
     return false;
 }
@@ -324,7 +412,7 @@ int Main::LoadFile(const text &file, text modname)
     }
 
     // Check if we need to decrypt an input file first
-    if (options.crypted)
+    if (Opt::writeEncrypted)
     {
         inputStream << input->rdbuf();
         text decrypted = Decrypt(inputStream.str());
@@ -337,7 +425,7 @@ int Main::LoadFile(const text &file, text modname)
     }
 
     // Check if we need to deserialize the input file first
-    if (options.packed)
+    if (Opt::writePacked)
     {
         Deserializer deserializer(*input);
         tree = deserializer.ReadTree();
@@ -366,13 +454,13 @@ int Main::LoadFile(const text &file, text modname)
     }
 
     // Output packed if this was requested
-    if (options.pack)
+    if (Opt::writePacked)
     {
         std::stringstream output;
         Serializer serialize(output);
         tree->Do(serialize);
         text packed = output.str();
-        if (options.crypt)
+        if (Opt::writeEncrypted)
         {
             text crypted = Encrypt(packed);
             if (crypted == "")
@@ -397,7 +485,7 @@ int Main::LoadFile(const text &file, text modname)
     tree = Normalize(tree);
 
     // Show source if requested
-    if (options.showSource || options.verbose)
+    if (Opt::showSource)
         std::cout << tree << "\n";
 
     // Create new symbol table for the file
@@ -445,7 +533,7 @@ int Main::Run()
     bool hadError = false;
 
     // If we only parse or compile, return
-    if (options.parseOnly || options.compileOnly)
+    if (Opt::parse || Opt::compile)
         return -1;
 
     // Loop over files we will process
@@ -470,14 +558,11 @@ int Main::Run()
         {
             hadError = true;
         }
-        else if (options.verbose)
-        {
-            std::cout << "RESULT of " << sf.name << "\n" << result << "\n";
-        }
+        record(run_results, "Result of %+s is %t", sf.name, result);
     }
 
     // Output the result
-    if (result && !options.listen)
+    if (result && !Opt::remote)
         std::cerr << result << "\n";
 
     return hadError;
@@ -491,33 +576,42 @@ int Main::Run()
 //
 // ============================================================================
 
-text Main::SearchFile(text file)
+text Main::SearchFile(text file, text extension)
 // ----------------------------------------------------------------------------
 //   Implement the default search strategy for file in paths
 // ----------------------------------------------------------------------------
 {
-    return SearchFile(file, paths);
+    return SearchFile(file, paths, extension);
 }
 
 
-text Main::SearchLibFile(text file)
+text Main::SearchLibFile(text file, text extension)
 // ----------------------------------------------------------------------------
 //   Implement the default search strategy for file in the library paths
 // ----------------------------------------------------------------------------
 {
-    return SearchFile(file, lib_paths);
+    return SearchFile(file, lib_paths, extension);
 }
 
 
-text Main::SearchFile(text file, const path_list &paths)
+text Main::SearchFile(text file, const path_list &paths, text extension)
 // ----------------------------------------------------------------------------
 //   Hook to search a file in paths if application sets them up
 // ----------------------------------------------------------------------------
 {
     utf8_filestat_t st;
 
+    // Add extension if needed
+    size_t len = extension.length();
+    if (len)
+    {
+        size_t flen = file.length();
+        if (file.rfind(extension) != flen - len)
+            file += extension;
+    }
+
     // If the given file is already good, use that
-    if (utf8_stat(file.c_str(), &st) == 0)
+    if (file.find("/") == 0 || utf8_stat(file.c_str(), &st) == 0)
         return file;
 
     // Search for a possible file in path
@@ -655,45 +749,3 @@ eval_fn Main::Declarator(text name)
 }
 
 XL_END
-
-
-#ifndef LIBXL
-
-
-
-int main(int argc, char **argv)
-// ----------------------------------------------------------------------------
-//   Parse the command line and run the compiler phases
-// ----------------------------------------------------------------------------
-{
-    record(main, "XL Compiler version %+s starting", XL_VERSION);
-
-#if HAVE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
-
-    XL::path_list bin { XL_BIN,
-                        "/usr/local/bin/", "/bin/", "/usr/bin/" };
-    XL::path_list lib { "../lib/xl/", "../lib/",
-                        XL_LIB,
-                        "/usr/local/lib/xl/", "/lib/xl/", "/usr/lib/xl/"  };
-    XL::Main main(argc, argv, bin, lib,
-                  "xl", "xl.syntax", "xl.stylesheet", "builtins.xl");
-    int rc = main.LoadAndRun();
-
-    if (RECORDER_TRACE(memory) || RECORDER_TRACE(gc_statistics))
-        XL::GarbageCollector::GC()->PrintStatistics();
-
-#if HAVE_SBRK
-    record(memory, "Total memory usage: %ldK\n",
-           long ((char *) malloc(1) - low_water) / 1024);
-#endif
-
-    record(main, "Compiler exit code %d", rc);
-    if (main.options.dumpRecorder)
-        recorder_dump();
-
-    return rc;
-}
-
-#endif // LIBXL

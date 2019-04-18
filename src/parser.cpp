@@ -50,6 +50,20 @@
 XL_BEGIN
 // ============================================================================
 //
+//    Options
+//
+// ============================================================================
+
+namespace Opt
+{
+BooleanOption signedConstants("signed_constants",
+                              "Allow negative values in constants",
+                              false);
+}
+
+
+// ============================================================================
+//
 //    Parser class itself
 //
 // ============================================================================
@@ -260,7 +274,7 @@ static inline Tree *CreatePrefix(Tree *left, Tree *right, TreePosition pos)
 //   Create a prefix, special-case unary minus with constants (feature #1580)
 // ----------------------------------------------------------------------------
 {
-    if (Options::options && Options::options->signedConstants)
+    if (Opt::signedConstants)
     {
         if (Name *name = left->AsName())
         {
@@ -537,7 +551,7 @@ Tree *Parser::Parse(text closing)
                 char buffer[20];
                 sprintf(buffer, "%u", tok);
                 errors.Log(Error("Internal error: unknown token $1 ($2)",
-                                 pos).Arg(scanner.NameValue()).Arg(buffer));
+                                 pos).Arg(scanner.TextValue()).Arg(buffer));
             }
             break;
         } // switch(tok)

@@ -37,41 +37,157 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+#include "base.h"
 #include <string>
 #include <vector>
-#include "base.h"
+#include <functional>
+#include <recorder/recorder.h>
 
 XL_BEGIN
 
-struct Errors;
+
+struct Options;
+
+struct Option
+// ----------------------------------------------------------------------------
+//    Representation of a command-line option
+// ----------------------------------------------------------------------------
+//    Option foo can be identified on command-line as -foo or --foo.
+//    Only the first characters required to avoid ambiguity are required.
+//    Arguments can either
+//    - Follow the argument directly, e.g. -O3 or -tlabels
+//    - Follow in the next argument, e.g. -Optim 3 or -trace labels
+//    - Follow an '=' or ':' character, e.g. -Opt:3 or -tra=labels
+{
+
+    Option(kstring name, kstring help);
+    virtual ~Option();
+    virtual kstring     SkipPrefix(kstring command);
+    virtual kstring     Matches(Options &);
+    virtual void        Process(Options &);
+    virtual void        Usage(int maxOptWidth, int maxWidth = 80);
+    kstring             Name()  { return name; }
+    kstring             Rename(kstring alias);
+
+protected:
+    friend struct Options;
+    kstring             name;
+    kstring             help;
+    Option *            next;
+    static Option *     options;
+};
+
+
+struct BooleanOption : Option
+// ----------------------------------------------------------------------------
+//   An option accepting boolean values
+// ----------------------------------------------------------------------------
+//   The argument can be either "true", "false", "yes", "no", "0" or "1"
+//   Not having a matching argument means the options is interpreted
+//   as "yes" and the argument is not consumed
+//   The option name can be prefixed with "no" or "no-" to disabled it,
+//   e.g. "-nodebug" or "--no-debug" or "-debug=no" all mean the same
+//   Conversely, the option can be prefixed with "with"
+{
+    BooleanOption(kstring name, kstring help, bool value = false)
+        : Option(name, help), value(value) {}
+    virtual kstring     SkipPrefix(kstring command);
+    virtual void        Process(Options &);
+    operator            bool() { return value; }
+public:
+    bool                value;
+};
+
+
+struct IntegerOption : Option
+// ----------------------------------------------------------------------------
+//   An option accepting integer values
+// ----------------------------------------------------------------------------
+{
+    IntegerOption(kstring name, kstring help,
+                  int64_t value = 0,
+                  int64_t min = INT64_MIN,
+                  int64_t max = INT64_MAX)
+        : Option(name, help), value(value), min(min), max(max) {}
+    virtual void        Process(Options &);
+    operator            int64_t() { return value; }
+public:
+    int64_t             value;
+    int64_t             min;
+    int64_t             max;
+};
+
+
+struct TextOption : Option
+// ----------------------------------------------------------------------------
+//   An option accepting text values
+// ----------------------------------------------------------------------------
+{
+    TextOption(kstring name, kstring help, text value = "")
+        : Option(name, help), value(value) {}
+    virtual void        Process(Options &);
+    operator            text() { return value; }
+public:
+    text                value;
+};
+
+
+struct CodeOption : Option
+// ----------------------------------------------------------------------------
+//   An option accepting text values
+// ----------------------------------------------------------------------------
+{
+    typedef std::function<void(Option &opt, Options &opts)> Code;
+
+    CodeOption(kstring name, kstring help, Code code)
+        : Option(name, help), code(code) {}
+    virtual void        Process(Options &);
+public:
+    Code code;
+};
+
+
+struct AliasOption : Option
+// ----------------------------------------------------------------------------
+//   An alias for another option
+// ----------------------------------------------------------------------------
+{
+    AliasOption(kstring name, Option &alias):
+        Option(name, "alias"), alias(alias) {}
+    virtual kstring     SkipPrefix(kstring command);
+    virtual kstring     Matches(Options &);
+    virtual void        Process(Options &);
+    virtual void        Usage(int maxOptWidth, int maxWidth = 80);
+
+private:
+    Option &            alias;
+};
 
 
 struct Options
-/*---------------------------------------------------------------------------*/
-/*  Class holding options for the compiler                                   */
-/*---------------------------------------------------------------------------*/
+// ----------------------------------------------------------------------------
+//    Class managing options (parsing, isolating files)
+// ----------------------------------------------------------------------------
 {
-  public:
     Options(int argc, char **argv);
-    text ParseFirst(bool consumeFile = true);
-    text ParseNext(bool consumeFile = true);
 
-  public:
-    // Read options from the options.tbl file
-#define OPTVAR(name, type, value)       type name;
-#define OPTION(name, descr, code)
-#include "options.tbl"
-#undef OPTVAR
-#undef OPTION
+    kstring             ParseFirst();
+    kstring             ParseNext();
+    void                Usage();
+    kstring             Input();
+    kstring             Command();
+    bool                HasDirectArgument();
+    kstring             Argument();
 
+private:
     uint                arg;
-    kstring             argt;
-    std::vector<text>   args;
-    std::vector<text>   files;
-
-    static Options *    options;
+    std::vector<kstring>args;
+    kstring             selected;
+    uint                length;
 };
 
 XL_END
+
+RECORDER_DECLARE(options);
 
 #endif /* XL_OPTIONS_H */

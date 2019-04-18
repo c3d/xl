@@ -192,12 +192,12 @@ public:
     text        Comment(text EndOfComment, bool stripIndent = true);
 
     // Access to scanned data
-    text        TokenText()     { return tokenText; }
-    text        NameValue()     { return caseSensitive?textValue:tokenText; }
-    text        TextValue()     { return textValue; }
-    double      RealValue()     { return realValue; }
-    ulong       IntegerValue()  { return intValue; }
-    uint        Base()          { return base; }
+    text        TokenText()             { return tokenText; }
+    text        NameValue()             { return textValue; }
+    text        TextValue()             { return textValue; }
+    double      RealValue()             { return realValue; }
+    ulong       IntegerValue()          { return intValue; }
+    uint        Base()                  { return base; }
     void        SetTextValue(text t)    { textValue = t; }
     void        SetTokenText(text t)    { tokenText = t; }
 
@@ -234,7 +234,6 @@ private:
     ulong          lineStart;
     Positions &    positions;
     Errors &       errors;
-    bool           caseSensitive;
     bool           checkingIndent;
     bool           settingIndent;
     bool           hadSpaceBefore;

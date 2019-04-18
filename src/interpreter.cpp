@@ -54,6 +54,21 @@ RECORDER(interpreter_typecheck, 64, "Type checks");
 XL_BEGIN
 // ============================================================================
 //
+//   Options
+//
+// ============================================================================
+
+namespace Opt
+{
+IntegerOption   stackDepth("stack_depth",
+                           "Maximum stack depth for interpreter",
+                           1000, 25, 25000);
+}
+
+
+
+// ============================================================================
+//
 //   Evaluation cache - Recording what has been evaluated and how
 //
 // ============================================================================
@@ -565,7 +580,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
     static uint depth = 0;
     Save<uint> saveDepth(depth, depth+1);
     record(interpreter_eval, "Eval%u %t from %t", depth, self, decl->left);
-    if (depth > MAIN->options.stack_depth)
+    if (depth > Opt::stackDepth)
     {
         Ooops("Stack depth exceeded evaluating $1", self);
         return error_result = xl_error;

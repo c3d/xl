@@ -322,7 +322,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 
     // In interpreted mode, just skip any C declaration
 #ifndef INTERPRETER_ONLY
-    if (MAIN->options.optimize_level <= 1)
+    if (Opt::optimize <= 1)
 #endif
         if (Prefix *cdecl = rewrite->right->AsPrefix())
             if (Name *cname = cdecl->left->AsName())

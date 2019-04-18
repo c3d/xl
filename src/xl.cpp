@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
     RECORD(main, "Compiler exit code %d", rc);
 
-    if (main.options.dumpRecorder)
+    if (RECORDER_TWEAK(dump_on_exit))
         recorder_dump();
 
     return rc;
