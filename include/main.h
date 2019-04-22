@@ -47,6 +47,7 @@
 #include "options.h"
 #include "info.h"
 #include "evaluator.h"
+#include "ownership.h"
 
 #include <recorder/recorder.h>
 #include <map>
