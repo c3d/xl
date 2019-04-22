@@ -46,6 +46,16 @@
 #include "compiler.h"
 #endif // INTERPRETER_ONLY
 
+
+// ============================================================================
+//
+//   List of recorders
+//
+// ============================================================================
+
+RECORDER(opcodes, 64, "List of opcodes");
+
+
 #include <typeinfo>
 
 XL_BEGIN
@@ -83,7 +93,6 @@ Opcode * Opcode::Find(Tree *self, text name)
 }
 
 
-RECORDER(opcodes, 64, "List of opcodes");
 void Opcode::Register(Context *context)
 // ----------------------------------------------------------------------------
 //    If the opcode defines a shape, enter that shape in symbol table
