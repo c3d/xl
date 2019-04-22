@@ -74,7 +74,8 @@ Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
     if (result)
     {
         CompilerUnit &unit = function.unit;
-        Type_p mtype = JIT::Type(result);
+        JITBlock &code = function.code;
+        Type_p mtype = code.Type(result);
         function.ValueMachineType(expr, mtype);
         if (force && unit.IsClosureType(mtype))
         {
@@ -313,7 +314,7 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         for (RewriteKind &k : cand->kinds)
         {
             Value_p value = Evaluate(k.value);
-            Type_p type = JIT::Type(value);
+            Type_p type = code.Type(value);
 
             if (type == compiler.treePtrTy        ||
                 type == compiler.integerTreePtrTy ||
@@ -328,7 +329,7 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
                 // Unboxed value, check the dynamic kind
                 Value_p tagPtr = code.StructGEP(value, TAG_INDEX, "tagp");
                 Value_p tag = code.Load(tagPtr, "tag");
-                Type_p  tagType = JIT::Type(tag);
+                Type_p  tagType = code.Type(tag);
                 Value_p mask = code.IntegerConstant(tagType, Tree::KINDMASK);
                 Value_p kindValue = code.And(tag, mask, "kind");
                 Value_p kindCheck = code.IntegerConstant(tagType, k.test);
@@ -471,7 +472,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     {
         Types *vtypes = cand->value_types;
         Tree *base = vtypes->CodegenType(call);
-        Type_p retTy = JIT::Type(result);
+        Type_p retTy = code.Type(result);
         function.AddBoxedType(base, retTy);
         record(compiler_expr, "Transporting type %t (%T) of %t into %p",
                base, retTy, call, vtypes);
@@ -512,8 +513,8 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
 
     Value_p       value     = Value(valueTree);
     Value_p       test      = Value(testTree);
-    Type_p        valueType = JIT::Type(value);
-    Type_p        testType  = JIT::Type(test);
+    Type_p        valueType = code.Type(value);
+    Type_p        testType  = code.Type(test);
 
 
     // Comparison of boolean values
@@ -523,7 +524,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType == compiler.nameTreePtrTy)
         {
             value = function.Autobox(valueTree, value, compiler.booleanTy);
-            valueType = JIT::Type(value);
+            valueType = code.Type(value);
         }
         if (valueType != compiler.booleanTy)
             return code.BooleanConstant(false);
@@ -536,7 +537,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
         if (valueType == compiler.textTreePtrTy)
         {
             value = function.Autobox(valueTree, value, testType);
-            valueType = JIT::Type(value);
+            valueType = code.Type(value);
         }
         if (valueType != compiler.characterTy)
             return code.BooleanConstant(false);
@@ -554,12 +555,12 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
         if (valueType == compiler.textTreePtrTy)
         {
             value = function.Autobox(valueTree, value, testType);
-            valueType = JIT::Type(value);
+            valueType = code.Type(value);
         }
         if (valueType != compiler.charPtrTy)
             return code.BooleanConstant(false);
         value = code.Call(unit.strcmp, test, value);
-        test = code.IntegerConstant(JIT::Type(value), 0);
+        test = code.IntegerConstant(code.Type(value), 0);
         value = code.ICmpEQ(value, test);
         return value;
     }
@@ -570,7 +571,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
         if (valueType == compiler.integerTreePtrTy)
         {
             value = function.Autobox(valueTree, value, compiler.integerTy);
-            valueType = JIT::Type(value);
+            valueType = code.Type(value);
         }
         if (!valueType->isIntegerTy())
             return code.BooleanConstant(false);
@@ -585,7 +586,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
         if (valueType == compiler.realTreePtrTy)
         {
             value = function.Autobox(valueTree, value, compiler.realTy);
-            valueType = JIT::Type(value);
+            valueType = code.Type(value);
         }
         if (!valueType->isFloatingPointTy())
             return code.BooleanConstant(false);
@@ -594,7 +595,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
             if (valueType != compiler.realTy)
             {
                 value = code.FPExt(value, compiler.realTy);
-                valueType = JIT::Type(value);
+                valueType = code.Type(value);
             }
             if (testType != compiler.realTy)
             {
@@ -639,7 +640,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType == compiler.postfixTreePtrTy)
         {
             value = function.Autobox(valueTree, value, compiler.treePtrTy);
-            valueType = JIT::Type(value);
+            valueType = code.Type(value);
         }
 
         if (testType != valueType)

@@ -219,7 +219,7 @@ SPECIAL(IAbs, 1,
 //   Return the absolute value for an integer input
 // ----------------------------------------------------------------------------
         Value_p value = args[0];
-        Type_p type = JIT::Type(value);
+        Type_p type = code.Type(value);
         Value_p zero = code.IntegerConstant(type, 0);
         Value_p cmp = code.ICmpSLT(value, zero);
         Value_p neg = code.Neg(value);
@@ -232,7 +232,7 @@ SPECIAL(FAbs, 1,
 //   Return the absolute value for a floating-point input
 // ----------------------------------------------------------------------------
         Value_p value = args[0];
-        Type_p type = JIT::Type(value);
+        Type_p type = code.Type(value);
         Value_p zero = code.FloatConstant(type, 0.0);
         Value_p cmp = code.FCmpOLT(value, zero);
         Value_p neg = code.FNeg(value);
@@ -251,7 +251,7 @@ SPECIAL(SMod, 2,
         Value_p right = args[1];
         Value_p rem = code.SRem(left, right);
         Value_p xored = code.Xor(left, right);
-        Value_p zero = code.IntegerConstant(JIT::Type(xored), 0);
+        Value_p zero = code.IntegerConstant(code.Type(xored), 0);
         Value_p cmp1 = code.ICmpSLT(xored, zero);
         Value_p cmp2 = code.ICmpNE(rem, zero);
         Value_p cmp = code.And(cmp1, cmp2);
