@@ -383,8 +383,9 @@ XL_END
 #define DIV0            (Ooops("Divide by 0 for $1", rightPtr), 1)
 #define LEFT_B          (left.value == "true")
 #define RIGHT_B         (right.value == "true")
-#define POSITION        (DataSelf(data)->Position())
 #define XL_SCOPE        DataScope(data)
+#define XL_SELF         DataSelf(data)
+#define POSITION        (XL_SELF->Position())
 #define AS_INT(x)       (new Integer((x), POSITION))
 #define AS_REAL(x)      (new Real((x), POSITION))
 #define AS_BOOL(x)      ((x) ? xl_true : xl_false)
@@ -751,8 +752,6 @@ XL_END
             if (_parms.size != size)                                    \
                 Ooops("Invalid argument count for " #FName              \
                       " in $1", data[0]);                               \
-            Tree *self = DataSelf(data);    (void) self;                \
-            Scope *scope = DataScope(data); (void) scope;               \
             Code;                                                       \
             return success;                                             \
         }                                                               \
