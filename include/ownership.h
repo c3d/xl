@@ -233,6 +233,13 @@ public:
           refcount()                            {}
     ~own()                                      { refcheck(); delete value; }
     operator T&()                               { return *value; }
+    own &operator=(own &val)
+    {
+        refcheck();
+        delete value;
+        value = val.Move();
+        return *this;
+    }
     template <typename U>
     own &operator=(const U &val)                { *value = val; return *this; }
 
@@ -304,7 +311,7 @@ class use
     own<T> value;
 public:
     use(own<T> &value)
-        : owner(owner), value(owner)            {}
+        : owner(value), value(value)            {}
     ~use()                                      { owner.Recapture(value); }
     operator T&()                               { return value; }
     template<typename U>
@@ -325,10 +332,10 @@ class any
 //   A polymorphic reference
 // ----------------------------------------------------------------------------
 {
-    T &value;
+    own<T> value;
 public:
-    template <class U>
-    any(const U &value): value(value)           {}
+    template <typename ... Args>
+    any(Args ... args): value(args...)          {}
     ~any()                                      {}
     operator T&()                               { return value; }
     template <typename U>
