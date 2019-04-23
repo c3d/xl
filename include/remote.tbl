@@ -55,38 +55,37 @@
 FUNCTION(tell, integer,
          PARM(host, text)
          PARM(code, tree),
-         int rc = xl_tell(XL_CONTEXT, host, &code);
+         int rc = xl_tell(XL_SCOPE, host, &code);
          R_INT(rc));
 
 FUNCTION(ask, tree,
          PARM(host, text)
          PARM(code, tree),
-         Tree_p rc = xl_ask(XL_CONTEXT, host, &code);
+         Tree_p rc = xl_ask(XL_SCOPE, host, &code);
          RESULT(rc));
 
 FUNCTION(invoke, tree,
          PARM(host, text)
          PARM(code, tree),
-         Tree_p rc = xl_invoke(XL_CONTEXT, host, &code);
+         Tree_p rc = xl_invoke(XL_SCOPE, host, &code);
          RESULT(rc));
 
 FUNCTION(reply, integer,
          PARM(code, tree),
-         int reply = xl_reply(XL_CONTEXT, &code);
+         int reply = xl_reply(XL_SCOPE, &code);
          R_INT(reply));
 
 FUNCTION(listen_on, integer,
          PARM(port, integer),
-         int rc = xl_listen(XL_CONTEXT->CurrentScope(), 0, port);
+         int rc = xl_listen(XL_SCOPE, 0, port);
          R_INT(rc));
 
 FUNCTION(listen, integer, ,
-         int rc = xl_listen(XL_CONTEXT->CurrentScope(), 0);
+         int rc = xl_listen(XL_SCOPE, 0);
          R_INT(rc));
 
 FUNCTION(listen_forking, integer, ,
-         int rc = xl_listen(XL_CONTEXT->CurrentScope(),
-                            Opt::remoteForks);
+         int rc = xl_listen(XL_SCOPE, Opt::remoteForks);
          R_INT(rc));
 
 FUNCTION(listen_hook, tree,

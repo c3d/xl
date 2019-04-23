@@ -147,7 +147,7 @@ struct StopAtGlobalsCloneMode
 typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
 
 
-static Tree_p xl_attach_context(Context *context, Tree *code)
+static Tree_p xl_attach_context(Context &context, Tree *code)
 // ----------------------------------------------------------------------------
 //   Attach the scope for the given code
 // ----------------------------------------------------------------------------
@@ -156,13 +156,13 @@ static Tree_p xl_attach_context(Context *context, Tree *code)
     Scope_p globals;
     Rewrite_p rewrite;
     Name *module_path = new Name("module_path", code->Position());
-    Tree *found = context->Bound(module_path, true, &rewrite, &globals);
+    Tree *found = context.Bound(module_path, true, &rewrite, &globals);
 
     // Do a clone of the symbol table up to that point
     StopAtGlobalsClone partialClone;
     if (found)
         partialClone.cutpoint = ScopeParent(globals);
-    Scope_p symbols = context->CurrentScope();
+    Scope_p symbols = context.CurrentScope();
     Tree_p symbolsToSend = partialClone.Clone(symbols);
 
     record(remote, "Sending context %t", symbolsToSend.Pointer());
@@ -204,7 +204,7 @@ static Tree *xl_restore_nil(Tree *tree)
 }
 
 
-static Tree_p xl_merge_context(Context *context, Tree *code)
+static Tree_p xl_merge_context(Context &context, Tree *code)
 // ----------------------------------------------------------------------------
 //    Merge the code into the current running context
 // ----------------------------------------------------------------------------
@@ -217,7 +217,7 @@ static Tree_p xl_merge_context(Context *context, Tree *code)
             code = prefix->right;
 
             // Walk up the chain for incoming symbols, stop at end
-            Context *codeCtx = context;
+            Context *codeCtx = context.Pointer();
             if (scope)
             {
                 scope = xl_restore_nil(scope)->As<Scope>();
@@ -226,7 +226,7 @@ static Tree_p xl_merge_context(Context *context, Tree *code)
                     scope = parent;
 
                 // Reattach that end to current scope
-                scope->left = context->CurrentScope();
+                scope->left = context.CurrentScope();
             }
 
             // And make the resulting code a closure at that location
@@ -245,7 +245,7 @@ static Tree_p xl_merge_context(Context *context, Tree *code)
 //
 // ============================================================================
 
-static int xl_send(Context *context, text host, Tree *code)
+static int xl_send(Context &context, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
@@ -310,11 +310,12 @@ static int xl_send(Context *context, text host, Tree *code)
 }
 
 
-int xl_tell(Context *context, text host, Tree *code)
+int xl_tell(Scope *scope, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host
 // ----------------------------------------------------------------------------
 {
+    Context context(scope);
     record(remote_tell, "Telling %s: %t", host.c_str(), code);
     int sock = xl_send(context, host, code);
     if (sock < 0)
@@ -324,11 +325,12 @@ int xl_tell(Context *context, text host, Tree *code)
 }
 
 
-Tree_p xl_ask(Context *context, text host, Tree *code)
+Tree_p xl_ask(Scope *scope, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for reply
 // ----------------------------------------------------------------------------
 {
+    Context context(scope);
     record(remote_ask, "Asking %s: %t", host.c_str(), code);
     int sock = xl_send(context, host, code);
     if (sock < 0)
@@ -344,11 +346,12 @@ Tree_p xl_ask(Context *context, text host, Tree *code)
 }
 
 
-Tree_p xl_invoke(Context *context, text host, Tree *code)
+Tree_p xl_invoke(Scope *scope, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code to the target, wait for multiple replies
 // ----------------------------------------------------------------------------
 {
+    Context context(scope);
     record(remote_invoke, "Invoking %s: %t", host.c_str(), code);
     int sock = xl_send(context, host, code);
     if (sock < 0)
@@ -365,7 +368,7 @@ Tree_p xl_invoke(Context *context, text host, Tree *code)
                host.c_str(), response);
         response = xl_merge_context(context, response);
         record(remote_invoke, "After merge, response was %t", response);
-        result = xl_evaluate(context->CurrentScope(), response);
+        result = xl_evaluate(context.CurrentScope(), response);
         record(remote_invoke, "After eval, was %t", result);
         if (result == xl_nil)
             break;
@@ -459,6 +462,7 @@ int xl_listen(Scope *scope, uint forking, uint port)
 // ----------------------------------------------------------------------------
 {
     // Open the socket
+    Context context(scope);
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
@@ -541,7 +545,6 @@ int xl_listen(Scope *scope, uint forking, uint port)
                 Tree_p hookResult = xl_evaluate(scope, hook);
                 if (hookResult != xl_nil)
                 {
-                    Context_p context = new Context(scope);
                     Save<int> saveReply(reply_socket, insock);
                     code = xl_merge_context(context, code);
                     Tree_p result = xl_evaluate(scope, code);
@@ -569,11 +572,12 @@ int xl_listen(Scope *scope, uint forking, uint port)
 }
 
 
-int xl_reply(Context *context, Tree *code)
+int xl_reply(Scope *scope, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send code back to whoever invoked us
 // ----------------------------------------------------------------------------
 {
+    Context context(scope);
     if (!reply_socket)
     {
         record(remote_reply, "Not replying to anybody");
