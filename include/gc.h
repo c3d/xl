@@ -233,6 +233,7 @@ struct GCPtr
     Object *Pointer() const                     { return pointer; }
     Object *operator->() const                  { return pointer; }
     Object& operator*() const                   { return *pointer; }
+    operator ValueType() const                  { return *pointer; }
 
     // Two threads may be assigning to this GCPtr at the same time,
     // e.g. if we update a same Tree child from two different threads.
