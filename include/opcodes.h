@@ -427,6 +427,7 @@ XL_END
 #undef NAME
 #undef NAME_FN
 #undef TYPE
+#undef CONVERTIBLE_TYPE
 
 
 
@@ -459,8 +460,15 @@ XL_END
 /* ------------------------------------------------------------ */      \
 /*  Declare a type and the related type conversions             */      \
 /* ------------------------------------------------------------ */      \
+    CONVERTIBLE_TYPE(symbol, BaseType, Condition, )
+
+
+#define CONVERTIBLE_TYPE(symbol, BaseType, Condition, ClassContents)    \
+/* ------------------------------------------------------------ */      \
+/*  Declare a type and the related type conversions             */      \
+/* ------------------------------------------------------------ */      \
     extern  Name_p symbol##_type;                                       \
-    struct  symbol##_r : BaseType##_r {};                               \
+    struct  symbol##_r : BaseType##_r { ClassContents };                \
     typedef symbol##_r *symbol##_p;                                     \
     typedef symbol##_r::value_t symbol##_t;                             \
     template<> inline                                                   \
@@ -821,6 +829,13 @@ XL_END
 
 
 #define TYPE(sym, BaseType, Condition)                                  \
+/* ------------------------------------------------------------ */      \
+/*  Declare a type with the condition to match it               */      \
+/* ------------------------------------------------------------ */      \
+    CONVERTIBLE_TYPE(sym, BaseType, Condition, )
+
+
+#define CONVERTIBLE_TYPE(sym, BaseType, Condition, ClassContents)       \
 /* ------------------------------------------------------------ */      \
 /*  Declare a type with the condition to match it               */      \
 /* ------------------------------------------------------------ */      \

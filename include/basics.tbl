@@ -77,10 +77,15 @@ NAME(error);
 //
 // ============================================================================
 
-TYPE(boolean, Name,
-     if (Name *name = AsName())
-         if (name->value == "true" || name->value == "false")
-             return (boolean_p) name;
+CONVERTIBLE_TYPE(boolean, Name,
+                 if (Name *name = AsName())
+                     if (name->value == "true" || name->value == "false")
+                         return (boolean_p) name;
+                 ,
+                 operator bool()
+                 {
+                     return value == "true";
+                 }
     );
 TYPE(integer, Integer,
      if (Integer *ival = AsInteger())
