@@ -44,6 +44,7 @@
 #include "main.h"
 #include "save.h"
 #include "interpreter.h"
+#include "version.h"
 #include "basics_module.h"
 
 #endif // BASICS_H

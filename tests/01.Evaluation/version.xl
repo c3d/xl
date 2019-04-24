@@ -1,0 +1,2 @@
+write_line "Version=", xl_version
+write_line "Compatibility=", xl_compatible_version

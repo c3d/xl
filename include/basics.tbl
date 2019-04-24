@@ -35,6 +35,8 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+
+
 // ============================================================================
 //
 //    Garbage collection initialization
@@ -222,3 +224,8 @@ INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 PREFIX_SCOPE(quote, tree, "quote", tree,RESULT(xl_parse_tree(scope,leftPtr)));
 PREFIX_FN(parse, tree, text,            RESULT(xl_parse_text(left)));
 PREFIX_FN(exit,  tree, integer,         exit(left); R_INT(0))
+
+NAME_FN(Version, text, "xl_version",
+        R_TEXT(XL::VERSION));
+NAME_FN(CompatibleVersion, text, "xl_compatible_version",
+        R_TEXT(XL::COMPATIBLE_VERSION));

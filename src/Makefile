@@ -38,7 +38,7 @@
 
 # For pkg-config generation
 PACKAGE_NAME=xl
-PACKAGE_VERSION=0.01
+PACKAGE_VERSION=0.0.1
 PACKAGE_DESCRIPTION=An extensible programming language
 PACKAGE_URL="http://github.com/c3d/xl"
 PACKAGE_REQUIRES=
@@ -77,6 +77,7 @@ SOURCES_VARIANT_lib     =			\
 	cdecls.cpp				\
 	serializer.cpp				\
 	utf8_fileutils.cpp			\
+	version.cpp				\
 	winglob.cpp				\
 	$(MODULES_SOURCES)
 
