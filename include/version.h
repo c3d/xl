@@ -61,6 +61,7 @@ struct Version
 
     bool        IsCompatibleWith(const Version &o) const;
     operator    std::string() const;
+    operator    bool() const;
 
 private:
     unsigned    major;

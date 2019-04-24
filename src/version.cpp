@@ -45,6 +45,7 @@ Version::Version(const char *input)
 //   Scan the input string for version numbers
 // ----------------------------------------------------------------------------
 // This accept input in the form 1.0.3 or v1.0.3
+// If scan fails, then the version will be 0.0.0 and operator bool() is false
     : major(0), minor(0), patch(0)
 {
     if (sscanf(input, "%u.%u.%u", &major, &minor, &patch) == 0)
@@ -115,6 +116,15 @@ bool Version::IsCompatibleWith(const Version &o) const
 //    Versions 0.x.y are assumed incompatible with one another
 {
     return major && o.major && *this >= o;
+}
+
+
+Version::operator bool() const
+// ----------------------------------------------------------------------------
+//    Return true for any version except 0.0.0
+// ----------------------------------------------------------------------------
+{
+    return major || minor || patch;
 }
 
 
