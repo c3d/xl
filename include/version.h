@@ -67,6 +67,11 @@ private:
     unsigned    major;
     unsigned    minor;
     unsigned    patch;
+
+    friend uintptr_t _recorder_arg(const Version &v)
+    {
+        return (uintptr_t) std::string(v).c_str();
+    }
 };
 
 
