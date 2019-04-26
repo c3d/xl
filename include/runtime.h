@@ -236,41 +236,47 @@ struct XLCall
 //    A structure that encapsulates a call to an XL tree
 // ----------------------------------------------------------------------------
 {
-    XLCall(text name):
-        name(new Name(name)), arguments(NULL), pointer(&arguments), call() {}
-
-    // Adding arguments
-    XLCall &operator, (Tree *tree)
+    XLCall(text name)
+        : name(new Name(name)), arguments(nullptr), pointer(&arguments), call() {}
+    XLCall(text name, TreeList &list)
+        : name(new Name(name)), arguments(nullptr), pointer(&arguments), call()
     {
-        call = NULL;
-        if (*pointer)
-        {
-            Infix *infix = new Infix(",", *pointer, tree);
-            *pointer = infix;
-            pointer = (Tree_p *) &infix->right;
-        }
-        else
-        {
-            *pointer = tree;
-        }
-        args.push_back(tree);
-        return *this;
+        for (Tree *tree : list)
+            Arg(tree);
     }
-    XLCall &operator, (Tree &tree) { return *this, &tree; }
-    XLCall &operator, (longlong v) { return *this, new Integer(v); }
-    XLCall &operator, (double  v)  { return *this, new Real(v); }
-    XLCall &operator, (text  v)    { return *this, new Text(v); }
+
+    template<typename ... ArgList>
+    XLCall(text name, ArgList... args)
+        : name(new Name(name)), arguments(nullptr), pointer(&arguments), call()
+    {
+        Args(args...);
+    }
+
+    // Adding one arguments
+    XLCall &Arg(Tree *tree);
+    XLCall &Arg(Tree &tree)     { return Arg(&tree); }
+    XLCall &Arg(longlong v)     { return Arg((Tree *) new Integer(v)); }
+    XLCall &Arg(double  v)      { return Arg((Tree *) new Real(v)); }
+    XLCall &Arg(text  v)        { return Arg((Tree *) new Text(v)); }
+
+    // Adding a collection of arguments
+    template<typename First, typename ... Rest>
+    XLCall &Args(First first, Rest ... rest)
+    {
+        return Arg(first).Args(rest...);
+    }
+    XLCall &Args()              { return *this; }
 
     // Calling in a given symbol context
-    Tree *  operator() (Scope *syms);
-    bool    build(Scope *syms);
+    Tree *      Build();
+    bool        Analyze(Scope *syms);
+    Tree *      operator() (Scope *syms);
 
-public:
+private:
     Name_p      name;
-    TreeList    args;
     Tree_p      arguments;
     Tree_p *    pointer;
-    Prefix_p    call;
+    Tree_p      call;
 };
 
 XL_END

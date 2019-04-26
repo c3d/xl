@@ -101,20 +101,10 @@ Tree *xl_call(Scope *scope, text prefix, TreeList &argList)
 //    Generate a call to the given prefix
 // ----------------------------------------------------------------------------
 {
-    uint arity = argList.size();
-    TreePosition pos = arity ? argList[0]->Position() : ~0;
-    Tree *call = new Name(prefix, pos);
-    if (arity)
-    {
-        Tree *args = argList[arity + ~0];
-        for (uint a = 1; a < arity; a++)
-        {
-            Tree *arg = argList[arity + ~a];
-            args = new Infix(",", arg, args, pos);
-        }
-        call = new Prefix(call, args, pos);
-    }
-    return xl_evaluate(scope, call);
+    XLCall call(prefix);
+    for (Tree *arg : argList)
+        call.Arg(arg);
+    return call(scope);
 }
 
 
@@ -1220,32 +1210,67 @@ bool xl_random_seed(int seed)
 //
 // ============================================================================
 
+XLCall &XLCall::Arg(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Create an argument from the given tree
+// ----------------------------------------------------------------------------
+{
+    call = NULL;
+    if (*pointer)
+    {
+        Infix *infix = new Infix(",", *pointer, tree);
+        *pointer = infix;
+        pointer = (Tree_p *) &infix->right;
+    }
+    else
+    {
+        *pointer = tree;
+    }
+    call = nullptr;             // Make sure we rebuild
+    return *this;
+}
+
+
+Tree *XLCall::Build()
+// ----------------------------------------------------------------------------
+//   Build the final call
+// ----------------------------------------------------------------------------
+{
+    if (!call)
+    {
+        if (arguments)
+            call = new Prefix(name, arguments);
+        else
+            call = name;
+    }
+    return call;
+}
+
+
+bool XLCall::Analyze(Scope *scope)
+// ----------------------------------------------------------------------------
+//    Perform the given call in the given context
+// ----------------------------------------------------------------------------
+{
+    if (!call)
+        Build();
+    assert(scope && call);
+    bool result = MAIN->TypeAnalysis(scope, call);
+    return result;
+}
+
+
 Tree *XLCall::operator() (Scope *scope)
 // ----------------------------------------------------------------------------
 //    Perform the given call in the given context
 // ----------------------------------------------------------------------------
 {
     Tree *result = xl_nil;
-    if (build(scope))
-    {
-        assert(call);
+    if (Analyze(scope))
         result = MAIN->Evaluate(scope, call);
-    }
     return result;
 }
 
-
-bool XLCall::build(Scope *scope)
-// ----------------------------------------------------------------------------
-//    Perform the given call in the given context
-// ----------------------------------------------------------------------------
-{
-    assert(scope);
-    if (!call)
-        call = new Prefix(name, arguments);
-    bool result = MAIN->TypeAnalysis(scope, call);
-    return result;
-}
 
 XL_END
 
