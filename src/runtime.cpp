@@ -1220,26 +1220,6 @@ bool xl_random_seed(int seed)
 //
 // ============================================================================
 
-Tree *XLCall::operator() (SourceFile *sf)
-// ----------------------------------------------------------------------------
-//   Invoke the call in the context of a given source file
-// ----------------------------------------------------------------------------
-{
-    Scope *scope = sf->scope;
-    return operator()(scope);
-}
-
-
-bool XLCall::build(SourceFile *sf)
-// ----------------------------------------------------------------------------
-//   Invoke the call in the context of a given source file
-// ----------------------------------------------------------------------------
-{
-    Scope *scope = sf->scope;
-    return build(scope);
-}
-
-
 Tree *XLCall::operator() (Scope *scope)
 // ----------------------------------------------------------------------------
 //    Perform the given call in the given context

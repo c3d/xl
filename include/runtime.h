@@ -262,10 +262,6 @@ struct XLCall
     XLCall &operator, (text  v)    { return *this, new Text(v); }
 
     // Calling in a given symbol context
-    Tree *  operator() (SourceFile *sf);
-    bool    build(SourceFile *sf);
-
-    // Calling in a given symbol context
     Tree *  operator() (Scope *syms);
     bool    build(Scope *syms);
 
