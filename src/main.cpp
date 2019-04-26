@@ -386,7 +386,7 @@ int Main::LoadFiles()
 }
 
 
-int Main::LoadFile(const text &file, text modname)
+int Main::LoadFile(text file, text modname)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
