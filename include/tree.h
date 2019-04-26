@@ -384,6 +384,7 @@ struct Infix : Tree
     Infix(Infix *i, Tree *l, Tree *r):
         Tree(INFIX, i), left(l), right(r), name(i->name) {}
     bool                IsDeclaration() { return name == "is"; }
+    Infix *             LastStatement(text sep1 = ";", text sep2 = "\n");
     Tree_p              left;
     Tree_p              right;
     text                name;
@@ -476,6 +477,23 @@ inline bool Tree::Equal(Tree *t1, Tree *t2, bool recurse)
 // ----------------------------------------------------------------------------
 {
     return Compare(t1, t2, recurse) == 0;
+}
+
+
+inline Infix *Infix::LastStatement(text sep1, text sep2)
+// ----------------------------------------------------------------------------
+//   Return the last statement following a given infix
+// ----------------------------------------------------------------------------
+{
+    Infix *last = this;
+    while (Infix *next = last->right->AsInfix())
+    {
+        if (next->name == sep1 || next->name == sep2)
+            last = next;
+        else
+            break;
+    }
+    return last;
 }
 
 
