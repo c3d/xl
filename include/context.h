@@ -285,6 +285,7 @@ public:
     Rewrite *           SetAttribute(text attr, text value, bool ow=false);
 
     // Path management
+    void                SetPrefixPath(text prefix, text path);
     text                ResolvePrefixedPath(text path);
 
     // Looking up definitions in a context

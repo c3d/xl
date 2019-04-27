@@ -570,6 +570,14 @@ Rewrite *Context::SetAttribute(text attribute, text value, bool owr)
 //
 // ============================================================================
 
+void Context::SetPrefixPath(text prefix, text path)
+// ----------------------------------------------------------------------------
+//   Set the path for the given prefix
+// ----------------------------------------------------------------------------
+{
+}
+
+
 text Context::ResolvePrefixedPath(text path)
 // ----------------------------------------------------------------------------
 //   Resolve the file name in the current paths
