@@ -151,6 +151,8 @@ struct CommentsInfo : Info
 // ----------------------------------------------------------------------------
 {
     CommentsInfo() {}
+    CommentsInfo(const CommentsInfo &other)
+        : Info(), before(other.before), after(other.after) {}
     ~CommentsInfo() {}
 
 public:
