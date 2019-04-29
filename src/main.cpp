@@ -90,19 +90,14 @@ Main *MAIN = NULL;
 
 namespace Opt
 {
-TextOption      builtins("builtins",
-                         "Set the path for the XL builtins file",
-                         "builtins.xl");
+TextOption      builtinsPath("builtins_path",
+                             "Set the path for the XL builtins file",
+                             "builtins.xl");
+
+BooleanOption   builtins("builtins", "Enable builtins file", true);
 
 BooleanOption   compile("compile",
                         "Only compile the file without evaluating it");
-
-CodeOption      noBuiltins("nobuiltins",
-                           "Ignore builtins file",
-                           [](Option &opt, Options &opts)
-                           {
-                               builtins.value = "";
-                           });
 
 IntegerOption   optimize("optimize",
                          "Select optimization level",
@@ -146,10 +141,10 @@ CodeOption      trace("trace",
                       });
 AliasOption     traceAlias("t", trace);
 
-BooleanOption   writeEncrypted("write_encrypted",
+BooleanOption   writeEncrypted("encrypted_writes",
                              "Encrypt files as they are written");
 
-BooleanOption   writePacked("write_packed",
+BooleanOption   writePacked("packed_writes",
                      "Pack files as they are written");
 
 }
@@ -233,7 +228,7 @@ Main::Main(int inArgc,
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
-    Opt::builtins.value = SearchLibFile(builtinsName);
+    Opt::builtinsPath.value = SearchLibFile(builtinsName);
     ParseOptions();
     Opcode::Enter(&context);
 
@@ -346,8 +341,8 @@ int Main::ParseOptions()
         file_names.push_back(cmd);
 
     // Load builtins before the rest (only after parsing options for builtins)
-    if (!Opt::builtins.value.empty())
-        file_names.insert(file_names.begin(), Opt::builtins);
+    if (Opt::builtins)
+        file_names.insert(file_names.begin(), Opt::builtinsPath);
 
     // Check if there were errors parsing it
     if (topLevelErrors.HadErrors())

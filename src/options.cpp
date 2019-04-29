@@ -290,8 +290,11 @@ static inline int prefixBooleanValue(kstring &command)
 // ----------------------------------------------------------------------------
 {
     int value = -1;
-    command = prefixMatch(command, "no",   false, value);
-    command = prefixMatch(command, "with", true,  value);
+    command = prefixMatch(command, "no",        false, value);
+    command = prefixMatch(command, "without",   false, value);
+    command = prefixMatch(command, "with",      true,  value);
+    command = prefixMatch(command, "disable",   false, value);
+    command = prefixMatch(command, "enable",    true,  value);
     return value;
 }
 
