@@ -68,7 +68,7 @@ struct SourceFile
 //    A source file and associated data
 // ----------------------------------------------------------------------------
 {
-    SourceFile(text n, Tree *t, Scope *ctx, bool readOnly = false);
+    SourceFile(text n, Tree *tree, Scope *scope, bool readOnly = false);
     SourceFile();
     ~SourceFile();
 
