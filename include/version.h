@@ -37,6 +37,10 @@
 
 #include <string>
 
+// Some variants of the GNU library define major and minor macros
+#undef major
+#undef minor
+
 namespace XL
 {
 struct Version
