@@ -255,9 +255,14 @@ struct XLCall
     // Adding one arguments
     XLCall &Arg(Tree *tree);
     XLCall &Arg(Tree &tree)     { return Arg(&tree); }
-    XLCall &Arg(longlong v)     { return Arg((Tree *) new Integer(v)); }
-    XLCall &Arg(double  v)      { return Arg((Tree *) new Real(v)); }
-    XLCall &Arg(text  v)        { return Arg((Tree *) new Text(v)); }
+    XLCall &Arg(Integer::value_t v)     { return Arg((Tree *) new Integer(v)); }
+    XLCall &Arg(Real::value_t  v)       { return Arg((Tree *) new Real(v)); }
+    XLCall &Arg(Text::value_t  v)       { return Arg((Tree *) new Text(v)); }
+
+    template <typename num,
+              typename =
+              typename std::enable_if<std::is_integral<num>::value>::type>
+    XLCall &Arg(num x)                  { return Arg(Integer::value_t(x)); }
 
     // Adding a collection of arguments
     template<typename First, typename ... Rest>
