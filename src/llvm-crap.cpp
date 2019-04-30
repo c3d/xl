@@ -1143,7 +1143,7 @@ Function_p JIT::ExternFunction(FunctionType_p type, text name)
     Function_p f = llvm::Function::Create(type,
                                           llvm::Function::ExternalLinkage,
                                           name, p.Module());
-    record(llvm_externals, "Extern function %v type %T", f, type);
+    record(llvm_externals, "Extern function %s is %v type %T", name, f, type);
     return f;
 }
 
