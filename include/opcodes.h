@@ -69,15 +69,15 @@ XL_BEGIN
 //    or return NULL if the item does not have the expected type
 //  - A function called OpcodeType() to get [name]_type from a [name]_p.
 
-extern Name_p   tree_type;
-extern Name_p   integer_type;
-extern Name_p   real_type;
-extern Name_p   text_type;
-extern Name_p   name_type;
-extern Name_p   block_type;
-extern Name_p   prefix_type;
-extern Name_p   postfix_type;
-extern Name_p   infix_type;
+extern Name_p           tree_type;
+extern Name_p           integer_type;
+extern Name_p           real_type;
+extern Name_p           text_type;
+extern Name_p           name_type;
+extern Name_p           block_type;
+extern Name_p           prefix_type;
+extern Name_p           postfix_type;
+extern Name_p           infix_type;
 
 #define Tree_type       tree_type
 #define Integer_type    integer_type
@@ -89,16 +89,17 @@ extern Name_p   infix_type;
 #define Postfix_type    postfix_type
 #define Infix_type      infix_type
 
-typedef Tree    Tree_r;
-typedef Integer Integer_r;
-typedef Real    Real_r;
-typedef Text    Text_r;
-typedef Name    Name_r;
-typedef Block   Block_r;
-typedef Prefix  Prefix_r;
-typedef Postfix Postfix_r;
-typedef Infix   Infix_r;
-typedef Scope   Scope_r;
+typedef Tree            Tree_r;
+typedef Integer         Integer_r;
+typedef Real            Real_r;
+typedef Text            Text_r;
+typedef Name            Name_r;
+typedef Block           Block_r;
+typedef Prefix          Prefix_r;
+typedef Postfix         Postfix_r;
+typedef Infix           Infix_r;
+typedef Scope           Scope_r;
+
 
 
 // ============================================================================
