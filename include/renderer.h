@@ -87,8 +87,6 @@ protected:
     std::ostream &      output;
     Syntax &            syntax;
     formats_table       formats;
-    highlights_table    highlights;
-    highlight_result    highlighted;
     uint                indent;
     text                self;
     Tree_p              left;
@@ -103,6 +101,8 @@ protected:
     bool                no_indents;
 
 public:
+    highlights_table    highlights;
+    highlight_result    highlighted;
     static Renderer *   renderer;
 };
 
