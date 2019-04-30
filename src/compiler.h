@@ -100,6 +100,7 @@ public:
     PointerType_p       charPtrTy;
     PointerType_p       charPtrPtrTy;
     StructType_p        textTy;
+    PointerType_p       textPtrTy;
     StructType_p        infoTy;
     PointerType_p       infoPtrTy;
     StructType_p        treeTy;

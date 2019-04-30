@@ -217,6 +217,16 @@ Text *xl_new_text(TreePosition pos, text value)
 }
 
 
+Text *xl_new_text_ptr(TreePosition pos, text *value)
+// ----------------------------------------------------------------------------
+//    Called by generated code to build a new double-quoted Text
+// ----------------------------------------------------------------------------
+{
+    Text *result = new Text(*value, pos);
+    return result;
+}
+
+
 Text *xl_new_ctext(TreePosition pos, kstring value)
 // ----------------------------------------------------------------------------
 //    Called by generated code to build a new double-quoted Text

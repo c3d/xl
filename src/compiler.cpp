@@ -84,6 +84,7 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
       characterTy       (jit.IntegerType<char>()),
       charPtrTy         (jit.PointerType(characterTy)),
       textTy            (jit.StructType({jit.OpaqueType("textrep")}, "text")),
+      textPtrTy         (jit.PointerType(textTy)),
       infoTy            (jit.OpaqueType("Info")),
       infoPtrTy         (jit.PointerType(infoTy)),
 

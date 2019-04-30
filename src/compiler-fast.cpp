@@ -2168,6 +2168,7 @@ O1CompileUnit::O1CompileUnit(FastCompiler &compiler,
     IntegerType_p  characterTy      = compiler.characterTy;
     PointerType_p  charPtrTy        = compiler.charPtrTy;
     StructType_p   textTy           = compiler.textTy;
+    PointerType_p  textPtrTy        = compiler.textPtrTy;
     PointerType_p  integerTreePtrTy = compiler.integerTreePtrTy;
     PointerType_p  realTreePtrTy    = compiler.realTreePtrTy;
     PointerType_p  textTreePtrTy    = compiler.textTreePtrTy;

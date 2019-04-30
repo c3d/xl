@@ -486,7 +486,7 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
         result = code.StructGEP(result, 0, "ubox_charpp");
         result = code.Load(result, "ubox_charp");
     }
-    else if (req == compiler.textTy)
+    else if (req == compiler.textTy || req == compiler.textPtrTy)
     {
         assert (type == compiler.textTreePtrTy);
         result = code.StructGEP(result, TEXT_VALUE_INDEX, "ubox_text");
@@ -523,6 +523,11 @@ Value_p CompilerFunction::Autobox(Tree *source, Value_p value, Type_p req)
     {
         assert(req == compiler.treePtrTy || req == compiler.textTreePtrTy);
         boxFn = unit.xl_new_text;
+    }
+    else if (type == compiler.textPtrTy)
+    {
+        assert(req == compiler.treePtrTy || req == compiler.textTreePtrTy);
+        boxFn = unit.xl_new_text_ptr;
     }
     else if (type == compiler.charPtrTy)
     {

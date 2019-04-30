@@ -545,7 +545,7 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
     }
 
     // Comparison of text constants
-    if (testType == compiler.textTy)
+    if (testType == compiler.textTy || testType == compiler.textPtrTy)
     {
         test = function.Autobox(testTree, test, compiler.charPtrTy);
         testType = test->getType();
@@ -626,17 +626,18 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
         }
 
         // Convert value to a Tree * if possible
-        if (valueType->isIntegerTy() ||
-            valueType->isFloatingPointTy() ||
-            valueType == compiler.charPtrTy ||
-            valueType == compiler.textTy ||
-            valueType == compiler.integerTreePtrTy  ||
-            valueType == compiler.realTreePtrTy     ||
-            valueType == compiler.textTreePtrTy     ||
-            valueType == compiler.nameTreePtrTy     ||
-            valueType == compiler.blockTreePtrTy    ||
-            valueType == compiler.infixTreePtrTy    ||
-            valueType == compiler.prefixTreePtrTy   ||
+        if (valueType->isIntegerTy()                    ||
+            valueType->isFloatingPointTy()              ||
+            valueType == compiler.charPtrTy             ||
+            valueType == compiler.textTy                ||
+            valueType == compiler.textPtrTy             ||
+            valueType == compiler.integerTreePtrTy      ||
+            valueType == compiler.realTreePtrTy         ||
+            valueType == compiler.textTreePtrTy         ||
+            valueType == compiler.nameTreePtrTy         ||
+            valueType == compiler.blockTreePtrTy        ||
+            valueType == compiler.infixTreePtrTy        ||
+            valueType == compiler.prefixTreePtrTy       ||
             valueType == compiler.postfixTreePtrTy)
         {
             value = function.Autobox(valueTree, value, compiler.treePtrTy);

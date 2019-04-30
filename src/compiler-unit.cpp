@@ -91,6 +91,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
     IntegerType_p  characterTy      = compiler.characterTy;
     PointerType_p  charPtrTy        = compiler.charPtrTy;
     StructType_p   textTy           = compiler.textTy;
+    PointerType_p  textPtrTy        = compiler.textPtrTy;
     PointerType_p  treePtrTy        = compiler.treePtrTy;
     PointerType_p  integerTreePtrTy = compiler.integerTreePtrTy;
     PointerType_p  realTreePtrTy    = compiler.realTreePtrTy;

@@ -87,6 +87,7 @@ Real    *xl_new_real(TreePosition pos, double value);
 Text    *xl_new_character(TreePosition pos, char value);
 Text    *xl_new_ctext(TreePosition pos, kstring value);
 Text    *xl_new_text(TreePosition pos, text value);
+Text    *xl_new_text_ptr(TreePosition pos, text *value);
 Text    *xl_new_xtext(TreePosition pos, kstring value, longlong len, kstring open, kstring close);
 Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
