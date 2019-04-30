@@ -35,12 +35,14 @@
 // *****************************************************************************
 
 #include "opcodes.h"
+
 #include "basics.h"
-#include "parser.h"
 #include "errors.h"
-#include "types.h"
-#include "runtime.h"
+#include "native.h"
+#include "parser.h"
 #include "renderer.h"
+#include "runtime.h"
+#include "types.h"
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
@@ -62,7 +64,6 @@ XL_BEGIN
 
 // List of registered opcodes
 Opcode::Opcodes *Opcode::opcodes = nullptr;
-
 
 void Opcode::Enter(Context *context)
 // ----------------------------------------------------------------------------

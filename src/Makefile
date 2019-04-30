@@ -59,37 +59,38 @@ SOURCES_VARIANT_exe=				\
 	xl.cpp
 SOURCES_VARIANT_lib     =			\
 	$(SOURCES_$(COMPILER))			\
-	main.cpp				\
-	tree.cpp				\
 	action.cpp				\
-	options.cpp				\
-	scanner.cpp				\
-	parser.cpp				\
+	bytecode.cpp				\
+	cdecls.cpp				\
+	context.cpp				\
 	errors.cpp				\
 	gc.cpp					\
-	syntax.cpp				\
-	renderer.cpp				\
-	context.cpp				\
-	runtime.cpp				\
-	bytecode.cpp				\
 	interpreter.cpp				\
+	main.cpp				\
+	native.cpp				\
 	opcodes.cpp				\
-	cdecls.cpp				\
+	options.cpp				\
+	parser.cpp				\
+	renderer.cpp				\
+	runtime.cpp				\
+	scanner.cpp				\
 	serializer.cpp				\
+	syntax.cpp				\
+	tree.cpp				\
 	utf8_fileutils.cpp			\
 	version.cpp				\
 	winglob.cpp				\
 	$(MODULES_SOURCES)
 
 SOURCES_llvm =					\
-	llvm-crap.cpp				\
-	compiler-fast.cpp			\
-	compiler.cpp				\
-	compiler-unit.cpp			\
-	compiler-prototype.cpp			\
-	compiler-function.cpp			\
-	compiler-expr.cpp			\
 	compiler-args.cpp			\
+	compiler-expr.cpp			\
+	compiler-fast.cpp			\
+	compiler-function.cpp			\
+	compiler-prototype.cpp			\
+	compiler-unit.cpp			\
+	compiler.cpp				\
+	llvm-crap.cpp				\
 	types.cpp				\
 
 HEADERS=$(HEADERS_$(VARIANT))
