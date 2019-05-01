@@ -199,7 +199,7 @@ eval_fn CompilerFunction::Finalize(bool createCode)
     }
 
     // Verify the function we built
-    if (RECORDER_TRACE(llvm_code) & 2)
+    if (RECORDER_TRACE(llvm_code) & 1)
         jit.Print("LLVM IR before verification and optimizations:\n", function);
     if (jit.VerifyFunction(function))
     {
@@ -207,14 +207,14 @@ eval_fn CompilerFunction::Finalize(bool createCode)
         return nullptr;
     }
     jit.Finalize(function);
-    if (RECORDER_TRACE(llvm_code) & 4)
+    if (RECORDER_TRACE(llvm_code) & 2)
         jit.Print("LLVM IR after optimizations:\n", function);
 
     void *result = NULL;
     if (createCode)
     {
         result = jit.ExecutableCode(function);
-        if (RECORDER_TRACE(llvm_code) & 8)
+        if (RECORDER_TRACE(llvm_code) & 4)
             jit.Print("LLVM IR after machine code generation:\n", function);
     }
 

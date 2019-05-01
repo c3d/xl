@@ -2231,17 +2231,17 @@ eval_fn O1CompileUnit::Finalize(bool topLevel)
     data.Branch(entrybb);
 
     // Generate the code
-    if (RECORDER_TRACE(llvm_code) & 2)
+    if (RECORDER_TRACE(llvm_code) & 1)
         jit.Print("Unoptimized (fast compiler):\n", function);
     jit.Finalize(function);
-    if (RECORDER_TRACE(llvm_code) & 4)
+    if (RECORDER_TRACE(llvm_code) & 2)
         jit.Print("Optimized (fast compiler):\n", function);
 
     void *result = NULL;
     if (topLevel)
     {
         result = jit.ExecutableCode(function);
-        if (RECORDER_TRACE(llvm_code) & 8)
+        if (RECORDER_TRACE(llvm_code) & 4)
             jit.Print("After code generation (fast compiler):\n", function);
         record(llvm_functions, "Fast code %p for %v", result, function);
     }
