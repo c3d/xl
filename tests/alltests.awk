@@ -12,7 +12,7 @@ BEGIN {
 }
 /\/\/ [A-Z]+=/ {
     name=substr($1, 4);
-    value=$2;
+    value=substr($0, index($0, "=") + 1);
     gsub("%x", xl, value);
     gsub("%f", file, value);
     gsub("%b", base, value);
