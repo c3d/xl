@@ -347,7 +347,6 @@ int Main::ParseOptions()
     // Check if there were errors parsing it
     if (topLevelErrors.HadErrors())
     {
-        options.Usage();
         fprintf(stderr, "\n");
         topLevelErrors.Display();
         exit(1);

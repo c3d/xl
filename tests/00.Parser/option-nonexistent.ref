@@ -1,0 +1,28 @@
+Usage: ../xl <options> <source_file>
+
+Option names can be shortened if unambiguous.
+
+-builtins         : Enable builtins file
+-builtins_path    : Set the path for the XL builtins file
+-case_sensitive   : Make scanner case sensitive
+-compile          : Only compile the file without evaluating it
+-debug-prefix     : Select a prefix to debug
+-encrypted_writes : Encrypt files as they are written
+-help             : Show usage for the program and list available options
+-interpreted      : Interpreted mode (same as -O0)
+-O                : Alias for optimize
+-optimize         : Select optimization level
+-packed_writes    : Pack files as they are written
+-parse            : Only parse the file without evaluating it
+-remote           : Listen for remote programs
+-remote_forks     : Select the number of forks for remote access
+-remote_port      : Select the port to listen to for remote access
+-show             : Show the source code
+-signed_constants : Allow negative values in constants
+-stack_depth      : Maximum stack depth for interpreter
+-stylesheet       : Select the style sheet for rendering XL code
+-t                : Alias for trace
+-trace            : Activate recorder traces
+You can get the available recorder traces with -trace help
+
+<Command line>: Command-line option "--nonexistent-option" does not exist

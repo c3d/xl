@@ -62,6 +62,7 @@
 
 RECORDER_DEFINE(options,        64, "Compiler options");
 RECORDER_DEFINE(option_parsing, 16, "Processing compiler options");
+RECORDER_DEFINE(option_value,   16, "Values set for options");
 
 XL_BEGIN
 // ============================================================================
@@ -150,6 +151,17 @@ static inline bool commandEnd(char c)
 }
 
 
+static inline char commandNormalize(char c)
+// ----------------------------------------------------------------------------
+//    Normalize - to _ in command-line options
+// ----------------------------------------------------------------------------
+{
+    if (c == '-')
+        c = '_';
+    return c;
+}
+
+
 kstring Option::SkipPrefix(kstring command)
 // ----------------------------------------------------------------------------
 //   For most options, there are no acceptable prefix
@@ -169,7 +181,8 @@ kstring Option::Matches(Options &opts)
 
     // Match as many characters as possible
     kstring match = name;
-    while (*match && !commandEnd(*command) && *match == *command)
+    while (*match && !commandEnd(*command) &&
+           commandNormalize(*match) == commandNormalize(*command))
     {
         ++match;
         ++command;
@@ -185,9 +198,11 @@ kstring Option::Matches(Options &opts)
     }
 
     // Update the argument text pointer
+    bool exact = *match == 0 && commandEnd(*command);
     record(option_parsing,
-           "Matched %u characters of [%+s], remaining is [%+s]",
-           match - name, name, command);
+           "Matched %u characters of [%+s], remaining is [%+s], %+s",
+           match - name, name, command, exact ? "exact" : "partial");
+    opts.IsExact(exact);
     return command;
 }
 
@@ -340,6 +355,7 @@ void BooleanOption::Process(Options &opts)
             opt = true;
         }
     }
+    record(option_value, "Boolean %+s = %d (was %d)", name, opt, value);
     if (opt >= 0)
         value = (bool) opt;
 }
@@ -362,17 +378,26 @@ void IntegerOption::Process(Options &opts)
            "Integer option [%+s] in %llu..%llu, current %llu",
            arg, min, max, value);
     char *end = (char *) arg;
-    value = strtoll(arg, &end, 0);
+    int req = strtoll(arg, &end, 0);
     if (end == arg || *end != 0)
+    {
         Ooops("Invalid numerical value $1 for option $2", Tree::COMMAND_LINE)
             .Arg(arg)
             .Arg(name);
-    if (value < min || value > max)
+    }
+    else if (req < min || req > max)
+    {
         Ooops("Value $1 for option $2 is outside of $3..$4", Tree::COMMAND_LINE)
-            .Arg(value)
+            .Arg(req)
             .Arg(name)
             .Arg(min)
             .Arg(max);
+    }
+    else
+    {
+        record(option_value, "Integer %+s = %d (was %d)", name, req, value);
+        value = req;
+    }
 }
 
 
@@ -382,7 +407,7 @@ void TextOption::Process(Options &opts)
 // ----------------------------------------------------------------------------
 {
     kstring arg = opts.Argument();
-    record(option_parsing, "Text option [%+s] current [%s]", arg, value);
+    record(option_value, "Text %+s = %s (was %s)", name, arg, value);
     value = arg;
 }
 
@@ -392,7 +417,7 @@ void CodeOption::Process(Options &opts)
 //   Pass the arguments to the code
 // ----------------------------------------------------------------------------
 {
-    record(option_parsing, "Code option [%+s]", name);
+    record(option_value, "Code %+s evaluating", name);
     code(*this, opts);
 }
 
@@ -459,7 +484,7 @@ Options::Options(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //    Process all the given options
 // ----------------------------------------------------------------------------
-    : arg(1), args()
+    : arg(1), args(), selected(), length(), exact()
 {
     // Store name of the program
     args.push_back(argv[0]);
@@ -647,7 +672,7 @@ kstring Options::ParseNext()
             kstring match = opt->Matches(*this);
             if (match)
             {
-                if (best)
+                if (best && !IsExact())
                 {
                     Ooops("Ambiguous command-line option $1 could be $2 or $3",
                           Tree::COMMAND_LINE)
@@ -661,6 +686,8 @@ kstring Options::ParseNext()
                     length = match - input;
                     selected = opt->Name();
                 }
+                if (IsExact())
+                    break;
             }
         }
 
@@ -670,6 +697,7 @@ kstring Options::ParseNext()
         {
             Ooops("Command-line option $1 does not exist", Tree::COMMAND_LINE)
                 .Arg(input);
+            Usage();
             break;
         }
         best->Process(*this);

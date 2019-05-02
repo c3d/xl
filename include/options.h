@@ -177,6 +177,8 @@ struct Options
     kstring             Input();
     kstring             Command();
     bool                HasDirectArgument();
+    bool                IsExact()               { return exact; }
+    void                IsExact(bool e)         { exact = e; }
     kstring             Argument();
 
 private:
@@ -184,6 +186,7 @@ private:
     std::vector<kstring>args;
     kstring             selected;
     uint                length;
+    bool                exact;
 };
 
 XL_END
