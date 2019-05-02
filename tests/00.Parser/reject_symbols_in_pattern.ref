@@ -2,8 +2,3 @@
 3 - 5
 00.Parser/reject_symbols_in_pattern.xl:36:1: The pattern variable [@] is not a name
 00.Parser/reject_symbols_in_pattern.xl:36:5: The pattern variable [`] is not a name
-00.Parser/reject_symbols_in_pattern.xl:36:1: The pattern variable [@] is not a name
-00.Parser/reject_symbols_in_pattern.xl:36:5: The pattern variable [`] is not a name
-00.Parser/reject_symbols_in_pattern.xl:36:3: Cannot unify type [type @:#A - `:#B] of [@ - `]
-00.Parser/reject_symbols_in_pattern.xl:36:12: with type [integer] of [@ + `]
-00.Parser/reject_symbols_in_pattern.xl:36:3: Type analysis for [@ - ` is @ + `|3 - 5] failed
