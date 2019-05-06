@@ -57,6 +57,8 @@
 #include "types.h"
 #include "runtime.h"
 #include "llvm-crap.h"
+#include "native.h"
+
 #include <recorder/recorder.h>
 #include <stdio.h>
 #include <sstream>
@@ -122,6 +124,8 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
         Name = jit.Function(fty, #Name);                        \
     }
 #include "compiler-primitives.tbl"
+
+    Native::EnterPrototypes(compiler);
 
     record(compiler_unit, "Created unit %p scope %t source %t",
            this, scope, source);

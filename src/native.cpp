@@ -35,6 +35,8 @@
 
 #include "native.h"
 
+RECORDER(native, 32, "Native functions");
+
 namespace XL
 {
 
@@ -64,6 +66,21 @@ Native::~Native()
     }
 
     delete implementation;
+}
+
+
+void Native::EnterPrototypes(Compiler &compiler)
+// ----------------------------------------------------------------------------
+//   Enter the prototypes for all native functions
+// ----------------------------------------------------------------------------
+{
+    record(native, "Entering prototypes");
+    for (Native *native = list; native; native = native->next)
+    {
+        record(native, "Entering prototype for %s shape %t",
+               native->symbol, native->Shape());
+        native->Prototype(compiler, native->symbol);
+    }
 }
 
 }

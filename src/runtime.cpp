@@ -46,6 +46,7 @@
 #include "options.h"
 #include "opcodes.h"
 #include "main.h"
+#include "native.h"
 #include "save.h"
 #include "tree-clone.h"
 #include "utf8_fileutils.h"
@@ -76,6 +77,7 @@ Tree *  xl_evaluate(Scope *scope, Tree *tree)
 {
     return MAIN->Evaluate(scope, tree);
 }
+XL_NATIVE(evaluate);
 
 
 Tree *  xl_identity(Scope *scope, Tree *tree)
@@ -149,6 +151,7 @@ Tree *xl_stack_overflow(Tree *what)
     Ooops("Stack overflow evaluating $1", what);
     return what;
 }
+XL_NATIVE(stack_overflow);
 
 
 bool xl_same_text(Tree *what, const char *ref)
@@ -159,6 +162,7 @@ bool xl_same_text(Tree *what, const char *ref)
     Text *tval = what->AsText(); assert(tval);
     return tval->value == text(ref);
 }
+XL_NATIVE(same_text);
 
 
 bool xl_same_shape(Tree *left, Tree *right)
@@ -888,6 +892,7 @@ bool xl_write_integer(longlong x)
     std::cout << x;
     return true;
 }
+XL_NATIVE(write_integer);
 
 
 bool xl_write_real(double x)
@@ -898,6 +903,7 @@ bool xl_write_real(double x)
     std::cout << x;
     return true;
 }
+XL_NATIVE(write_real);
 
 
 bool xl_write_text(kstring x)
@@ -908,6 +914,7 @@ bool xl_write_text(kstring x)
     std::cout << x;
     return true;
 }
+XL_NATIVE(write_text);
 
 
 bool xl_write_tree(Tree *tree)

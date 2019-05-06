@@ -35,12 +35,15 @@
 //   along with Tao3D.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
 
-#include "tree.h"
-#include "llvm-crap.h"
+#include "basics.h"
 #include "compiler.h"
+#include "llvm-crap.h"
+#include "tree.h"
 
+#include <recorder/recorder.h>
 #include <type_traits>
 
+RECORDER_DECLARE(native);
 
 namespace XL
 {
@@ -60,6 +63,7 @@ struct xl_type
     typedef T            native_type;
     static PointerType_p TreeType(Compiler &c)   { return c.treePtrTy; }
     static PointerType_p NativeType(Compiler &c) { return c.treePtrTy; }
+    static Tree *        Shape()                 { return XL::tree_type; }
 };
 
 
@@ -82,7 +86,22 @@ struct xl_type<Num,
     {
         return c.jit.IntegerType<Num>();
     }
+    static Tree *Shape()
+    {
+        return integer_type;
+    }
 };
+
+
+template <> inline Tree *xl_type<bool>  ::Shape() { return boolean_type; }
+template <> inline Tree *xl_type<int8>  ::Shape() { return integer8_type; }
+template <> inline Tree *xl_type<int16> ::Shape() { return integer16_type; }
+template <> inline Tree *xl_type<int32> ::Shape() { return integer32_type; }
+template <> inline Tree *xl_type<int64> ::Shape() { return integer64_type; }
+template <> inline Tree *xl_type<uint8> ::Shape() { return unsigned8_type; }
+template <> inline Tree *xl_type<uint16>::Shape() { return unsigned16_type; }
+template <> inline Tree *xl_type<uint32>::Shape() { return unsigned32_type; }
+template <> inline Tree *xl_type<uint64>::Shape() { return unsigned64_type; }
 
 
 template <typename Num>
@@ -104,8 +123,16 @@ struct xl_type<Num,
     {
         return c.jit.FloatType(c.jit.BitsPerByte * sizeof(Num));
     }
+
+    static Tree *Shape()
+    {
+        return real_type;
+    }
 };
 
+
+template <> inline Tree *xl_type<float>  ::Shape()  { return real32_type; }
+template <> inline Tree *xl_type<double> ::Shape()  { return real64_type; }
 
 template <>
 struct xl_type<kstring>
@@ -124,6 +151,11 @@ struct xl_type<kstring>
     static Type_p NativeType(Compiler &c)
     {
         return c.charPtrTy;
+    }
+
+    static Tree *Shape()
+    {
+        return text_type;
     }
 };
 
@@ -146,6 +178,38 @@ struct xl_type<text>
     {
         return c.textPtrTy;
     }
+
+    static Tree *Shape()
+    {
+        return text_type;
+    }
+};
+
+
+template <>
+struct xl_type<Scope *>
+// ----------------------------------------------------------------------------
+//   Specialization for C++-style C strings
+// ----------------------------------------------------------------------------
+{
+    typedef Tree *       tree_type;
+    typedef Scope *      native_type;
+
+    static PointerType_p TreeType(Compiler &c)
+    {
+        return c.scopePtrTy;
+    }
+
+    static Type_p NativeType(Compiler &c)
+    {
+        return c.scopePtrTy;
+    }
+
+    static Tree *Shape()
+    {
+        static Name scope("scope", Tree::BUILTIN);
+        return &scope;
+    }
 };
 
 
@@ -166,6 +230,8 @@ struct function_type<R(*)()>
 {
     typedef R return_type;
     static void Args(Compiler &, Signature &)  {}
+    static Tree *Shape()        { return nullptr; }
+    static Tree *ReturnShape()  { return xl_type<R>::Shape(); }
 };
 
 
@@ -181,6 +247,19 @@ struct function_type<R(*)(T)>
         Type_p argTy = xl_type<T>::NativeType(compiler);
         signature.push_back(argTy);
     }
+    static Tree *Shape(uint &index)
+    {
+        Tree *type = xl_type<T>::Shape();
+        Name *name = new Name(text(1, 'A' + index), Tree::BUILTIN);
+        ++index;
+        if (type)
+        {
+            Infix *infix = new Infix(":", name, type);
+            return infix;
+        }
+        return name;
+    }
+    static Tree *ReturnShape()  { return xl_type<R>::Shape(); }
 };
 
 
@@ -196,6 +275,14 @@ struct function_type<R(*)(T,A...)>
         function_type<R(*)(T)>::Args(compiler, signature);
         function_type<R(*)(A...)>::Args(compiler, signature);
     }
+    static Tree *Shape(uint &index)
+    {
+        Tree *left = function_type<R(*)(T)>::Shape(index);
+        Tree *right = function_type<R(*)(A...)>::Shape(index);
+        Infix *infix = new Infix(",", left, right);
+        return infix;
+    }
+    static Tree *ReturnShape()  { return xl_type<R>::Shape(); }
 };
 
 
@@ -215,6 +302,7 @@ struct NativeInterface
     virtual     Type_p          ReturnType(Compiler &)                  = 0;
     virtual     FunctionType_p  FunctionType(Compiler &)                = 0;
     virtual     Function_p      Prototype(Compiler &, text name)        = 0;
+    virtual     Tree *          Shape(uint &index)                      = 0;
 };
 
 
@@ -247,6 +335,16 @@ struct NativeImplementation : NativeInterface
         Function_p f = compiler.jit.ExternFunction(fty, name);
         return f;
     }
+
+    virtual Tree *Shape(uint &index) override
+    {
+        function_type<fntype> ft;
+        Tree *result = ft.Shape(index);
+        Tree *retType = ft.ReturnShape();
+        if (retType)
+            result = new Infix("as", result, retType);
+        return result;
+    }
 };
 
 
@@ -267,6 +365,7 @@ struct Native
         : symbol(symbol),
           address((void *) input),
           implementation(new NativeImplementation<fntype>),
+          shape(nullptr),
           next(list)
     {
         list = this;
@@ -281,10 +380,15 @@ struct Native
     FunctionType_p      FunctionType(Compiler &compiler);
     Function_p          Prototype(Compiler &compiler, text name);
 
+    Tree *              Shape();
+
+    static void         EnterPrototypes(Compiler &compiler);
+
 public:
     kstring             symbol;
     void *              address;
     NativeInterface *   implementation;
+    Tree_p              shape;
 
 private:
     static Native      *list;
@@ -319,6 +423,31 @@ inline Function_p Native::Prototype(Compiler &compiler, text name)
 }
 
 
+inline Tree *Native::Shape()
+// ----------------------------------------------------------------------------
+//   Delegate the shape generation to the implementation
+// ----------------------------------------------------------------------------
+{
+    if (!shape)
+    {
+        uint index = 0;
+        Name *name = new Name(symbol, Tree::BUILTIN);
+        if (Tree *args = implementation->Shape(index))
+        {
+            Prefix *prefix = new Prefix(name, args, Tree::BUILTIN);
+            shape = prefix;
+        }
+        else
+        {
+            shape = name;
+        }
+    }
+    return shape;
+}
+
 } // namespace XL
+
+#define NATIVE(Name)    static Native xl_##Name##_native(#Name, Name)
+#define XL_NATIVE(Name) static Native xl_##Name##_native(#Name, xl_##Name)
 
 #endif // NATIVE_H
