@@ -112,7 +112,7 @@ TYPE(tree,      Tree, return (tree_p)  this);
 TYPE(code,      Tree, return (code_p)  this);
 TYPE(source,    Tree, return (source_p)  this);
 TYPE(reference, Tree, return (reference_p)  this);
-TYPE(value,   Tree, return (value_p) this);
+TYPE(value,     Tree, return (value_p) this);
 TYPE(symbol,  Name,
      if (Name *name = AsName())
          return (symbol_p) name;
