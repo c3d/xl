@@ -442,6 +442,5 @@ void xl_assert_failed(kstring kind, kstring msg, kstring file, unsigned line)
     fprintf(stderr, "%s:%u: %s failed: %s\n",
             file, line, kind, msg);
     record(xl_assert, "%+s %+s failed (%+s:%u)", kind, msg, file, line);
-    recorder_dump();
     abort();
 }
