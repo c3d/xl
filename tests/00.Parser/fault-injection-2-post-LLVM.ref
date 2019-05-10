@@ -1,2 +1,1 @@
 main.cpp:253: assertion failed: ((recorder_info_ptr_for_inject_fault)->trace) != 2 && "Running late crash test"
-Received signal Abort trap: 6 (6), dumping recorder
