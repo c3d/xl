@@ -73,9 +73,11 @@
 RECORDER(fileload,                      16, "Files being loaded");
 RECORDER(main,                          16, "Compiler main entry point");
 RECORDER(run_results,                   16, "Show run results");
+RECORDER(fault_injection,                4, "Fault injection");
 RECORDER_TWEAK_DEFINE(gc_statistics,     0, "Display garbage collector stats");
 RECORDER_TWEAK_DEFINE(dump_on_exit,  false, "Dump the recorder on exit");
-
+RECORDER_TWEAK_DEFINE(inject_fault,  false, "Test fault handler "
+                      "(1 pre-LLVM, 2 post-LLVM 3 stack overflow)");
 
 XL_BEGIN
 
@@ -246,6 +248,9 @@ Main::Main(int inArgc,
     else
 #endif // INTERPRETER_ONLY
         evaluator = new Interpreter;
+
+    // Force a crash if this is requested
+    XL_ASSERT(RECORDER_TWEAK(inject_fault) != 2 && "Running late crash test");
 }
 
 
@@ -336,9 +341,23 @@ int Main::ParseOptions()
         std::cerr << "WARNING: Cannot set locale.\n"
                   << "         Check LANG, LC_CTYPE, LC_ALL.\n";
 
+    // Test that the crash handler works for stack overflows
+    if (RECORDER_TWEAK(inject_fault) == 3)
+    {
+        record(fault_injection, "Provoking stack overflow %p", (void *) &cmd);
+        ParseOptions();
+    }
+
     // Scan options and build list of files we need to process
     for (cmd = options.ParseFirst(); cmd != end; cmd = options.ParseNext())
         file_names.push_back(cmd);
+
+    // Test that the crash handler works for stack overflows
+    if (RECORDER_TWEAK(inject_fault) == 3)
+    {
+        record(fault_injection, "Provoking stack overflow %p", (void *) &cmd);
+        ParseOptions();
+    }
 
     // Load builtins before the rest (only after parsing options for builtins)
     if (Opt::builtins)
@@ -354,6 +373,9 @@ int Main::ParseOptions()
 
     // Update style sheet
     renderer.SelectStyleSheet(SearchLibFile(Opt::stylesheet, ".stylesheet"));
+
+    // Force a crash if this is requested
+    XL_ASSERT(RECORDER_TWEAK(inject_fault) != 1 && "Running early crash test");
 
     return false;
 }
