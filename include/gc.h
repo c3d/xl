@@ -49,6 +49,9 @@
 #include <stdint.h>
 #include <typeinfo>
 
+
+RECORDER_DECLARE(memory);
+
 XL_BEGIN
 
 struct GarbageCollector;
@@ -421,6 +424,7 @@ inline void TypeAllocator::Acquire(void *pointer)
 //   Increase reference count for pointer and return it
 // ----------------------------------------------------------------------------
 {
+    record(memory, "Acquire %p", pointer);
     if (IsGarbageCollected(pointer))
     {
         XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
@@ -437,6 +441,7 @@ inline void TypeAllocator::Release(void *pointer)
 //   Decrease reference count for pointer and return it
 // ----------------------------------------------------------------------------
 {
+    record(memory, "Release %p", pointer);
     if (IsGarbageCollected(pointer))
     {
         XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
@@ -617,7 +622,5 @@ inline bool GarbageCollector::SafePoint()
 }
 
 XL_END
-
-RECORDER_DECLARE(memory);
 
 #endif // GC_H

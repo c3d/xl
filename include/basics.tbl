@@ -66,7 +66,6 @@ INIT_ALLOCATOR(Context);
 
 NAME(nil);
 NAME(self);
-NAME(scope);
 NAME(true);
 NAME(false);
 NAME(error);
@@ -113,6 +112,7 @@ TYPE(code,      Tree, return (code_p)  this);
 TYPE(source,    Tree, return (source_p)  this);
 TYPE(reference, Tree, return (reference_p)  this);
 TYPE(value,     Tree, return (value_p) this);
+TYPE(scope,     Scope, return (scope_p) this);
 TYPE(symbol,  Name,
      if (Name *name = AsName())
          return (symbol_p) name;

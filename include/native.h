@@ -207,8 +207,7 @@ struct xl_type<Scope *>
 
     static Tree *Shape()
     {
-        static Name scope("scope", Tree::BUILTIN);
-        return &scope;
+        return scope_type;
     }
 };
 
@@ -229,9 +228,18 @@ struct function_type<R(*)()>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
-    static void Args(Compiler &, Signature &)  {}
-    static Tree *Shape()        { return nullptr; }
-    static Tree *ReturnShape()  { return xl_type<R>::Shape(); }
+    static void         Args(Compiler &, Signature &)  {}
+    static Tree *       Shape()
+    {
+        record(native, "Shape returns null");
+        return nullptr;
+    }
+    static Tree_p       ReturnShape()
+    {
+        Tree_p ret = xl_type<R>::Shape();
+        record(native, "ReturnShape () = %t", ret);
+        return ret;
+    }
 };
 
 
@@ -247,19 +255,27 @@ struct function_type<R(*)(T)>
         Type_p argTy = xl_type<T>::NativeType(compiler);
         signature.push_back(argTy);
     }
-    static Tree *Shape(uint &index)
+    static Tree_p Shape(uint &index)
     {
-        Tree *type = xl_type<T>::Shape();
-        Name *name = new Name(text(1, 'A' + index), Tree::BUILTIN);
+        Tree_p type = xl_type<T>::Shape();
+        Name_p name = new Name(text(1, 'A' + index), Tree::BUILTIN);
         ++index;
         if (type)
         {
-            Infix *infix = new Infix(":", name, type);
+            Infix_p infix = new Infix(":", name, type);
+            record(native,
+                   "Shape %u infix %t : %t = %t", index, type, name, infix);
             return infix;
         }
+        record(native, "Shape %u name %t", index, name);
         return name;
     }
-    static Tree *ReturnShape()  { return xl_type<R>::Shape(); }
+    static Tree_p ReturnShape()
+    {
+        Tree_p ret = xl_type<R>::Shape();
+        record(native, "Return shape (one) %t", ret);
+        return ret;
+    }
 };
 
 
@@ -275,14 +291,20 @@ struct function_type<R(*)(T,A...)>
         function_type<R(*)(T)>::Args(compiler, signature);
         function_type<R(*)(A...)>::Args(compiler, signature);
     }
-    static Tree *Shape(uint &index)
+    static Tree_p Shape(uint &index)
     {
-        Tree *left = function_type<R(*)(T)>::Shape(index);
-        Tree *right = function_type<R(*)(A...)>::Shape(index);
-        Infix *infix = new Infix(",", left, right);
+        Tree_p left = function_type<R(*)(T)>::Shape(index);
+        Tree_p right = function_type<R(*)(A...)>::Shape(index);
+        Infix_p infix = new Infix(",", left, right);
+        record(native, "Shape %u (...) %t,%t = %t", index, left, right, infix);
         return infix;
     }
-    static Tree *ReturnShape()  { return xl_type<R>::Shape(); }
+    static Tree_p ReturnShape()
+    {
+        Tree_p ret = xl_type<R>::Shape();
+        record(native, "Return shape (...) %t", ret);
+        return ret;
+    }
 };
 
 
@@ -302,7 +324,7 @@ struct NativeInterface
     virtual     Type_p          ReturnType(Compiler &)                  = 0;
     virtual     FunctionType_p  FunctionType(Compiler &)                = 0;
     virtual     Function_p      Prototype(Compiler &, text name)        = 0;
-    virtual     Tree *          Shape(uint &index)                      = 0;
+    virtual     Tree_p          Shape(uint &index)                      = 0;
 };
 
 
@@ -336,13 +358,14 @@ struct NativeImplementation : NativeInterface
         return f;
     }
 
-    virtual Tree *Shape(uint &index) override
+    virtual Tree_p Shape(uint &index) override
     {
         function_type<fntype> ft;
-        Tree *result = ft.Shape(index);
-        Tree *retType = ft.ReturnShape();
+        Tree_p result = ft.Shape(index);
+        Tree_p retType = ft.ReturnShape();
         if (retType)
             result = new Infix("as", result, retType);
+        record(native, "Native shape %u %t return %t", index, result, retType);
         return result;
     }
 };
@@ -380,7 +403,7 @@ struct Native
     FunctionType_p      FunctionType(Compiler &compiler);
     Function_p          Prototype(Compiler &compiler, text name);
 
-    Tree *              Shape();
+    Tree_p              Shape();
 
     static void         EnterPrototypes(Compiler &compiler);
 
@@ -423,7 +446,7 @@ inline Function_p Native::Prototype(Compiler &compiler, text name)
 }
 
 
-inline Tree *Native::Shape()
+inline Tree_p Native::Shape()
 // ----------------------------------------------------------------------------
 //   Delegate the shape generation to the implementation
 // ----------------------------------------------------------------------------
@@ -431,10 +454,10 @@ inline Tree *Native::Shape()
     if (!shape)
     {
         uint index = 0;
-        Name *name = new Name(symbol, Tree::BUILTIN);
-        if (Tree *args = implementation->Shape(index))
+        Name_p name = new Name(symbol, Tree::BUILTIN);
+        if (Tree_p args = implementation->Shape(index))
         {
-            Prefix *prefix = new Prefix(name, args, Tree::BUILTIN);
+            Prefix_p prefix = new Prefix(name, args, Tree::BUILTIN);
             shape = prefix;
         }
         else

@@ -651,7 +651,6 @@ extern Name_p   xl_true;
 extern Name_p   xl_false;
 extern Name_p   xl_nil;
 extern Name_p   xl_self;
-extern Name_p   xl_scope;
 
 XL_END
 
