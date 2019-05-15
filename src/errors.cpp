@@ -35,17 +35,19 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+#include "errors.h"
+
+#include "basics.h"
+#include "context.h" // For error display
+#include "main.h"
 #include "options.h"
 #include "scanner.h" // for Positions
-#include "context.h" // For error display
 #include "tree.h"
-#include "main.h"
-#include "basics.h"
 
-#include <sstream>
 #include <iostream>
+#include <sstream>
 #include <stdio.h>
-#include "errors.h"
+#include <unistd.h>
 
 XL_BEGIN
 
@@ -432,15 +434,15 @@ XL_END
 //
 // ============================================================================
 
-RECORDER_DEFINE(xl_assert, 16, "XL assertions checks");
+RECORDER_DEFINE(xl_assert_error, 16, "XL assertions checks");
 
 void xl_assert_failed(kstring kind, kstring msg, kstring file, unsigned line)
 // ----------------------------------------------------------------------------
 //   Report an assertion failure
 // ----------------------------------------------------------------------------
 {
-    fprintf(stderr, "%s:%u: %s failed: %s\n",
-            file, line, kind, msg);
-    record(xl_assert, "%+s %+s failed (%+s:%u)", kind, msg, file, line);
+    record(xl_assert_error, "%+s %+s failed (%+s:%u)", kind, msg, file, line);
+    while (RECORDER_TRACE(xl_assert_error) == 1205)
+        sleep(1);
     abort();
 }

@@ -1,4 +1,4 @@
 // OPT=-tinject_fault=2:recorder_reltime=0:recorder_order=0
 // EXIT=114
-// FILTER=grep -v "^[a-z][a-z_]*:" || true
+// FILTER=grep "^\(fault_injection\|recorder_signals\|.*assert.*\|.*abort.*\):" | sed -e 's/0x[0-9a-fA-F][0-9a-fA-F]*/HEX/g'
 false
