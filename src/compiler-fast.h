@@ -166,7 +166,7 @@ struct O1CompileUnit
 
 public:
     FastCompiler &      compiler;       // The compiler environment we use
-    Context             symbols;        // The symbols for this copmilation unit
+    Context             symbols;        // The symbols for this compilation unit
     Tree_p              source;         // The original source we compile
 
     Function_p          function;       // Function we generate
