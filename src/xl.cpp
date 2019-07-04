@@ -42,10 +42,6 @@
 #include <unistd.h>
 #endif // HAVE_SBRK
 
-RECORDER(main, 32, "Compiler main entry point");
-RECORDER_TWEAK_DEFINE(gc_statistics, 0, "Display garbage collector stats");
-
-
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
