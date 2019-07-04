@@ -579,7 +579,7 @@ int Main::Run()
 
     // Output the result
     if (result && !Opt::remote)
-        std::cerr << result << "\n";
+        std::cout << result << "\n";
 
     return hadError;
 }
