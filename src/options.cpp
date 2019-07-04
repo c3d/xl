@@ -665,6 +665,7 @@ kstring Options::ParseNext()
         }
 
         Option *best = nullptr;
+        Option *ambiguous = nullptr;
         for (Option *opt = Option::options; opt; opt = opt->next)
         {
             record(option_parsing, "Matching #%d '%+s' against '%+s'",
@@ -674,11 +675,7 @@ kstring Options::ParseNext()
             {
                 if (best && !IsExact())
                 {
-                    Ooops("Ambiguous command-line option $1 could be $2 or $3",
-                          Tree::COMMAND_LINE)
-                        .Arg(input)
-                        .Arg(opt->Name())
-                        .Arg(best->Name());
+                    ambiguous = opt;
                 }
                 else
                 {
@@ -687,7 +684,10 @@ kstring Options::ParseNext()
                     selected = opt->Name();
                 }
                 if (IsExact())
+                {
+                    ambiguous = nullptr;
                     break;
+                }
             }
         }
 
@@ -698,6 +698,15 @@ kstring Options::ParseNext()
             Ooops("Command-line option $1 does not exist", Tree::COMMAND_LINE)
                 .Arg(input);
             Usage();
+            break;
+        }
+        else if (ambiguous)
+        {
+            Ooops("Ambiguous command-line option $1 could be $2 or $3",
+                  Tree::COMMAND_LINE)
+                .Arg(input)
+                .Arg(ambiguous->Name())
+                .Arg(ambiguous->Name());
             break;
         }
         best->Process(*this);
