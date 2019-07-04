@@ -45,7 +45,7 @@ Native *Native::list = nullptr;
 
 Native::~Native()
 // ----------------------------------------------------------------------------
-//   Remove the current native from the list
+//   Remove the current native interface from the list
 // ----------------------------------------------------------------------------
 {
     if (list == this)
@@ -71,7 +71,7 @@ Native::~Native()
 
 void Native::EnterPrototypes(Compiler &compiler)
 // ----------------------------------------------------------------------------
-//   Enter the prototypes for all native functions
+//   Enter the prototypes for all functions declared with Native objects
 // ----------------------------------------------------------------------------
 {
     record(native, "Entering prototypes");
