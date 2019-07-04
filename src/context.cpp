@@ -857,7 +857,7 @@ ulong Context::Hash(Tree *what)
 // ----------------------------------------------------------------------------
 {
     kind        k = what->Kind();
-    ulong       h = 0xC0DED + 0x29912837*k;
+    ulong       h = 0xC0DEDUL + 0x29912837UL*k;
 
     switch(k)
     {
