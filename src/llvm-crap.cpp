@@ -646,12 +646,8 @@ static void dumpModule(Module_p module, kstring message)
 //   Dump a module for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    llvm::errs() << message << ":\n";
-#ifdef LLVM_ENABLE_DUMP
-    module->dump();
-#else
-    llvm::errs() << "Disabled (not present in LLVM libraries)\n";
-#endif
+    llvm::errs() << "; " << message << ":\n";
+    module->print(llvm::errs(), nullptr);
 }
 
 
@@ -954,7 +950,8 @@ void JIT::Print(kstring label, Value_p value)
 // ----------------------------------------------------------------------------
 {
     if (label)
-        llvm::outs() << label;
+        // Emit a ';' so that we can pass that to llvm-mc -assemble
+        llvm::outs() << "; " << label;
     value->print(llvm::outs());
 }
 
