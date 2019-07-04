@@ -149,6 +149,8 @@ BooleanOption   writeEncrypted("encrypted_writes",
 BooleanOption   writePacked("packed_writes",
                      "Pack files as they are written");
 
+BooleanOption   emitIR("emit_ir", "Generate LLVM IR suitable for llvmc");
+AliasOption     emitIRAlias("B", emitIR);
 }
 
 
@@ -578,7 +580,7 @@ int Main::Run()
     }
 
     // Output the result
-    if (result && !Opt::remote)
+    if (result && !Opt::remote && !Opt::emitIR)
         std::cout << result << "\n";
 
     return hadError;

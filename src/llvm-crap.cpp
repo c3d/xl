@@ -40,6 +40,7 @@
 #include "llvm-crap.h"
 #include "renderer.h"
 #include "errors.h"
+#include "main.h"               // For options
 
 
 
@@ -709,6 +710,10 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 
     if (RECORDER_TRACE(llvm_code) & 0x20)
         dumpModule(module.get(), "Dump of module after optimizations");
+
+    // Emit LLVM IR if requested
+    if (Opt::emitIR)
+        module->print(llvm::outs(), nullptr);
 
     return module;
 }

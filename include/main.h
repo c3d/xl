@@ -157,6 +157,7 @@ namespace Opt
 extern IntegerOption    optimize;
 extern IntegerOption    remoteForks;
 extern TextOption       stylesheet;
+extern BooleanOption    emitIR;
 }
 
 XL_END

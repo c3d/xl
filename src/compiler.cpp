@@ -38,6 +38,7 @@
 #include "compiler.h"
 #include "compiler-unit.h"
 #include "errors.h"
+#include "main.h"               // For Opt::emitIR
 
 #include <recorder/recorder.h>
 #include <iostream>
@@ -160,7 +161,9 @@ Tree * Compiler::Evaluate(Scope *scope, Tree *source)
         return source;
     }
 
-    Tree *result = code(scope, source);
+    Tree *result = source;
+    if (!Opt::emitIR)
+        result = code(scope, source);
     return result;
 }
 

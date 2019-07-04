@@ -2,11 +2,13 @@ Usage: ../xl <options> <source_file>
 
 Option names can be shortened if unambiguous.
 
+-B                : Alias for emit_ir
 -builtins         : Enable builtins file
 -builtins_path    : Set the path for the XL builtins file
 -case_sensitive   : Make scanner case sensitive
 -compile          : Only compile the file without evaluating it
 -debug-prefix     : Select a prefix to debug
+-emit_ir          : Generate LLVM IR suitable for llvmc
 -encrypted_writes : Encrypt files as they are written
 -help             : Show usage for the program and list available options
 -interpreted      : Interpreted mode (same as -O0)
