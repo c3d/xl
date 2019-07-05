@@ -100,7 +100,8 @@ PRODUCTS=$(PRODUCTS_$(VARIANT))
 PRODUCTS_exe=xl.exe
 PRODUCTS_lib=xl.dll
 
-LIB_INSTALL=builtins.xl xl.syntax C.syntax $(wildcard *.stylesheet)
+SHR_INSTALL=$(SHR_INSTALL_$(VARIANT))
+SHR_INSTALL_lib=builtins.xl xl.syntax C.syntax $(wildcard *.stylesheet)
 
 DEFINES=	$(DEFINES_$(COMPILER))		\
 		XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
@@ -169,7 +170,7 @@ DEFINES_llvm-crap=DISABLE_RTTI
 MINGW_LIBS_mingw=-lws2_32
 
 CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
-		-DXL_LIB='"'$(PREFIX_LIB)'"'
+		-DXL_LIB='"'$(PREFIX_SHR)'"'
 
 XCODE_WARNINGS=	-Wno-missing-field-initializers		\
 		-Wno-missing-prototypes			\
