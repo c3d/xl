@@ -445,8 +445,8 @@ Tree *Types::AssignType(Tree *expr, Tree *type)
             Tree *existing = it->second;
             type = Unify(existing, type);
         }
+        types[expr] = type;
     }
-    types[expr] = type;
     return type;
 }
 
