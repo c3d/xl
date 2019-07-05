@@ -125,7 +125,7 @@ write_line              as boolean      is C xl_write_cr
 
 write true              is write "true"
 write false             is write "false"
-write head, rest        is write head; write rest
+write Head, Rest        is write Head; write Rest
 write_line Items        is write Items; write_line
 
 // Tree shape and attributes
@@ -144,10 +144,10 @@ opening X:block         as text         is builtin BlockOpening
 closing X:block         as text         is builtin BlockClosing
 
 // Min and max functions
-min x, y is if x < min y then x else min y
-min y    is y
-max x, y is if x > max y then x else max y
-max y    is y
+min X, Y is if X < min Y then X else min Y
+min Y    is Y
+max X, Y is if X > max Y then X else max Y
+max Y    is Y
 
 // Interval test
 X:real in A:real..B:real is X >= A and X <= B
