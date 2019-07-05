@@ -131,7 +131,7 @@ Tree *Types::TypeAnalysis(Tree *program)
 
 Tree *Types::BaseType(Tree *type)
 // ----------------------------------------------------------------------------
-//   Return the base type associated to the input type
+//   Return the base type (end of unification chain) for the input type
 // ----------------------------------------------------------------------------
 {
     // Check if we have a type as input and if there is a base type for it
