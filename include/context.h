@@ -310,7 +310,7 @@ public:
 
     // The hash code used in the rewrite table
     static ulong        Hash(Tree *input);
-    static inline ulong Rehash(ulong h) { return (h>>1) | (h<<31); }
+    static inline ulong Rehash(ulong h) { return (h>>1) ^ (h<<31); }
 
     // Clear the symbol table
     void                Clear();
