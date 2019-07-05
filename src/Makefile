@@ -171,6 +171,55 @@ MINGW_LIBS_mingw=-lws2_32
 CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
 		-DXL_LIB='"'$(PREFIX_LIB)'"'
 
+XCODE_WARNINGS=	-Wno-missing-field-initializers		\
+		-Wno-missing-prototypes			\
+		-Werror=return-type			\
+		-Wdocumentation				\
+		-Wunreachable-code			\
+		-Werror=deprecated-objc-isa-usage	\
+		-Werror=objc-root-class			\
+		-Wno-non-virtual-dtor			\
+		-Wno-overloaded-virtual			\
+		-Wno-exit-time-destructors		\
+		-Wno-missing-braces			\
+		-Wparentheses				\
+		-Wswitch				\
+		-Wunused-function			\
+		-Wno-unused-label			\
+		-Wno-unused-parameter			\
+		-Wunused-variable			\
+		-Wunused-value				\
+		-Wempty-body				\
+		-Wuninitialized				\
+		-Wconditional-uninitialized		\
+		-Wno-unknown-pragmas			\
+		-Wshadow				\
+		-Wno-four-char-constants		\
+		-Wno-conversion				\
+		-Wconstant-conversion			\
+		-Wint-conversion			\
+		-Wbool-conversion			\
+		-Wenum-conversion			\
+		-Wno-float-conversion			\
+		-Wnon-literal-null-conversion		\
+		-Wobjc-literal-conversion		\
+		-Wshorten-64-to-32			\
+		-Wno-newline-eof			\
+		-Wno-c++11-extensions			\
+		-Wdeprecated-declarations		\
+		-Winvalid-offsetof			\
+		-Wno-sign-conversion			\
+		-Winfinite-recursion			\
+		-Wmove					\
+		-Wcomma					\
+		-Wblock-capture-autoreleasing		\
+		-Wstrict-prototypes			\
+		-Wrange-loop-analysis			\
+		-Wno-semicolon-before-method-body	\
+		-Wunguarded-availability		\
+		-isystem /usr/local/include
+
+
 # Which kind of test we run for each kind of build
 XL_TESTS_COMPILER_none=interactive
 XL_TESTS_COMPILER_llvm=interactive O3
