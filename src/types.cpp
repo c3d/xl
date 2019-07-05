@@ -471,7 +471,6 @@ Tree *Types::TypeOf(Tree *expr)
         return real_type;
     case TEXT:
         return ((Text *) expr)->IsCharacter() ? character_type : text_type;
-        break;
 
     case NAME:
     {
