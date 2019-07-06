@@ -168,6 +168,7 @@ public:
     bool        TypeCoversType(Tree *type, Tree *test);
     bool        TreePatternsMatch(Tree *t1, Tree *t2);
     bool        TreePatternMatchesValue(Tree *pat, Tree *val);
+    bool        TreePatternMatchesType(Tree *pat, Tree *type);
     bool        TreePatternDependsOn(Tree *pat, Tree *type);
 
     // Checking if we have specific kinds of types

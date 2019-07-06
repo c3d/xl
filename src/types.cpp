@@ -841,6 +841,10 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
             if (TreePatternsMatch(pat1, pat2))
                 return Join(t1, t2);
 
+        // Check if the tree pattern matches some builtin type
+        if (TreePatternMatchesType(pat1, t2))
+            return t1;
+
         // Match a type pattern with another value
         if (TreePatternMatchesValue(pat1, t2))
             return Join(t2, t1);
@@ -850,6 +854,8 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         // If we have [foo X:#A] and [#A], unify to #A
         if (IsGeneric(t1) && TreePatternDependsOn(pat2, t1))
             return Join(t2, t1);
+        if (TreePatternMatchesType(pat2, t1))
+            return t2;
         if (TreePatternMatchesValue(pat2, t1))
             return Join(t1, t2);
     }
@@ -1343,6 +1349,56 @@ bool Types::TreePatternMatchesValue(Tree *pat, Tree *val)
 
     }
 
+    return false;
+}
+
+
+bool Types::TreePatternMatchesType(Tree *pat, Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if the pattern, e.g. [1,2] matches a type, e.g. [infix]
+// ----------------------------------------------------------------------------
+{
+    if (!pat || !type)
+        return false;
+
+    switch(pat->Kind())
+    {
+    case INTEGER:
+    case REAL:
+    case TEXT:
+        return TypeCoversConstant(type, pat);
+
+    case NAME:
+        // If the pattern is a name, then any type matches
+        // (implicitly, the pattern is a tree)
+        return true;
+
+    case INFIX:
+        // If the pattern is an infix, match with an infix type
+        if (type == infix_type)
+            return true;
+        break;
+
+    case PREFIX:
+        if (type == prefix_type)
+            return true;
+        break;
+
+    case POSTFIX:
+        if (type == postfix_type)
+            return true;
+        break;
+
+    case BLOCK:
+        if (type == block_type)
+            return true;
+        if (Block *block = pat->AsBlock())
+            return TreePatternMatchesType(block->child, type);
+        break;
+    }
+
+    // All other cases, fail
+    // TODO: Lookup type shapes?
     return false;
 }
 
