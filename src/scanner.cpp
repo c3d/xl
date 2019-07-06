@@ -154,7 +154,7 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
     position = positions.OpenFile(name);
     if (input.fail())
         err.Log(Error("File $1 cannot be read: $2", position).
-                Arg(name).Arg(strerror(errno)));
+                Arg(name).Arg(strerror(errno), ""));
 
     // Skip UTF-8 BOM if present
     if (input.get() != 0xEF)
