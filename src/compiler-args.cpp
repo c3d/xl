@@ -390,7 +390,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
         // Add a condition on the infix name
         Tree *infixName = new Prefix(new Name("name", pos), value);
-        if (!binding_types->Type(infixName))
+        if (!value_types->Type(infixName))
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p name mismatch",
