@@ -619,6 +619,9 @@ text Main::SearchFile(text file, const path_list &paths, text extension)
 {
     utf8_filestat_t st;
 
+    record(fileload, "Search file '%s' extension '%s', %u paths",
+           file, extension, paths.size());
+
     // Add extension if needed
     size_t len = extension.length();
     if (len)
@@ -630,12 +633,16 @@ text Main::SearchFile(text file, const path_list &paths, text extension)
 
     // If the given file is already good, use that
     if (file.find("/") == 0 || utf8_stat(file.c_str(), &st) == 0)
+    {
+        record(fileload, "Quick exit for '%s'", file);
         return file;
+    }
 
     // Search for a possible file in path
     for (auto &p : paths)
     {
         text candidate = p + file;
+        record(fileload, "Checking candidate '%s' in path '%s'", candidate, p);
         if (utf8_stat (candidate.c_str(), &st) == 0)
             return candidate;
     }
