@@ -169,8 +169,8 @@ DEFINES_llvm-crap=DISABLE_RTTI
 # Additional dependencies
 MINGW_LIBS_mingw=-lws2_32
 
-CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'	\
-		-DXL_LIB='"'$(PREFIX_SHR)'"'
+CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'			\
+		-DXL_LIB='"'$(PREFIX_SHR)$(PACKAGE_DIR)'"'
 
 XCODE_WARNINGS=	-Wno-missing-field-initializers		\
 		-Wno-missing-prototypes			\
