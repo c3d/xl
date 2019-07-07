@@ -71,6 +71,7 @@ Types::Types(Scope *scope)
       codegen(false)
 {
     // Pre-assign some types
+    types[xl_nil] = xl_nil;
     types[xl_true] = boolean_type;
     types[xl_false] = boolean_type;
     record(types, "Created Types %p for scope %t", this, scope);
@@ -309,7 +310,14 @@ Tree *Types::Do(Name *what)
     if (body && body != what)
     {
         Tree *defined = RewriteDefined(rw->left);
-        if (defined != what)
+
+        // Check if this is some built-in type
+        if (defined->GetInfo<TypeCheckOpcode>())
+        {
+            type = type_type;
+        }
+
+        else if (defined != what)
         {
             if (scope != context->CurrentScope())
                 captured[what] = defined;

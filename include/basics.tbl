@@ -78,6 +78,8 @@ NAME(error);
 //
 // ============================================================================
 
+TYPE(type, Tree, );
+
 CONVERTIBLE_TYPE(boolean, Name,
                  if (Name *name = AsName())
                      if (name->value == "true" || name->value == "false")

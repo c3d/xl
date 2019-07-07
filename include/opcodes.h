@@ -186,6 +186,7 @@ struct TypeCheckOpcode : NameOpcode
 {
     TypeCheckOpcode(kstring name, Name_p &toDefine)
         : NameOpcode(name, toDefine) {}
+    virtual void                Register(Context *);
     virtual Opcode *            Clone() { return new TypeCheckOpcode(*this); }
     virtual Tree *              Check(Scope *scope XL_UNUSED, Tree *what)
     {

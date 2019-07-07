@@ -133,7 +133,25 @@ void NameOpcode::Register(Context *context)
     record(opcodes, "Opcode %+s is a name", this->OpID());
 
     context->Define(toDefine, toDefine);
-    toDefine->SetInfo<Opcode> (this);
+    toDefine->SetInfo<NameOpcode> (this);
+}
+
+
+
+// ============================================================================
+//
+//    TypeCheck opcodes
+//
+// ============================================================================
+
+void TypeCheckOpcode::Register(Context *context)
+// ----------------------------------------------------------------------------
+//   For name rewrites, create the name, assign to variable, enter it
+// ----------------------------------------------------------------------------
+{
+    record(opcodes, "Opcode %+s is a type", this->OpID());
+    context->Define(toDefine, toDefine);
+    toDefine->SetInfo<TypeCheckOpcode> (this);
 }
 
 XL_END
