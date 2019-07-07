@@ -918,7 +918,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
     {
     case INTEGER:
         isConstant = true;
-        mtype = compiler.integerTy;
+        mtype = compiler.integer64Ty;
         base = integer_type;
         break;
     case REAL:

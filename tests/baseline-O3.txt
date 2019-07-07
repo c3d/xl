@@ -1,5 +1,2 @@
 O3/optimized-library-writeln-list.xl
 O3/optimized-factorial.xl
-O3/optimized-builtin-kind-integer.xl
-O3/optimized-builtin-kind-postfix.xl
-O3/optimized-builtin-kind-block.xl

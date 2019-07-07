@@ -95,7 +95,7 @@ Value_p CompilerExpression::Do(Integer *what)
 {
     Compiler &compiler = function.compiler;
     JITBlock &code = function.code;
-    return code.IntegerConstant(compiler.integerTy, int64_t(what->value));
+    return code.IntegerConstant(compiler.integer64Ty, int64_t(what->value));
 }
 
 
