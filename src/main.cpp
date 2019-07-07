@@ -229,6 +229,8 @@ Main::Main(int inArgc,
     recorder_dump_on_common_signals(0, 0);
     recorder_trace_set(".*_(error|warning)");
     recorder_trace_set(getenv("XL_TRACES"));
+    recorder_configure_type('O', recorder_render<std::ostringstream, Op *>);
+    recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
@@ -237,8 +239,6 @@ Main::Main(int inArgc,
     Opcode::Enter(&context);
 
     // Once all options have been read, enter symbols and setup compiler
-    recorder_configure_type('O', recorder_render<std::ostringstream, Op *>);
-    recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
 #ifndef INTERPRETER_ONLY
     compilerName = SearchFile(compilerName, bin_paths);
     kstring cname = compilerName.c_str();
