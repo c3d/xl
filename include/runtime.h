@@ -95,6 +95,7 @@ Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
 Tree *   xl_array_index(Scope *, Tree *data, Tree *index);
 Tree     *xl_new_closure(eval_fn toCall, Tree *expr, size_t ntrees, ...);
+kstring xl_infix_name(Infix *infix);
 
 
 

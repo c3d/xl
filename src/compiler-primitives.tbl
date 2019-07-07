@@ -87,8 +87,7 @@ SPECIAL(InfixName, 1,
 // ----------------------------------------------------------------------------
         Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
         Value_p infixValue = code.BitCast(treeValue, compiler.infixTreePtrTy);
-        Value_p ptr = code.StructGEP(infixValue, INFIX_NAME_INDEX, "namep");
-        Value_p result = code.Load(ptr, "name");
+        Value_p result = code.Call(unit.xl_infix_name, infixValue);
         return result;
     )
 
@@ -164,7 +163,7 @@ SPECIAL(BlockClosing, 1,
 EXTERNAL(strcmp,                integerTy,      charPtrTy, charPtrTy)
 EXTERNAL(xl_evaluate,           treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_same_shape,         booleanTy,      treePtrTy, treePtrTy)
-EXTERNAL(xl_same_text,         booleanTy,       treePtrTy, charPtrTy)
+EXTERNAL(xl_same_text,          booleanTy,      treePtrTy, charPtrTy)
 EXTERNAL(xl_infix_match_check,  treePtrTy,      scopePtrTy, treePtrTy, charPtrTy)
 EXTERNAL(xl_typecheck,          treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_form_error,         treePtrTy,      scopePtrTy, treePtrTy)
@@ -188,6 +187,7 @@ EXTERNAL(xl_integer2real,       treePtrTy,      treePtrTy)
 EXTERNAL(xl_array_index,        treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 VA_EXTERNAL(xl_new_closure,     treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
 EXTERNAL(xl_closure_code,       evalFnTy,       treePtrTy)
+EXTERNAL(xl_infix_name,         charPtrTy,      infixTreePtrTy);
 
 
 
