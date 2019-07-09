@@ -954,7 +954,7 @@ Type_p CompilerFunction::BoxedType(Tree *type)
         if (base == xl_error)
             mtype = compiler.treePtrTy;
         STYPE(boolean);
-        STYPE(integer);
+        CTYPE(integer, integer64);
         STYPE(integer8);
         STYPE(integer16);
         STYPE(integer32);
