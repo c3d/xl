@@ -1419,45 +1419,58 @@ bool Types::TreePatternDependsOn(Tree *pattern, Tree *type)
 //   Check if we have something like [foo X:#A] that depends on [#A]
 // ----------------------------------------------------------------------------
 {
-    if (pattern == type)
-        return true;
-    switch (pattern->Kind())
+    TreeList pending;
+    do
     {
-    case INTEGER:
-    case REAL:
-    case TEXT:
-    case NAME:
-        return false;
+        if (pattern == type)
+            return true;
+        switch (pattern->Kind())
+        {
+        case INTEGER:
+        case REAL:
+        case TEXT:
+        case NAME:
+            pattern = nullptr;
+            break;
 
-    case BLOCK:
-    {
-        Block *block = (Block *) pattern;
-        return TreePatternDependsOn(block->child, type);
+        case BLOCK:
+        {
+            Block *block = (Block *) pattern;
+            pattern = block->child;
+            break;
+        }
+        case PREFIX:
+        {
+            Prefix *prefix = (Prefix *) pattern;
+            if (prefix->left->Kind() != NAME)
+                pending.push_back(prefix->left);
+            pattern = prefix->right;
+            break;
+        }
+        case POSTFIX:
+        {
+            Postfix *postfix = (Postfix *) pattern;
+            if (postfix->right->Kind() != NAME)
+                pending.push_back(postfix->right);
+            pattern = postfix->left;
+            break;
+        }
+        case INFIX:
+        {
+            Infix *infix = (Infix *) pattern;
+            pattern = infix->left;
+            pending.push_back(infix->right);
+            break;
+        }
+        }
 
-    }
-    case PREFIX:
-    {
-        Prefix *prefix = (Prefix *) pattern;
-        return (TreePatternDependsOn(prefix->left, type) ||
-                TreePatternDependsOn(prefix->right, type));
+        if (!pattern && pending.size())
+        {
+            pattern = pending.back();
+            pending.pop_back();
+        }
+    } while (pattern);
 
-    }
-    case POSTFIX:
-    {
-        Postfix *postfix = (Postfix *) pattern;
-        return (TreePatternDependsOn(postfix->left, type) ||
-                TreePatternDependsOn(postfix->right, type));
-
-    }
-    case INFIX:
-    {
-        Infix *infix = (Infix *) pattern;
-        return (TreePatternDependsOn(infix->left, type) ||
-                TreePatternDependsOn(infix->right, type));
-
-    }
-
-    }
     return false; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
 }
 
