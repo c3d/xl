@@ -676,17 +676,17 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
         return nullptr;
     }
 
+    // Creating the type for the declaration itself
+    Tree *type = new Infix("=>", declt, initt, what->Position());
+    type = AssignType(what, type);
+
     // Unify with the type of the right hand side
     initt = Unify(declt, initt);
     if (!initt)
         return nullptr;
 
-    // If the left side has a complex shape, e.g. [X+Y], return [DT => I]
-    Tree *type = new Infix("=>", declt, initt, what->Position());
-    type = AssignType(what, type);
-
-    record(types_calls, "Rewrite for %t is %t (%t => %t)",
-           what, type, decl, init);
+    record(types_calls, "Rewrite for %t is %t (%t => %t after unification)",
+           what, type, declt, initt);
     return type;
 }
 
