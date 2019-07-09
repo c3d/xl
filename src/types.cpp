@@ -296,6 +296,7 @@ Tree *Types::Do(Name *what)
 // ----------------------------------------------------------------------------
 {
     Tree *type = nullptr;
+    record(types_ids, "Type %+s %t", declaration ? "decl" : "eval", what);
     if (declaration)
     {
         type = TypeOf(what);
@@ -516,7 +517,7 @@ Tree *Types::TypeOf(Tree *expr)
         {
             TreePosition pos = type->Position();
             type = MakeTypesExplicit(type);
-            type = new Prefix(new Name("type", pos), type, pos);
+            type = new Prefix(type_type, type, pos);
         }
         break;
     }
@@ -910,7 +911,7 @@ Tree *Types::IsTypeOf(Tree *type)
     {
         if (Name *tname = pfx->left->AsName())
         {
-            if (tname->value == "type")
+            if (tname == type_type)
             {
                 Tree *pattern = pfx->right;
                 if (Block *block = pattern->AsBlock())
