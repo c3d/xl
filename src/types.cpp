@@ -452,6 +452,8 @@ Tree *Types::AssignType(Tree *expr, Tree *type)
         if (it != types.end())
         {
             Tree *existing = it->second;
+            if (existing == type)
+                return type;
             type = Unify(existing, type);
         }
         types[expr] = type;
