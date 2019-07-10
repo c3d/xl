@@ -977,7 +977,6 @@ Tree *Types::Join(Tree *old, Tree *replace)
     for (auto &u : unifications)
         if (u.second == old)
             u.second = replace;
-    unifications.erase(replace);
     unifications[old] = replace;
 
     // Replace the type in the rewrite calls
