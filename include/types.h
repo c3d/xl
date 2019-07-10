@@ -273,5 +273,6 @@ RECORDER_DECLARE(types_ids);
 RECORDER_DECLARE(types_unifications);
 RECORDER_DECLARE(types_calls);
 RECORDER_DECLARE(types_boxing);
+RECORDER_DECLARE(types_joined);
 
 #endif // TYPES_H

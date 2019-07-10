@@ -990,14 +990,12 @@ Tree *Types::Join(Tree *old, Tree *replace)
 }
 
 
-RECORDER_DEFINE(joined_type, 64, "Joined types");
-
 Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 // ----------------------------------------------------------------------------
 //   Build a type after joining, in case that's necessary
 // ----------------------------------------------------------------------------
 {
-    record(joined_type, "Replace %t with %t in %t", old, replace, type);
+    record(types_joined, "Replace %t with %t in %t", old, replace, type);
     XL_REQUIRE (type != NULL);
     XL_REQUIRE (old != NULL);
     XL_REQUIRE (replace != NULL);
@@ -1521,3 +1519,4 @@ RECORDER(types_ids,             64, "Assigned type identifiers");
 RECORDER(types_unifications,    64, "Type unifications");
 RECORDER(types_calls,           64, "Type deductions in rewrites (calls)");
 RECORDER(types_boxing,          64, "Machine type boxing and unboxing");
+RECORDER(types_joined,          64, "Joined types");
