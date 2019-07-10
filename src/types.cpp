@@ -1046,11 +1046,16 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
     case INFIX:
     {
         Infix *infix = (Infix *) type;
-        Tree *left = JoinedType(infix->left, old, replace);
-        Tree *right = JoinedType(infix->right, old, replace);
-        XL_ASSERT (left && right);
-        if (left != infix->left || right != infix->right)
-            return new Infix(infix, left, right);
+        if (infix->name != "=>"         ||
+            infix->left != replace      ||
+            infix->right != old)
+        {
+            Tree *left = JoinedType(infix->left, old, replace);
+            Tree *right = JoinedType(infix->right, old, replace);
+            XL_ASSERT (left && right);
+            if (left != infix->left || right != infix->right)
+                return new Infix(infix, left, right);
+        }
         return infix;
     }
 
