@@ -835,6 +835,7 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         return t1;
 
     // Success if t1 covers t2 or t2 covers t1
+    record(types_unifications, "Unify %t and %t", t1, t2);
     if (TypeCoversType(t1, t2))
         return Join(t2, t1);
     if (TypeCoversType(t2, t1))
@@ -960,6 +961,7 @@ Tree *Types::Join(Tree *old, Tree *replace)
         return old;
 
     // Replace the type in the types map
+    record(types_unifications, "Join %t with %t", old, replace);
     for (auto &t : types)
     {
         Tree *joined = JoinedType(t.second, old, replace);
