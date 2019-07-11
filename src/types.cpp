@@ -836,6 +836,18 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
 
     // Success if t1 covers t2 or t2 covers t1
     record(types_unifications, "In %p unify %t and %t", this, t1, t2);
+
+    // Check union types: A|B=C if A=C && B=C
+    if (Infix *u1 = IsUnionType(t1))
+        if (Tree *ul = Unify(u1->left, t2))
+            if (Tree *ur = Unify(u1->right, ul))
+                return Join(ur, t2);
+    if (Infix *u2 = IsUnionType(t2))
+        if (Tree *ul = Unify(u2->left, t1))
+            if (Tree *ur = Unify(u2->right, ul))
+                return Join(ur, t1);
+
+    // Check other cases of super-types
     if (TypeCoversType(t1, t2))
         return Join(t2, t1);
     if (TypeCoversType(t2, t1))
