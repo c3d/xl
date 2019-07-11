@@ -949,19 +949,23 @@ Infix *Types::IsUnionType(Tree *type)
 }
 
 
-Tree *Types::Join(Tree *old, Tree *replace)
+Tree *Types::Join(Tree *old, Tree *replacement)
 // ----------------------------------------------------------------------------
 //   Replace the old type with the new one
 // ----------------------------------------------------------------------------
 {
     // Deal with error cases
-    if (!old || !replace)
+    if (!old || !replacement)
         return nullptr;
-    if (old == replace)
+    if (old == replacement)
         return old;
 
+    // Go to the base type for the replacement
+    Tree *replace = BaseType(replacement);
+
     // Store the unification
-    record(types_unifications, "In %p join %t with %t", this, old, replace);
+    record(types_unifications, "In %p join %t with %t (base for %t)",
+           this, old, replace, replacement);
     unifications[old] = replace;
 
     // Replace the type in the types map
