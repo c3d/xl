@@ -960,8 +960,11 @@ Tree *Types::Join(Tree *old, Tree *replace)
     if (old == replace)
         return old;
 
-    // Replace the type in the types map
+    // Store the unification
     record(types_unifications, "Join %t with %t", old, replace);
+    unifications[old] = replace;
+
+    // Replace the type in the types map
     for (auto &t : types)
     {
         Tree *joined = JoinedType(t.second, old, replace);
@@ -977,7 +980,6 @@ Tree *Types::Join(Tree *old, Tree *replace)
     for (auto &u : unifications)
         if (u.second == old)
             u.second = replace;
-    unifications[old] = replace;
 
     // Replace the type in the rewrite calls
     for (auto &r : rcalls)
