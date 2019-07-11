@@ -150,7 +150,7 @@ Tree *Types::KnownType(Tree *expr)
 {
     auto it = types.find(expr);
     Tree *type = it != types.end() ? it->second : nullptr;
-    record(types_ids, "Existing type for %t in %p is %t", expr, this, type);
+    record(types_ids, "In %p existing type for %t is %t", this, expr, type);
     return type;
 }
 
@@ -168,7 +168,7 @@ Tree *Types::Type(Tree *expr)
         Ooops("Internal error: No type for $1", expr);
     type = expr->Do(this);
     type = AssignType(expr, type);
-    record(types_ids, "Created type for %t in %p is %t", expr, this, type);
+    record(types_ids, "In %p created type for %t is %t", this, expr, type);
     return type;
 }
 
@@ -208,7 +208,7 @@ rcall_map & Types::TypesRewriteCalls()
 //   Returns the list of rewrite calls for this
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "Number of rewrites for %p is %u", this, rcalls.size());
+    record(types_calls, "In %p there are %u rewrites", this, rcalls.size());
     return rcalls;
 }
 
@@ -220,7 +220,7 @@ RewriteCalls *Types::HasRewriteCalls(Tree *what)
 {
     auto it = rcalls.find(what);
     RewriteCalls *result = (it != rcalls.end()) ? it->second : nullptr;
-    record(types_calls, "In %p, calls for %t are %p (%u entries)",
+    record(types_calls, "In %p calls for %t are %p (%u entries)",
            this, what, result, result ? result->candidates.size() : 0);
     return result;
 }
@@ -296,7 +296,8 @@ Tree *Types::Do(Name *what)
 // ----------------------------------------------------------------------------
 {
     Tree *type = nullptr;
-    record(types_ids, "Type %+s %t", declaration ? "decl" : "eval", what);
+    record(types_ids, "In %p %+s name %t",
+           this, declaration ? "declaring" : "processing", what);
     if (declaration)
     {
         type = TypeOf(what);
@@ -638,8 +639,8 @@ Tree *Types::TypeDeclaration(Rewrite *decl)
     Tree *declared = decl->left;
     Tree *type = EvaluateType(decl->right);
     Tree *declt = TypeOf(declared);
-    record(types_ids, "Declaration %t declared %t type %t in %p",
-           decl, declared, type, this);
+    record(types_ids, "In %p declaration %t declared %t type %t",
+           this, decl, declared, type);
     type = Join(declt, type);
     return declt;
 }
@@ -658,7 +659,7 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
 //   In other cases, we unify the type of [X] with that of [Y] and
 //   return the type [type X => type Y] for the [X is Y] expression.
 {
-    record(types_calls, "Processing rewrite %t in %p", what, this);
+    record(types_calls, "In %p processing rewrite %t", this, what);
 
     // Evaluate types for the declaration and the body in a new context
     context->CreateScope(what->Position());
@@ -671,8 +672,8 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
     // Create a [type Decl => type Init] type
     if (!declt || !initt)
     {
-        record(types_calls, "Failed type for %t declt=%t initt=%t",
-               what, declt, initt);
+        record(types_calls, "In %p failed type for %t declt=%t initt=%t",
+               this, what, declt, initt);
         return nullptr;
     }
 
@@ -685,8 +686,7 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
     if (!initt)
         return nullptr;
 
-    record(types_calls, "Rewrite for %t is %t (%t => %t after unification)",
-           what, type, declt, initt);
+    record(types_calls, "In %p rewrite for %t is %t", this, what, type);
     return type;
 }
 
@@ -729,7 +729,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "Evaluating %t in types %p", what, this);
+    record(types_calls, "In %p evaluating %t", this, what);
     if (declaration)
         return TypeOf(what);
 
@@ -790,7 +790,7 @@ Tree *Types::EvaluateType(Tree *type)
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "Evaluating type %t in types %p", type, this);
+    record(types_calls, "In %p evaluating type %t", this, type);
     Tree *found = context->Lookup(type, lookupType, nullptr);
     if (found)
         type = Join(type, found);
@@ -835,7 +835,7 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         return t1;
 
     // Success if t1 covers t2 or t2 covers t1
-    record(types_unifications, "Unify %t and %t", t1, t2);
+    record(types_unifications, "In %p unify %t and %t", this, t1, t2);
     if (TypeCoversType(t1, t2))
         return Join(t2, t1);
     if (TypeCoversType(t2, t1))
@@ -961,7 +961,7 @@ Tree *Types::Join(Tree *old, Tree *replace)
         return old;
 
     // Store the unification
-    record(types_unifications, "Join %t with %t", old, replace);
+    record(types_unifications, "In %p join %t with %t", this, old, replace);
     unifications[old] = replace;
 
     // Replace the type in the types map
@@ -996,7 +996,8 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 //   Build a type after joining, in case that's necessary
 // ----------------------------------------------------------------------------
 {
-    record(types_joined, "Replace %t with %t in %t", old, replace, type);
+    record(types_joined, "In %p replace %t with %t in %t",
+           this, old, replace, type);
     XL_REQUIRE (type != NULL);
     XL_REQUIRE (old != NULL);
     XL_REQUIRE (replace != NULL);
@@ -1349,7 +1350,8 @@ void Types::AddBoxedType(Tree *type, Type_p mtype)
 //   The machine type could be integerTy or StructType({integerTy, realTy})
 {
     Tree *base = BaseType(type);
-    record(types_boxing, "Add %T boxing %t (%t)", mtype, type, base);
+    record(types_boxing, "In %p add %T boxing %t (%t)",
+           this, mtype, type, base);
     assert(!boxed[base] || boxed[base] == mtype);
     boxed[base] = mtype;
 }
@@ -1364,7 +1366,8 @@ Type_p Types::BoxedType(Tree *type)
     Tree *base = BaseType(type);
     auto it = boxed.find(base);
     Type_p mtype = (it != boxed.end()) ? it->second : nullptr;
-    record(types_boxing, "Type %T is boxing %t (%t)", mtype, type, base);
+    record(types_boxing, "In %p type %T is boxing %t (%t)",
+           this, mtype, type, base);
     return mtype;
 }
 
