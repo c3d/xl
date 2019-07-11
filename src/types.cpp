@@ -1383,7 +1383,7 @@ void Types::DumpTypes()
 {
     uint i = 0;
 
-    std::cout << "TYPES:\n";
+    std::cout << "TYPES " << (void *) this << ":\n";
     for (auto &t : types)
     {
         Tree *value = t.first;
@@ -1409,7 +1409,7 @@ void Types::DumpMachineTypes()
     uint i = 0;
     Save<intptr_t> saveTrace(RECORDER_TRACE(types_boxing), 0);
 
-    std::cout << "MACHINE TYPES:\n";
+    std::cout << "MACHINE TYPES " << (void *) this << ":\n";
     for (auto &b : boxed)
     {
         Tree *type = b.first;
@@ -1428,7 +1428,7 @@ void Types::DumpUnifications()
 // ----------------------------------------------------------------------------
 {
     uint i = 0;
-    std::cout << "UNIFICATIONS:\n";
+    std::cout << "UNIFICATIONS" << (void *) this << ":\n";
     for (auto &t : unifications)
     {
         Tree *type = t.first;
@@ -1446,7 +1446,7 @@ void Types::DumpRewriteCalls()
 // ----------------------------------------------------------------------------
 {
     uint i = 0;
-    std::cout << "CALLS:\n";
+    std::cout << "CALLS" << (void *) this << ":\n";
     for (auto &t : rcalls)
     {
         Tree *expr = t.first;
