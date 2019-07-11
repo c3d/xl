@@ -969,11 +969,11 @@ Tree *Types::Join(Tree *old, Tree *replacement)
     // Deal with error cases
     if (!old || !replacement)
         return nullptr;
-    if (old == replacement)
-        return old;
 
     // Go to the base type for the replacement
     Tree *replace = BaseType(replacement);
+    if (old == replace)
+        return old;
 
     // Store the unification
     record(types_unifications, "In %p join %t with %t (base for %t)",
