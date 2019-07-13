@@ -1,4 +1,4 @@
 // OPT=-tinject_fault=3:recorder_reltime=0:recorder_order=0
 // EXIT=114
-// FILTER=grep "^\(fault_injection\|recorder_signals\|.*assert.*\|.*abort.*\):" | sed -e 's/0x[0-9a-fA-F][0-9a-fA-F]*/HEX/g'
+// FILTER=grep "^\(fault_injection\|recorder_signals\|.*assert.*\|.*abort.*\):"  | grep -v -e "Activating" -e "for signal \(7\|16\|29\)" -e "No change for .* (\(7\|16\|29\))" | sed -e 's/0x[0-9a-fA-F][0-9a-fA-F]*/HEX/g' -e 's/(nil)/HEX/g' -e 's/Received signal Segmentation fault: 11/Received signal Segmentation fault/g'
 false

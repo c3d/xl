@@ -1,4 +1,4 @@
 // OPT=-tinject_fault=2:recorder_reltime=0:recorder_order=0
 // EXIT=114
-// FILTER=grep "^\(fault_injection\|recorder_signals\|.*assert.*\|.*abort.*\):" | grep -v "Activating" | grep -v "Hex (7)" | grep -v "Hex (16)" | grep -v "Hex (29)" | sed -e 's/0x[0-9a-fA-F][0-9a-fA-F]*/HEX/g' -e 's/(nil)/HEX/g' -e 's/Received signal Aborted/Receveid signal Abort trap: 6/g'
+// FILTER=grep "^\(fault_injection\|recorder_signals\|.*assert.*\|.*abort.*\):"  | grep -v -e "Activating" -e "for signal \(7\|16\|29\)" -e "No change for .* (\(7\|16\|29\))" | sed -e 's/0x[0-9a-fA-F][0-9a-fA-F]*/HEX/g' -e 's/(nil)/HEX/g' -e 's/Received signal Aborted/Received signal Abort trap: 6/g'
 false

@@ -9,7 +9,6 @@ recorder_signals: Recorder dump handler HEX for signal 12, old flags=HEX action=
 recorder_signals: Recorder dump handler HEX for signal 13, old flags=HEX action=HEX
 recorder_signals: Recorder dump handler HEX for signal 24, old flags=HEX action=HEX
 recorder_signals: Recorder dump handler HEX for signal 25, old flags=HEX action=HEX
-recorder_signals: Recorder dump handler HEX for signal 29, old flags=HEX action=HEX
 recorder_signals: Recorder dump handler HEX for signal 30, old flags=HEX action=HEX
 recorder_signals: Recorder dump handler HEX for signal 31, old flags=HEX action=HEX
 recorder_signals: No change for HEX (3) flag HEX address HEX
@@ -22,7 +21,6 @@ recorder_signals: No change for HEX (12) flag HEX address HEX
 recorder_signals: No change for HEX (13) flag HEX address HEX
 recorder_signals: No change for HEX (24) flag HEX address HEX
 recorder_signals: No change for HEX (25) flag HEX address HEX
-recorder_signals: No change for HEX (29) flag HEX address HEX
 recorder_signals: No change for HEX (30) flag HEX address HEX
 recorder_signals: No change for HEX (31) flag HEX address HEX
 xl_assert_error: assertion ((recorder_info_ptr_for_inject_fault)->trace) != 2 && "Running late crash test" failed (main.cpp:255)
