@@ -53,6 +53,7 @@ SPECIAL(TreeKind, 1,
         Value_p tag = code.Load(ptr, "tag");
         Value_p mask = code.IntegerConstant(code.Type(tag), Tree::KINDMASK);
         Value_p kind = code.And(tag, mask, "tagAndMask");
+        kind = code.BitCast(kind, compiler.integerTy);
         return kind;
     )
 

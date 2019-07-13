@@ -70,7 +70,7 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
     : jit               (argc, argv),
       voidTy            (jit.VoidType()),
       booleanTy         (jit.IntegerType(1)),
-      integerTy         (jit.IntegerType<int>()),
+      integerTy         (jit.IntegerType<longlong>()),
       integer8Ty        (jit.IntegerType(8)),
       integer16Ty       (jit.IntegerType(16)),
       integer32Ty       (jit.IntegerType(32)),
