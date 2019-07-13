@@ -25,6 +25,5 @@ Option names can be shortened if unambiguous.
 -stylesheet       : Select the style sheet for rendering XL code
 -t                : Alias for trace
 -trace            : Activate recorder traces
-You can get the available recorder traces with -trace help
 
 <Command line>: Command-line option "--nonexistent-option" does not exist

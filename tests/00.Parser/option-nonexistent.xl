@@ -1,3 +1,4 @@
 // CMD=%x --nonexistent-option %f
 // EXIT=1
+// FILTER=[ "$TARGET" != "release" ] && grep -v "You can get .* -trace help"
 1 + 1

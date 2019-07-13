@@ -174,7 +174,7 @@ do
     # Run the XL compiler on the test
     THIS_FAILED=
     TOTAL_TESTS=$(($TOTAL_TESTS+1))
-    if (echo $EXCLUDE | grep -q $RUNTIME) then
+    if (echo $EXCLUDE | grep -q -e "$RUNTIME" -e "$TARGET") then
         CACHED="(Excluded)"
         EXCLUDED=$(($EXCLUDED+1))
         RC=$EXIT
