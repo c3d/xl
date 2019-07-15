@@ -129,6 +129,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
 
     record(compiler_unit, "Created unit %p scope %t source %t",
            this, scope, source);
+    record(types, "Types %p created for source %t", types, source);
 }
 
 

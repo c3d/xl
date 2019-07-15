@@ -666,6 +666,8 @@ Tree *RewriteCalls::Check (Scope *scope,
 
     // All the following is in candidate types
     Types *binding_types = rc->binding_types;
+    record(types, "Types %p created for bindings of %t in candidate %t",
+           binding_types, what, candidate->left);
 
     // Attempt binding / unification of parameters to arguments
     Tree *form = candidate->left;
