@@ -729,7 +729,8 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
 {
-    record(types_calls, "In %p evaluating %t", this, what);
+    record(types_calls, "In %p %+s %t",
+           this, declaration ? "declaring" : "evaluating", what);
     if (declaration)
         return TypeOf(what);
 
