@@ -1,5 +1,11 @@
 # XL - An extensible language
 
+*WARNING*: XL is a work in progress. Nothing of what is written here
+really works yet. It has been in this constant flux of not quite
+working yet for about 20 years now. That's how I spend my spare
+time. and there is absolutely no other reason for this code base yet.
+Consider yourself warned.
+
 XL is a very simple programming language designed to make it very easy
 for programmers to extend the language to suit their needs. In XL,
 extending the language is a routine operation, much like adding a
@@ -19,7 +25,6 @@ languages.
 
 
 For more information, please consult the [reference manual](doc/XL.md).
-
 
 ## A few simple examples
 
