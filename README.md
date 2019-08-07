@@ -18,7 +18,7 @@ languages.
 * [Simple examples](#a-few-simple-examples)
 * [Dialects and use cases](#dialects-and-use-cases)
 * [If you come from another language](#if-you-come-from-another-language)
-* [One operator to rule them all](#one-operator-to-rule-them-all)
+* [One operator to rule them all](#semantics-one-operator-to-rule-them-all)
 * [Syntax: Look, Ma, no keywords!](#syntax-look-ma-no-keywords)
 * [XL as a functional language](#XL-as-a-functional-language)
 * [Subtelty #1: Expression vs statement](#subtlety-1-expression-vs-statement)
