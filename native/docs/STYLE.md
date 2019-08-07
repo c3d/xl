@@ -77,7 +77,7 @@ For example `(sin X + Y)` will be parsed as a block containing
 the *expression* `sin X + Y`, which is an infix `+` operator separating
 a prefix `sin X` and a name `Y`.
 
-By contrast, `{write X + Y}`, while it has the same sequence of
+By contrast, `{write X + Y}`, while it has a similar sequence of
 tokens, will be parsed as a block containing the *statement*
 `write X + Y`, and this time, because it is parsed as a statement,
 it will be interpreted as meaning a `write` prefix with `X + Y` as its
