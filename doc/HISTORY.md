@@ -493,7 +493,7 @@ parse tree from the `X` variable in the source code (which must be a
 parse tree itself).
 
 
-## XL2 internal use of plugins: teh `translation` extension
+## XL2 internal use of plugins: the `translation` extension
 
 The compiler uses this plug-in mechanism quite extensively internally.
 A particularly important compiler extension provides the `translation`
