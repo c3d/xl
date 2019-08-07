@@ -1,10 +1,13 @@
 # XL - An extensible language
 
-*WARNING*: XL is a work in progress. Nothing of what is written here
-really works yet. It has been in this constant flux of not quite
-working yet for about 20 years now. That's how I spend my spare
-time. and there is absolutely no other reason for this code base yet.
-Consider yourself warned.
+> **WARNING**: XL is a work in progress. Even if there are some bits
+> and pieces that happen to already work, XL is presently not suitable
+> for any serious programming. Examples given below may sometimes simply not
+> work. Take it as a painful reminder that the work is far from finished,
+> and, who knows, as an idea for a contribution.
+> See [HISTORY](doc/HISTORY.md) for how we came to the present mess, and
+> [Compiler Status](#compiler-status) for information about what is
+> expected to work.
 
 XL is a very simple programming language designed to make it very easy
 for programmers to extend the language to suit their needs. In XL,
@@ -451,3 +454,70 @@ In that case, `adder 3` will bind `X` to value `3`, but then the
 returned value outlives the scope where `X` was declared. However, `X`
 is referred to in the code. So the returned value is a *closure* which
 integrates the binding `X is 3`.
+
+
+### Compiler status
+
+The interpreter / compiler recently went through a rather heavy
+merge of several incompatible branches. As a result, it inherited
+the best of the various branches, but is overall quite broken.
+There are actually several, somewhat incompatible versions of
+the language, some of which reside in different binaries, some
+in the primary binary.
+
+The primary binary resides in the `src` directory. It is written
+in C++, and there is currently no real plan to self-compile it,
+although there are plans to use it as a basis for a self-compiling
+compiler bootstrap someday.
+
+That primary binary contains a single scanner and parser for the
+XL language, but three different ways to evaluate it, which are
+instances of the C++ `Evaluator` class. These three ways to evaluate
+XL are selected using the `-O` option.
+
+* `-O0` or `-i` selects an interpreter. This interpreter is
+essentially similar to what used to be the ELFE implementation
+of the language, i.e. a very small implementation that performs
+evaluation using parse tree rewrites.
+
+* `-O1` selects the `FastCompiler`, which is basically an
+adaptation of the compiler used in the Tao3D program, with
+the intent to allow the `master` branch of XL to be able to
+support Tao3D again without major incompatibilities. It generates
+machine code using LLVM, but the generated code is relatively
+inefficient because it manipulates the parse tree. For example,
+an integer value is always represented by an `Integer` pointer,
+so there is always an indirection to access it. Also, while
+forward-porting that compiler to a version of the compiler that
+had dropped it, I broke a number of things. So under repair,
+and not currently able to support Tao3D yet.
+
+* `-O2` and above select the `Compiler` class, which is an
+ongoing attempt at implementing XL the way I always wanted to,
+using type inference to generate efficient code. Presently, the
+type inference is so badly broken that it's likely to reject
+a number of very valid programs, including the basic factorial
+example.
+
+If you think 3 implementations is bad, wait. There is more.
+There is a `Bytecode` class that is yet another evaluator
+that attempted to generate a bytecode so as to accelerate
+interpreted evaluation, without having to bring in LLVM and
+all the risks associated with dynamic code generation (e.g. if
+you use XL as an extension language). Unfortunately, that
+bytecode experiment went nowhere. It's slow, ridden with bugs,
+and has severely damaged other parts of the compiler. I can't
+wait to expurge it from the compiler.
+
+So now that's it, right? Well... No.
+
+You see, the current XL started life as a "runtime" language
+for the "real" XL. The original XL looked more like Ada,
+and had very different type semantics. See [HISTORY](doc/HISTORY.md)
+for all the gory details. Suffice it to say here that this
+compiler resides in the `xl2` directory (because, yes, it was
+already version 2 of the language). One reason for me to keep
+it is that it's the only version of the compiler that ever
+came close to self-compiling it. So I keep it around to remind
+myself of various neat tricks that XL made possible, like the
+`translate` instruction.
