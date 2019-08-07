@@ -497,7 +497,12 @@ ongoing attempt at implementing XL the way I always wanted to,
 using type inference to generate efficient code. Presently, the
 type inference is so badly broken that it's likely to reject
 a number of very valid programs, including the basic factorial
-example.
+example. I have hope, though. At some point, that implementation
+was able to compete with C on relatively simple programs, but
+only with a lot of type annotations. I'm trying to achieve the
+same result without the type annotations. We're getting there.
+Like `-O1`, `-O2` output uses LLVM to generate machine code, but
+that time, it's good machine code.
 
 If you think 3 implementations is bad, wait. There is more.
 There is a `Bytecode` class that is yet another evaluator
