@@ -521,3 +521,14 @@ it is that it's the only version of the compiler that ever
 came close to self-compiling it. So I keep it around to remind
 myself of various neat tricks that XL made possible, like the
 `translate` instruction.
+
+Now, you are really done, right? Well... There's one more.
+
+See, I really want the compiler to self-compile. So in order
+to prepare for that, there is a `native` directory where I
+store tidbits of what the future compiler and library would
+look like. Except that this is really an exploratory scratchpad,
+so the various modules are not even consistent with one another...
+But ultimately, if everything goes according to plan, the C++
+compiler should be able to compile `native` in order to generate
+a compiler that would compile itself.
