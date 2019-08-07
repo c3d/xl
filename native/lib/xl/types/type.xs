@@ -40,11 +40,13 @@
     determine the size and binary representation of values.
 
     Two operators are used for type annotation, `X:T` and `X as T`.
-    Both indicate that `X` belongs to type `T`.
+    Both are annotations indicating that `X` belongs to type `T`.
 
     The first difference between the two type annotations is parsing
     precedence. This makes it convenient to write a declaration like
         X:integer + Y:integer as integer
+    which means that the notation X+Y, when X and Y are integer, is
+    itself an integer.
 
     The second difference is that `X as T` denotes that X is not mutable,
     whereas `X : T` denotes that X is mutable.
@@ -53,28 +55,28 @@
     declared by `with`. The non-mutable declarations using `as` are
     considered as belonging only to the type, whereas mutable declarations
     using `:` are considered as belonging to values of the type. As a result,
-    much like C++ class member declarations, "functions" belong to the type,
-    whereas "values" belong to type instances.
+    much like C++ class member declarations, "functions" or "methods"
+    are interpreted as belonging to the type, whereas "values" or
+    "members" belong to type instances.
 
     For example, consider a `person` type declaration like the following:
 
         type person with
             Name : text
-            Citizenship as text
+            Greeting as text
 
     This means that the `Name` belongs to each value of the `person` type,
-    but that the `Citizenship` belongs to the type, not to values. If `P`
-    is a `person`, then `P.Name` depends on the person, but `P.Citizenship`
-    is really a shortcut for `person.Citizenship`.
+    but that the `Greeting` belongs to the `person` type, not to individual
+    `person` instances. If `P` is a `person`, then `P.Name` depends on the
+    individual person, but `P.Greeting` is the same as `person.Citizenship`.
 
-    However, note that for declarations that take a value of the type as
-    their first argument, that value can be passed when using the dot
-    field notation above. It is often called `Self` to indicate that
-    intent. For example, if you have
+    Inversely, if a declaration takes a value of the type as its first
+    argument (usually called `Self`), then the value can be passed
+    using the dot field notation. For example, consider:
 
         type person with
-            First : text
-            Last  : text
+            FirstName : text
+            LastName : text
             FullName Self:person as text
 
     In that case, it is possible to write `P.FullName` which will be a
