@@ -478,7 +478,16 @@ XL are selected using the `-O` option.
 * `-O0` or `-i` selects an interpreter. This interpreter is
 essentially similar to what used to be the ELFE implementation
 of the language, i.e. a very small implementation that performs
-evaluation using parse tree rewrites.
+evaluation using parse tree rewrites. It sort of works, passes
+most tests with `make check`, and is overall sane, if a bit slow
+(similar to `bash` in my testing). It can be used for example
+as an extension language for your application, and does not draw
+much in terms of dependencies. You would add your own vocabulary
+using simple-to-write "modules". See the `Makefile` for examples.
+That part is the only one I can advertise as possibly useful.
+In particular, it correctly runs the examples in the `demo` directory,
+which are the older ELFE demos, i.e. distributed programming
+from a single source code.
 
 * `-O1` selects the `FastCompiler`, which is basically an
 adaptation of the compiler used in the Tao3D program, with
