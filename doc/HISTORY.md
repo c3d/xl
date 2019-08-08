@@ -261,11 +261,13 @@ support was de-commissioned from SourceForge.
 
 Part of the work was to define a complete description of the source
 code that could be used for different language. Like for Xroma, we
-stayed on bad puns, and in Mozart that representation was called
-`Coda`. It included individual source elements called
-`Notes` and the serialized representation was called a `Tune`. Transformation
-on Notes, i.e. the operations of compiler plug-ins, were done by
-`Performer` instances.
+stayed on bad puns and convoluted ideas for naming. In Mozart that
+representation was called `Coda`. It included individual source
+elements called `Notes` and the serialized representation was called a
+`Tune`. Transformation on Notes, i.e. the operations of compiler
+plug-ins, were done by `Performer` instances. A couple of years later,
+I would realize that this made the code totally obfuscated for the
+non-initiated, and I vowed to never make that mistake again.
 
 Mozart included [Moka](http://mozart-dev.sourceforge.net/moka.html), a
 Java to Java compiler using Mozart as its intermediate representation.
