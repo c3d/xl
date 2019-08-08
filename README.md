@@ -9,11 +9,25 @@
 > [Compiler Status](#compiler-status) for information about what is
 > expected to work.
 
-XL is a very simple programming language designed to make it very easy
-for programmers to extend the language to suit their needs. In XL,
-extending the language is a routine operation, much like adding a
-function or creating a class in more traditional programming
-languages.
+XL is an extensible programming language designed to accomodate a
+variety of programming needs with ease. Being _extensible_ means that
+the language is designed to make it very easy for programmers to adapt
+the language to suit their needs, for example by adding new
+programming constructs. In XL, extending the language is a routine
+operation, much like adding a function or creating a class in more
+traditional programming languages.
+
+As a validation of this bold claim, XL has a single fundamental operator,
+the [definition operator](#semantics-one-operator-to-rule-them-all),
+which you write `Pattern is Implmentation`, where `Pattern` is a
+program pattern, like `X+Y`, and `Definition` is an implementation for
+that pattern, for example `Add X, Y`.
+
+Everything that is built-in in most other programming languages, from
+basic data types to arithmetic to conditionals to loops is provided by
+the standard library in XL. You can replace these constructs if you
+want, or add your own. Adding a new kind of loop is not more difficult
+in XL than adding a function, and it uses the same syntax.
 
 * [Simple examples](#a-few-simple-examples)
 * [Dialects and use cases](#dialects-and-use-cases)
@@ -25,7 +39,6 @@ languages.
 * [Subtelty #2: Infix vs. Prefix](#subtlety-2-infix-vs-prefix)
 * [Subtelty #3: Delayed evaluation](#subtlety-3-delayed-evaluation)
 * [Subtelty #4: Closures](#subtlety-4-closures)
-
 
 For more information, please consult the [reference manual](doc/XL.md).
 
