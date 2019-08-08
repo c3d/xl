@@ -100,7 +100,7 @@ Two dialects of XL further demonstrate the extensibility of the language
 * [ELFE](http://github.com/c3d/elfe), formerly ELIOT (Extensible
   Language for the Internet of things) was an experiment on how to
   write distributed software that looks like a single program, for
-  exampel to control swarms of devices in the context of the Internet
+  example to control swarms of devices in the context of the Internet
   of Things. An example of a simple ELFE program would be:
 
   ```xl
