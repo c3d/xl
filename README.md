@@ -231,7 +231,7 @@ the shape of the word `cartesian` followed by two numbers, like for
 example `cartesian(1,5)`.
 </details>
 <details>
-<summary>It can define higher-order functions</summary>
+<summary>It can define higher-order functions, i.e. functions that return functions</summary>
 
 ```xl
 adder N         is      (X is N + X)
