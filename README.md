@@ -240,10 +240,11 @@ add3            is      adder 3
  // This will compute 8
  add3 5
 ```
+This makes XL a truly functional language.
 
 </details>
 <details>
-<summary>It can define maps, which are just regular functions</summary>
+<summary>It can define maps associating a key to a value</summary>
 
 ```xl
 my_map is
@@ -262,6 +263,11 @@ my_map[27]
 // The following is 45
 my_map (44)
 ```
+
+This provides a functionality roughly equivalent to `std::map` in
+C++. However, it's really nothing more than a regular function with a
+number of special cases. The compiler can optimize some special kinds
+of mapping to provide an efficient implementation.
 
 </details>
 <details>
