@@ -163,10 +163,8 @@ Daveed was very excited about my work, because he was himself working
 on his own pet language named Xroma (pronounced like Chroma). At the
 time, Xroma was, I believe, not as far along as XL, since Daveed had
 not really worked on a compiler. However, it had annotations similar
-to my pragmas (which I suspect are distant ancestors of C++11 attributes,
-since Daveed has remained active on the C++ committee since that time),
-and some kind of public representation for the abstract syntax tree as
-well.
+to my pragmas, and some kind of public representation for the abstract
+syntax tree as well.
 
 Also, the Xroma name was quite Xool, along with all the puns we could
 build using a capital-X pronounced as “K” (Xolor, Xameleon, Xode, ...)
@@ -295,19 +293,20 @@ are some of the key features that went quite a bit beyond Ada:
   rid of any `begin` or `end` keyword, without resorting to C-style curly
   braces to delimit blocks.
 
-* Pragmas extend the language by invoking
+* Pragmas extended the language by invoking
   [arbitrary compiler plug-ins](http://mozart-dev.sourceforge.net/tools.html#pragma).
   I suspect that attributes in C++11 are distant (and less powerful)
   descendants of this kind of annotation, if only because their syntax
   matches my recollection of the annotation syntax in Xroma...
 
 * [Expression reduction](http://mozart-dev.sourceforge.net/xl_style.html#expred)
-  is a generalisation of operator overloading that works with
-  expressions of any complexity. To this day, expression reduction
-  still has no real equivalent in any other language that I know of,
-  although expression templates can be used to achieve similar effect
-  in a very convoluted way for expressions following the standard
-  operator syntax in C++.
+  was a generalisation of operator overloading that works with
+  expressions of any complexity, and could be used to name types. To
+  this day, expression reduction still has no real equivalent in any
+  other language that I know of, although expression templates can be
+  used in C++ to achieve similar effect in a very convoluted and less
+  powerful way. Expression templates will not allow you to add
+  operators, for example.
 
 * [True generic types](http://mozart-dev.sourceforge.net/xl_style.html#truegen)
    were a way to make generic programming much easier by declaring
@@ -326,8 +325,9 @@ are some of the key features that went quite a bit beyond Ada:
    if variadic templates are a later reinvention of the idea, or if
    something of my e-mails influenced members of the C++ committee.
 
-* A powerful standard library was not quite there, but the key
-  foundations were there, and it was mostly a matter of writing it.
+* A powerful standard library was in the making. Not quite there yet,
+  but the key foundations were there, and I felt it was mostly a
+  matter of spending the time writing it.
   [My implementation of complex numbers](../xl2/native/library/xl.math.complex.xl),
   for example, was
   [70% faster than C++ on](http://mozart-dev.sourceforge.net/news.html#complex)
@@ -335,6 +335,7 @@ are some of the key features that went quite a bit beyond Ada:
   instead of memory.  There were a few things that I believe also date
   from that era, like getting rid of any trace of a main function,
   top-level statements being executed as in most scripting languages.
+
 
 ## XL0 and XL2: Reinventing the parse tree
 
