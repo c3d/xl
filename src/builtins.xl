@@ -4,8 +4,8 @@
 //
 // File description:
 //
-//
-//
+//   Built-in operations that are pre-loaded by the compiler without
+//   any explicit `import` statement.
 //
 //
 //
