@@ -128,13 +128,18 @@ Two dialects of XL further demonstrate the extensibility of the language
 If you are familiar with other programming languages, here are a few
 things that may surprise you about XL.
 
-* There are no keywords.
-* The language is designed primarily to be readable and writable by humans
-* The language is _homoiconic_, i.e. programs are data.
-* Evaluation is defined entirely in terms of rewrites of an abstract.
+* There are no keywords. In C, `if` is a keyword. In XL, it's just a name.
+* The language is designed primarily to be readable and writable by humans.
+  For example, there are [special parsing rules](#subtlety-1-expression-vs-statement) to match how we read the code.
+* The language is _homoiconic_, i.e. programs are data, like in Lisp.
+  This forms the basis of XL extensibility.
+* Evaluation is defined entirely in terms of rewrites of a very simple abstract.
   syntax tree that represents the program being evaluated.
-* The precedence of all operators is dynamic.
-* The language is primarily defined by its own standard library.
+* The precedence of all operators is dynamic, in the sense that it's
+  loaded from a [configuration file](src/xl.syntax)
+* The language is primarily defined by its own
+  [standard library](src/builtins.xl), rather than by special rules in
+  the compiler.
 
 
 ### Semantics: One operator to rule them all
