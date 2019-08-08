@@ -368,9 +368,14 @@ changed. So that became my topic of interest.
 The new implementation was called XL2, not just as a version number,
 but because I was seeing things as a three-layer construction:
 
-* `XL0` was just a very simple parse tree format with only eight node types.
-* `XL1` was the core language, without any library.
-* `XL2` was the full language, including its standard library.
+* `XL0` was just a very simple parse tree format with only eight node
+  types. I sometimes refer to that level of XL as "_XML without the M_",
+  i.e. an extensble language without markup.
+* `XL1` was the core language evaluation rules, not taking any library
+  into account.
+* `XL2` was the full language, including its standard library. At the
+  time, the goal was to reconstruct a language that would be as close
+  as possible at the version of XL written using the Mozart framework.
 
 This language is still available today, and while it’s not been
 maintained in quite a while, it seems to still pass most of its test
