@@ -68,11 +68,13 @@ Let me elaborate a bit on some specific frustrations with Ada:
   me a while to turn that idea into a reality.
 
 I don't have much left of that era, but that first compiler was
-relatively classical, generating 68K assembly language, and I went to
-the stage where the compiler could correctly compile a "Hello World"
-style program with an I/O library writte in the language.
+relatively classical, generating 68K assembly language. I reached the
+point where the compiler could correctly compile a "Hello World"
+style program using an I/O library written in the language. I was
+doing that work at home on Atari-ST class machines, but also gave
+demos to my HP colleagues running XL code on VME 68030 boards.
 
-From memory, some of the objectives of the language included:
+From memory, some of the objectives of the language at the time included:
 
 * Giving up on superfluous syntactic markers such as terminating semi-colon.
 
