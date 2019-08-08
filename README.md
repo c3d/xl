@@ -220,9 +220,15 @@ loop Body       is      Body; loop Body
 <summary>It can define types</summary>
 
 ```xl
-complex         is      type(complex(re:real, im:real))
+type complex    is      polar or cartesian
+type cartesian  is      cartesian(re:number, im:number)
+type polar      is      polar(mod:number, arg:number)
 ```
 
+Note that types in XL indicate the shape of parse trees. In other
+words, the `cartesian` type above will match any parse tree that takes
+the shape of the word `cartesian` followed by two numbers, like for
+example `cartesian(1,5)`.
 </details>
 <details>
 <summary>It can define higher-order functions</summary>
