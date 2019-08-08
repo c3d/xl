@@ -357,7 +357,7 @@ Kay, of Smalltalk fame, during an HP technical conference. Kay was an
 HP Fellow at the time. I tried to show him how my language was solving
 some of the issues he had talked about during his presentation. He did
 not even bother looking. He simply asked: “_Does your language
-self-compile?_“. When I answered that the compiler being written in
+self-compile?_“. When I answered that the compiler was written in
 C++, Alan Kay replied that he was not interested.
 
 That gave me a desire to consider a true bootstrap of XL. That meant
