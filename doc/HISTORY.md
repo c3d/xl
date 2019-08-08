@@ -132,8 +132,8 @@ expanded value. For example, `{derivation} d(X+sin(X))/dX` would
 generate code that looked like `1 + cos(X)`.
 
 If you are curious what this may look like, there are still
-[tests in the XL2 test suite](../xl2/native/TESTS) using a very
-similar feature and syntax.
+[tests in the XL2 test suite](../xl2/native/TESTS/07.Plugins)
+ using a very similar feature and syntax.
 
 
 ## LX, meet Xroma
