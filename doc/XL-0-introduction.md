@@ -27,11 +27,11 @@ For XL, it really means three things:
 
 This may all seem too good to be true. This document explains how the
 magic happens. But first of all, one thing that really matters: XL is
-supposed to be _simple_. Let's start with a few simple examples to
+supposed to be _simple_. Let's start with a few well-known examples to
 prove this.
 
 
-## A few simple examples
+## Two basic examples
 
 It is practically mandatory to begin the presentation of any
 programming language with a ["Hello World"](https://en.wikipedia.org/wiki/%22Hello,_World!%22_program) example,
