@@ -350,7 +350,7 @@ is the XL compiler parsing...
 ### Tweak #1: expression vs. statement
 
 This first tweak is intended to put in XL an implicit grammatical
-grouping that humans to do. Consider for example the following:
+grouping that humans apparently do. Consider for example the following:
 
 ```xl
 write sin X, cos Y
