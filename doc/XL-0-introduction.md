@@ -30,8 +30,6 @@ magic happens. But first of all, one thing that really matters: XL is
 supposed to be _simple_. Let's start with a few well-known examples to
 prove this.
 
-* auto-gen TOC:
-{:toc}
 
 ## Two basic examples
 
