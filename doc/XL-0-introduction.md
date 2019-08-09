@@ -661,8 +661,7 @@ compiler that an expression like `X+Y` where both `X` and `Y` have the
 of `as integer`). The implementation, however, is not given. Instead,
 the `builtin Add` tells the compiler that it has a cheat sheet for
 that operations, called `Add`. How this cheat sheet is actually
-implemmented is not specified, and depends on the implementation of
-the compiler.
+implemented is not specified, and depends on the compiler.
 
 
 ## Adding complex features
