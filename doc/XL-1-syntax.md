@@ -112,7 +112,7 @@ Inner nodes contains combinations of other XL nodes:
 >   `bits` before a large integer value or file name:
 >   ```xl
 >       bits 16#FF_00_FF_00_FF_FF_00_FF_00
->       bitsd "image.png"
+>       bits "image.png"
 >   ```
 > * Finding a more efficient representation for large sequences of
 >   items. So far, attempts at finding such a representation came with
