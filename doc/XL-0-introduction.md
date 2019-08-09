@@ -284,8 +284,8 @@ that are found in other languages, using a single, easy to read syntax.
 
 ## The standard library
 
-Most programming languages offer a specific set of features, which
-often are characteristic of the language. Most languages offer integer
+Each programming languages offers a specific set of features, which
+are characteristic of that language. Most languages offer integer
 arithmetic, floating-point arithmetic, comparisons, boolean logic,
 loops, text manipulation (often called "strings"), but also
 programming constructs such as loops, tests, and so on.
