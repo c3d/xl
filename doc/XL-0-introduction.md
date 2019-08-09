@@ -247,7 +247,7 @@ the indexes are contiguous integers.
 </details>
 <details>
 <summary>It can define templates (C++ terminology) or
-         generics (Ada terminology)</summary>_
+         generics (Ada terminology)</summary>
 
 ```xl
 // An (inefficient) implementation of a generic 1-based array type
