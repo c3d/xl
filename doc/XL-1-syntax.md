@@ -105,6 +105,17 @@ Inner nodes contains combinations of other XL nodes:
    `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
 
 
+> *NOTE* This list of node types is what the current implementations
+> of XL offer. Some changes may happen, notably:
+> * Adding a "binary object" node type, which could be used to store
+>   binary data in the program. A possible syntax would be to prefix
+>   `bits` before a large integer value or file name:
+>       bits 16#FF_00_FF_00_FF_FF_00_FF_00
+>       bitsd "image.png"
+> * Finding a more efficient representation for large sequences of
+>   items. So far, attempts at finding such a representation came with
+>   an unacceptable cost, notably with respect to the generated code.
+
 For example, let's consider the following code:
 
 ```xl
@@ -176,6 +187,10 @@ The base can be any decimal value between 2 and 36, or 64.
   example, `A` is 10, `F` is 15, `z` is 35.
 * For base 64, [Base64](https://en.wikipedia.org/wiki/Base64)
   encoding is used, and case matters.
+
+There is an implementation-dependent limit for the maximum `integer`
+value. This limit cannot be less than the maximum value for a
+2-complement 64-bit signed integer.
 
 For real numbers, a dot `.` is used as decimal separator, and must
 separate digits. For example, `0.2` and `2.0` are valid but, unlike in
