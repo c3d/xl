@@ -270,8 +270,8 @@ for I in 1..5 loop
 <summary>It can define variadic functions</summary>
 
 ```xl
-min X       is X
 min X, Y    is { Z is min Y; if X < Z then X else Z }
+min X       is X
 
 // Computes 4
 min 7, 42, 20, 8, 4, 5, 30
