@@ -379,7 +379,7 @@ desired objective, and you will need additional parentheses.
 
 ### Tweak #2: infix vs. prefix
 
-Another special rule is that XL will use the presence of space on
+Another special rule is that XL will use the presence of a space on
 only one side of an operator to disambiguate between an infix or a
 prefix. For example:
 
