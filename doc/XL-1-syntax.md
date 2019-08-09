@@ -162,7 +162,7 @@ by considerations beyond syntax, for example the need to be able to
 precisely define [program evaluation](XL-2-evaluation.md) or to
 represent distinct machine types.
 
-> *NOTE* Empty blocks are repreented as a block with an "empty name" as
+> *NOTE* Empty blocks are represented as a block with an "empty name" as
 > a child. This is not very satisfactory. Alternatives such as
 > representing blocks as possibly empty sequences of items have proven
 > even more complicated, since the representation of [A,B,C] becomes
