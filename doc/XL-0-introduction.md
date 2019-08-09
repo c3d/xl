@@ -810,8 +810,9 @@ following:
 [ELFE](https://github.com/c3d/elfe) is another XL-based experiment
 targeting distributed programming, notably for the Internet of
 things. The idea was to use the homoiconic aspect of XL to evaluate
-parts of the progrma on different machines, by sending the relevant
-program fragments and the associated data over the wire.
+parts of the program on different machines, by sending the relevant
+program fragments and the associated data over the wire for remote
+evaluation.
 
 > **NOTE** ELFE is now integrated as part of XL, and the ELFE demos are
 > stored in the [demo](../demo) directory of XL.
