@@ -3,7 +3,7 @@
 Extensible? What does that mean for a programming language?
 For XL, it really means three things:
 
-1. XL has a method extend the language with any kind of feature, not
+1. XL has a method to extend the language with any kind of feature, not
    just functions or data types, but programming constructs, optimizations,
    domain-specific notations, and more. Actually, all this is done
    with a [single operator](#one-operator-to-rule-them-all), `is`,
