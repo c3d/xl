@@ -253,17 +253,18 @@ and `JoeDalton` are treated identically.
 > *NOTE* For historical reasons, the current implementations are quite
 > lacking in that respect.
 
-Symbols are a consecutive sequence of ASCII punctuation characters:
+Symbols begin with one of the ASCII punctuation characters:
 
 ```
     ! # $ % & ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
 ```
 
-If a symbol is given in the syntax file, then further symbols will be
-treated as part of a different symbol. For example, `(` and `)` are
-block separator, which means that `(+1)` is unambiguously treated as a
-block containing the `+1` prefix, and not as a nonexistent `(+`
-symbol.
+Symbols longer than one character must be specified in the XL syntax
+file. For example, the XL syntax file defines a `<=` operator, but no
+`<=>` operator. Consequently, the sequence `1 <=> 2` will be parsed as
+`(1 <= (> 2))`. It is of course possible to add the `<=>` operator in
+the syntax file if one wants to add the "spaceship operator" to the
+language.
 
 Except for the characters they contain, names and symbols are
 otherwise treated interchangeably by XL.
