@@ -723,7 +723,7 @@ say, the `seconds` value changes, a time event is sent by `seconds`,
 which is intercepted by the enclosing `locally`, which then
 re-evaluated its contents, and then sends a redraw event to the
 enclosing layout. The two other layouts will use the cached graphics,
-wihtout re-evaluating the code under `locally`.
+without re-evaluating the code under `locally`.
 
 All this can be implemented entirely within the constraints of the
 normal XL evaluation rules. In other words, the language did not have
