@@ -575,7 +575,7 @@ Until very recently, that operator was spelled using an arrow, as
 well. Around 2018, I decided that this was unreadable for the novice,
 and switched to using `is` as this _definition operator_. This `->`
 operator is still what you will find for example on the
-[Tao3D web site(]http://tao3d.sourceforge.net).
+[Tao3D web site](http://tao3d.sourceforge.net).
 
 
 This notation can be used to declare basic
