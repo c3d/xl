@@ -230,7 +230,7 @@ valid XL names.
 > that `⇒A2` is presently a valid name in XL. It is highty recommended
 > to not depend on this behavior, which is considered a bug.
 
-Case and delimiters are not be significant in XL, so that `JOE_DALTON`
+Case and delimiters are not significant in XL, so that `JOE_DALTON`
 and `JoeDalton` are treated identically.
 
 > *NOTE* For historical reasons, the current implementations are quite
