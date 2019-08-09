@@ -19,9 +19,9 @@ traditional programming languages.
 
 As a validation of this bold claim, XL has a single fundamental operator,
 the [definition operator](#semantics-one-operator-to-rule-them-all),
-which you write `Pattern is Implmentation`, where `Pattern` is a
-program pattern, like `X+Y`, and `Definition` is an implementation for
-that pattern, for example `Add X, Y`.
+which you write `[Pattern] is [Implementation`, where] `[Pattern]` is
+a program pattern, like `X+Y`, and `[Implementation]` explains how to
+translate that pattern, for example `Add X, Y`.
 
 Everything that is built-in in most other programming languages, from
 basic data types to arithmetic to conditionals to loops is provided by
@@ -287,18 +287,19 @@ of mapping to provide an efficient implementation.
 <summary>It can define templates (C++ terminology) or generics (Ada terminology)</summary>_
 
 ```xl
-// An (inefficient) implementation of a generic array type
-array [1] of T is
+// An (inefficient) implementation of a generic 1-based array type
+type array [1] of T is
     Value : T
-    0 is Value
-array [N] of T when N > 1 is
+    1 is Value
+type array [N] of T when N > 1 is
     Head  : array[N-1] of T
     Tail  : T
-    I when I<N-1 is Head[I]
-    I when I=N-1 is Tail
+    I when I<N is Head[I]
+    I when I=N is Tail
 
 A : array[5] of integer
-A[3]
+for I in 1..5 loop
+    A[I] := I * I
 ```
 
 </details>
@@ -486,7 +487,7 @@ is referred to in the code. So the returned value is a *closure* which
 integrates the binding `X is 3`.
 
 
-### Compiler status
+## Compiler status
 
 The interpreter / compiler recently went through a rather heavy
 merge of several incompatible branches. As a result, it inherited
