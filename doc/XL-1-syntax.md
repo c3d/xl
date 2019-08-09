@@ -356,9 +356,9 @@ grouping that humans apparently do. Consider for example the following:
 write sin X, cos Y
 ```
 
-Most human being parse this as meaning `write (sin(X),cos(Y))`,
-i.e. we call `write_line` with two values resulting from evaluating `sin X`
-and `cos Y`.
+Most human beings parse this as `write (sin(X),cos(Y))`, i.e. we call
+`write` with two values resulting from evaluating `sin X` and
+`cos Y`.
 
 This is, however, not entirely logical. If `write` takes
 comma-separated arguments, why wouldn't `sin` also take
