@@ -407,20 +407,20 @@ However, being readable for humans requires a few special rules to
 match the way we read expressions. Consider for example the following:
 
 ```xl
-write_line sin X, cos Y
+write sin X, cos Y
 ```
 
-Most human being parse this as meaning `write_line (sin(X),cos(Y))`,
-i.e. we call `write_line` with two values resulting from evaluating `sin X`
+Most human beings parse this as meaning `write (sin(X),cos(Y))`,
+i.e. we call `write` with two values resulting from evaluating `sin X`
 and `cos Y`. This is not entirely logical. If `write` takes
 comma-separated arguments, why wouldn't `sin` also take
 comma-separated arguments? In other words, why doesn't this parse as
-`write_line(sin(X, cos(Y))`?
+`write(sin(X, cos(Y))`?
 
 This shows that humans have a notion of *expressions*
 vs. *statements*. Expressions such as `sin X` have higher priority
 than commas and require parentheses if you want multiple arguments. By
-contrast, statements such as `write_line` have lower priority, and will
+contrast, statements such as `write` have lower priority, and will
 take comma-separated argument lists. An indent or `{ }` block begins a
 statement, whereas parentheses `()` or square brackets `[]` begin an
 expression.
@@ -430,13 +430,13 @@ desired objective, and you will need additional parentheses.
 
 ### Subtlety #2: infix vs. prefix
 
-Another special rule is that XL will use the presence of space on
+Another special rule is that XL will use the presence of a space on
 only one side of an operator to disambiguate between an infix or a
 prefix. For example:
 
 ```xl
-write_line -A   // write_line (-A)
-B - A           // (B - A)
+write -A   // write (-A)
+B - A      // (B - A)
 ```
 
 ### Subtlety #3: Delayed evaluation
