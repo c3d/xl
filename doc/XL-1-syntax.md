@@ -110,8 +110,10 @@ Inner nodes contains combinations of other XL nodes:
 > * Adding a "binary object" node type, which could be used to store
 >   binary data in the program. A possible syntax would be to prefix
 >   `bits` before a large integer value or file name:
+>   ```xl
 >       bits 16#FF_00_FF_00_FF_FF_00_FF_00
 >       bitsd "image.png"
+>   ```
 > * Finding a more efficient representation for large sequences of
 >   items. So far, attempts at finding such a representation came with
 >   an unacceptable cost, notably with respect to the generated code.
