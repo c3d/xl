@@ -344,8 +344,8 @@ loop
 
 The operators available for XL programmers are defined by the
 [syntax file](../src/xl.syntax). The same rules apply for names or for
-symbols. The table given in this file indicates if an operator is an
-infix, a prefix, a postfix or a block separator.
+symbols. The table given in this file uses keywords such as `INFIX` to
+indicate if an operator is an infix, a prefix, or a postfix.
 
 The table also gives operators a precedence. For example, the
 following segment in the `INFIX` portion of the table indicates that
@@ -370,13 +370,71 @@ guarantees that it's impossible for operators to have the same
 precedence, with some being left-associative and some being
 right-associative, which would cause parsing ambiguities.
 
+The syntax file uses a few special names:
+
+* `NEWLINE` is used to represent the infix operators that separates
+  individual source code lines.
+* `STATEMENT` is the precedence that delimits
+   [expressions from statements](#tweak-1-expression vs-statement).
+   Anyting operator with a lower precedence belongs to a statement, like
+   `if` or `loop`. Any operator with a higher precedence belongs to an
+   expression, like `+` or `*`.
+* `DEFAULT` is the default precedence for names and symbols. It is not
+  very important in practice.
+* `FUNCTION` is the precedence for names and symbols used as a prefix
+  when they are not explicitly listed in the file. If you write
+ `sin X` for example, the associated precedence will be that of `FUNCTION`.
+
+
+### Comment, block, text and syntax separators
+
+Additional sections of the syntax file define comment, block and text
+separators.
+
+Block separators come in pairs and have a priority. The special names
+`INDENT` and `UNINDENT` are used for the indentation block. The block
+priority is used to give the priority of the block in an expression,
+but also to determine if the block contains an expression or a
+statement.
+
+In the default syntax file, indentation blocks and blocks delimited by
+curly braces `{ }` contain statements, whereas blocks delimited by
+parentheses `( )` or square brackets `[ ]` will contain expressions.
+
+A syntax file can contain children syntax files, which override the
+syntax when a given name or symbol is found.
+
+In the default syntax file, a children syntax named `C` is used when
+the `extern` name is encountered, and until a semi-colon `;` is
+seen. This is used to approximate C-style parsing for extern
+declarations like
+
+```xl
+extern real sqrt(real);
+```
+
+### Extending the syntax in your program
+
+The `syntax` name followed by a block can be used to alter the default
+syntax file. For example, if you want to add the spaceship operator
+`<=>` in your program, and give the same precedence as `<=`, namely
+290, you could write:
+
+```xl
+syntax
+    INFIX 290 <=>
+```
+
+> *NOTE* This syntax is intended to work also when the syntax is
+> specified in a module. This means that an `import` statement can
+> alter the syntax in your source code. This is, however, rarely used.
+
 
 ## Making the syntax easy for humans
 
 XL contains a couple of tweaks designed specifically to make code
 easier to read or write by humans. When the human logic is subtle, so
 is the XL compiler parsing...
-
 
 ### Tweak #1: expression vs. statement
 
