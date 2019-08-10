@@ -340,6 +340,37 @@ loop
 ```
 
 
+### Operator precedence and associativity
+
+The operators available for XL programmers are defined by the
+[syntax file](../src/xl.syntax). The same rules apply for names or for
+symbols. The table given in this file indicates if an operator is an
+infix, a prefix, a postfix or a block separator.
+
+The table also gives operators a precedence. For example, the
+following segment in the `INFIX` portion of the table indicates that
+`*` and `/` have higher precedence than `+` and `-`, so that `X+Y*Z`
+will parse as `X+(Y*Z)`:
+
+```xl
+        21      -> is has
+        310     + -
+        320     * / mod rem
+```
+
+The precedence also indicates associativity for infix operators. Even
+precedences indicate left associativity, as for `+` and `*`
+above. This means that `X * Y * Z` parses as `(X * Y) * Z`.
+Conversely, right-associativity is indicated by an odd precedence, as
+is the case for `is`. This means that `X is Y is Z` parses as
+`X is (Y is Z)`.
+
+Enforcing different precedences for left and right associativity
+guarantees that it's impossible for operators to have the same
+precedence, with some being left-associative and some being
+right-associative, which would cause parsing ambiguities.
+
+
 ## Making the syntax easy for humans
 
 XL contains a couple of tweaks designed specifically to make code
