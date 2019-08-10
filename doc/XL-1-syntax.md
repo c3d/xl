@@ -389,7 +389,14 @@ The syntax file uses a few special names:
 ### Comment, block, text and syntax separators
 
 Additional sections of the syntax file define comment, block and text
-separators.
+separators. Comment and text separators come in pairs.
+
+The default syntax file specifies comments that follow the C/C++
+convention, i.e. comments either start with `/*` and end with `*/` or
+start with `//` and end with a new line. The basic text separators `"`
+and `'` are not specified in the syntax file because they are used to
+parse the syntax file itself. The default syntax file adds `<<` and
+`>>` as separators for multi-line text..
 
 Block separators come in pairs and have a priority. The special names
 `INDENT` and `UNINDENT` are used for the indentation block. The block
