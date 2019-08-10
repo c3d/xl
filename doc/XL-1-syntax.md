@@ -412,13 +412,16 @@ A syntax file can contain children syntax files, which override the
 syntax when a given name or symbol is found.
 
 In the default syntax file, a children syntax named `C` is used when
-the `extern` name is encountered, and until a semi-colon `;` is
-seen. This is used to approximate C-style parsing for extern
-declarations like
+the `extern` name is encountered, and until the following semi-colon `;`.
+This is used to approximate C-style parsing for extern declarations:
 
 ```xl
 extern real sqrt(real);
 ```
+
+Note that this is only a very crude approximation of the C syntax,
+which is only intended for relatively simple declaration.
+
 
 ### Extending the syntax in your program
 
