@@ -411,16 +411,18 @@ parentheses `( )` or square brackets `[ ]` will contain expressions.
 A syntax file can contain children syntax files, which override the
 syntax when a given name or symbol is found.
 
-In the default syntax file, a children syntax named `C` is used when
-the `extern` name is encountered, and until the following semi-colon `;`.
-This is used to approximate C-style parsing for extern declarations:
+The [default syntax file](../src/xl.syntax) contains a
+[child syntax](../src/C.syntax) named `C` which is activated
+between the `extern` name and a following semi-colon `;`.
+This is used to approximate C-style parsing for extern declarations,
+making it easier to reference C code from XL:
 
 ```xl
 extern real sqrt(real);
 ```
 
-Note that this is only a very crude approximation of the C syntax,
-which is only intended for relatively simple declaration.
+Note that this is only a very crude and limited approximation of the C
+syntax, which is only intended for relatively simple function declarations.
 
 
 ### Extending the syntax in your program
