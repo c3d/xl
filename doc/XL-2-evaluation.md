@@ -106,16 +106,26 @@ CONTEXT is
 
 The execution then resumes by executing the definition, in that case
 `2 * pi * Radius`, in the local context. The result of that execution
-replaces the original statement, and then execution resumes.
+replaces the original statement.
+
+The process can then resume with the next statement, `circumference 2.5`.
+The result of evaluating the whole program will be the result of that
+last statement.
 
 
 ### Expression evaluation
 
-If we apply this process again with `2 * pi * Radius`, assuming the
-operator declarations in the [standard library](../src/builtins.xl),
+Executing the implementation for `circumference Radius:real` involves
+the evaluation of expression `2 * pi * Radius`. This follows almost
+exactly the same process as for `circumference 5.3`, with the
+difference that now the same process needs to be repeated multiple
+time.
+
+If we apply the evaluation process with `2 * pi * Radius`, assuming
+the operator declarations in the [standard library](../src/builtins.xl),
 we will find a declaration for `X:real * Y:real as real` as well as a
 declaratoin for `X:integer * Y:integer`. There is nothing that
-directly matches `X * Y * Z`.
+directly matches something like `X * Y * Z`.
 
 The `*` operator is left-associative, so `2 * pi * Radius` parses as
 `(2 * pi) * Radius`. In order to check which of the `X * Y` candidates
@@ -186,10 +196,6 @@ CONTEXT is
 
 The result of the multiplication is a `real` with value `33.284`. This
 is the result of evaluating `circumference 5.3`.
-
-The process can then resume with the next statement, `circumference 2.5`.
-The result of evaluating the whole program will be the result of that
-last statement.
 
 
 ### Deferred evaluation
