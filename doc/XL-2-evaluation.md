@@ -20,6 +20,13 @@ where all the declarations are stored in the context, followed by an
 _evaluation phase_, where statements other than declarations are
 processed in order.
 
+The declaration and evaluation phase are designed so that in a very
+large number of cases, it is at least conceptually possible to do the
+whole declaration phase ahead of time, and to generate machine code
+that can perform the evaluation phase without any reference to the
+original source code. This is described in more details in the
+[Compiled representations](#compiled-representations) section below.
+
 In the following description, `CONTEXT` will be the name of a
 pseudo-variable that describes the execution context. Where necessary,
 `CONTEXT0` will describe the context before execution.
@@ -30,13 +37,14 @@ pseudo-variable that describes the execution context. Where necessary,
 Both declaration and evaluation phases will process _sequences_, which
 are one of:
 
-* A block, in which case processing the sequence is processing the
+* A block, in which case processing the sequence means processing the
   block's child
-* An infix "newline" or semi-colon, i.e. statements on separate lines
-  or separated by a semi-colon, in which case the left and right
+* An infix "newline" or semi-colon, in which case the left and right
   operands of the infix are processed in that order
-* An infix `is` is called a _declaration_
-* Anything else is called a _statement_
+* An infix `is` is called a _declaration_, and is processed during the
+  [declaration phase](#declaration-phase) as indicated in the next section.
+* Anything else is called a _statement_ and is processed during the
+  [execution phase](#execution-phase), as indicated later.
 
 For example, consider the following code:
 
