@@ -13,23 +13,90 @@ code and data, as long as that optimized representation ultimately
 respect the semantics described using the normal form for the parse tree.
 
 
+### Execution context
+
+The execution of XL programs is defined by describing the evolution of
+a particular data structure called the _execution context_, which
+stores all values accessible to the program at any given time.
+
+That data structure is only intended to explain the effect of
+evaluating the program. It is not intended to be a model of how things
+are actually implemented. As a matter of fact, care was taken in the
+design of XL to allow standard compilation and optimization techniques
+to remain applicable, and to leave a lot of freedom regarding actual
+evaluation techniques.
+
+In the examples below, `CONTEXT` will be a pseudo-variable that
+describes the execution context. Where necessary, `CONTEXT0` will
+represent the previous context.
+
+
 ## Execution phases
 
-Executing an XL program is the result of two phases, a _declaration phase_,
-where all the declarations are stored in the context, followed by an
-_evaluation phase_, where statements other than declarations are
-processed in order.
+Executing an XL program is the result of three phases, a _parsing
+phase_ where program source text is converted to a parse tree, a
+_declaration phase_, where all the declarations are stored in the
+context, followed by an _evaluation phase_, where statements other
+than declarations are processed in order.
 
-The declaration and evaluation phase are designed so that in a very
-large number of cases, it is at least conceptually possible to do the
-whole declaration phase ahead of time, and to generate machine code
-that can perform the evaluation phase without any reference to the
-original source code. This is described in more details in the
+The execution phases are designed so that in a very large number of
+cases, it is at least conceptually possible to do both the parsing and
+declaration phases ahead of time, and to generate machine code that can
+perform the evaluation phase using only representations of code and
+data optimized for the specific machine running the program.
+
+This is described in more details in the
 [Compiled representations](#compiled-representations) section below.
 
-In the following description, `CONTEXT` will be the name of a
-pseudo-variable that describes the execution context. Where necessary,
-`CONTEXT0` will describe the context before execution.
+
+### Parsing phase
+
+The parsing phase reads source text and turns it into a parse tree
+using operator spelling and precedence information given in the
+[syntax file](../src/xl.syntax).
+
+This results in either a parse-time error, or in a faithful
+representation of the source code as a parse tree data structure that
+can be used for program evaluation.
+
+In so far as there is almost a complete equivalence between the parse
+tree and the source code, the rest of the document will, for
+convenience, represent a parse tree using a source code form. In the
+rare cases where additional information is necessary for
+understanding, it will be provided in the form of XL comments.
+
+Beyond the creation of the parse tree, very little actual processing
+happens during parsing. There are, however, a few tasks that can only
+be performed during parsing:
+
+1. Filtering out comments: Comments should not have an effect on the
+   program, so they are simply eliminated during parsing.
+
+2. Processing `syntax` statements: This must be done during parsing,
+   because `syntax` is designed to add names and symbols to the syntax
+   table.
+
+3. Processing `import` statements: Since imported modules can contain
+   `syntax` statements, they must at least partially be processed
+   during parsing.
+
+4. Identifying words that switch to a child syntax: symbols that
+   activate a child syntax are recognized during parsing.
+
+5. Identifying binary data: The word `bits` is treated specially
+   during parsing, to generate parse tree nodes representing binary data.
+
+The need to process `import` statements during parsing means that it's
+not possible in XL to have computed `import` statements. The name of
+the module must always be evaluated at compile-time.
+
+> *RATIONALE* An alternative would have been to allow computed
+> `import` statement, but disallow `syntax` in them. However, for
+> convenience, `import` names look like `XL.CONSOLE.TEXT_IO` and not,
+> say, `"xl/console/text_io.xs"`.
+
+Once parsing completes successfully, the parse tree can be handed to
+the declaration and execution phases.
 
 
 ### Sequences
@@ -83,6 +150,7 @@ declarations, since the execution phase depends on it.
 
 Note that since the declaration phase occurs first, all declarations
 in the program will be visible during the execution phase.
+
 
 ### Execution phase
 
