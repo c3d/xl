@@ -192,6 +192,13 @@ The result of evaluating the whole program will be the result of that
 last statement.
 
 
+### Deferred evaluation
+
+
+### Pattern matching
+
+
+
 ## Compiled representations
 
 Code and any data can also have one or several _compiled forms_. The
