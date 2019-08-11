@@ -33,11 +33,13 @@ represent the previous context.
 
 ## Execution phases
 
-Executing an XL program is the result of three phases, a _parsing
-phase_ where program source text is converted to a parse tree, a
-_declaration phase_, where all the declarations are stored in the
-context, followed by an _evaluation phase_, where statements other
-than declarations are processed in order.
+Executing an XL program is the result of three phases,
+
+1. A _parsing phase_ where program source text is converted to a parse tree,
+2. A _declaration phase_, where all the declarations are stored in the
+   context,
+3. An _evaluation phase_, where statements other than declarations are
+   processed in order.
 
 The execution phases are designed so that in a very large number of
 cases, it is at least conceptually possible to do both the parsing and
@@ -45,7 +47,9 @@ declaration phases ahead of time, and to generate machine code that can
 perform the evaluation phase using only representations of code and
 data optimized for the specific machine running the program.
 
-This is described in more details in the
+In short, it should be possible to create an efficient ahead-of-time
+compiler for XL. Work is currently in progress to build one. This kind
+of optimizations are described in more details in the
 [Compiled representations](#compiled-representations) section below.
 
 
