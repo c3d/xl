@@ -27,6 +27,6 @@ Table of contents:
 * [Introduction](HANDBOOK_0-introduction.md)
 * [Syntax](HANDBOOK_1-syntax.md)
 * [Program evaluation](HANDBOOK_2-evaluation.md)
-* [Type system](HANDBOOK_3-type-system.md)
+* [Type system](HANDBOOK_3-types.md)
 * [Basic operations](HANDBOOK_4-basic-operations.md)
 * [Standard library](HANDBOOK_5-standard-library.md)
