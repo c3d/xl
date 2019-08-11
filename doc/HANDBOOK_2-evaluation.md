@@ -124,14 +124,16 @@ For example, consider the following code:
 
 ```xl
 pi is 3.14
-circumference 5.3; circumference 2.5
+circumference 5.3
 circumference Radius:real is 2 * pi * Radius
 ```
 
 THe first and last line are each representing a declaration of `pi` and
-`circumference Radius:real` respectively. The second line is made of two
-statements that compute `circumference 5.3` and `circumference 2.5`.
-There are two declarations and two statements in this code.
+`circumference Radius:real` respectively. The second line is made of one
+statements that computes `circumference 5.3`. There are two
+declarations and one statement in this code. The _result_ of executing
+the code is the value of its last statement, in that case the value
+computed by `circumference 5.3`.
 
 
 ### Declaration phase
@@ -191,9 +193,8 @@ The execution then resumes by executing the definition, in that case
 `2 * pi * Radius`, in the local context. The result of that execution
 replaces the original statement.
 
-The process can then resume with the next statement, `circumference 2.5`.
-The result of evaluating the whole program will be the result of that
-last statement.
+The process can then resume with the next statement if there is
+one. In our example, there isn't one, so the execution is complete.
 
 
 ### Expression evaluation
