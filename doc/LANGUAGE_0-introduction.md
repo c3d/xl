@@ -938,4 +938,4 @@ compiler.
 -------------------------------------------------------------------------------
 
 Previous: [Top](LANGUAGE.md)
-Next: [Syntax](XL-1-syntax.md)
+Next: [Syntax](LANGUAGE_1-syntax.md)

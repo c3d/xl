@@ -159,7 +159,7 @@ following command:
 All of XL is built on this very simple data structure. Some choices,
 like having distinct `integer` and `real` node, were guided primarily
 by considerations beyond syntax, for example the need to be able to
-precisely define [program evaluation](XL-2-evaluation.md) or to
+precisely define [program evaluation](LANGUAGE_2-evaluation.md) or to
 represent distinct machine types.
 
 > *NOTE* Empty blocks are represented as a block with an "empty name" as
@@ -491,5 +491,5 @@ B - A       // (B - A)
 
 -------------------------------------------------------------------------------
 
-Next: [Program evaluation](XL-2-evaluation.md)
-Previous: [Introduction](XL-0-introduction.md)
+Next: [Program evaluation](LANGUAGE_2-evaluation.md)
+Previous: [Introduction](LANGUAGE_0-introduction.md)
