@@ -207,7 +207,7 @@ one. In our example, there isn't one, so the execution is complete.
 Executing the implementation for `circumference Radius:real` involves
 the evaluation of expression `2 * pi * Radius`. This follows almost
 exactly the same process as for `circumference 5.3`, but in that case,
-that same process needs to be repeated multiple time to complete the
+that same process needs to be repeated multiple times to complete the
 evaluation.
 
 If we apply the evaluation process with `2 * pi * Radius`, assuming
