@@ -57,17 +57,15 @@ of optimizations are described in more details in the
 
 The parsing phase reads source text and turns it into a parse tree
 using operator spelling and precedence information given in the
-[syntax file](../src/xl.syntax).
+[syntax file](../src/xl.syntax). This results in either a parse-time
+error, or in a faithful representation of the source code as a parse
+tree data structure that can be used for program evaluation.
 
-This results in either a parse-time error, or in a faithful
-representation of the source code as a parse tree data structure that
-can be used for program evaluation.
-
-In so far as there is almost a complete equivalence between the parse
-tree and the source code, the rest of the document will, for
-convenience, represent a parse tree using a source code form. In the
-rare cases where additional information is necessary for
-understanding, it will be provided in the form of XL comments.
+Since there is almost a complete equivalence between the parse tree
+and the source code, the rest of the document will, for convenience,
+represent a parse tree using a source code form. In the rare cases
+where additional information is necessary for understanding, it will
+be provided in the form of XL comments.
 
 Beyond the creation of the parse tree, very little actual processing
 happens during parsing. There are, however, a few tasks that can only
@@ -77,18 +75,20 @@ be performed during parsing:
    program, so they are simply eliminated during parsing.
 
 2. Processing `syntax` statements: This must be done during parsing,
-   because `syntax` is designed to add names and symbols to the syntax
-   table.
+   because `syntax` is designed to modify the syntax used during the
+   parsing phase.
 
 3. Processing `import` statements: Since imported modules can contain
    `syntax` statements, they must at least partially be processed
    during parsing.
 
-4. Identifying words that switch to a child syntax: symbols that
-   activate a child syntax are recognized during parsing.
+4. Identifying words that switch to a
+   [child syntax](HANDBOOK_1-syntax.md#comment-block-text-and-syntax-separators):
+   symbols that activate a child syntax are recognized during parsing.
 
 5. Identifying binary data: The word `bits` is treated specially
    during parsing, to generate parse tree nodes representing binary data.
+   *Note:* this is not currently implemented.
 
 The need to process `import` statements during parsing means that it's
 not possible in XL to have computed `import` statements. The name of
