@@ -170,7 +170,8 @@ declarations" in such cases, XL does not.
 The execution phase evaluates each statement in the order they appear
 in the program. For each statement, the context is looked up for
 matching declarations. There is a match if the shape of the tree being
-evaluated matches the shape of the tree in the declaration.
+evaluated matches the shape of the tree on the left of `is` in the
+declaration.
 
 For example, `circumference 5.3` will not match the declation of `pi`,
 but it will match the declatation of `circumference Radius:real` since
