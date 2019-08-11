@@ -115,9 +115,9 @@ are one of:
 * An infix "newline" or semi-colon, in which case the left and right
   operands of the infix are processed in that order
 * An infix `is` is called a _declaration_, and is processed during the
-  [declaration phase](#declaration-phase) as indicated in the next section.
+  [declaration phase](#declaration-phase).
 * Anything else is called a _statement_ and is processed during the
-  [execution phase](#execution-phase), as indicated later.
+  [execution phase](#execution-phase).
 
 For example, consider the following code:
 
