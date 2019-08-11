@@ -173,8 +173,8 @@ matching declarations. There is a match if the shape of the tree being
 evaluated matches the shape of the tree on the left of `is` in the
 declaration.
 
-For example, `circumference 5.3` will not match the declation of `pi`,
-but it will match the declatation of `circumference Radius:real` since
+For example, `circumference 5.3` will not match the declaration of `pi`,
+but it will match the declaration of `circumference Radius:real` since
 the value `5.3` is indeed a real number.
 
 When this happens, a new context is created with _bindings_ for the
