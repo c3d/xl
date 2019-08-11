@@ -180,7 +180,7 @@ the value `5.3` is indeed a real number.
 When this happens, a new context is created with _bindings_ for the
 formal parameters to the value passed as an argument in the
 statement. This new context is called a _local context_ and will be
-used to evaluat the definition associated with the declaration.
+used to evaluate the definition associated with the declaration.
 
 For example, the local context to evaluate the definition of
 `circumference Radius:real` would be:
