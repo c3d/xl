@@ -99,7 +99,8 @@ the module must always be evaluated at compile-time.
 > *RATIONALE* An alternative would have been to allow computed
 > `import` statement, but disallow `syntax` in them. However, for
 > convenience, `import` names look like `XL.CONSOLE.TEXT_IO` and not,
-> say, `"xl/console/text_io.xs"`.
+> say, `"xl/console/text_io.xs"`, so there is no obvious way to
+> compute them anyway.
 
 Once parsing completes successfully, the parse tree can be handed to
 the declaration and execution phases.
