@@ -937,5 +937,5 @@ compiler.
 
 -------------------------------------------------------------------------------
 
-Previous: [Top](XL.md)
+Previous: [Top](LANGUAGE.md)
 Next: [Syntax](XL-1-syntax.md)
