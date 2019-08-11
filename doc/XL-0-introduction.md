@@ -802,7 +802,7 @@ theme_font Theme, Master, "title" is font "Palatino", 80, italic
 The result of this program is an animated slide that looks like the
 following:
 
-![Animated clock](Tao3D-clock.png)
+![Animated clock](images/Tao3D-clock.png)
 
 
 ### Distributed programming with ELFE
