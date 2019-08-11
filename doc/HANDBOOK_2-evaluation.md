@@ -85,6 +85,8 @@ be performed during parsing:
 4. Identifying words that switch to a
    [child syntax](HANDBOOK_1-syntax.md#comment-block-text-and-syntax-separators):
    symbols that activate a child syntax are recognized during parsing.
+   This is the case for example with the `extern` name in the
+   [default syntax](../src/xl.syntax#L62).
 
 5. Identifying binary data: The word `bits` is treated specially
    during parsing, to generate parse tree nodes representing binary data.
