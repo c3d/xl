@@ -158,7 +158,11 @@ tree. Whatever algorithm is used must preserve the order of
 declarations, since the execution phase depends on it.
 
 Note that since the declaration phase occurs first, all declarations
-in the program will be visible during the execution phase.
+in the program will be visible during the execution phase. In our
+example, it is possible to use `circumference` before it has been
+declared. This is necessary because declarations may refer to one
+another in a circular way. Some other languages require "forward
+declarations" in such cases, XL does not.
 
 
 ### Execution phase
