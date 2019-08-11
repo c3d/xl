@@ -937,5 +937,5 @@ compiler.
 
 -------------------------------------------------------------------------------
 
-Previous: [Top](LANGUAGE.md)
-Next: [Syntax](LANGUAGE_1-syntax.md)
+Previous: [Top](HANDBOOK.md)
+Next: [Syntax](HANDBOOK_1-syntax.md)

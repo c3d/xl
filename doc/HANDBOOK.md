@@ -24,9 +24,9 @@ from documents and application scripting, as illustrated by
 as illustrated by [ELFE](https://github.com/c3d/elfe).
 
 Table of contents:
-* [Introduction](LANGUAGE_0-introduction.md)
-* [Syntax](LANGUAGE_1-syntax.md)
-* [Program evaluation](LANGUAGE_2-evaluation.md)
-* [Type system](LANGUAGE_3-type-system.md)
-* [Basic operations](LANGUAGE_4-basic-operations.md)
-* [Standard library](LANGUAGE_5-standard-library.md)
+* [Introduction](HANDBOOK_0-introduction.md)
+* [Syntax](HANDBOOK_1-syntax.md)
+* [Program evaluation](HANDBOOK_2-evaluation.md)
+* [Type system](HANDBOOK_3-type-system.md)
+* [Basic operations](HANDBOOK_4-basic-operations.md)
+* [Standard library](HANDBOOK_5-standard-library.md)
