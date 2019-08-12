@@ -216,7 +216,7 @@ CONTEXT is
 ```
 
 As a reminder, `Radius` is a _formal parameter_, or simply _parameter_
-that receives the _argument_ 5.3 as a _binding_. The binding
+that receives the _argument_ 5.3 as a result of _binding_. The binding
 remains active for the duration of the evaluation of of the body of
 the definition.
 
@@ -326,9 +326,52 @@ The result of the last multiplication is a `real` with value
 consequently the result of executing the entire program.
 
 
+## Overloading
+
+There may be multiple declarations where the pattern matches the
+shape. This is called _overloading_.
+
+For example, as we have seen above, for the multiplication expression
+`X*Y` we have at least `integer` and `real` candidates. The first one
+would be used for an expression like `2+3` and the second one for an
+expression like `5.5*6.4`. It is important for the compiler to be able
+to distinguish them, since they may result in very different
+machine-level operations.
+
+In XL, the various possible candidates are considered in order, and
+the first declaratoin that matches is selected. Knowing which one matches may
+be possible at compile-time, or may require run-time tests.
+
+For example, a definition of the
+[Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_number)
+in XL is given below:
+
+```xl
+fib 0   is 0
+fib 1   is 1
+fib N   is (fib(N-1) + fib(N-2))
+```
+
+> *NOTE* Parentheses are required around the expression statement, in
+> order to parse this as the addition of `fib(N-1)` and `fib(N-2)` and
+> not as the `fib` of `(N-1)+fib(N-2)`.
+
+When evaluating a sub-expression like `fib(N-1)`, three candidates for
+`fib` are available, and type information is not sufficient to
+eliminate any of them. The generated code will therefore evaluate
+`N-1`, something called [immediate evaluation](#immediate-evaluation),
+in order to compare the value against the candidates. If the value is
+`0`, the first definition will be selected. If the value is `1`, the
+second definition will be used. Otherwise, the third definition will
+be used.
+
+The version of the function that is actually used depends on the
+dynamic value of `N`. This is the basis for _dynamic dispatch_ in XL,
+i.e. runtime selection of the code to execute depending on the value
+of some variable.
+
+
 ## Pattern matching
-
-
 
 Consider the following examples:
 
