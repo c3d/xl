@@ -13,6 +13,29 @@ code and data, as long as that optimized representation ultimately
 respect the semantics described using the normal form for the parse tree.
 
 
+## Execution phases
+
+Executing an XL program is the result of three phases,
+
+1. A [parsing phase](#parsing-phase)_ where program source text is
+   converted to a parse tree,
+2. A [declaration phase](#declaration-phase), where all declarations
+   are stored in the context,
+3. An [evaluation phase](#evaluation-phase), where statements other
+   than declarations are processed in order.
+
+The execution phases are designed so that in a very large number of
+cases, it is at least conceptually possible to do both the parsing and
+declaration phases ahead of time, and to generate machine code that can
+perform the evaluation phase using only representations of code and
+data optimized for the specific machine running the program.
+
+In short, it should be possible to create an efficient ahead-of-time
+compiler for XL. Work is currently in progress to build one. This kind
+of optimizations are described in more details in the
+[Compiled representations](#compiled-representations) section below.
+
+
 ### Execution context
 
 The execution of XL programs is defined by describing the evolution of
@@ -29,28 +52,6 @@ evaluation techniques.
 In the examples below, `CONTEXT` will be a pseudo-variable that
 describes the execution context. Where necessary, `CONTEXT0` will
 represent the previous context.
-
-
-## Execution phases
-
-Executing an XL program is the result of three phases,
-
-1. A _parsing phase_ where program source text is converted to a parse tree,
-2. A _declaration phase_, where all the declarations are stored in the
-   context,
-3. An _evaluation phase_, where statements other than declarations are
-   processed in order.
-
-The execution phases are designed so that in a very large number of
-cases, it is at least conceptually possible to do both the parsing and
-declaration phases ahead of time, and to generate machine code that can
-perform the evaluation phase using only representations of code and
-data optimized for the specific machine running the program.
-
-In short, it should be possible to create an efficient ahead-of-time
-compiler for XL. Work is currently in progress to build one. This kind
-of optimizations are described in more details in the
-[Compiled representations](#compiled-representations) section below.
 
 
 ### Parsing phase
@@ -120,7 +121,7 @@ are one of:
   collectively called _declarations_, and are processed during the
   [declaration phase](#declaration-phase).
 * Anything else is called a _statement_ and is processed during the
-  [execution phase](#execution-phase).
+  [evaluation phase](#evaluation-phase).
 
 For example, consider the following code:
 
@@ -169,19 +170,25 @@ CONTEXT is
 The actual implementation is likely to store declarations is a more
 efficient way, for example using some hashing or some form of balanced
 tree. Such optimizations must preserve the order of declarations,
-since correct behavior during the execution phase depends on it.
+since correct behavior during the evaluation phase depends on it.
 
 Note that since the declaration phase occurs first, all declarations
-in the program will be visible during the execution phase. In our
+in the program will be visible during the evaluation phase. In our
 example, it is possible to use `circumference` before it has been
 declared. Definitions may therefore refer to one another in a circular
 way. Some other languages require "forward declarations" in such
 cases, XL does not.
 
+The parse tree on the left of `is`, `as` or `:` is called the
+_pattern_ of the declaration. The pattern will be checked against the
+_form_ of parse trees to be evaluated. The right operand of `:` or
+`as` is called the _type_ of the type declaration. The parse tree on
+the right of `is` is called the _body_ of the definition.
 
-### Execution phase
 
-The execution phase evaluates each statement in the order they appear
+### Evaluation phase
+
+The evaluation phase processes each statement in the order they appear
 in the program. For each statement, the context is looked up for
 matching declarations in order. There is a match if the shape of the
 tree being evaluated matches the pattern of the declaration. Precise
@@ -227,7 +234,7 @@ The process can then resume with the next statement if there is
 one. In our example, there isn't one, so the execution is complete.
 
 
-### Expression evaluation
+## Expression evaluation
 
 Executing the body for the definition of `circumference Radius:real`
 involves the evaluation of expression `2 * pi * Radius`. This follows
@@ -319,103 +326,9 @@ The result of the last multiplication is a `real` with value
 consequently the result of executing the entire program.
 
 
-### Immediate evaluation
-
-In the previous examples, matching `2 * pi * Radius` against the
-possible candidates for `X * Y` expressions required an evaluation of
-`2 * pi` in order to check whether it was a `real` or `integer` value.
-
-This is called _immediate evaluation_ of arguments, and is required in
-XL in the following cases:
-
-1. When the formal parameter being checked has a type declaration,
-   like `Radius` in our example. Immediate evaluation is required in
-   order to check if the argument type is of the expected type.
-
-2. When the part of the pattern being checked is a constant. For
-   example, consider the definition of the factorial. where the
-   expression `(N-1)` must be evaluated in order to check if it
-   matches the value `0`, in order to verify if `(N-1)!` matches `0!`:
-   ```xl
-   0! is 1
-   N! is N * (N-1)!
-   ```
-
-3. When the name of the formal parameter that is not part of a type
-   declaration already exists. For example, the standard definition of
-   `if` tests in XL refers to pre-existing names `true` and `false`:
-   ```xl
-   if true  then TrueBody else FalseBody    is TrueBody
-   if false then TrueBody else FalseBody    is FalseBody
-   ```
-   This is also the case if the name of the same formal parameter is
-   used several times in the same pattern, as in:
-   ```xl
-   A - A    is 0
-   ```
-   Such a definition would require the evaluation of `X` and `2 * Y`
-   in expression `X - 2 * Y` in order to check if they are equal.
-
-A pattern may not match the expected forms if a formal parameter
-happens to unintentionally use a name that already exists in the
-context. The following definition and use of `select` will fail to
-compile, because `true` and `false` are defined, XL is
-case-insensitive, and `"Equal"` does not match `true`.
-
-```xl
-select Condition, True, False     is    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
-
-If you know the expected type for the arguments, you can reuse an
-existing name for a formal parameter by putting it in a type
-declaration, as in the following example:
-
-```xl
-select Condition:boolean, True:text, False:text is ...
-```
-
-The side effect, however, is that it requires the immediate evaluation of
-`Condition`, `True` and `False`, which may not be desired in an
-example like this, since it would cause an otherwise unnecessary
-division by zero in the following example when `X` is `0`.
-
-```xl
-select X <> 0, 3 / X, "Error"
-```
-
-### Deferred evaluation
+## Pattern matching
 
 
-
-This is generally the case when the pattern being checked contains an
-explicit
-
-_type annotation_, i.e. an infix `:` form `Parameter : Type`.
-
-The [XL type system](HANDBOOK_3-types.md] is described in more details
-in the next chapter. For now, suffice it to say that the presence of a
-type annotation for a formal parameter is one way to force the
-evaluation of the arguments before executing the implementation of the declaration.
-
-
-### Closures
-
-
-### Scoping
-
-
-
-
-### Tail call optimization
-
-
-### Pattern matching
-
-The parse tree on the left of `is`, `as` or `:` is called the
-_pattern_ of the declaration, which will be checked against the _form_
-of parse trees to be evaluated. The parse tree on the right of `is` is
-called the _body_ of the definition.
 
 Consider the following examples:
 
@@ -445,6 +358,111 @@ values:
 X:integer                           // Declares an integer variable named X
 X:integer + Y:integer as integer    // Declares that 2+3 is an integer
 ```
+
+
+### Immediate evaluation
+
+In the previous examples, matching `2 * pi * Radius` against the
+possible candidates for `X * Y` expressions required an evaluation of
+`2 * pi` in order to check whether it was a `real` or `integer` value.
+
+This is called _immediate evaluation_ of arguments, and is required in
+XL in the following cases:
+
+1. When the formal parameter being checked has a type declaration,
+   like `Radius` in our example, and when the type does not match the
+   argument. Immediate evaluation is required in such cases order to
+   check if the argument type is of the expected type after evaluation.
+   Evaluation is *not* required if the argument and the declared type
+   for the formal parameter match. as in the following example:
+   ```xl
+   write X:infix   is  write X.left, " ", Xlname, " ", X.right
+   write A+3
+   ```
+   In that case, since `A+3` is already an `infix`, so it is possible
+   to bind it to `X`.
+
+2. When the part of the pattern being checked is a constant. For
+   example, consider the definition of the factorial. where the
+   expression `(N-1)` must be evaluated in order to check if it
+   matches the value `0`, in order to verify if `(N-1)!` matches `0!`:
+   ```xl
+   0! is 1
+   N! is N * (N-1)!
+   ```
+
+3. When the name of the formal parameter that is not part of a type
+   declaration already exists. For example, the standard definition of
+   `if` tests in XL refers to pre-existing names `true` and `false`:
+   ```xl
+   if true  then TrueBody else FalseBody    is TrueBody
+   if false then TrueBody else FalseBody    is FalseBody
+   ```
+   This is also the case if the name of the same formal parameter is
+   used several times in the same pattern, as in:
+   ```xl
+   A - A    is 0
+   ```
+   Such a definition would require the evaluation of `X` and `2 * Y`
+   in expression `X - 2 * Y` in order to check if they are equal.
+
+A pattern may not match the expected forms if a formal parameter
+happens to unintentionally use a name that already exists in the
+context. For instance, the following definition and use of `select`
+will fail to compile, because `true` and `false` are defined, XL is
+case-insensitive, and `"Equal"` does not match `true`.
+
+```xl
+select Condition, True, False     is    if Condition then True else False
+select X = Y, "Eq", "Diff"
+```
+
+This problem is called namespace pollution, and is common to most
+languages in one shape or another. For example, C has a similar
+problem with `#define` macros, where you can for example
+`#define x y-1` if you want to really annoy your co-workers. A minimal
+amount of care is normally sufficient to avoid the problem.
+
+The simplest solution is to change the name of the formal parameters
+so that they don't conflict with any visible declaration. Another,
+more verbose approach is to specify the expected types, for example:
+
+```xl
+select Condition:boolean, True:anything, False:anything is
+    if Condition then True else False
+select X = Y, "Eq", "Diff"
+```
+
+If there are multiple candidates being considered,
+
+
+
+### Deferred evaluation
+
+In the cases where immediate evaluation
+
+
+This is generally the case when the pattern being checked contains an
+explicit
+
+_type annotation_, i.e. an infix `:` form `Parameter : Type`.
+
+The [XL type system](HANDBOOK_3-types.md] is described in more details
+in the next chapter. For now, suffice it to say that the presence of a
+type annotation for a formal parameter is one way to force the
+evaluation of the arguments before executing the implementation of the declaration.
+
+
+### Closures
+
+
+### Scoping
+
+## Declaration-only bodies
+
+
+
+### Tail call optimization
 
 
 
