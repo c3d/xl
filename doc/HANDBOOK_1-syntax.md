@@ -475,8 +475,24 @@ begins a statement, whereas parentheses `()` or square brackets `[]`
 begin an expression.
 
 There are rare cases where the default rule will not achieve the
-desired objective, and you will need additional parentheses.
+desired objective, and you will need additional parentheses. One
+important such case is "expression statements", i.e. statements that
+you would like to see as an expression. Consider the following two
+declarations:
 
+```xl
+debug X     is write "X=", X
+expm1 X     is exp X - 1
+```
+
+The first example parses as intended, as a statement. The second one,
+however, is not, despite being syntactically similar. On could want to
+see this parse as `(exp X) -1`, but in reality, it parses as `exp (X-1)`
+for the same reason that the line above parses as `write ("X=", X)`.
+The solution is to add parentheses around the expression, i.e. to
+write the body as `(exp X - 1)`. Generally, when you see statements
+between parentheses in XL, it is to indicate that they are expression
+statements.
 
 ### Tweak #2: infix vs. prefix
 
