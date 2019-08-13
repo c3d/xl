@@ -339,8 +339,19 @@ to distinguish them, since they may result in very different
 machine-level operations.
 
 In XL, the various possible candidates are considered in order, and
-the first declaratoin that matches is selected. Knowing which one matches may
-be possible at compile-time, or may require run-time tests.
+the first declaration that matches is selected. Knowing which
+candidate matches may be possible at compile-time, or may require
+run-time tests against the values in the declaration.
+
+> *NOTE* The XL2 implementation does not select the first that
+> matches, but the _largest and most specialized_ match. This is a
+> slightly more complicated implementation, but not by far, and it has
+> some benefits, notably with respect to making the code more robust
+> to reorganizations. For this reason, this remains an open option.
+> However, it is likely to be more complicated to implement in the
+> case of "functional" XL, notably for dynamic dispatch, where the
+> runtime cost of finding the proper candidate might be a bit too high
+> to be practical.
 
 For example, a definition of the
 [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_number)
@@ -352,7 +363,8 @@ fib 1   is 1
 fib N   is (fib(N-1) + fib(N-2))
 ```
 
-> *NOTE* Parentheses are required around the expression statement, in
+> *NOTE* Parentheses are required around the
+> [expressions statements](HANDBOOK_1-syntax.md#tweak-1-expression vs-statement).
 > order to parse this as the addition of `fib(N-1)` and `fib(N-2)` and
 > not as the `fib` of `(N-1)+fib(N-2)`.
 
@@ -365,10 +377,26 @@ in order to compare the value against the candidates. If the value is
 second definition will be used. Otherwise, the third definition will
 be used.
 
-The version of the function that is actually used depends on the
+The version of the declaration that is actually used depends on the
 dynamic value of `N`. This is the basis for _dynamic dispatch_ in XL,
-i.e. runtime selection of the code to execute depending on the value
-of some variable.
+i.e. runtime selection of the code to execute depending on some values.
+Dynamic dispatch is an important feature to support techniques such as
+object-oritented programming.
+
+Testing can happen for multiple parameters, and so does dynamic
+dispatch in XL. This is very different from C++, for instance, where
+built-in dynamic dispatch ("virtual functions") works along a single
+axis at a time, and only based on the type of the value.
+
+This makes the XL version sometimes harder to optimize, but has
+interesting use cases. For example, Tao3D uses theme functions that
+depend on the slide "theme", the slide "master" and the slide
+"element", as in:
+
+```xl
+theme_font "WhiteChristmas", "main", "title"    is font "Alex Brush"
+theme_font SlideTheme, SlideMaster, SlideItem   is font "Arial"
+```
 
 
 ## Pattern matching
