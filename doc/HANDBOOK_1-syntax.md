@@ -476,7 +476,7 @@ begin an expression.
 
 There are rare cases where the default rule will not achieve the
 desired objective, and you will need additional parentheses. One
-important such case is "expression statements", i.e. statements that
+important such case is _expression statements_, i.e. statements that
 you would like to see as an expression. Consider the following two
 declarations:
 
