@@ -89,8 +89,9 @@ be performed during parsing:
    This is the case for example with the `extern` name in the
    [default syntax](../src/xl.syntax#L62).
 
-5. Identifying binary data: The word `bits` is treated specially
-   during parsing, to generate parse tree nodes representing binary data.
+5. Identifying binary data: words such as `bits` marked as introducing
+   `BINARY` data in the syntax file are treated specially during
+   parsing, to generate parse tree nodes representing binary data.
    *Note:* this is not currently implemented.
 
 The need to process `import` statements during parsing means that it's
