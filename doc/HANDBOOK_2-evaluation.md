@@ -132,7 +132,7 @@ circumference 5.3
 circumference Radius:real is 2 * pi * Radius
 ```
 
-THe first and last line are each representing a definition of `pi` and
+The first and last line are each representing a definition of `pi` and
 `circumference Radius:real` respectively. The second line is made of one
 statement that computes `circumference 5.3`. There are two
 definitions, one statement and no type declaration in this code.
