@@ -92,7 +92,7 @@ be performed during parsing:
 5. Identifying binary data: words such as `bits` marked as introducing
    `BINARY` data in the syntax file are treated specially during
    parsing, to generate parse tree nodes representing binary data.
-   >  *Note:* this is not currently implemented.
+   >  *NOTE:* this is not currently implemented.
 
 The need to process `import` statements during parsing means that it's
 not possible in XL to have computed `import` statements. The name of
@@ -156,7 +156,8 @@ value computed by `circumference 5.3`.
 
 During the declaration phase, all declarations are stored in order in
 the context, so that they appear before any declaration that was
-already in the context.
+already in the context. As a result, the new declarations may _shadow_
+existing declarations that match.
 
 In the example above, the declaration phase would result in a context
 that looks something like:
