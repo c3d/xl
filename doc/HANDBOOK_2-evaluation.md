@@ -57,7 +57,7 @@ represent the previous context.
 
 The parsing phase reads source text and turns it into a parse tree
 using operator spelling and precedence information given in the
-[syntax file](../src/xl.syntax). This results in either a parse-time
+[syntax file](../src/xl.syntax). This results either in a parse-time
 error, or in a faithful representation of the source code as a parse
 tree data structure that can be used for program evaluation.
 
