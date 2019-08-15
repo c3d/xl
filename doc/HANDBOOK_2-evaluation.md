@@ -360,11 +360,13 @@ A pattern `P` matches an expression `E`` if:
   can deduce that `2+3` has `integer` type and can therefore proceed
   using `X:integer - Y:integer` for the `-` infix.
 
-* The pattern is an infix `SubPattern when Condition`, and
-  `SubPattern` matches the expression, and the `Condition` is true.
-  Bindings created while testing `SubPattern` are present in the
-  context used to evaluate `Condition`. For example, you can match
-  only even `integer` values using `N:integer when N mod 2 = 0`.
+* The pattern is an infix `SubPattern when Condition`, called a
+  _conditional clause_, and `SubPattern` matches the expression, and
+  the `Condition` is true.  Bindings created while testing
+  `SubPattern` are present in the context used to evaluate
+  `Condition`, and any binding used in `Condition` will be
+  evaluated. For example, you can match only even `integer` values
+  using `N:integer when N mod 2 = 0`.
 
 * The pattern is a block with a child `C`, and `C` matches `E`.
   This would be the case for `(X+Y) * (X-Y) is X^2 - Y^2`.
@@ -386,7 +388,7 @@ A pattern `P` matches an expression `E`` if:
   matches `4%`.
 
 
-### Overloading
+## Overloading
 
 There may be multiple declarations where the pattern matches the
 shape. This is called _overloading_. For example, as we have seen
@@ -406,8 +408,19 @@ in very different machine-level operations.
 
 In XL, the various declarations in the context are considered in
 order, and the first declaration that matches is selected. A candidate
-declaration matches if it matches the whole shape of the tree. For
-example, `X+1` can match any of the declarations patterns below:
+declaration matches if it matches the whole shape of the tree.
+
+> *NOTE* The XL2 implementation does not select the first that
+> matches, but the _largest and most specialized_ match. This is a
+> slightly more complicated implementation, but not by far, and it has
+> some benefits, notably with respect to making the code more robust
+> to reorganizations. For this reason, this remains an open option.
+> However, it is likely to be more complicated with the more dynamic
+> semantics of XL, notably for dynamic dispatch, where the
+> runtime cost of finding the proper candidate might be a bit too high
+> to be practical.
+
+For example, `X+1` can match any of the declarations patterns below:
 
 ```xl
 X:integer + Y:integer
@@ -426,20 +439,14 @@ foo X
 X * Y
 ```
 
-Knowing which candidate matches may be possible at compile-time, or
-may require run-time tests against the values in the declaration. This
-depends on the shape of the tree being evaluated and on the available
-declarations in the context,
-
-> *NOTE* The XL2 implementation does not select the first that
-> matches, but the _largest and most specialized_ match. This is a
-> slightly more complicated implementation, but not by far, and it has
-> some benefits, notably with respect to making the code more robust
-> to reorganizations. For this reason, this remains an open option.
-> However, it is likely to be more complicated with the more dynamic
-> semantics of XL, notably for dynamic dispatch, where the
-> runtime cost of finding the proper candidate might be a bit too high
-> to be practical.
+Knowing which candidate matches may be possible at compile-time, for
+example if the selection of the declaration can be done solely based
+on the type of the arguments and parameters. This would be the case if
+matching an`integer` argument against an `integer` parameter, since
+any value of that argument would match. In other cases, it may
+require run-time tests against the values in the declaration. This
+would be the case if matching an `integer` argument against `0`, or
+against `N:integer when N mod 2 = 0`.
 
 For example, a definition of the
 [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_number)
@@ -458,28 +465,87 @@ fib N   is (fib(N-1) + fib(N-2))
 
 When evaluating a sub-expression like `fib(N-1)`, three candidates for
 `fib` are available, and type information is not sufficient to
-eliminate any of them. The generated code will therefore evaluate
+eliminate any of them. The generated code will therefore have to evaluate
 `N-1`, something called [immediate evaluation](#immediate-evaluation),
 in order to compare the value against the candidates. If the value is
 `0`, the first definition will be selected. If the value is `1`, the
 second definition will be used. Otherwise, the third definition will
 be used.
 
-The version of the declaration that is actually used depends on the
-dynamic value of `N`. This is the basis for _dynamic dispatch_ in XL,
-i.e. runtime selection of the code to execute depending on some values.
-Dynamic dispatch is an important feature to support techniques such as
-object-oritented programming.
+A binding may contain a value that may itself need to be _decomposed_
+in order to be tested against the formal parameters. This is used in
+the implementation of `write_line`:
 
-Testing can happen for multiple parameters, and so does dynamic
-dispatch in XL. This is very different from C++, for instance, where
-built-in dynamic dispatch ("virtual functions") works along a single
-axis at a time, and only based on the type of the value.
+```xl
+write_line Items        is write Items; write_line
+write Head, Rest        is write Head; write Rest
+write Item:integer      is /* implementation for integer */...
+write Item:real         is /* implementation for real */...
+```
 
-This makes the XL version sometimes harder to optimize, but has
-interesting use cases. For example, Tao3D uses theme functions that
-depend on the slide "theme", the slide "master" and the slide
-"element", as in:
+In that case, finding the declaration matching `write_line "Hello",
+"World"` involves creating a binding like this:
+
+```xl
+CONTEXT is
+    Items is "Hello", "World"
+    CONTEXT0
+```
+
+When evaluating `write Items`, the various candidates for `write`
+include `write Head, Rest`, and this will be the one selected, causing
+the context to become:
+
+```xl
+CONTEXT is
+    Head is "Hello"
+    Rest is "World"
+    CONTEXT0
+```
+
+
+## Dynamic dispatch
+
+The declaration that is actually selected to evaluate a given parse
+tree may depend on the dynamic value of the arguments. In the example
+above, `fib(N-1)` may select any of the three declarations of `fib`
+depending on the actual value of `N`. This runtime selection of
+declarations based on the value of arguments is called _dynamic
+dispatch_. Dynamic dispatch is an important feature to support
+well-known techniques such as object-oritented programming.
+
+Testing can happen for the value of multiple arguments. Consequently,
+dynamic dispatch in XL can apply to multiple arguments, an approach
+that is sometimes called _multi-methods_ in the object-oriented
+world. This is very different from C++, for instance, where built-in
+dynamic dispatch ("virtual functions") works along a single axis at a
+time, and only based on the type of the value.
+
+This makes the XL version of dynamic dispatch sometimes harder to
+optimize, but has interesting use cases. Consider for example the
+archetypal object-oriented `shape` class, with derived classes such as
+`rectangle`, `circle`, `polygon`, and so on. In C++, it is easy to
+impement a `Shape::Draw` method, because selecting the correct
+implementation depends on a single argument, and this is the kind of
+example that is often given in C++ books to illustrate the benefits of
+dynamic dispatch.
+
+On the other hand, implementing a test detecting if two shapes
+intersect is not as easy in C++, since in that case, the correct
+implementation depends the type of two arguments, not just one. With XL,
+it is straightforward to implement, even if somewhat verbose:
+
+```xl
+X:shape     intersects Y:shape      as boolean  is ... // general case
+X:rectangle intersects Y:rectangle  as boolean  is ... // two rectangles
+X:circle    intersects Y:circle     as boolean  is ... // two circles
+X:circle    intersects Y:rectangle  as boolean  is ... // two circles
+X:rectangle intersects Y:circle     as boolean  is ... // two circles
+...
+```
+
+As another illustration, Tao3D uses theme functions that depend on the
+slide "theme", the slide "master" and the slide "element", as in:
 
 ```xl
 theme_font "WhiteChristmas", "main", "title"    is font "Alex Brush"
@@ -487,7 +553,116 @@ theme_font SlideTheme, SlideMaster, SlideItem   is font "Arial"
 ```
 
 
-## Pattern matching
+## Immediate evaluation
+
+In the previous examples, matching `2 * pi * Radius` against the
+possible candidates for `X * Y` expressions required an evaluation of
+`2 * pi` in order to check whether it was a `real` or `integer` value.
+
+This is called _immediate evaluation_ of arguments, and is required in
+XL in the following cases:
+
+1. When the formal parameter being checked has a type declaration,
+   like `Radius` in our example, and when the type does not match the
+   argument. Immediate evaluation is required in such cases order to
+   check if the argument type is of the expected type after evaluation.
+   Evaluation is *not* required if the argument and the declared type
+   for the formal parameter match. as in the following example:
+   ```xl
+   write X:infix   is  write X.left, " ", Xlname, " ", X.right
+   write A+3
+   ```
+   In that case, since `A+3` is already an `infix`, it is possible
+   to bind it to `X` directly without evaluating it.
+
+2. When the part of the pattern being checked is a constant. For
+   example, consider the definition of the factorial. where the
+   expression `(N-1)` must be evaluated in order to check if it
+   matches the value `0`, in order to verify if `(N-1)!` matches `0!`:
+   ```xl
+   0! is 1
+   N! is N * (N-1)!
+   ```
+
+3. When the name of the formal parameter that is not part of a type
+   declaration already exists. For example, the standard definition of
+   `if` tests in XL refers to pre-existing names `true` and `false`:
+   ```xl
+   if true  then TrueBody else FalseBody    is TrueBody
+   if false then TrueBody else FalseBody    is FalseBody
+   ```
+   This is also the case if the name of the same formal parameter is
+   used several times in the same pattern, as in:
+   ```xl
+   A - A    is 0
+   ```
+   Such a definition would require the evaluation of `X` and `2 * Y`
+   in expression `X - 2 * Y` in order to check if they are equal.
+
+4. When a conditional clause requires the evaluation of the corresponding
+   binding, as in the following example:
+   ```xl
+   syracuse N when N mod 2 = 0  is N/2
+   syracuse N when N mod 2 = 1  is N * 3 + 1
+   syracuse X+5 // Must evaluate "X+5" for the conditional clause
+   ```
+
+In the case of overloading, a same sub-expression will only be
+computed once irrespective of the number of overload candidates, and once
+it has been computed, the computed value is always used for that
+sub-expression when testing against following candidates.
+
+
+## Namespace pollution
+
+A pattern may not match the expected forms if a formal parameter
+happens to unintentionally use a name that already exists in the
+context. For instance, the following definition and use of `select`
+will fail to compile, because `true` and `false` are defined, XL is
+case-insensitive, and `"Equal"` does not match `true`.
+
+```xl
+select Condition, True, False     is    if Condition then True else False
+select X = Y, "Eq", "Diff"
+```
+
+This problem is called namespace pollution, and is common to most
+languages in one form or another. For example, C has a similar problem
+with `#define` macros, where you can for example `#define x y-1` if
+you want to really annoy your co-workers. A minimal amount of care is
+normally sufficient to avoid the problem.
+
+The simplest solution is to change the name of the formal parameters
+so that they don't conflict with any visible declaration. Another,
+more verbose approach is to specify the expected types, for example:
+
+```xl
+select Condition:boolean, True:anything, False:anything is
+    if Condition then True else False
+select X = Y, "Eq", "Diff"
+```
+
+If there are multiple candidates being considered,
+
+
+
+## Deferred evaluation
+
+In the cases where immediate evaluation
+
+
+This is generally the case when the pattern being checked contains an
+explicit
+
+_type annotation_, i.e. an infix `:` form `Parameter : Type`.
+
+The [XL type system](HANDBOOK_3-types.md] is described in more details
+in the next chapter. For now, suffice it to say that the presence of a
+type annotation for a formal parameter is one way to force the
+evaluation of the arguments before executing the implementation of the declaration.
+
+
+## Multi
 
 Consider the following examples:
 
@@ -572,97 +747,6 @@ apply Function, Value is Function(Value)
 apply (N is N!), 6
 ```
 
-### Immediate evaluation
-
-In the previous examples, matching `2 * pi * Radius` against the
-possible candidates for `X * Y` expressions required an evaluation of
-`2 * pi` in order to check whether it was a `real` or `integer` value.
-
-This is called _immediate evaluation_ of arguments, and is required in
-XL in the following cases:
-
-1. When the formal parameter being checked has a type declaration,
-   like `Radius` in our example, and when the type does not match the
-   argument. Immediate evaluation is required in such cases order to
-   check if the argument type is of the expected type after evaluation.
-   Evaluation is *not* required if the argument and the declared type
-   for the formal parameter match. as in the following example:
-   ```xl
-   write X:infix   is  write X.left, " ", Xlname, " ", X.right
-   write A+3
-   ```
-   In that case, since `A+3` is already an `infix`, so it is possible
-   to bind it to `X`.
-
-2. When the part of the pattern being checked is a constant. For
-   example, consider the definition of the factorial. where the
-   expression `(N-1)` must be evaluated in order to check if it
-   matches the value `0`, in order to verify if `(N-1)!` matches `0!`:
-   ```xl
-   0! is 1
-   N! is N * (N-1)!
-   ```
-
-3. When the name of the formal parameter that is not part of a type
-   declaration already exists. For example, the standard definition of
-   `if` tests in XL refers to pre-existing names `true` and `false`:
-   ```xl
-   if true  then TrueBody else FalseBody    is TrueBody
-   if false then TrueBody else FalseBody    is FalseBody
-   ```
-   This is also the case if the name of the same formal parameter is
-   used several times in the same pattern, as in:
-   ```xl
-   A - A    is 0
-   ```
-   Such a definition would require the evaluation of `X` and `2 * Y`
-   in expression `X - 2 * Y` in order to check if they are equal.
-
-A pattern may not match the expected forms if a formal parameter
-happens to unintentionally use a name that already exists in the
-context. For instance, the following definition and use of `select`
-will fail to compile, because `true` and `false` are defined, XL is
-case-insensitive, and `"Equal"` does not match `true`.
-
-```xl
-select Condition, True, False     is    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
-
-This problem is called namespace pollution, and is common to most
-languages in one shape or another. For example, C has a similar
-problem with `#define` macros, where you can for example
-`#define x y-1` if you want to really annoy your co-workers. A minimal
-amount of care is normally sufficient to avoid the problem.
-
-The simplest solution is to change the name of the formal parameters
-so that they don't conflict with any visible declaration. Another,
-more verbose approach is to specify the expected types, for example:
-
-```xl
-select Condition:boolean, True:anything, False:anything is
-    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
-
-If there are multiple candidates being considered,
-
-
-
-### Deferred evaluation
-
-In the cases where immediate evaluation
-
-
-This is generally the case when the pattern being checked contains an
-explicit
-
-_type annotation_, i.e. an infix `:` form `Parameter : Type`.
-
-The [XL type system](HANDBOOK_3-types.md] is described in more details
-in the next chapter. For now, suffice it to say that the presence of a
-type annotation for a formal parameter is one way to force the
-evaluation of the arguments before executing the implementation of the declaration.
 
 
 ### Closures
