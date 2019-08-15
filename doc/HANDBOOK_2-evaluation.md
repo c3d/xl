@@ -17,7 +17,7 @@ respect the semantics described using the normal form for the parse tree.
 
 Executing an XL program is the result of three phases,
 
-1. A [parsing phase](#parsing-phase)_ where program source text is
+1. A [parsing phase](#parsing-phase) where program source text is
    converted to a parse tree,
 2. A [declaration phase](#declaration-phase), where all declarations
    are stored in the context,
