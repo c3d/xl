@@ -132,20 +132,20 @@ circumference 5.3
 circumference Radius:real is 2 * pi * Radius
 ```
 
-The first and last line are each representing a definition of `pi` and
+The first and last line are representing a definition of `pi` and
 `circumference Radius:real` respectively. The second line is made of one
-statement that computes `circumference 5.3`. There are two
-definitions, one statement and no type declaration in this code.
+statement that computes `circumference 5.3`. There are two definitions,
+one statement and no type declaration in this code.
 
 Note that there is a type declaration of `Radius` in the definition on
-the last line, but that type declaration it is _local_ to the
+the last line, but that type declaration is _local_ to the
 definition, and consequently not part of the declarations in the
 top-level sequence.
 
 A name like `Radius` is called a _formal parameter_, or simply
 _parameter_.  Each parameter will receive its value from an _argument_
-during the evaluation, for example `5.3` while evaluating the
-statement on the second line.
+during the evaluation. For example the `Radius` parameter will be
+_bound_ to argument`5.3` while evaluating the statement on the second line.
 
 The _result_ of executing any XL code is the value of its last
 statement. In that case the result of executing the code will be the
