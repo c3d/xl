@@ -117,11 +117,11 @@ are one of:
   block's child
 * An infix "newline" or semi-colon, in which case the left and right
   operands of the infix are processed in that order
-* An infix `is` is called a _definition_. An infix `:` or `as` is
-  called a _type declaration_. Definitions and type declarations are
-  collectively called _declarations_, and are processed during the
-  [declaration phase](#declaration-phase).
-* Anything else is called a _statement_ and is processed during the
+* An infix `is`, which is called a _definition_, or an infix `:` or
+  `as`, which is called a _type declaration_. Definitions and type
+  declarations are collectively called _declarations_, and are
+  processed during the [declaration phase](#declaration-phase).
+* Anything else, which is called a _statement_ and is processed during the
   [evaluation phase](#evaluation-phase).
 
 For example, consider the following code:
