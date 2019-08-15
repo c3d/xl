@@ -37,8 +37,9 @@ one.
 ### Execution context
 
 The execution of XL programs is defined by describing the evolution of
-a particular data structure called the _execution context_, which
-stores all values accessible to the program at any given time.
+a particular data structure called the _execution context_, or simply
+_context_, which stores all values accessible to the program at any
+given time.
 
 That data structure is only intended to explain the effect of
 evaluating the program. It is not intended to be a model of how things
