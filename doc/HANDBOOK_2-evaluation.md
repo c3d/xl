@@ -28,12 +28,10 @@ The execution phases are designed so that in a very large number of
 cases, it is at least conceptually possible to do both the parsing and
 declaration phases ahead of time, and to generate machine code that can
 perform the evaluation phase using only representations of code and
-data optimized for the specific machine running the program.
-
-In short, it should be possible to create an efficient ahead-of-time
-compiler for XL. Work is currently in progress to build one. This kind
-of optimizations are described in more details in the
-[Compiled representations](#compiled-representations) section below.
+data [optimized](#compiled-representations) for the specific machine
+running the program. It should be possible to create an efficient
+ahead-of-time compiler for XL. Work is currently in progress to build
+one.
 
 
 ### Execution context
