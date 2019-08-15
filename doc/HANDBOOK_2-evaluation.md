@@ -92,7 +92,7 @@ be performed during parsing:
 5. Identifying binary data: words such as `bits` marked as introducing
    `BINARY` data in the syntax file are treated specially during
    parsing, to generate parse tree nodes representing binary data.
-   *Note:* this is not currently implemented.
+   >  *Note:* this is not currently implemented.
 
 The need to process `import` statements during parsing means that it's
 not possible in XL to have computed `import` statements. The name of
@@ -115,7 +115,7 @@ are one of:
 
 * A block, in which case processing the sequence means processing the
   block's child
-* An infix "newline" or semi-colon, in which case the left and right
+* An infix "newline" or semi-colon `;`, in which case the left and right
   operands of the infix are processed in that order
 * An infix `is`, which is called a _definition_, or an infix `:` or
   `as`, which is called a _type declaration_. Definitions and type
