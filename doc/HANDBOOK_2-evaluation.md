@@ -75,8 +75,9 @@ be performed during parsing:
    program, so they are simply eliminated during parsing.
 
 2. Processing `syntax` statements: This must be done during parsing,
-   because `syntax` is designed to modify the syntax used during the
-   parsing phase.
+   because `syntax` is designed to modify the spelling and precedence
+   of operators, and that information is used during the parsing
+   phase.
 
 3. Processing `import` statements: Since imported modules can contain
    `syntax` statements, they must at least partially be processed
