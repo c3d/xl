@@ -116,7 +116,7 @@ are one of:
 * A block, in which case processing the sequence means processing the
   block's child
 * An infix "newline" or semi-colon `;`, in which case the left and right
-  operands of the infix are processed in that order
+  operands of the infix are processed in that order.
 * An infix `is`, which is called a _definition_, or an infix `:` or
   `as`, which is called a _type declaration_. Definitions and type
   declarations are collectively called _declarations_, and are
@@ -675,12 +675,3 @@ evaluation of the arguments before executing the implementation of the declarati
 
 
 ### Tail call optimization
-
-
-
-## Compiled representations
-
-Code and any data can also have one or several _compiled forms_. The
-compiled forms are generally very implementation-dependent, varying
-with the machine you run the program on as well as with the compiler
-technology being used.
