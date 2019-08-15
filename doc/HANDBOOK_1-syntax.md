@@ -372,6 +372,18 @@ right-associative, which would cause parsing ambiguities.
 
 The syntax file uses a few special names:
 
+* `INFIX`, `PREFIX`, `POSTFIX` and `BLOCK` introduce sections that
+  declare the operators of the respective types.
+* `COMMENT` and `TEXT` specify delimiters for comments and long text
+  respectively.
+* `SYNTAX` introduces a child syntax. It is followed by the name of a
+  syntax file, and then by an opening and closing symbol for that
+  syntax.
+* `BINARY` specifies the names that introduce binary data. The default
+  syntax file uses `bits`. The syntax for binary data can take one of
+  two forms: either a very large integer constant in big-endian
+  format, as in `bits 16#000102030405060708090A0B0C0D0E0F`, or the
+  name of a file, as in `bits "image.png"`.
 * `NEWLINE` is used to represent the infix operators that separates
   individual source code lines.
 * `STATEMENT` is the precedence that delimits
