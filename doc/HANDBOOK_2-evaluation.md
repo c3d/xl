@@ -326,30 +326,116 @@ The result of the last multiplication is a `real` with value
 consequently the result of executing the entire program.
 
 
-## Overloading
+## Pattern matching
+
+As we have seen above, the key to execution in XL is _pattern matching_,
+which is the process of finding the declarations patterns that match a
+given parse tree.
+
+A pattern `P` matches an expression `E`` if:
+
+* The pattern is an `integer`, `real` or `text` constant, and the
+  expression has the same type and the same value. For example,
+  pattern `0` matches `integer` value `0`.
+
+* The pattern is a name that is declared in the current context, and
+  the expression `P = E` is true. For example, you can define an
+  optimization `sin pi is 0.0` that will enforce the mathematical
+  equality despite possible rounding errors.
+
+* The pattern is a name `N` that is not declared in the current context.
+  In that case, a new binding `N is E` will be added add the beginning
+  of the context. This is the case for example, in `N! is N * (N-1)!`
+
+* The pattern is a type declaration like `Name : Type`, in which case the
+  expression must have the specified `Type`. In that case too, a new
+  binding `Name is E` will be added at the beginning of the
+  context. This is the case for pattern `X:integer + Y:integer`.
+
+* The pattern is a type declaration like `SubPattern as Type`, in
+  which the expression must have the correct `Type`. This is the case
+  for `X:integer + Y:integer as integer` matching `2+3-8`: the compiler
+  can deduce that `2+3` has `integer` type and can therefore proceed
+  using `X:integer - Y:integer` for the `-` infix.
+
+* The pattern is an infix `SubPattern when Condition`, and
+  `SubPattern` matches the expression, and the `Condition` is true.
+  Bindings created while testing `SubPattern` are present in the
+  context used to evaluate `Condition`. For example, you can match
+  only even `integer` values using `N:integer when N mod 2 = 0`.
+
+* The pattern is a block with a child `C`, and `C` matches `E`.
+  This would be the case for `(X+Y) * (X-Y) is X^2 - Y^2`.
+  Note that the delimiters of a block cannot be tested that way, you
+  should use a conditional pattern like `B:block when  B.opening = "("`.
+
+* The pattern is an infix with name `I`, the expression is an infix
+  with the same name, and the two pattern operands match the
+  respective expression operands. For example, patten `X + Y`
+  matches expression `2+3*5`.
+
+* The pattern is the a prefix or postfix, the expression is
+  respectively a prefix or postfix, and pattern operator and operand
+  both match expression operator and operand respectively. For
+  example, `(A+B)(C+D)` matches `(1+2)(3+4)`.  If the pattern is the
+  outermost prefix or postfix, and if the pattern operator is a name,
+  then the expression operator must be a name too, with the
+  same value. For example, `sin X` matches `sin (3.1*pi)` and `X%`
+  matches `4%`.
+
+
+### Overloading
 
 There may be multiple declarations where the pattern matches the
-shape. This is called _overloading_.
+shape. This is called _overloading_. For example, as we have seen
+above, for the multiplication expression `X*Y` we have at least
+`integer` and `real` candidates. This looks like:
 
-For example, as we have seen above, for the multiplication expression
-`X*Y` we have at least `integer` and `real` candidates. The first one
-would be used for an expression like `2+3` and the second one for an
-expression like `5.5*6.4`. It is important for the compiler to be able
-to distinguish them, since they may result in very different
-machine-level operations.
+```xl
+X:integer * Y:integer as integer        is ...
+X:real    * Y:real    as real           is ...
 
-In XL, the various possible candidates are considered in order, and
-the first declaration that matches is selected. Knowing which
-candidate matches may be possible at compile-time, or may require
-run-time tests against the values in the declaration.
+```
+
+The first declaration above would be used for an expression like `2+3`
+and the second one for an expression like `5.5*6.4`. It is important
+for the compiler to be able to distinguish them, since they may result
+in very different machine-level operations.
+
+In XL, the various declarations in the context are considered in
+order, and the first declaration that matches is selected. A candidate
+declaration matches if it matches the whole shape of the tree. For
+example, `X+1` can match any of the declarations patterns below:
+
+```xl
+X:integer + Y:integer
+X:integer + 1
+X:integer + Y:integer when Y > 0
+X + Y
+Infix:infix
+```
+
+The same `X+1` expression will not match any of the following
+patterns:
+
+```xl
+foo X
++1
+X * Y
+```
+
+Knowing which candidate matches may be possible at compile-time, or
+may require run-time tests against the values in the declaration. This
+depends on the shape of the tree being evaluated and on the available
+declarations in the context,
 
 > *NOTE* The XL2 implementation does not select the first that
 > matches, but the _largest and most specialized_ match. This is a
 > slightly more complicated implementation, but not by far, and it has
 > some benefits, notably with respect to making the code more robust
 > to reorganizations. For this reason, this remains an open option.
-> However, it is likely to be more complicated to implement in the
-> case of "functional" XL, notably for dynamic dispatch, where the
+> However, it is likely to be more complicated with the more dynamic
+> semantics of XL, notably for dynamic dispatch, where the
 > runtime cost of finding the proper candidate might be a bit too high
 > to be practical.
 
@@ -365,8 +451,8 @@ fib N   is (fib(N-1) + fib(N-2))
 
 > *NOTE* Parentheses are required around the
 > [expressions statements](HANDBOOK_1-syntax.md#tweak-1-expression vs-statement).
-> order to parse this as the addition of `fib(N-1)` and `fib(N-2)` and
-> not as the `fib` of `(N-1)+fib(N-2)`.
+> in the last declaration in order to parse this as the addition of
+> `fib(N-1)` and `fib(N-2)` and not as the `fib` of `(N-1)+fib(N-2)`.
 
 When evaluating a sub-expression like `fib(N-1)`, three candidates for
 `fib` are available, and type information is not sufficient to
@@ -430,6 +516,59 @@ X:integer                           // Declares an integer variable named X
 X:integer + Y:integer as integer    // Declares that 2+3 is an integer
 ```
 
+
+### Creating a functional object
+
+Unlike in several functional languages, when you declare a "function",
+you do not automatically declare an object with the function's
+name.
+
+For example, the first definition in the following code does not
+create any declaration for `my_function` in the context, which means
+that the last statement in that code will cause an error.
+
+```xl
+my_function X  is X + 1
+apply Function, Value is Function(Value)
+apply my_function, 1
+```
+
+The reason for that is that overloading means a multiplicity of
+declarations must often be considered for a single
+expression. Consider the standard definition of `factorial`:
+
+```xl
+factorial 0 is 1
+factorial N is N * factorial(N-1)
+apply Function, Value is Function(Value)
+apply factorial, 6
+```
+
+In that case, there are two declarations that "constitute" `factorial`,
+so it does not really make sense to pass `factorial` around. If you
+really want to expose `factorial` as a "function object", you need to
+explicitly do so. This is illustrated below with a definition of
+`factorial` that is correct XL.
+
+
+```xl
+0! is 1
+N! is N * (N-1)!
+factorial is (N is N!)
+apply Function, Value is Function(Value)
+apply factorial, 6
+```
+
+Note that this is not really idiomatic XL, since you don't need to
+give an explicit name to your function. Instead, you can pass a
+declaration like:
+
+```xl
+0! is 1
+N! is N * (N-1)!
+apply Function, Value is Function(Value)
+apply (N is N!), 6
+```
 
 ### Immediate evaluation
 
