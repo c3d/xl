@@ -588,8 +588,8 @@ In the previous examples, matching `2 * pi * Radius` against the
 possible candidates for `X * Y` expressions required an evaluation of
 `2 * pi` in order to check whether it was a `real` or `integer` value.
 
-This is called _immediate evaluation_ of arguments, and is required in
-XL in the following cases:
+This is called _immediate evaluation_ of arguments, and is required
+in XL for statements, but also in the following cases:
 
 1. When the formal parameter being checked has a type declaration,
    like `Radius` in our example, and when the type does not match the
@@ -636,15 +636,32 @@ XL in the following cases:
    syracuse X+5 // Must evaluate "X+5" for the conditional clause
    ```
 
-In the case of overloading, a same sub-expression will only be
-computed once irrespective of the number of overload candidates, and once
-it has been computed, the computed value is always used for that
-sub-expression when testing against following candidates.
+Immediate evaluation for expressions is performed in the order required
+to test pattern matching, and from left to right, depth first, while testing
+a given pattern.
+
+In the case of overloading, a sub-expression will only be computed
+once irrespective of the number of overload candidates. Once a
+sub-expression has been computed, the computed value is always used
+when testing against following candidates.
+
+For example, in the following code, the second declaration will not be
+selected, because the sub-expression `B*C` has been evaluated to test
+against `0` in the first declaration:
+
+```xl
+X + 0       is Case1(X)
+X + Y * Z   is Case2(X,Y,Z)
+A + B * C
+```
 
 
 ## Deferred evaluation
 
-In the cases where immediate evaluation
+In the cases where immediate evaluation is not required, an argument
+will be bound to a formal parameter as is, without evaluation. This is
+called _deferred evaluation_. In that case, the argument will be
+evaluated every time this is required by
 
 
 This is generally the case when the pattern being checked contains an
