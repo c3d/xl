@@ -661,56 +661,132 @@ A + B * C
 In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter as is, without evaluation. This is
 called _deferred evaluation_. In that case, the argument will be
-evaluated every time this is required by
+evaluated every time this is required to evaluate the formal argument.
 
-
-This is generally the case when the pattern being checked contains an
-explicit
-
-_type annotation_, i.e. an infix `:` form `Parameter : Type`.
-
-The [XL type system](HANDBOOK_3-types.md] is described in more details
-in the next chapter. For now, suffice it to say that the presence of a
-type annotation for a formal parameter is one way to force the
-evaluation of the arguments before executing the implementation of the declaration.
-
-
-## Multi
-
-Consider the following examples:
+Consider the canonical definition of `while` loops:
 
 ```xl
-A in B..C as boolean
-A in B..C is A >= B and A <= C
+while Condition loop Body is
+    if Condition then
+        Body
+        while Condition loop Body
 ```
 
-The first type declaration tells the compiler that a pattern like
-`A in B..C` is supposed to evaluate as a `boolean` value. The
-definition that follows has the same pattern `A in B..C`, and its body
-is `A >= B and A <= C`.
-
-
-
-The names in that pattern are
-
-
-The parse tree on the left of `:` or `as` is also called a pattern,
-except in the case where it consists in a single name, in which case
-it is called a _variable_. For example, in following two type
-declarations, the first one declares a variable named `X`, whereas the
-second one declares a pattern for the multiplication of `integer`
-values:
+Let's use that now in a context where we test the
+[Syracuse conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture):
 
 ```xl
-X:integer                           // Declares an integer variable named X
-X:integer + Y:integer as integer    // Declares that 2+3 is an integer
+while N <> 1 loop
+    if N mod 2 = 0 then
+        N /= 2
+    else
+        N := N * 3 + 1
+    write_line N
+```
+
+The definition of `while` given earlier only works because `Condition`
+and `Body` are evaluated multiple times. The context when evaluating
+the body of the definition is somewhat equivalent to:
+
+```
+CONTEXT is
+    Condition is N <> 1
+    Body is
+        if N mod 2 = 0 then
+            N /= 2
+        else
+            N := N * 3 + 1
+        write_line N
+    CONTEXT0
+```
+
+In the body of the `while` definition, `Condition` must be evaluated
+because it is tested against known value `true` in the definition of
+`if-then-else`:
+
+```xl
+if true  then TrueBody      is TrueBody
+if false then TrueBody      is false
+```
+
+In that same definition for `while`, `Body` must be evaluated because
+it is a statement.
+
+The value of `Body` or `Condition` is not changed by them being evaluated.
+In our example, the `Body` and `Condition` passed in the recursive
+statement at the end of the `while Condition loop Body` are the same
+arguments that were passed to the original invokation. For the same
+reason, each test of `N <> 1` in our example is with the latest value
+of `N`.
+
+
+## Closures
+
+The bindings given above for `Condition` and `Body` are somewhat simplistic.
+Consider what would happen if you wrote the following `while` loop:
+
+```xl
+Condition is N > 1
+while Condition loop N -= 1
+```
+
+Evaluating this would lead to a "naive" binding that looks like this:
+
+```xl
+CONTEXT is
+    Condition is Condition
+    Body is N -= 1
+    CONTEXT0
+```
+
+That would not work well, since evaluating `Condition` would require
+evaluating `Condition`, and indefinitely so. Something needs to be
+done to address this.
+
+In reality, the bindings must look more like this, which is called a _closure_:
+
+```xl
+CONTEXT is
+    Condition is CONTEXT0.Condition
+    Body is CONTEXT0.{ N-= 1 }
+    CONTEXT0
+```
+
+The notation `CONTEXT0.Condition` means that we evaluate `Condition` using
+`CONTEXT0` as the context. This is called the [scoping operator](#scoping).
+
+
+## Self
+
+In a definition body, `self` refers to the input tree. A special idiom
+is a definition where the body is `self`, called a _self
+definition_. Such definitions indicates that the item being defined
+needs no further evaluation. For example, `true` and `false` can be
+defined as:
+
+```xl
+true    is self
+false   is self
+```
+
+This means that evaluating `true` will return `true`, and evaluating
+`false` will return `false`, without any further evaluation. Note that
+you cannot write for example `true is true`, as `true` in the body is
+a statement, which would require further evaluation, hence an infinite
+recursion.
+
+It is possible to use `self` for data structures. For example, in
+order to ensure that comma-separated lists are not evaluated, you can write :
+
+```xl
+X, Y    is self
 ```
 
 
 ### Creating a functional object
 
 Unlike in several functional languages, when you declare a "function",
-you do not automatically declare an object with the function's
+you do not automatically declare a named entity with the function's
 name.
 
 For example, the first definition in the following code does not
@@ -723,22 +799,28 @@ apply Function, Value is Function(Value)
 apply my_function, 1
 ```
 
-The reason for that is that overloading means a multiplicity of
-declarations must often be considered for a single
-expression. Consider the standard definition of `factorial`:
+One reason for that choice is that overloading means a multiplicity of
+declarations must often be considered for a single expression. Consider
+the standard definition of `factorial`:
 
 ```xl
-factorial 0 is 1
-factorial N is N * factorial(N-1)
+0! is 1
+N! is N * (N-1)!
 apply Function, Value is Function(Value)
-apply factorial, 6
+apply (!), 6
 ```
 
-In that case, there are two declarations that "constitute" `factorial`,
-so it does not really make sense to pass `factorial` around. If you
-really want to expose `factorial` as a "function object", you need to
-explicitly do so. This is illustrated below with a definition of
-`factorial` that is correct XL.
+In that case, there are two declarations that "constitute" the
+definition of the factorial notation `N!`, so it does not really make
+sense to pass `!` around. Also, there is obviously a problem because
+`N!` is an operator notation, and it's not completely obvious that its
+name should be something like `!`. How would you name the pattern
+`A*B+C*D`? You can't name it `*+*` since that could be an operator in
+its own right.
+
+If you really want to expose the notation `N!` as a "function object",
+you need to explicitly do so. This is illustrated below with the
+definition of factorial below that is correct XL.
 
 
 ```xl
@@ -749,9 +831,8 @@ apply Function, Value is Function(Value)
 apply factorial, 6
 ```
 
-Note that this is not really idiomatic XL, since you don't need to
-give an explicit name to your function. Instead, you can pass a
-declaration like:
+You don't even need to give an explicit name to your function. Instead, you
+can pass a definition as an argument, as in the following code:
 
 ```xl
 0! is 1
@@ -760,14 +841,23 @@ apply Function, Value is Function(Value)
 apply (N is N!), 6
 ```
 
+Passing definitions like this might be seen as related to what other
+languages call _anonymous functions_, or sometimes _lambda function_
+in reference to Church's lambda calculus. The way this works, however,
+is markedly different internally, and is detailed in the section on
+[scoping](#scoping) below.
 
 
-### Closures
+## Declaration-only bodies
+
 
 
 ### Scoping
 
-## Declaration-only bodies
+
+
+The dot notation `X.Y` in XL is called the _scoping operator_. It
+indicates that
 
 
 
