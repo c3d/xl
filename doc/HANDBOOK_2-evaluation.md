@@ -388,6 +388,36 @@ A pattern `P` matches an expression `E`` if:
   matches `4%`.
 
 
+## Namespace pollution
+
+A pattern may not match the expected forms if a formal parameter
+happens to unintentionally use a name that already exists in the
+context. For instance, the following definition and use of `select`
+will fail to compile, because `true` and `false` are defined, XL is
+case-insensitive, and `"Equal"` does not match `true`.
+
+```xl
+select Condition, True, False     is    if Condition then True else False
+select X = Y, "Eq", "Diff"
+```
+
+This problem is called namespace pollution, and is common to most
+languages in one form or another. For example, C has a similar problem
+with `#define` macros, where you can for example `#define x y-1` if
+you want to really annoy your co-workers. A minimal amount of care is
+normally sufficient to avoid the problem.
+
+The simplest solution is to change the name of the formal parameters
+so that they don't conflict with any visible declaration. Another,
+more verbose approach is to specify the expected types, for example:
+
+```xl
+select Condition:boolean, True:anything, False:anything is
+    if Condition then True else False
+select X = Y, "Eq", "Diff"
+```
+
+
 ## Overloading
 
 There may be multiple declarations where the pattern matches the
@@ -398,7 +428,6 @@ above, for the multiplication expression `X*Y` we have at least
 ```xl
 X:integer * Y:integer as integer        is ...
 X:real    * Y:real    as real           is ...
-
 ```
 
 The first declaration above would be used for an expression like `2+3`
@@ -493,8 +522,8 @@ CONTEXT is
 ```
 
 When evaluating `write Items`, the various candidates for `write`
-include `write Head, Rest`, and this will be the one selected, causing
-the context to become:
+include `write Head, Rest`, and this will be the one selected after
+decomposition of `Items`, causing the context to become:
 
 ```xl
 CONTEXT is
@@ -507,12 +536,12 @@ CONTEXT is
 ## Dynamic dispatch
 
 The declaration that is actually selected to evaluate a given parse
-tree may depend on the dynamic value of the arguments. In the example
-above, `fib(N-1)` may select any of the three declarations of `fib`
-depending on the actual value of `N`. This runtime selection of
-declarations based on the value of arguments is called _dynamic
-dispatch_. Dynamic dispatch is an important feature to support
-well-known techniques such as object-oritented programming.
+tree may depend on the dynamic value of the arguments. In the
+Fibonacci example above, `fib(N-1)` may select any of the three
+declarations of `fib` depending on the actual value of `N`. This
+runtime selection of declarations based on the value of arguments is
+called _dynamic dispatch_. Dynamic dispatch is an important feature to
+support well-known techniques such as object-oritented programming.
 
 Testing can happen for the value of multiple arguments. Consequently,
 dynamic dispatch in XL can apply to multiple arguments, an approach
@@ -611,39 +640,6 @@ In the case of overloading, a same sub-expression will only be
 computed once irrespective of the number of overload candidates, and once
 it has been computed, the computed value is always used for that
 sub-expression when testing against following candidates.
-
-
-## Namespace pollution
-
-A pattern may not match the expected forms if a formal parameter
-happens to unintentionally use a name that already exists in the
-context. For instance, the following definition and use of `select`
-will fail to compile, because `true` and `false` are defined, XL is
-case-insensitive, and `"Equal"` does not match `true`.
-
-```xl
-select Condition, True, False     is    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
-
-This problem is called namespace pollution, and is common to most
-languages in one form or another. For example, C has a similar problem
-with `#define` macros, where you can for example `#define x y-1` if
-you want to really annoy your co-workers. A minimal amount of care is
-normally sufficient to avoid the problem.
-
-The simplest solution is to change the name of the formal parameters
-so that they don't conflict with any visible declaration. Another,
-more verbose approach is to specify the expected types, for example:
-
-```xl
-select Condition:boolean, True:anything, False:anything is
-    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
-
-If there are multiple candidates being considered,
-
 
 
 ## Deferred evaluation
