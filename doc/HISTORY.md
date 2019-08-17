@@ -607,6 +607,9 @@ if true then TrueBody is TrueBody
 if false then TrueBody is false
 ```
 
+> *NOTE* the above definition now requires a
+> [metabox](HANDBOOK_2-evaluation#metabox) in the latest definition of XL.
+
 Similarly for basic loops, provided your translation mechanism
 implements tail recursion properly:
 
@@ -628,10 +631,10 @@ for Var in Low..High loop Body is
 ```
 
 
-Note that the fact that such structures can be implemented in the
-library does not mean that they have to. It is simply a proof that
-basic amenities can be constructed that way, and to provide a
-reference definition of the expected behaviour.
+> *NOTE* The fact that such structures can be implemented in the
+> library does not mean that they have to. It is simply a proof that
+> basic amenities can be constructed that way, and to provide a
+> reference definition of the expected behaviour.
 
 
 ## Tao3D, interactive 3D graphics with XL
@@ -691,6 +694,17 @@ Tao3D developed a relatively large set of specialised modules, dealing
 with things such as stereoscopy or lens flares. As a product, however,
 it was never very successful, and Taodyne shut down in 2015, even if
 the open-source version lives on.
+
+Unfortunately, Tao3D was built on a relatively weak implementation of
+XL, where the type system in particular was not at all well
+understood. This made a few things really awkward. Notably, all values
+are passed by reference, which was mostlyi an implementation hack to
+enable the user-interface to "retrofit" values into the code when you
+move shapes on the screen. Unfortunately, this made the language
+brittle, and forced many modules to rely on poor hacks when updating
+values. To make a long story short, `X := Y` in Tao3D is a joke, and
+I'm rightfully ashamed of it.
+
 
 ## ELFE, distributed programming with XL
 
@@ -775,6 +789,32 @@ hand, the LLVM support in that “branch” of the XL family tree fell
 into a bad state of disrepair.
 
 
+## XL gets a type system
+
+Until that point, XL lacked a real type system. What was there was
+mostly quick-and-dirty solutions for the most basic type checks. Over
+a Christmas vacation, I spent quite a bit of time thinking about what
+a good type system would be for XL. I was notably stumped by what the
+type of `if-then-else` statements should be.
+
+The illumination came when I realized that I was blocked in my
+thinking by the false constraint that each value had to have a single
+type. Instead, the type system that seems natural in XL is that a type
+indicates the shape of a parse tree. For example, `integer` is the
+type of integer constants in the code, `real` the type of real constants,
+and `type(X+Y)` would be the type of all additions.
+
+Obviously, that means that in XL, a value can belong to multiple
+types. `2+3*5` belongs to `type(X+Y)`, to `type(X:integer+Y:integer)`
+or to `infix`. This makes the XL type system extremely powerful. For
+example. a type for even numbers is `type(X:integer when X mod 2 = 0)`.
+
+ELFE also gave me a chance to implement a relatively crude version of
+this idea and validate that it's basically sane. Bringing that idea to
+the optimizing compiler was an entirely different affair, though, and
+is still ongoing.
+
+
 ## The LLVM catastrophy
 
 For a while, there were multiple subtly distinct variants of XL which
@@ -856,6 +896,65 @@ repair a lot of the issues:
 
 This is the current state of the XL tree you are looking at. Not
 pretty, but still much better than two years ago.
+
+
+## Language redefinition
+
+During all that time, the language definition had been a very vaguely
+defined [TeXMacs document](XL_Reference_Manual.pdf). This document had
+fallen somewhat behind with respect to the actual language
+implementation or design. Notably, the type system was quickly
+retrofitted in the document. Also, the TexMacs document was
+monolithic, and not easy to convert to a web format.
+
+So after a while, I decided to
+[rewrite the documentation in markdown](HANDBOOK.md). This led me to
+crystalize decisions about a few things that have annoyed me in the previous
+definition, in particular:
+
+* The ambiguity about formal parameters in patterns, exhibited by the
+  definition of `if-then-else`. The XL language had long defined
+  `if-then-else` as follows:
+  ```xl
+  if true  then TrueClause      is TrueClause
+  if false then TrueClause      is false
+  ```
+  There is an obvious problem in that definition. Why should `true` be
+  treated like a constant while `TrueClause` a formal parameter?
+
+  The solution proposed so far so far was that if a name already
+  existed in the context, then we were talking about this name. In
+  other words, `true` was supposed to be defined elsewhere and not
+  `TrueClause`.
+
+  This also dealt with patterns such as `A - A is 0`. However, the
+  cost was very high. In particular, a formal parameter name could not
+  be any name used in the enclosing context, which was a true nuisance
+  in practice.
+
+  More recently, I came across another problem, which was how to
+  properly insert a computed value like the square root of two in a
+  pattern? I came up with an idea inspired parameters in `translate`
+  statements in XL2, which I called a "metabox". The notation `[[X]]`
+  in a pattern will evaluate `X`. To match the square root of 2, you
+  would insert the metabox `[[sqrt 2]]`. To match `true` instead of
+  defining a name `true`, you would insert `[[true]]` instead of
+  `true`.
+
+  Downside: fix all the places in the documentation that had it backwards.
+
+* The addition of opaque binary data in parse trees, for example to
+  put an image from a PNG file in an XL program. I had long been
+  thinking about a syntax like `binary "image.png".
+
+* Adding a `lambda` syntax for anonymous functions. Earlier versions
+  of XL would use a catch-all pattern like `(X is X + 1)` to define a
+  lambda function, so that `(X is X + 1) 3` would be `4`. That pattern
+  was only recognized in some specific contexts, and in other
+  contexts, this would be a definition of a variable named `X`. It is
+  now mandatory to add `lambda` for a catch-all pattern, as in
+  `lambda X is X + 1`, but then this works in any context.
+
 
 
 ## Future work
