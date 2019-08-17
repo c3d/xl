@@ -303,10 +303,10 @@ For example, the _if statement_ in XL is defined in the standard
 library as follows:
 
 ```xl
-if true  then TrueClause else FalseClause   is TrueClause
-if false then TrueClause else FalseClause   is FalseClause
-if true  then TrueClause                    is TrueClause
-if false then TrueClause                    is false
+if [[true]]  then TrueClause else FalseClause   is TrueClause
+if [[false]] then TrueClause else FalseClause   is FalseClause
+if [[true]]  then TrueClause                    is TrueClause
+if [[false]] then TrueClause                    is false
 ```
 
 Similarly, the `while` loop is defined as follows:
@@ -330,6 +330,13 @@ while N <> 1 loop
         N := N * 3 + 1
     write_line N
 ```
+
+> *NOTE* A value between two square brackets, as in `[[true]]` and `[[false]]`,
+> is called a [metabox](HANDBOOK_2-evaluation.md#metabox). It indicates
+> that the pattern must match the actual values in the metabox. In
+> other words, `foo true` defines a pattern with a formal paramter name `true`,
+> whereas `foo [[true]]` defines a pattern which only matches when the
+> argument is equal to constant `true`.
 
 
 ### The next natural evolutionary step
@@ -362,6 +369,7 @@ By contrast, all it takes in XL to implement `<=>` in a variant that
 always returns `-1`, `0` or `1` is the following:
 
 ```xl
+syntax { INFIX 290 <=> }
 X <=> Y     when X < Y  is -1
 X <=> Y     when X = Y  is  0
 X <=> Y     when X > Y  is  1

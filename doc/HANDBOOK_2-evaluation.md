@@ -75,13 +75,15 @@ be performed during parsing:
    program, so they are simply eliminated during parsing.
 
 2. Processing `syntax` statements: This must be done during parsing,
-   because `syntax` is designed to modify the spelling and precedence
+   because `syntax` is designed to
+   [modify the spelling and precedence](HANDBOOK_1-syntax.md#extending-the-syntax-in-your-program)
    of operators, and that information is used during the parsing
    phase.
 
 3. Processing `import` statements: Since imported modules can contain
    `syntax` statements, they must at least partially be processed
-   during parsing.
+   during parsing. Details about `import` statements are covered in
+   the [chapter about modules](HANDBOOK_6-modules.md).
 
 4. Identifying words that switch to a
    [child syntax](HANDBOOK_1-syntax.md#comment-block-text-and-syntax-separators):
@@ -105,7 +107,9 @@ the module must always be evaluated at compile-time.
 > compute them anyway.
 
 Once parsing completes successfully, the parse tree can be handed to
-the declaration and execution phases.
+the declaration and evaluation phases. Parsing occurs for the
+_entire program_, including imported modules, before the other phases
+begin.
 
 
 ### Sequences
@@ -117,6 +121,7 @@ are one of:
   block's child
 * An infix "newline" or semi-colon `;`, in which case the left and right
   operands of the infix are processed in that order.
+* Prefix `import`
 * An infix `is`, which is called a _definition_, or an infix `:` or
   `as`, which is called a _type declaration_. Definitions and type
   declarations are collectively called _declarations_, and are
@@ -154,6 +159,9 @@ value computed by `circumference 5.3`.
 
 ### Declaration phase
 
+The declaration phase of the program begins as soon as the parsing
+phase finished.
+
 During the declaration phase, all declarations are stored in order in
 the context, so that they appear before any declaration that was
 already in the context. As a result, the new declarations may _shadow_
@@ -174,12 +182,12 @@ efficient way, for example using some hashing or some form of balanced
 tree. Such optimizations must preserve the order of declarations,
 since correct behavior during the evaluation phase depends on it.
 
-Note that since the declaration phase occurs first, all declarations
-in the program will be visible during the evaluation phase. In our
-example, it is possible to use `circumference` before it has been
-declared. Definitions may therefore refer to one another in a circular
-way. Some other languages require "forward declarations" in such
-cases, XL does not.
+Note that since the declaration phase occurs before the execution
+phase, all declarations in the program will be visible during the
+evaluation phase. In our example, it is possible to use `circumference`
+before it has been declared. Definitions may therefore refer to one
+another in a circular way. Some other languages require "forward
+declarations" in such cases, XL does not.
 
 The parse tree on the left of `is`, `as` or `:` is called the
 _pattern_ of the declaration. The pattern will be checked against the
@@ -332,96 +340,98 @@ consequently the result of executing the entire program.
 
 As we have seen above, the key to execution in XL is _pattern matching_,
 which is the process of finding the declarations patterns that match a
-given parse tree.
+given parse tree. Pattern matching is recursive, the _top-level pattern_
+matching only if all _sub-patterns_ also match.
 
-A pattern `P` matches an expression `E`` if:
+For example, consider the following declaration:
 
-* The pattern is an `integer`, `real` or `text` constant, and the
-  expression has the same type and the same value. For example,
-  pattern `0` matches `integer` value `0`.
+```xl
+log X:real when X > 0.0 is [... some implementation ...]
+```
 
-* The pattern is a name that is declared in the current context, and
-  the expression `P = E` is true. For example, you can define an
-  optimization `sin pi is 0.0` that will enforce the mathematical
-  equality despite possible rounding errors.
+This will match an expression like `log 1.25` because:
 
-* The pattern is a name `N` that is not declared in the current context.
-  In that case, a new binding `N is E` will be added add the beginning
-  of the context. This is the case for example, in `N! is N * (N-1)!`
+1. `log 1.25` is a prefix with the name `log` on the left, just like
+   the prefix in the pattern.
 
-* The pattern is a type declaration like `Name : Type`, in which case the
-  expression must have the specified `Type`. In that case too, a new
-  binding `Name is E` will be added at the beginning of the
-  context. This is the case for pattern `X:integer + Y:integer`.
+2. `1.25` matches the formal parameter `X` and has the expected `real`
+   type, meaning that `1.25` matches the sub-pattern `X:real`.
 
-* The pattern is a type declaration like `SubPattern as Type`, in
-  which the expression must have the correct `Type`. This is the case
-  for `X:integer + Y:integer as integer` matching `2+3-8`: the compiler
-  can deduce that `2+3` has `integer` type and can therefore proceed
-  using `X:integer - Y:integer` for the `-` infix.
+3. The condition `X > 0.0` is true with binding `X is 1.25`
 
-* The pattern is an infix `SubPattern when Condition`, called a
-  _conditional clause_, and `SubPattern` matches the expression, and
-  the `Condition` is true.  Bindings created while testing
-  `SubPattern` are present in the context used to evaluate
-  `Condition`, and any binding used in `Condition` will be
-  evaluated. For example, you can match only even `integer` values
-  using `N:integer when N mod 2 = 0`.
+A pattern `P` matches an expression `E` if:
+
+* The top-level pattern `P` is a name, and expression `E` is the same name.
+  For example, `pi is 3.14` defines a name `pi`, and the only way to match
+  this pattern is with the expression `pi`.
+
+* The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
+  `X%`, and the expression `E` is a prefix or  postfix respectively
+  with the same operator as the pattern, and operands match.
+  For example, pattern `sin X:real` will match expression `sin (A+B)`
+  if `(A+B)` has the `real` type, but not `cos C`; pattern `X%` will
+  match `3%` but not `3!`
+
+* The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
+  called a _conditional pattern_, and `Pattern` matches `E`, and the
+  value of `Condition` is `true` with the bindings declared while
+  matching `Pattern`. For example, `log X when X > 0 is ...` will
+  match `log 42` but not `log(-1)`.
+
+* The pattern `P` is an infix, and the operator is the same in the pattern
+  and in the expression, and both operands in the pattern match the
+  respective operands in the expression. For example, pattern
+  `X:integer+Y:integer` will match `2+3` but not `A-B` nor `"A" + "B"`.
+  This works both for patterns and sub-patterns. For sub-patterns, if
+  `E` is a name, then its value can be _decomposed_. For example,
+  `write Items` can match `write Head, Tail` if there is a binding
+  like `Items is "Hello", "World"` in the current context.
+
+  > *NOTE* A very common idiom  is to use comma `,` infix to separate
+  > multiple parameters, as in `write Head, Tail is write Head; write Tail`,
+  > which would match `write 1, 2, 3` with bindings `Head is 1` and
+  > `Tail is 2,3`.
+
+* The pattern `P` is an `integer`, `real` or `text` constant, or a
+  [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
+  respectively, and the expression `E` matches the value given by the
+  constant or computed by the expression in the metabox. In that case,
+  expression `E` needs to be evaluated to check if it matches. This
+  case applies to sub-patterns, as in `0! is 1`, as well as to
+  top-level patterns, as in `0 is "Zero"`. This last case is useful in
+  [maps](#scoping).
+
+* The sub-pattern `P` is a name or a type declaration, such as `N` in `N! is
+  N * (N-1)!` or `X:real` in `sin X:real is cos(x - pi/2)`. If a type is given,
+  expression `E` may be evaluated as necessary to check the type. For
+  example, expression `A+B` will have to be evaluated to match
+  `X:real`, but that would not be necessary for `X:infix` because
+  `A+B` is already an infix. In that case, a binding `P is E2` is added
+  at the top of the current context, where `E2` is the evaluated value
+  of `E` if `E` was evaluated, and `E` otherwise.
+
+* The sub-pattern `P` is a name that was already bound in the same
+  top-level pattern, and  expression `P = E` is `true`. For example,
+  `A - A is 0` will match expression `X - Y` if `X = Y`, or more
+  precisely, if `Y = A` is `true` in a context where `A is X`.
 
 * The pattern is a block with a child `C`, and `C` matches `E`.
-  This would be the case for `(X+Y) * (X-Y) is X^2 - Y^2`.
+  In other words, blocks in a pattern only change the precedence, but play no
+  other role in pattern matching. This would be the case for
+  `(X+Y) * (X-Y) is X^2 - Y^2`, which would match `[A+3] * [A-3]`.
   Note that the delimiters of a block cannot be tested that way, you
-  should use a conditional pattern like `B:block when  B.opening = "("`.
+  should use a conditional pattern like `B:block when B.opening = "("`.
 
-* The pattern is an infix with name `I`, the expression is an infix
-  with the same name, and the two pattern operands match the
-  respective expression operands. For example, patten `X + Y`
-  matches expression `2+3*5`.
-
-* The pattern is the a prefix or postfix, the expression is
-  respectively a prefix or postfix, and pattern operator and operand
-  both match expression operator and operand respectively. For
-  example, `(A+B)(C+D)` matches `(1+2)(3+4)`.  If the pattern is the
-  outermost prefix or postfix, and if the pattern operator is a name,
-  then the expression operator must be a name too, with the
-  same value. For example, `sin X` matches `sin (3.1*pi)` and `X%`
-  matches `4%`.
-
-
-## Namespace pollution
-
-A pattern may not match the expected forms if a formal parameter
-happens to unintentionally use a name that already exists in the
-context. For instance, the following definition and use of `select`
-will fail to compile, because `true` and `false` are defined, XL is
-case-insensitive, and `"Equal"` does not match `true`.
-
-```xl
-select Condition, True, False     is    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
-
-This problem is called namespace pollution, and is common to most
-languages in one form or another. For example, C has a similar problem
-with `#define` macros, where you can for example `#define x y-1` if
-you want to really annoy your co-workers. A minimal amount of care is
-normally sufficient to avoid the problem.
-
-The simplest solution is to change the name of the formal parameters
-so that they don't conflict with any visible declaration. Another,
-more verbose approach is to specify the expected types, for example:
-
-```xl
-select Condition:boolean, True:anything, False:anything is
-    if Condition then True else False
-select X = Y, "Eq", "Diff"
-```
+In some cases, pattern matching requires evaluation of an expression
+or sub-expression. This is called [immediate evaluation](#immediate-evaluation).
+An expression that needs not be evaluated is passed so as to allow
+[deferred evaluation](#deferred-evaluation) of that expression.
 
 
 ## Overloading
 
-There may be multiple declarations where the pattern matches the
-shape. This is called _overloading_. For example, as we have seen
+There may be multiple declarations where the pattern matches a given
+parse tree. This is called _overloading_. For example, as we have seen
 above, for the multiplication expression `X*Y` we have at least
 `integer` and `real` candidates. This looks like:
 
@@ -604,24 +614,22 @@ in XL for statements, but also in the following cases:
    In that case, since `A+3` is already an `infix`, it is possible
    to bind it to `X` directly without evaluating it.
 
-2. When the part of the pattern being checked is a constant. For
-   example, consider the definition of the factorial. where the
-   expression `(N-1)` must be evaluated in order to check if it
-   matches the value `0`, in order to verify if `(N-1)!` matches `0!`:
+2. When the part of the pattern being checked is a constant or a
+   [metabox](#metabox). For example, this is the case in the definition of the
+   factorial below, where the expression `(N-1)` must be evaluated in order
+   to check if it matches the value `0`, in order to verify if
+   `(N-1)!` matches `0!`, or in the definition of `if-then-else`,
+   where the condition must be evaluated to be checked against `true`
+   or `false`:
    ```xl
    0! is 1
    N! is N * (N-1)!
+   if [[true]]  then TrueBody else FalseBody    is TrueBody
+   if [[false]] then TrueBody else FalseBody    is FalseBody
    ```
 
-3. When the name of the formal parameter that is not part of a type
-   declaration already exists. For example, the standard definition of
-   `if` tests in XL refers to pre-existing names `true` and `false`:
-   ```xl
-   if true  then TrueBody else FalseBody    is TrueBody
-   if false then TrueBody else FalseBody    is FalseBody
-   ```
-   This is also the case if the name of the same formal parameter is
-   used several times in the same pattern, as in:
+3. When the same name is used more than once for a formal parameter,
+   as in the following optimmization:
    ```xl
    A - A    is 0
    ```
@@ -672,7 +680,7 @@ while Condition loop Body is
         while Condition loop Body
 ```
 
-Let's use that now in a context where we test the
+Let's use that definition of `while` in a context where we test the
 [Syracuse conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture):
 
 ```xl
@@ -705,8 +713,8 @@ because it is tested against known value `true` in the definition of
 `if-then-else`:
 
 ```xl
-if true  then TrueBody      is TrueBody
-if false then TrueBody      is false
+if [[true]]  then TrueBody      is TrueBody
+if [[false]] then TrueBody      is false
 ```
 
 In that same definition for `while`, `Body` must be evaluated because
@@ -718,6 +726,15 @@ statement at the end of the `while Condition loop Body` are the same
 arguments that were passed to the original invokation. For the same
 reason, each test of `N <> 1` in our example is with the latest value
 of `N`.
+
+Deferred evaluation can also be used to implement "short circuit"
+boolean operators. The following code for the `and` operator will not
+evaluate `Condition` if its left operand is `false`.
+
+```xl
+[[true]]  and Condition is Condition
+[[false]] and Condition is false
+```
 
 
 ## Closures
@@ -783,25 +800,197 @@ X, Y    is self
 ```
 
 
-### Creating a functional object
+## Nested declarations
+
+A definition body may itself contain declarations, which are called
+_nested declarations_.
+
+When the body is evaluated, a _local declaration phase_ will run,
+followed by a _local evaluation phase_. The local declaration phase
+will add the local declarations at the beginning of a new context,
+which will be destroyed when the body evaluation terminates. The local
+declarations therefore shadow declarations from the enclosing context.
+
+For example, a function that returns the number of vowels in some text
+can be written as follows:
+
+```xl
+count_vowels InputText is
+    is_vowel C is
+        Item in Head, Tail is Item in Head or Item in Tail
+        Item in RefItem is Item = RefItem
+        C in 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', Y'
+
+    Count is 0
+    for C in InputText loop
+        if is_vowel C then
+            Count += 1
+    Count
+count_vowels "Hello World" // Should return 3
+```
+
+This code example defines a local helper `is_vowel C` that checks if
+`C` is a vowel by comparing it against a list of vowels. That local
+helper is not visible to the outer program. You cannot use `is_vowel X`
+in the outer program, since it is not present in the outer context. It
+is, however, visible while evaluating the body of `count_vowels T`.
+
+Similarly, the local helper itself defines an even more local helper
+infix `in` in order ot evaluate the expression `C in 'a', 'e', ...`.
+
+While evaluating `count_vowels "Hello World"`, the context will look
+something like:
+
+```xl
+CONTEXT is
+    is_vowel C is [...]
+    Count is 0
+    InputText is "Hello World"
+    CONTEXT0
+```
+
+In turn, while evaluating `is_vowel Char`, the context will look
+somethign like:
+
+```xl
+CONTEXT is
+    Item in Head, Tail is [...]
+    Item in RefItem is [...]
+    C is 'l'
+    is_vowel C is [...]
+    Count is 1
+    InputText is "Hello World"
+    CONTEXT0
+```
+
+The context is sorted so that the innermost definitions are visible
+first. Also, outer declarations are visible from the body of inner
+ones. In the example above, the body of `is_vowel Char` could validly
+refer to `Count` or to `InputText`.
+
+
+## Scoping
+
+A common idiom in XL is to have a body that consists only of declarations,
+without any statement. Definitions that consist of only declarations
+are called _maps_. When evaluating a map, the result is the map,
+i.e. the list of declarations in the body.
+
+For example, evaluating `digit_spelling` in the code below returns the
+sequence of declarations in the body:
+
+```xl
+digit_spelling is
+    0 is "Zero"
+    1 is "One"
+    2 is "Two"
+    3 is "Three"
+    ...
+```
+
+There are two primary use cases for maps.
+
+1. _Indexing_ uses the map as a prefix, for example `digit_spelling 0`
+   which evaluates the operand in the current context, and then
+   evaluates the result as if with the scoping operator. Indexing is
+   often written using square brackets, as in `digit_spelling[0]`, in
+   order to better express the intent. This notation is a nod to
+   existing practice in other programming languages such as C.
+
+2. The _scoping operator_ is an infix `.` with the map on the left,
+   such as `digit_spelling.0`. This evaluates the right operand in a
+   context that consists _only_ of the declarations of the value on
+   the left, excluding the current context.
+
+In short, the difference between indexing and scoping is that indexing
+evaluates in the current context, then evaluates the result within the
+map, whereas scoping only evaluates within the map. In both cases, it
+is an error if there is no match within the map.
+
+The following code illustrates the difference between the two:
+
+```xl
+A is 0
+my_map is
+    0 is "Zero"
+    1 is "One"
+    Name is "My map"
+my_map[0]       // Valid, returns "Zero"
+my_map.0        // Valid, returns "Zero"
+my_map[A]       // Valid, returns "Zero"
+my_map.A        // Invalid, there is no 'A' in my_map
+my_map[Name]    // Invalid, no "Name" visible here
+my_map.Name     // Valid, returns "My map"
+```
+
+There is no real need for the map to be given a name. In particular,
+"anonymous functions" can be used for indexing and scoping, as in the
+following example:
+
+```xl
+(X is X + 1) (3 + 4)        // Computes 8
+(X is X + 1).(3 + 4)        // Returns
+```
+
+
+A primary use for maps is to be used as a prefix, which is called
+_indexing_ the map, or alternatively, using the _scoping operator_,
+which is an infix `.`. In the case of `digit_spelling`, the first case
+would be an expression like `digit_spelling 0`, or often, in order to
+indicate the intent
+
+Using a map as a prefix evaluates the right-hand side as if it was a
+single statement at the end of the
+
+
+```xl
+fib is
+    0 is 1
+    1 is 1
+    N is (fib(N-1) + fib(N-2))
+```
+
+This definition can be used almost like the definition
+
+
+
+
+The dot notation `X.Y` in XL is called the _scoping operator_. It
+indicates that
+
+
+
+## Functions as values
 
 Unlike in several functional languages, when you declare a "function",
-you do not automatically declare a named entity with the function's
-name.
+you do not automatically declare a named entity or value with the
+function's name.
 
 For example, the first definition in the following code does not
 create any declaration for `my_function` in the context, which means
 that the last statement in that code will cause an error.
 
 ```xl
-my_function X  is X + 1
+my_function X is X + 1
 apply Function, Value is Function(Value)
 apply my_function, 1
 ```
 
-One reason for that choice is that overloading means a multiplicity of
-declarations must often be considered for a single expression. Consider
-the standard definition of `factorial`:
+One reason for that choice is that [overloading](#overloading) means a
+multiplicity of declarations must often be considered for a single
+expression. Another reason is that declarations can have arbitrarily
+complex patterns. It is not obvious what name should be given to a
+declaration of a pattern like `A in B..C`. A name like `in..` does not
+even "work" syntactically.
+
+It is not clear how such a name would be called as a function either,
+since some of the arguments may themselves contain arbitrary parse
+trees, as we have seen for the definition of `write_line`, where the
+single `Items` parameter may actually be a comma-separated list of
+arguments that will be decomposed when calling `write`.
+
+XL offers a neat solution to these problems, however. Consider the
+standard definition of `factorial`:
 
 ```xl
 0! is 1
@@ -810,13 +999,13 @@ apply Function, Value is Function(Value)
 apply (!), 6
 ```
 
-In that case, there are two declarations that "constitute" the
+In that case, there are two declarations that constitute the
 definition of the factorial notation `N!`, so it does not really make
-sense to pass `!` around. Also, there is obviously a problem because
-`N!` is an operator notation, and it's not completely obvious that its
-name should be something like `!`. How would you name the pattern
-`A*B+C*D`? You can't name it `*+*` since that could be an operator in
-its own right.
+sense to pass `!` around. This example illustrates another obvious
+problem because `N!` is an operator notation, and it's not completely
+self-evident that its name should be something like `!`. How would you name
+the pattern `A*B+C*D`? You can't name it `*+*` since that could be an
+operator in its own right.
 
 If you really want to expose the notation `N!` as a "function object",
 you need to explicitly do so. This is illustrated below with the
@@ -847,17 +1036,6 @@ in reference to Church's lambda calculus. The way this works, however,
 is markedly different internally, and is detailed in the section on
 [scoping](#scoping) below.
 
-
-## Declaration-only bodies
-
-
-
-### Scoping
-
-
-
-The dot notation `X.Y` in XL is called the _scoping operator_. It
-indicates that
 
 
 

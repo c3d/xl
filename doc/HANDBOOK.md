@@ -30,4 +30,5 @@ Table of contents:
 * [Compiled forms](HANDBOOK_4-compilation.md)
 * [Type system](HANDBOOK_4-types.md)
 * [Basic operations](HANDBOOK_5-basic-operations.md)
-* [Standard library](HANDBOOK_6-standard-library.md)
+* [Modules](HANDBOOK_6-modules.md)
+* [Standard library](HANDBOOK_7-standard-library.md)
