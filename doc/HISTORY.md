@@ -607,7 +607,7 @@ if true then TrueBody is TrueBody
 if false then TrueBody is false
 ```
 
-> *NOTE* the above definition now requires a
+> **NOTE** the above definition now requires a
 > [metabox](HANDBOOK_2-evaluation#metabox) in the latest definition of XL.
 
 Similarly for basic loops, provided your translation mechanism
@@ -631,7 +631,7 @@ for Var in Low..High loop Body is
 ```
 
 
-> *NOTE* The fact that such structures can be implemented in the
+> **NOTE** The fact that such structures can be implemented in the
 > library does not mean that they have to. It is simply a proof that
 > basic amenities can be constructed that way, and to provide a
 > reference definition of the expected behaviour.

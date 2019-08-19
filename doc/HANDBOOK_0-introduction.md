@@ -4,7 +4,7 @@ Extensible? What does that mean for a programming language?
 For XL, it really means three things:
 
 1. XL has a method to extend the language with any kind of feature, not
-   just functions or data types, but programming constructs, optimizations,
+   just functions or data types, but also programming constructs, optimizations,
    domain-specific notations, and more. Actually, all this is done
    with a [single operator](#one-operator-to-rule-them-all), `is`,
    called the _definition operator_.
@@ -223,7 +223,7 @@ The notation `lambda X`, inspired by
 means that we match the catch-all pattern `X`. This makes XL a
 functional language in the traditional sense.
 
-> *NOTE* The current implementations of XL special-case single-defintion
+> **NOTE** The current implementations of XL special-case single-defintion
 > contexts, and `lambda` can be omitted in that case. In a normal
 > context, `X is Y` defines a name `X`, but it did not seem very
 > useful to have single-definition contexts defining only a name.
@@ -349,7 +349,7 @@ while N <> 1 loop
     write_line N
 ```
 
-> *NOTE* A value between two square brackets, as in `[[true]]` and `[[false]]`,
+> **NOTE** A value between two square brackets, as in `[[true]]` and `[[false]]`,
 > is called a [metabox](HANDBOOK_2-evaluation.md#metabox). It indicates
 > that the pattern must match the actual values in the metabox. In
 > other words, `foo true` defines a pattern with a formal paramter name `true`,
@@ -840,7 +840,7 @@ parts of the program on different machines, by sending the relevant
 program fragments and the associated data over the wire for remote
 evaluation.
 
-> **NOTE** ELFE is now integrated as part of XL, and the ELFE demos are
+> ***NOTE*** ELFE is now integrated as part of XL, and the ELFE demos are
 > stored in the [demo](../demo) directory of XL.
 
 This was achieved by adding only four relatively simple XL functions:

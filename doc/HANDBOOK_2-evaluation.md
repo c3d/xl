@@ -100,7 +100,7 @@ The need to process `import` statements during parsing means that it's
 not possible in XL to have computed `import` statements. The name of
 the module must always be evaluated at compile-time.
 
-> *RATIONALE* An alternative would have been to allow computed
+> **RATIONALE** An alternative would have been to allow computed
 > `import` statement, but disallow `syntax` in them. However, for
 > convenience, `import` names look like `XL.CONSOLE.TEXT_IO` and not,
 > say, `"xl/console/text_io.xs"`, so there is no obvious way to
@@ -387,7 +387,7 @@ A pattern `P` matches an expression `E` if:
   `write Items` can match `write Head, Tail` if there is a binding
   like `Items is "Hello", "World"` in the current context.
 
-  > *NOTE* A very common idiom  is to use comma `,` infix to separate
+  > **NOTE** A very common idiom  is to use comma `,` infix to separate
   > multiple parameters, as in `write Head, Tail is write Head; write Tail`,
   > which would match `write 1, 2, 3` with bindings `Head is 1` and
   > `Tail is 2,3`.
@@ -449,7 +449,7 @@ In XL, the various declarations in the context are considered in
 order, and the first declaration that matches is selected. A candidate
 declaration matches if it matches the whole shape of the tree.
 
-> *NOTE* The XL2 implementation does not select the first that
+> **NOTE** The XL2 implementation does not select the first that
 > matches, but the _largest and most specialized_ match. This is a
 > slightly more complicated implementation, but not by far, and it has
 > some benefits, notably with respect to making the code more robust
@@ -497,7 +497,7 @@ fib 1   is 1
 fib N   is (fib(N-1) + fib(N-2))
 ```
 
-> *NOTE* Parentheses are required around the
+> **NOTE** Parentheses are required around the
 > [expressions statements](HANDBOOK_1-syntax.md#tweak-1-expression vs-statement).
 > in the last declaration in order to parse this as the addition of
 > `fib(N-1)` and `fib(N-2)` and not as the `fib` of `(N-1)+fib(N-2)`.

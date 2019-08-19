@@ -10,12 +10,13 @@ semi-random punctuation characters that have decorated programs since
 the dawn of computing and make most source code look like an ornate
 form of line noise to the uninitiated. Where are all the parentheses
 gone? Why this horrible lack of curly braces? How can you make sense
-of a program without a semi-colon to terminate (or separate) statements?
+of a program without a semi-colon to
+[terminate or separate](https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)#Statements) statements?
 
-In reality, however, the difference between XL syntax and earlier
-programming languages is much more than skin deep. The syntax of XL is
-actually one of its most unique characteristics. It is essential to
-understand both the philosophy and implementation of the language.
+In reality, the difference between XL syntax and earlier programming
+languages is much more than skin deep. The syntax of XL is actually
+one of its most unique characteristics. It is essential to understand
+both the philosophy and implementation of the language.
 
 
 ## Homoiconic representation of programs
@@ -31,7 +32,7 @@ foundation upon which the touted extensibility of XL is built.
 
 In that respect, XL is very much inspired by one of the earliest
 and most enduring high-level programming language,
-[Lisp](https://en.wikipedia.org/wiki/Lisp_(programming_language))
+[Lisp](https://en.wikipedia.org/wiki/Lisp_(programming_language)).
 The earliest implementations of Lisp date back to 1958, yet that
 language remains surprisingly modern and flourishing today, unlike
 languages of that same era like [Cobol](https://en.wikipedia.org/wiki/COBOL)
@@ -43,9 +44,9 @@ you need is to write a program that translates Lisp programs with the
 new feature into previous-generation Lisp programs. This kind of
 capability made it much easier to add object-oriented programming
 [to Lisp](https://en.wikipedia.org/wiki/Common_Lisp_Object_System)
-than to languages like C. Neither [C++](https://en.wikipedia.org/wiki/C++)
-nor [Objective C](https://en.wikipedia.org/wiki/Objective-C) could
-have possibly be implemented as a regulard C library.
+than to languages like C: neither [C++](https://en.wikipedia.org/wiki/C++)
+nor [Objective C](https://en.wikipedia.org/wiki/Objective-C) were
+implemented as just another C library, and there was a reason for that.
 
 Despite its strengths, Lisp remains confined to specific markets, in
 large part because to most programmers, the language remains
@@ -55,23 +56,25 @@ as "_Lots of Insipid and Stupid Parentheses_". As seen from a
 point of view, the underlying problem is that the Lisp syntax departs
 from the usual notations as used by human beings. For example, adding
 1 and 2 is written `1+2` in XL, like in most programming languages,
-but `(+ 1 2)` in Lisp.
+but `(+ 1 2)` in Lisp. In concept programming, this notational problem
+is called syntactic noise.
 
-XL addresses this problem by putting human accessibility first. XL is
-quite a bit more than Lisp with a new fancy and programmer-friendly
-syntax, however.
+XL addresses this problem by putting human accessibility first. In
+that sense, it can be seen as an effort to make the power of Lisp more
+accessible. That being said, XL is quite a bit more than just Lisp
+with a new fancy and programmer-friendly syntax.
 
 
 ### The XL parse tree
 
-The XL syntax is  much _simpler_ than that of languages such
-as C, and arguably not much more complicated than that of Lisp.
-A key to keeping things simple is that the XL syntax is _dynamic_.
+The XL syntax is much _simpler_ than that of languages such as C, and
+arguably not really more complicated than the syntax of Lisp.  A key
+to keeping things simple is that the XL syntax is _dynamic_.
 Available operators and their precedence are _configured_ primarily
-through a [syntax file](../src/xl.syntax). There are no keywords or
-special operators in XL.
+through a [syntax file](../src/xl.syntax). As a result, there are no
+hard-coded keywords or special operators in the XL compiler.
 
-XL programs can be represented with a very simple tree structure,
+All XL programs can be represented with a very simple tree structure,
 called a _parse tree_. The XL parse tree contains four leaf node types
 (integer, real, text and name), and four inner node types (infix,
 prefix, postfix and block).
@@ -105,7 +108,7 @@ Inner nodes contains combinations of other XL nodes:
    `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
 
 
-> *NOTE* This list of node types is what the current implementations
+> **NOTE** This list of node types is what the current implementations
 > of XL offer. Some changes may happen, notably:
 > * Adding a "binary object" node type, which could be used to store
 >   binary data in the program. A possible syntax would be to prefix
@@ -162,7 +165,7 @@ by considerations beyond syntax, for example the need to be able to
 precisely define [program evaluation](HANDBOOK_2-evaluation.md) or to
 represent distinct machine types.
 
-> *NOTE* Empty blocks are represented as a block with an "empty name" as
+> **NOTE** Empty blocks are represented as a block with an "empty name" as
 > a child. This is not very satisfactory. Alternatives such as
 > representing blocks as possibly empty sequences of items have proven
 > even more complicated, since the representation of [A,B,C] becomes
@@ -186,9 +189,10 @@ The base can be any decimal value between 2 and 36, or 64.
 
 * For bases between 11 and 36, letters `A` through `Z`
   or `a` through `z` represent digit values larger than 10. For
-  example, `A` is 10, `F` is 15, `z` is 35.
+  example, `A` is 10, `F` is 15, `z` is 35. Case does not matter.
 * For base 64, [Base64](https://en.wikipedia.org/wiki/Base64)
-  encoding is used, and case matters.
+  encoding is used, and case matters. This is mostly indended for use
+  in binary objects, i.e. after `bits`.
 
 There is an implementation-dependent limit for the maximum `integer`
 value. This limit cannot be less than the maximum value for a
@@ -197,11 +201,11 @@ value. This limit cannot be less than the maximum value for a
 For real numbers, a dot `.` is used as decimal separator, and must
 separate digits. For example, `0.2` and `2.0` are valid but, unlike in
 C, `.2` and`2.` are not real numbers but a prefix and postifix dot
-respectively. Also note that there is a frequent notation for ranges
+respectively. Also note that the standard library denotes ranges
 using two dots, so `2..3` is an infix `..` with `2` and `3` as
-operands, and usually indicates the range between 2 and 3.
+operands, representing the range between 2 and 3.
 
-Both integer and real numbers can contain an exponent, specified by
+Both `integer` and `real` numbers can contain an exponent, specified by
 the letter `e` or `E`. If the exponent is negative, then the number is
 parsed as a real number. Therefore, `1e3` is integer value 1000, but
 `1e-3` is real value `0.001`. The exponent is always given in base 10,
@@ -220,7 +224,7 @@ convenience, and are all strictly equivalent as far as program
 execution is concerned. In other words, a program may not behave
 differently if a constant is given as `16#FF_FF` or as `65535`.
 
-> *NOTE* One unsatisfactory aspect of XL number syntax is that it does
+> **NOTE** One unsatisfactory aspect of XL number syntax is that it does
 > not offer an obvious path to correctly represent "semantic" version
 > numbers in the code.  For example, a notation like `2.3.1` will
 > parse as an infix `.` between real number `2.3` and integer `1`,
@@ -242,7 +246,7 @@ Unicode symbols can be interpreted as a letter in at least one
 language. In many cases, it works. For example, `𝝿_2` or `étalon` are
 valid XL names.
 
-> *NOTE* Unfortunately, the XL parser is not smart enough to
+> **NOTE** Unfortunately, the XL parser is not smart enough to
 > recognize what humans would see as symbols in the Unicode space, so
 > that `⇒A2` is presently a valid name in XL. It is highty recommended
 > to not depend on this behavior, which is considered a bug.
@@ -250,7 +254,7 @@ valid XL names.
 Case and delimiters are not significant in XL, so that `JOE_DALTON`
 and `JoeDalton` are treated identically.
 
-> *NOTE* For historical reasons, the current implementations are quite
+> **NOTE** For historical reasons, the current implementations are quite
 > lacking in that respect.
 
 Symbols begin with one of the ASCII punctuation characters:
@@ -262,12 +266,10 @@ Symbols begin with one of the ASCII punctuation characters:
 Symbols longer than one character must be specified in the XL syntax
 file. For example, the XL syntax file defines a `<=` operator, but no
 `<=>` operator. Consequently, the sequence `1 <=> 2` will be parsed as
-`(1 <= (> 2))`. It is of course possible to add the `<=>` operator in
-the syntax file if one wants to add the "spaceship operator" to the
-language.
+`(1 <= (> 2))`. In order to add this operator, it is necessary to
+[extend the syntax](#extending-the-syntax) using a `syntax` statement.
 
-Except for the characters they contain, names and symbols are
-otherwise treated interchangeably by XL.
+Names and symbols are treated interchangeably by XL after the parsing phase.
 
 
 ### Text syntax
@@ -300,16 +302,20 @@ MyHTML is HTML
 END_HTML
 ```
 
+> **RATIONALE** The reason for a built-in format for text using single
+> or double quotes is because the syntax file is read using the
+> standard XL parser, and it needs text tokens in some specific cases
+> that would otherwise parse incorrectly such as block or comment delimiters.
+
 
 ### Indentation and off-side rule
 
 Indentation in XL is significant, and is parsed as a special kind of
-block.
+block. Individual program line are parsed as infix nodes with the
+first line as the left operand, and the second line as the right
+operand.
 
-Individual program line are parsed as infix nodes with the first line
-as the left operand, and the second line as the right operand.
-
-Consequently, the two `loop` instructions below have exactly the same
+In other words, the two `loop` instructions below have exactly the same
 structure, except for the block delimiters (curly braces or
 indentation) and for the line-separating infix names (semi-colon or
 line terminator):
@@ -321,7 +327,6 @@ loop
     Pray
     Love
 ```
-
 
 Indentation must use the same indentation character within a single
 file, either tab or space. In other words, either your whole file is
@@ -387,7 +392,7 @@ The syntax file uses a few special names:
 * `NEWLINE` is used to represent the infix operators that separates
   individual source code lines.
 * `STATEMENT` is the precedence that delimits
-   [expressions from statements](#tweak-1-expression vs-statement).
+   [expressions from statements](#tweak-1-expression-vs-statement).
    Anyting operator with a lower precedence belongs to a statement, like
    `if` or `loop`. Any operator with a higher precedence belongs to an
    expression, like `+` or `*`.
@@ -433,25 +438,31 @@ making it easier to reference C code from XL:
 extern real sqrt(real);
 ```
 
-Note that this is only a very crude and limited approximation of the C
-syntax, which is only intended for relatively simple function declarations.
+> **NOTE** The so-called C syntax is only a very crude and limited
+> approximation of the C syntax, which is only intended for relatively
+> simple function declarations.
 
 
-### Extending the syntax in your program
+### Extending the syntax
 
 The `syntax` name followed by a block can be used to alter the default
-syntax file. For example, if you want to add the spaceship operator
-`<=>` in your program, and give the same precedence as `<=`, namely
-290, you could write:
+syntax provided by the [syntax file](../src/xl.syntax). Within the
+block, operators can be defined and their precedence given using the
+[same rules](#operator-precedence-and-associativity) as in the syntax file.
+
+For example, if you want to add the spaceship operator `<=>` in your
+program, and give the same precedence as `<=`, namely 290, you could
+write:
 
 ```xl
 syntax
     INFIX 290 <=>
 ```
 
-> *NOTE* This syntax is intended to work also when the syntax is
+> **NOTE** This syntax is intended to work also when the syntax is
 > specified in a module. This means that an `import` statement can
-> alter the syntax in your source code. This is, however, rarely used.
+> alter the syntax in your source code. This is, however, rarely
+> recommended.
 
 
 ## Making the syntax easy for humans
@@ -519,5 +530,5 @@ B - A       // (B - A)
 
 -------------------------------------------------------------------------------
 
-Next: [Program evaluation](HANDBOOK_2-evaluation.md)
 Previous: [Introduction](HANDBOOK_0-introduction.md)
+Next: [Program evaluation](HANDBOOK_2-evaluation.md)
