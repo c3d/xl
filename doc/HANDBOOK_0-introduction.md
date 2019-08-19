@@ -147,7 +147,7 @@ identity_matrix is
 <summary>It can define functions</summary>
 
 ```xl
-abs X           is      if X < 0 then -X else X
+abs X:number    is      if X < 0 then -X else X
 ```
 
 </details>
