@@ -15,8 +15,9 @@ of a program without a semi-colon to
 
 In reality, the difference between XL syntax and earlier programming
 languages is much more than skin deep. The syntax of XL is actually
-one of its most unique characteristics. It is essential to understand
-both the philosophy and implementation of the language.
+one of its most unique characteristics. The design of the XL syntax is
+essential to understand both the philosophy and implementation of the
+whole language.
 
 
 ## Homoiconic representation of programs
