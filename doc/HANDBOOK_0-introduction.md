@@ -203,10 +203,10 @@ type cartesian  is      cartesian(re:number, im:number)
 type polar      is      polar(mod:number, arg:number)
 ```
 
-Note that types in XL indicate the shape of parse trees. In other
-words, the `cartesian` type above will match any parse tree that takes
-the shape of the word `cartesian` followed by two numbers, like for
-example `cartesian(1,5)`.
+Note that [types](HANDBOOK_4-types.md) in XL indicate the shape of
+parse trees. In other words, the `cartesian` type above will match any
+parse tree that takes the shape of the word `cartesian` followed by
+two numbers, like for example `cartesian(1,5)`.
 </details>
 <details>
 <summary>It can define higher-order functions, i.e. functions that return functions</summary>
