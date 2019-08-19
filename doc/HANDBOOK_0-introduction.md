@@ -212,13 +212,27 @@ example `cartesian(1,5)`.
 <summary>It can define higher-order functions, i.e. functions that return functions</summary>
 
 ```xl
-adder N         is      (X is N + X)
+adder N         is      (lambda X is N + X)
 add3            is      adder 3
 
  // This will compute 8
  add3 5
 ```
-This makes XL a truly functional language.
+The notation `lambda X`, inspired by
+[lambda calculus](https://en.wikipedia.org/wiki/Lambda_calculus),
+means that we match the catch-all pattern `X`. This makes XL a
+functional language in the traditional sense.
+
+> *NOTE* The current implementations of XL special-case single-defintion
+> contexts, and `lambda` can be omitted in that case. In a normal
+> context, `X is Y` defines a name `X`, but it did not seem very
+> useful to have single-definition contexts defining only a name.
+> The above example could have been written as:
+> ```
+> adder N is (X is N + X)
+> ```
+> However, this is not consistent with the rest of the language.
+> It is likely that `lambda` will be required in all future implementations.
 
 </details>
 <details>
