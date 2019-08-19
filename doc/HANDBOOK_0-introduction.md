@@ -244,7 +244,7 @@ my_map is
     1 is 0
     8 is "World"
     27 is 32
-    N when N < 45 is N + 1
+    lambda N when N < 45 is N + 1
 
 // The following is "World"
 my_map 8
