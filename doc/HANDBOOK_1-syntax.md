@@ -32,7 +32,7 @@ foundation upon which the touted extensibility of XL is built.
 ### Why Lisp remains strong to this day
 
 In that respect, XL is very much inspired by one of the earliest
-and most enduring high-level programming language,
+and most enduring high-level programming languages,
 [Lisp](https://en.wikipedia.org/wiki/Lisp_(programming_language)).
 The earliest implementations of Lisp date back to 1958, yet that
 language remains surprisingly modern and flourishing today, unlike
