@@ -119,24 +119,28 @@ matches.
 ## One operator to rule them all
 
 XL has a single fundamental operator, `is`, called the _definition operator_.
-You use it as follows: `Pattern is Implmentation`, where `Pattern` is a
-program pattern, like `X+Y`, and `Definition` is an implementation for
+You use it as follows: `Pattern is Implementation`, where `Pattern` is a
+program pattern, like `X+Y`, and `Implementation` is an implementation for
 that pattern, for example `Add X, Y`. This operator can be read as
 _transforms into_, i.e. it transforms the code that is on the left
 into the code that is on the right.
 
 <details>
-<summary>It can define simple variables</summary>
+<summary>It can define simple variables or constants</summary>
 
 ```xl
 pi              is      3.1415926
 ```
 </details>
 <details>
-<summary>It can define lists</summary>
+<summary>It can define lists or data structures</summary>
 
 ```xl
-words           is      "xylophage", "zygomatic", "barfitude"
+funny_words     is      "xylophage", "zygomatic", "barfitude"
+identity_matrix is
+    [ [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1] ]
 ```
 </details>
 <details>
