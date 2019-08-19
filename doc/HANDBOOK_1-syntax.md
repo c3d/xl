@@ -69,8 +69,17 @@ with a new fancy and programmer-friendly syntax.
 ### The XL parse tree
 
 The XL syntax is much _simpler_ than that of languages such as C, and
-arguably not really more complicated than the syntax of Lisp.  A key
-to keeping things simple is that the XL syntax is _dynamic_.
+arguably not really more complicated than the syntax of Lisp. The
+[parser](../src/parser.cpp) for XL is less than 800 lines of
+straightforward C++ code, and the [scanner](../src/scanner.cpp) barely
+adds another 900 lines. By contrast, the
+[C parser](https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c)
+in GCC needs more than 20000 lines of code, which is about the size of
+a complete XL interpreter, and the
+[C++ parser](https://github.com/gcc-mirror/gcc/blob/master/gcc/cp/parser.c)
+is over twice as much!
+
+A key to keeping things really simple is that the XL syntax is _dynamic_.
 Available operators and their precedence are _configured_ primarily
 through a [syntax file](../src/xl.syntax). As a result, there are no
 hard-coded keywords or special operators in the XL compiler.
