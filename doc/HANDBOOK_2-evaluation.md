@@ -121,7 +121,10 @@ are one of:
   block's child
 * An infix "newline" or semi-colon `;`, in which case the left and right
   operands of the infix are processed in that order.
-* Prefix `import`
+* An `import` statement, which is the only statement that requires
+  processing in all three executation phases.
+* A `syntax` definition, which only plays a role during parsing is
+  ignored during the declaration and evaluation phases.
 * An infix `is`, which is called a _definition_, or an infix `:` or
   `as`, which is called a _type declaration_. Definitions and type
   declarations are collectively called _declarations_, and are
