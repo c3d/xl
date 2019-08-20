@@ -521,7 +521,7 @@ fib N   is (fib(N-1) + fib(N-2))
 ```
 
 > **NOTE** Parentheses are required around the
-> [expressions statements](HANDBOOK_1-syntax.md#tweak-1-expression-vs-statement).
+> [expressions statements](HANDBOOK_1-syntax.md#tweak-1-expression-vs-statement)
 > in the last declaration in order to parse this as the addition of
 > `fib(N-1)` and `fib(N-2)` and not as the `fib` of `(N-1)+fib(N-2)`.
 
