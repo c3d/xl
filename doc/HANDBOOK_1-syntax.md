@@ -225,14 +225,14 @@ by a `#` sign, which is mandatory if `e` or `E` are valid digits in
 the base, as in `16#FF#e2` which represents decimal value 65280.
 
 If a sign precedes a number, like `+3` or `-5.3`, it is parsed by the
-compiler as a prefix `-` and not as part of the number. It is
+compiler as a prefix `+` or `-` and not as part of the number. It is
 possible, however, for an `integer` or `real` node to contain negative
 values as a result of program evaluation.
 
-The various syntactic possibilities to give a number are only for
+The various syntactic possibilities for XL numbers are only for
 convenience, and are all strictly equivalent as far as program
 execution is concerned. In other words, a program may not behave
-differently if a constant is given as `16#FF_FF` or as `65535`.
+differently if a constant is spelled as `16#FF_FF` or as `65535`.
 
 > **NOTE** One unsatisfactory aspect of XL number syntax is that it does
 > not offer an obvious path to correctly represent "semantic" version
@@ -243,23 +243,21 @@ differently if a constant is given as `16#FF_FF` or as `65535`.
 
 ### Name and symbol syntax
 
-Names in XL begin with an ASCII letter or Unicode symbol, followed by
-ASCII letters, Unicode symbols or digits. For example, `MyName` and
-`A22` are valid XL names.
+Names in XL begin with an letter, followed by letters, symbols or
+digits. For example, `MyName` and `A22` are valid XL names.
 
 A single underscore `_` can be used to separate two valid characters
 in a name. Therefore, `A_2` is a valid XL name, but `A__2` and `_A`
 are not.
 
-The choice to include Unicode symbols makes the assumption that most
-Unicode symbols can be interpreted as a letter in at least one
-language. In many cases, it works. For example, `𝝿_2` or `étalon` are
-valid XL names.
-
-> **NOTE** Unfortunately, the XL parser is not smart enough to
-> recognize what humans would see as symbols in the Unicode space, so
-> that `⇒A2` is presently a valid name in XL. It is highty recommended
-> to not depend on this behavior, which is considered a bug.
+> **NOTE** The current implementation reads its input in Unicode UTF-8
+> format, and makes crude attempts at accepting Unicode. This was
+> good enough for Tao3D to deal with multi-lingual text, including in
+> languages such as Hebrew or Arabic. However, that implementation is
+> a bit naive with respect to filtering Unicode letters.
+> For example, `𝝿_2` or `étalon` are valid XL names, and this is
+> intentional, but `⇒A2` is presently a valid XL name, and this
+> is considered a bug.
 
 Case and delimiters are not significant in XL, so that `JOE_DALTON`
 and `JoeDalton` are treated identically.
@@ -359,8 +357,9 @@ loop
 
 The operators available for XL programmers are defined by the
 [syntax file](../src/xl.syntax). The same rules apply for names or for
-symbols. The table given in this file uses keywords such as `INFIX` to
-indicate if an operator is an infix, a prefix, or a postfix.
+symbols. The table given in this file uses keywords such as `INFIX`,
+`PREFIX` and `POSTFIX` to indicate if an operator is an infix, a
+prefix, or a postfix respectively.
 
 The table also gives operators a precedence. For example, the
 following segment in the `INFIX` portion of the table indicates that
@@ -448,8 +447,8 @@ making it easier to reference C code from XL:
 extern real sqrt(real);
 ```
 
-> **NOTE** The so-called C syntax is only a very crude and limited
-> approximation of the C syntax, which is only intended for relatively
+> **NOTE** The so-called "C syntax" in XL is only a very crude and limited
+> approximation of the actual C syntax, which is only intended for relatively
 > simple function declarations.
 
 
@@ -469,10 +468,10 @@ syntax
     INFIX 290 <=>
 ```
 
-> **NOTE** This syntax is intended to work also when the syntax is
-> specified in a module. This means that an `import` statement can
-> alter the syntax in your source code. This is, however, rarely
-> recommended.
+> **NOTE** Extending the syntax is intended to also work also in a
+> module. This means that an `import` statement can alter the syntax
+> in your source code. This is, however, rarely recommended.
+> Also, importing a syntax extension does not presently work.
 
 
 ## Making the syntax easy for humans
