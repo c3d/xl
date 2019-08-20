@@ -819,7 +819,7 @@ The returned value for `add3` will therefore be a closure similar to
 the following:
 
 ```xl
-`(N is 3).(lambda X is X + N)
+(N is 3).(lambda X is X + N)
 ```
 
  This closure can correctly be evaluated even in a context where there
