@@ -362,7 +362,7 @@ matching only if all _sub-patterns_ also match.
 For example, consider the following declaration:
 
 ```xl
-log X:real when X > 0.0 is [... some implementation ...]
+log X:real when X > 0.0 is /* ... implementation of log ... */
 ```
 
 This will match an expression like `log 1.25` because:
@@ -375,7 +375,7 @@ This will match an expression like `log 1.25` because:
 
 3. The condition `X > 0.0` is true with binding `X is 1.25`
 
-A pattern `P` matches an expression `E` if:
+More generally, a pattern `P` matches an expression `E` if:
 
 * The top-level pattern `P` is a name, and expression `E` is the same name.
   For example, `pi is 3.14` defines a name `pi`, and the only way to match
