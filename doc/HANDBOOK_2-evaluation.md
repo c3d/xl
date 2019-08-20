@@ -389,7 +389,7 @@ following conditions is true:
   if `(A+B)` has the `real` type, but it will not match a prefix with
   any other name, like `cos C`. Similarly, pattern `X%` will match
   `3%` but neither `3!`, because the operator is not the right one,
-  nor `"hello"%`, because the operand does not match
+  nor `"hello"%`, because the operand does not match.
 
 * The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
   called a _conditional pattern_, and `Pattern` matches `E`, and the
