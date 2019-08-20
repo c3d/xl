@@ -386,8 +386,9 @@ following conditions is true:
   `X%`, and the expression `E` is a prefix or  postfix respectively
   with the same operator as the pattern, and operands match.
   For example, pattern `sin X:real` will match expression `sin (A+B)`
-  if `(A+B)` has the `real` type, but not `cos C`; pattern `X%` will
-  match `3%` but not `3!`
+  if `(A+B)` has the `real` type, but it will not match a prefix with
+  any other name, like `cos C`. Similarly, pattern `X%` will match
+  `3%` but neither `3!` nor `"hello"!`.
 
 * The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
   called a _conditional pattern_, and `Pattern` matches `E`, and the
