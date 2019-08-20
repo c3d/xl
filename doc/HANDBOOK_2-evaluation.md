@@ -448,8 +448,7 @@ following conditions is true:
 
 In some cases, pattern matching requires evaluation of an expression
 or sub-expression. This is called [immediate evaluation](#immediate-evaluation).
-An expression that needs not be evaluated is passed so as to allow
-[deferred evaluation](#deferred-evaluation) of that expression.
+Otherwise, [evaluation will be deferred](#deferred-evaluation).
 
 
 ## Overloading
