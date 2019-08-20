@@ -119,7 +119,7 @@ are one of:
 
 * A block, in which case processing the sequence means processing the
   block's child
-* An infix "newline" or semi-colon `;`, in which case the left and right
+* An infix `NEWLINE` or semi-colon `;`, in which case the left and right
   operands of the infix are processed in that order.
 * An `import` statement, which is the only statement that requires
   processing in all three executation phases.
@@ -127,7 +127,7 @@ are one of:
   ignored during the declaration and evaluation phases.
 * An infix `is`, which is called a _definition_, or an infix `:` or
   `as`, which are called _type annotations_. Definitions and type
-  declarations are collectively called _declarations_, and are
+  annotations are collectively called _declarations_, and are
   processed during the [declaration phase](#declaration-phase).
 * Anything else, which is called a _statement_ and is processed during the
   [evaluation phase](#evaluation-phase).
@@ -194,8 +194,8 @@ declarations" in such cases, XL does not.
 The parse tree on the left of `is`, `as` or `:` is called the
 _pattern_ of the declaration. The pattern will be checked against the
 _form_ of parse trees to be evaluated. The right operand of `:` or
-`as` is the type of the type annotation. The parse tree on
-the right of `is` is called the _body_ of the definition.
+`as` is the type of the type annotation. The parse tree on the right
+of `is` is called the _body_ of the definition.
 
 
 ### Evaluation phase
@@ -403,14 +403,15 @@ A pattern `P` matches an expression `E` if:
   top-level patterns, as in `0 is "Zero"`. This last case is useful in
   [maps](#scoping).
 
-* The sub-pattern `P` is a name or a type declaration, such as `N` in `N! is
-  N * (N-1)!` or `X:real` in `sin X:real is cos(x - pi/2)`. If a type is given,
-  expression `E` may be evaluated as necessary to check the type. For
-  example, expression `A+B` will have to be evaluated to match
-  `X:real`, but that would not be necessary for `X:infix` because
-  `A+B` is already an infix. In that case, a binding `P is E2` is added
-  at the top of the current context, where `E2` is the evaluated value
-  of `E` if `E` was evaluated, and `E` otherwise.
+* The sub-pattern `P` is a name possibly with a type annotation, such
+  as `N` in `N! is N * (N-1)!` or `X:real` in `sin X:real is cos(x -
+  pi/2)`. If a type is given, expression `E` may be evaluated as
+  necessary to check the type. For example, expression `A+B` will have
+  to be evaluated to match `X:real`, but that would not be necessary
+  for `X:infix` because `A+B` is already an infix. In that case, a
+  binding `P is E2` is added at the top of the current context, where
+  `E2` is the evaluated value of `E` if `E` was evaluated, and `E`
+  otherwise.
 
 * The sub-pattern `P` is a name that was already bound in the same
   top-level pattern, and  expression `P = E` is `true`. For example,
@@ -603,7 +604,7 @@ possible candidates for `X * Y` expressions required an evaluation of
 This is called _immediate evaluation_ of arguments, and is required
 in XL for statements, but also in the following cases:
 
-1. When the formal parameter being checked has a type declaration,
+1. When the formal parameter being checked has a type annotation,
    like `Radius` in our example, and when the type does not match the
    argument. Immediate evaluation is required in such cases order to
    check if the argument type is of the expected type after evaluation.
