@@ -268,9 +268,8 @@ The `*` operator is left-associative, so `2 * pi * Radius` parses as
 `X` corresponding to `2 * pi` and `Y` corresponding to `Radius`.
 However, that information alone is insufficient to determine if either
 sub-expression is `integer` or `real`. In order to be able to make
-that determination, the two arguments need to be _evaluated_.
-Evaluation that is required to figure out if you can match a pattern
-is called [immediate evaluation](#immediate-evaluation).
+that determination, [immediate evaluation](#immediate-evaluation) of
+the arguments is required.
 
 The evaluation process therefore repeats with sub-expression `2 * pi`,
 and like before, it is necessary to evaluate `pi`. This in turns gives
@@ -287,11 +286,12 @@ something like this:
 X:integer as real is /* some implementation here */
 ```
 
-An implicit conversion like this tells the compiler how to implicitly
-transform an `integer` value like `2` into a `real`. Such an implicit
-conversion is only considered if there is no exact match. In our case,
-there isn't an exact match, so the compiler will consider the implicit
-conversion to get a `real` from `integer` value `2`.
+This implicit conversion tells the compiler how to transform an
+`integer` value like `2` into a `real`. Implicit conversions are only
+considered if there is no exact match, and only one of them can be
+used to match a given parameter. In our case, there isn't an exact
+match, so the compiler will consider the implicit conversion to get a
+`real` from `integer` value `2`.
 
 The body of the implicit conversion above is therefore evaluated in a
 context where `X` is set to `2`:
