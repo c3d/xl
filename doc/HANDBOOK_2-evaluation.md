@@ -411,7 +411,9 @@ following conditions is true:
   > write Head, Tail is write Head; write Tail
   > ```
   > This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
-  > `Tail is 2,3`.
+  > `Tail is 2,3`. In the evaluation of the body with these bindings,
+  > `write Tail` will then match the same declaration again with
+  > `Tail` being decomposed, resulting in bindings `Head is 2` and `Tail is 3`.
 
 * The pattern `P` is an `integer`, `real` or `text` constant, or a
   [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
