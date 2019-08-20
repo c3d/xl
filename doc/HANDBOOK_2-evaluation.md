@@ -618,7 +618,7 @@ theme_font SlideTheme, SlideMaster, SlideItem   is font "Arial"
 
 ## Immediate evaluation
 
-In the previous examples, matching `2 * pi * Radius` against the
+In the `circumference` examples, matching `2 * pi * Radius` against the
 possible candidates for `X * Y` expressions required an evaluation of
 `2 * pi` in order to check whether it was a `real` or `integer` value.
 
