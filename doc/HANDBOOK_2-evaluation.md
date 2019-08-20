@@ -575,7 +575,7 @@ of the three declarations of `fib` depending on the actual value of
 `N`. This runtime selection of declarations based on the value of
 arguments is called _dynamic dispatch_. Dynamic dispatch is an
 important feature to support well-known techniques such as
-object-oritented programming.
+object-oriented programming.
 
 Testing can happen for the value of multiple arguments. Consequently,
 dynamic dispatch in XL can apply to multiple arguments, an approach
