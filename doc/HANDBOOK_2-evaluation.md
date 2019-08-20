@@ -633,7 +633,7 @@ in XL for statements, but also in the following cases:
    required if the argument and the declared type for the formal
    parameter match, as in the following example:
    ```xl
-   write X:infix   is  write X.left, " ", Xlname, " ", X.right
+   write X:infix   is  write X.left, " ", X.name, " ", X.right
    write A+3
    ```
    In that case, since `A+3` is already an `infix`, it is possible
