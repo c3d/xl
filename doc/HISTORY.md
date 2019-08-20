@@ -601,10 +601,10 @@ writeln X as boolean                is write X; writeln
 More interestingly, even if-then-else can be described that way:
 
 ```xl
-if true then TrueBody else FalseBody is TrueBody
-if false then TrueBody else FalseBody is FalseBody
-if true then TrueBody is TrueBody
-if false then TrueBody is false
+if true  then TrueBody else FalseBody   is TrueBody
+if false then TrueBody else FalseBody   is FalseBody
+if true  then TrueBody                  is TrueBody
+if false then TrueBody                  is false
 ```
 
 > **NOTE** the above code now requires a
