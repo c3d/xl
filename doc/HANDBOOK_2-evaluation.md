@@ -406,8 +406,11 @@ following conditions is true:
   like `Items is "Hello", "World"` in the current context.
 
   > **NOTE** A very common idiom  is to use comma `,` infix to separate
-  > multiple parameters, as in `write Head, Tail is write Head; write Tail`,
-  > which would match `write 1, 2, 3` with bindings `Head is 1` and
+  > multiple parameters, as in the following definition:
+  > ```xl
+  > write Head, Tail is write Head; write Tail
+  > ```
+  > This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
   > `Tail is 2,3`.
 
 * The pattern `P` is an `integer`, `real` or `text` constant, or a
