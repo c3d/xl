@@ -568,13 +568,14 @@ CONTEXT is
 
 ## Dynamic dispatch
 
-The declaration that is actually selected to evaluate a given parse
-tree may depend on the dynamic value of the arguments. In the
-Fibonacci example above, `fib(N-1)` may select any of the three
-declarations of `fib` depending on the actual value of `N`. This
-runtime selection of declarations based on the value of arguments is
-called _dynamic dispatch_. Dynamic dispatch is an important feature to
-support well-known techniques such as object-oritented programming.
+As shown above, the declaration that is actually selected to evaluate
+a given parse tree may depend on the dynamic value of the
+arguments. In the Fibonacci example above, `fib(N-1)` may select any
+of the three declarations of `fib` depending on the actual value of
+`N`. This runtime selection of declarations based on the value of
+arguments is called _dynamic dispatch_. Dynamic dispatch is an
+important feature to support well-known techniques such as
+object-oritented programming.
 
 Testing can happen for the value of multiple arguments. Consequently,
 dynamic dispatch in XL can apply to multiple arguments, an approach
