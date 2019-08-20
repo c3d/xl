@@ -607,8 +607,10 @@ if true then TrueBody is TrueBody
 if false then TrueBody is false
 ```
 
-> **NOTE** the above definition now requires a
-> [metabox](HANDBOOK_2-evaluation#metabox) in the latest definition of XL.
+> **NOTE** the above code now requires a
+> [metabox](HANDBOOK_2-evaluation#metabox) for true in the version of
+> XL described in this document, i.e. `true` must be replaced with
+> `[[true]]` in order to avoid being interpreted as a formal parameter.
 
 Similarly for basic loops, provided your translation mechanism
 implements tail recursion properly:
