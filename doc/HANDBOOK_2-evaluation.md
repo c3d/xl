@@ -375,7 +375,8 @@ This will match an expression like `log 1.25` because:
 
 3. The condition `X > 0.0` is true with binding `X is 1.25`
 
-More generally, a pattern `P` matches an expression `E` if:
+More generally, a pattern `P` matches an expression `E` if one of the
+following conditions is true:
 
 * The top-level pattern `P` is a name, and expression `E` is the same name.
   For example, `pi is 3.14` defines a name `pi`, and the only way to match
