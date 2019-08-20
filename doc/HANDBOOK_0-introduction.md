@@ -840,7 +840,7 @@ parts of the program on different machines, by sending the relevant
 program fragments and the associated data over the wire for remote
 evaluation.
 
-> ***NOTE*** ELFE is now integrated as part of XL, and the ELFE demos are
+> **NOTE** ELFE is now integrated as part of XL, and the ELFE demos are
 > stored in the [demo](../demo) directory of XL.
 
 This was achieved by adding only four relatively simple XL functions:

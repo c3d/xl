@@ -94,7 +94,7 @@ be performed during parsing:
 5. Identifying binary data: words such as `bits` marked as introducing
    `BINARY` data in the syntax file are treated specially during
    parsing, to generate parse tree nodes representing binary data.
-   >  *NOTE:* this is not currently implemented.
+   >  **NOTE** this is not currently implemented.
 
 The need to process `import` statements during parsing means that it's
 not possible in XL to have computed `import` statements. The name of
@@ -126,7 +126,7 @@ are one of:
 * A `syntax` definition, which only plays a role during parsing is
   ignored during the declaration and evaluation phases.
 * An infix `is`, which is called a _definition_, or an infix `:` or
-  `as`, which is called a _type declaration_. Definitions and type
+  `as`, which are called _type annotations_. Definitions and type
   declarations are collectively called _declarations_, and are
   processed during the [declaration phase](#declaration-phase).
 * Anything else, which is called a _statement_ and is processed during the
@@ -143,12 +143,11 @@ circumference Radius:real is 2 * pi * Radius
 The first and last line are representing a definition of `pi` and
 `circumference Radius:real` respectively. The second line is made of one
 statement that computes `circumference 5.3`. There are two definitions,
-one statement and no type declaration in this code.
+one statement and no type annotation in this code.
 
-Note that there is a type declaration of `Radius` in the definition on
-the last line, but that type declaration is _local_ to the
-definition, and consequently not part of the declarations in the
-top-level sequence.
+Note that there is a type annotation for `Radius` in the definition on
+the last line, but that annotation is _local_ to the definition, and
+consequently not part of the declarations in the top-level sequence.
 
 A name like `Radius` is called a _formal parameter_, or simply
 _parameter_.  Each parameter will receive its value from an _argument_
@@ -195,7 +194,7 @@ declarations" in such cases, XL does not.
 The parse tree on the left of `is`, `as` or `:` is called the
 _pattern_ of the declaration. The pattern will be checked against the
 _form_ of parse trees to be evaluated. The right operand of `:` or
-`as` is called the _type_ of the type declaration. The parse tree on
+`as` is the type of the type annotation. The parse tree on
 the right of `is` is called the _body_ of the definition.
 
 
