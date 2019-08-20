@@ -631,7 +631,7 @@ in XL for statements, but also in the following cases:
    evaluation is required in such cases order to check if the argument
    type is of the expected type after evaluation.  Evaluation is *not*
    required if the argument and the declared type for the formal
-   parameter match. as in the following example:
+   parameter match, as in the following example:
    ```xl
    write X:infix   is  write X.left, " ", Xlname, " ", X.right
    write A+3
