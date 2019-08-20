@@ -625,12 +625,13 @@ possible candidates for `X * Y` expressions required an evaluation of
 This is called _immediate evaluation_ of arguments, and is required
 in XL for statements, but also in the following cases:
 
-1. When the formal parameter being checked has a type annotation,
-   like `Radius` in our example, and when the type does not match the
-   argument. Immediate evaluation is required in such cases order to
-   check if the argument type is of the expected type after evaluation.
-   Evaluation is *not* required if the argument and the declared type
-   for the formal parameter match. as in the following example:
+1. When the formal parameter being checked has a type annotation, like
+   `Radius` in our example, and when the annotation type does not
+   match the type associated to the argument parse tree. Immediate
+   evaluation is required in such cases order to check if the argument
+   type is of the expected type after evaluation.  Evaluation is *not*
+   required if the argument and the declared type for the formal
+   parameter match. as in the following example:
    ```xl
    write X:infix   is  write X.left, " ", Xlname, " ", X.right
    write A+3
