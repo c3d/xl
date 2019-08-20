@@ -799,6 +799,33 @@ CONTEXT is
 
 The notation `CONTEXT0.Condition` means that we evaluate `Condition` using
 `CONTEXT0` as the context. This is called the [scoping operator](#scoping).
+A context that refers to an earlier context is called a _closure_.
+
+A closure may be returned as a result of evaluation, in which case all
+or part of a context may have to be captured in the closure even after
+it would otherwise be normally discarded.
+
+For example, consider the following code:
+
+```xl
+adder N is  (lambda X is X + N)
+add3 is adder 3
+add3 5
+```
+
+When we evaluate `add3`, a binding `N is 3` is created. Then `adder N`
+returns `(lambda X is X + N)` with a closure that captures this binding.
+The returned value for `add3` will therefore be a closure similar to
+the following:
+
+```xl
+`(N is 3).(lambda X is X + N)
+```
+
+ This closure can correctly be evaluated even in a context where there
+ is no binding for `N`, like the global context after the evaluation
+ of `add3`.
+
 
 
 ## Self
