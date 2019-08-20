@@ -688,6 +688,9 @@ X + Y * Z   is Case2(X,Y,Z)
 A + B * C
 ```
 
+If the intent is to allow `Case2` to be called, then the declaration
+of `X + Y * Z` must be placed before the declaration of `X + 0`.
+
 
 ## Deferred evaluation
 
