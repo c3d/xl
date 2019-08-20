@@ -154,9 +154,9 @@ _parameter_.  Each parameter will receive its value from an _argument_
 during the evaluation. For example the `Radius` parameter will be
 _bound_ to argument`5.3` while evaluating the statement on the second line.
 
-The _result_ of executing any XL code is the value of its last
-statement. In that case the result of executing the code will be the
-value computed by `circumference 5.3`.
+The _result_ of a sequence is the value of its last statement. In our
+example, the result of executing the code will be the value computed
+by `circumference 5.3`.
 
 
 ### Declaration phase

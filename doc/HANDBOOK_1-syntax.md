@@ -521,10 +521,12 @@ The first example parses as intended, as a statement. The second one,
 however, is not, despite being syntactically similar. On could want to
 see this parse as `(exp X) -1`, but in reality, it parses as `exp (X-1)`
 for the same reason that the line above parses as `write ("X=", X)`.
+
 The solution is to add parentheses around the expression, i.e. to
 write the body as `(exp X - 1)`. Generally, when you see statements
 between parentheses in XL, it is to indicate that they are expression
 statements.
+
 
 ### Tweak #2: infix vs. prefix
 
