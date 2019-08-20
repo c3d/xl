@@ -162,7 +162,7 @@ by `circumference 5.3`.
 ### Declaration phase
 
 The declaration phase of the program begins as soon as the parsing
-phase finished.
+phase finishes.
 
 During the declaration phase, all declarations are stored in order in
 the context, so that they appear before any declaration that was
@@ -255,30 +255,36 @@ that case, that process needs to be repeated multiple times to
 complete the evaluation.
 
 If we apply the evaluation process with `2 * pi * Radius`, assuming
-the declarations in the [standard library](../src/builtins.xl), we
-will find a definition for `X:real * Y:real as real` as well as a
-definition for `X:integer * Y:integer`. There is nothing that directly
-matches a larger pattern like `X * Y * Z`.
+the declarations in the [standard library](../src/builtins.xl),
+no declaration has a larger pattern like `X * Y * Z` that could match
+the whole expression. However, there is a definition for a
+multiplication between `real` numbers, with a pattern that looks like
+`X:real * Y:real as real`, as well as another for `integer`
+multiplication, with a pattern that looks like `X:integer * Y:integer`.
+There may be more, but we will ignore them for the rest of the discussion.
 
 The `*` operator is left-associative, so `2 * pi * Radius` parses as
-`(2 * pi) * Radius`. In order to check which of the `X * Y` candidates
-could apply, `X` cannot be simply bound to `2 * pi` and `Y` to
-`Radius`, because we don't know if they are `real` or `integer` or
-something else. In that case, the program must evaluate `2 * pi` to
-compare it against the possible `X`.
+`(2 * pi) * Radius`. Therefore, we will be looking for a match with
+`X` corresponding to `2 * pi` and `Y` corresponding to `Radius`.
+However, that information alone is insufficient to determine if either
+sub-expression is `integer` or `real`. In order to be able to make
+that determination, the two arguments need to be _evaluated_.
+Evaluation that is required to figure out if you can match a pattern
+is called [immediate evaluation](#immediate-evaluation).
 
-The processus therefore repeats with sub-expression `2 * pi`, and like
-before, it is necessary to evaluate `pi`. This in turns gives the
-result `3.14` given the current context. That result replaces `pi`, so
-that we now evaluate `2 * 3.14`.
+The evaluation process therefore repeats with sub-expression `2 * pi`,
+and like before, it is necessary to evaluate `pi`. This in turns gives
+the result `3.14` given the current context. That result replaces
+`pi`, so that we now must evaluate `2 * 3.14`.
 
 This tree does not match `X:real * Y:real` because `2` is an `integer`
 and not a `real`. It does not match `X:integer * Y:integer` either
-because `3.14` is a `real` and not an `integer`. However, there is a
-definition of an _implicit conversion_ that looks like this:
+because `3.14` is a `real` and not an `integer`. However, the standard
+library provides a definition of an _implicit conversion_ that looks
+something like this:
 
 ```xl
-X:integer   as real is ...
+X:integer as real is /* some implementation here */
 ```
 
 An implicit conversion like this tells the compiler how to implicitly
@@ -336,6 +342,14 @@ CONTEXT is
 The result of the last multiplication is a `real` with value
 `33.284`. This is the result of evaluating `circumference 5.3`, and
 consequently the result of executing the entire program.
+
+> **NOTE** The standard XL library only provides implicit conversions
+> that do not cause data loss. On most implementation, `real` has a
+> 53-bit mantissa, which means that the implicit conversion from
+> `integer` to `real` is actually closer to the following:
+> ```xl
+> X:integer as real when X >= -2^53 and X < 2^53 is ...
+> ```
 
 
 ## Pattern matching
