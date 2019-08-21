@@ -424,15 +424,16 @@ following conditions is true:
   top-level patterns, as in `0 is "Zero"`. This last case is useful in
   [maps](#scoping).
 
-* The sub-pattern `P` is a name possibly with a type annotation, such
-  as `N` in `N! is N * (N-1)!` or `X:real` in `sin X:real is cos(x -
-  pi/2)`. If a type is given, expression `E` may be evaluated as
-  necessary to check the type. For example, expression `A+B` will have
-  to be evaluated to match `X:real`, but that would not be necessary
-  for `X:infix` because `A+B` is already an infix. In that case, a
-  binding `P is E2` is added at the top of the current context, where
-  `E2` is the evaluated value of `E` if `E` was evaluated, and `E`
-  otherwise.
+* The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
+  that case, a binding `N is A` is added at the top of the local context
+  used to evaluate the body, where `A` is the (possibly evaluated)
+  sub-expression from the argument.
+
+* The sub-pattern `P` is a type annotation, such as `X:real` in
+  `sin X:real is cos(x - pi/2)`. This case is similar to the previous
+  one, except that `E` may need to be evaluated to check its type.
+  For example, expression `A+B` must be evaluated if the pattern is
+  `X:real`, but not for `X:infix` since `A+B` is an infix.
 
 * The sub-pattern `P` is a name that was already bound in the same
   top-level pattern, and  expression `P = E` is `true`. For example,
