@@ -872,10 +872,10 @@ CONTEXT is
 ## Memoization
 
 A sub-expression will only be computed once irrespective of the number
-of overload candidates or tests performed on the value. Once a
-sub-expression has been computed, the computed value is always used
-for testing or binding that specific sub-expression, and only that
-sub-expression.
+of overload candidates considered or of the numnber of tests performed
+on the value. Once a sub-expression has been computed, the computed
+value is always used for testing or binding that specific
+sub-expression, and only that sub-expression.
 
 For example, consider the following declarations:
 
