@@ -748,7 +748,7 @@ while N <> 1 loop
 
 The definition of `while` given above only works because `Condition`
 and `Body` are evaluated multiple times. The context when evaluating
-the body of the definition is somewhat equivalent to:
+the body of the definition is somewhat equivalent to the following:
 
 ```
 CONTEXT is
@@ -818,8 +818,9 @@ CONTEXT is
 ```
 
 The notation `CONTEXT0.Condition` means that we evaluate `Condition` using
-`CONTEXT0` as the context. This is called the [scoping operator](#scoping).
-A context that refers to an earlier context is called a _closure_.
+`CONTEXT0` as the context. This is called the [scoping operator](#scoping)
+and is explained below. A context that refers to an earlier context is
+called a _closure_.
 
 A closure may be returned as a result of evaluation, in which case all
 or part of a context may have to be captured in the closure even after
@@ -833,18 +834,20 @@ add3 is adder 3
 add3 5
 ```
 
-When we evaluate `add3`, a binding `N is 3` is created. Then `adder N`
-returns `(lambda X is X + N)` with a closure that captures this binding.
-The returned value for `add3` will therefore be a closure similar to
-the following:
+When we evaluate `add3`, a binding `N is 3` is created in a new context
+that contains declaration `N is 3`. That context can simply be written
+as `{ N is 3 }`. A context with an additional binding for `M is "Hello"`
+ would be something like `{ N is 3; M is "Hello" }`.
 
-```xl
-(N is 3).(lambda X is X + N)
-```
+The value returned by `adder N` lives in that newly created context.
+In other words,  `adder N` does not just return `(lambda X is X + N)`,
+but something like `{N is 3}.(lambda X is X + N)`, a closure that
+captures the bindings necessary for evaluation.
 
 This closure can correctly be evaluated even in a context where there
 is no binding for `N`, like the global context after the evaluation
-of `add3`.
+of `add3`. This ensures that `add3 5` will correctly evaluate to `8`,
+because the value `N is 3` is captured in `CONTEXT3`.
 
 
 ## Memoization
