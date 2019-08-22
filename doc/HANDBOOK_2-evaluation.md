@@ -692,7 +692,7 @@ in XL for statements, but also in the following cases:
    ```
 
 3. When the same name is used more than once for a formal parameter,
-   as in the following optimmization:
+   as in the following optimization:
    ```xl
    A - A    is 0
    ```
