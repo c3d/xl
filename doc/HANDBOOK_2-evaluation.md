@@ -634,12 +634,12 @@ if shape1 intersects shape2 then    // selects the right combination
 > dispatch along a single axis, based on the type of the object
 > argument. C++ also features a special syntax, `shape.Draw()`, for calls
 > with dynamic dispatch, which differs from the C-style syntax for
-> function calls, `Draw(shape)`. The syntax alone makes the `intersect`
+> function calls, `Draw(shape)`. The syntax alone makes the `intersects`
 > example difficult to write in C++.
 
 As another illustration of a complex dynamic dispatch not based on
-types, Tao3D uses theme functions that depend on the slide "theme",
-the slide "master" and the slide "element", as in:
+types, Tao3D uses theme functions that depend on the names of the
+slide theme, master and element, as in:
 
 ```xl
 theme_font "Christmas", "main", "title"         is font "Times"
