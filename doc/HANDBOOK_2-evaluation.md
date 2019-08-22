@@ -776,7 +776,8 @@ of `N`.
 
 Deferred evaluation can also be used to implement "short circuit"
 boolean operators. The following code for the `and` operator will not
-evaluate `Condition` if its left operand is `false`.
+evaluate `Condition` if its left operand is `false`, making this
+implementation of `and` more efficient than the one given earlier:
 
 ```xl
 [[true]]  and Condition is Condition
