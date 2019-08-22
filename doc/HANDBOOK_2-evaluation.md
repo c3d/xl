@@ -642,10 +642,10 @@ types, Tao3D uses theme functions that depend on the names of the
 slide theme, master and element, as in:
 
 ```xl
-theme_font "Christmas", "main", "title"         is font "Times"
+theme_font "Christmas", "main",       "title"   is font "Times"
 theme_font "Christmas", SlideMaster", "code"    is font "Menlo"
-theme_font "Christmas", SlideMaster, SlideItem  is font "Palatino"
-theme_font SlideTheme, SlideMaster, SlideItem   is font "Arial"
+theme_font "Christmas", SlideMaster,  SlideItem is font "Palatino"
+theme_font SlideTheme,  SlideMaster,  SlideItem is font "Arial"
 ```
 
 As the example above illustrates, the XL approach to dynamic dispatch
