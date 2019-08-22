@@ -403,7 +403,7 @@ following conditions is true:
   respective operands in the expression. For example, pattern
   `X:integer+Y:integer` will match `2+3` but not `A-B` nor `"A" + "B"`.
   This works both for patterns and sub-patterns. For sub-patterns, if
-  `E` is a name, then its value can be _decomposed_. For example,
+  `E` is a name, then its value can be _split_. For example,
   `write Items` can match `write Head, Tail` if there is a binding
   like `Items is "Hello", "World"` in the current context.
 
@@ -415,7 +415,7 @@ following conditions is true:
   > This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
   > `Tail is 2,3`. In the evaluation of the body with these bindings,
   > `write Tail` will then match the same declaration again with
-  > `Tail` being decomposed, resulting in bindings `Head is 2` and `Tail is 3`.
+  > `Tail` being split, resulting in bindings `Head is 2` and `Tail is 3`.
 
 * The pattern `P` is an `integer`, `real` or `text` constant, or a
   [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
@@ -537,9 +537,9 @@ in order to compare the value against the candidates. If the value is
 second definition will be used. Otherwise, the third definition will
 be used.
 
-A binding may contain a value that may itself need to be _decomposed_
-in order to be tested against the formal parameters. This is used in
-the implementation of `write_line`:
+A binding may contain a value that may itself need to be split in
+order to be tested against the formal parameters. This is used in the
+implementation of `write_line`:
 
 ```xl
 write_line Items        is write Items; write_line
@@ -559,7 +559,7 @@ CONTEXT is
 
 When evaluating `write Items`, the various candidates for `write`
 include `write Head, Rest`, and this will be the one selected after
-decomposition of `Items`, causing the context to become:
+splitting `Items`, causing the context to become:
 
 ```xl
 CONTEXT is
@@ -1105,7 +1105,7 @@ It is not clear how such a name would be called as a function either,
 since some of the arguments may themselves contain arbitrary parse
 trees, as we have seen for the definition of `write_line`, where the
 single `Items` parameter may actually be a comma-separated list of
-arguments that will be decomposed when calling `write`.
+arguments that will be split when calling `write`.
 
 XL offers a neat solution to these problems, however. Consider the
 standard definition of `factorial`:
