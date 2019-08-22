@@ -600,9 +600,6 @@ draw P:polygon      is /* ... implementation for polygon class ... */
 draw Something      // Calls the right implementation based type of Something
 ```
 
-> **NOTE** This is relatively similar to the notion of _virtual
-> function_ in C++, although the implementaiton is likely to be different.
-
 A single dynamic dispatch may require multiple tests on different
 arguments. For example, the `and` binary operator can be defined
 (somewhat inefficiently) as follows:
@@ -629,6 +626,15 @@ X:rectangle intersects Y:circle     as boolean  is ... // two circles
 ...
 ```
 
+> **NOTE** Type-based dynamic dispatch is relatively similar to the
+> notion of _virtual function_ in C++, although the XL implementation is
+> likely to be quite different. The C++ approach only allows dynamic
+> dispatch along a single axis, based on the type of the object
+> argument. C++ also features a special syntax, `shape.Draw()`, for calls
+> with dynamic dispatch, which differs from the C-style syntax for
+> function calls, `Draw(shape)`. The syntax alone makes the `intersect`
+> example difficult to write in C++.
+
 As another illustration of a complex dynamic dispatch not based on
 types, Tao3D uses theme functions that depend on the slide "theme",
 the slide "master" and the slide "element", as in:
@@ -640,12 +646,9 @@ theme_font "Christmas", SlideMaster, SlideItem  is font "Palatino"
 theme_font SlideTheme, SlideMaster, SlideItem   is font "Arial"
 ```
 
-Pattern matching makes it possible to quickly express both the special
-cases and the general case.
-
-> **NOTE** This is different from C++, for instance, where built-in
-> dynamic dispatch ("virtual functions") works along a single axis at
-> a time, and only based on the type of the value.
+As the example above illustrates, the XL approach to dynamic dispatch
+takes advantage of pattern matching to allow complex combination of
+argument tests.
 
 
 ## Immediate evaluation
