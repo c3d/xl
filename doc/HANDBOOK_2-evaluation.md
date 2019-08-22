@@ -125,9 +125,11 @@ are one of:
   processing in all three executation phases.
 * A `syntax` definition, which only plays a role during parsing is
   ignored during the declaration and evaluation phases.
-* An infix `is`, which is called a _definition_, or an infix `:` or
-  `as`, which are called _type annotations_. Definitions and type
-  annotations are collectively called _declarations_, and are
+* An infix `is`, which is called a _definition_, an infix `:` or
+  `as`, which are called _type annotations_, or an infix assignment
+  operator `:=` with a type annotation on the left, called a _variable
+  initialization_. Definitions, type  annotations and variable
+  initializations are collectively called _declarations_, and are
   processed during the [declaration phase](#declaration-phase).
 * Anything else, which is called a _statement_ and is processed during the
   [evaluation phase](#evaluation-phase).
@@ -717,11 +719,13 @@ in a given statement.
 ## Deferred evaluation
 
 In the cases where immediate evaluation is not required, an argument
-will be bound to a formal parameter as is, without evaluation. This is
-called _deferred evaluation_. In that case, the argument will be
-evaluated every time this is required to evaluate the formal argument.
+will be bound to a formal parameter in such a way that an evaluation
+of the formal argument in the body of the declaration will evaluate
+the original expression in the original context. This is called
+_deferred evaluation_. The original expression will be evaluated every
+time the parameter is evaluated.
 
-Consider the canonical definition of `while` loops:
+To understand these rules, consider the canonical definition of `while` loops:
 
 ```xl
 while Condition loop Body is
@@ -742,7 +746,7 @@ while N <> 1 loop
     write_line N
 ```
 
-The definition of `while` given earlier only works because `Condition`
+The definition of `while` given above only works because `Condition`
 and `Body` are evaluated multiple times. The context when evaluating
 the body of the definition is somewhat equivalent to:
 
@@ -759,16 +763,9 @@ CONTEXT is
 ```
 
 In the body of the `while` definition, `Condition` must be evaluated
-because it is tested against known value `true` in the definition of
-`if-then-else`:
-
-```xl
-if [[true]]  then TrueBody      is TrueBody
-if [[false]] then TrueBody      is false
-```
-
-In that same definition for `while`, `Body` must be evaluated because
-it is a statement.
+because it is tested against metabox `[[true]]` and `[[false]]` in the
+definition of `if-then-else`. In that same definition for `while`,
+`Body` must be evaluated because it is a statement.
 
 The value of `Body` or `Condition` is not changed by them being evaluated.
 In our example, the `Body` and `Condition` passed in the recursive
@@ -938,7 +935,7 @@ count_vowels InputText is
         Item in RefItem is Item = RefItem
         C in 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', Y'
 
-    Count is 0
+    Count : integer := 0
     for C in InputText loop
         if is_vowel C then
             Count += 1
