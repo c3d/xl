@@ -592,10 +592,10 @@ implementation based on the class of the `shape` object.
 In XL, this can be written as follows:
 
 ```xl
-draw S:shape        is /* ... implementation for shape class ... */
 draw R:rectangle    is /* ... implementation for rectangle class ... */
 draw C:circle       is /* ... implementation for circle class ... */
 draw P:polygon      is /* ... implementation for polygon class ... */
+draw S:shape        is /* ... implementation for shape class ... */
 
 draw Something      // Calls the right implementation based type of Something
 ```
@@ -618,10 +618,11 @@ cases. Consider for example an operator that checks if two shapes
 intersect. In XL, this can be written as follows:
 
 ```xl
-X:shape     intersects Y:shape      as boolean  is ... // general case
 X:rectangle intersects Y:rectangle  as boolean  is ... // two rectangles
 X:circle    intersects Y:circle     as boolean  is ... // two circles
+X:circle    intersects Y:rectangle  as boolean  is ... // rectangle & circle
 X:polygon   intersects Y:polygon    as boolean  is ... // two polygons
+X:shape     intersects Y:shape      as boolean  is ... // general case
 
 if shape1 intersects shape2 then    // selects the right combination
     write_line "The two shapes touch"
