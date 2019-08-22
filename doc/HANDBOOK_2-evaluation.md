@@ -665,7 +665,7 @@ in XL for statements, but also in the following cases:
 1. When the formal parameter being checked has a type annotation, like
    `Radius` in our example, and when the annotation type does not
    match the type associated to the argument parse tree. Immediate
-   evaluation is required in such cases order to check if the argument
+   evaluation is required in such cases in order to check if the argument
    type is of the expected type after evaluation.  Evaluation is *not*
    required if the argument and the declared type for the formal
    parameter match, as in the following example:
