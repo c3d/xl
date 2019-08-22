@@ -707,47 +707,11 @@ in XL for statements, but also in the following cases:
    syracuse X+5 // Must evaluate "X+5" for the conditional clause
    ```
 
-Immediate evaluation for expressions is performed in the order required
-to test pattern matching, and from left to right, depth first, while testing
-a given pattern.
-
-A sub-expression will only be computed once irrespective of the number
-of overload candidates or tests performed on the value. Once a
-sub-expression has been computed, the computed value is always used
-for testing or binding that specific sub-expression, and only that
-sub-expression.
-
-For example, consider the following declarations:
-
-```xl
-X + 0               is Case1(X)
-X + Y when Y > 25   is Case2(X, Y)
-X + Y * Z           is Case3(X,Y,Z)
-```
-
-If you evaluate an expression like `A + foo B`, then `foo B` will be
-evaluated in order to test the first candidate, and the result will be
-compared against `0`. The test `Y > 25` will then be performed with
-the result of that evaluation, because it is the same sub-expression,
-`foo B`, which has already been evaluated.
-
-On the other hand, if you evaluate `A + B * foo C`, then `B * foo C`
-will be evaluated to match against `0`.  Like previously, the evaluated
-result will also be used to test `Y > 25`. If that test fails, the third
-declaration remains a candidate, because having evaluated `B * foo C`
-does not preclude the consideration of different sub-expressions such
-as `B` and `foo C`. However, if the evaluation of `B * foo C` required
-the evaluation of `foo C`, then that evaluated version will be used as
-a binding for `Z`.
-
-> ** RATIONALE ** These rules are not just optimizations. They are necessary
-> to preserve the semantics of the language during dynamic dispatch for
->  expressions that are not constant. For example, consider a call like
-> `fib(random(3..10))`, which evaluates the `fib` function with a random
->  value between `3` and `10`. Every time `random` is evaluated, it returns
-> a different, pseudo-random value. The rules above guarantee that the
-> _same_ value will be used when testing against `0`, `1` or as a
-> binding with `N`.
+Evaluation of sub-expressions is performed in the order required to
+test pattern matching, and from left to right, depth first. Patterns
+are tested in the order of declarations. Computed values for sub-expressions
+are [memoized](#memoization), meaning that they are computed at most once
+in a given statement.
 
 
 ## Deferred evaluation
@@ -880,10 +844,50 @@ the following:
 (N is 3).(lambda X is X + N)
 ```
 
- This closure can correctly be evaluated even in a context where there
- is no binding for `N`, like the global context after the evaluation
- of `add3`.
+This closure can correctly be evaluated even in a context where there
+is no binding for `N`, like the global context after the evaluation
+of `add3`.
 
+
+## Memoization
+
+A sub-expression will only be computed once irrespective of the number
+of overload candidates or tests performed on the value. Once a
+sub-expression has been computed, the computed value is always used
+for testing or binding that specific sub-expression, and only that
+sub-expression.
+
+For example, consider the following declarations:
+
+```xl
+X + 0               is Case1(X)
+X + Y when Y > 25   is Case2(X, Y)
+X + Y * Z           is Case3(X,Y,Z)
+```
+
+If you evaluate an expression like `A + foo B`, then `foo B` will be
+evaluated in order to test the first candidate, and the result will be
+compared against `0`. The test `Y > 25` will then be performed with
+the result of that evaluation, because it is the same sub-expression,
+`foo B`, which has already been evaluated.
+
+On the other hand, if you evaluate `A + B * foo C`, then `B * foo C`
+will be evaluated to match against `0`.  Like previously, the evaluated
+result will also be used to test `Y > 25`. If that test fails, the third
+declaration remains a candidate, because having evaluated `B * foo C`
+does not preclude the consideration of different sub-expressions such
+as `B` and `foo C`. However, if the evaluation of `B * foo C` required
+the evaluation of `foo C`, then that evaluated version will be used as
+a binding for `Z`.
+
+> ** RATIONALE ** These rules are not just optimizations. They are necessary
+> to preserve the semantics of the language during dynamic dispatch for
+>  expressions that are not constant. For example, consider a call like
+> `fib(random(3..10))`, which evaluates the `fib` function with a random
+>  value between `3` and `10`. Every time `random` is evaluated, it returns
+> a different, pseudo-random value. The rules above guarantee that the
+> _same_ value will be used when testing against `0`, `1` or as a
+> binding with `N`.
 
 
 ## Self
