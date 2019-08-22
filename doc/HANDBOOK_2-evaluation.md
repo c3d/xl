@@ -847,7 +847,7 @@ captures the bindings necessary for evaluation.
 This closure can correctly be evaluated even in a context where there
 is no binding for `N`, like the global context after the evaluation
 of `add3`. This ensures that `add3 5` will correctly evaluate to `8`,
-because the value `N is 3` is captured in `CONTEXT3`.
+because the value `N is 3` is captured in the closure.
 
 
 ## Memoization
@@ -869,7 +869,7 @@ X + Y * Z           is Case3(X,Y,Z)
 If you evaluate an expression like `A + foo B`, then `foo B` will be
 evaluated in order to test the first candidate, and the result will be
 compared against `0`. The test `Y > 25` will then be performed with
-the result of that evaluation, because it is the same sub-expression,
+the result of that evaluation, because the test concerns a sub-expression,
 `foo B`, which has already been evaluated.
 
 On the other hand, if you evaluate `A + B * foo C`, then `B * foo C`
