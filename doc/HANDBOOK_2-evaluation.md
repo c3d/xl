@@ -621,9 +621,10 @@ intersect. In XL, this can be written as follows:
 X:shape     intersects Y:shape      as boolean  is ... // general case
 X:rectangle intersects Y:rectangle  as boolean  is ... // two rectangles
 X:circle    intersects Y:circle     as boolean  is ... // two circles
-X:circle    intersects Y:rectangle  as boolean  is ... // two circles
-X:rectangle intersects Y:circle     as boolean  is ... // two circles
-...
+X:polygon   intersects Y:polygon    as boolean  is ... // two polygons
+
+if shape1 intersects shape2 then    // selects the right combination
+    write_line "The two shapes touch"
 ```
 
 > **NOTE** Type-based dynamic dispatch is relatively similar to the
