@@ -679,13 +679,14 @@ in XL for statements, but also in the following cases:
 2. When the part of the pattern being checked is a constant or a
    [metabox](#metabox). For example, this is the case in the definition of the
    factorial below, where the expression `(N-1)` must be evaluated in order
-   to check if it matches the value `0`, in order to verify if
-   `(N-1)!` matches `0!`, or in the definition of `if-then-else`,
-   where the condition must be evaluated to be checked against `true`
-   or `false`:
+   to check if it matches the value `0` in pattern `0!`:
    ```xl
    0! is 1
    N! is N * (N-1)!
+   ```
+   This is also the case for the condition in `if-then-else` statements,
+   to check if that condition matches either `true` or `false`:
+   ```xl
    if [[true]]  then TrueBody else FalseBody    is TrueBody
    if [[false]] then TrueBody else FalseBody    is FalseBody
    ```
