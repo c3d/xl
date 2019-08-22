@@ -822,6 +822,13 @@ The notation `CONTEXT0.Condition` means that we evaluate `Condition` using
 and is explained below. A context that refers to an earlier context is
 called a _closure_.
 
+In the above example, we gave an arbitrary name to the closure,
+`CONTEXT0`, which is the same for both `Condition` and `Body`. This
+name is indented to underline that the _same_ closure is used both for
+`Condition` and `Body`. In particular, if the body contains a
+context-modifying operation like `N -= 1`, that will modify the same
+`CONTEXT0` used to evaluate the condition `N > 1`.
+
 A closure may be returned as a result of evaluation, in which case all
 or part of a context may have to be captured in the closure even after
 it would otherwise be normally discarded.
@@ -848,6 +855,18 @@ This closure can correctly be evaluated even in a context where there
 is no binding for `N`, like the global context after the evaluation
 of `add3`. This ensures that `add3 5` will correctly evaluate to `8`,
 because the value `N is 3` is captured in the closure.
+
+When a closure is pattern-matched, the parse tree shape considered for
+testing is not the scoping operator, but the actual expression. If
+argument splitting is necessary, then the result is two closures. For
+example, if `Items is CONTEXT0.(A, B, C)` is checked against a pattern
+like `Head, Tail`, then this results in:
+
+```xl
+CONTEXT is
+    Head is CONTEXT0.A
+    Tail is CONTEXT0.(B, C)
+```
 
 
 ## Memoization
