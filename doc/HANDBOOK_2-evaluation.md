@@ -479,9 +479,9 @@ declaration matches if it matches the whole shape of the tree.
 > some benefits, notably with respect to making the code more robust
 > to reorganizations. For this reason, this remains an open option.
 > However, it is likely to be more complicated with the more dynamic
-> semantics of XL, notably for dynamic dispatch, where the
-> runtime cost of finding the proper candidate might be a bit too high
-> to be practical.
+> semantics of XL, notably for [dynamic dispatch](#dynamic-dispatch),
+> where the runtime cost of finding the proper candidate might be a
+> bit too high to be practical.
 
 For example, `X+1` can match any of the declarations patterns below:
 
@@ -574,30 +574,51 @@ a given parse tree may depend on the dynamic value of the
 arguments. In the Fibonacci example above, `fib(N-1)` may select any
 of the three declarations of `fib` depending on the actual value of
 `N`. This runtime selection of declarations based on the value of
-arguments is called _dynamic dispatch_. Dynamic dispatch is an
-important feature to support well-known techniques such as
-object-oriented programming.
+arguments is called _dynamic dispatch_.
 
-Testing can happen for the value of multiple arguments. Consequently,
-dynamic dispatch in XL can apply to multiple arguments, an approach
-that is sometimes called _multi-methods_ in the object-oriented
-world. This is very different from C++, for instance, where built-in
-dynamic dispatch ("virtual functions") works along a single axis at a
-time, and only based on the type of the value.
+In the case of `fib`, the selection of the correct definition is a
+function of an `integer` argument. This is not the only kind of test
+that can be made. In particular, dynamic dispatch based on the
+_type_ of the argument is an important feature to support well-known
+techniques such as object-oriented programming.
 
-This makes the XL version of dynamic dispatch sometimes harder to
-optimize, but has interesting use cases. Consider for example the
-archetypal object-oriented `shape` class, with derived classes such as
-`rectangle`, `circle`, `polygon`, and so on. In C++, it is easy to
-impement a `Shape::Draw` method, because selecting the correct
-implementation depends on a single argument, and this is the kind of
-example that is often given in C++ books to illustrate the benefits of
-dynamic dispatch.
+Let's consider an archetypal example for object-oriented programming,
+the `shape` class, with derived classes such as `rectangle`, `circle`,
+`polygon`, and so on. Textbooks typically illustrate dynamic dispatch
+using a `Draw` method that features different implementations
+depending on the class. Dynamic dispatch selects the appropriate
+implementation based on the class of the `shape` object.
 
-On the other hand, implementing a test detecting if two shapes
-intersect is not as easy in C++, since in that case, the correct
-implementation depends the type of two arguments, not just one. With XL,
-it is straightforward to implement, even if somewhat verbose:
+In XL, this can be written as follows:
+
+```xl
+draw S:shape        is /* ... implementation for shape class ... */
+draw R:rectangle    is /* ... implementation for rectangle class ... */
+draw C:circle       is /* ... implementation for circle class ... */
+draw P:polygon      is /* ... implementation for polygon class ... */
+
+draw Something      // Calls the right implementation based type of Something
+```
+
+> **NOTE** This is relatively similar to the notion of _virtual
+> function_ in C++, although the implementaiton is likely to be different.
+
+A single dynamic dispatch may require multiple tests on different
+arguments. For example, the `and` binary operator can be defined
+(somewhat inefficiently) as follows:
+
+```xl
+[[false]] and [[false]]     is false
+[[false]] and [[true]]      is false
+[[true]]  and [[false]]     is false
+[[true]]  and [[true]]      is true
+```
+
+When applied to types, this capability is sometimes called _multi-methods_
+in the object-oriented world. This makes the XL version of dynamic
+dispatch somewhat harder to optimize, but has interesting use
+cases. Consider for example an operator that checks if two shapes
+intersect. In XL, this can be written as follows:
 
 ```xl
 X:shape     intersects Y:shape      as boolean  is ... // general case
@@ -608,13 +629,23 @@ X:rectangle intersects Y:circle     as boolean  is ... // two circles
 ...
 ```
 
-As another illustration, Tao3D uses theme functions that depend on the
-slide "theme", the slide "master" and the slide "element", as in:
+As another illustration of a complex dynamic dispatch not based on
+types, Tao3D uses theme functions that depend on the slide "theme",
+the slide "master" and the slide "element", as in:
 
 ```xl
-theme_font "WhiteChristmas", "main", "title"    is font "Alex Brush"
+theme_font "Christmas", "main", "title"         is font "Times"
+theme_font "Christmas", SlideMaster", "code"    is font "Menlo"
+theme_font "Christmas", SlideMaster, SlideItem  is font "Palatino"
 theme_font SlideTheme, SlideMaster, SlideItem   is font "Arial"
 ```
+
+Pattern matching makes it possible to quickly express both the special
+cases and the general case.
+
+> **NOTE** This is different from C++, for instance, where built-in
+> dynamic dispatch ("virtual functions") works along a single axis at
+> a time, and only based on the type of the value.
 
 
 ## Immediate evaluation
