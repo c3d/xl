@@ -218,10 +218,16 @@ add3            is      adder 3
  // This will compute 8
  add3 5
 ```
-The notation `lambda X`, inspired by
-[lambda calculus](https://en.wikipedia.org/wiki/Lambda_calculus),
-means that we match the catch-all pattern `X`. This makes XL a
-functional language in the traditional sense.
+
+The notation `lambda X`, which can also be written `\X`, is inspired by
+[lambda calculus](https://en.wikipedia.org/wiki/Lambda_calculus).
+It makes it possible to create patterns that match entire expressions.
+In other words, `X is 0` defines a name, and only the expression `X`
+matches that definition, whereas `\X is 0` defines a "catch-all" pattern
+that will match `35` or `"ABC"`. This _lambda notation_ can be used to build
+something that behaves almost exactly like an _anonymous function_ in
+functional languages, although the way it actually works internally is
+[still based on pattern matching](HANDBOOK_2-evaluation.md#scoping).
 
 > **NOTE** The current implementations of XL special-case single-defintion
 > contexts, and `lambda` can be omitted in that case. In a normal
@@ -231,8 +237,8 @@ functional language in the traditional sense.
 > ```
 > adder N is (X is N + X)
 > ```
-> However, this is not consistent with the rest of the language.
-> It is likely that `lambda` will be required in all future implementations.
+> However, this is not consistent with the rest of the language, and
+> `lambda` will be required in future implementations.
 
 </details>
 <details>
