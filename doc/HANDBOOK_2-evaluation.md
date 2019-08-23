@@ -808,65 +808,92 @@ That would not work well, since evaluating `Condition` would require
 evaluating `Condition`, and indefinitely so. Something needs to be
 done to address this.
 
-In reality, the bindings must look more like this, which is called a _closure_:
+In reality, the bindings must look more like this:
 
 ```xl
 CONTEXT is
-    Condition is CONTEXT0.Condition
-    Body is CONTEXT0.{ N-= 1 }
+    Condition is CONTEXT0 { Condition }
+    Body is CONTEXT0 { N-= 1 }
     CONTEXT0
 ```
 
-The notation `CONTEXT0.Condition` means that we evaluate `Condition` using
-`CONTEXT0` as the context. This is called the [scoping operator](#scoping)
-and is explained below. A context that refers to an earlier context is
-called a _closure_.
+The notation `CONTEXT0 { Condition }` means that we evaluate `Condition` in
+context `CONTEXT0`. This one of the [scoping operators](#scoping),
+which is explained in more details below. A prefix with a context on
+the left and a block on the right is called a _closure_.
 
-In the above example, we gave an arbitrary name to the closure,
-`CONTEXT0`, which is the same for both `Condition` and `Body`. This
-name is indented to underline that the _same_ closure is used both for
-`Condition` and `Body`. In particular, if the body contains a
-context-modifying operation like `N -= 1`, that will modify the same
-`CONTEXT0` used to evaluate the condition `N > 1`.
+In the above example, we gave an arbitrary name to the closure, `CONTEXT0`,
+which is the same for both `Condition` and `Body`. This name is
+indented to underline that the _same_ context is used to evaluate both.
+In particular, if `Body` contains a context-modifying operation like
+`N -= 1`, that will modify the same  `N` in the same `CONTEXT0` that
+will later be used to evaluate `N > 1` while evaluating `Condition`.
 
 A closure may be returned as a result of evaluation, in which case all
-or part of a context may have to be captured in the closure even after
-it would otherwise be normally discarded.
+or part of a context may need to be captured in the returned value,
+even after that context would otherwise normally be discarded.
 
-For example, consider the following code:
+For example, consider the following code defining an anonymous function:
 
 ```xl
-adder N is  (lambda X is X + N)
-add3 is adder 3
-add3 5
+adder N is  { lambda X is X + N }
+add3 is adder 3     // Creates a function that adds 3 to its input
+add3 5              // Computes 8
 ```
 
 When we evaluate `add3`, a binding `N is 3` is created in a new context
 that contains declaration `N is 3`. That context can simply be written
 as `{ N is 3 }`. A context with an additional binding for `M is "Hello"`
- would be something like `{ N is 3; M is "Hello" }`.
+could be written something like `{ N is 3; M is "Hello" }`.
 
-The value returned by `adder N` lives in that newly created context.
-In other words,  `adder N` does not just return `(lambda X is X + N)`,
-but something like `{N is 3}.(lambda X is X + N)`, a closure that
-captures the bindings necessary for evaluation.
+The value returned by `adder N` is not simply `{ lambda X is X + N }`,
+but something like `{N is 3} { lambda X is X + N }`, i.e. a closure that
+captures the bindings necessary for evaluation of the body `X + N` at
+a later time.
 
 This closure can correctly be evaluated even in a context where there
-is no binding for `N`, like the global context after the evaluation
-of `add3`. This ensures that `add3 5` will correctly evaluate to `8`,
-because the value `N is 3` is captured in the closure.
+is no longer any binding for `N`, like the global context after the
+finishing the evaluation of `add3`. This ensures that `add3 5` correctly
+evaluates as `8`, because the value `N is 3` is _captured_ in the closure.
 
-When a closure is pattern-matched, the parse tree shape considered for
-testing is not the scoping operator, but the actual expression. If
-argument splitting is necessary, then the result is two closures. For
-example, if `Items is CONTEXT0.(A, B, C)` is checked against a pattern
-like `Head, Tail`, then this results in:
+A closure looks like a prefix `CONTEXT EXPR`, where `CONTEXT` and `EXPR`
+are blocks, and where `CONTEXT` is a sequence of declarations.
+Evaluating such a closure is equivalent to evaluating `EXPR` in the
+current context with `CONTEXT` as a local context, i.e. with the
+declarations in `CONTEXT` possibly shadowing declarations in the
+current context.
+
+In particular, if argument splitting is required to evaluate the expression,
+each of the split arguments shares the same context. Consider the `write`
+and `write_line` implementation, with the following declarations:
 
 ```xl
-CONTEXT is
-    Head is CONTEXT0.A
-    Tail is CONTEXT0.(B, C)
+write Head, Tail        is write Head; write Tail
+write_line Items        is write Items; write_line
 ```
+
+When evaluating `{ X is 42 } { write_line "X=", X }`, `Items` will be
+bound with a closure that captures the `{ X is 42 }` context:
+
+```xl
+CONTEXT1 is
+    Items is { X is 42 } { "X=", X }
+```
+
+In turn, this will lead to the evaluation of `write Items`, where
+`Items` is evaluated using the `{ X is 42 }` context. As a result, the
+bindings while evaluating `write` will be:
+
+```xl
+CONTEXT2 is
+    Head is CONTEXT1 { "X=" }
+    Tail is CONTEXT1 { X }
+    CONTEXT1 is { X is 42 }
+```
+
+The whole processus ensures that, when `write` evaluates `write Tail`,
+it computes `X` in a context where the correct value of `X` is
+available, and `write Tail` will correctly write `42`.
 
 
 ## Memoization
@@ -1008,22 +1035,53 @@ refer to `Count` or to `InputText`.
 
 ## Scoping
 
-A common idiom in XL is to have a body that consists only of declarations,
-without any statement. Definitions that consist of only declarations
-are called _maps_. When evaluating a map, the result is the map,
-i.e. the list of declarations in the body.
+A value in XL can be a list of declarations, as we have seen with closures.
+For example, `{ Zero is 0; One is 1 }` is a block that only contains
+two declarations for `Zero` and `One`. Such a list of declarations
+evaluates as itself, and is often called a _map_.
 
-For example, evaluating `digit_spelling` in the code below returns the
-sequence of declarations in the body:
+There are two primary operations for a map:
+
+1. _Indexing_ uses the map as a prefix, for example `digit_spelling 0`
+   which evaluates the operand in the current context, and then
+   evaluates the result as if with the scoping operator. Indexing is
+   often written using square brackets, as in `digit_spelling[0]`, in
+   order to better express the intent. This notation is a nod to
+   existing practice in other programming languages such as C.
+
+2. The _scoping operator_ is an infix `.` with the map on the left,
+   such as `digit_spelling.0`. This evaluates the right operand in a
+   context that consists _only_ of the declarations of the value on
+   the left, excluding the current context.
+
+
+
+The body of a definition can consist of only declarations. Such a
+declaration is called a _map_. A map evaluates as itself, i.e. the
+value of the map is the list of declarations in its body.
+
+For example, consider that you need to convert numbers spelled out in
+English into their numerical values. The spellings are somewhat
+arbitrary, so it's not very easy to "compute" that value. A map can
+help for such cases, as the following code illustrates:
 
 ```xl
-digit_spelling is
-    0 is "Zero"
-    1 is "One"
-    2 is "Two"
-    3 is "Three"
-    ...
+digit_value is
+    "zero"  is 0
+    "one"   is 1
+    "two"   is 2
+    "three" is 3
+    "four"  is 4
+    "five"  is 5
+    "six"   is 6
+    "seven" is 7
+    "eight" is 8
+    "nine"  is 9
 ```
+
+When you evaluate `digit_value`, the result is the list of declarations.
+This
+
 
 There are two primary use cases for maps.
 
