@@ -1219,3 +1219,8 @@ languages call _anonymous functions_, or sometimes _lambda function_
 in reference to Church's lambda calculus. The way this works, however,
 is markedly different internally, and is detailed in the section on
 [scoping](#scoping) above.
+
+-------------------------------------------------------------------------------
+
+Previous: [Syntax](HANDBOOK_1-syntax.md)
+Next: [Compilation](HANDBOOK_3-compilation.md)
