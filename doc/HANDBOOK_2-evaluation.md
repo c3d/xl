@@ -424,7 +424,11 @@ following conditions is true:
   expression `E` needs to be evaluated to check if it matches. This
   case applies to sub-patterns, as in `0! is 1`, as well as to
   top-level patterns, as in `0 is "Zero"`. This last case is useful in
-  [maps](#scoping).
+  [maps](#scoping). Evaluating an expression against a top-level
+  constant will rule out all top-level constants. For example,
+  pattern-matching expression `A` against top-level pattern `0` will
+  trigger the evaluation of `A`, but that evaluation will not consider
+  the top-level pattern `0` again.
 
 * The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
   that case, a binding `N is A` is added at the top of the local context
@@ -963,6 +967,13 @@ order to ensure that comma-separated lists are not evaluated, you can write :
 X, Y    is self
 ```
 
+Note that the following values also evaluate as themselves:
+
+1. `integer`, `real` or `text` constants
+
+2. Sequences of declarations, like `{ Zero is 0; One is 1 }`, in particular
+   the contexts captured for [closures](#closures).
+
 
 ## Nested declarations
 
@@ -1035,124 +1046,124 @@ refer to `Count` or to `InputText`.
 
 ## Scoping
 
-A value in XL can be a list of declarations, as we have seen with closures.
-For example, `{ Zero is 0; One is 1 }` is a block that only contains
-two declarations for `Zero` and `One`. Such a list of declarations
-evaluates as itself, and is often called a _map_.
+A list of declarations, similar to the kind that is used in
+[closures](#closures), is called a _map_ and evaluates as itself.
+One of the primary uses for maps is _scoping_, in other words defining
+a common _scope_ for the declarations that it contains. Since the
+[declaration phase](#declaration-phase) operates on entire blocks, all
+declarations within a scope are visible at the same time.
 
-There are two primary operations for a map:
+There are two primary operations that apply to a map:
 
-1. _Indexing_ uses the map as a prefix, for example `digit_spelling 0`
-   which evaluates the operand in the current context, and then
-   evaluates the result as if with the scoping operator. Indexing is
-   often written using square brackets, as in `digit_spelling[0]`, in
-   order to better express the intent. This notation is a nod to
-   existing practice in other programming languages such as C.
+1. _Applying_ a map as a prefix to an operand, as we saw with closures,
+   evaluates the operand in the context defined by overlaying the map
+   definitions on top of the current context.
 
-2. The _scoping operator_ is an infix `.` with the map on the left,
-   such as `digit_spelling.0`. This evaluates the right operand in a
-   context that consists _only_ of the declarations of the value on
-   the left, excluding the current context.
+2. _Scoping_ an expression within a map uses the infix `.` operator,
+   where the expression on the right is evaluated in a context that
+   consists _exclusively_ of the declarations in the map on the left.
 
 
+Evaluating a closure is a prime example of map application. The context
+is captured by the closure in a map, and the closure itself is a
+prefix that corresponds to the map application. Such an expression can
+also be created explicitly. For example, `{ X is 40; Y is 2 } { X + Y }`
+will evaluate as `42`, taking `X` and `Y` from the map, and taking the
+declaration used to evaluate `X + Y` from the current context.
 
-The body of a definition can consist of only declarations. Such a
-declaration is called a _map_. A map evaluates as itself, i.e. the
-value of the map is the list of declarations in its body.
-
-For example, consider that you need to convert numbers spelled out in
-English into their numerical values. The spellings are somewhat
-arbitrary, so it's not very easy to "compute" that value. A map can
-help for such cases, as the following code illustrates:
-
-```xl
-digit_value is
-    "zero"  is 0
-    "one"   is 1
-    "two"   is 2
-    "three" is 3
-    "four"  is 4
-    "five"  is 5
-    "six"   is 6
-    "seven" is 7
-    "eight" is 8
-    "nine"  is 9
-```
-
-When you evaluate `digit_value`, the result is the list of declarations.
-This
-
-
-There are two primary use cases for maps.
-
-1. _Indexing_ uses the map as a prefix, for example `digit_spelling 0`
-   which evaluates the operand in the current context, and then
-   evaluates the result as if with the scoping operator. Indexing is
-   often written using square brackets, as in `digit_spelling[0]`, in
-   order to better express the intent. This notation is a nod to
-   existing practice in other programming languages such as C.
-
-2. The _scoping operator_ is an infix `.` with the map on the left,
-   such as `digit_spelling.0`. This evaluates the right operand in a
-   context that consists _only_ of the declarations of the value on
-   the left, excluding the current context.
-
-In short, the difference between indexing and scoping is that indexing
-evaluates in the current context, then evaluates the result within the
-map, whereas scoping only evaluates within the map. In both cases, it
-is an error if there is no match within the map.
-
-The following code illustrates the difference between the two:
+Another common usage for maps is to store declarations where the
+patterns are constant values. For example, you can use a map called
+`digit_spelling` to convert a digit to its English spelling:
 
 ```xl
-A is 0
-my_map is
-    0 is "Zero"
-    1 is "One"
-    Name is "My map"
-my_map[0]       // Valid, returns "Zero"
-my_map.0        // Valid, returns "Zero"
-my_map[A]       // Valid, returns "Zero"
-my_map.A        // Invalid, there is no 'A' in my_map
-my_map[Name]    // Invalid, no "Name" visible here
-my_map.Name     // Valid, returns "My map"
+digit_spelling is
+    0 is "zero"
+    1 is "one"
+    2 is "two"
+    3 is "three"
+    4 is "four"
+    5 is "five"
+    6 is "six"
+    7 is "seven"
+    8 is "eight"
+    9 is "nine"
 ```
 
-There is no real need for the map to be given a name. In particular,
-"anonymous functions" can be used for indexing and scoping, as in the
-following example:
+With this declaration, the expression `digit_spelling 3` evaluates to
+`"three"`. This kind of map application is called _indexing_. A suggested
+style choice is to make the intent more explicit using square brackets,
+as in `digit_spelling[4]`. This is a nod to the syntax of programming
+languages such as C or C++.
+
+When the index is an expression, for example `digit_spelling[A+3]` in
+a context where `A is 2`, we must evaluate `A+3` in current context
+augmented with the declarations in `digit_spelling`. The first candidate
+has pattern `0`.  This requires the evaluation of expression `A+3` to
+check if it matches the value. As indicated [earlier](#pattern-matching),
+this evaluation will not consider constants, since it is performed to match
+a constant.  In other words, it will match the pattern `X+Y` for
+`A+2`, and therefore compute the value `5`. That computed value will fail
+the check against pattern `0`, but because of [memoization](#memoization),
+it will then be used against the various constants in the map. As a result,
+`digit_spelling[A+2]` evaluates as `"five"`.
+
+A map is not restricted to constant patterns. For example, the
+following map performs a more complete spelling conversion for numbers
+below 1000 (the notation `\N` being a shortcut for `lambda N`):
 
 ```xl
-(X is X + 1) (3 + 4)        // Computes 8
-(X is X + 1).(3 + 4)        // Returns
+number_spelling is
+    \N when N<10    is digit_spelling[N]
+    11              is "eleven"
+    12              is "twelve"
+    13              is "thirteen"
+    14              is "fourteen"
+    15              is "fifteen"
+    16              is "sixteen"
+    17              is "seventeen"
+    18              is "eighteen"
+    19              is "nineteen"
+    20              is "twenty"
+    30              is "thirty"
+    40              is "forty"
+    50              is "fifty"
+    60              is "sixty"
+    70              is "seventy"
+    80              is "eighty"
+    90              is "ninety"
+    \N when N<100   is (number_spelling[N/10*10] & " " &
+                        digit_spelling[N mod 10])
+    \N when N<1000  is (digit_spelling[N/100] & " hundred and " &
+                        digit_spelling[N mod 100])
 ```
 
-
-A primary use for maps is to be used as a prefix, which is called
-_indexing_ the map, or alternatively, using the _scoping operator_,
-which is an infix `.`. In the case of `digit_spelling`, the first case
-would be an expression like `digit_spelling 0`, or often, in order to
-indicate the intent
-
-Using a map as a prefix evaluates the right-hand side as if it was a
-single statement at the end of the
-
+Another common idiom is to use a named map to group related declarations.
+This is the basis for the XL module system. For example, consider the
+following declaration:
 
 ```xl
-fib is
-    0 is 1
-    1 is 1
-    N is (fib(N-1) + fib(N-2))
+byte_magic_constants is
+    num_bits    is 8
+    min_value   is 0
+    max_value   is 255
 ```
 
-This definition can be used almost like the definition
+With that declaration, `byte_magic_constants.num_bits` evaluates to `8`.
+A declaration like this can of course be more than a simple name:
 
+```xl
+magic_constants Bits is
+    num_bits    is Bits
+    min_value   is 0
+    max_value   is 2^Bits - 1
+```
 
+In that case, `magic_constants(4).max_values` will evaluate to `15`.
 
-
-The dot notation `X.Y` in XL is called the _scoping operator_. It
-indicates that
-
+This is also exactly what happens when you `import` a module. For example,
+with `import IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in
+the current context that contains the declarations in the module. As a
+result, `IO.write` will refer to the declaration in the module.
 
 
 ## Functions as values
@@ -1171,67 +1182,40 @@ apply Function, Value is Function(Value)
 apply my_function, 1
 ```
 
-One reason for that choice is that [overloading](#overloading) means a
-multiplicity of declarations must often be considered for a single
-expression. Another reason is that declarations can have arbitrarily
-complex patterns. It is not obvious what name should be given to a
-declaration of a pattern like `A in B..C`. A name like `in..` does not
-even "work" syntactically.
+> **RATIONALE** One reason for that choice is that [overloading](#overloading)
+> means a multiplicity of declarations often need to be considered for
+> a single expression. Another reason is that declarations can have
+> arbitrarily complex patterns. It is not obvious what name should be
+> given to a declaration of a pattern like `A in B..C`: a "name" like
+> `in..` does not even "work" syntactically.
+>
+> It is not clear how such a name would be called as a function either,
+> since some of the arguments may themselves contain arbitrary parse
+> trees, as we have seen for the definition of `write_line`, where the
+> single `Items` parameter may actually be a comma-separated list of
+> arguments that will be split when calling `write Items` and matching
+> it to `write Head, Tail`.
 
-It is not clear how such a name would be called as a function either,
-since some of the arguments may themselves contain arbitrary parse
-trees, as we have seen for the definition of `write_line`, where the
-single `Items` parameter may actually be a comma-separated list of
-arguments that will be split when calling `write`.
-
-XL offers a neat solution to these problems, however. Consider the
-standard definition of `factorial`:
-
-```xl
-0! is 1
-N! is N * (N-1)!
-apply Function, Value is Function(Value)
-apply (!), 6
-```
-
-In that case, there are two declarations that constitute the
-definition of the factorial notation `N!`, so it does not really make
-sense to pass `!` around. This example illustrates another obvious
-problem because `N!` is an operator notation, and it's not completely
-self-evident that its name should be something like `!`. How would you name
-the pattern `A*B+C*D`? You can't name it `*+*` since that could be an
-operator in its own right.
-
-If you really want to expose the notation `N!` as a "function object",
-you need to explicitly do so. This is illustrated below with the
-definition of factorial below that is correct XL.
-
+If you need to perform the operation above, it is however quite easy
+to create a map that performs the operation. That map may be given a
+name or be anonymous. The following code example shows two correct
+ways to write such an `apply` call for a factorial definition:
 
 ```xl
-0! is 1
-N! is N * (N-1)!
-factorial is (N is N!)
-apply Function, Value is Function(Value)
-apply factorial, 6
-```
+0!                      is 1
+N!                      is N * (N-1)!
+apply Function, Value   is Function(Value)
 
-You don't even need to give an explicit name to your function. Instead, you
-can pass a definition as an argument, as in the following code:
+// Using an anonymous map to compute 3!
+apply { \N is N! }, 3
 
-```xl
-0! is 1
-N! is N * (N-1)!
-apply Function, Value is Function(Value)
-apply (N is N!), 6
+// Using a named map to compute 5!
+factorial   is { \N is N! }
+apply factorial, 5
 ```
 
 Passing definitions like this might be seen as related to what other
 languages call _anonymous functions_, or sometimes _lambda function_
 in reference to Church's lambda calculus. The way this works, however,
 is markedly different internally, and is detailed in the section on
-[scoping](#scoping) below.
-
-
-
-
-### Tail call optimization
+[scoping](#scoping) above.
