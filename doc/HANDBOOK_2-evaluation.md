@@ -828,7 +828,7 @@ the left and a block on the right is called a _closure_.
 
 In the above example, we gave an arbitrary name to the closure, `CONTEXT0`,
 which is the same for both `Condition` and `Body`. This name is
-indented to underline that the _same_ context is used to evaluate both.
+intended to underline that the _same_ context is used to evaluate both.
 In particular, if `Body` contains a context-modifying operation like
 `N -= 1`, that will modify the same  `N` in the same `CONTEXT0` that
 will later be used to evaluate `N > 1` while evaluating `Condition`.
