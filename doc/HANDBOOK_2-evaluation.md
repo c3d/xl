@@ -1223,4 +1223,4 @@ is markedly different internally, and is detailed in the section on
 -------------------------------------------------------------------------------
 
 Previous: [Syntax](HANDBOOK_1-syntax.md)
-Next: [Compilation](HANDBOOK_3-compilation.md)
+Next: [Compilation](HANDBOOK_3-types.md)

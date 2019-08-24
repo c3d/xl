@@ -212,7 +212,7 @@ two numbers, like for example `cartesian(1,5)`.
 <summary>It can define higher-order functions, i.e. functions that return functions</summary>
 
 ```xl
-adder N         is      (lambda X is N + X)
+adder N         is      { lambda X is N + X }
 add3            is      adder 3
 
  // This will compute 8
