@@ -1,21 +1,134 @@
 # XL Type System
 
-Types are annotations given to the compiler that restrict the kind
-of operations that can be performed on a value. Types also implicitly
-determine the size and binary representation of values. In XL, types
-are defined by the shape of trees that belong to the type.
+A type annotation like `X : integer` indicates that `X` has the
+`integer` type. Types identify which operations that can be performed
+on a value. For example, knowing that `X` is an `integer` allows
+expression `X+X` to match declaration pattern `X:integer+Y:integer`.
 
-Two operators are used for type annotation, `X:T` and `X as T`.
+In XL, types are defined by the _shape_ of trees that belong to the
+type. The expression `type(Pattern)` returns the type for the given
+type declaration pattern. For example, the type for all additions
+where the first value is a `real` is `type(A:real+B)`.
+
+This approach to typing means in particular that, unlike many other
+languages, a same value can belong to _multiple_ types. For example,
+the expression `2+3*5` belongs to `type(A+B*C)`, but also to
+`type(A:integer+B:integer)`, or to `infix`.
+
+
+## Type annotations
+
+Two infix operators can be used for type annotations, `X:T` and `X as T`.
 Both are annotations indicating that `X` belongs to type `T`.
 
 The first difference between the two type annotations is parsing
-precedence. This makes it convenient to write a declaration like
-   X:integer + Y:integer as integer
-which means that the notation X+Y, when X and Y are integer, is
-itself an integer.
+precedence. The infix `:` has precedence higher than most operators,
+whereas infix `as` has a very low precedence. In most declaratoins, an
+infix `:` is used to give a type to formal parameters, whereas an
+infix `as` is used to give a type to the whole expression. This is
+illustrated in the following pattern, which states that the addition
+of two `integer` values is itself an `integer`:
+```xl
+X:integer + Y:integer as integer
+```
 
-The second difference is that `X as T` denotes that X is not mutable,
-whereas `X : T` denotes that X is mutable.
+Another difference is that `X as T`, by default, denotes that `X` is
+not mutable, whereas `X : T` denotes that `X` is mutable, unless the
+type explicitly specifies otherwise. For example, `seconds : integer`
+declares a _variable_ named seconds, where you can store your own
+seconds values, whereas `seconds as integer` declares a _function_
+named seconds, computing the number of seconds in the current time, or
+some other value that you cannot modify.
+
+
+## Type declarations
+
+Like other XL values, a type can be given a name. For example, a
+`complex` type made of two `real` numbers representing the real and
+imaginary parts can be described using the following code:
+
+```xl
+complex is type(complex(Re:real, Im:real))
+```
+
+This declaration means that any parse tree like `complex(1.3,2.5)`
+will match the `complex` type.
+
+There is a shortcut notation for declaring types, where the `type`
+word can be placed in the pattern instead of in the body of the
+definition. This is nothing more than syntactic sugar for readability.
+The previous example should be written as follows:
+
+```xl
+type complex is complex(Re:real, Im:real)
+```
+
+
+## Type expressions
+
+A type declaration is like any other XL declaration. It can have parameters,
+including parameters with the `type` type, and such declarations can
+then be used to build _tpye expressions_.
+
+For example, the following code extends our previous `complex` type to
+take an argument that indicates the representation for `real` numbers,
+and uses that first declaration to declare two types, `complex` and
+`copmlex32`, the latter using `real32` as a representation type for
+real numbers:
+
+```xl
+type complex[real:type] is complex(Re:real, Im:real)
+type complex is complex[real]
+type complex32 is complex[real32]
+```
+
+> **NOTE** Type expressions play for XL the role that "class templates"
+> play in C++, or "generic types" in Ada.
+
+
+## Standard type expressions
+
+A number of type expressions are provided by the standard library.
+The most important ones are:
+
+* `nil` is a type that contains a single value, `nil`, used to
+  represent an absence of value: `type nil is nil`.
+
+* `T1` or `T2` is a type for values that belong to `T1` or to `T2`.
+  It is similar to what other languages may call union types.
+  For example, `integer or real` will match both `integer` and `real`
+  values.
+
+* `T1` and `T2` is a type for values that belong to both `T1` and `T2`.
+  For example, `number and ordered` will match ordered numbers.
+
+* `another T` is a new type that is identical to `T`, allowing overloading.
+  For example, `type distance is another real` will create another `real`
+  type, allowing you to forbid multiplication, and preventing errors
+  such as adding a `distance` to a `real`.
+
+* `optional T` is a shortcut for `T or nil`. This is useful for
+  functions like `find` that return an optional value, and where not
+  finding something is not an error but an expected result.
+
+* `fallible T` is a shortcut for `T or error`, and should be used for
+  [functions that may fail](#error-handling).
+
+* `either Patterns` is a type that matches one of the patterns given.
+  It can be used in particular for what would be called "enumerations"
+  in a language like C, but is richer, much like "enumerations" in Rust.
+
+* `variable T` or `var T` is a mutable version of type `T`.
+
+* `constant T` is a non-mutable version of type `T`.
+
+
+
+
+## Type hierarchy
+
+
+
 
 The difference matters in particular in the interface of a type, as
 declared by `with`. The non-mutable declarations using `as` are
