@@ -470,7 +470,7 @@ were much simpler to develop and maintain, since they had to deal with
 a very simple parse tree structure.
 
 For example, the
-[differentiation plugin](../xl2/native/xl.plugin.differentiation.xl)
+[differentiation plugin](../xl2/native/xl.plugin.differentiation.xl)
 implements symbolic differentiation for common functions. It is tested
 [here](../xl2/native/TESTS/07.Plugins/differentiation.xl#L33).
 The generated code after applying the plugin would
