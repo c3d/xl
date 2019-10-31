@@ -1,6 +1,6 @@
-write_line 3.1+4.71
-write_line 3.1-4.71
-write_line 3.1*4.71
-write_line 3.1/4.71
-write_line 3.1 mod 4.71
-write_line -3.1
+print 3.1+4.71
+print 3.1-4.71
+print 3.1*4.71
+print 3.1/4.71
+print 3.1 mod 4.71
+print -3.1

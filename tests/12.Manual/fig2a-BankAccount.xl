@@ -1,5 +1,5 @@
 BankAccount is 100
 if BankAccount < 0 then
-    write_line "Warning shots fired"
+    print "Warning shots fired"
 else
-    write_line "Round of cakes and applause"
+    print "Round of cakes and applause"

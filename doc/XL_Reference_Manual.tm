@@ -62,11 +62,11 @@
       <\code>
         if BankAccount \<less\> 0 then
 
-        \ \ \ \ write_line "Warning shots fired"
+        \ \ \ \ print "Warning shots fired"
 
         else
 
-        \ \ \ \ write_line "Round of cakes and applause"
+        \ \ \ \ print "Round of cakes and applause"
       </code>
 
       <\code>
@@ -92,7 +92,7 @@
   years, due to the design and limitations of existing programming languages.
   This includes input and output<\footnote>
     Various programming languages have implemented I/Os using built-in
-    functions (<verbatim|PRINT> in Basic, <verbatim|write_line> in Pascal),
+    functions (<verbatim|PRINT> in Basic, <verbatim|print> in Pascal),
     variadic functions with special runtime conventions (<verbatim|printf> in
     C), operator overloading (<verbatim|\<less\>\<less\>> \ in C++), monads
     (Haskell). Each approach has its own set of limitations.
@@ -267,7 +267,7 @@
   shown in Figure<nbsp><reference|hello-world>.\
 
   <big-figure|<\verbatim>
-    write_line "Hello World"
+    print "Hello World"
   </verbatim>|<label|hello-world>Example of Hello World program in XL>
 
   \ This program is only notable by what it lacks: no semi-colons, no
@@ -1441,7 +1441,7 @@
     the semi-colon <verbatim|;> and the new-line <verbatim|NEWLINE>.
 
     <big-figure|<\verbatim>
-      write "Hello"; write_line " World"
+      write "Hello"; print " World"
 
       emit_loud_beep
     </verbatim>|Example of sequence>
@@ -2440,15 +2440,15 @@
 
     \ \ \ \ X
 
-    \ \ \ \ if X then write_line "X is true"
+    \ \ \ \ if X then print "X is true"
 
-    \ \ \ \ if do X then write_line "X is true"
+    \ \ \ \ if do X then print "X is true"
 
     \ \ \ \ X
 
     bar -\<gtr\>
 
-    \ \ \ \ write_line "bar evaluated"
+    \ \ \ \ print "bar evaluated"
 
     \ \ \ \ true
 

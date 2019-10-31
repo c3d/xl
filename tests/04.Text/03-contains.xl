@@ -1,12 +1,12 @@
 if "ABCDEF" contains "CD" then
-    write_line "PASS"
+    print "PASS"
 else
-    write_line "FAIL"
+    print "FAIL"
 
 if "ABCDEF" contains "KO" then
-    write_line "FAIL"
+    print "FAIL"
 else
-    write_line "PASS"
+    print "PASS"
 
-write_line "Index ", "CD" in "ABCDEF ABCDEF"
-write_line "Index ", "CD" in "ABCDEF ABCDEF" from 4
+print "Index ", "CD" in "ABCDEF ABCDEF"
+print "Index ", "CD" in "ABCDEF ABCDEF" from 4

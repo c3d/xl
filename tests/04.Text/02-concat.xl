@@ -1,7 +1,7 @@
-write_line "ABCDEF=", "ABC" & "DEF"
-write_line "DEFABC=", "DEF" & "ABC"
-write_line "ABC123=", "ABC" & 123
-write_line "123ABC123=", 123 & "ABC" & 123
-write_line "1.23ABC12.3=", 1.23 & "ABC" & 12.3
-write_line "With multiply=", 123 & 10 * "ABC"
-write_line "With two multiplies=", "X"*3 & 6 * "B"
+print "ABCDEF=", "ABC" & "DEF"
+print "DEFABC=", "DEF" & "ABC"
+print "ABC123=", "ABC" & 123
+print "123ABC123=", 123 & "ABC" & 123
+print "1.23ABC12.3=", 1.23 & "ABC" & 12.3
+print "With multiply=", 123 & 10 * "ABC"
+print "With two multiplies=", "X"*3 & 6 * "B"

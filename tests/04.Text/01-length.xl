@@ -1,4 +1,4 @@
-write_line "Len(ABCD)=4=", length "ABCD"
-write_line "Len()=0=", length ""
-write_line "10 chars=", 10 * "chars"
-write_line "Len(10 chars)=10=", length (10 * "ABC")
+print "Len(ABCD)=4=", length "ABCD"
+print "Len()=0=", length ""
+print "10 chars=", 10 * "chars"
+print "Len(10 chars)=10=", length (10 * "ABC")

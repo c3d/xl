@@ -1,4 +1,4 @@
-write_line kind 1
-write_line kind 1.21
-write_line kind "Hello"
-write_line kind false
+print kind 1
+print kind 1.21
+print kind "Hello"
+print kind false

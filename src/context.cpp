@@ -60,6 +60,9 @@
 #include <sstream>
 #include <sys/stat.h>
 
+RECORDER(scope_enter,  16, "Entering items in the scope");
+RECORDER(scope_lookup, 16, "Lookup items from a scope");
+
 XL_BEGIN
 
 // ============================================================================

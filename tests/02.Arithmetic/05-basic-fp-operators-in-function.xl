@@ -1,12 +1,12 @@
 run_test x, y is
-    write_line x+y
-    write_line x-y
-    write_line x*y
-    write_line x/y
-    write_line x mod y
-    write_line x rem y
-    write_line -x
-    write_line "---"
+    print x+y
+    print x-y
+    print x*y
+    print x/y
+    print x mod y
+    print x rem y
+    print -x
+    print "---"
 
 run_test 3.154,2.1872
 run_test -3.154,17.1872

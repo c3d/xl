@@ -1,5 +1,5 @@
-write_line good 0
-write_line good 0.0
-write_line good ""
-write_line good false
-write_line good nil
+print good 0
+print good 0.0
+print good ""
+print good false
+print good nil

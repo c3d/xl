@@ -51,7 +51,7 @@ written as follows:
 N! is N * (N-1)!
 
 for I in 1..5 loop
-    write_line "The factorial of ", I, " is ", I!
+    print "The factorial of ", I, " is ", I!
 ```
 
 
@@ -61,10 +61,10 @@ be implemented using keywords in more traditional languages. For
 example, the `if` statement in XL is defined by the following code:
 
 ```xl
-if true  then TrueClause else FalseClause   is TrueClause
-if false then TrueClause else FalseClause   is FalseClause
-if true  then TrueClause                    is TrueClause
-if false then TrueClause                    is false
+if [[true]]  then TrueClause else FalseClause   is TrueClause
+if [[false]] then TrueClause else FalseClause   is FalseClause
+if [[true]]  then TrueClause                    is TrueClause
+if [[false]] then TrueClause                    is false
 ```
 
 Similarly, the `while` loop is defined as follows:
@@ -127,7 +127,7 @@ Two dialects of XL further demonstrate the extensibility of the language
               display temperature
 
   display Temp:real is
-      write_line "The temperature of ", WORKER, " is ", Temp
+      print "The temperature of ", WORKER, " is ", Temp
   ```
 
 > The present branch, `bigmerge`, is an ongoing effort to _reconverge_
@@ -386,9 +386,9 @@ adder X:integer is (Y is Y + X)
 add3 is adder 3
 add5 is adder 5
 
-write_line "3+2=", add3 2
-write_line "5+17=", add5 17
-write_line "8+2=", (adder 8) 2
+print "3+2=", add3 2
+print "5+17=", add5 17
+print "8+2=", (adder 8) 2
 ```
 
 However, it is a bit different in the sense that the core data

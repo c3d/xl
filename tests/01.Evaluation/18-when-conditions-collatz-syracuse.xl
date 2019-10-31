@@ -6,8 +6,8 @@ collatz N                       is 3*N + 1
 N := 27
 I := 0
 while N <> 1 loop
-    write_line I, ":", N
+    print I, ":", N
     I := I + 1
     N := collatz N
 
-write_line I, ":", N
+print I, ":", N

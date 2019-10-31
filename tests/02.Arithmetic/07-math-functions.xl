@@ -1,20 +1,20 @@
 run_test x is
-    write_line abs x
-    write_line sqrt x
+    print abs x
+    print sqrt x
     // Avoid platform-dependent rounding errors for very small values
-    write_line 0.25 + sin x
-    write_line 0.25 + cos x
-    write_line 0.25 + tan x
-    write_line asin x
-    write_line acos x
-    write_line atan x
-    write_line exp x
-    write_line expm1 x
-    write_line log x
-    write_line log10 x
-    write_line log2 x
-    write_line log1p x
-    write_line "---"
+    print 0.25 + sin x
+    print 0.25 + cos x
+    print 0.25 + tan x
+    print asin x
+    print acos x
+    print atan x
+    print exp x
+    print expm1 x
+    print log x
+    print log10 x
+    print log2 x
+    print log1p x
+    print "---"
 
 run_test 0.13331
 run_test 1.3331

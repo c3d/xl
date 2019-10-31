@@ -47,7 +47,7 @@ PREFIX(WriteTree,       boolean, "write", value,
        if (Tree *eval = Interpreter::IsClosure(value, NULL))
            value = eval;
        R_BOOL(std::cout << value));
-NAME_FN(WriteNewLine,   boolean, "write_line",
+NAME_FN(WriteNewLine,   boolean, "print",
        R_BOOL(std::cout << "\n"));
 
 PREFIX(DebugTree,       boolean, "debug", value,

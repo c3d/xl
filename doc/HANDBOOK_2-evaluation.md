@@ -543,17 +543,17 @@ be used.
 
 A binding may contain a value that may itself need to be split in
 order to be tested against the formal parameters. This is used in the
-implementation of `write_line`:
+implementation of `print`:
 
 ```xl
-write_line Items        is write Items; write_line
+print Items             is write Items; print
 write Head, Rest        is write Head; write Rest
 write Item:integer      is /* implementation for integer */...
 write Item:real         is /* implementation for real */...
 ```
 
-In that case, finding the declaration matching `write_line "Hello",
-"World"` involves creating a binding like this:
+In that case, finding the declaration matching `print "Hello", "World"`
+involves creating a binding like this:
 
 ```xl
 CONTEXT is
@@ -631,7 +631,7 @@ X:polygon   intersects Y:polygon    as boolean  is ... // two polygons
 X:shape     intersects Y:shape      as boolean  is ... // general case
 
 if shape1 intersects shape2 then    // selects the right combination
-    write_line "The two shapes touch"
+    print "The two shapes touch"
 ```
 
 > **NOTE** Type-based dynamic dispatch is relatively similar to the
@@ -747,7 +747,7 @@ while N <> 1 loop
         N /= 2
     else
         N := N * 3 + 1
-    write_line N
+    print N
 ```
 
 The definition of `while` given above only works because `Condition`
@@ -762,7 +762,7 @@ CONTEXT is
             N /= 2
         else
             N := N * 3 + 1
-        write_line N
+        print N
     CONTEXT0
 ```
 
@@ -869,14 +869,14 @@ current context.
 
 In particular, if argument splitting is required to evaluate the expression,
 each of the split arguments shares the same context. Consider the `write`
-and `write_line` implementation, with the following declarations:
+and `print` implementation, with the following declarations:
 
 ```xl
 write Head, Tail        is write Head; write Tail
-write_line Items        is write Items; write_line
+print Items        is write Items; print
 ```
 
-When evaluating `{ X is 42 } { write_line "X=", X }`, `Items` will be
+When evaluating `{ X is 42 } { print "X=", X }`, `Items` will be
 bound with a closure that captures the `{ X is 42 }` context:
 
 ```xl
@@ -1191,7 +1191,7 @@ apply my_function, 1
 >
 > It is not clear how such a name would be called as a function either,
 > since some of the arguments may themselves contain arbitrary parse
-> trees, as we have seen for the definition of `write_line`, where the
+> trees, as we have seen for the definition of `print`, where the
 > single `Items` parameter may actually be a comma-separated list of
 > arguments that will be split when calling `write Items` and matching
 > it to `write Head, Tail`.

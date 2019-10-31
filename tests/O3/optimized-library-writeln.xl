@@ -1,2 +1,2 @@
 // OPT=-O3
-write_line "Hello World"
+print "Hello World"

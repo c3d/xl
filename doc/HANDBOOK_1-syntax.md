@@ -135,7 +135,7 @@ For example, let's consider the following code:
 
 ```xl
 if X < 0 then
-   write_line "The value of ", X, " is negative"
+   print "The value of ", X, " is negative"
    X := -X
 ```
 
@@ -154,7 +154,7 @@ following command:
  (block indent
   (infix CR
    (prefix
-    write_line
+    print
     (infix,
      "The value of "
      (infix,
@@ -496,12 +496,12 @@ Most human beings parse this as `write (sin(X),cos(Y))`, i.e. we call
 This is, however, not entirely logical. If `write` takes
 comma-separated arguments, why wouldn't `sin` also take
 comma-separated arguments? In other words, why doesn't this parse as
-`write_line(sin(X, cos(Y))`?
+`print(sin(X, cos(Y))`?
 
 This shows that humans have a notion of *expressions*
 vs. *statements*. Expressions such as `sin X` have higher priority
 than commas and require parentheses if you want multiple arguments. By
-contrast, statements such as `write_line` have lower priority, and
+contrast, statements such as `print` have lower priority, and
 will take comma-separated argument lists. An indent or `{ }` block
 begins a statement, whereas parentheses `()` or square brackets `[]`
 begin an expression.

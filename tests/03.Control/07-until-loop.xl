@@ -1,7 +1,7 @@
 X := 0
 until X > 42 loop
     X := X + 1
-    write_line "X=", X
+    print "X=", X
 
 until X > 50 loop
     X := X + 2
@@ -9,4 +9,4 @@ until X > 50 loop
     until Y > X loop
         write "."
         Y := Y + 1
-    write_line "X=", X
+    print "X=", X

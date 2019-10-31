@@ -1,23 +1,23 @@
-write_line good 0
-write_line good 0.0
-write_line good ""
-write_line good false
-write_line good nil
+print good 0
+print good 0.0
+print good ""
+print good false
+print good nil
 
-write_line good 1
-write_line good 1.3
-write_line good "ABC"
-write_line good true
-write_line good ABC
+print good 1
+print good 1.3
+print good "ABC"
+print good true
+print good ABC
 
-write_line bad 1
-write_line bad 1.3
-write_line bad "ABC"
-write_line bad true
-write_line bad ABC
+print bad 1
+print bad 1.3
+print bad "ABC"
+print bad true
+print bad ABC
 
-write_line bad 0
-write_line bad 0.0
-write_line bad ""
-write_line bad false
-write_line bad nil
+print bad 0
+print bad 0.0
+print bad ""
+print bad false
+print bad nil

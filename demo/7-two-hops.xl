@@ -13,6 +13,6 @@ invoke "pi2.local",
 show_temps T1:real, T2:real is
     write "Temperature on pi is ", T1, " and on pi2 ", T2, ". "
     if T1>T2 then
-        write_line "Pi is hotter by ", T1-T2, " degrees"
+        print "Pi is hotter by ", T1-T2, " degrees"
     else
-        write_line "Pi2 is hotter by ", T2-T1, " degrees"
+        print "Pi2 is hotter by ", T2-T1, " degrees"

@@ -6,14 +6,14 @@ HOST is "localhost"
 tell HOST,
     I := 0
     while I < process_id mod 100 loop
-        write_line "Hello World from ", process_id, " I=", I,
-                   " T=", hours, ":", minutes, ":", seconds
+        print "Hello World from ", process_id, " I=", I,
+              " T=", hours, ":", minutes, ":", seconds
         I := I + 1
         sleep 1.5
-    write_line "Goodbye cruel world, ", process_id, " exiting"
+    print "Goodbye cruel world, ", process_id, " exiting"
 
 // Then perform a synchronous computation on the target
-write_line "Asking time to ", HOST, "=", remote_computation
+print "Asking time to ", HOST, "=", remote_computation
 remote_computation is ask HOST,
     zero N is if N < 10 then "0" & N else N
     hours & ":" & zero minutes & ":" & zero seconds

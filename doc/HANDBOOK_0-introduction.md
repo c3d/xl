@@ -45,12 +45,12 @@ In XL, a program that prints `Hello World` on the terminal console
 output will look like this:
 
 ```xl
-import XL.CONSOLE.TEXT_IO
-write_line "Hello World"
+use XL.CONSOLE.TEXT_IO
+print "Hello World"
 ```
 
 The first line _imports_ the `XL.CONSOLE.TEXT_IO` module. The program
-can then use the `write_line` function from that module to write the
+can then use the `print` function from that module to write the
 text on the terminal console.
 
 Why do we need the `import` statement? There is a general rule in XL
@@ -61,7 +61,7 @@ embedded systems, don't even have a terminal console. On such a
 system, the corresponding module would not be available, and the
 program would properly fail to compile.
 
-What is more interesting, though, is the definition of `write_line`.
+What is more interesting, though, is the definition of `print`.
 That definition is [discussed below](#the-case-of-text-input-output-operations),
 and you will see that it is quite simple.
 
@@ -72,20 +72,20 @@ A program computing the factorial of numbers between 1 and 5, and then
 showing them on the console, would be written as follows:
 
 ```xl
-import IO = XL.CONSOLE.TEXT_IO
+use IO = XL.CONSOLE.TEXT_IO
 
 0! is 1
 N! is N * (N-1)!
 
 for I in 1..5 loop
-    IO.write_line "The factorial of ", I, " is ", I!
+    IO.print "The factorial of ", I, " is ", I!
 ```
 
 We have used an alternative form of the `import` statement, where the
 imported module is given a local nick-name, `IO`. This form is useful
 when it's important to avoid the risk of name collisions between
-modules. In that case, you need to refer to the `write_line` function
-of the module as `IO.write_line`.
+modules. In that case, you need to refer to the `print` function
+of the module as `IO.print`.
 
 The definition of the factorial function shows how expressive XL is,
 making it possible to use the well-known notation for the factorial
@@ -352,7 +352,7 @@ while N <> 1 loop
         N /= 2
     else
         N := N * 3 + 1
-    write_line N
+    print N
 ```
 
 > **NOTE** A value between two square brackets, as in `[[true]]` and `[[false]]`,
@@ -471,7 +471,7 @@ venerable `printf` function in C is
 [available online](https://github.com/lattera/glibc/blob/master/stdio-common/vfprintf.c).
 
 The implementation of text I/O in XL is comparatively very simple. The
-definition of `write_line` looks something like, where irrelevant
+definition of `print` looks something like, where irrelevant
 implementation details were elided as `...`:
 
 ```xl
@@ -483,20 +483,20 @@ write [[true]]                          is write "true"
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
-write_line              as boolean      is write SOME_NEWLINE_CHARACTER
-write_line Items                        is write Items; write_line
+print                   as boolean      is write SOME_NEWLINE_CHARACTER
+print Items                             is write Items; print
 ```
 
 This is an example of _variadic function definition_ in XL. In other
-words, `write_line` can take a variable number of argument, much like
+words, `print` can take a variable number of argument, much like
 `printf` in C. You can write multiple comma-separated items in a
-`write_line`. For example, consider the following code:
+`print`. For example, consider the following code:
 
 ```xl
-write_line "The value of X is ", X, " and the value of Y is ", Y
+print "The value of X is ", X, " and the value of Y is ", Y
 ```
 
-That would first call the last definition of `write_line` with the
+That would first call the last definition of `print` with the
 following _binding_ for the variable `Items`:
 
 ```xl
@@ -541,7 +541,7 @@ example, if `X` and `Y` are `integer` values, the generated code could
 be used for
 
 ```xl
-write_line "The sum is ", X+Y, " and the difference is ", X-Y
+print "The sum is ", X+Y, " and the difference is ", X-Y
 ```
 
 This is because the sequence of types is the same. Everything happens
@@ -549,9 +549,9 @@ as if the above mechanism had created a series of additional
 definition that looks like:
 
 ```xl
-write_line A:text, B:integer, C:text, D:integer is
+print A:text, B:integer, C:text, D:integer is
     write A, B, C, D
-    write_line
+    print
 
 write A:text, B:integer, C:text, D:integer is
     write A
@@ -572,8 +572,8 @@ compiler evaluates future function calls.
 
 ### Comparing XL I/O operations with C and C++
 
-Unlike `printf`, `write_line` as defined above is both type-safe and
-extensible.
+Unlike the C `printf` function, `print` as defined above is both
+type-safe and extensible.
 
 It is type-safe because the compiler knows the type of each argument
 at every step, and can check that there is a matching `write`
@@ -591,20 +591,20 @@ write Z:complex     is write "(", Z.re, ";", Z.im, ")"
 
 Unlike the C++ `iostream` facility, the XL compiler will naturally
 emit less code. In particular, it will need only one function call for
-every call to `write_line`, calling the generated function for the
+every call to `print`, calling the generated function for the
 given combination of arguments.
 
 Additionally, the approach used in XL makes it possible to offer
 specific features for output lines, for example to ensure that a
 single line is always printed contiguously even in a multi-threaded
 scenario. Assuming a `single_thread` facility ensuring that the code
-is executed by at most one thread, creating a locked `write_line` is
+is executed by at most one thread, creating a locked `print` is
 nothing more than:
 
 ```xl
-locked_write_line Items is
+locked_print Items is
     single_thread
-         write_line Items
+         print Items
 ```
 
 It is extremely difficult, if not impossible, to achieve a similar
@@ -883,11 +883,11 @@ invoke WORKER_1,
                show_temps T1, T2
 
 show_temps T1:real, T2:real is
-    write_line "Temperature on pi is ", T1, " and on pi2 ", T2, ". "
+    print "Temperature on pi is ", T1, " and on pi2 ", T2, ". "
     if T1>T2 then
-        write_line "Pi is hotter by ", T1-T2, " degrees"
+        print "Pi is hotter by ", T1-T2, " degrees"
     else
-        write_line "Pi2 is hotter by ", T2-T1, " degrees"
+        print "Pi2 is hotter by ", T2-T1, " degrees"
 ```
 
 This small program looks like a relatively simple control script.
@@ -942,8 +942,8 @@ invoke "pi.local",
         compute_stats temperature
 
 report_stats Count, T, Min, Max, Avg is
-    write_line "Sample ", Count, " T=", T, " ",
-               "Min=", Min, " Max=", Max, " Avg=", Avg
+    print "Sample ", Count, " T=", T, " ",
+          "Min=", Min, " Max=", Max, " Avg=", Avg
 ```
 
 To run the ELFE demos, you need to start an XL server on the machines

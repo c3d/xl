@@ -1,7 +1,7 @@
 // EXIT=42
 X := 0
 loop
-    write_line "Almost infinite loop"
+    print "Almost infinite loop"
     X := X + 1
     if X > 41 then
         exit X

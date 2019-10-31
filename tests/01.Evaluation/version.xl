@@ -1,2 +1,2 @@
-write_line "Version=", xl_version
-write_line "Compatibility=", xl_compatible_version
+print "Version=", xl_version
+print "Compatibility=", xl_compatible_version

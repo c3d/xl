@@ -7,18 +7,18 @@ foo is
 
     "Outer A" is "Indexed by Outer A"
 
-write_line "foo.A=", foo.A
-write_line "foo.B=", foo.B
-write_line "foo.C=", foo.C
+print "foo.A=", foo.A
+print "foo.B=", foo.B
+print "foo.C=", foo.C
 
-write_line "foo[A]=", foo[A]
-write_line "foo[B]=", foo[B]
-write_line "foo[C]=", foo[C]
+print "foo[A]=", foo[A]
+print "foo[B]=", foo[B]
+print "foo[C]=", foo[C]
 
-write_line "foo(A)=", foo(A)
-write_line "foo(B)=", foo(B)
-write_line "foo(C)=", foo(C)
+print "foo(A)=", foo(A)
+print "foo(B)=", foo(B)
+print "foo(C)=", foo(C)
 
-write_line "foo A=", foo A
-write_line "foo B=", foo B
-write_line "foo C=", foo C
+print "foo A=", foo A
+print "foo B=", foo B
+print "foo C=", foo C

@@ -1,12 +1,12 @@
-write_line "2#1001=", 2#1001
-write_line "2#1111=", 2#1111
-write_line "16#FF_FE=", 16#FF_FE
-write_line "36#1Z=", 36#1Z
+print "2#1001=", 2#1001
+print "2#1111=", 2#1111
+print "16#FF_FE=", 16#FF_FE
+print "36#1Z=", 36#1Z
 
-write_line "64#A=", 64#A
-write_line "64#C=", 64#C
-write_line "64#a=", 64#a
-write_line "64#c=", 64#c
-write_line "64#1=", 64#1
-write_line "64#YW55IGN=", 64#YW55IGN
-write_line "64#TWFuIGlzIGRpc=", 64#TWFuIGlzIGRpc
+print "64#A=", 64#A
+print "64#C=", 64#C
+print "64#a=", 64#a
+print "64#c=", 64#c
+print "64#1=", 64#1
+print "64#YW55IGN=", 64#YW55IGN
+print "64#TWFuIGlzIGRpc=", 64#TWFuIGlzIGRpc

@@ -4,5 +4,5 @@
 // the test result must be an integer (number of characters)
 // We need to filter it because the value returned by puts is not portable
 // FILTER=sed -e 's/[0-9][0-9]*/OK/g'
-write_line X:text as integer is C puts
-write_line "Hello world"
+print X:text as integer is C puts
+print "Hello world"

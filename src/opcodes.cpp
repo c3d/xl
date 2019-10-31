@@ -130,7 +130,7 @@ void NameOpcode::Register(Context *context)
 //   For name rewrites, create the name, assign to variable, enter it
 // ----------------------------------------------------------------------------
 {
-    record(opcodes, "Opcode %+s is a name", this->OpID());
+    record(opcodes, "Opcode %+s is name %t", this->OpID(), toDefine);
 
     context->Define(toDefine, toDefine);
     toDefine->SetInfo<NameOpcode> (this);

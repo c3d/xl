@@ -8,10 +8,10 @@ invoke "pi2.local",
 
     last_temperature := temperature
     every 2s,
-        write_line "Measuring temperature on ", process_id
+        print "Measuring temperature on ", process_id
         check_temperature_change temperature
 
 
 report_temperature_change Temp, Last is
-    write_line "Temperature on Pi2 changed from ", Last, " to ", Temp, ", ",
-               "a variation of ", Temp - Last, " degrees"
+    print "Temperature on Pi2 changed from ", Last, " to ", Temp, ", ",
+          "a variation of ", Temp - Last, " degrees"

@@ -1,4 +1,4 @@
 // Check the communication
 // Replace "localhost" with any target you want
 tell "localhost",
-    write_line "Hello World"
+    print "Hello World"

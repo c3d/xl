@@ -1,13 +1,13 @@
-write_line 73+3
-write_line 73-3
-write_line 73*3
-write_line 73/3
-write_line 73 mod 3
-write_line 73 and 3
-write_line 73 or 3
-write_line 73 xor 3
-write_line 73 shl 3
-write_line 73 ashr 3
-write_line 73 lshr 3
-write_line -73
-write_line not 73
+print 73+3
+print 73-3
+print 73*3
+print 73/3
+print 73 mod 3
+print 73 and 3
+print 73 or 3
+print 73 xor 3
+print 73 shl 3
+print 73 ashr 3
+print 73 lshr 3
+print -73
+print not 73

@@ -1,5 +1,5 @@
 foo X:integer is
-    bar Z:integer is write_line "For ", Z, " bar=", X+2*Z
+    bar Z:integer is print "For ", Z, " bar=", X+2*Z
     bar 2
     bar 4
     bar 6

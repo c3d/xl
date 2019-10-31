@@ -1,7 +1,7 @@
 foo is 1
 bar is 2*3
 if foo < bar then
-    write_line "Foo less than bar (GOOD)"
+    print "Foo less than bar (GOOD)"
 else
-    write_line "Foo more than bar (FAIL)"
-write_line "Finished"
+    print "Foo more than bar (FAIL)"
+print "Finished"
