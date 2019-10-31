@@ -34,9 +34,9 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import SLICE
-import STRING
-import MEMORY
+use SLICE
+use STRING
+use MEMORY
 
 type text[type character is UTF8] with
 // ----------------------------------------------------------------------------

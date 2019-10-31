@@ -53,7 +53,7 @@ The first line _imports_ the `XL.CONSOLE.TEXT_IO` module. The program
 can then use the `print` function from that module to write the
 text on the terminal console.
 
-Why do we need the `import` statement? There is a general rule in XL
+Why do we need the `use` statement? There is a general rule in XL
 that you only pay for things that you use. Not all programs will use a
 terminal console, so the corresponding functions must be explicitly
 imported into your program. It is possible that some systems, like
@@ -81,7 +81,7 @@ for I in 1..5 loop
     IO.print "The factorial of ", I, " is ", I!
 ```
 
-We have used an alternative form of the `import` statement, where the
+We have used an alternative form of the `use` statement, where the
 imported module is given a local nick-name, `IO`. This form is useful
 when it's important to avoid the risk of name collisions between
 modules. In that case, you need to refer to the `print` function
@@ -451,11 +451,11 @@ them in the compiler, has several benefits:
 The XL standard library consists of a [wide variety of modules](../native/lib).
 The top-level module is called `XL`, and sub-modules are categorized
 in a hierarchy. For example, if you need to perform computations on
-complex numbers, you would use `import XL.MATH.COMPLEX` to load the
+complex numbers, you would `use XL.MATH.COMPLEX` to load the
 [complex numbers module](../native/lib/xl/math/complex.xs)
 
 The [library builtins](../src/builtins.xl) is a list of definitions
-that are accessible to any XL program without any explicit `import`
+that are accessible to any XL program without any explicit `use`
 statement. This includes most features that you find in languages
 such as C, for example integer arithmetic or loops. Compiler options
 make it possible to load another file instead, or even to load no file
@@ -771,7 +771,7 @@ sheets reminiscent of CSS. In other words, Tao3D does with a single
 language, XL, what HTML5 does with three.
 
 For example, an interactive slide in Tao3D would be written using code
-like this:
+like this (note that Tao3D uses `import` instead of `use`):
 
 ```xl
 import Slides

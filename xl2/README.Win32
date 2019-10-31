@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  README.Win32                    (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                                 XL2 project 
+//  README.Win32                    (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                                 XL2 project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     README for the Win32 port of the XL compiler
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -106,7 +106,7 @@ You should get an HelloWorld_native.exe and the display of 'Hello World'.
 
 - Always add a carriage return at the end of your files otherwise the
   compiler will choke
-- Always import the XL.UI.CONSOLE module, while not being used
+- Always use the XL.UI.CONSOLE module, while not being used
   directly, it supplies indispensable definitions.
 
 

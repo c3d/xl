@@ -469,7 +469,7 @@ syntax
 ```
 
 > **NOTE** Extending the syntax is intended to also work also in a
-> module. This means that an `import` statement can alter the syntax
+> module. This means that an `use` statement can alter the syntax
 > in your source code. This is, however, rarely recommended.
 > Also, importing a syntax extension does not presently work.
 

@@ -517,7 +517,7 @@ int Main::LoadFile(text file, text modname)
     // Check if the module name is given
     if (modname != "")
     {
-        // If we have an explicit module name (e.g. import),
+        // If we have an explicit module name (e.g. use),
         // we will refer to the content using that name
         context.SetModuleName(modname);
         context.Define(modname, tree);
@@ -763,11 +763,11 @@ Tree *Main::Normalize(Tree *input)
 
 eval_fn Main::Declarator(text name)
 // ----------------------------------------------------------------------------
-//   Return a declarator for 'import' and 'load'
+//   Return a declarator for 'use' and 'load'
 // ----------------------------------------------------------------------------
 {
-    if (name == "import")
-        return xl_import;
+    if (name == "use")
+        return xl_use;
     if (name == "load")
         return xl_load;
     return nullptr;

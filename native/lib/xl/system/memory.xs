@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import SYSTEM
+use SYSTEM
 use ENUMERATION
 
 MEMORY has

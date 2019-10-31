@@ -1,19 +1,19 @@
 // ****************************************************************************
-//  html.stylesheet                 (C) 1992-2004 Christophe de Dinechin (ddd) 
-//                                                               XL project 
+//  html.stylesheet                 (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                               XL project
 // ****************************************************************************
-// 
+//
 //   File Description:
-// 
+//
 //     Style sheet for rendering colorized XL as HTML
-// 
-// 
-// 
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
+//
+//
+//
 // ****************************************************************************
 // This document is released under the GNU General Public License.
 // See http://www.gnu.org/copyleft/gpl.html for details
@@ -41,7 +41,7 @@ end           = "</BODY></HTML>"
 // Character remapping
 nbsp            = "&nbsp;"
 space           = nbsp
-cr              = "<BR>" 
+cr              = "<BR>"
 '<'             = "&lt;"
 '>'             = "&gt;"
 '&'             = "&amper;"
@@ -67,7 +67,7 @@ keyword         = "<FONT color=""#000080""><B>" self "</B></FONT>"
 "function"      = keyword
 "procedure"     = keyword
 "to"            = keyword
-"import"        = keyword
+"use"           = keyword
 
 // Basic types
 type            = "<FONT color=""#008080""><B>" self "</B></FONT>"

@@ -34,14 +34,14 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import ARITHMETIC
-import BITWISE
-import COPY
-import MOVE
-import CLONE
-import DELETE
-import COMPARISON
-import MEMORY
+use ARITHMETIC
+use BITWISE
+use COPY
+use MOVE
+use CLONE
+use DELETE
+use COMPARISON
+use MEMORY
 
 
 type number with

@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import MATH = XL.MATH
+use MATH = XL.MATH
 
 module XL.REAL[value:type] is
     x:value + y:value           as value        is builtin FAdd

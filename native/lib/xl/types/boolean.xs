@@ -34,9 +34,9 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import ENUMERATED
-import BITWISE
-import COMPARISON
+use ENUMERATED
+use BITWISE
+use COMPARISON
 
 
 type boolean with

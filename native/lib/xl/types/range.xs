@@ -34,8 +34,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import COMPARISON
-import ITERATOR
+use COMPARISON
+use ITERATOR
 
 module RANGE[value:type] with
 // ----------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 //
 //   The XL module contains all the standard XL capabilities.
 //   It is pre-loaded by any XL program, so that its content can be
-//   used without any `import` or `use` statement.
+//   used without any `use` statement.
 //
 //
 //

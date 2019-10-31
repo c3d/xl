@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import BOOLEAN, SYMBOLS, PARSER, FILE
+use BOOLEAN, SYMBOLS, PARSER, FILE
 
 
 module MODULE with
@@ -57,13 +57,12 @@ module MODULE with
 
 
     // Importing modules
-    import ModuleList:module_list
     use    ModuleList:module_list
 
 
     module_list is either
     // ------------------------------------------------------------------------
-    //   List of modules for `import` or `use`
+    //   List of modules for `use`
     // ------------------------------------------------------------------------
 
         // List: `use PARSER, SCANNER`

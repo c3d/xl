@@ -80,9 +80,9 @@ be performed during parsing:
    of operators, and that information is used during the parsing
    phase.
 
-3. Processing `import` statements: Since imported modules can contain
+3. Processing `use` statements: Since imported modules can contain
    `syntax` statements, they must at least partially be processed
-   during parsing. Details about `import` statements are covered in
+   during parsing. Details about `use` statements are covered in
    the [chapter about modules](HANDBOOK_6-modules.md).
 
 4. Identifying words that switch to a
@@ -96,13 +96,13 @@ be performed during parsing:
    parsing, to generate parse tree nodes representing binary data.
    >  **NOTE** this is not currently implemented.
 
-The need to process `import` statements during parsing means that it's
-not possible in XL to have computed `import` statements. The name of
+The need to process `use` statements during parsing means that it's
+not possible in XL to have computed `use` statements. The name of
 the module must always be evaluated at compile-time.
 
 > **RATIONALE** An alternative would have been to allow computed
-> `import` statement, but disallow `syntax` in them. However, for
-> convenience, `import` names look like `XL.CONSOLE.TEXT_IO` and not,
+> `use` statement, but disallow `syntax` in them. However, for
+> convenience, `use` names look like `XL.CONSOLE.TEXT_IO` and not,
 > say, `"xl/console/text_io.xs"`, so there is no obvious way to
 > compute them anyway.
 
@@ -121,7 +121,7 @@ are one of:
   block's child
 * An infix `NEWLINE` or semi-colon `;`, in which case the left and right
   operands of the infix are processed in that order.
-* An `import` statement, which is the only statement that requires
+* An `use` statement, which is the only statement that requires
   processing in all three executation phases.
 * A `syntax` definition, which only plays a role during parsing is
   ignored during the declaration and evaluation phases.
@@ -1160,8 +1160,8 @@ magic_constants Bits is
 
 In that case, `magic_constants(4).max_values` will evaluate to `15`.
 
-This is also exactly what happens when you `import` a module. For example,
-with `import IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in
+This is also exactly what happens when you `use` a module. For example,
+with `use IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in
 the current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
 

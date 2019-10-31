@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import COMPARISON
+use COMPARISON
 use    BITWISE
 
 

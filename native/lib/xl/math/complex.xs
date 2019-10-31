@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-import XL.TYPES.REAL
+use XL.TYPES.REAL
 
 type complex[type real is XL.TYPES.REAL.real] with
 // ----------------------------------------------------------------------------

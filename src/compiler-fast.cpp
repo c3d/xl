@@ -1505,7 +1505,7 @@ Tree *DeclarationAction::Do(Prefix *what)
     if (Name *name = what->left->AsName())
     {
         // Check if there is some stuff that needs to be done at decl time
-        // This is used for 'load' and 'import'
+        // This is used for 'load' and 'use'
         if (eval_fn declarator = MAIN->Declarator(name->value))
             if (Tree *result = declarator(symbols, what))
                 return result;

@@ -532,7 +532,7 @@ struct ImportedFileInfo : Info
 };
 
 
-Tree *xl_import(Scope *scope, Tree *self)
+Tree *xl_use(Scope *scope, Tree *self)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
@@ -540,7 +540,7 @@ Tree *xl_import(Scope *scope, Tree *self)
     Infix *infix = self->AsInfix();
     if (!infix)
     {
-        Ooops("Unexpected import: $1", self);
+        Ooops("Unexpected use: $1", self);
         return self;
     }
     text modname = "";
@@ -558,7 +558,7 @@ Tree *xl_import(Scope *scope, Tree *self)
         }
         else
         {
-            Ooops("Invalid import name $1", infix->right);
+            Ooops("Invalid use name $1", infix->right);
             return self;
         }
     }
@@ -623,7 +623,7 @@ Tree *xl_load(Scope *scope, Tree *self)
 //    Load a file from disk
 // ----------------------------------------------------------------------------
 {
-    return xl_import(scope, self);
+    return xl_use(scope, self);
 }
 
 
