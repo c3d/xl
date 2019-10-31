@@ -1008,8 +1008,8 @@ as stable as it was for Tao3D in the 2010-2015 period) includes:
   like:
 
   ```xl
-  bits 16#0001_0002_0003_0004_0005_0006_0007_0008_0009
-  bits "image.jpg"
+  binary 16#0001_0002_0003_0004_0005_0006_0007_0008_0009
+  binary "image.jpg"
   ```
 
 It is unclear if I will be able to do that while at the same time
