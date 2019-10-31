@@ -701,7 +701,7 @@ Unfortunately, Tao3D was built on a relatively weak implementation of
 XL, where the type system in particular was not well thought out
 (it was really a hack that only supported parse tree types).
 This made a few things really awkward. Notably, all values are passed
-by reference, which was mostlyi an implementation hack to enable the
+by reference, which was mostly an implementation hack to enable the
 user-interface to "retrofit" values into the code when you move shapes
 on the screen. Unfortunately, this made the language brittle, and
 forced many modules to rely on poor hacks when updating values. To
