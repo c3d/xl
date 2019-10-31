@@ -21,7 +21,7 @@ as illustrated by [ELFE](https://github.com/c3d/elfe).
 > reworked, and the compiler in this repository is presently not
 > suitable for any serious programming. Examples given below may
 > sometimes simply not work. Take it as a painful reminder that the
-> work is far from finished, > and, who knows, as an idea for a contribution.
+> work is far from finished, and, who knows, as an idea for a contribution.
 > See [HISTORY](HISTORY.md) for how we came to the present mess.
 > The [README](../README.md) will give you a quick overview of the language.
 
