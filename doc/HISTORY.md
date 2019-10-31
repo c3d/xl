@@ -667,7 +667,7 @@ usability popped up after actively using the language:
   language, without changing the core translation technology at all.
 
 Precisely because the changes were so minor, Tao3D largely proved the
-point that XL was really extensible. For example, a slide function
+point that XL was really extensible. For example, a `slide` function
 (that takes code as its second argument) makes it easy to describe a
 great-looking bullet points slide:
 
