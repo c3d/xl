@@ -79,10 +79,8 @@ From memory, some of the objectives of the language at the time included:
 * Giving up on superfluous syntactic markers such as terminating semi-colon.
 
 * Using generics to write standard library component such as arrays or
-  I/O facilities. I profoundly disliked that `array` had to be
-  built-in, I wanted that to be in the library. Remember, that was
-  long before the STL made it to C++, but I was clearly thinking along
-  the same lines.
+  I/O facilities, in a way reminiscent of how STL containers were
+  added to the C++ standard library.
 
 * Making the compiler an integral part of the language, which led to...
 
