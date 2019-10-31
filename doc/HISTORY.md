@@ -745,7 +745,7 @@ show_temps T1:real, T2:real ->
 
 
 ELFE only adds a very small number of features to the standard XL,
-which are implemented as regular XL functions implemented in C++:
+which are simply regular XL functions implemented in C++:
 
 * The `ask` statement sends a program, and returns the result of
   evaluating that program as if it has been evaluated locally. It
