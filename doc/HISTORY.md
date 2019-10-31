@@ -698,14 +698,15 @@ it was never very successful, and Taodyne shut down in 2015, even if
 the open-source version lives on.
 
 Unfortunately, Tao3D was built on a relatively weak implementation of
-XL, where the type system in particular was not at all well
-understood. This made a few things really awkward. Notably, all values
-are passed by reference, which was mostlyi an implementation hack to
-enable the user-interface to "retrofit" values into the code when you
-move shapes on the screen. Unfortunately, this made the language
-brittle, and forced many modules to rely on poor hacks when updating
-values. To make a long story short, `X := Y` in Tao3D is a joke, and
-I'm rightfully ashamed of it.
+XL, where the type system in particular was not well thought out
+(it was really a hack that only supported parse tree types).
+This made a few things really awkward. Notably, all values are passed
+by reference, which was mostlyi an implementation hack to enable the
+user-interface to "retrofit" values into the code when you move shapes
+on the screen. Unfortunately, this made the language brittle, and
+forced many modules to rely on poor hacks when updating values. To
+make a long story short, `X := Y` in Tao3D is a joke, and I'm
+rightfully ashamed of it.
 
 
 ## ELFE, distributed programming with XL
