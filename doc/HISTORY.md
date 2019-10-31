@@ -304,8 +304,9 @@ are some of the key features that went quite a bit beyond Ada:
   this day, expression reduction still has no real equivalent in any
   other language that I know of, although expression templates can be
   used in C++ to achieve similar effect in a very convoluted and less
-  powerful way. Expression templates will not allow you to add
-  operators, for example.
+  powerful way. Expression templates will not allow you to <em>add</em>
+  operators, for example. In other words, you can redefine what
+  `X+Y*Z` means, but you cannot create `X in Y..Z` in C++.
 
 * [True generic types](http://mozart-dev.sourceforge.net/xl_style.html#truegen)
    were a way to make generic programming much easier by declaring
