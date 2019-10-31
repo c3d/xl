@@ -294,7 +294,9 @@ are some of the key features that went quite a bit beyond Ada:
   [arbitrary compiler plug-ins](http://mozart-dev.sourceforge.net/tools.html#pragma).
   I suspect that attributes in C++11 are distant (and less powerful)
   descendants of this kind of annotation, if only because their syntax
-  matches my recollection of the annotation syntax in Xroma...
+  matches my recollection of the annotation syntax in Xroma, and
+  because Daveed has been a regular and innovative contributor to the
+  C++ standard for two decades...
 
 * [Expression reduction](http://mozart-dev.sourceforge.net/xl_style.html#expred)
   was a generalisation of operator overloading that works with
