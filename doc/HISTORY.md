@@ -949,7 +949,9 @@ definition, in particular:
 
 * The addition of opaque binary data in parse trees, for example to
   put an image from a PNG file in an XL program. I had long been
-  thinking about a syntax like `binary "image.png".
+  thinking about a syntax like `binary "image.png"` It should also
+  be possible to declare arbitrary binary data inline, as in
+  `binary 16#FFFF_0000_FFFF_0000_FF00_00FF_FF00_00FF`.
 
 * Adding a `lambda` syntax for anonymous functions. Earlier versions
   of XL would use a catch-all pattern like `(X is X + 1)` to define a
