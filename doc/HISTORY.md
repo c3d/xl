@@ -318,9 +318,9 @@ are some of the key features that went quite a bit beyond Ada:
 
 * [Type-safe variable argument lists](http://mozart-dev.sourceforge.net/xl_style.html#vararg)
    made it possible to write type-safe variadic functions. They solved
-   the WriteLn problem I referred to earlier, i.e. they made it
+   the `WriteLn` problem I referred to earlier, i.e. they made it
    possible to write a function in a library that behaved exactly like
-   the Pascal WriteLn. I see them as a distant ancestor of variadic
+   the Pascal `WriteLn`. I see them as a distant ancestor of variadic
    templates in C++11, although like for concepts, it is hard to tell
    if variadic templates are a later reinvention of the idea, or if
    something of my e-mails influenced members of the C++ committee.
