@@ -756,7 +756,7 @@ which are simply regular XL functions implemented in C++:
   executing.
 
 * Finally, the `reply` statement allows a remote node to respond to
-  whoever invoke‘d it, by evaluating one of the available functions in
+  whoever `invoke`‘d it, by evaluating one of the available functions in
   the caller’s context.
 
 A few very simple [ELFE demos](../demo) illustrate these
