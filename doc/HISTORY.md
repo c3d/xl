@@ -848,7 +848,7 @@ all shared the same XL0, but had very different run-time constraints.
   most advanced library. But it  has been left aside for a few
   years. As an imperative language, it is more verbose and feels
   heavier to program. Yet it is not obsolete, as the discussion above
-  demonstrates. It’s type system, with its support for generics or
+  demonstrates. Its type system, with its support for generics or
   validation, is much more robust than whatever was ever implemented
   in all XLR variants. It would need quite a bit of love to make it
   really usable, for example improving the standard library and
