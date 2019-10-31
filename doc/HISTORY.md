@@ -720,7 +720,7 @@ machines.
 
 An ELFE program looks as as if it was running on a single machine, but
 actively exchanges program segments and their associated data between
-distant nodes:
+distant nodes (in modern XL, `->` below would read `is`):
 
 ```xl
 invoke "pi2.local",
