@@ -367,7 +367,7 @@ while N <> 1 loop
 
 Moving features to a library is a natural evolution for programming
 languages. Consider for example the case of text I/O operations. They
-used to be built-in the language in early languages such as BASIC's
+used to be built-in for early languages such as BASIC's
 `PRINT` or Pascal's `WriteLn`, but they moved to the library in later
 languages such as C with `printf`. As a result, C has a much wider
 variety of I/O functions.  The same observation can be made on text
