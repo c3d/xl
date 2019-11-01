@@ -486,14 +486,14 @@ This first tweak is intended to put in XL an implicit grammatical
 grouping that humans apparently do. Consider for example the following:
 
 ```xl
-write sin X, cos Y
+print sin X, cos Y
 ```
 
-Most human beings parse this as `write (sin(X),cos(Y))`, i.e. we call
-`write` with two values resulting from evaluating `sin X` and
+Most human beings parse this as `print (sin(X),cos(Y))`, i.e. we call
+`print` with two values resulting from evaluating `sin X` and
 `cos Y`.
 
-This is, however, not entirely logical. If `write` takes
+This is, however, not entirely logical. If `print` takes
 comma-separated arguments, why wouldn't `sin` also take
 comma-separated arguments? In other words, why doesn't this parse as
 `print(sin(X, cos(Y))`?
