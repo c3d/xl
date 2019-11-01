@@ -402,7 +402,7 @@ The syntax file uses a few special names:
   individual source code lines.
 * `STATEMENT` is the precedence that delimits
    [expressions from statements](#tweak-1-expression-vs-statement).
-   Anyting operator with a lower precedence belongs to a statement, like
+   Any operator with a lower precedence belongs to a statement, like
    `if` or `loop`. Any operator with a higher precedence belongs to an
    expression, like `+` or `*`.
 * `DEFAULT` is the default precedence for names and symbols. It is not
