@@ -931,7 +931,7 @@ as `B` and `foo C`. However, if the evaluation of `B * foo C` required
 the evaluation of `foo C`, then that evaluated version will be used as
 a binding for `Z`.
 
-> ** RATIONALE ** These rules are not just optimizations. They are necessary
+> **RATIONALE** These rules are not just optimizations. They are necessary
 > to preserve the semantics of the language during dynamic dispatch for
 >  expressions that are not constant. For example, consider a call like
 > `fib(random(3..10))`, which evaluates the `fib` function with a random
