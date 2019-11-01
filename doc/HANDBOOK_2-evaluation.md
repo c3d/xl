@@ -655,7 +655,7 @@ theme_font SlideTheme,  SlideMaster,  SlideItem is font "Arial"
 ```
 
 As the example above illustrates, the XL approach to dynamic dispatch
-takes advantage of pattern matching to allow complex combination of
+takes advantage of pattern matching to allow complex combinations of
 argument tests.
 
 
