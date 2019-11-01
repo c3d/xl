@@ -938,7 +938,8 @@ a binding for `Z`.
 >  value between `3` and `10`. Every time `random` is evaluated, it returns
 > a different, pseudo-random value. The rules above guarantee that the
 > _same_ value will be used when testing against `0`, `1` or as a
-> binding with `N`.
+> binding with `N`. Witout these rules, it would be possible for the body
+> of the general case to be called with a value that is `0` or `1`.
 
 
 ## Self
