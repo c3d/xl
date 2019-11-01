@@ -68,7 +68,7 @@ type complex is complex(Re:real, Im:real)
 
 A type declaration is like any other XL declaration. It can have parameters,
 including parameters with the `type` type, and such declarations can
-then be used to build _tpye expressions_.
+then be used to build _type expressions_.
 
 For example, the following code extends our previous `complex` type to
 take an argument that indicates the representation for `real` numbers,
