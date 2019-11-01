@@ -1,4 +1,4 @@
-# XL program execution
+# XL program evaluation
 
 XL defines _program execution_ primarily in terms of operations on
 the parse tree combined with operations on an implicit _context_ that
@@ -1224,4 +1224,4 @@ is markedly different internally, and is detailed in the section on
 -------------------------------------------------------------------------------
 
 Previous: [Syntax](HANDBOOK_1-syntax.md)
-Next: [Compilation](HANDBOOK_3-types.md)
+Next: [Type System](HANDBOOK_3-types.md)
