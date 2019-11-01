@@ -873,7 +873,7 @@ and `print` implementation, with the following declarations:
 
 ```xl
 write Head, Tail        is write Head; write Tail
-print Items        is write Items; print
+print Items             is write Items; print
 ```
 
 When evaluating `{ X is 42 } { print "X=", X }`, `Items` will be
