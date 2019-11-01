@@ -23,7 +23,7 @@ Both are annotations indicating that `X` belongs to type `T`.
 
 The first difference between the two type annotations is parsing
 precedence. The infix `:` has precedence higher than most operators,
-whereas infix `as` has a very low precedence. In most declaratoins, an
+whereas infix `as` has a very low precedence. In most declarations, an
 infix `:` is used to give a type to formal parameters, whereas an
 infix `as` is used to give a type to the whole expression. This is
 illustrated in the following pattern, which states that the addition
