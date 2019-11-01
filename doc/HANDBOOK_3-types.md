@@ -73,7 +73,7 @@ then be used to build _type expressions_.
 For example, the following code extends our previous `complex` type to
 take an argument that indicates the representation for `real` numbers,
 and uses that first declaration to declare two types, `complex` and
-`copmlex32`, the latter using `real32` as a representation type for
+`complex32`, the latter using `real32` as a representation type for
 real numbers:
 
 ```xl
