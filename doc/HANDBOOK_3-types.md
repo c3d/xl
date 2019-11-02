@@ -91,8 +91,8 @@ type complex32 is complex[real32]
 A number of type expressions are provided by the standard library.
 The most important ones are:
 
-* `nil` is a type that contains a single value, `nil`, used to
-  represent an absence of value: `type nil is nil`.
+* `nil` is a type that contains a single value, `nil`, which evaluates
+  to itself. That is generally used to represent an absence of value.
 
 * `T1` or `T2` is a type for values that belong to `T1` or to `T2`.
   It is similar to what other languages may call union types.
@@ -106,22 +106,201 @@ The most important ones are:
   For example, `type distance is another real` will create another `real`
   type, allowing you to forbid multiplication, and preventing errors
   such as adding a `distance` to a `real`.
+      ```
+      type distance is another real
+      X:distance * Y:distance is compile_error "Cannot multiply distances"
+      syntax { POSTFIX 400 m cm mm km }
+      X:real m  is distance(X)
+      X:real cm is distance(X * 0.01)
+      X:real mm is distance(X * 0.001)
+      X:real km is distance(X * 1000.0)
+
+      D:distance is 3.2km
+      ```
 
 * `optional T` is a shortcut for `T or nil`. This is useful for
   functions like `find` that return an optional value, and where not
   finding something is not an error but an expected result.
 
 * `fallible T` is a shortcut for `T or error`, and should be used for
-  [functions that may fail](#error-handling).
+  [functions that may fail](#error-handling). Unlike `nil`, an `error`
+  carries a payload that gives information about the error, and can be
+  used to generate an error message.
+
+* `array[N] of T` defines an 0-based array containing `N` elements of
+  type `T`. The value of `N` need not be a constant. Another variant,
+  `array[A..B] of T`, allows arrays where the index is between values
+  `A` and `B`, which can be any enumerated type. For example,
+  `array['A'..'Z'] of boolean` provides 26 `boolean` values, indexed by
+  an alphabetic letter.
+
+* `string of T` is a variable size sequence of values with the same
+  type `T`. The size of a `string` can change over its lifetime.
 
 * `either Patterns` is a type that matches one of the patterns given.
   It can be used in particular for what would be called "enumerations"
-  in a language like C, but is richer, much like "enumerations" in Rust.
+  in a language like C, but is richer, much like
+  [Rust enumerations](https://doc.rust-lang.org/reference/items/enumerations.html)
+  ```
+  type complex is either
+      cartesian(Re:real, Im:real)
+      polar(Mod:real, Arg:real)
+  ```
 
-* `variable T` or `var T` is a mutable version of type `T`.
+* `variable T` or `var T` is a mutable version of type `T`, whereas
+  `constant T` is a non-mutable version of type `T`. Only mutable
+  values can be changed using the `:=` operator or their
+  variants. Note that by default, function bindings are mutable, but
+  modifications apply to the copy in the new context.
 
-* `constant T` is a non-mutable version of type `T`.
+* `in T`, `out T` and `inout T` are types design to optimize parameter
+  passing in a safe way. They indicate how you intend data to flow
+  between the caller and the callee. These types also may have uses in
+  data structures.
 
+* `T in ValueList` is a subtype of `T` that only accepts values in the
+  given comma-separated `ValueList`. For types that have a total
+  order, `ValueList` elements can also include ranges written as
+  `A..B`. For example, `integer in 1..5,9,12..20` is a type that only
+  accept integer values 1 through 5, or 9, or 12 through 20.
+  Similarly, `text in "One", "Two", "Three", "Four"` is a type that only
+  accepts the given text strings.
+
+These are only some common examples of type expressions. There is
+nothing that prevents you from adding many others.
+
+The case of `in T`, `out T` and `inout T`  are examples of what will
+be called _ownership controlling types_, i.e. types that are dedicated
+to controlling who owns what data. More details are provided in the
+section on [ownership](#ownership) below.
+
+
+## Ownership
+
+The [XL execution model](HANDBOOK_2-evaluation.md) is based on a
+source-like description of the evaluation context. This execution
+model was described using relatively simple types for the bindings,
+for example `X is 0`.
+
+We described two
+cases that correspond to immediate and lazy evaluation. This leads to
+slightly different behaviour, which is exposed by the following program:
+
+```
+immediate Arg:integer is Arg + 1
+lazy Arg is Arg + 1
+
+X is 42
+immediate X
+lazy X
+```
+
+When evaluating `immediate X`, we need to evaluate `X` to check its
+type. Therefore, the context while evaluating `immediate X` will be
+`Arg is 42`, where `42` is the evaluated value of `X`.
+
+When evaluating `lazy X` on the other hand, `X` is not evaluated, so
+that the bindings will look more like:
+
+```
+Arg is CONTEXT { X }
+CONTEXT is { X is 42 }
+```
+
+
+## Ownership
+
+So far, we have
+only described simple bindings such as `X is 0` in the context, where
+copying the binding value around is inexpensive. If you call a pattern
+like `foo Y:integer`, you end up with a binding like `Y is X`, and
+we have not really discussed if and how that could behave differently
+from a binding like `Y is 0`.
+
+There are, however, many data types where the difference will
+matter. A binding like `Y is X` is called a _reference binding_: the
+value _refers_ to another value. By contrast, a binding like `Y is 0`
+is called a _value binding_. The difference matters in particular if
+you do something like `Y := 42`. Do you end up in a binding that is
+`Y is 42`, or do you end up with a `Y is X; X is 42` binding?
+
+Some data types, such as `string of T`, require relatively complex and
+expensive memory management operations. For example, as you add
+elements to a `string of integer`, the implementation of that type may
+need to allocate memory to store the new values. Some other data
+types, such as `array[1000] of integer`, may simply be big and
+expensive to copy around. Finally, some types such as `file` may
+acquire and release
+
+
+
+For that reason, it may be necessary to optimize the generated code in
+order to avoid copies and memory allocations while binding values. In
+C, for example, you would pass a _pointer_ to a function when the data
+being worked on is too large. The problem with this approach is well
+known: ownership of the data being pointed to is unclear in
+C. C++ has not improved this class of problems much. This class of
+problems, collectively called "memory safety", has plagued C and C++
+programs for years.
+
+To address this problem, the Rust programming language has
+[defined ownership](https://doc.rust-lang.org/1.8.0/book/ownership.html)
+so that there is only one owner of any value at any time. This is done
+in Rust in a way that can be fully enforced at compile-time, but
+requires a somewhat complex mental gymanistics from the programmer.
+
+
+rather
+has a precise definition of the ownership of data. However, the XL
+approach is intended to be slightly easier to use, while delivering
+substantially the same benefits.
+
+
+
+this is
+done in a rather different way in XL. The rules in XL are not as
+strict and constraining as in Rust, although they allow programmers to
+achieve substantially the same effect, i.e. memory and thread safety
+without a need for garbage collection.
+
+### Copy or Move
+
+
+
+
+
+copy-controlling types, which
+  cause a copy when the value is initialized, when it goes out of
+  scope, or in both cases. They are mostly used for function
+  parameters, although they can also be used in data structures.
+  ```
+  increment X:inout integer is X := X+1; print_A
+  print_A is print "A=", A
+  A:integer := 45
+  increment A   // Can print either "A=45" or "A=46" depending on copy or ref
+  ```
+  > **NOTE** The language makes no guarantee that the copies happen
+  > _only_ when the value is created or destroyed. Typically, `inout T`
+  > will perform copies only for small objects, and use references for
+  > larger ones if the lifetime of the bound value allows it. The
+  > compilers determines which approach is more efficient in an
+  > architecture-dependent way.
+
+  The `copy_in T`, `copy_out T` and `copy_inout T` are types that
+  guarantee that copy will occur.
+
+* `ref T` is a reference to the entity being bound, meaning that any
+  change to the `ref T` value will actually modify the bound
+  value. The lifetime of the bound value must dominate the lifetime of
+  the `ref T` value. Mutability for the reference is the same as
+  mutability for the
+  ```
+  // Increment in place
+  increment X:ref integer is X := X+1; print_A
+  print_A is print "A=", A
+  A:integer := 45
+  increment A   // Guaranteed to print "A=46", X is the same as A
+  ```
 
 
 
