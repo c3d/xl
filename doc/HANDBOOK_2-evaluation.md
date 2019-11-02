@@ -222,7 +222,7 @@ of `circumference Radius:real` would be:
 
 ```xl
 CONTEXT is
-    Radius is 5.3
+    Radius:real := 5.3
     // Earlier context begins here
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
@@ -233,6 +233,16 @@ As a reminder, `Radius` is a _formal parameter_, or simply _parameter_
 that receives the _argument_ 5.3 as a result of _binding_. The binding
 remains active for the duration of the evaluation of of the body of
 the definition.
+
+The binding contains the type annotation for the formal parameter,
+ensuring that type constraints are known and respected. For example,
+attempting `Radius := "Hello"` in the body of `circumference` would
+fail, because the type of `"Hello"` is not `real`.
+
+The binding can also be made with either `is` or `:=`. Bindings made
+with `is` are immutable. Bindings made with `:=` are mutable. Since by
+default, an `X : T` annotation creates a mutable binding, the binding
+for `Radius` is made with `:=`.
 
 Once the new context has been created, execution of the program
 continues with the body of the definition. In that case, that means
@@ -300,9 +310,9 @@ context where `X` is set to `2`:
 
 ```xl
 CONTEXT is
-    X is 2
+    X:integer := 2
     // Earlier context begins here
-    Radius is 5.3
+    Radius:real := 5.3
     // Earlier context begins here
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
@@ -315,10 +325,10 @@ called with an argument of the correct `real` type for `X`:
 
 ```xl
 CONTEXT is
-    X is 2.0
-    Y is 3.14
+    X:real := 2.0
+    Y:real := 3.14
     // Earlier context here
-    Radius is 5.3
+    Radius:real := 5.3
     // Earlier context begins here
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
@@ -331,10 +341,10 @@ will then happen with the following context:
 
 ```xl
 CONTEXT is
-    X is 6.28 // from 2 * pi
-    Y is 5.3  // from Radius
+    X:real := 6.28 // from 2 * pi
+    Y:real :=5.3  // from Radius
     // Earlier context here
-    Radius is 5.3
+    Radius:real := 5.3
     // Earlier context begins here
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
@@ -455,7 +465,7 @@ following conditions is true:
 
 In some cases, pattern matching requires evaluation of an expression
 or sub-expression. This is called [immediate evaluation](#immediate-evaluation).
-Otherwise, [evaluation will be deferred](#deferred-evaluation).
+Otherwise, [evaluation will be lazy](#lazy-evaluation).
 
 
 ## Overloading
@@ -680,7 +690,8 @@ in XL for statements, but also in the following cases:
    write A+3
    ```
    In that case, since `A+3` is already an `infix`, it is possible
-   to bind it to `X` directly without evaluating it.
+   to bind it to `X` directly without evaluating it. So we will
+   evaluate the body with binding `X:infix is A+3`.
 
 2. When the part of the pattern being checked is a constant or a
    [metabox](#metabox). For example, this is the case in the definition of the
@@ -720,13 +731,13 @@ are [memoized](#memoization), meaning that they are computed at most once
 in a given statement.
 
 
-## Deferred evaluation
+## Lazy evaluation
 
 In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter in such a way that an evaluation
 of the formal argument in the body of the declaration will evaluate
 the original expression in the original context. This is called
-_deferred evaluation_. The original expression will be evaluated every
+_lazy evaluation_. The original expression will be evaluated every
 time the parameter is evaluated.
 
 To understand these rules, consider the canonical definition of `while` loops:
@@ -778,7 +789,7 @@ arguments that were passed to the original invokation. For the same
 reason, each test of `N <> 1` in our example is with the latest value
 of `N`.
 
-Deferred evaluation can also be used to implement "short circuit"
+Lazy evaluation can also be used to implement "short circuit"
 boolean operators. The following code for the `and` operator will not
 evaluate `Condition` if its left operand is `false`, making this
 implementation of `and` more efficient than the one given earlier:
@@ -840,7 +851,7 @@ even after that context would otherwise normally be discarded.
 For example, consider the following code defining an anonymous function:
 
 ```xl
-adder N is  { lambda X is X + N }
+adder N is { lambda X is X + N }
 add3 is adder 3     // Creates a function that adds 3 to its input
 add3 5              // Computes 8
 ```
@@ -1020,7 +1031,7 @@ something like:
 ```xl
 CONTEXT is
     is_vowel C is [...]
-    Count is 0
+    Count:integer := 0
     InputText is "Hello World"
     CONTEXT0
 ```
@@ -1034,7 +1045,7 @@ CONTEXT is
     Item in RefItem is [...]
     C is 'l'
     is_vowel C is [...]
-    Count is 1
+    Count:integer := 1
     InputText is "Hello World"
     CONTEXT0
 ```
@@ -1165,6 +1176,11 @@ This is also exactly what happens when you `use` a module. For example,
 with `use IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in
 the current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
+
+
+## Assignments
+
+## Moves
 
 
 ## Functions as values
