@@ -159,7 +159,7 @@ The most common and useful ones are:
   carries a payload that gives information about the error, and can be
   used to generate an error message.
 
-* `array[N] of T` defines an 0-based array containing `N` elements of
+* `array[N] of T` defines a 0-based array containing `N` elements of
   type `T`. The value of `N` need not be a constant. Another variant,
   `array[A..B] of T`, allows arrays where the index is between values
   `A` and `B`, which can be any enumerated type. For example,
