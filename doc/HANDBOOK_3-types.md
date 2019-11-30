@@ -183,8 +183,10 @@ The most common and useful ones are:
 * `variable T` or `var T` is a mutable version of type `T`, whereas
   `constant T` is a non-mutable version of type `T`. Only mutable
   values can be changed using the `:=` operator or their
-  variants. Note that by default, function bindings are mutable, but
-  modifications apply to the copy in the new context.
+  variants. Note that by default, formal parameters are mutable (they
+  are generally specified with something like `X:integer`), but
+  modifications apply to the binding in the current evaluation
+  context, therefore not modifying the corresponding argument.
 
 * `in T`, `out T` and `inout T` are types design to optimize parameter
   passing in a safe way. They indicate how you intend data to flow
