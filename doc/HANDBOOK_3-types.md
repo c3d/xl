@@ -167,7 +167,8 @@ The most common and useful ones are:
   an alphabetic letter.
 
 * `string of T` is a variable size sequence of values with the same
-  type `T`. The size of a `string` can change over its lifetime.
+  type `T`. The size of a `string` can change over its lifetime. A
+  `text` may be represented as a `string of character`.
 
 * `either Patterns` is a type that matches one of the patterns given.
   It can be used in particular for what would be called "enumerations"
