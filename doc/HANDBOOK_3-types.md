@@ -17,7 +17,7 @@ or to `infix`.
 
 In XL, you shouldn't talk about _the_ type of a value, but rather
 about _a_ type. However, in the presence of a type annotation, it is
-customary to talk about _the type_ to denote the type as indicated by
+customary to talk about _the type_ to denote the type indicated by
 the annotation. For example, in the presence of an annotation like
 `X:integer`, we will frequently refer to the type of `X` as being
 `integer`, although the value of `X`, for example `2`, may belong to
