@@ -109,11 +109,14 @@ The most important ones are:
 * `T1` or `T2` is a type for values that belong to `T1` or to `T2`.
   It is similar to what other languages may call union types.
   For example, `integer or real` will match both `integer` and `real`
-  values. An operation is valid on `T1 or T2` only if there is a
-  corresponding operation for both `T1` or `T2`. For example, if `V`
-  is `integer or real`, `V+V` is valid and will dynamically dispatch
-  to either `X:real+Y:real` or `X:integer+Y:integer` depending on
-  whether the actual value of `V` is `real` or `integer` respectively.
+  values. Operations on `T1 or T2` will cause dynamic dispatch
+  depending on the actual value being considered. For example,
+  consider:
+  ```
+  double X:(integer or real) is X + X
+  double 1      // returns 2 as an integer
+  double 3.5    // returns 7.0 as a real
+  ```
 
 * `T1` and `T2` is a type for values that belong to both `T1` and `T2`.
   For example, `number and ordered` will match ordered numbers.
