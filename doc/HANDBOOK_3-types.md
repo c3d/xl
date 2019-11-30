@@ -150,6 +150,9 @@ The most common and useful ones are:
 * `optional T` is a shortcut for `T or nil`. This is useful for
   functions like `find` that return an optional value, and where not
   finding something is not an error but an expected result.
+  > **NOTE** Compilers should perform specific optimizations such as
+  > representing the value with a pointer and reserving the null
+  > pointer for value `nil`.
 
 * `fallible T` is a shortcut for `T or error`, and should be used for
   [functions that may fail](#error-handling). Unlike `nil`, an `error`
