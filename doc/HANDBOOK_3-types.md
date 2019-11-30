@@ -53,7 +53,7 @@ some other value that you cannot modify.
 
 Like other XL values, a type can be given a name. For example, a
 `complex` type made of two `real` numbers representing the real and
-imaginary parts can be described using the following code:
+imaginary parts can be described as follows:
 
 ```xl
 complex is type(complex(Re:real, Im:real))
