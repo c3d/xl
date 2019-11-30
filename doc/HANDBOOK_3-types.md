@@ -101,7 +101,7 @@ type complex32 is complex[real32]
 ## Standard type expressions
 
 A number of type expressions are provided by the standard library.
-The most important ones are:
+The most common and useful ones are:
 
 * `nil` is a type that contains a single value, `nil`, which evaluates
   to itself. That is generally used to represent an absence of value.
@@ -118,8 +118,11 @@ The most important ones are:
   double 3.5    // returns 7.0 as a real
   ```
 
-* `T1` and `T2` is a type for values that belong to both `T1` and `T2`.
-  For example, `number and ordered` will match ordered numbers.
+* `T1` and `T2` is a type for values that belong to both `T1` and
+  `T2`.  For example, `number and totally_ordered` will match totally
+  ordered numbers, i.e. it will not match `"ABC"` (`totally_ordered`,
+  but not a `number`) nor will it match `ieee754(2.5)` (`number`, but
+  not `totally_ordered`).
 
 * `another T` is a new type that is identical to `T`, allowing overloading.
   For example, `type distance is another real` will create another `real`
