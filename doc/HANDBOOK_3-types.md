@@ -128,17 +128,18 @@ The most common and useful ones are:
   For example, `type distance is another real` will create another `real`
   type, allowing you to forbid multiplication, and preventing errors
   such as adding a `distance` to a `real`.
-      ```
-      type distance is another real
-      X:distance * Y:distance is compile_error "Cannot multiply distances"
-      syntax { POSTFIX 400 m cm mm km }
-      X:real m  is distance(X)
-      X:real cm is distance(X * 0.01)
-      X:real mm is distance(X * 0.001)
-      X:real km is distance(X * 1000.0)
 
-      D:distance is 3.2km
-      ```
+  ```
+  type distance is another real
+  X:distance * Y:distance is compile_error "Cannot multiply distances"
+  syntax { POSTFIX 400 m cm mm km }
+  X:real m  is distance(X)
+  X:real cm is distance(X * 0.01)
+  X:real mm is distance(X * 0.001)
+  X:real km is distance(X * 1000.0)
+
+  D:distance is 3.2km
+  ```
 
 * `optional T` is a shortcut for `T or nil`. This is useful for
   functions like `find` that return an optional value, and where not
