@@ -132,6 +132,7 @@ The most common and useful ones are:
   ```
   type distance is another real
   X:distance * Y:distance is compile_error "Cannot multiply distances"
+  X:real as distance is compile_error "Implicit distance from real"
   syntax { POSTFIX 400 m cm mm km }
   X:real m  is distance(X)
   X:real cm is distance(X * 0.01)
@@ -139,7 +140,12 @@ The most common and useful ones are:
   X:real km is distance(X * 1000.0)
 
   D:distance is 3.2km
+  D + D     // OK: inherit X:distance+Y:distance from X:real+Y:real
+  D + 1.0   // Error: Implicit distance from real
+  D * D     // Error: Cannot multiply distances
   ```
+  > **NOTE** The code above is incomplete, since `distance` would
+  > inherit `X:integer as real`, so that `D+1` would be accepted.
 
 * `optional T` is a shortcut for `T or nil`. This is useful for
   functions like `find` that return an optional value, and where not
