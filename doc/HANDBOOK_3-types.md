@@ -91,7 +91,11 @@ type complex32 is complex[real32]
 ```
 
 > **NOTE** Type expressions play for XL the role that "class templates"
-> play in C++, or "generic types" in Ada.
+> play in C++, or "generic types" in Ada. By convention, the formal
+> parameters or arguments of type expressions are placed between
+> square brackets, as in `complex[real]`, although there is no
+> requirement for this. In practice, exceptions are frequent, notably
+> for types using operator-like notations, like `pointer to T`.
 
 
 ## Standard type expressions
