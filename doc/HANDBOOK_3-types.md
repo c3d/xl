@@ -10,11 +10,19 @@ type. The expression `type(Pattern)` returns the type for the given
 type declaration pattern. For example, the type for all additions
 where the first value is a `real` is `type(A:real+B)`.
 
-This approach to typing means in particular that, unlike many other
-languages, a same value can belong to _multiple_ types. For example,
-the expression `2+3*5` belongs to `type(A+B*C)`, but also to
-`type(A:integer+B:integer)`, or to `infix`.
+This approach to typing means in particular that a same value can
+belong to _multiple_ types. For example, the expression `2+3*5`
+belongs to `type(A+B*C)`, but also to `type(A:integer+B:integer)`,
+or to `infix`.
 
+In XL, you shouldn't talk about _the_ type of a value, but rather
+about _a_ type. However, in the presence of a type annotation, it is
+customary to talk about the type to denote the type as indicated by
+the annotation. For example, in the presence of an annotation like
+`X:integer`, we will frequently refer to the type of `X` as being
+`integer`, although the value of `X`, for example `2`, may belong to
+other types such as `even` or `positive` or `type(2)` (i.e. a type
+that only contains the value `2`).
 
 ## Type annotations
 
