@@ -1,52 +1,66 @@
 # XL Type System
 
-A type annotation like `X : integer` indicates that `X` has the
-`integer` type. Types identify which operations that can be performed
-on a value. For example, knowing that `X` is an `integer` allows
-expression `X+X` to match declaration pattern `X:integer+Y:integer`.
+XL types are a way to organize values by restricting which
+operations can be selected during evaluation. For example, knowing
+that `A` is a `real` allows expression `A+A` to match declaration
+pattern `X:real+Y:real`, but prevent it from matching pattern
+`X:integer+Y:integer`.
 
-In XL, types are defined by the _shape_ of trees that belong to the
-type. The expression `type(Pattern)` returns the type for the given
-type declaration pattern. For example, the type for all additions
-where the first value is a `real` is `type(A:real+B)`.
+In XL, types are based on the _shape_ of trees. A type identifies
+the tree patterns that belong to the type. The expression `type(Pattern)`
+returns the type for the given type declaration pattern. For example,
+the type for all additions where the first value is a `real` is
+`type(A:real+B)`.
 
 This approach to typing means in particular that a same value can
 belong to _multiple_ types. For example, the expression `2+3*5`
 belongs to `type(A+B*C)`, but also to `type(A:integer+B:integer)`,
 or to `infix`.
 
-In XL, you shouldn't talk about _the_ type of a value, but rather
-about _a_ type. However, in the presence of a type annotation, it is
-customary to talk about _the type_ to denote the type indicated by
-the annotation. For example, in the presence of an annotation like
-`X:integer`, we will frequently refer to the type of `X` as being
-`integer`, although the value of `X`, for example `2`, may belong to
-other types such as `even` or `positive` or `type(2)` (i.e. a type
-that only contains the value `2`).
+Therefore, for XL, you shouldn't talk about _the_ type of a value, but
+rather about _a_ type. However, in the presence of a type annotation,
+it is customary to talk about _the type_ to denote the single type
+indicated by the annotation. For example, for `X:integer`, we will
+ordinarily refer to the type of `X` as being `integer`, although the
+value of `X`, for example `2`, may also belong to other types such as
+`even_integer` or `positive_integer` or `type(2)`, a type that
+only contains the value `2`.
+
 
 ## Type annotations
 
+A type can be associated to a name using a _type annotation_.
+For example, a type annotation such as `X:integer` indicates that the
+values that can be bound to the name `X` must belong to the `integer`
+type.
+
 Two infix operators can be used for type annotations, `X:T` and `X as T`.
 Both are annotations indicating that `X` belongs to type `T`.
+Typical usage for these two kinds of annotations is illustrated below,
+indicating that the `<` operator between two `integer` values has the
+`boolean` type:
 
-The first difference between the two type annotations is parsing
+```
+X:integer < Y:integer as boolean
+```
+
+The first difference between the two kinds of type annotations is parsing
 precedence. The infix `:` has precedence higher than most operators,
 whereas infix `as` has a very low precedence. In most declarations, an
 infix `:` is used to give a type to formal parameters, whereas an
 infix `as` is used to give a type to the whole expression. This is
-illustrated in the following pattern, which states that the addition
-of two `integer` values is itself an `integer`:
-```xl
-X:integer + Y:integer as integer
-```
+illustrated in the example above, where `X:integer` and `Y:integer`
+define the types of the two formal parameters `X` and `Y` in the
+pattern `X < Y`, and the `as boolean` part indicates that the result of an
+operation like `3 < 5` has the `boolean` type.
 
-Another difference is that `X as T`, by default, denotes that `X` is
-not mutable, whereas `X : T` denotes that `X` is mutable, unless the
-type explicitly specifies otherwise. For example, `seconds : integer`
-declares a _variable_ named seconds, where you can store your own
-seconds values, whereas `seconds as integer` declares a _function_
-named seconds, computing the number of seconds in the current time, or
-some other value that you cannot modify.
+Another difference is [mutability](#mutability). If type `T` is not
+explicitly marked as `constant` or `variable`, `X:T` indicates that
+`X` is mutable, whereas `X as T` indicates that `X` is not mutable.
+For example, `seconds : integer` declares a _variable_ named seconds,
+where you can store your own seconds values, whereas `seconds as integer`
+declares a _function_ named seconds, possibly returning the number of
+seconds in the current time from some real-time clock.
 
 
 ## Type declarations
@@ -70,6 +84,67 @@ The previous example should be written as follows:
 ```xl
 type complex is complex(Re:real, Im:real)
 ```
+
+
+## Mutability
+
+A value is said to be _mutable_ or _variable_ if it can change
+during its lifetime. A value that is not mutable is said to be
+_constant_.
+
+The `X:T` type annotations indicates that `X` is a mutable value of
+type `T`, unless type `T` is explicitly marked as constant.
+The `X as T` type annotation indicates that `X` is a constant value of
+type `T`, unless type `T` is explicitly marked as variable.
+
+A mutable value can be initialized or modified using the `:=`
+operator, which is called an _assignment_:
+
+```xl
+X : integer := 42       // Initialize with value 42
+X := X + 1              // Add 1 to X, so now X is 43
+```
+
+There are also a number of derived operators, such as `+=` that adds
+to a value that has a `+` operation, `-=` that subtracts from it, and
+so on. For example, the code above could also be written as:
+
+```xl
+X : integer := 42       // Initialize with value 42
+X += 1                  // Add 1 to X, so now X is 43
+```
+
+The cost and complexity of modifying a value varies a lot depending on
+the value type. Simple, small objects such as `integer` or `real` are
+called _machine-representable_ in that they normally have an immediate
+machine representation. Operations such as assignments can directly be
+translated into individual machine instructions.
+
+Other, more complex types, such as `text`, require a more
+sophisticated representation, and multiple machine operations are
+necessary to represent even a simple assignment. Furthermore, such
+types may expose an internal structure. For example, a `text` value
+can contain a multiplicity of `character` elements, which can be
+addressed individually.
+
+At least conceptually, it is possibly to mutate a text not simply by
+changing its value as a whole, but by changing individual characters
+in it as well. Some languages forbid such operations, but this
+generally results in the inability to express some highly-efficient
+algorithms (or with the need to express them in a convoluted way and
+count on the compiler being very smart).
+
+
+
+## Copy, move and bind
+
+
+
+ If a mutable value is not initialized, there must be
+a default initialization for the type, i.e. a
+
+Formal parameters can be marked as `in`, `out` or `inout`. A
+
 
 
 ## Type expressions
