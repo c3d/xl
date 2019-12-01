@@ -86,16 +86,112 @@ type complex is complex(Re:real, Im:real)
 ```
 
 
-## Mutability
+## Type-related concepts
 
-A value is said to be _mutable_ or _variable_ if it can change
-during its lifetime. A value that is not mutable is said to be
-_constant_.
+A number of essential concepts are related to the type system, and
+will be explained more in details below:
+
+* the [lifetime](#lifetime) of a value is the amount of time during
+  which the value exists in the program. Lifetime is, among other
+  things, determined by [scoping](HANDBOOKE_2-evaluation.md#scoping).
+* [creation](#creation) and [destruction](#destruction)
+  defines how values of a given type are initialized and destroyed.
+* [mutability](#mutability) is the ability for an entity to change
+  value over its lifetime.
+* [compactness](#compactness) is the property of some types to have
+  their values represented in the machine in a compact way, i.e. a
+  fixed-size sequence of consecutive memory storage units
+  (most generally bytes).
+* [ownership](#ownership) is a properties of some types to control the
+  lifetime of the associated values or possibly some other resource
+  such as a network connection. Non-owning types can be used to
+  [access](#access) values of an associated owning type.
+* [copy](#copy), [move](#move) and [binding](#binding) are operations
+  used to transfer values across parts of a program.
+* [atomicity](#atomicity) is the ability to perform operations in a
+  way that allows consistent behavior across multiple threads of
+  execution, possibly executing concurrently on different CPUs.
+
+
+### Lifetime
+
+The lifetime of a value is the amount of time during which the value
+exists in the program, in other words the time between its
+[creation](#creation) and its [destruction](#destruction).
+
+* _Temporary values_ hold the result of evaluation of functions.
+  They are created in the called function, and [copied](#copy) or
+  [moved](#move) to the function caller. The temporary value is
+  destroyed before the end of the statement, and possibly as early as
+  it is no longer used. In the following example, the value of `x*3`
+  can be destroyed as soon as the expression `x*3+5` is computed.
+
+  ```
+  f(x) is (x*3+5)/2
+  ```
+
+* _Named constants_ have a lifetime that corresponds to their
+  [scope](HANDBOOKE_2-evaluation.md#scoping).
+  As long as the named constant is visible, it exists. In the
+  following example, the value of `degree2radian`, `2 * pi / 180`
+  exists for the duration of the `cos_degrees` function:
+
+  ```
+  cos_degrees X is
+     degree2radian is 2 * pi / 180
+     cos(X * degree2radian)
+  ```
+
+* _Variables_ have a lifetime that generally corresponds to their
+  [scope](HANDBOOKE_2-evaluation.md#scoping), but the value of their
+  lifetime terminates each time the value is updated. In the following
+  example, `Message` is created with value `"Hello"`, but on the
+  second line, that value is destroyed to be replaced with value
+  `"Hello World"`.
+
+  ```
+  Message : text := "Hello"
+  Message := Message & " World"
+  ```
+
+* _Allocated values_ are stored dynamically, for example in heap
+  storage. The lifetime of such values is normally controlled by the
+  types used to access the storage. For example, the code below
+  creates a `string of integer`, which is a dynamically allocated data
+  type that holds an arbitrariliy large sequence of `integer` values,
+  thus extending the lifetime of all elements in this sequence::
+
+  ```
+  collatz N:integer as string of integer is
+      loop
+          result &= N
+          N := if N mod 2 = 0 then N/2 else N*3+1
+      until N = 1
+  ```
+
+
+### Creation
+
+
+
+
+### Destruction
+
+
+### Mutability
+
+A value is said to be _mutable_ if it can change during its lifetime.
+A value that is not mutable is said to be _constant_. A mutable named
+entity is called a _variable_. An immutable named entity is called a
+_named constant_.
 
 The `X:T` type annotations indicates that `X` is a mutable value of
-type `T`, unless type `T` is explicitly marked as constant.
+type `T`, unless type `T` is explicitly marked as constant. When `X`
+is a name, the annotation declares that `X` is a variable.
 The `X as T` type annotation indicates that `X` is a constant value of
-type `T`, unless type `T` is explicitly marked as variable.
+type `T`, unless type `T` is explicitly marked as variable. When `X`
+is a name, this may declare either a named constant or a function
+without parameters, depending on the shape of the body.
 
 A mutable value can be initialized or modified using the `:=`
 operator, which is called an _assignment_:
@@ -135,16 +231,24 @@ algorithms (or with the need to express them in a convoluted way and
 count on the compiler being very smart).
 
 
+### Compactness
 
-## Copy, move and bind
+### Ownership
 
 
+### Access
 
- If a mutable value is not initialized, there must be
-a default initialization for the type, i.e. a
 
-Formal parameters can be marked as `in`, `out` or `inout`. A
+### Copy
 
+
+### Move
+
+
+### Binding
+
+
+### Atomicity
 
 
 ## Type expressions
