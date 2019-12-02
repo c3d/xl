@@ -223,7 +223,7 @@ of `circumference Radius:real` would be:
 ```xl
 CONTEXT is
     Radius:real := 5.3
-    // Earlier context begins here
+    // Enclosing context begins here
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
     CONTEXT0 // Previous context
