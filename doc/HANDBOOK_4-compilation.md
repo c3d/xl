@@ -12,3 +12,6 @@ Types also determine properties such as the size and binary representation
 of values. For example, on most machines, `integer` will be
 represented as a 64-bit 2-complement binary value, and `real` using
 the IEEE-754 64-bit representation.
+
+
+## Lifetime
