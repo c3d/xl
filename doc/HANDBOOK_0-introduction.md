@@ -33,9 +33,10 @@ prove this.
 
 ## Two basic examples
 
-It is practically mandatory to begin the presentation of any
-programming language with a ["Hello World"](https://en.wikipedia.org/wiki/%22Hello,_World!%22_program) example,
-immediately followed by a a recursive definition of the
+It is practically compulsory to begin the presentation of any
+programming language with a
+["Hello World"](https://en.wikipedia.org/wiki/%22Hello,_World!%22_program)
+example, immediately followed by a a recursive definition of the
 [factorial function](https://en.wikipedia.org/wiki/Factorial). Let's
 follow this long honored tradition.
 
