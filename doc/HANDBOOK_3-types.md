@@ -119,6 +119,32 @@ The lifetime of a value is the amount of time during which the value
 exists in the program, in other words the time between its
 [creation](#creation) and its [destruction](#destruction).
 
+An entity is said to be _live_ if it was created but not yet
+destroyed. It is said to be _dead_ otherwise.
+
+> **NOTE** Some entities may be live but not accessible from within
+> the current context because they are not visible. This is the case
+> for variables declared in the caller's context.
+
+The lifetime information known by the compiler about entity `X` is
+represented as compile-time constant `lifetime X`. The lifetime
+values are equipped with a partial order `<`, such that the expression
+`lifetime X < lifetime Y` being `true` is a compiler guarantee that
+`Y` will always be live while `X` is live. It is possible for neither
+`lifetime X < lifetime Y` nor `lifetime X > lifetime Y` to be
+true. This `lifetime` feature is used to implement
+[Rust-like](https://doc.rust-lang.org/1.8.0/book/ownership.html)
+[restrictions on access types](HANDBOOK_4-compilation.md#lifetime),
+i.e. a way to achieve memory safety at zero runtime cost.
+
+The lifetime of XL values fall in one of the following categories:
+
+* _Global_ entities are live at least as long as they are visible.
+  This includes builtin-enttiies, entitites declared in the top-level
+  of the modules used by the program, and most entities created by the
+  compiler itself. The compiler can generally assign preallocated
+  storage to such entities, at compilation time.
+
 * _Temporary values_ hold the result of evaluation of functions.
   They are created in the called function, and [copied](#copy) or
   [moved](#move) to the function caller. The temporary value is
@@ -130,17 +156,25 @@ exists in the program, in other words the time between its
   f(x) is (x*3+5)/2
   ```
 
+  Such temporary values are typically stored in registers or on the
+  stack, although some temporary values may require heap storage that
+  will be freed when the value is destroyed.
+
 * _Named constants_ have a lifetime that corresponds to their
   [scope](HANDBOOKE_2-evaluation.md#scoping).
   As long as the named constant is visible, it exists. In the
-  following example, the value of `degree2radian`, `2 * pi / 180`
+  following example, the value of `DEGREE_TO_RADIAN`, `2 * pi / 180`
   exists for the duration of the `cos_degrees` function:
 
   ```
   cos_degrees X is
-     degree2radian is 2 * pi / 180
-     cos(X * degree2radian)
+     DEGREE_TO_RADIAN is 2 * pi / 180
+     cos(X * DEGREE_TO_RADIAN)
   ```
+
+  The compiler has a lot of freedom on how to implement named
+  constants, and may use preallocated storage, functions, or immediate
+  constants depending on the need.
 
 * _Variables_ have a lifetime that generally corresponds to their
   [scope](HANDBOOKE_2-evaluation.md#scoping), but the value of their
@@ -154,25 +188,53 @@ exists in the program, in other words the time between its
   Message := Message & " World"
   ```
 
-* _Allocated values_ are stored dynamically, for example in heap
-  storage. The lifetime of such values is normally controlled by the
-  types used to access the storage. For example, the code below
-  creates a `string of integer`, which is a dynamically allocated data
-  type that holds an arbitrariliy large sequence of `integer` values,
-  thus extending the lifetime of all elements in this sequence::
+  Except for global variables, variables are usually stored on the
+  stock or in registers.
+
+* _Dynamic values_ require dynamic storage, generally in a heap.
+  The lifetime of such values is normally controlled by the
+  values used to access the storage. With the exception of data types
+  used to access data not owned by the XL program (e.g. data allocated
+  from another language), XL ownership rules ensure that dynamic
+  values are destroyed as soon as they can no longer be accessed.
+
+  For example, the code below creates a `string of integer`, which
+  uses dynamically allocated storage, to hold an arbitrary large
+  sequence of `integer` values. Thus, the `string of integer` value
+  extends the lifetime of all values geneated in the sequence.
+  However, it also guarantees that these values are destroyed when the
+  `string of integer` value itself is no longer needed.
 
   ```
-  collatz N:integer as string of integer is
+  syracuse N:integer as string of integer is
       loop
-          result &= N
+          result := result & N
           N := if N mod 2 = 0 then N/2 else N*3+1
       until N = 1
   ```
 
+  Dynamic data is normally stored on a standard heap, but XL
+  provides hooks that make it possible to provide your own allocation
+  for data storage.
+
 
 ### Creation
 
+_Creation_ is the process of preparing a value for use. The XL
+compiler ensures that specific rules are followed to invoke creation
+code provided by the programmer before any other possible use of the
+value being created.
 
+An object can be created in one of two ways:
+
+* From the temporary return value from a
+
+> **RATIONALE** This mechanism is similar to _elaboration_ in Ada or
+> to _constructors_ in C++. It makes it possible for programmers to
+> provide strong guarantees about the internal state of values before
+> they can be used. This is a fundamental brick of programming
+> techniques such as encapsulation, programming contracts or
+> [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization).
 
 
 ### Destruction
@@ -285,7 +347,7 @@ The most common and useful ones are:
 * `nil` is a type that contains a single value, `nil`, which evaluates
   to itself. That is generally used to represent an absence of value.
 
-* `T1` or `T2` is a type for values that belong to `T1` or to `T2`.
+* `T1 or T2` is a type for values that belong to `T1` or to `T2`.
   It is similar to what other languages may call union types.
   For example, `integer or real` will match both `integer` and `real`
   values. Operations on `T1 or T2` will cause dynamic dispatch
@@ -297,7 +359,7 @@ The most common and useful ones are:
   double 3.5    // returns 7.0 as a real
   ```
 
-* `T1` and `T2` is a type for values that belong to both `T1` and
+* `T1 and T2` is a type for values that belong to both `T1` and
   `T2`.  For example, `number and totally_ordered` will match totally
   ordered numbers, i.e. it will not match `"ABC"` (`totally_ordered`,
   but not a `number`) nor will it match `ieee754(2.5)` (`number`, but
