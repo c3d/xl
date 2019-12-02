@@ -63,8 +63,10 @@ system, the corresponding module would not be available, and the
 program would properly fail to compile.
 
 What is more interesting, though, is the definition of `print`.
-That definition is [discussed below](#the-case-of-text-input-output-operations),
-and you will see that it is quite simple.
+That definition is
+[discussed below](#the-case-of-text-input-output-operations),
+and you will see that it is quite simple, in particular if you compare
+it with similar input/output operations in languages such as C++.
 
 
 ### Factorial
