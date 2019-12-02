@@ -784,7 +784,7 @@ slide "The XL programming language",
 
 This can easily be mis-interpreted as being a mere markup language,
 something similar to [markdown](https://en.wikipedia.org/wiki/Markdown),
-which is one reason why I sometimes call XL an _XML without the M_.
+which is one reason why I sometimes refer XL as an _XML without the M_.
 
 However, the true power of XL can more easily be shown by adding the
 clock defined previously, naming it `clock`, and then using it in the
