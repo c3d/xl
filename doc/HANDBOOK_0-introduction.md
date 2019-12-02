@@ -946,6 +946,11 @@ report_stats Count, T, Min, Max, Avg is
           "Min=", Min, " Max=", Max, " Avg=", Avg
 ```
 
+> **NOTE** The definitions of `min`, `max`, `sum` and `count` would
+> not be acceptable in the version of XL described in this document.
+> You would need to write for example `min : real := 100` instead
+> of `min is 100.0`, since `min is 100.0` would declare a constant.
+
 To run the ELFE demos, you need to start an XL server on the machines
 called `pi.local` and `pi2.local`, using the `-remote` command-line
 option of XL:
