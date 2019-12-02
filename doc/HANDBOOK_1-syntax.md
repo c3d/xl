@@ -29,7 +29,7 @@ sometimes referred to as _metaprogramming_.  Metaprogramming is the
 foundation upon which the touted extensibility of XL is built.
 
 
-### Why Lisp remains strong to this day
+### Why Lisp remains so strong to this day
 
 In that respect, XL is very much inspired by one of the earliest
 and most enduring high-level programming languages,
