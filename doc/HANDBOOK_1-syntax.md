@@ -283,8 +283,10 @@ Names and symbols are treated interchangeably by XL after the parsing phase.
 ### Text syntax
 
 Text in XL is delimited with a single or double quote, `'` or `"`, and
-can contain any printable character. Foe example, `"Hello World"` or
-`'ABC'` are valid text in XL.
+can contain any printable character. For example, `"Hello World"` or
+`'ABC'` are valid text in XL. If the delimiter is needed in the text,
+it can be obtained by doubling it. For example, `"He said ""Hello"""`
+is text containing `He said "Hello"`.
 
 Additionally, the XL syntax file can specify delimiters for "long"
 text. Long text can include line-terminating characters, and only
