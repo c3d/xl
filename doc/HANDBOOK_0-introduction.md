@@ -387,10 +387,9 @@ implement that code.
 C++ went one step further than C, allowing you to _overload_
 operators, i.e. redefine the meaning of an operation like `X+1`,
 but only for custom data types, and only for already existing
-operators.
-
-In C++, you cannot create the _spaceship operator_ `<=>` yourself.
-It has to be [added to the language](http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf),
+operators. In C++, you cannot _create_ the _spaceship operator_
+`<=>` yourself. It has to be
+[added to the language](http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf),
 and that takes a 35-pages article to discuss the implications.
 By contrast, all it takes in XL to implement `<=>` in a variant that
 always returns `-1`, `0` or `1` is the following:
