@@ -586,7 +586,7 @@ you need for that type to become "writable" is to add a definition of
 `write` that looks like:
 
 ```xl
-write Z:complex     is write "(", Z.re, ";", Z.im, ")"
+write Z:complex     is write "(", Z.Re, ";", Z.Im, ")"
 ```
 
 Unlike the C++ `iostream` facility, the XL compiler will naturally
