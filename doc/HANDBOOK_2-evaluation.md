@@ -33,6 +33,17 @@ running the program. It should be possible to create an efficient
 ahead-of-time compiler for XL. Work is currently in progress to build
 one.
 
+> **NOTE** Reasonably efficient compilers were produced for earlier
+> generations of the language, notably as part of the Tao3D project.
+> However, this earlier iteration of the language had a very weak type
+> system that made advanced optimizations hard to achieve. This was
+> actually a feature for Tao3D, which purposely disabled some
+> optimizations in order to improve compilation speed, notably when
+> the program structure did not change. The version of XL described in
+> this document, however, has markedly evolved relative to what was
+> implemented in Tao3D, with the hope that much better code quality
+> can be achieved. This part has not been demonstrated yet.
+
 
 ### Execution context
 
