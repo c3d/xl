@@ -919,8 +919,8 @@ However, the way it runs is extremely interesting.
    features that might require a very complex API in other languages.
 
 This last point is worth insisting on. The following program uses the
-same function to compute the min, max and average temperature on the
-remote node. Nothing was changed to the temperature API. The
+same function to compute the minimum, maximum and average temperature
+on the remote node. Nothing was changed to the temperature API. The
 computations are performed efficiently by the remote node.
 
 ```xl
