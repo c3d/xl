@@ -220,7 +220,7 @@ the letter `e` or `E`. If the exponent is negative, then the number is
 parsed as a real number. Therefore, `1e3` is integer value 1000, but
 `1e-3` is real value `0.001`. The exponent is always given in base 10,
 and it indicates an exponentiation in the given base, so that `2#1e8`
-is decimal value 256. For based numbers, the exponent may be precede
+is decimal value 256. For based numbers, the exponent may be preceded
 by a `#` sign, which is mandatory if `e` or `E` are valid digits in
 the base, as in `16#FF#e2` which represents decimal value 65280.
 
