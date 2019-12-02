@@ -915,7 +915,7 @@ However, the way it runs is extremely interesting.
    substantial networking costs.
 
 4. A single `temperature` function, with an extremely simple
-   implementation, provides an extremely rich set of remotely-accessible
+   implementation, provides an remarkably rich set of remotely-accessible
    features that might require a very complex API in other languages.
 
 This last point is worth insisting on. The following program uses the
