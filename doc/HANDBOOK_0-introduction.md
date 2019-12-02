@@ -416,9 +416,7 @@ containing multiple operators. For example, many modern CPUs feature a
 form of [fused multiply-add](https://en.wikipedia.org/wiki/Multiply–accumulate_operation#Fused_multiply–add),
 which has benefits that include performance and precision. Yet C++
 will not allow you to overload `X*Y+Z` to use this kind of
-operations.
-
-In XL, this is not a problem at all:
+operations. In XL, this is not a problem at all:
 
 ```xl
 X*Y+Z   is FusedMultiplyAdd(X,Y,Z)
