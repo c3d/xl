@@ -449,120 +449,141 @@ This will match an expression like `log 1.25` because:
 More generally, a pattern `P` matches an expression `E` if one of the
 following conditions is true:
 
-* <details>
-  <summary>
+<details><summary>
   The top-level pattern `P` is a name, and expression `E` is the same name.
-  </summary>
+</summary>
 
-  | Declaration           | Matched by         | Not matched by      |
-  | --------------------- | ------------------ | ------------------- |
-  | `pi is 3.14`          | `pi`               | `ip`, `3.14`        |
-  </details>
+| Declaration           | Matched by         | Not matched by      |
+| --------------------- | ------------------ | ------------------- |
+| `pi is 3.14`          | `pi`               | `ip`, `3.14`        |
+</details>
 
-* The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
-  `X%`, and the expression `E` is a prefix or  postfix respectively
-  with the same operator as the pattern, and operands match.
+<details><summary>
+The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
+`X%`, and the expression `E` is a prefix or  postfix respectively
+with the same operator as the pattern, and operands match.
+</summary>
 
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `sin X`               | `sin (2.27 + A)`   | `cos 3.27`           |
-  | `+X:real`             | `+2.27`            | `+"A"`, `-3.1`, `1+1`|
-  | `X%`                  | `2.27%`, `"A"%`    | `%3`, `3%2`          |
-  | `X km`                | `2.27 km`          | `km 3`, `1 km 3`     |
+| Pattern               | Matched by         | Not matched by       |
+| --------------------- | ------------------ | -------------------- |
+| `sin X`               | `sin (2.27 + A)`   | `cos 3.27`           |
+| `+X:real`             | `+2.27`            | `+"A"`, `-3.1`, `1+1`|
+| `X%`                  | `2.27%`, `"A"%`    | `%3`, `3%2`          |
+| `X km`                | `2.27 km`          | `km 3`, `1 km 3`     |
+</details>
 
-* The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
-  called a _conditional pattern_, and `Pattern` matches `E`, and the
-  value of `Condition` is `true` with the bindings declared while
-  matching `Pattern`.
+<details><summary>
+The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
+called a _conditional pattern_, and `Pattern` matches `E`, and the
+value of `Condition` is `true` with the bindings declared while
+matching `Pattern`.
+</summary>
 
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `log X when X > 0`    | `log 3.5`          | `log(-3.5)`          |
+| Pattern               | Matched by         | Not matched by       |
+| --------------------- | ------------------ | -------------------- |
+| `log X when X > 0`    | `log 3.5`          | `log(-3.5)`          |
+</details>
 
-* The pattern `P` is an infix, and the operator is the same in the pattern
-  and in the expression, and both operands in the pattern match the
-  respective operands in the expression.
+<details><summary>
+The pattern `P` is an infix, and the operator is the same in the pattern
+and in the expression, and both operands in the pattern match the
+respective operands in the expression.
+</summary>
 
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `X:real+Y:real`       | `3.5+2.9`          | `3+2`, `3.5-2.9`     |
-  | `X and Y`             | `N and 3`          | `N or 3`             |
+| Pattern               | Matched by         | Not matched by       |
+| --------------------- | ------------------ | -------------------- |
+| `X:real+Y:real`       | `3.5+2.9`          | `3+2`, `3.5-2.9`     |
+| `X and Y`             | `N and 3`          | `N or 3`             |
 
-  For sub-patterns, if `E` is a name and its' bound to an infix with
-  the same operator as in the pattern, then its value can be _split_.
+For sub-patterns, if `E` is a name and its' bound to an infix with
+the same operator as in the pattern, then its value can be _split_.
 
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `write X,Y` | `write Items` when `Items is "A","B"` | `wrote 0`, `write Items` when `Items is "A"+B"`   |
+| Pattern               | Matched by         | Not matched by       |
+| --------------------- | ------------------ | -------------------- |
+| `write X,Y` | `write Items` when `Items is "A","B"` | `wrote 0`, `write Items` when `Items is "A"+B"`   |
 
-  > **NOTE** A very common idiom  is to use comma `,` infix to separate
-  > multiple parameters, as in the following definition:
-  > ```xl
-  > write Head, Tail is write Head; write Tail
-  > ```
-  > This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
-  > `Tail is 2,3`. In the evaluation of the body with these bindings,
-  > `write Tail` will then match the same declaration again with
-  > `Tail` being split, resulting in bindings `Head is 2` and `Tail is 3`.
+> **NOTE** A very common idiom  is to use comma `,` infix to separate
+> multiple parameters, as in the following definition:
+> ```xl
+> write Head, Tail is write Head; write Tail
+> ```
+> This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
+> `Tail is 2,3`. In the evaluation of the body with these bindings,
+> `write Tail` will then match the same declaration again with
+> `Tail` being split, resulting in bindings `Head is 2` and `Tail is
+> 3`.
+</details>
 
-* The pattern `P` is an `integer`, `real` or `text` constant, or a
-  [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
-  respectively, and the expression `E` matches the value given by the
-  constant or computed by the expression in the metabox.
-  In that case, expression `E` needs to be evaluated to check if it matches.
+<details><summary>
+The pattern `P` is an `integer`, `real` or `text` constant, or a
+ [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
+ respectively, and the expression `E` matches the value given by the
+ constant or computed by the expression in the metabox.
+ In that case, expression `E` needs to be evaluated to check if it matches.
+</summary>
 
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `if [[true]] then Op` | `if X<3 then run` when `X<3` is `true` | `if 0 then run` |
-  | `0!`                  | `N!` when `N=0`    | `N!` when `N<>0`     |
+| Pattern               | Matched by         | Not matched by       |
+| --------------------- | ------------------ | -------------------- |
+| `if [[true]] then Op` | `if X<3 then run` when `X<3` is `true` | `if 0 then run` |
+| `0!`                  | `N!` when `N=0`    | `N!` when `N<>0`     |
 
-  This case applies to sub-patterns, as was the case for `0! is 1` in
-  the [definition of factorial](HANDBOOK_0-introduction.md#factorial),
-  as well as to top-level patterns, as in `0 is "Zero"`.
-  This last case is useful in [maps](#scoping).
+This case applies to sub-patterns, as was the case for `0! is 1` in
+the [definition of factorial](HANDBOOK_0-introduction.md#factorial),
+as well as to top-level patterns, as in `0 is "Zero"`.
+This last case is useful in [maps](#scoping).
 
-  | Definition            | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `0 is "Zero"`         | `0`, `N` when `N=0` | `1`, `'A'`, `N` unless `N=0`|
-  | `[[false]] is self`   | `false`             | `true`               |
+| Definition            | Matched by          | Not matched by       |
+| --------------------- | ------------------- | -------------------- |
+| `0 is "Zero"`         | `0`, `N` when `N=0` | `1`, `'A'`, `N` unless `N=0`|
+| `[[false]] is self`   | `false`             | `true`               |
+</details>
 
-* The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
-  that case, a binding `N is A` is added at the top of the local context
-  used to evaluate the body, where `A` is the (possibly evaluated)
-  sub-expression from the argument.
+<details><summary>
+The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
+that case, a binding `N is A` is added at the top of the local context
+used to evaluate the body, where `A` is the (possibly evaluated)
+sub-expression from the argument.
+</summary>
+| Sub-pattern           | Matched by          | Not matched by       |
+| --------------------- | ------------------- | -------------------- |
+| `N`                   | Any expression      |                      |
+</details>
 
-  | Sub-pattern           | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `N`                   | Any expression      |                      |
+<details><summary>
+The sub-pattern `P` is a type annotation, such as `X:real`.
+This case is similar to the previous one, except that `E` may need
+to be evaluated to check its type. For example, expression `A+B`
+must be evaluated if the pattern is `X:real`, but not for `X:infix`
+since `A+B` is an infix.
+</summary>
 
-* The sub-pattern `P` is a type annotation, such as `X:real`.
-  This case is similar to the previous one, except that `E` may need
-  to be evaluated to check its type. For example, expression `A+B`
-  must be evaluated if the pattern is `X:real`, but not for `X:infix`
-  since `A+B` is an infix.
+| Pattern               | Matched by          | Not matched by       |
+| --------------------- | ------------------- | -------------------- |
+| `N:integer`           | `0`, `A+B` when `integer` | `A+B` when `real` |
+| `N:infix`             | `A+B` always        | `A*B`                |
+</details>
 
-  | Pattern               | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `N:integer`           | `0`, `A+B` when `integer` | `A+B` when `real` |
-  | `N:infix`             | `A+B` always        | `A*B`                |
+<details><summary>
+The sub-pattern `P` is a name that was already bound in the same
+top-level pattern, and  expression `P = E` is `true`.
+</summary>
+| Pattern               | Matched by          | Not matched by       |
+| --------------------- | ------------------- | -------------------- |
+| `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`     |
+</details>
 
-* The sub-pattern `P` is a name that was already bound in the same
-  top-level pattern, and  expression `P = E` is `true`.
+<details><summary>
+The pattern is a block with a child `C`, and `C` matches `E`.
+In other words, blocks in a pattern only change the precedence, but play no
+other role in pattern matching.
+</summary>
+| Definition            | Matched by          | Not matched by       |
+| --------------------- | ------------------- | -------------------- |
+| `(X+Y)*(X-Y) is X^2-Y^2` | `[A+3]*[A-3]`    | `(A+3)*(A-4)`        |
 
-  | Pattern               | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`     |
-
-* The pattern is a block with a child `C`, and `C` matches `E`.
-  In other words, blocks in a pattern only change the precedence, but play no
-  other role in pattern matching.
-
-  | Definition            | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `(X+Y)*(X-Y) is X^2-Y^2` | `[A+3]*[A-3]`    | `(A+3)*(A-4)`        |
-
-  The delimiters of a block cannot be tested that way, you should use
-  a conditional pattern like `B:block when B.opening = "("`.
+The delimiters of a block cannot be tested that way, you should use
+a conditional pattern like `B:block when B.opening = "("`.
+</details>
 
 
 In some cases, pattern matching requires evaluation of an expression
