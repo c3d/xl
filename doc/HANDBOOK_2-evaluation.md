@@ -595,11 +595,12 @@ In XL, the various declarations in the context are considered in
 order, and the first declaration that matches is selected. A candidate
 declaration matches if it matches the whole shape of the tree.
 
-> **NOTE** The XL2 implementation does not select the first that
-> matches, but the _largest and most specialized_ match. This is a
-> slightly more complicated implementation, but not by far, and it has
-> some benefits, notably with respect to making the code more robust
-> to reorganizations. For this reason, this remains an open option.
+> **NOTE** Historically, the [XL2](HISTORY.md#bootstrapping-xl)
+> implementation does not select the first that matches, but the
+> _largest and most specialized_ match. This is a slightly more
+> complicated implementation, but not by far, and it has some
+> benefits, notably with respect to making the code more robust to
+> reorganizations. For this reason, this remains an open option.
 > However, it is likely to be more complicated with the more dynamic
 > semantics of XL, notably for [dynamic dispatch](#dynamic-dispatch),
 > where the runtime cost of finding the proper candidate might be a
