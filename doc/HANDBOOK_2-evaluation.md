@@ -1090,7 +1090,8 @@ X, Y    is self
 
 Note that the following values also evaluate as themselves:
 
-1. `integer`, `real` or `text` constants
+1. `integer`, `real` or `text` constants, unless an explicit
+   declaration in the current context matches.
 
 2. Sequences of declarations, like `{ Zero is 0; One is 1 }`, in particular
    the contexts captured for [closures](#closures).
