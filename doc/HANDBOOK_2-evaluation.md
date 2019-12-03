@@ -150,8 +150,9 @@ are one of:
   syntax { INFIX 290 <=> }
   ```
 * An infix `is`, which is called a _definition_, an infix `:` or
-  `as`, which are called _type annotations_, or an infix assignment
-  operator `:=` with a [type annotation](HANDBOOK_3-types.md##type-annotations)
+  `as`, which are called
+  [_type annotations_](HANDBOOK_3-types.md##type-annotations),
+  or an infix assignment operator `:=` with a type annotation
   on the left, called a _variable initialization_. Definitions, type
   annotations and variable initializations are collectively called
   _declarations_, and are  processed during the
