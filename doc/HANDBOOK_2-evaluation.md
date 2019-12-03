@@ -446,8 +446,14 @@ This will match an expression like `log 1.25` because:
 
 3. The condition `X > 0.0` is true with binding `X is 1.25`
 
-More generally, a pattern `P` matches an expression `E` if one of the
-following conditions is true:
+<details>
+<summary>
+The conditions for a pattern to match an expression depend on the kind
+of pattern being considered.
+</summary>
+
+A pattern `P` matches an expression `E` if one of the following
+conditions is true:
 
 * The top-level pattern `P` is a name, and expression `E` is the same name.
 
@@ -559,6 +565,7 @@ following conditions is true:
 
   The delimiters of a block cannot be tested that way, you should use
   a conditional pattern like `B:block when B.opening = "("`.
+</details>
 
 
 In some cases, pattern matching requires evaluation of an expression
