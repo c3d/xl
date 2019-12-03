@@ -272,11 +272,11 @@ remains active for the duration of the evaluation of of the body of
 the definition.
 
 The binding contains the type annotation for the formal parameter,
-ensuring that type constraints are known and respected. For example,
-the context contains the `Redius:real` annotation, so that
-attempting `Radius := "Hello"` in the body of `circumference` would
-fail, because the type of `"Hello"` does not match the `real`
-[type](HANDBOOK_3-types.md).
+ensuring that [type constraints](HANDBOOK_3-types.md) are known and
+respected. For example, the context contains the `Redius:real`
+annotation, so that attempting `Radius := "Hello"` in the body of
+`circumference` would fail, because the type of `"Hello"` does not
+match the `real` [type](HANDBOOK_3-types.md).
 
 The binding can also be made with either `is` or `:=`. Bindings made
 with `is` are immutable. Bindings made with `:=` are mutable. Since by
