@@ -279,7 +279,8 @@ annotation, so that attempting `Radius := "Hello"` in the body of
 match the `real` type.
 
 The binding can also be made with either `is` or `:=`. Bindings made
-with `is` are immutable. Bindings made with `:=` are mutable. Since by
+with `is` are [immutable](HANDBOOK_3-types.md#mutability). Bindings
+made with `:=` are [mutable](HANDBOOK_3-types.md#mutability). Since by
 default, an `X : T` annotation creates a mutable binding, the binding
 for `Radius` is made with `:=`.
 
