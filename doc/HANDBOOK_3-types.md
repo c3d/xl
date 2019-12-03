@@ -225,9 +225,66 @@ compiler ensures that specific rules are followed to invoke creation
 code provided by the programmer before any other possible use of the
 value being created.
 
-An object can be created in one of two ways:
+When you define a type, you need to specify the associate shape. For
+example, we defined a `complex` type as follows:
 
-* From the temporary return value from a
+```xl
+type complex is complex(Re:real, Im:real)
+```
+
+This means that a shape like `complex(2.3, 5.6)` is a `complex`. This
+also means that the _only_ elementary way to create a `complex` is by
+creating such a shape. It is not possible to have an uninitialized
+element in a `complex`, since for example `complex(1.3)` would not
+match the shape and not have the right type.
+
+Using the shape explicitly given for the type is called the _basic
+type constructor_. From this, your code can create as many _alternate
+constructors_ as necessary. For example, you may create an imaginary
+unit, `i`, but the only way to do that is with a basic constructor:
+
+```xl
+i   is complex(0.0, 1.0)
+```
+
+It is then possible to recognize common expressions such as `2 + 3i`
+or `2 + 3*i` as follows:
+
+```xl
+syntax { POSTFIX 190 i }
+Re + Im i                           is complex(Re, Im)      // Case 1
+Re + Im * [[i]]                     is complex(Re, Im)      // Case 2
+Re + [[i]] * Im                     is complex(Re, Im)      // Case 3
+Re:real as complex                  is complex(Re, 0.0)     // Case 4
+X:complex + Y:complex as complex    is ...
+
+2 + 3i              // Calls case 1 (with explicit concersions to real)
+2 + 3 * i           // Calls case 2 (with explicit conversions to real)
+2 + i * 3           // Calls case 3
+2 + 3i + 5.2        // Calls case 4 to convert 5.2 to complex(5.2, 0.0)
+2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)
+```
+
+A type implementation may be _hidden_ in a module interface, in which
+case the module interface should also provide some functions to create
+elements of the type. The following example illustrates this for a
+`file` interface based on Unix-style file descriptors:
+
+```xl
+module MY_FILE with
+    type file
+    open Name:text as file
+    close F:file
+
+module MY_FILE is
+    type file is file(fd:integer)
+    open Name:text as file is
+        fd:integer := libc.open(Name, libc.O_RDONLY)
+        file(fd)
+    close F:file is
+        libc.close(F.fd)
+    delete F:file is close F    // Destruction, see below
+```
 
 > **RATIONALE** This mechanism is similar to _elaboration_ in Ada or
 > to _constructors_ in C++. It makes it possible for programmers to
