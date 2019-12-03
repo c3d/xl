@@ -1126,8 +1126,9 @@ count_vowels InputText is
 count_vowels "Hello World" // Should return 3
 ```
 
-> **NOTE** This is not idiomatic XL, since the standard library
-> provides useful tools. A better way to write it would be:
+> **NOTE** This example is designed for illustration purpose only. It
+> is not idiomatic XL, since the standard library provides useful
+> tools. A better way to write it would be:
 > ```
 > count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"
 > ```
