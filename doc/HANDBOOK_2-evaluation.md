@@ -588,7 +588,7 @@ X:real    * Y:real    as real           is ...
 
 The first declaration above would be used for an expression like `2+3`
 and the second one for an expression like `5.5*6.4`. It is important
-for the compiler to be able to distinguish them, since they may result
+for the evaluation to be able to distinguish them, since they may result
 in very different machine-level operations.
 
 In XL, the various declarations in the context are considered in
