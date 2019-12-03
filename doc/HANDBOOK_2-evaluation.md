@@ -449,11 +449,15 @@ This will match an expression like `log 1.25` because:
 More generally, a pattern `P` matches an expression `E` if one of the
 following conditions is true:
 
-* The top-level pattern `P` is a name, and expression `E` is the same name.
+* <details>
+  <summary>
+  The top-level pattern `P` is a name, and expression `E` is the same name.
+  </summary>
 
   | Declaration           | Matched by         | Not matched by      |
   | --------------------- | ------------------ | ------------------- |
   | `pi is 3.14`          | `pi`               | `ip`, `3.14`        |
+  </details>
 
 * The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
   `X%`, and the expression `E` is a prefix or  postfix respectively
