@@ -568,9 +568,9 @@ conditions is true:
 </details>
 
 
-In some cases, checking if a pattern matches requires evaluation of
-the corresponding expression or sub-expression. This is called
-[immediate evaluation](#immediate-evaluation).  Otherwise,
+In some cases, checking if an argument matches a pattern requires
+evaluation of the corresponding expression or sub-expression. This is
+called [immediate evaluation](#immediate-evaluation).  Otherwise,
 [evaluation will be lazy](#lazy-evaluation).
 
 
