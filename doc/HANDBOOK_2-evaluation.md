@@ -162,10 +162,12 @@ Note that there is a type annotation for `Radius` in the definition on
 the last line, but that annotation is _local_ to the definition, and
 consequently not part of the declarations in the top-level sequence.
 
-A name like `Radius` is called a _formal parameter_, or simply
-_parameter_.  Each parameter will receive its value from an _argument_
-during the evaluation. For example the `Radius` parameter will be
-_bound_ to argument`5.3` while evaluating the statement on the second line.
+In that specific case, that type annotation is a declaration of a
+_parameter_ called `Radius`, which only accepts `real` values.
+Sometimes, such parameters are called _formal parameters_.
+A parameter will receive its value from an _argument_ during the
+evaluation. For example the `Radius` parameter will be _bound_ to
+argument`5.3` while evaluating the statement on the second line.
 
 The _result_ of a sequence is the value of its last statement. In our
 example, the result of executing the code will be the value computed
