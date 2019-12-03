@@ -72,8 +72,8 @@ but invisible to the current code. By convention, `CONTEXT0` and
 inherited from earlier execution.
 
 > **NOTE** By default, the context of the caller is not visible to the
-> callee. It can be made visible if necessary using a feature called
-> [_caller lookup_](#caller-lookup).
+> callee. A feature making it visible if necessary is being considered,
+> called [_caller lookup_](#caller-lookup).
 
 
 ### Parsing phase
@@ -1295,7 +1295,69 @@ result, `IO.write` will refer to the declaration in the module.
 
 ## Caller lookup
 
-Any lookup
+> **WARNING** This feature is only under consideration after a couple
+> of use-cases for this kind of lookup popped up while experimenting with
+> [Tao3D](http://tao3d.sourceforge.net), see RATIONALE.
+
+In general, the context of the caller is invisible to the callee.
+For example, the following code prints `"X=Global"`.
+
+```xl
+outer "Argument"
+
+X is "Global"
+
+outer X:text is
+    inner X
+
+inner A:text is
+    print "X=", X
+
+```
+
+While evaluating `inner`, the value `"Argument"` bound to `X` while
+evaluating `outer` is no longer visible. The scoping rules mean that
+the `X` that is being seen from within `inner` is the one defined in
+the global context.
+
+However, the `caller` context may be explicitly referenced by scoping
+operators. The following example will print `X=Argument`:
+
+```xl
+outer "Argument"
+
+X is "Global"
+
+outer X:text is
+    inner X
+
+inner A:text is
+    print "X=", caller.X
+```
+
+> **RATIONALE** The first use-case that was "discovered" using Tao3D
+> was passing an implicit environment to a large number of related
+> functions. In the case of Tao3D, that implicit environment was
+> describing graphics attributes such as color or line width.
+> A global variable would provide a convenient default, but a local
+> variable with the correct name would make that default easy to override.
+> This would play a role similar to the C++ implicit `this` pointer,
+> with the added benefits that multiple such implicit parameters would
+> be possible depending on usage (graphics state, window state, etc)
+>
+> A second use case was also found in XL2 when looking up
+> [generic code](../xl2/native/TESTS/10.Generics/any_lookup.xl),
+> and plays the role of
+> [Koenig lookup](https://en.wikipedia.org/wiki/Argument-dependent_name_lookup)
+> in C++, i.e. make it possible to access code in the caller's
+> context. For example, the definition corresponding to `write Head, Tail`
+> will call `write Head`. If you want to be able to extend `write`
+> with your own custom types, it is necessary to be able to lookup
+> `write Head` within the caller's context as well. Whether this is
+> really necessary or functional remains to be tested.
+>
+> A reasonably efficient implementation strategy for compiled code
+> [seems possible](HANDBOOK_4-compilation.md#caller-lookup).
 
 
 ## Assignments
