@@ -257,7 +257,6 @@ in the program. For each statement, the context is looked up for
 matching declarations in order. There is a match if the shape of the
 tree being evaluated matches the pattern of the declaration. Precise
 pattern matching rules will be [detailed below](#pattern-matching).
-
 In our example, `circumference 5.3` will not match the declaration of
 `pi`, but it will match the declaration of `circumference Radius:real`
 since the value `5.3` is indeed a real number.
@@ -265,10 +264,9 @@ since the value `5.3` is indeed a real number.
 When a match happens, a new context is created with _bindings_ for the
 formal parameters to the value passed as an argument in the
 statement. This new context is called a _local context_ and will be
-used to evaluate the body of the definition.
-
-For example, the local context to evaluate the body of the definition
-of `circumference Radius:real` would be:
+used to evaluate the body of the definition. For example, the local
+context to evaluate the body of the definition of `circumference
+Radius:real` would be:
 
 ```xl
 CONTEXT is
@@ -276,7 +274,7 @@ CONTEXT is
     // Enclosing context begins here
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
-    CONTEXT0 // Previous context
+    CONTEXT0 // Calling and enclosing context
 ```
 
 As a reminder, `Radius` is a _formal parameter_, or simply _parameter_
