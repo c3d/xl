@@ -361,9 +361,10 @@ while N <> 1 loop
 > **NOTE** A value between two square brackets, as in `[[true]]` and `[[false]]`,
 > is called a [metabox](HANDBOOK_2-evaluation.md#metabox). It indicates
 > that the pattern must match the actual values in the metabox. In
-> other words, `foo true is ...` defines a pattern with a formal parameter named `true`,
-> whereas `foo [[true]] is ...` defines a pattern which only matches when the
-> argument is equal to constant `true`.
+> other words, `foo true is ...` defines a pattern with a formal
+> parameter named `true`, whereas `foo [[true]] is ...` defines a
+> pattern which only matches when the argument is equal to constant
+> `true`.
 
 
 ### The next natural evolutionary step

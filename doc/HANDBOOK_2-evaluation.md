@@ -338,11 +338,11 @@ multiplication between `real` numbers, with a pattern that looks like
 multiplication, with a pattern that looks like `X:integer * Y:integer`.
 There may be more, but we will ignore them for the rest of this
 discussion. The code below shows what the relevant declaration might
-look like:
+look like (`...` indicates irrelevant code):
 
 ```xl
-X:integer * Y:integer   as integer  is builtin IntegerAdd
-X:real * Y:real         as real     is builtin FloatingPointAdd
+X:integer * Y:integer   as integer  is ...
+X:real * Y:real         as real     is ...
 ```
 
 The `*` operator is left-associative, so `2 * pi * Radius` parses as
@@ -433,7 +433,7 @@ matching only if all _sub-patterns_ also match.
 For example, consider the following declaration:
 
 ```xl
-log X:real when X > 0.0 is /* ... implementation of log ... */
+log X:real when X > 0.0 is ...
 ```
 
 This will match an expression like `log 1.25` because:
@@ -663,8 +663,8 @@ implementation of `print`:
 ```xl
 print Items             is write Items; print
 write Head, Rest        is write Head; write Rest
-write Item:integer      is /* implementation for integer */...
-write Item:real         is /* implementation for real */...
+write Item:integer      is ...  // Implementation for integer
+write Item:real         is ...  // implementation for real
 ```
 
 In that case, finding the declaration matching `print "Hello", "World"`
@@ -714,10 +714,10 @@ implementation based on the class of the `shape` object.
 In XL, this can be written as follows:
 
 ```xl
-draw R:rectangle    is /* ... implementation for rectangle class ... */
-draw C:circle       is /* ... implementation for circle class ... */
-draw P:polygon      is /* ... implementation for polygon class ... */
-draw S:shape        is /* ... implementation for shape class ... */
+draw R:rectangle    is ... // Implementation for rectangle
+draw C:circle       is ... // Implementation for circle
+draw P:polygon      is ... // Implementation for polygon
+draw S:shape        is ... // Implementation for shape
 
 draw Something      // Calls the right implementation based type of Something
 ```
@@ -1136,7 +1136,7 @@ something like:
 
 ```xl
 CONTEXT1 is
-    is_vowel C is [...]
+    is_vowel C is ...
     Count:integer := 0
     InputText is "Hello World"
     CONTEXT0
@@ -1147,8 +1147,8 @@ somethign like:
 
 ```xl
 CONTEXT2 is
-    Item in Head, Tail is [...]
-    Item in RefItem is [...]
+    Item in Head, Tail is ...
+    Item in RefItem is ...
     C is 'l'
     CONTEXT1
 ```
