@@ -450,7 +450,6 @@ More generally, a pattern `P` matches an expression `E` if one of the
 following conditions is true:
 
 <details><summary>
-
 The top-level pattern `P` is a name, and expression `E` is the same
 name.
 
@@ -462,7 +461,6 @@ name.
 </details>
 
 <details><summary>
-
 The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
 `X%`, and the expression `E` is a prefix or  postfix respectively
 with the same operator as the pattern, and operands match.
@@ -478,7 +476,6 @@ with the same operator as the pattern, and operands match.
 </details>
 
 <details><summary>
-
 The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
 called a _conditional pattern_, and `Pattern` matches `E`, and the
 value of `Condition` is `true` with the bindings declared while
@@ -492,7 +489,6 @@ matching `Pattern`.
 </details>
 
 <details><summary>
-
 The pattern `P` is an infix, and the operator is the same in the pattern
 and in the expression, and both operands in the pattern match the
 respective operands in the expression.
@@ -524,7 +520,6 @@ the same operator as in the pattern, then its value can be _split_.
 </details>
 
 <details><summary>
-
 The pattern `P` is an `integer`, `real` or `text` constant, or a
 [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
 respectively, and the expression `E` matches the value given by the
@@ -550,7 +545,6 @@ This last case is useful in [maps](#scoping).
 </details>
 
 <details><summary>
-
 The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
 that case, a binding `N is A` is added at the top of the local context
 used to evaluate the body, where `A` is the (possibly evaluated)
@@ -563,7 +557,6 @@ sub-expression from the argument.
 </details>
 
 <details><summary>
-
 The sub-pattern `P` is a type annotation, such as `X:real`.
 This case is similar to the previous one, except that `E` may need
 to be evaluated to check its type. For example, expression `A+B`
@@ -579,7 +572,6 @@ since `A+B` is an infix.
 </details>
 
 <details><summary>
-
 The sub-pattern `P` is a name that was already bound in the same
 top-level pattern, and  expression `P = E` is `true`.
 
@@ -592,7 +584,6 @@ top-level pattern, and  expression `P = E` is `true`.
 </details>
 
 <details><summary>
-
 The pattern is a block with a child `C`, and `C` matches `E`.
 In other words, blocks in a pattern only change the precedence, but play no
 other role in pattern matching.
