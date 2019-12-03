@@ -265,7 +265,8 @@ X:complex + Y:complex as complex    is ...
 2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)
 ```
 
-A type implementation may be _hidden_ in a module interface, in which
+A type implementation may be _hidden_ in a
+[module interface](HANDBOOK_6-modules.md), in which
 case the module interface should also provide some functions to create
 elements of the type. The following example illustrates this for a
 `file` interface based on Unix-style file descriptors:
