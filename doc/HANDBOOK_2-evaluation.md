@@ -59,9 +59,21 @@ design of XL to allow standard compilation and optimization techniques
 to remain applicable, and to leave a lot of freedom regarding actual
 evaluation techniques.
 
-In the examples below, `CONTEXT` will be a pseudo-variable that
-describes the execution context. Where necessary, `CONTEXT0` will
-represent the previous context.
+In the examples below, `CONTEXT0`, `CONTEXT1`, ... will denote
+pseudo-variables that describe the various currently visible execution
+contexts, following the language [scoping](#scoping) rules. The most
+recent contexts will have higher numbers. In addition, `HIDDEN0`,
+`HIDDEN1`, ... will represent pending execution contexts that are
+invisible to the currently executing code. These are also known as
+[_activation records_](https://en.wikipedia.org/wiki/Activation_record).
+Entries in `HIDDEN` contexts are [live](HANDBOOK_3-types.md#lifetime),
+but invisible to the current code. By convention, `CONTEXT0` and
+`HIDDEN0` are not defined in the examples and are assumed to be
+inherited from earlier execution.
+
+> **NOTE** By default, the context of the caller is not visible to the
+> callee. It can be made visible if necessary using a feature called
+> [_caller lookup_](#caller-lookup).
 
 
 ### Parsing phase
@@ -86,8 +98,8 @@ be performed during parsing:
    program, so they are simply eliminated during parsing.
 
 2. Processing `syntax` statements: This must be done during parsing,
-   because `syntax` is designed to
-   [modify the spelling and precedence](HANDBOOK_1-syntax.md#extending-the-syntax-in-your-program)
+   because `syntax` is designed to modify the
+   [spelling and precedence](HANDBOOK_1-syntax.md#extending-the-syntax)
    of operators, and that information is used during the parsing
    phase.
 
@@ -97,7 +109,7 @@ be performed during parsing:
    the [chapter about modules](HANDBOOK_6-modules.md).
 
 4. Identifying words that switch to a
-   [child syntax](HANDBOOK_1-syntax.md#comment-block-text-and-syntax-separators):
+   [child syntax](HANDBOOK_1-syntax.md#child-syntax):
    symbols that activate a child syntax are recognized during parsing.
    This is the case for example with the `extern` name in the
    [default syntax](../src/xl.syntax#L62).
@@ -115,7 +127,9 @@ the module must always be evaluated at compile-time.
 > `use` statement, but disallow `syntax` in them. However, for
 > convenience, `use` names look like `XL.CONSOLE.TEXT_IO` and not,
 > say, `"xl/console/text_io.xs"`, so there is no obvious way to
-> compute them anyway.
+> compute them anyway. If computed `use` statement ever become
+> necessary, it will be easy enough to use the syntax `use "path"`
+> for them.
 
 Once parsing completes successfully, the parse tree can be handed to
 the declaration and evaluation phases. Parsing occurs for the
@@ -212,10 +226,11 @@ In the example above, the declaration phase would result in a context
 that looks something like:
 
 ```xl
-CONTEXT is
+CONTEXT1 is
     pi is 3.14
     circumference Radius:real is 2 * pi * Radius
-    CONTEXT0 // Previous context
+    CONTEXT0
+    HIDDEN0
 ```
 
 An actual implementation is likely to store declarations is a more
@@ -265,35 +280,32 @@ When a match happens, a new context is created with _bindings_ for the
 formal parameters to the value passed as an argument in the
 statement. This new context is called a _local context_ and will be
 used to evaluate the body of the definition. For example, the local
-context to evaluate the body of the definition of `circumference
-Radius:real` would be:
+context to evaluate the body of the definition of
+`circumference Radius:real` would be:
 
 ```xl
-CONTEXT is
+CONTEXT2 is
     Radius:real := 5.3
-    // Enclosing context begins here
-    pi is 3.14
-    circumference Radius:real is 2 * pi * Radius
-    CONTEXT0 // Calling and enclosing context
+    CONTEXT1
+    HIDDEN1
+HIDDEN1 is CONTEXT1
 ```
 
 As a reminder, `Radius` is a _formal parameter_, or simply _parameter_
 that receives the _argument_ 5.3 as a result of _binding_. The binding
 remains active for the duration of the evaluation of of the body of
-the definition.
+the definition. The binding, at least conceptually, contains the type
+annotation for the formal parameter, ensuring that all required
+[type constraints](HANDBOOK_3-types.md) are known and respected.
+For example, the context contains the `Redius:real` annotation, so that
+attempting `Radius := "Hello"` in the body of `circumference` would
+fail, because the type of `"Hello"` does not match the `real` type.
 
-The binding contains the type annotation for the formal parameter,
-ensuring that [type constraints](HANDBOOK_3-types.md) are known and
-respected. For example, the context contains the `Redius:real`
-annotation, so that attempting `Radius := "Hello"` in the body of
-`circumference` would fail, because the type of `"Hello"` does not
-match the `real` type.
-
-The binding can also be made with either `is` or `:=`. Bindings made
-with `is` are [immutable](HANDBOOK_3-types.md#mutability). Bindings
-made with `:=` are [mutable](HANDBOOK_3-types.md#mutability). Since by
-default, an `X : T` annotation creates a mutable binding, the binding
-for `Radius` is made with `:=`.
+Bindings can be marked as [mutable](HANDBOOK_3-types.md#mutability)
+or constant. In this document, bindings made with `:=` are mutable, while
+binding made with `is` are constant. Since by default, an `X : T`
+annotation creates a mutable binding, the binding for `Radius` is made
+with `:=`.
 
 Once the new context has been created, execution of the program
 continues with the body of the definition. In that case, that means
@@ -318,13 +330,20 @@ that case, that process needs to be repeated multiple times to
 complete the evaluation.
 
 If we apply the evaluation process with `2 * pi * Radius`, assuming
-the declarations in the [standard library](../src/builtins.xl),
+the declarations in the [standard library](HANDBOOK_7-standard-library.md),
 no declaration has a larger pattern like `X * Y * Z` that could match
 the whole expression. However, there is a definition for a
 multiplication between `real` numbers, with a pattern that looks like
 `X:real * Y:real as real`, as well as another for `integer`
 multiplication, with a pattern that looks like `X:integer * Y:integer`.
-There may be more, but we will ignore them for the rest of the discussion.
+There may be more, but we will ignore them for the rest of this
+discussion. The code below shows what the relevant declaration might
+look like:
+
+```xl
+X:integer * Y:integer   as integer  is builtin IntegerAdd
+X:real * Y:real         as real     is builtin FloatingPointAdd
+```
 
 The `*` operator is left-associative, so `2 * pi * Radius` parses as
 `(2 * pi) * Radius`. Therefore, we will be looking for a match with
@@ -332,42 +351,38 @@ The `*` operator is left-associative, so `2 * pi * Radius` parses as
 However, that information alone is insufficient to determine if either
 sub-expression is `integer` or `real`. In order to be able to make
 that determination, [immediate evaluation](#immediate-evaluation) of
-the arguments is required.
+the arguments is required. The evaluation process therefore repeats
+with sub-expression `2 * pi`, and like before, it is necessary to
+evaluate `pi`. This in turns gives the result `3.14` given the current
+context. That result replaces `pi`, so that we now must evaluate
+`2 * 3.14`.
 
-The evaluation process therefore repeats with sub-expression `2 * pi`,
-and like before, it is necessary to evaluate `pi`. This in turns gives
-the result `3.14` given the current context. That result replaces
-`pi`, so that we now must evaluate `2 * 3.14`.
-
-This tree does not match `X:real * Y:real` because `2` is an `integer`
-and not a `real`. It does not match `X:integer * Y:integer` either
-because `3.14` is a `real` and not an `integer`. However, the standard
-library provides a definition of an _implicit conversion_ that looks
-something like this:
+The `2 * 3.14` tree does not match `X:real * Y:real` because `2` is an
+`integer` and not a `real`. It does not match `X:integer * Y:integer`
+either because `3.14` is a `real` and not an `integer`. However, the
+standard library provides a definition of an _implicit conversion_
+that looks something like this:
 
 ```xl
-X:integer as real is /* some implementation here */
+X:integer as real     is builtin IntegerToReal
 ```
 
 This implicit conversion tells the compiler how to transform an
 `integer` value like `2` into a `real`. Implicit conversions are only
 considered if there is no exact match, and only one of them can be
 used to match a given parameter. In our case, there isn't an exact
-match, so the compiler will consider the implicit conversion to get a
+match, so the evaluation will consider the implicit conversion to get a
 `real` from `integer` value `2`.
 
 The body of the implicit conversion above is therefore evaluated in a
 context where `X` is set to `2`:
 
 ```xl
-CONTEXT is
+CONTEXT3 is
     X:integer := 2
-    // Earlier context begins here
-    Radius:real := 5.3
-    // Earlier context begins here
-    pi is 3.14
-    circumference Radius:real is 2 * pi * Radius
-    CONTEXT0 // Previous context
+    CONTEXT2
+    HIDDEN2
+HIDDEN2 is CONTEXT2
 ```
 
 The result of that implicit conversion is `2.0`. Evaluation can
@@ -375,15 +390,11 @@ then resume with the `X:real * Y:real as real` definition, this time
 called with an argument of the correct `real` type for `X`:
 
 ```xl
-CONTEXT is
+CONTEXT4 is
     X:real := 2.0
     Y:real := 3.14
-    // Earlier context here
-    Radius:real := 5.3
-    // Earlier context begins here
-    pi is 3.14
-    circumference Radius:real is 2 * pi * Radius
-    CONTEXT0 // Previous context
+    CONTEXT2
+    HIDDEN2
 ```
 
 The result of the multiplication is a `real` with value `6.28`, and
@@ -391,25 +402,22 @@ after evaluating `Radius`, evaluation of the second multiplication
 will then happen with the following context:
 
 ```xl
-CONTEXT is
+CONTEXT5 is
     X:real := 6.28 // from 2 * pi
     Y:real :=5.3  // from Radius
-    // Earlier context here
-    Radius:real := 5.3
-    // Earlier context begins here
-    pi is 3.14
-    circumference Radius:real is 2 * pi * Radius
-    CONTEXT0 // Previous context
+    CONTEXT2
+    HIDDEN2
 ```
 
 The result of the last multiplication is a `real` with value
 `33.284`. This is the result of evaluating `circumference 5.3`, and
 consequently the result of executing the entire program.
 
-> **NOTE** The standard XL library only provides implicit conversions
-> that do not cause data loss. On most implementation, `real` has a
-> 53-bit mantissa, which means that the implicit conversion from
-> `integer` to `real` is actually closer to the following:
+> **NOTE** The [standard XL library](HANDBOOK_7-standard-library.md)
+> only provides implicit conversions that do not cause data loss. On
+> most implementation, `real` has a 53-bit mantissa, which means that
+> the implicit conversion from `integer` to `real` is actually closer
+> to the following:
 > ```xl
 > X:integer as real when X >= -2^53 and X < 2^53 is ...
 > ```
@@ -442,31 +450,46 @@ More generally, a pattern `P` matches an expression `E` if one of the
 following conditions is true:
 
 * The top-level pattern `P` is a name, and expression `E` is the same name.
-  For example, `pi is 3.14` defines a name `pi`, and the only way to match
-  this pattern is with the expression `pi`.
+
+  | Declaration           | Matched by         | Not matched by      |
+  | --------------------- | ------------------ | ------------------- |
+  | `pi is 3.14`          | `pi`               | `ip`, `3.14`        |
 
 * The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
   `X%`, and the expression `E` is a prefix or  postfix respectively
   with the same operator as the pattern, and operands match.
-  For example, pattern `sin X:real` will match expression `sin (A+B)`
-  if `(A+B)` has the `real` type, but it will not match a prefix with
-  any other name, like `cos C`. Similarly, pattern `X%` will match
-  `3%` but not `3!`, because the operator is not the right one.
+
+  | Pattern               | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `sin X`               | `sin (2.27 + A)`   | `cos 3.27`           |
+  | `+X:real`             | `+2.27`            | `+"A"`, `-3.1`, `1+1`|
+  | `X%`                  | `2.27%`, `"A"%`    | `%3`, `3%2`          |
+  | `X km`                | `2.27 km`          | `km 3`, `1 km 3`     |
 
 * The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
   called a _conditional pattern_, and `Pattern` matches `E`, and the
   value of `Condition` is `true` with the bindings declared while
-  matching `Pattern`. For example, `log X when X > 0 is ...` will
-  match `log 42` but not `log(-1)`.
+  matching `Pattern`.
+
+  | Pattern               | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `log X when X > 0`    | `log 3.5`          | `log(-3.5)`          |
 
 * The pattern `P` is an infix, and the operator is the same in the pattern
   and in the expression, and both operands in the pattern match the
-  respective operands in the expression. For example, pattern
-  `X:integer+Y:integer` will match `2+3` but not `A-B` nor `"A" + "B"`.
-  This works both for patterns and sub-patterns. For sub-patterns, if
-  `E` is a name, then its value can be _split_. For example,
-  `write Items` can match `write Head, Tail` if there is a binding
-  like `Items is "Hello", "World"` in the current context.
+  respective operands in the expression.
+
+  | Pattern               | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `X:real+Y:real`       | `3.5+2.9`          | `3+2`, `3.5-2.9`     |
+  | `X and Y`             | `N and 3`          | `N or 3`             |
+
+  For sub-patterns, if `E` is a name and its' bound to an infix with
+  the same operator as in the pattern, then its value can be _split_.
+
+  | Pattern               | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `write X,Y` | `write Items` when `Items is "A","B"` | `wrote 0`, `write Items` when `Items is "A"+B"`   |
 
   > **NOTE** A very common idiom  is to use comma `,` infix to separate
   > multiple parameters, as in the following definition:
@@ -481,38 +504,62 @@ following conditions is true:
 * The pattern `P` is an `integer`, `real` or `text` constant, or a
   [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
   respectively, and the expression `E` matches the value given by the
-  constant or computed by the expression in the metabox. In that case,
-  expression `E` needs to be evaluated to check if it matches. This
-  case applies to sub-patterns, as in `0! is 1`, as well as to
-  top-level patterns, as in `0 is "Zero"`. This last case is useful in
-  [maps](#scoping). Evaluating an expression against a top-level
-  constant will rule out all top-level constants. For example,
-  pattern-matching expression `A` against top-level pattern `0` will
-  trigger the evaluation of `A`, but that evaluation will not consider
-  the top-level pattern `0` again.
+  constant or computed by the expression in the metabox.
+  In that case, expression `E` needs to be evaluated to check if it matches.
+
+  | Pattern               | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `if [[true]] then Op` | `if X<3 then run` when `X<3` is `true` | `if 0 then run` |
+  | `0!`                  | `N!` when `N=0`    | `N!` when `N<>0`     |
+
+  This case applies to sub-patterns, as was the case for `0! is 1` in
+  the [definition of factorial](HANDBOOK_0-introduction.md#factorial),
+  as well as to top-level patterns, as in `0 is "Zero"`.
+  This last case is useful in [maps](#scoping).
+
+  | Definition            | Matched by          | Not matched by       |
+  | --------------------- | ------------------- | -------------------- |
+  | `0 is "Zero"`         | `0`, `N` when `N=0` | `1`, `'A'`, `N` unless `N=0`|
+  | `[[false]] is self`   | `false`             | `true`               |
 
 * The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
   that case, a binding `N is A` is added at the top of the local context
   used to evaluate the body, where `A` is the (possibly evaluated)
   sub-expression from the argument.
 
-* The sub-pattern `P` is a type annotation, such as `X:real` in
-  `sin X:real is cos(x - pi/2)`. This case is similar to the previous
-  one, except that `E` may need to be evaluated to check its type.
-  For example, expression `A+B` must be evaluated if the pattern is
-  `X:real`, but not for `X:infix` since `A+B` is an infix.
+  | Sub-pattern           | Matched by          | Not matched by       |
+  | --------------------- | ------------------- | -------------------- |
+  | `N`                   | Any expression      |                      |
+
+* The sub-pattern `P` is a type annotation, such as `X:real`.
+  This case is similar to the previous one, except that `E` may need
+  to be evaluated to check its type. For example, expression `A+B`
+  must be evaluated if the pattern is `X:real`, but not for `X:infix`
+  since `A+B` is an infix.
+
+  | Pattern               | Matched by          | Not matched by       |
+  | --------------------- | ------------------- | -------------------- |
+  | `N:integer`           | `0`, `A+B` when `integer` | `A+B` when `real` |
+  | `N:infix`             | `A+B` always        | `A*B`                |
 
 * The sub-pattern `P` is a name that was already bound in the same
-  top-level pattern, and  expression `P = E` is `true`. For example,
-  `A - A is 0` will match expression `X - Y` if `X = Y`, or more
-  precisely, if `Y = A` is `true` in a context where `A is X`.
+  top-level pattern, and  expression `P = E` is `true`.
+
+  | Pattern               | Matched by          | Not matched by       |
+  | --------------------- | ------------------- | -------------------- |
+  | `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`     |
 
 * The pattern is a block with a child `C`, and `C` matches `E`.
   In other words, blocks in a pattern only change the precedence, but play no
-  other role in pattern matching. This would be the case for
-  `(X+Y) * (X-Y) is X^2 - Y^2`, which would match `[A+3] * [A-3]`.
-  Note that the delimiters of a block cannot be tested that way, you
-  should use a conditional pattern like `B:block when B.opening = "("`.
+  other role in pattern matching.
+
+  | Definition            | Matched by          | Not matched by       |
+  | --------------------- | ------------------- | -------------------- |
+  | `(X+Y)*(X-Y) is X^2-Y^2` | `[A+3]*[A-3]`    | `(A+3)*(A-4)`        |
+
+  The delimiters of a block cannot be tested that way, you should use
+  a conditional pattern like `B:block when B.opening = "("`.
+
 
 In some cases, pattern matching requires evaluation of an expression
 or sub-expression. This is called [immediate evaluation](#immediate-evaluation).
@@ -617,7 +664,7 @@ In that case, finding the declaration matching `print "Hello", "World"`
 involves creating a binding like this:
 
 ```xl
-CONTEXT is
+CONTEXT1 is
     Items is "Hello", "World"
     CONTEXT0
 ```
@@ -627,10 +674,11 @@ include `write Head, Rest`, and this will be the one selected after
 splitting `Items`, causing the context to become:
 
 ```xl
-CONTEXT is
+CONTEXT2 is
     Head is "Hello"
     Rest is "World"
     CONTEXT0
+    HIDDEN1 is CONTEXT1
 ```
 
 
@@ -817,7 +865,7 @@ and `Body` are evaluated multiple times. The context when evaluating
 the body of the definition is somewhat equivalent to the following:
 
 ```
-CONTEXT is
+CONTEXT1 is
     Condition is N <> 1
     Body is
         if N mod 2 = 0 then
@@ -864,7 +912,7 @@ while Condition loop N -= 1
 Evaluating this would lead to a "naive" binding that looks like this:
 
 ```xl
-CONTEXT is
+CONTEXT2 is
     Condition is Condition
     Body is N -= 1
     CONTEXT0
@@ -877,22 +925,22 @@ done to address this.
 In reality, the bindings must look more like this:
 
 ```xl
-CONTEXT is
-    Condition is CONTEXT0 { Condition }
-    Body is CONTEXT0 { N-= 1 }
+CONTEXT2 is
+    Condition is CONTEXT1 { Condition }
+    Body is CONTEXT1 { N-= 1 }
     CONTEXT0
 ```
 
-The notation `CONTEXT0 { Condition }` means that we evaluate `Condition` in
-context `CONTEXT0`. This one of the [scoping operators](#scoping),
+The notation `CONTEXT1 { Condition }` means that we evaluate `Condition` in
+context `CONTEXT1`. This one of the [scoping operators](#scoping),
 which is explained in more details below. A prefix with a context on
 the left and a block on the right is called a _closure_.
 
-In the above example, we gave an arbitrary name to the closure, `CONTEXT0`,
+In the above example, we gave an arbitrary name to the closure, `CONTEXT1`,
 which is the same for both `Condition` and `Body`. This name is
 intended to underline that the _same_ context is used to evaluate both.
 In particular, if `Body` contains a context-modifying operation like
-`N -= 1`, that will modify the same  `N` in the same `CONTEXT0` that
+`N -= 1`, that will modify the same  `N` in the same `CONTEXT1` that
 will later be used to evaluate `N > 1` while evaluating `Condition`.
 
 A closure may be returned as a result of evaluation, in which case all
@@ -1080,7 +1128,7 @@ While evaluating `count_vowels "Hello World"`, the context will look
 something like:
 
 ```xl
-CONTEXT is
+CONTEXT1 is
     is_vowel C is [...]
     Count:integer := 0
     InputText is "Hello World"
@@ -1091,14 +1139,11 @@ In turn, while evaluating `is_vowel Char`, the context will look
 somethign like:
 
 ```xl
-CONTEXT is
+CONTEXT2 is
     Item in Head, Tail is [...]
     Item in RefItem is [...]
     C is 'l'
-    is_vowel C is [...]
-    Count:integer := 1
-    InputText is "Hello World"
-    CONTEXT0
+    CONTEXT1
 ```
 
 The context is sorted so that the innermost definitions are visible
@@ -1227,6 +1272,11 @@ This is also exactly what happens when you `use` a module. For example,
 with `use IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in
 the current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
+
+
+## Caller lookup
+
+Any lookup
 
 
 ## Assignments

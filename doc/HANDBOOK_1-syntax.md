@@ -414,10 +414,10 @@ The syntax file uses a few special names:
  `sin X` for example, the associated precedence will be that of `FUNCTION`.
 
 
-### Comment, block, text and syntax separators
+### Delimiters
 
-Additional sections of the syntax file define comment, block and text
-separators. Comment and text separators come in pairs.
+Additional sections of the syntax file define delimiters for comment,
+block and text. Comment and text delimiters come in pairs.
 
 The default syntax file specifies comments that follow the C/C++
 convention, i.e. comments either start with `/*` and end with `*/` or
@@ -436,7 +436,10 @@ In the default syntax file, indentation blocks and blocks delimited by
 curly braces `{ }` contain statements, whereas blocks delimited by
 parentheses `( )` or square brackets `[ ]` will contain expressions.
 
-A syntax file can contain children syntax files, which override the
+
+### Child syntax
+
+A syntax file can define a child syntax file, which overrides the
 syntax when a given name or symbol is found.
 
 The [default syntax file](../src/xl.syntax) contains a
