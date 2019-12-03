@@ -151,10 +151,11 @@ are one of:
   ```
 * An infix `is`, which is called a _definition_, an infix `:` or
   `as`, which are called _type annotations_, or an infix assignment
-  operator `:=` with a type annotation on the left, called a _variable
-  initialization_. Definitions, type  annotations and variable
-  initializations are collectively called _declarations_, and are
-  processed during the [declaration phase](#declaration-phase).
+  operator `:=` with a [type annotation](HANDBOOK_3-types.md##type-annotations)
+  on the left, called a _variable initialization_. Definitions, type
+  annotations and variable initializations are collectively called
+  _declarations_, and are  processed during the
+  [declaration phase](#declaration-phase).
   ```xl
   pi is 3.1415                  // Definition of 'pi'
   Count : integer               // Declaration of 'Count'
