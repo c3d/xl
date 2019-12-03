@@ -218,10 +218,23 @@ CONTEXT is
     CONTEXT0 // Previous context
 ```
 
-The actual implementation is likely to store declarations is a more
-efficient way, for example using some hashing or some form of balanced
-tree. Such optimizations must preserve the order of declarations,
-since correct behavior during the evaluation phase depends on it.
+An actual implementation is likely to store declarations is a more
+efficient manner. For example, an interpreter might use some hashing or
+some form of balanced tree. Such optimizations must preserve the order
+of declarations, since correct behavior during the evaluation phase
+depends on it.
+
+In the case of a [compiled implementation](HANDBOOK_4-compilation.md),
+the compiler will most likely assign machine locations to each of the
+declarations.  When the program runs, a constant like `pi` or the
+definition of `circumference` may end up being represented as a
+machine address, and a variable such as `Radius` may be represented as
+a "stack location", i.e. a preallocated offset from the current stack
+pointer, the corresponding memory location only containing the value,
+i.e. the right-hand side of `:=`.
+Most of the [type analysis](HANDBOOK_3-types.md) can be performed at
+compile time, meaning that most type information is unnecessary at
+program run time and can be eliminated from the compiled program.
 
 Note that since the declaration phase occurs before the execution
 phase, all declarations in the program will be visible during the
