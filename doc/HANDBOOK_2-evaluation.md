@@ -240,8 +240,8 @@ Note that since the declaration phase occurs before the execution
 phase, all declarations in the program will be visible during the
 evaluation phase. In our example, it is possible to use `circumference`
 before it has been declared. Definitions may therefore refer to one
-another in a circular way. Some other languages require "forward
-declarations" in such cases, XL does not.
+another in a circular way. Some other languages such as C require
+"forward declarations" in such cases, XL does not.
 
 The parse tree on the left of `is`, `as` or `:` is called the
 _pattern_ of the declaration. The pattern will be checked against the
