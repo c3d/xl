@@ -130,20 +130,42 @@ are one of:
 
 * A block, in which case processing the sequence means processing the
   block's child
+  ```xl
+  loop { print "Hello World" }
+  ```
 * An infix `NEWLINE` or semi-colon `;`, in which case the left and right
   operands of the infix are processed in that order.
+  ```xl
+  print "One"; print "Two"
+  print "Three"
+  ```
 * An `use` statement, which is the only statement that requires
   processing in all three executation phases.
+  ```xl
+  use XL.MATH.COMPLEX
+  ```
 * A `syntax` definition, which only plays a role during parsing is
   ignored during the declaration and evaluation phases.
+  ```xl
+  syntax { INFIX 290 <=> }
+  ```
 * An infix `is`, which is called a _definition_, an infix `:` or
   `as`, which are called _type annotations_, or an infix assignment
   operator `:=` with a type annotation on the left, called a _variable
   initialization_. Definitions, type  annotations and variable
   initializations are collectively called _declarations_, and are
   processed during the [declaration phase](#declaration-phase).
+  ```xl
+  pi is 3.1415                  // Definition of 'pi'
+  Count : integer               // Declaration of 'Count'
+  byte_size X as integer        // Declaration of 'byte_size X'
+  Remaining : integer := 100    // Declaration of 'Remaining'
+  ```
 * Anything else, which is called a _statement_ and is processed during the
   [evaluation phase](#evaluation-phase).
+  ```xl
+  print "This is a statement"
+  ```
 
 For example, consider the following code:
 
