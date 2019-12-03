@@ -1126,6 +1126,13 @@ count_vowels InputText is
 count_vowels "Hello World" // Should return 3
 ```
 
+> **NOTE** This is not idiomatic XL, since the standard library
+> provides useful tools. A better way to write it would be:
+> ```
+> count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"
+> ```
+
+
 This code example defines a local helper `is_vowel C` that checks if
 `C` is a vowel by comparing it against a list of vowels. That local
 helper is not visible to the outer program. You cannot use `is_vowel X`
