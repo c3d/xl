@@ -568,9 +568,10 @@ conditions is true:
 </details>
 
 
-In some cases, pattern matching requires evaluation of an expression
-or sub-expression. This is called [immediate evaluation](#immediate-evaluation).
-Otherwise, [evaluation will be lazy](#lazy-evaluation).
+In some cases, checking if a pattern matches requires evaluation of
+the corresponding expression or sub-expression. This is called
+[immediate evaluation](#immediate-evaluation).  Otherwise,
+[evaluation will be lazy](#lazy-evaluation).
 
 
 ## Overloading
