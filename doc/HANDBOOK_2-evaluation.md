@@ -762,8 +762,9 @@ if shape1 intersects shape2 then    // selects the right combination
 > example difficult to write in C++.
 
 As another illustration of a complex dynamic dispatch not based on
-types, Tao3D uses theme functions that depend on the names of the
-slide theme, master and element, as in:
+types, [Tao3D](http://tao3d.sourceforge.net) uses
+[theme functions](https://github.com/c3d/tao3D/blob/63e2b358691795e612b027b247c99ad31eb3d0ec/modules/themes/white_christmas/white_christmas.xl#L309)
+that depend on the names of the slide theme, master and element, as in:
 
 ```xl
 theme_font "Christmas", "main",       "title"   is font "Times"
