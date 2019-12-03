@@ -391,10 +391,10 @@ called with an argument of the correct `real` type for `X`:
 
 ```xl
 CONTEXT4 is
-    X:real := 2.0
-    Y:real := 3.14
-    CONTEXT2
-    HIDDEN2
+  X:real := 2.0
+  Y:real := 3.14
+  CONTEXT2
+  HIDDEN2
 ```
 
 The result of the multiplication is a `real` with value `6.28`, and
@@ -403,10 +403,10 @@ will then happen with the following context:
 
 ```xl
 CONTEXT5 is
-    X:real := 6.28 // from 2 * pi
-    Y:real :=5.3  // from Radius
-    CONTEXT2
-    HIDDEN2
+  X:real := 6.28 // from 2 * pi
+  Y:real :=5.3  // from Radius
+  CONTEXT2
+  HIDDEN2
 ```
 
 The result of the last multiplication is a `real` with value
@@ -439,10 +439,10 @@ log X:real when X > 0.0 is /* ... implementation of log ... */
 This will match an expression like `log 1.25` because:
 
 1. `log 1.25` is a prefix with the name `log` on the left, just like
-   the prefix in the pattern.
+ the prefix in the pattern.
 
 2. `1.25` matches the formal parameter `X` and has the expected `real`
-   type, meaning that `1.25` matches the sub-pattern `X:real`.
+ type, meaning that `1.25` matches the sub-pattern `X:real`.
 
 3. The condition `X > 0.0` is true with binding `X is 1.25`
 
@@ -450,7 +450,10 @@ More generally, a pattern `P` matches an expression `E` if one of the
 following conditions is true:
 
 <details><summary>
-  The top-level pattern `P` is a name, and expression `E` is the same name.
+
+The top-level pattern `P` is a name, and expression `E` is the same
+name.
+
 </summary>
 
 | Declaration           | Matched by         | Not matched by      |
@@ -459,9 +462,11 @@ following conditions is true:
 </details>
 
 <details><summary>
+
 The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
 `X%`, and the expression `E` is a prefix or  postfix respectively
 with the same operator as the pattern, and operands match.
+
 </summary>
 
 | Pattern               | Matched by         | Not matched by       |
@@ -473,10 +478,12 @@ with the same operator as the pattern, and operands match.
 </details>
 
 <details><summary>
+
 The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
 called a _conditional pattern_, and `Pattern` matches `E`, and the
 value of `Condition` is `true` with the bindings declared while
 matching `Pattern`.
+
 </summary>
 
 | Pattern               | Matched by         | Not matched by       |
@@ -485,9 +492,11 @@ matching `Pattern`.
 </details>
 
 <details><summary>
+
 The pattern `P` is an infix, and the operator is the same in the pattern
 and in the expression, and both operands in the pattern match the
 respective operands in the expression.
+
 </summary>
 
 | Pattern               | Matched by         | Not matched by       |
@@ -515,11 +524,13 @@ the same operator as in the pattern, then its value can be _split_.
 </details>
 
 <details><summary>
+
 The pattern `P` is an `integer`, `real` or `text` constant, or a
- [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
- respectively, and the expression `E` matches the value given by the
- constant or computed by the expression in the metabox.
- In that case, expression `E` needs to be evaluated to check if it matches.
+[metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
+respectively, and the expression `E` matches the value given by the
+constant or computed by the expression in the metabox.
+In that case, expression `E` needs to be evaluated to check if it matches.
+
 </summary>
 
 | Pattern               | Matched by         | Not matched by       |
@@ -539,10 +550,12 @@ This last case is useful in [maps](#scoping).
 </details>
 
 <details><summary>
+
 The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
 that case, a binding `N is A` is added at the top of the local context
 used to evaluate the body, where `A` is the (possibly evaluated)
 sub-expression from the argument.
+
 </summary>
 | Sub-pattern           | Matched by          | Not matched by       |
 | --------------------- | ------------------- | -------------------- |
@@ -550,11 +563,13 @@ sub-expression from the argument.
 </details>
 
 <details><summary>
+
 The sub-pattern `P` is a type annotation, such as `X:real`.
 This case is similar to the previous one, except that `E` may need
 to be evaluated to check its type. For example, expression `A+B`
 must be evaluated if the pattern is `X:real`, but not for `X:infix`
 since `A+B` is an infix.
+
 </summary>
 
 | Pattern               | Matched by          | Not matched by       |
@@ -564,25 +579,33 @@ since `A+B` is an infix.
 </details>
 
 <details><summary>
+
 The sub-pattern `P` is a name that was already bound in the same
 top-level pattern, and  expression `P = E` is `true`.
+
 </summary>
+
 | Pattern               | Matched by          | Not matched by       |
 | --------------------- | ------------------- | -------------------- |
 | `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`     |
+
 </details>
 
 <details><summary>
+
 The pattern is a block with a child `C`, and `C` matches `E`.
 In other words, blocks in a pattern only change the precedence, but play no
 other role in pattern matching.
+
 </summary>
+
 | Definition            | Matched by          | Not matched by       |
 | --------------------- | ------------------- | -------------------- |
 | `(X+Y)*(X-Y) is X^2-Y^2` | `[A+3]*[A-3]`    | `(A+3)*(A-4)`        |
 
 The delimiters of a block cannot be tested that way, you should use
 a conditional pattern like `B:block when B.opening = "("`.
+
 </details>
 
 
