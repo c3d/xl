@@ -1409,8 +1409,9 @@ In all cases, the previous value that was held in the left operand is
 
 The `:=` operator is used to transfer arguments to parameters. This
 means that passing an argument in XL, like in Rust, can make the
-argument invalid in the caller. This is discussed more in details
-[in the next chapter](HANDBOOK_3-types.md#binding).
+argument invalid in the caller if it is moved rather than copied.
+There are, however, multiple ways to pass arguments. This is all
+discussed in more details [in the next chapter](HANDBOOK_3-types.md#binding).
 
 > **RATIONALE** For simple types such as arithmetic types, an
 > assignment performs a copy, which is a relatively inexpensive
