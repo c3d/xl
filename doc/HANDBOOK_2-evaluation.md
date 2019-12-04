@@ -166,16 +166,17 @@ are one of:
 * An infix `is`, which is called a _definition_, an infix `:` or
   `as`, which are called
   [_type annotations_](HANDBOOK_3-types.md##type-annotations),
-  or an infix assignment operator `:=` with a type annotation
+  or an infix assignment operator `:=` with a `:` type annotation
   on the left, called a _variable initialization_. Definitions, type
   annotations and variable initializations are collectively called
   _declarations_, and are  processed during the
   [declaration phase](#declaration-phase).
   ```xl
   pi is 3.1415                  // Definition of 'pi'
-  Count : integer               // Declaration of 'Count'
-  byte_size X as integer        // Declaration of 'byte_size X'
-  Remaining : integer := 100    // Declaration of 'Remaining'
+  e as real is 2.71828          // Typed definition of 'e'
+  Count : integer               // Variable declaration of 'Count'
+  byte_size X as integer        // Function declaration of 'byte_size X'
+  Remaining : integer := 100    // Variable initialization of 'Remaining'
   ```
 * Anything else, which is called a _statement_ and is processed during the
   [evaluation phase](#evaluation-phase).
@@ -1360,10 +1361,67 @@ inner A:text is
 > [seems possible](HANDBOOK_4-compilation.md#caller-lookup).
 
 
-## Assignments
+## Assignments and moves
 
-## Moves
+The infix `:=` operator is used to perform _assignments_ and returns
+the value being assigned. Variants such as `+=`, `-=`, `*=`, `/=` are
+equivalent to performing the corresponding operating and assigning the
+result.
 
+```xl
+X : integer := 0    // Initialize X to 0
+X := 5              // Now X contains value 5
+X += 7              // Now X contains value 12
+```
+
+> **NOTE** The `:=` operator (and only that operator) is a _variable
+> declaration_ when its left operand is an infix `:`. This was
+> discussed [earlier](#sequences), and corresponds to the first line
+> in the example above. A variable declaration is _not_ an assignment.
+
+Seven combined operators are defined independently of the type as
+follows:
+
+```xl
+X += Y      is X := X + Y
+X -= Y      is X := X - Y
+X *= Y      is X := X * Y
+X /= Y      is X := X / Y
+X &= Y      is X := X & Y
+X |= Y      is X := X | Y
+X ^= Y      is X := X ^ Y
+```
+
+XL offers two additional operators, the `:+` _copy_ operator and the
+`:<` _move_ operator (which is also sometimes _cut_ operator because
+of its shape that evokes scissors). The `:+` operator guarantees that
+all data is being copied, and that the new object is an independent
+copy of the original (hence the `+` character in it). The `:<`
+operator guarantees that all data is being moved, and forbids later
+use of the source on the right side of the operator.
+
+Depending on the data type, `:=` may correspond to a copy or a move.
+The precise details of which operator is selected and the associated
+rationale are detailed in [the next chapter](HANDBOOK_3-types.md#ownership).
+In all cases, the previous value that was held in the left operand is
+[destroyed](HANDBOOK_3-types.md#destruction) by the assignment.
+
+The `:=` operator is used to transfer arguments to parameters. This
+means that passing an argument in XL, like in Rust, can make the
+argument invalid in the caller. This is discussed more in details
+[in the next chapter](HANDBOOK_3-types.md#binding).
+
+> **RATIONALE** For simple types such as arithmetic types, an
+> assignment performs a copy, which is a relatively inexpensive
+> memmory copy between fixed-size locations. For more complicated data
+> types, such as `spreadsheet`, `graph` or `picture`, a copy involves
+> copying possibly megabytes of data, or complex webs of
+> interconnected objects, which can be very expensive, and often
+> leaves an unused copy behind. For such data types, moving data is
+> the frequently desirable operations, for example to pass objects
+> around as arguments, and copying data is the less frequent case.
+> In any case, the programmer remains in charge, always having the
+> possibility to explicitly request a copy or a move.
 
 ## Functions as values
 
@@ -1378,7 +1436,7 @@ that the last statement in that code will cause an error.
 ```xl
 my_function X is X + 1
 apply Function, Value is Function(Value)
-apply my_function, 1
+apply my_function, 1        // Error: Nothing called 'my_function'
 ```
 
 > **RATIONALE** One reason for that choice is that [overloading](#overloading)

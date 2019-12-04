@@ -367,6 +367,9 @@ count on the compiler being very smart).
 
 ### Binding
 
+#### in, out and inout parameters
+
+
 
 ### Atomicity
 
