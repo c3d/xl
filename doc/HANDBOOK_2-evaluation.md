@@ -1397,8 +1397,9 @@ XL offers two additional operators, the `:+` _copy_ operator and the
 of its shape that evokes scissors). The `:+` operator guarantees that
 all data is being copied, and that the new object is an independent
 copy of the original (hence the `+` character in it). The `:<`
-operator guarantees that all data is being moved, and forbids later
-use of the source on the right side of the operator.
+operator may simply move ownership of the value if that is less
+expensive than copying it, and invalidates the right side of the
+operator, which may no longer be used.
 
 Depending on the data type, `:=` may correspond to a copy or a move.
 The precise details of which operator is selected and the associated
