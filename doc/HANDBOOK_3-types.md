@@ -374,7 +374,8 @@ is a name, this may declare either a named constant or a function
 without parameters, depending on the shape of the body.
 
 A mutable value can be initialized or modified using the `:=`
-operator, which is called an _assignment_:
+operator, which is called an
+[_assignment_](HANDBOOK_2-evaluation.md##assignments-and-moves):
 
 ```xl
 X : integer := 42       // Initialize with value 42
