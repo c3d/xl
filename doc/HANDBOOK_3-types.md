@@ -115,14 +115,9 @@ will be explained more in details below:
 
 ### Lifetime
 
-<details>
-<summary>
-
 The lifetime of a value is the amount of time during which the value
 exists in the program, in other words the time between its
 [creation](#creation) and its [destruction](#destruction).
-
-</summary>
 
 An entity is said to be _live_ if it was created but not yet
 destroyed. It is said to be _dead_ otherwise.
@@ -221,7 +216,7 @@ The lifetime of XL values fall in one of the following categories:
   Dynamic data is normally stored on a standard heap, but XL
   provides hooks that make it possible to provide your own allocation
   for data storage.
-</details>
+
 
 ### Creation
 
