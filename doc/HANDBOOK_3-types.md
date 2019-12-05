@@ -297,6 +297,66 @@ module MY_FILE is
 
 ### Destruction
 
+When the lifetime of a value `V` terminates, the statement `delete V`
+automatically evaluates. A `delete X:T` definition is called a
+_destructor_ for type `T`. Declared entites are destroyed in the
+revere order of their declaration.
+
+There is a built-in default definition of that statement that has
+no effect and matches any value:
+
+```xl
+delete Anything is nil
+```
+
+There may be multiple destructors that match a given expression. When
+this happens, normal lookup rules happen. This means that, unlike
+languages like C++, a programmer can deliberately override the
+destruction of an object, and remains in control of the destruction
+process.
+
+> **RATIONALE** In XL, multiple patterns can match a given value.
+> It might seem desirable to call all the patterns that match, but not
+> only would it introduce a special-case lookup, it would also be
+> extremely dangerous in a number of easily identified cases.
+> As an illustration, consider the following code:
+> ```xl
+> delete F:file when F.fd < 0   is ... // Case 1
+> delete F:file                 is ... // Case 2
+> ```
+> Clearly, the intent of the programmer is to special-case the
+> destruction of `file` values that have an invalid file descriptor,
+> for example as a result of an error condition from the C `open`
+> call (which returns `-1` on error).
+
+It is possible to create local destructor definitions. When such a
+local definition exists, it is possible for it to override a more
+general definition. The general definition can be accessed using
+[super lookup](HANDBOOK_2-evaluation.md#super-lookup).
+
+```xl
+show_destructors is
+    delete Something is
+        print "Deleted", Something
+        super.delete Something
+    X is 42
+    Y is 57.2
+    X + Y
+```
+
+This should output something similar to the following:
+
+```xl
+Deleted 42.0
+Deleted 57.2
+Deleted 42
+```
+
+The first value being output is the temporary value created by the
+necessary implicit conversion of `X` from `integer` to `real`. Note
+that additional temporary values may appear depending on the
+optimizations performed by the compiler. The value returned by the
+function should not be destroyed, since it's passed to the caller.
 
 ### Mutability
 
