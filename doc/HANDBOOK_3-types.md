@@ -117,9 +117,11 @@ will be explained more in details below:
 
 <details>
 <summary>
+
 The lifetime of a value is the amount of time during which the value
 exists in the program, in other words the time between its
 [creation](#creation) and its [destruction](#destruction).
+
 </summary>
 
 An entity is said to be _live_ if it was created but not yet
