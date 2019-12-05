@@ -1294,6 +1294,17 @@ the current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
 
 
+## Super lookup
+
+In a given context, `super` is a way to refer to the enclosing
+scope.
+
+```xl
+X is 42
+foo X:integer is X + super.X    // super.X refers to X above
+foo 3                           // Returns 45
+```
+
 ## Caller lookup
 
 > **WARNING** This feature is only under consideration after a couple
