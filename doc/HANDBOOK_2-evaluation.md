@@ -1490,6 +1490,7 @@ in reference to Church's lambda calculus. The way this works, however,
 is markedly different internally, and is detailed in the section on
 [scoping](#scoping) above.
 
+
 -------------------------------------------------------------------------------
 
 Previous: [Syntax](HANDBOOK_1-syntax.md)
