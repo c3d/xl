@@ -42,7 +42,7 @@ type complex[type real is XL.TYPES.REAL.real] with
 // ----------------------------------------------------------------------------
 
     // Complex numbers implement all of 'number'
-    as number
+    features number
 
     // Two common representations
     type cartesian              is type cartesian(Re:real, Im:real)

@@ -39,15 +39,15 @@ type character[Bits] with
 //    Generic interface for character types
 // ----------------------------------------------------------------------------
 
-    as ENUMERTATED.enumerated
-    as COPY.copiable
-    as MOVE.movable
-    as CLONE.clonable
-    as DELETE.deletable
-    as COMPARISON.equatable
-    as COMPARISON.ordered
-    as MEMORY.sized
-    as MEMORY.aligned
+    features ENUMERTATED.enumerated
+    features COPY.copiable
+    features MOVE.movable
+    features CLONE.clonable
+    features DELETE.deletable
+    features COMPARISON.equatable
+    features COMPARISON.ordered
+    features MEMORY.sized
+    features MEMORY.aligned
 
 
 type ASCII              is character[7]
