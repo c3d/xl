@@ -486,7 +486,7 @@ types typically does a [move](#move).
 
 ### Ownership
 
-Computers offer a number of resources: memory, files, network
+Computers offer a number of resources: memory, files, locks, network
 connexions, devices, sensors, actuators, and so on. A common problem
 with such resources is to control their _ownership_. In other words,
 who is responsible for a given resource at any given time.
@@ -500,11 +500,50 @@ Acquisition is Initialization_. The central idea is that ownership of
 a resource is an invariant during the lifetime of a value. In other
 words, the value gets ownership of the resource during construction,
 and releases this ownership during destruction. This was illustrated
-in the `file` type of the module `MY_FILE` [given earlier](#my_file)
+in the `file` type of the module `MY_FILE` [given earlier](#my_file).
 
+Types designed to own the associated value are called _owner types_.
+There is normally at most one live owner at any given time for each
+controlled resource, that acquired the resource at construction time,
+and will release it at destruction time. It may be possible to release
+the owned resource early using `delete Value`.
+
+The [standard library)(HANDBOOK_7-standard-library.md) provides a
+number of types intended to own common classes of resources:
+
+* An `array`, a `buffer` and a `string` all own a contiguous sequence
+  of items of the same type.
+  * An `array` has a fixed size during its lifetime and allocates
+    items directly, i.e. on the execution stack.
+  * A `buffer` has a fixed size during its lifteime, and allocates
+    items dynamically, i.e. from a heap.
+  * A `string` has a variable size during its lifetime, and
+    consequently may move items around in memory as a result of
+    specific operations.
+* A `text` owns a variable number of `character` items, being
+  equivalent to `string of character`.
+* A `file` owns an open file
+* A `mutex` owns execution by a single thread while it's live
+* A `timer` owns a resource that can be used to measure time and
+  schedule execution.
+* A `thread` owns an execution thread and the associated call stack
+* A `task` owns an operation to perform that can be dispatched to one
+  of the available threads of execution
+* A `context` captures an execution context
 
 
 ### Access
+
+Not all types are intended to be owner types, but delegate ownership
+to some other type, an merely provide _access_ to some value. The
+corresponding types are called _access types_.
+
+
+
+For example, a `text` value like `"ABC"` owns the
+`character` values it contains. However, a text slice value like
+`"ABC"[1..2]` does not change the ownership of the underlying `text`,
+nor does it own it.
 
 
 ### Copy
@@ -665,93 +704,6 @@ to controlling who owns what data. More details are provided in the
 section on [ownership](#ownership) below.
 
 
-## Ownership
-
-The [XL execution model](HANDBOOK_2-evaluation.md) is based on a
-source-like description of the evaluation context. This execution
-model was described using relatively simple types for the bindings,
-for example `X is 0`.
-
-We described two
-cases that correspond to immediate and lazy evaluation. This leads to
-slightly different behaviour, which is exposed by the following program:
-
-```
-immediate Arg:integer is Arg + 1
-lazy Arg is Arg + 1
-
-X is 42
-immediate X
-lazy X
-```
-
-When evaluating `immediate X`, we need to evaluate `X` to check its
-type. Therefore, the context while evaluating `immediate X` will be
-`Arg is 42`, where `42` is the evaluated value of `X`.
-
-When evaluating `lazy X` on the other hand, `X` is not evaluated, so
-that the bindings will look more like:
-
-```
-Arg is CONTEXT { X }
-CONTEXT is { X is 42 }
-```
-
-
-## Ownership
-
-So far, we have
-only described simple bindings such as `X is 0` in the context, where
-copying the binding value around is inexpensive. If you call a pattern
-like `foo Y:integer`, you end up with a binding like `Y is X`, and
-we have not really discussed if and how that could behave differently
-from a binding like `Y is 0`.
-
-There are, however, many data types where the difference will
-matter. A binding like `Y is X` is called a _reference binding_: the
-value _refers_ to another value. By contrast, a binding like `Y is 0`
-is called a _value binding_. The difference matters in particular if
-you do something like `Y := 42`. Do you end up in a binding that is
-`Y is 42`, or do you end up with a `Y is X; X is 42` binding?
-
-Some data types, such as `string of T`, require relatively complex and
-expensive memory management operations. For example, as you add
-elements to a `string of integer`, the implementation of that type may
-need to allocate memory to store the new values. Some other data
-types, such as `array[1000] of integer`, may simply be big and
-expensive to copy around. Finally, some types such as `file` may
-acquire and release
-
-
-
-For that reason, it may be necessary to optimize the generated code in
-order to avoid copies and memory allocations while binding values. In
-C, for example, you would pass a _pointer_ to a function when the data
-being worked on is too large. The problem with this approach is well
-known: ownership of the data being pointed to is unclear in
-C. C++ has not improved this class of problems much. This class of
-problems, collectively called "memory safety", has plagued C and C++
-programs for years.
-
-To address this problem, the Rust programming language has
-[defined ownership](https://doc.rust-lang.org/1.8.0/book/ownership.html)
-so that there is only one owner of any value at any time. This is done
-in Rust in a way that can be fully enforced at compile-time, but
-requires a somewhat complex mental gymanistics from the programmer.
-
-
-rather
-has a precise definition of the ownership of data. However, the XL
-approach is intended to be slightly easier to use, while delivering
-substantially the same benefits.
-
-
-
-this is
-done in a rather different way in XL. The rules in XL are not as
-strict and constraining as in Rust, although they allow programmers to
-achieve substantially the same effect, i.e. memory and thread safety
-without a need for garbage collection.
 
 ### Copy or Move
 
