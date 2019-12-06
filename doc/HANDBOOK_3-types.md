@@ -289,9 +289,11 @@ module MY_FILE is
     open Name:text as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
-    close F:file is
-        libc.close(F.fd)
-    delete F:file is close F    // Destruction, see below
+    close F:*file is
+        if fd >= 0 then
+            libc.close(F.fd)
+            F.fd := -2
+    delete F:*file is close F    // Destruction, see below
 ```
 
 > **RATIONALE** This mechanism is similar to _elaboration_ in Ada or
@@ -305,9 +307,11 @@ module MY_FILE is
 ### Destruction
 
 When the lifetime of a value `V` terminates, the statement `delete V`
-automatically evaluates. A `delete X:T` definition is called a
-_destructor_ for type `T`. Declared entites are destroyed in the
-revere order of their declaration.
+automatically evaluates. Declared entites are destroyed in the reverse
+order of their declaration.  A `delete X:T` definition is called a
+_destructor_ for type `T`. It often has an [inout](#inout) parameter
+for the value to destroy, in order to be able to modify its argument,
+i.e. a destructor often has a signature like `delete X:*T`.
 
 There is a built-in default definition of that statement that has
 no effect and matches any value:
@@ -328,8 +332,8 @@ process.
 > extremely dangerous in a number of easily identified cases.
 > As an illustration, consider the following code:
 > ```xl
-> delete F:file when F.fd < 0   is ... // Case 1
-> delete F:file                 is ... // Case 2
+> delete F:*file when F.fd < 0  is ... // Case 1
+> delete F:*file                is ... // Case 2
 > ```
 > Clearly, the intent of the programmer is to special-case the
 > destruction of `file` values that have an invalid file descriptor,
@@ -488,7 +492,14 @@ who is responsible for a given resource at any given time.
 In XL, like in languages like Rust or C++, ownership is largely
 determined by the type system, and relies heavily on the guarantees
 it provides, in particular with respect to [creation](#creation) and
-[destruction](#destruction).
+[destruction](#destruction). In C++, the mechanism is called
+[RAII](https://en.wikipedia.org/wiki/RAII), which stands for _Resource
+Acquisition is Initialization_. The central idea is that ownership of
+a resource is an invariant during the lifetime of a value. In other
+words, the value gets ownership of the resource during construction,
+and releases it during destruction.
+
+
 
 
 ### Access
@@ -502,7 +513,11 @@ it provides, in particular with respect to [creation](#creation) and
 
 ### Binding
 
-#### in, out and inout parameters
+#### `in` arguments
+
+#### `out` arguments
+
+#### `inout` arguments
 
 
 
