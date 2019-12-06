@@ -424,6 +424,23 @@ invalid, since `Person` is a constant value.
 
 ### Compactness
 
+Some data types can be represented by a fixed number of contiguous
+memory locations. This is the case for example of `integer` or `real`:
+all `integer` values take the same number of bytes. Such data types
+are called _compact_.
+
+On the other hand, a `text` value can be of any length, and may
+therefore require a variable number of bytes to represent values such
+as `"Hi"` and `"There once was a time where text was represented in
+languages such as Pascal by fixed-size character array with a byte
+representing the length. This meant that you could not process text
+that was longer than, say, 255 characters. More modern languages have
+lifted this restriction."`. These values are said to be _scattered_.
+
+Although this is not always the case, the assignment for compact types
+generally does a [copy](#copy), while the assignment for scattered
+types typically does a [move](#move).
+
 ### Ownership
 
 
