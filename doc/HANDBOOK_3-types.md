@@ -238,10 +238,18 @@ creating such a shape. It is not possible to have an uninitialized
 element in a `complex`, since for example `complex(1.3)` would not
 match the shape and not have the right type.
 
-Using the shape explicitly given for the type is called the _basic
-type constructor_. From this, your code can create as many _alternate
-constructors_ as necessary. For example, you may create an imaginary
-unit, `i`, but the only way to do that is with a basic constructor:
+Using the shape explicitly given for the type is called the _constructor_
+for the type. By construction, the constructor can never fail or build
+a partial object. If an argument returns an [error](#errors) during
+evaluation, then that `error` value will not match the expected
+argument, except naturally if the constructor is written to accept
+`error` values.
+
+Often, developers will offer alternate ways to create values of a
+given type. These alternate helpers are nothing else than regular
+definitions that return a value of the type. For example, you may
+create an imaginary unit, `i`, but the only way to do that is
+ultimately with a constructor:
 
 ```xl
 i   is complex(0.0, 1.0)
@@ -265,11 +273,10 @@ X:complex + Y:complex as complex    is ...
 2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)
 ```
 
-A type implementation may be _hidden_ in a
-[module interface](HANDBOOK_6-modules.md), in which
-case the module interface should also provide some functions to create
-elements of the type. The following example illustrates this for a
-`file` interface based on Unix-style file descriptors:
+A type implementation may be _hidden_ in a[module interface](HANDBOOK_6-modules.md),
+in which case the module interface should also provide some functions
+to create elements of the type. The following example illustrates this
+for a `file` interface based on Unix-style file descriptors:
 
 ```xl
 module MY_FILE with
@@ -357,6 +364,28 @@ necessary implicit conversion of `X` from `integer` to `real`. Note
 that additional temporary values may appear depending on the
 optimizations performed by the compiler. The value returned by the
 function should not be destroyed, since it's passed to the caller.
+
+Any destruction code must be able to be called multiple times with the
+same value, if only because you cannot prevent a programmer from
+writing:
+
+```xl
+delete Value
+```
+
+In that case, `Value` will be destroyed twice, once by the explicit
+`delete`, and a second time when `Value` goes out of scope. There is
+obviously no limit on the number of destructions that an object may go
+through.
+
+```
+for I in 1..LARGE_NUMBER loop
+    delete Value
+```
+
+Also, remember that assigning to a value implicitly destroys the target of
+the assignment.
+
 
 ### Mutability
 
@@ -451,6 +480,15 @@ types typically does a [move](#move).
 
 ### Ownership
 
+Computers offer a number of resources: memory, files, network
+connexions, devices, sensors, actuators, and so on. A common problem
+with such resources is to control their _ownership_. In other words,
+who is responsible for a given resource at any given time.
+
+In XL, like in languages like Rust or C++, ownership is largely
+determined by the type system, and relies heavily on the guarantees
+it provides, in particular with respect to [creation](#creation) and
+[destruction](#destruction).
 
 
 ### Access
@@ -740,6 +778,17 @@ copy-controlling types, which
 
 
 ## Type hierarchy
+
+
+
+
+## Errors
+
+Errors in XL are represented by values with the following type:
+
+```xl
+type error is error Message:text
+```
 
 
 
