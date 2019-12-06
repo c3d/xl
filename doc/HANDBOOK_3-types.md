@@ -412,7 +412,7 @@ Greeting[6] := 'o'                      // (4) Greeting now "Good morning John!"
 ```
 
 None of these operations would be valid on a constant text such as
-`Person` in the code above. For example, `Person[3] := 'a'` is
+`Person` in the code above. For example, `Person[3]:='a'` is
 invalid, since `Person` is a constant value.
 
 > **NOTE** In the case (3) above, modifying a `text` value through an
