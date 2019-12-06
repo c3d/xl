@@ -273,6 +273,8 @@ X:complex + Y:complex as complex    is ...
 2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)
 ```
 
+<a name="my_file"/>
+
 A type implementation may be _hidden_ in a[module interface](HANDBOOK_6-modules.md),
 in which case the module interface should also provide some functions
 to create elements of the type. The following example illustrates this
@@ -497,8 +499,8 @@ it provides, in particular with respect to [creation](#creation) and
 Acquisition is Initialization_. The central idea is that ownership of
 a resource is an invariant during the lifetime of a value. In other
 words, the value gets ownership of the resource during construction,
-and releases it during destruction.
-
+and releases this ownership during destruction. This was illustrated
+in the `file` type of the module `MY_FILE` [given earlier](#my_file)
 
 
 
