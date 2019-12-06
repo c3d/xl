@@ -373,44 +373,54 @@ type `T`, unless type `T` is explicitly marked as variable. When `X`
 is a name, this may declare either a named constant or a function
 without parameters, depending on the shape of the body.
 
+```xl
+StartupMessage : text := "Hello World"  // Variable
+Answer as integer is 42                 // Named constant
+```
+
 A mutable value can be initialized or modified using the `:=`
 operator, which is called an
-[_assignment_](HANDBOOK_2-evaluation.md##assignments-and-moves):
+[_assignment_](HANDBOOK_2-evaluation.md##assignments-and-moves).
+There are a number of derived operators, such as `+=`, that combine a
+frequent arithmetic operation and an assignment.
 
 ```xl
 X : integer := 42       // Initialize with value 42
-X := X + 1              // Add 1 to X, so now X is 43
+X := X or 1             // Binary or, X is now 43
+X -= 1                  // Subtract 1 from X, now 42
 ```
 
-There are also a number of derived operators, such as `+=` that adds
-to a value that has a `+` operation, `-=` that subtracts from it, and
-so on. For example, the code above could also be written as:
+Some entities may give [access](#access) to individual inner
+values. For example, a `text` value is conceptually made of a number
+of individual `character` values that can be accessed individually.
+This is true irrespective of how `text` is represented. In addition,
+a slice of a `text` value is itself a `text` value. The mutability of
+a `text` value obviously has an effect on the mutability of accessed
+elements in the `text`.
+
+The following example shows how `text` values can be mutated directly (1),
+using a computed assignment (2), by changing a slice (3) or by
+changing an individual element (4).
 
 ```xl
-X : integer := 42       // Initialize with value 42
-X += 1                  // Add 1 to X, so now X is 43
+Greeting : text := "Hello"              // Variable text
+Person as text is "John"                // Constant text
+Greeting := Greeting & " " & Person     // (1) Greeting now "Hello John"
+Greeting &= "!"                         // (2) Greeting now "Hello John!"
+Greeting[0..4] := "Good m0rning"        // (3) Greeting now "Good m0rning John!"
+Greeting[6] := 'o'                      // (4) Greeting now "Good morning John!"
 ```
 
-The cost and complexity of modifying a value varies a lot depending on
-the value type. Simple, small objects such as `integer` or `real` are
-called _machine-representable_ in that they normally have an immediate
-machine representation. Operations such as assignments can directly be
-translated into individual machine instructions.
+None of these operations would be valid on a constant text such as
+`Person` in the code above. For example, `Person[3] := 'a'` is
+invalid, since `Person` is a constant value.
 
-Other, more complex types, such as `text`, require a more
-sophisticated representation, and multiple machine operations are
-necessary to represent even a simple assignment. Furthermore, such
-types may expose an internal structure. For example, a `text` value
-can contain a multiplicity of `character` elements, which can be
-addressed individually.
-
-At least conceptually, it is possibly to mutate a text not simply by
-changing its value as a whole, but by changing individual characters
-in it as well. Some languages forbid such operations, but this
-generally results in the inability to express some highly-efficient
-algorithms (or with the need to express them in a convoluted way and
-count on the compiler being very smart).
-
+> **NOTE** In the case (3) above, modifying a `text` value through an
+> access type can change its length. This is possible because
+> `Greeting[0..4]` is not an independent value, but an access type,
+> specifically a `slice`, which keeps track of both the `text`
+> (`Greeting` here) and the index range (`0..4` in that case),
+> with a `:=` operator that modifies the accessed `text` value.
 
 ### Compactness
 
