@@ -437,11 +437,20 @@ representing the length. This meant that you could not process text
 that was longer than, say, 255 characters. More modern languages have
 lifted this restriction."`. These values are said to be _scattered_.
 
+Scattered types are always built by _interpreting_ compact types. For
+example, a representation for text could be made of two values, the
+memory address of the first character, and the size of the text. This
+is not the only possible representation, of course, but any
+representation require interpreting fixed-size memory locations and
+giving them a logical structure.
+
 Although this is not always the case, the assignment for compact types
 generally does a [copy](#copy), while the assignment for scattered
 types typically does a [move](#move).
 
+
 ### Ownership
+
 
 
 ### Access
