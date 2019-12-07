@@ -509,7 +509,7 @@ and will release it at destruction time. It may be possible to release
 the owned resource early using `delete Value`.
 
 The [standard library)(HANDBOOK_7-standard-library.md) provides a
-number of types intended to own common classes of resources:
+number of types intended to own common classes of resources, including:
 
 * An `array`, a `buffer` and a `string` all own a contiguous sequence
   of items of the same type.
@@ -529,6 +529,8 @@ number of types intended to own common classes of resources:
 * A `thread` owns an execution thread and the associated call stack
 * A `task` owns an operation to perform that can be dispatched to one
   of the available threads of execution
+* A `process` owns an operating system process, including its threads
+  and address space.
 * A `context` captures an execution context
 
 
@@ -536,7 +538,28 @@ number of types intended to own common classes of resources:
 
 Not all types are intended to be owner types, but delegate ownership
 to some other type, an merely provide _access_ to some value. The
-corresponding types are called _access types_.
+corresponding types are called _access types_. When an access type is
+destroyed, the resources that it accesses are _not_ disposed of, since
+the access type does not own the value.
+
+For example, if `T` is a `text` value and if `A` and `B` are `integer`
+values, then `T[A..B]` is a particular kind of access called a
+_slice_, which denotes the fragment of text between positions `A` and
+`B`. where the first character in the text is at position `0`. By
+construction, this slice can only access `T`, no other text, and it
+is easy to implement boundary checks since the length of the text is
+known.
+
+Access types generalize _pointers_ or _references_ found in other
+languages, because they can describe a much wider class of access
+patterns. A pointer can only access a single element. Some languages
+such as C or C++ provide "pointer arithmetic", which makes it possible
+to access elements almost anywhere in memory, and is the root cause
+for the fabled lack of memory safety in these languages. By contrast,
+an access value that accesses a `text` value will only be able to
+access the `character` values in that `text`, but cannot be used to
+access `character` values in any other location in memory.
+
 
 
 
