@@ -43,3 +43,6 @@ example X:integer, Base:integer as integer is X + Base
 Base : integer := 25
 example 3, Base
 ```
+
+
+## Compact vs. Packed
