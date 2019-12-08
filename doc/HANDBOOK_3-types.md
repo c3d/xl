@@ -522,16 +522,16 @@ number of types intended to own common classes of resources, including:
     specific operations.
 * A `text` owns a variable number of `character` items, being
   equivalent to `string of character`.
-* A `file` owns an open file
-* A `mutex` owns execution by a single thread while it's live
+* A `file` owns an open file.
+* A `mutex` owns execution by a single thread while it's live.
 * A `timer` owns a resource that can be used to measure time and
   schedule execution.
-* A `thread` owns an execution thread and the associated call stack
+* A `thread` owns an execution thread and the associated call stack.
 * A `task` owns an operation to perform that can be dispatched to one
-  of the available threads of execution
+  of the available threads of execution.
 * A `process` owns an operating system process, including its threads
   and address space.
-* A `context` captures an execution context
+* A `context` captures an execution context.
 
 
 ### Access
