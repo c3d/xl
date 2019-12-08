@@ -508,15 +508,15 @@ controlled resource, that acquired the resource at construction time,
 and will release it at destruction time. It may be possible to release
 the owned resource early using `delete Value`.
 
-The [standard library)(HANDBOOK_7-standard-library.md) provides a
+The [standard library](HANDBOOK_7-standard-library.md) provides a
 number of types intended to own common classes of resources, including:
 
 * An `array`, a `buffer` and a `string` all own a contiguous sequence
   of items of the same type.
   * An `array` has a fixed size during its lifetime and allocates
-    items directly, i.e. on the execution stack.
+    items directly, e.g. on the execution stack.
   * A `buffer` has a fixed size during its lifteime, and allocates
-    items dynamically, i.e. from a heap.
+    items dynamically, typically from a heap.
   * A `string` has a variable size during its lifetime, and
     consequently may move items around in memory as a result of
     specific operations.
