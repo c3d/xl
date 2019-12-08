@@ -96,6 +96,7 @@ will be explained more in details below:
   things, determined by [scoping](HANDBOOKE_2-evaluation.md#scoping).
 * [creation](#creation) and [destruction](#destruction)
   defines how values of a given type are initialized and destroyed.
+* [errors](#errors) are special types used to indicate failure.
 * [mutability](#mutability) is the ability for an entity to change
   value over its lifetime.
 * [compactness](#compactness) is the property of some types to have
@@ -106,6 +107,9 @@ will be explained more in details below:
   lifetime of the associated values or possibly some other resource
   such as a network connection. Non-owning types can be used to
   [access](#access) values of an associated owning type.
+* [inheritance](#inheritance) is the ability for a type to inherit
+  all operations from another type, so that its values can safely be
+  implicitly converted to values of that other type.
 * [copy](#copy), [move](#move) and [binding](#binding) are operations
   used to transfer values across parts of a program.
 * [atomicity](#atomicity) is the ability to perform operations in a
@@ -393,6 +397,84 @@ Also, remember that assigning to a value implicitly destroys the target of
 the assignment.
 
 
+### Errors
+
+Errors in XL are represented by values with the `error` type (or any
+type that can be implicitly converted to `error`). The error type has
+a constructor that takes a simple error message:
+
+```xl
+type error is error Message:text
+```
+
+A function that may fail will often have an `error or T` return value.
+There is a specific shortcut for that, `fallible T`. For example, a
+logarithm returns an error for non-positive values, so that the
+signature of the `log` functions is:
+
+```xl
+log X:real as fallible real     is ... // May return real or error
+```
+
+If possible, error detection should be pushed to the interface of the
+function. For the `log` function, it is known to fail only for
+negative or null values, so that a better interface would be:
+
+```xl
+log X:real as real  when X > 0.0    is ... // Always return a real
+log X:real as error                 is ... // Always return an error
+```
+
+ A benefit of writing code this way is that the compiler can more
+ easily figure out that the following code is correct and does not
+ require any kind of error handling:
+
+ ```xl
+ if X > 0.0 then
+     print "Log(", X, ") is ", log X
+ ```
+
+> **RATIONALE** By returning an `error` for failure conditions, XL
+> forces the programmer to deal with errors. They cannot simply be
+> ignored like C return values or C++ exceptions can be. Errors that
+> may possibly return from a function are a fundamental part of its
+> type, and error handling is not optional.
+
+A number of types [derive](#inheritance) from the base `error` type to
+feature additional properties:
+
+* A `compile_error` helps the compiler emit better diagnostic for
+  situations which would lead to an invalid program.
+  ```xl
+  // Emit a specific diagnostic when writing a real into an integer
+  X:integer := Y:real       is compile_error "Possible truncation"
+  ```
+
+* A `range_error` indicates that a given value is out of range.
+  The default message provided is supplemented with information
+  comparing the value with the expected range.
+  ```xl
+  T:text[A:integer] as character or range_error is
+      if A < 0 or A >= length T then
+          range_error "Text index is out of bounds", A, T
+      else
+          P : memory_address[character] := memory_address(T.first)
+          P += A
+          *P
+  ```
+
+* A `logic_error` indicates an unexpected condition in the program,
+  and can be returned by `assert`, `require` and `ensure`.
+  ```xl
+  if X > 0 then
+      print "X is positive"
+  else if X < 0 then
+      print "X is negative"
+  else
+      logic_error "I never considered that case"
+  ```
+
+
 ### Mutability
 
 A value is said to be _mutable_ if it can change during its lifetime.
@@ -456,6 +538,7 @@ invalid, since `Person` is a constant value.
 > specifically a `slice`, which keeps track of both the `text`
 > (`Greeting` here) and the index range (`0..4` in that case),
 > with a `:=` operator that modifies the accessed `text` value.
+
 
 ### Compactness
 
@@ -596,9 +679,13 @@ number of types intended to access common owner types, including:
   absolutely necessary.
 
 
+### Inheritance
+
 ### Copy
 
-
+The [assignment operator](HANDBOOK_2-evaluation.md#assignments-and-moves)
+is written `A := B` in XL. For compact types, this is normally
+equivalent to `A :+ B`, which is guaranteed to be a _copy_.
 
 ### Move
 
@@ -799,16 +886,6 @@ copy-controlling types, which
 
 ## Type hierarchy
 
-
-
-
-## Errors
-
-Errors in XL are represented by values with the following type:
-
-```xl
-type error is error Message:text
-```
 
 
 
