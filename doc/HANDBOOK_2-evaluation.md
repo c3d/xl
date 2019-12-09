@@ -1491,6 +1491,92 @@ is markedly different internally, and is detailed in the section on
 [scoping](#scoping) above.
 
 
+## Error handling
+
+Code that fails will generally report it by returning an `error` value.
+Error values have the [`error` type](HANDBOOK_3-types.md#errors).
+For example, consider the `sqrt` (square root) function. That function
+is only defined for positive values.
+
+```xl
+sqrt X:real as real     when X >= 0     is ...
+print "Square root of 2 is ", sqrt 2        // OK
+print "Square root of -1 is ", sqrt(-1)     // Error
+```
+
+This program will print something similar to the following
+
+```console
+Square root of 2 is 1.41421356237
+Square root of -1 is Error: No form matches sqrt(-1)
+```
+
+This message is not very informative. For that reason, it is customary
+to add specific error messages for well-identified conditions:
+
+```xl
+sqrt X:real as real     when X >= 0     is ...
+sqrt X:real as real     when X <  0     is error "Square root of negative real ", X
+```
+
+In that case, the output will change to something like:
+
+```console
+Square root of 2 is 1.41421356237
+Square root of -1 is Error: Square root of negative real -1.0
+```
+
+There are multiple ways to handle errors.
+
+### Taking error parameters
+
+The simplest one is to have a variant of the function that takes an
+error as an argument. For example, you could "extend" your square root
+function as follows:
+
+```xl
+sqrt X:real as real     when X >= 0     is ...
+sqrt X:real as real     when X <  0     is error "Square root of negative real ", X
+sqrt E:error as error                   is error "Square root of error: ", E
+```
+
+Now if you attempt to take the square root of an error, you will get a
+different output:
+
+```xl
+print "Double error is ", sqrt(sqrt(-1))
+Double error is Error: Square root of error: Square root of negative real -1.0
+```
+
+### Fallible types
+
+Another way to handle errors is to use `fallible T` types, which hold
+either a `T` or an `error`. A `fallible T` contains four accessile
+fields:
+
+* `value` is a `T` value, and can only be accessed when there was no
+  error (otherwise, it returns... an `error`!)
+
+* `error` is an `error` value that should only be accessed when there was
+  an error. Otherwise, it returns `nil`.
+
+* `good` is `true` if there was no error, and `bad` otherwise.
+
+* `bad` is equivalent to `not good`.
+
+The following code shows how to use a `fallible real` type to return
+`0.0` for the `sqrt` of a negative value:
+
+```xl
+sanitized_sqrt X:real as real is
+    R : fallible real := sqrt X
+    if R.bad then
+        print "Got an error in sqrt: ", R.error
+        R := 0.0
+    return R.value
+```
+
+
 -------------------------------------------------------------------------------
 
 Previous: [Syntax](HANDBOOK_1-syntax.md)
