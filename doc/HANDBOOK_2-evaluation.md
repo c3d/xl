@@ -1548,6 +1548,10 @@ print "Double error is ", sqrt(sqrt(-1))
 Double error is Error: Square root of error: Square root of negative real -1.0
 ```
 
+> **NOTE** As the example above illustrates, `print` and `write` are
+> examples of functions that take an `error` parameter. In that case,
+> these functions will print the associated error message.
+
 ### Fallible types
 
 Another way to handle errors is to use `fallible T` types, which hold
