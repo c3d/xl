@@ -571,10 +571,10 @@ All these definitions are then available as shortcuts whenever the
 compiler evaluates future function calls.
 
 
-### Comparing XL I/O operations with C and C++
 
-Unlike the C `printf` function, `print` as defined above is both
-type-safe and extensible.
+The `print` function as defined above is both type-safe and
+extensible, unlike similar facilities found for example in the C
+programming language.
 
 It is type-safe because the compiler knows the type of each argument
 at every step, and can check that there is a matching `write`
