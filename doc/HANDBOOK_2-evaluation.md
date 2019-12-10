@@ -1689,6 +1689,86 @@ The notation `own T` above is an [owning type](HANDBOOK_3-types.md#ownership)
 that dynamically allocates an object from the heap.
 
 
+## Interface and implementation
+
+XL provides strong _encapsulation_ by allowing a programmer to hide
+irrelevant details of an implementation. This is fundamental to
+provide a robust [module system](HANDBOOK_6-modules.md).
+
+All values in XL expose an _interface_, which define _what_ can be
+done with the value, and also have an _implementation_ of their
+interface to tell the program _how_ operations actually happen. The
+interface needs to be visible for the program to be correct, but
+various mechanisms may allow to hide the implementation.
+
+For example, a variable `integer` value named `X` has the following
+interface:
+
+```xl
+X : integer
+```
+
+This is all that is really needed in order to recognize the validity
+and meaning of operations such as `X+X`, `2*X+1`, `X<0` or `X:=18`. The
+actual value of `X` does not matter. In other words, it is sufficient
+to have the interface above to use `X`, an implementation like the one
+shown below can be hidden to the users of `X`:
+
+```xl
+X : integer := 42
+```
+
+The same is true for functions. For example, a function checking if a
+value is even could expose the following interface:
+
+```xl
+is_odd N:integer as boolean
+```
+
+Based on this interface alone, I know that I can write code that
+checks if a value is even or odd:
+
+```xl
+for I in 1..100 loop
+    if is_odd I then
+        print I, " is odd"
+    else
+        print I, " is even"
+```
+
+It does not matter if `is_odd` is actually implemented as follows:
+
+```xl
+is_odd N:integer as boolean is N mod 2 <> 0
+```
+
+or maybe as folows using the bitwise `and` operator:
+
+```xl
+is_odd N:integer as boolean is N and 1 = 1
+```
+
+The [declarations](#declaration-phase) must specify the interface of
+the values being used, but they need not specify the implementation.
+A definitions of the value must be provided at some point that matches
+the declaration and specifies an implementation, but that definition may be
+[in a different source file](HANDBOOK_6-modules.md).
+
+> **RATIONALE** In languages such as C++, some members of a class can
+> be made _private_ or _protected_. This restricts their usage, but
+> the compiler (and the programmer) still have knowledge of internal
+> details of the implementation. This facilitates some low-level
+> copmiler optimizations (most of which are obsolete or irrelevant today),
+> but also results in a number of long-term maintenance issues.
+> Exposing implementation details in the interface worsens the
+> [fragile base class](https://en.wikipedia.org/wiki/Fragile_base_class)
+> problem, since some aspects of the implementation are public enough
+> that they cannot be modified. In XL, the implementation can be truly
+> hidden, and an implementation must be able to generate code that
+> does not depend on the implementation when the situation requires
+> it, for example if the implementation may be in a different shared
+> library than the code using the interface.
+
 -------------------------------------------------------------------------------
 
 Previous: [Syntax](HANDBOOK_1-syntax.md)
