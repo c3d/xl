@@ -1539,7 +1539,7 @@ There are multiple ways to handle errors:
 ### Taking error parameters
 
 The simplest way to handle errors is to have a variant of the function
-that takes an error as an argument. For example, you could "extend"
+that takes an `error` as an argument. For example, you could extend
 your square root function as follows:
 
 ```xl
