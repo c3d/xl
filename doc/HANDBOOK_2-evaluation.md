@@ -1563,8 +1563,12 @@ Double error is Error: Square root of error: Square root of negative real -1.0
 ### Fallible types
 
 Another way to handle errors is to use `fallible T` types, which hold
-either a `T` or an `error`. The `faillible` type is `fallible nil`.
-A `fallible T` contains four accessible fields:
+either a `T` or an `error`. The `faillible` type (without a type
+argument) is the same as `fallible nil`, and is normally used for
+functions that are not expected to return a value, but can return an
+error.
+
+`fallible T` contains four accessible fields:
 
 * `value` is a `T` value, and can only be accessed when there was no
   error (otherwise, it returns... an `error`!)
