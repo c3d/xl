@@ -1551,8 +1551,8 @@ Double error is Error: Square root of error: Square root of negative real -1.0
 ### Fallible types
 
 Another way to handle errors is to use `fallible T` types, which hold
-either a `T` or an `error`. A `fallible T` contains four accessile
-fields:
+either a `T` or an `error`. The `faillible` type is `fallible nil`.
+A `fallible T` contains four accessible fields:
 
 * `value` is a `T` value, and can only be accessed when there was no
   error (otherwise, it returns... an `error`!)
@@ -1575,6 +1575,102 @@ sanitized_sqrt X:real as real is
         R := 0.0
     return R.value
 ```
+
+### Try-Catch
+
+A third way to handle errors is to use a `try Body catch Handler`
+form, which evaluates `Body`, and if `Body` returns an `error`,
+evaluates `Handler` instead. The error that was caught by `catch` is
+called `caught`.
+
+With this construct, the `sanitized_sqrt` above can be written in a
+much shorter and more idiomatic way as follows:
+
+```xl
+sanitized_sqrt X:real as real is
+    try
+        sqrt X
+    catch
+        print "Got an error in sqrt: ", caught
+        0.0
+```
+
+> **NOTE** This may look like exception handling, and intentionally so.
+> However, `error` values are not exceptions in that they don't
+> automatically propagate across functions like C++ exceptions do.
+> If an error happens at some level, you must deal with it at that
+> level, if only to explicitly pass it along. This is done
+> [automatically](#error-statements) in many cases, so that the end
+> result may feel a little like exceptions, but conceptually, this is
+> always an `error` value being returned, not an exception being thrown.
+
+### Error statements
+
+If a statement, assignment or declaration returns an `error`, then as
+a special evaluation rule, that `error` valuea is immediately returned
+by the enclosing function. It is a type error if the interface of the
+enclosing function does not allow an `error` return value.
+
+For example, in C, it is frequent to have code that looks like:
+
+```C
+Thing *read_thing_from_file(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+        return NULL;
+    Thing *thing = malloc(sizeof(Thing))
+    if (thing == NULL)
+    {
+        fclose(file);
+        return NULL;
+    }
+    thing->header = malloc(sizeof(ThingHeader));
+    if (thing->header == NULL)
+    {
+        free(thing);
+        fclose(file);
+        return NULL;
+    }
+    size_t header_read = fread(&thing->header, 1, sizeof(ThingHeader), file);
+    if (header_read != sizeof(ThingHeader))
+    {
+        free (thing->header);
+        free (thing);
+        fclose(file);
+        return NULL;
+    }
+    if (thing->header.size < MIN_SIZE)
+    {
+        log_error("Header size is too small: %u", thing->header.size);
+        free(thing->header);
+        free(thing);
+        fclose(file);
+        return NULL;
+    }
+    // ... possibly more of the same
+    fclose(file);
+    return thing;
+}
+```
+
+In XL, handling `error` values is implicit, so that code similar to
+the above can be written as follows:
+
+```xl
+read_thing_from_file FileName:text as fallible own thing is
+    F:file := file.open(FileName)       // May error out
+    H:own thing_header := read(F)       // May error out (and close F)
+    if H.size < MIN_SIZE then
+        // Explicitly error out with custom message
+        error "Header size is too small", H.size
+    T:own thing := thing(H)             // May error out, dispose H, close F
+    // ... possibly more of the same
+    T
+```
+
+The notation `own T` above is an [owning type](HANDBOOK_3-types.md#ownership)
+that dynamically allocates an object from the heap.
 
 
 -------------------------------------------------------------------------------
