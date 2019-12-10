@@ -116,7 +116,6 @@ will be explained more in details below:
   way that allows consistent behavior across multiple threads of
   execution, possibly executing concurrently on different CPUs.
 
-
 ### Lifetime
 
 The lifetime of a value is the amount of time during which the value
@@ -539,6 +538,25 @@ invalid, since `Person` is a constant value.
 > (`Greeting` here) and the index range (`0..4` in that case),
 > with a `:=` operator that modifies the accessed `text` value.
 
+A constant value does not change over its lifetime, but it may change
+over the lifetime of the program. More precisely, the lifetime of a
+constant is at most as long as the lifetime of the values it is
+computed from. For example, in the following code, the constant `K`
+has a different value for every interation of the loop, but the
+constant `L` has the same value for all iterations of `I`
+
+```xl
+for J in 1..5 loop
+    for I in 1..5 loop
+        K is 2*I + 1
+        L is 2*J + 1
+        print "I=", I, " K=", K, " L=", L
+```
+
+> **RATIONALE** There is no syntactic difference between a constant
+> and a function without parameters. An implementation should be free
+> to implement a constant as a function if this is more effective, or
+> to use smarter strategies when appropriate.
 
 ### Compactness
 
