@@ -1526,13 +1526,21 @@ Square root of 2 is 1.41421356237
 Square root of -1 is Error: Square root of negative real -1.0
 ```
 
-There are multiple ways to handle errors.
+There are multiple ways to handle errors:
+
+* [Taking error parameters](#taking-error-parameters) lets you
+  explicitly deal with errors, for example to show an error message.
+* [Fallible types](#fallible-types) deal with cases where you expect a
+  value or an error.
+* [Try-Catch](#try-catch) will let you special-case error conditions.
+* [Error statements](#error-statements) automatically propagate errors
+  without cluttering your code with error checking conditions.
 
 ### Taking error parameters
 
-The simplest one is to have a variant of the function that takes an
-error as an argument. For example, you could "extend" your square root
-function as follows:
+The simplest way to handle errors is to have a variant of the function
+that takes an error as an argument. For example, you could "extend"
+your square root function as follows:
 
 ```xl
 sqrt X:real as real     when X >= 0     is ...
