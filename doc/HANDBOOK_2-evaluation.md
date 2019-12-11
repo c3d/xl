@@ -1294,6 +1294,30 @@ the current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
 
 
+## Named scopes
+
+A common idiom in XL is to prefix a scope with a name, so as to better
+document the intent for the programmer and create patterns that are
+more specific, minimizing the risk of ambiguity. A scope following a
+name is called a _named scope_, and can be used like a regular scope,
+i.e. the prefix name does not play a role in the lookup.
+
+For example, the `magic_constants` could be defined as
+```xl
+magic_constants Bits is size_constants
+    num_bits    is Bits
+    min_value   is 0
+    max_value   is 2^Bits - 1
+
+eight_bits is magic_constants(8)
+
+print "The max value for 8 bits is ", eight_bits.max_value
+```
+
+This forms the basis of [constructors](HANDBOOK_3-types.md#creation)
+and [tagged types](HANDBOOK_3-types.md#interface)in XL.
+
+
 ## Super lookup
 
 In a given context, `super` is a way to refer to the enclosing
