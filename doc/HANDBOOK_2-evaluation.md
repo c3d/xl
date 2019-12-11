@@ -568,11 +568,44 @@ conditions is true:
   a conditional pattern like `B:block when B.opening = "("`.
 </details>
 
-
 In some cases, checking if an argument matches a pattern requires
 evaluation of the corresponding expression or sub-expression. This is
 called [immediate evaluation](#immediate-evaluation).  Otherwise,
 [evaluation will be lazy](#lazy-evaluation).
+
+### Pattern matching scope values
+
+When a pattern is matched to an argument, it can be matched either
+directly by value, or it can be matched by looking up the
+corresponding name in a scope. This, combined with the rules about
+matching blocks, makes it possible to pass arguments by name for
+clarity in very long parameter lists.
+
+```xl
+// Function to create a person, with many parameters
+create_person FirstName     : text,
+              LastName      : text,
+              DateOfBirth   : date,
+              Gender        : gender,
+              Weight        : weight,
+              Height        : length,
+              Address       : address as person is ...
+
+// The above function can be invoked with as scope as an argument
+// Notice that since this is based on lookup, the order can be different
+JohnDoe is create_person
+    LastName    is "Doe"
+    FirstName   is "John"
+    Gender      is Male
+    Weight      is 87.3kg
+    Height      is 182cm
+    Address     is address
+        Street  is "Sesame Street"
+        Number  is 42
+        ZipCode is 97777
+        City    is "Flooontch"
+    DateOfBirth is 1902/12/05
+```
 
 
 ## Overloading
