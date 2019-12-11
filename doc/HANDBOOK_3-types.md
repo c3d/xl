@@ -6,11 +6,12 @@ that `A` is a `real` allows expression `A+A` to match declaration
 pattern `X:real+Y:real`, but prevent it from matching pattern
 `X:integer+Y:integer`.
 
-In XL, types are based on the _shape_ of trees. A type identifies
-the tree patterns that belong to the type. The expression `type(Pattern)`
-returns the type for the given type declaration pattern. For example,
-the type for all additions where the first value is a `real` is
-`type(A:real+B)`.
+In XL, types are based on the _shape_ of
+[parse trees](HANDBOOK_1-syntax.md#the-xl-parse-tree).
+A type identifies the tree patterns that belong to the type.
+The expression `type(Pattern)` returns the type for the given type
+declaration pattern. For example, the type for all additions where the
+first value is a `real` is `type(A:real+B)`.
 
 This approach to typing means in particular that a same value can
 belong to _multiple_ types. For example, the expression `2+3*5`
@@ -91,6 +92,10 @@ type complex is complex(Re:real, Im:real)
 A number of essential concepts are related to the type system, and
 will be explained more in details below:
 
+* the [interface](#interface) of a type is an optional scope that
+  exposes _fields_ of the type, i.e. individually accessible values.
+  The _implementation_ of the type must provide all interfaces exposed
+  in the type's interface.
 * the [lifetime](#lifetime) of a value is the amount of time during
   which the value exists in the program. Lifetime is, among other
   things, determined by [scoping](HANDBOOKE_2-evaluation.md#scoping).
@@ -115,6 +120,64 @@ will be explained more in details below:
 * [atomicity](#atomicity) is the ability to perform operations in a
   way that allows consistent behavior across multiple threads of
   execution, possibly executing concurrently on different CPUs.
+
+
+### Interface
+
+The [interface](HANDBOOK_2-evaluation.md#interface-and-implementation)
+of a type can specifiy a [scope](HANDBOOK_2-evaluation.md#scoping)
+for values that match the type, using the syntax `type T with I`,
+where `I` is a scope containing the publicly available declarations.
+These declarations are called _fields_ of the type when they denote
+[mutable](#mutability) values, and _members_ of the type if they are
+constant.
+
+The code below defines a `picture` type that exposes `width`, `height`
+and `data` fields, as well as a `size` member that is used to compute
+the size of the `data` buffer.
+
+```xl
+type picture with
+    width  : unsigned
+    height : unsigned
+    data   : buffer[size] of unsigned8
+    size as unsigned
+```
+
+The interface does not reveal any information on the actual shape of
+the parse tree for `picture` values. In other words, it does not
+specify how the `picture` type is actually implemented. A type that
+has a name but no implementation, like `picture` above, is called a
+_tag type_. A tag type can only match values that were _tagged_ with
+the same type using some explicit type annotation.
+
+The type interface above remains sufficient to validate code like the
+following definition of `is_square`:
+
+```xl
+is_square P:picture is P.width = P.height
+```
+
+In that code, `P` is properly tagged as having the `picture` type, and
+even if we have no idea how that type is implemented, we can still use
+`P.width` and deduce that it's an `integer` value based on the
+type interface alone.
+
+The simplest way to implement fields is to create a type that has
+a structure exposing declarations that directly match the
+interface. For the `picture` type, this could be the following code:
+
+```xl
+type picture is
+    width   : unsigned
+    height  : unsigned
+    data    : buffer[size] of unsigned8
+    size is width * height
+```
+
+The implementation of the `picture` type is a scope that matches
+
+
 
 ### Lifetime
 
@@ -864,6 +927,24 @@ section on [ownership](#ownership) below.
 ### Copy or Move
 
 
+### Variant types
+
+```xl
+type picture with
+    width  : unsigned
+    height : unsigned
+    format : either { RGB; GRAY }
+    data   : buffer
+    size is width * height
+    type grayscale is fixed_point range 0.0..1.0 bits 8
+    type buffer is buffer[1..size] of pixel
+
+    type pixel is pixel[format]
+    type pixel[RGB] is rgb(red   : grayscale,
+                           green : grayscale,
+                           blue  : grayscale)
+    type pixel[GRAY] is gray(gray: grayscale)
+```
 
 
 
@@ -906,7 +987,9 @@ copy-controlling types, which
 
 
 
+-------------------------------------------------------------
 
+### MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)
 
 The difference matters in particular in the interface of a type, as
 declared by `with`. The non-mutable declarations using `as` are
