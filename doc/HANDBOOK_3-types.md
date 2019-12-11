@@ -86,16 +86,25 @@ The previous example should be written as follows:
 type complex is complex(Re:real, Im:real)
 ```
 
+A declaration `type T is P` is equivalent to `T is type (P)`. This is
+important to remember if you write type expressions. For example:
+
+```xl
+// This is `type(integer)`, which only accepts the name `integer`
+type int is integer
+
+// This is `type(X:integer8)`, which accepts `integer8` values
+type int8 is X:integer8
+
+// This creates an alternate name for `unsigned`
+positive is unsigned
+```
 
 ## Type-related concepts
 
 A number of essential concepts are related to the type system, and
 will be explained more in details below:
 
-* the [interface](#interface) of a type is an optional scope that
-  exposes _fields_ of the type, i.e. individually accessible values.
-  The _implementation_ of the type must provide all interfaces exposed
-  in the type's interface.
 * the [lifetime](#lifetime) of a value is the amount of time during
   which the value exists in the program. Lifetime is, among other
   things, determined by [scoping](HANDBOOKE_2-evaluation.md#scoping).
@@ -115,68 +124,15 @@ will be explained more in details below:
 * [inheritance](#inheritance) is the ability for a type to inherit
   all operations from another type, so that its values can safely be
   implicitly converted to values of that other type.
+* the [interface](#interface) of a type is an optional scope that
+  exposes _fields_ of the type, i.e. individually accessible values.
+  The _implementation_ of the type must provide all interfaces exposed
+  in the type's interface.
 * [copy](#copy), [move](#move) and [binding](#binding) are operations
   used to transfer values across parts of a program.
 * [atomicity](#atomicity) is the ability to perform operations in a
   way that allows consistent behavior across multiple threads of
   execution, possibly executing concurrently on different CPUs.
-
-
-### Interface
-
-The [interface](HANDBOOK_2-evaluation.md#interface-and-implementation)
-of a type can specifiy a [scope](HANDBOOK_2-evaluation.md#scoping)
-for values that match the type, using the syntax `type T with I`,
-where `I` is a scope containing the publicly available declarations.
-These declarations are called _fields_ of the type when they denote
-[mutable](#mutability) values, and _members_ of the type if they are
-constant.
-
-The code below defines a `picture` type that exposes `width`, `height`
-and `data` fields, as well as a `size` member that is used to compute
-the size of the `data` buffer.
-
-```xl
-type picture with
-    width  : unsigned
-    height : unsigned
-    data   : buffer[size] of unsigned8
-    size as unsigned
-```
-
-The interface does not reveal any information on the actual shape of
-the parse tree for `picture` values. In other words, it does not
-specify how the `picture` type is actually implemented. A type that
-has a name but no implementation, like `picture` above, is called a
-_tag type_. A tag type can only match values that were _tagged_ with
-the same type using some explicit type annotation.
-
-The type interface above remains sufficient to validate code like the
-following definition of `is_square`:
-
-```xl
-is_square P:picture is P.width = P.height
-```
-
-In that code, `P` is properly tagged as having the `picture` type, and
-even if we have no idea how that type is implemented, we can still use
-`P.width` and deduce that it's an `integer` value based on the
-type interface alone.
-
-The simplest way to implement fields is to create a type that has
-a structure exposing declarations that directly match the
-interface. For the `picture` type, this could be the following code:
-
-```xl
-type picture is
-    width   : unsigned
-    height  : unsigned
-    data    : buffer[size] of unsigned8
-    size is width * height
-```
-
-The implementation of the `picture` type is a scope that matches
-
 
 
 ### Lifetime
@@ -761,6 +717,101 @@ number of types intended to access common owner types, including:
 
 
 ### Inheritance
+
+### Interface
+
+The [interface](HANDBOOK_2-evaluation.md#interface-and-implementation)
+of a type can specifiy a [scope](HANDBOOK_2-evaluation.md#scoping)
+for values that match the type, using the syntax `type T with I`,
+where `I` is a scope containing the publicly available declarations.
+These declarations are called _fields_ of the type when they denote
+[mutable](#mutability) values, and _members_ of the type if they are
+constant.
+
+The code below defines a `picture` type that exposes `width`, `height`
+and `data` fields, as well as a `size` member that is used to compute
+the size of the `data` buffer.
+
+```xl
+type picture with
+    width  : unsigned
+    height : unsigned
+    data   : buffer[size] of unsigned8
+    size as unsigned
+```
+
+The interface does not reveal any information on the actual shape of
+the parse tree for `picture` values. In other words, it does not
+specify how the `picture` type is actually implemented. A type that
+has a name but no implementation, like `picture` above, is called a
+_tag type_. A tag type can only match values that were _tagged_ with
+the same type using some explicit type annotation.
+
+The type interface above remains sufficient to validate code like the
+following definition of `is_square`:
+
+```xl
+is_square P:picture is P.width = P.height
+```
+
+In that code, `P` is properly tagged as having the `picture` type, and
+even if we have no idea how that type is implemented, we can still use
+`P.width` and deduce that it's an `integer` value based on the
+type interface alone.
+
+The simplest way to implement fields is to create a type that has
+a structure exposing declarations that directly match the
+interface. For the `picture` type, this could be the following code:
+
+```xl
+type picture is
+    width   : unsigned
+    height  : unsigned
+    data    : buffer[size] of unsigned8
+    size is width * height
+```
+
+Remember that this is equivalent to:
+
+```xl
+picture is type
+    width   : unsigned
+    height  : unsigned
+    data    : buffer[size] of unsigned8
+    size is width * height
+```
+
+This implementation of the `picture` type is a pattern that matches
+values such as:
+
+```xl
+my_picture is
+    1024
+    768
+    my_buffer
+
+another_picture i
+```
+
+
+
+In general, you want the pattern to be more specific, so it is
+customary to add a prefix that matches the type name and add infix `,`
+operators separating the values, therefore creating a [constructor](#creation).
+
+```xl
+type picture is picture
+    width   : unsigned,         // Notice the comma
+    height  : unsigned,         // Here too
+    data    : buffer[size] of unsigned8
+    size is width * height
+
+my_picture is picture(1024, 768, my_buffer)
+```
+
+However, the implementation is often entirely different, and merely
+needs to _expose_ the interface in some way.
+
 
 ### Copy
 
