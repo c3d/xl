@@ -778,6 +778,10 @@ JohnDoe is create_person
 > **NOTE** This rule is a bit uncertain: the effect on readability
 > seems desirable, but there is a bit of ad-hockery in this rule, and
 > it's unclear that long parameter list are that useful in XL.
+> It is also unclear that this can easily be implemented within the
+> language as a definition for `X,Y`, which is a bit concerning.
+> (In other words, this might be the kind of language rule that is not
+> very natural to write in XL - To be verified...)
 
 
 ## Overloading
