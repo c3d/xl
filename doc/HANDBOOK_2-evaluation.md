@@ -547,7 +547,7 @@ expressions.
 </details>
 
 <details>
-  <summary>Suffix definitions</summary>
+  <summary>Postfix definitions</summary>
 
   When the pattern is a postfix, like `X%`, the expression will match
   only if it is a postfix with the same name, and when the pattern on
