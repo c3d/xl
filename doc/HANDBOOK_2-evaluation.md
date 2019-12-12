@@ -711,6 +711,11 @@ expressions.
 
 </details>
 
+In some cases, checking if an argument matches a pattern requires
+evaluation of the corresponding expression or sub-expression. This is
+called [immediate evaluation](#immediate-evaluation).  Otherwise,
+[evaluation will be lazy](#lazy-evaluation).
+
 > **STYLE** The rules of pattern matching give a lot of freedom with
 > respect to coding style. Several conventions are recommended and are
 > generally followed in this document:
@@ -733,11 +738,6 @@ expressions.
 >   C : circle := circle(0.3, 2.6, 4.0)
 >   ```
 >
-
-In some cases, checking if an argument matches a pattern requires
-evaluation of the corresponding expression or sub-expression. This is
-called [immediate evaluation](#immediate-evaluation).  Otherwise,
-[evaluation will be lazy](#lazy-evaluation).
 
 ### Pattern matching scope values
 
