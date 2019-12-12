@@ -447,126 +447,292 @@ This will match an expression like `log 1.25` because:
 
 3. The condition `X > 0.0` is true with binding `X is 1.25`
 
+There are several kinds of patterns, each maching different kinds of
+expressions.
+
 <details>
-<summary>
-The conditions for a pattern to match an expression depend on the kind
-of pattern being considered.
-</summary>
+  <summary>Name definitions</summary>
 
-A pattern `P` matches an expression `E` if one of the following
-conditions is true:
-
-* The top-level pattern `P` is a name, and expression `E` is the same name.
+  Top-level name patterns only match the exact same name.
 
   | Declaration           | Matched by         | Not matched by      |
   | --------------------- | ------------------ | ------------------- |
   | `pi is 3.14`          | `pi`               | `ip`, `3.14`        |
 
-* The top-level pattern `P` is a prefix, like `sin X` or a postfix, like
-  `X%`, and the expression `E` is a prefix or  postfix respectively
-  with the same operator as the pattern, and operands match.
+  Top-level name patterns are called _name definitions_.
+
+  > **NOTE** This case only applies to names, not to operators.
+  > You cannot define a `+` operator that way.
+
+</details>
+
+<details>
+  <summary>Wildcards</summary>
+
+  Name patterns that are not at the top-level can match any expression,
+  and this does not require [immediate evaluation](#immediate-evaluation).
+  In that case, the expression will be bound to the name in the
+  argument context, unless it is already bound in the current context.
+  In that latter case, the value `New` of the new expression is
+  compared with the already bound value `Old` by evaluating the
+  `New=Old` expression, and the pattern only matches if that
+  check evaluates to `true`.
+
+  | Declaration           | Matched by              | Not matched by      |
+  | --------------------- | ----------------------- | ------------------- |
+  | `X+Y`                 | `2+"A"`                 | `2-3`, `+3`, `3+`   |
+  | `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`        |
+
+  Such name patterns are called _wildcard parameters_ because
+  they can accept any expression as an expression, or _untyped
+  parameters_ because no type checking occurs on the argument.
+
+  > **NOTE** This case only applies to names, not to operators.
+  > You cannot define a `+` parameter that way.
+
+</details>
+
+<details>
+  <summary>Type annotations</summary>
+
+  When the pattern is an infix `:` or `as`, it matches an expression
+  if the expression matches the pattern on the left of the infix, and
+  if the [type](HANDBOOK_3-types.md) of the expression matches the
+  type on the right of the infix.
+
+  A type annotation as a top-level pattern is a declaration:
+
+  | Top-level pattern     | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `X:integer`           | `X`                | `2`, `'X'`           |
+  | `seconds as integer`  | `seconds`          | `2`, `"seconds"`     |
+
+  A type annotation as a sub-pattern declares a parameter:
+
+  | Parameter pattern     | Matched by   | Not matched by       |
+  | --------------------- | ------------ | -------------------- |
+  | `X:integer`           | `42`         | `X` (unless bound to an `integer`) |
+  | `seconds as integer`  | `42`         | `X` (unless constant bound to an `integer`) |
+
+  Such patterns are called _type annotations_, and are used to perform
+  type checking. Normally, type annotations using `:` are used to
+  declare the type of parameters, whereas `as` is used to declare the
+  type of the expression being defined, as shown for the pattern on
+  the left of `is` in the example below:
+
+  ```xl
+  X:real + Y:real as real is ...
+  ```
+
+</details>
+
+<details>
+  <summary>Function definitions</summary>
+
+  When the pattern is a prefix, like `sin X`, the expression will
+  match only if it is a prefix with the same name, and when the
+  pattern on the right of the prefix matches the right operand of the
+  expression.
 
   | Pattern               | Matched by         | Not matched by       |
   | --------------------- | ------------------ | -------------------- |
   | `sin X`               | `sin (2.27 + A)`   | `cos 3.27`           |
   | `+X:real`             | `+2.27`            | `+"A"`, `-3.1`, `1+1`|
-  | `X%`                  | `2.27%`, `"A"%`    | `%3`, `3%2`          |
-  | `X km`                | `2.27 km`          | `km 3`, `1 km 3`     |
 
-* The top-level pattern `P` is an infix `when` like `Pattern when Condition`,
-  called a _conditional pattern_, and `Pattern` matches `E`, and the
-  value of `Condition` is `true` with the bindings declared while
-  matching `Pattern`.
+  When the prefix is a name, definitions like this are called
+  _function definitions_, and the corresponding expressions are
+  usually called _function calls_. Otherwise, they are called _prefix
+  operator definitions_.x
+
+</details>
+
+<details>
+  <summary>Suffix definitions</summary>
+
+  When the pattern is a postfix, like `X%`, the expression will match
+  only if it is a postfix with the same name, and when the pattern on
+  the left of the postfix matches the left operand of the expression.
+
+  | Pattern               | Matched by         | Not matched by       |
+  | --------------------- | ------------------ | -------------------- |
+  | `X%`                  | `2.27%`, `"A"%`    | `%3`, `3%2`          |
+  | `X km`                | `2.27 km`          | `km 3`, `1 km 3`
+  |
+
+  Definitions like this are called _postfix definitions_, and the
+  corresponding expressions are usually called _postfix expressions_.
+  The name or operator is called the _suffix_.
+
+</details>
+
+<details>
+  <summary>Infix definitions</summary>
+
+  When the pattern is an infix, it only matches:
+
+  * an infix expression with the same infix operator when both the
+    left and right operands of the pattern match the corresponding
+    left and right operands of the expression.
+
+    | Pattern               | Matched by         | Not matched by       |
+    | --------------------- | ------------------ | -------------------- |
+    | `X:real+Y:real`       | `3.5+2.9`          | `3+2`, `3.5-2.9`     |
+    | `X and Y`             | `N and 3`          | `N or 3`             |
+
+  * a name bound to an infix with the same infix operator when both
+    the left and right operands of the pattern match the corresponding
+    left and right operands of the bound value. In that case, the
+    value in the name is said to be _split_ to match the parameters.
+
+    | Pattern               | Matched by         | Not matched by       |
+    | --------------------- | ------------------ | -------------------- |
+    | `write X,Y` | `write Items` when `Items is "A","B"` | `wrote 0`, `write Items` when `Items is "A"+B"`   |
+
+    > **NOTE** A very common idiom  is to use comma `,` infix to separate
+    > multiple parameters, as in the following definition:
+    > ```xl
+    > write Head, Tail is write Head; write Tail
+    > ```
+    > This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
+    > `Tail is 2,3`. In the evaluation of the body with these bindings,
+    > `write Tail` will then match the same declaration again with
+    > `Tail` being split, resulting in bindings `Head is 2` and `Tail is 3`.
+
+  A definition containing an infix pattern is called an _infix
+  definition_, and the expressions are called _infix expressions_.
+
+</details>
+
+<details>
+  <summary>Conditional patterns</summary>
+
+  When a top-level pattern is an infix like `Pattern when Condition`,
+  then the pattern matches an expression if the pattern on the left of
+  the infix matches the expression, and if the expression on the right
+  evaluates to `true` after bindings
 
   | Pattern               | Matched by         | Not matched by       |
   | --------------------- | ------------------ | -------------------- |
   | `log X when X > 0`    | `log 3.5`          | `log(-3.5)`          |
 
-* The pattern `P` is an infix, and the operator is the same in the pattern
-  and in the expression, and both operands in the pattern match the
-  respective operands in the expression.
+  Such patterns are called _conditional patterns_. They do not match
+  if the expression evaluates to anything but `true`, notably if it
+  evaluates to any kind of error.
+
+</details>
+
+<details>
+  <summary>Literal constants</summary>
+
+  When the pattern is an `integer` like `0`, a `real` like `3.5`, a
+  `text` like `"ABC"`, it only matches an expression with the same value,
+  as verified by evaluating the `Pattern = Value` expression, where
+  `Pattern` is the literal constant in the pattern, and `Value` is the
+  evaluated value of the expression. Checking that the value matches
+  will therefore require [immediate evaluation](#immediate-evaluation).
 
   | Pattern               | Matched by         | Not matched by       |
   | --------------------- | ------------------ | -------------------- |
-  | `X:real+Y:real`       | `3.5+2.9`          | `3+2`, `3.5-2.9`     |
-  | `X and Y`             | `N and 3`          | `N or 3`             |
-
-  For sub-patterns, if `E` is a name and its' bound to an infix with
-  the same operator as in the pattern, then its value can be _split_.
-
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `write X,Y` | `write Items` when `Items is "A","B"` | `wrote 0`, `write Items` when `Items is "A"+B"`   |
-
-  > **NOTE** A very common idiom  is to use comma `,` infix to separate
-  > multiple parameters, as in the following definition:
-  > ```xl
-  > write Head, Tail is write Head; write Tail
-  > ```
-  > This declaration will match `write 1, 2, 3` with bindings `Head is 1` and
-  > `Tail is 2,3`. In the evaluation of the body with these bindings,
-  > `write Tail` will then match the same declaration again with
-  > `Tail` being split, resulting in bindings `Head is 2` and `Tail is 3`.
-
-* The pattern `P` is an `integer`, `real` or `text` constant, or a
-  [metabox](#metabox), for example `0`, `1.25`, `"Hello"` or `[[sqrt 2]]`
-  respectively, and the expression `E` matches the value given by the
-  constant or computed by the expression in the metabox.
-  In that case, expression `E` needs to be evaluated to check if it matches.
-
-  | Pattern               | Matched by         | Not matched by       |
-  | --------------------- | ------------------ | -------------------- |
-  | `if [[true]] then Op` | `if X<3 then run` when `X<3` is `true` | `if 0 then run` |
   | `0!`                  | `N!` when `N=0`    | `N!` when `N<>0`     |
 
   This case applies to sub-patterns, as was the case for `0! is 1` in
-  the [definition of factorial](HANDBOOK_0-introduction.md#factorial),
-  as well as to top-level patterns, as in `0 is "Zero"`.
-  This last case is useful in [maps](#scoping).
+  the [definition of factorial](HANDBOOK_0-introduction.md#factorial).
+  It also applies to top-level patterns, which is primarily useflu in
+  [maps](#scoping):
 
-  | Definition            | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `0 is "Zero"`         | `0`, `N` when `N=0` | `1`, `'A'`, `N` unless `N=0`|
-  | `[[false]] is self`   | `false`             | `true`               |
+  ```xl
+  digits is
+      0 is "Zero"
+      1 is "One"
+  ```
 
-* The sub-pattern `P` is a name, such as `N` in `N! is N * (N-1)!`. In
-  that case, a binding `N is A` is added at the top of the local context
-  used to evaluate the body, where `A` is the (possibly evaluated)
-  sub-expression from the argument.
+</details>
 
-  | Sub-pattern           | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `N`                   | Any expression      |                      |
+<a name="metabox"/>
+<details>
+  <summary>Metabox constants</summary>
 
-* The sub-pattern `P` is a type annotation, such as `X:real`.
-  This case is similar to the previous one, except that `E` may need
-  to be evaluated to check its type. For example, expression `A+B`
-  must be evaluated if the pattern is `X:real`, but not for `X:infix`
-  since `A+B` is an infix.
+  When the pattern is a an expression between two square brackets,
+  like `[[true]]`, it is called a _metabox_, and it only matches a
+  value that is equal to the value computed by the metabox.
+  This equality is checked by evaluating `Pattern = Value`, where
+  `Pattern` is the expression in the metabox, and `Value` is the
+  expression being tested.
 
-  | Pattern               | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `N:integer`           | `0`, `A+B` when `integer` | `A+B` when `real` |
-  | `N:infix`             | `A+B` always        | `A*B`                |
+  | Pattern            | Matched by          | Not matched by       |
+  | ------------------ | ------------------  | -------------------- |
+  | `[[true]]`         | `true`, `not false` | `"true"`, `1`        |
 
-* The sub-pattern `P` is a name that was already bound in the same
-  top-level pattern, and  expression `P = E` is `true`.
+  A metabox is used in particular when a name would be interpreted as
+  a parameter. The two declarations below declare a short-circuit
+  boolean `and` operator:
 
-  | Pattern               | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
-  | `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`     |
+  ```xl
+  [[true]]  and X   is X
+  [[false]] and X   is false
+  ```
 
-* The pattern is a block with a child `C`, and `C` matches `E`.
-  In other words, blocks in a pattern only change the precedence, but play no
-  other role in pattern matching.
+  By contrast, the two definitions would not work as intended, since
+  they would simply declare parameters called `true` and `false`,
+  always causing the first one to be evaluated for any `A and B`
+  expression:
 
-  | Definition            | Matched by          | Not matched by       |
-  | --------------------- | ------------------- | -------------------- |
+  ```xl
+  true  and X       is X
+  false and X       is false
+  ```
+
+</details>
+
+<details>
+  <summary>Block elimination</summary>
+
+  When the pattern is a block, it matches what the block's child would
+  match. In other words, blocks in patterns can be used to change the
+  relative precedence of operators in a complex expression, but play
+  otherwise no other role in pattern matching.
+
+  | Definition               | Matched by       | Not matched by       |
+  | ------------------------ | ---------------- | -------------------- |
   | `(X+Y)*(X-Y) is X^2-Y^2` | `[A+3]*[A-3]`    | `(A+3)*(A-4)`        |
 
-  The delimiters of a block cannot be tested that way, you should use
-  a conditional pattern like `B:block when B.opening = "("`.
+  The delimiters of a block cannot be tested that way. In other words,
+  a pattern with angle brackets can match parentheses or conversely.
+  For example, `[A:integer]` will match `2` or `(2)` or `{2}`.
+
+  It is possible to test the delimiters of a block, but that requires
+  a conditional pattern. For example the following code will check if
+  its argument is delimited with parentheses:
+
+  ```xl
+  has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
+  has_parentheses B:block                                           is false
+  ```
+
 </details>
+
+> **STYLE** The rules of pattern matching give a lot of freedom with
+> respect to coding style. Several conventions are recommended and are
+> generally followed in this document:
+>
+> * When a function takes multiple parameters, they are generally
+>   represented using a comma-separated parameter list, altough in
+>   some cases, other infix operators would do just as well:
+>   ```xl
+>   circle CenterX:real, CenterY:real, Radius:real is ...
+>   ```
+> * When there is such a comma-separated parameter list, it is
+>   customary to surround it with parentheses when the function is
+>   intended to be used in expressions, because in such an expression
+>   context, the parentheses are necessary at the call site.
+>   For example, if `circle` is intended to create a `circle` object
+>   rather than to draw a circle, the above definition might be
+>   written as follows:
+>   ```xl
+>   circle CenterX:real, CenterY:real, Radius:real as circle is ...
+>   C : circle := circle(0.3, 2.6, 4.0)
+>   ```
+>
 
 In some cases, checking if an argument matches a pattern requires
 evaluation of the corresponding expression or sub-expression. This is
