@@ -557,7 +557,6 @@ expressions.
   | --------------------- | ------------------ | -------------------- |
   | `X%`                  | `2.27%`, `"A"%`    | `%3`, `3%2`          |
   | `X km`                | `2.27 km`          | `km 3`, `1 km 3`
-  |
 
   Definitions for such patterns are called _postfix definitions_, and the
   corresponding expressions are usually called _postfix expressions_.
