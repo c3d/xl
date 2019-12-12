@@ -740,6 +740,18 @@ type picture with
     size as unsigned
 ```
 
+Note that only knowing the interface of a type does not allow values
+of the type to be created. Typically, the interface of a function
+making it possible to create values will also be provided. In the rest
+of the discussion for the `picture` type, we will also assume that
+there is a `create_picture` function with the following interface:
+
+```xl`
+picture(width:unsigned, height:unsigned) as picture
+```
+
+#### Information hiding
+
 The interface does not reveal any information on the actual shape of
 the parse tree for `picture` values. In other words, it does not
 specify how the `picture` type is actually implemented. A type that
@@ -758,6 +770,8 @@ In that code, `P` is properly tagged as having the `picture` type, and
 even if we have no idea how that type is implemented, we can still use
 `P.width` and deduce that it's an `integer` value based on the
 type interface alone.
+
+#### Anonymous scope implementation
 
 The simplest way to implement fields is to create a type that has
 a structure exposing declarations that directly match the
@@ -782,18 +796,25 @@ picture is type
 ```
 
 This implementation of the `picture` type is a pattern that matches
-values such as:
+values that directly match the pattern, such as:
 
 ```xl
 my_picture is
     1024
     768
     my_buffer
-
-another_picture i
 ```
 
+For better readability, the pattern can also
+[match a scope](HANDBOOK_2-evaluation.md#pattern-matching-scope-values)
+```xl
+another_picture is
+    width  is 1024
+    height is 768
+    buffer is another_buffer
+```
 
+#### Named scope implementation
 
 In general, you want the pattern to be more specific, so it is
 customary to add a prefix that matches the type name and add infix `,`
@@ -807,10 +828,45 @@ type picture is picture
     size is width * height
 
 my_picture is picture(1024, 768, my_buffer)
+
+another_picture is picture
+    width  is 256
+    height is 256
+    data   is another_buffer
 ```
 
+#### Indirect implementation
+
 However, the implementation is often entirely different, and merely
-needs to _expose_ the interface in some way.
+needs to _expose_ the interface in some way. This is called an
+_indirect implementation_ of the interface.
+
+For example, the `picture` type can be implemented by _delegating_
+the implementation to another value that provides the required
+information. For the sake of illustration, we will imagine that we use
+a `bitmap` type defined as follows:
+
+```xl
+type bitmap with
+    width  : unsigned16
+    height : unsigned16
+    buf    : array[width, height] of unsigned8
+```
+
+This means that the implementation of the `picture` type must perform
+some adjustments in order to delegate the work to the underlying
+`bitmap` value.
+
+```xl
+type picture is picture
+    Bitmap:bitmap
+    buffer:optional[buffer[size] of unsigned8]
+
+(P:picture).width   is P.Image.width
+(P:picture).height  is P.Image.height
+(P:picture).buffer  is P.Image.buffer
+
+```
 
 
 ### Copy
