@@ -539,10 +539,10 @@ expressions.
   | `sin X`               | `sin (2.27 + A)`   | `cos 3.27`           |
   | `+X:real`             | `+2.27`            | `+"A"`, `-3.1`, `1+1`|
 
-  When the prefix is a name, definitions like this are called
+  When the prefix is a name, definitions for such patterns are called
   _function definitions_, and the corresponding expressions are
   usually called _function calls_. Otherwise, they are called _prefix
-  operator definitions_.x
+  definitions_.
 
 </details>
 
@@ -559,9 +559,9 @@ expressions.
   | `X km`                | `2.27 km`          | `km 3`, `1 km 3`
   |
 
-  Definitions like this are called _postfix definitions_, and the
+  Definitions for such patterns are called _postfix definitions_, and the
   corresponding expressions are usually called _postfix expressions_.
-  The name or operator is called the _suffix_.
+  The name or operator is sometimes called the _suffix_.
 
 </details>
 
@@ -598,8 +598,8 @@ expressions.
     > `write Tail` will then match the same declaration again with
     > `Tail` being split, resulting in bindings `Head is 2` and `Tail is 3`.
 
-  A definition containing an infix pattern is called an _infix
-  definition_, and the expressions are called _infix expressions_.
+  A definition for an infix pattern is called an _infix definition_,
+  and the expressions are called _infix expressions_.
 
 </details>
 
@@ -617,7 +617,12 @@ expressions.
 
   Such patterns are called _conditional patterns_. They do not match
   if the expression evaluates to anything but `true`, notably if it
-  evaluates to any kind of error.
+  evaluates to any kind of error. For example:
+
+  ```xl
+  log X when X > 0 is ...
+  log "Logging an error"        // Will not match the definition above
+  ```
 
 </details>
 
