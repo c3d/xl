@@ -459,7 +459,7 @@ expressions.
   | --------------------- | ------------------ | ------------------- |
   | `pi is 3.14`          | `pi`               | `ip`, `3.14`        |
 
-  Top-level name patterns are called _name definitions_.
+  Definitions with a top-level name pattern are called _name definitions_.
 
   > **NOTE** This case only applies to names, not to operators.
   > You cannot define a `+` operator that way.
@@ -484,8 +484,8 @@ expressions.
   | `N+N`                 | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`        |
 
   Such name patterns are called _wildcard parameters_ because
-  they can accept any expression as an expression, or _untyped
-  parameters_ because no type checking occurs on the argument.
+  they can match any expression, or _untyped parameters_ because no
+  type checking occurs on the matched argument.
 
   > **NOTE** This case only applies to names, not to operators.
   > You cannot define a `+` parameter that way.
