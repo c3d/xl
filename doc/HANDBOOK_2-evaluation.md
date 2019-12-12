@@ -527,7 +527,7 @@ expressions.
 </details>
 
 <details>
-  <summary>Function definitions</summary>
+  <summary>Function (prefix) definitions</summary>
 
   When the pattern is a prefix, like `sin X`, the expression will
   match only if it is a prefix with the same name, and when the
