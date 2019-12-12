@@ -741,11 +741,13 @@ called [immediate evaluation](#immediate-evaluation).  Otherwise,
 
 ### Pattern matching scope values
 
-When a pattern is matched to an argument, it can be matched either
-directly by value, or it can be matched by looking up the
-corresponding name in a scope. This, combined with the rules about
-matching blocks, makes it possible to pass arguments by name for
-clarity in very long parameter lists.
+When a pattern is a comma-separated parameter list, it can be matched
+to a comma-separated argument list as explained above, but it can also
+be matched by looking up the relevant parameter names in a scope
+passed as an argument.
+
+This, combined with the rules about matching blocks, makes it possible
+to pass arguments by name for clarity in very long parameter lists.
 
 ```xl
 // Function to create a person, with many parameters
@@ -772,6 +774,10 @@ JohnDoe is create_person
         City    is "Flooontch"
     DateOfBirth is 1902/12/05
 ```
+
+> **NOTE** This rule is a bit uncertain: the effect on readability
+> seems desirable, but there is a bit of ad-hockery in this rule, and
+> it's unclear that long parameter list are that useful in XL.
 
 
 ## Overloading
