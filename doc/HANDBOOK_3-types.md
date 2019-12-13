@@ -331,7 +331,7 @@ automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration.  A `delete X:T` definition is called a
 _destructor_ for type `T`. It often has an [inout](#inout) parameter
 for the value to destroy, in order to be able to modify its argument,
-i.e. a destructor often has a signature like `delete X:*T`.
+i.e. a destructor often has a signature like `delete X:inout T`.
 
 There is a built-in default definition of that statement that has
 no effect and matches any value:
