@@ -602,6 +602,7 @@ expressions.
 
 </details>
 
+<a name="when"/>
 <details>
   <summary>Conditional patterns</summary>
 
