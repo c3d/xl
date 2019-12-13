@@ -724,6 +724,24 @@ number of types intended to access common owner types, including:
 
 ### Inheritance
 
+A type is said to _inherit_ another type, called its _base type_, if
+it can use all its operations. The type is then said to _derive_ from
+the base type. In XL, this is achieved simply by providing an
+_implicit conversion_ between the derived type and the base type:
+
+```xl
+Derived:derived as base is ...
+```
+
+As a consequence of this approach, a type can derive from any number
+of other types, a feature sometimes called multiple inheritance. There
+is also no need for the base and derived type to share any specific
+data representation, although this is
+[often done in practice](#data-inheritance). For example, there is an
+implicit conversion from `integer16` to `integer32`, altough the
+machine representation is different.
+
+
 ### Interface
 
 The [interface](HANDBOOK_2-evaluation.md#interface-and-implementation)
@@ -754,6 +772,23 @@ there is a `create_picture` function with the following interface:
 
 ```xl`
 picture(width:unsigned, height:unsigned) as picture
+```
+
+A type interface can announce that the declared type will
+[derive](#inheritance) from one or several other types using the
+`like` infix:
+
+```xl
+type derived like base1, base2, base3 with
+    additional : field
+```
+
+An interface may consist of only announcing the inheritance, or of not
+announcing anything at all:
+
+```xl
+type derived like base      // All we know is that it derives from base
+type abstract               // All we know is that the type exists
 ```
 
 #### Information hiding
