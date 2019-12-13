@@ -788,7 +788,7 @@ announcing anything at all:
 
 ```xl
 type derived like base      // All we know is that it derives from base
-type abstract               // All we know is that the type exists
+type totally_abstract       // All we know is that the type exists
 ```
 
 #### Information hiding
@@ -837,7 +837,7 @@ picture is type
 ```
 
 This implementation of the `picture` type is a pattern that matches
-values that directly match the pattern, such as:
+values that have the exact same structure, such as:
 
 ```xl
 my_picture is
