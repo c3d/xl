@@ -64,6 +64,74 @@ declares a _function_ named seconds, possibly returning the number of
 seconds in the current time from some real-time clock.
 
 
+## Basic types
+
+The XL library provides a number of standard types representing
+fundamental data types common in most programming languages, as well
+as the types used as building blocks for a parse tree.
+
+### Basic data types
+
+The basic data types include `integer`, `unsigned`, `real`,
+`character`, `text`, `boolean`. The `boolean` type in XL matches the
+values `true` and `false`, but unlike languages like C, it is not a
+numerical type. In other words, there is no equivalence between `true`
+and `1` or between `false` and `0`.
+
+### Sized data types
+
+Types such as `integer`, `unsigned`, `character` or `real` are
+optimized for the target architecture the program runs on.
+
+For portability, XL features sized variants of these types:
+
+* `integer` and `unsigned` for at least 8, 16, 32 and 64 bits,
+* `real` for at least 32 and 64 bits,
+* `character` for at least 8, 16 and 32 bits.
+
+The size types are named by apppending the type name and the bit size,
+for example `integer32` or `real64`.
+
+When the standard sizes are not sufficient, it is easy to use
+[integer subtypes](#subtypes) to identify precise ranges of values or
+precise number of bits.
+
+
+### Parse tree types
+
+The types that are used to represent parse tree elements include
+`integer`, `real`, `text`, `symbol`, `infix`, `prefix`, `postfix` and
+`block`, as well as the
+
+In addition, `name` is a [subtype](#subtypes) of
+
+`name`, `symbol`, `operator`, `infix`, `prefix`, `postfix`,
+`block`, `tree`, `anything`, `parse_tree`,
+
+* `integer` matches integer values such as `0` or `-42`. Its precise
+  range may vary from one implementation to another, but on standard
+  modern CPUs, it typically is a 64-bit value in two's-complement
+  signed representation.
+
+  `unsigned` matches unsigned values, and normally has the same number
+  of bits and machine representation as `integer`
+
+  Sized variants of `integer` exist for at least the following sizes:
+  `integer8`, `integer16`, `integer32` and `integer64`, as well as
+  unsigned counterparts `unsigned8`, `unsigned16`, `unsigned32` and
+  `unsigned64`. A machine that has, for example native support for
+  24-bit and 48-bit values should offer `integer24` and `integer48`.
+
+  A type with a specified range can be constructed as `integer range
+  Low..High`, and is an efficient representation that has at least the
+  number of required bits for the whole range.
+
+* `character` represents text values containing a single value, which
+  are represented by text literals in single quotes: `'A'` or `'0'`.
+
+*
+
+
 ## Type declarations
 
 Like other XL values, a type can be given a name. For example, a
@@ -741,6 +809,124 @@ data representation, although this is
 implicit conversion from `integer16` to `integer32`, altough the
 machine representation is different.
 
+
+### Subtypes
+
+A type can be given additional constraints, which define a _subtype_.
+A subtype can always be converted to the type it was derived from, and
+therefore derives from that type in the [inheritance](#inheritance)
+sense. A subtype machine representation may differ from the type it
+derives from.
+
+For example, from the `integer` type, one can construct a `month` type
+that matches only `integer` values between `1` and `12` using a
+regular [conditional pattern](HANDBOOK_2-evaluation.md#when) as follows:
+
+```xl
+month is type(X:integer when X >= 1 and X <= 12)
+```
+
+#### Range subtypes
+
+Subtyping to select a range is common enough that there is a shortcut
+for it.  For any type with an order, subtypes can be created with the
+`range` infix operator:
+
+```xl
+T:type range Low:T..High:T      is type(X:T when X in Low..High)
+```
+
+With this definition, the `month` type can be defines simply as follows:
+
+```xl
+month is integer range 1..12
+```
+
+#### Size subtypes
+
+The infix `bits` operator creates a subtype with the specified number
+of bits. It applies to `real`, `integer` and `character` types.
+
+For example, the `integer8` type can be defined as:
+
+```xl
+integer8 is integer bits 8
+```
+
+This implicitly implies a `range` that depends on the type being
+subtyped. For example, for `integer` and `unsigned`, the range would
+be defined as follows:
+
+```xl
+[[integer]]  bits N:unsigned    is integer  range -2^(N-1)..2^(N-1)-1
+[[unsigned]] bits N:unsigned    is unsigned range  0..2^N-1
+```
+
+> **NOTE** The `bits` subtypes are intended to specify the bit size of
+> the machine representation. The requested size may be rounded up to
+> a more convenient or more efficient machine representation. For
+> example, on a 32-bit machine, `integer bits 22` might be more
+> efficiently represented as a 32-bit value in registers and as 3
+> bytes, i.e. 24 bits, in memory.
+
+#### Real subtypes
+
+The `real` type can be subtype with a `range` and a `bits` size, as
+well as with additional constraints more specific to the `real` type:
+
+* a `digits` count specifies the number of accurate decimal digits.
+  For example, `real digits 3` is represents values with at least 3
+  significant digits.
+
+* a `quantum` followed by a literal real value specifies a
+  representation that should be representable exactly. For example,
+  on a machine using [IEEE-754](https://en.wikipedia.org/wiki/IEEE-754),
+  the value `0.01` cannot be [represented accurately](https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding)
+  but `real quantum 0.01` will accurately represent it.
+  > **NOTE** Converting to a `real` will lose that accuracy.
+
+* an `exponent` specifies the maximum decimal exponent. For example,
+  `real exponent 100` will ensure that values up to `1.0e100` can be
+  represented.
+
+* a `base` specifies the base for the internal representation. Only
+  bases `2`, `10` and `16` are allowed. Base `2` requires a binary
+  floating-point representation. Base `10` requires a decimal
+  floating-point representation. Base `16` requires an hexadecimal
+  floating-point representation on historical platforms that support it.
+
+A `real` subtype is represented as a _fixed point_ representation if
+one of the following conditions is true:
+
+* The `exponent` is specified as `0`
+* The `range` is small enough to be representable entirely with the
+  same exponent
+* A `quantum` is specified and no `exponent` is specified.
+
+For example, the `hundredth` type defined below could be represented
+internally by `integer` values between `0` and `100`, and converted to
+`real` by multiplying this value by the given `quantum` value.
+
+```xl
+hundredth is real range 0.0..1.0 quantum 0.01
+```
+
+#### Character and text subtypes
+
+The `character` and `text` can be subtyped with the `range` and, for
+`character`, the `bits` operators.
+
+In addition, they both can be subtyped with the following infix operators:
+
+* The `encoding` operator specifies the encoding used for the text,
+  for example `text encoding UTF8` or `character encoding ASCII`.
+
+* The `locale` operator specifies the locale for the text, for example
+  `text locale fr_FR` will select a French locale.
+
+* The `collation` operator specifies collating order. For example, to
+  have `text` values that sort following German rules, you would use
+  `text collate de_DE`
 
 ### Interface
 
