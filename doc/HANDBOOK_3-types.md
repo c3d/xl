@@ -352,8 +352,8 @@ process.
 > extremely dangerous in a number of easily identified cases.
 > As an illustration, consider the following code:
 > ```xl
-> delete F:*file when F.fd < 0  is ... // Case 1
-> delete F:*file                is ... // Case 2
+> delete F:inout file when F.fd < 0  is ... // Case 1
+> delete F:inout file                is ... // Case 2
 > ```
 > Clearly, the intent of the programmer is to special-case the
 > destruction of `file` values that have an invalid file descriptor,
