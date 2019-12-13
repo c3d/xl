@@ -425,10 +425,16 @@ type error is either
     error Message:text, Payload
 ```
 
-A function that may fail will often have an `error or T` return value.
-There is a specific shortcut for that, `fallible T`. For example, a
-logarithm returns an error for non-positive values, so that the
-signature of the `log` functions is:
+A function that may fail will often have a `T or error` return value.
+There is a specific shortcut for that, `fallible T`:
+
+```xl
+fallible T:type is T or error
+```
+
+
+For example, a logarithm returns an error for non-positive values, so
+that the signature of the `log` functions is:
 
 ```xl
 log X:real as fallible real     is ... // May return real or error
