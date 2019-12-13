@@ -261,26 +261,22 @@ element in a `complex`, since for example `complex(1.3)` would not
 match the shape and not have the right type.
 
 Using the shape explicitly given for the type is called the _constructor_
-for the type. By construction, the constructor can never fail or build
-a partial object. If an argument returns an [error](#errors) during
-evaluation, then that `error` value will not match the expected
-argument, except naturally if the constructor is written to accept
-`error` values.
+for the type. A constructor can never fail nor build a partial
+object. If an argument returns an [error](#errors) during evaluation,
+then that `error` value will not match the expected argument, except
+naturally if the constructor is written to accept `error` values.
 
 Often, developers will offer alternate ways to create values of a
 given type. These alternate helpers are nothing else than regular
-definitions that return a value of the type. For example, you may
-create an imaginary unit, `i`, but the only way to do that is
-ultimately with a constructor:
+definitions that return a value of the type.
+
+For example, for the `complex` type, you may create an imaginary unit,
+`i`, but you need a constructor to define it. You can also recognize
+common expressions such as `2+3i` and turn them into constructors.
 
 ```xl
 i   is complex(0.0, 1.0)
-```
 
-It is then possible to recognize common expressions such as `2 + 3i`
-or `2 + 3*i` as follows:
-
-```xl
 syntax { POSTFIX 190 i }
 Re + Im i                           is complex(Re, Im)      // Case 1
 Re + Im * [[i]]                     is complex(Re, Im)      // Case 2
