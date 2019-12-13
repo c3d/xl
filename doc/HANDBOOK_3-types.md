@@ -101,36 +101,34 @@ precise number of bits.
 
 The types that are used to represent parse tree elements include
 `integer`, `real`, `text`, `symbol`, `infix`, `prefix`, `postfix` and
-`block`, as well as the
+`block`, as well as the `parse_tree` type, which can be any of them.
 
-In addition, `name` is a [subtype](#subtypes) of
+```xl
+parse_tree is either
+    I:integer
+    R:real
+    T:text
+    S:symbol
+    I:infix
+    P:prefix
+    P:postfix
+    B:block
+```
 
-`name`, `symbol`, `operator`, `infix`, `prefix`, `postfix`,
-`block`, `tree`, `anything`, `parse_tree`,
+> **NOTE** It is likely that all these types will not be visible by
+> default, but will ultimately require a `use XL.PARSER`.
 
-* `integer` matches integer values such as `0` or `-42`. Its precise
-  range may vary from one implementation to another, but on standard
-  modern CPUs, it typically is a 64-bit value in two's-complement
-  signed representation.
+In addition, the following [subtypes](#subtypes) help identify
+particular syntactic structures:
 
-  `unsigned` matches unsigned values, and normally has the same number
-  of bits and machine representation as `integer`
+* `name` is a subtype of `symbol` for syntactically valid XL names,
+   e.g. it will accept `A_2` but not `_A2`
 
-  Sized variants of `integer` exist for at least the following sizes:
-  `integer8`, `integer16`, `integer32` and `integer64`, as well as
-  unsigned counterparts `unsigned8`, `unsigned16`, `unsigned32` and
-  `unsigned64`. A machine that has, for example native support for
-  24-bit and 48-bit values should offer `integer24` and `integer48`.
+* `operator` is a subtype of `symbol` that accepts only syntactically
+  valid XL operators, i.e. it will accept `+` but not `A`.
 
-  A type with a specified range can be constructed as `integer range
-  Low..High`, and is an efficient representation that has at least the
-  number of required bits for the whole range.
-
-* `character` represents text values containing a single value, which
-  are represented by text literals in single quotes: `'A'` or `'0'`.
-
-*
-
+* `paren_block`, `square_block`, `curly_block` and `indent_block` are
+  subtypes of `block` that require specific separators.
 
 ## Type declarations
 
