@@ -278,9 +278,9 @@ common expressions such as `2+3i` and turn them into constructors.
 i   is complex(0.0, 1.0)
 
 syntax { POSTFIX 190 i }
-Re + Im i                           is complex(Re, Im)      // Case 1
-Re + Im * [[i]]                     is complex(Re, Im)      // Case 2
-Re + [[i]] * Im                     is complex(Re, Im)      // Case 3
+Re:real + Im:real i                 is complex(Re, Im)      // Case 1
+Re:real + Im:real * [[i]]           is complex(Re, Im)      // Case 2
+Re:real + [[i]] * Im:real           is complex(Re, Im)      // Case 3
 Re:real as complex                  is complex(Re, 0.0)     // Case 4
 X:complex + Y:complex as complex    is ...
 
