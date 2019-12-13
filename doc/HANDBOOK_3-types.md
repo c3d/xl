@@ -309,11 +309,11 @@ module MY_FILE is
     open Name:text as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
-    close F:*file is
+    close F:inout file is
         if fd >= 0 then
             libc.close(F.fd)
             F.fd := -2
-    delete F:*file is close F    // Destruction, see below
+    delete F:inout file is close F    // Destruction, see below
 ```
 
 > **RATIONALE** This mechanism is similar to _elaboration_ in Ada or
