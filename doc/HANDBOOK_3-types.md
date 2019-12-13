@@ -3,7 +3,7 @@
 XL types are a way to organize values by restricting which
 operations can be selected during evaluation. For example, knowing
 that `A` is a `real` allows expression `A+A` to match declaration
-pattern `X:real+Y:real`, but prevent it from matching pattern
+pattern `X:real+Y:real`, but prevents it from matching pattern
 `X:integer+Y:integer`.
 
 In XL, types are based on the _shape_ of
