@@ -414,11 +414,15 @@ the assignment.
 ### Errors
 
 Errors in XL are represented by values with the `error` type (or any
-type that can be implicitly converted to `error`). The error type has
-a constructor that takes a simple error message:
+type that can be implicitly converted to `error`, in other words, any
+value that [inherits](#inheritance) from error). The error type has
+a constructor that takes a simple error message, or a simple message
+and a payload:
 
 ```xl
-type error is error Message:text
+type error is either
+    error Message:text
+    error Message:text, Payload
 ```
 
 A function that may fail will often have an `error or T` return value.
