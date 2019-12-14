@@ -1,5 +1,7 @@
 == XL, an extensible programming language
 
+:toc: left
+
 XL is an extensible programming language. It is designed to accomodate a variety of programming needs with ease. Being _extensible_ means that the language is designed to make it very easy for programmers to adapt the language to suit their needs, for example by adding new programming constructs. In XL, extending the language is a routine operation, much like adding a function or creating a class in more traditional programming languages.
 
 As a consequence of this extensibility, XL is intended to be suitable for programming tasks ranging from the simplest to the most complex, from documents and application scripting, as illustrated by https://tao3d.sf.net[Tao3D], to compilers, as illustrated by the XL2 link:../xl2/native[self-compiling compiler] to distributed programming, as illustrated by https://github.com/c3d/elfe[ELFE].
