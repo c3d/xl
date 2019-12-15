@@ -26,6 +26,10 @@ easy for programmers to adapt the language to suit their needs, for
 example by adding new programming constructs. In XL, extending the
 language is a routine operation, much like adding a function or
 creating a class in more traditional programming languages.
+This extensibility is demonstrated by the fact that operations that
+are built-in in other programming languages, such as integer
+arithmetic, basic types or loops, are part of the
+link:#standard-library[standard library] in XL.
 
 As a consequence of this extensibility, XL is intended to be suitable
 for programming tasks ranging from the simplest to the most complex,
