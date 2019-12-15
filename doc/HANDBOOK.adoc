@@ -403,22 +403,31 @@ standard library is guaranteed to be present in all implementations
 and behave identically. However, it is written using only tools that
 are available to a regular developer, not just to compiler writers.
 
-==== Avoiding built-in constructs
+==== Usual programming features
 
 Definitions in the standard library include common fixtures of
-programming that are built-in in other languages, well-known
-((programming construct))s such as ((loop))s, ((test))s, and so on.
+programming that are built-in in other languages, in particular
+well-known ((programming construct))s such as ((loop))s, ((test))s,
+and so on.
 
-For example, the _if statement_ in XL is defined in the standard library
-as follows:
+For example, the _((if statement))_ in XL is defined in the standard
+library as follows:
 
 [source]
 ----
-if [[true]]  then TrueClause else FalseClause   is TrueClause
+if [[true]]  then TrueClause else FalseClause   is TrueClause   // <1>
 if [[false]] then TrueClause else FalseClause   is FalseClause
 if [[true]]  then TrueClause                    is TrueClause
 if [[false]] then TrueClause                    is false
 ----
+
+<1> A value between two square brackets, as in `+[[true]]+` and
+`+[[false]]+`, is called a link:#metabox[((metabox))].
+It indicates that the pattern must match the actual values in the
+metabox. In other words, `+foo true is ...+` defines a pattern with a
+formal parameter named `true`, whereas `+foo [[true]] is ...+` defines a
+pattern which only matches when the argument is equal to constant
+`true`.
 
 Similarly, the `while` loop is defined as follows:
 
@@ -432,8 +441,8 @@ while Condition loop Body is
 
 With the definitions above, programmers can then use `if` and `while`
 in their programs much like they would in any other programming
-language, as in the following code that verifies the Syracuse
-conjecture:
+language, as in the following code that verifies the
+https://en.wikipedia.org/wiki/Collatz_conjecture[((Syracuse conjecture))]:
 
 [source]
 ----
@@ -445,13 +454,6 @@ while N <> 1 loop
     print N
 ----
 
-NOTE: A value between two square brackets, as in `+[[true]]+` and
-`+[[false]]+`, is called a link:#metabox[((metabox))].
-It indicates that the pattern must match the actual values in the
-metabox. In other words, `+foo true is ...+` defines a pattern with a
-formal parameter named `true`, whereas `+foo [[true]] is ...+` defines a
-pattern which only matches when the argument is equal to constant
-`true`.
 
 ==== The next natural evolutionary step
 
@@ -506,8 +508,8 @@ Finally, pass:[C++] also makes it very difficult to deal with expressions
 containing multiple operators. For example, many modern CPUs feature a
 form of
 https://en.wikipedia.org/wiki/Multiply–accumulate_operation#Fused_multiply–add[fused multiply-add], which has benefits that include performance and
-precision. Yet pass:[C++] will not allow you to overload `X*Y+Z` to use this
-kind of operations. In XL, this is not a problem at all:
+precision. Yet pass:[C++] will not allow you to overload `X*Y+Z` to
+use this kind of operations. In XL, this is not a problem at all:
 
 [source]
 ----
@@ -2707,7 +2709,7 @@ while Condition loop Body is
 ----
 
 Let’s use that definition of `while` in a context where we test the
-https://en.wikipedia.org/wiki/Collatz_conjecture[Syracuse conjecture]:
+https://en.wikipedia.org/wiki/Collatz_conjecture[((Syracuse conjecture))]:
 
 [source]
 ----
