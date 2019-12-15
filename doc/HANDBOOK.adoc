@@ -4624,7 +4624,7 @@ possible to create values will also be provided. In the rest of the
 discussion for the `picture` type, we will also assume that there is a
 `create_picture` function with the following interface:
 
-[source`]
+[source]
 ----
 picture(width:unsigned, height:unsigned) as picture
 ----
