@@ -477,14 +477,14 @@ pass:[C++] went one step further than C, allowing programmers to
 _((overload))_ operators, i.e. redefine the meaning of an operation
 like `X+1`, but only for ((custom data types)), and only for already
 existing operators. In pass:[C++], a programmer cannot _create_ the
-_((spaceship operator))_ `<=>` using the standard language mechanisms.
+_((spaceship operator))_ `+<=>+` using the standard language mechanisms.
 It has to be implemented in the compiler. The spaceship operator has to be
 http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf[added
 to the language by compiler writers], and it takes a 35-pages article
 to discuss the implications. This takes time and a large effort, since
 all compiler writers must implement the same thing.
 
-By contrast, all it takes in XL to implement `<=>` in a variant that
+By contrast, all it takes in XL to implement `+<=>+` in a variant that
 always returns `-1`, `0` or `1` is the following:
 
 [source]
@@ -1180,7 +1180,7 @@ Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 . [[real]]`real` nodes represent floating-point values like `1.234`, `1.5e-10`
 or `2#1.0001_0001#e24`.
 . [[text]]`text` nodes represent text values like `"Hello world"` or `'A'`.
-. [[name]]`name` node represent names like `ABC_DEF` or symbols like `<=>`.
+. [[name]]`name` node represent names like `ABC_DEF` or symbols like `+<=>+`.
 
 Inner nodes contains combinations of other XL nodes:
 
@@ -1345,7 +1345,7 @@ Symbols begin with one of the ASCII punctuation characters:
 
 Symbols longer than one character must be specified in the XL syntax
 file. For example, the XL syntax file defines a `<=` operator, but no
-`<=>` operator. Consequently, the sequence `1 <=> 2` will be parsed as
+`+<=>+` operator. Consequently, the sequence `1 <=> 2` will be parsed as
 `(1 <= (> 2))`. In order to add this operator, it is necessary to
 link:#extending-the-syntax[extend the syntax] using a `syntax`
 statement.
@@ -1533,7 +1533,7 @@ block, operators can be defined and their precedence given using the
 link:#operator-precedence-and-associativity[same rules] as in the syntax
 file.
 
-For example, if you want to add the spaceship operator `<=>` in your
+For example, if you want to add the spaceship operator `+<=>+` in your
 program, and give the same precedence as `<=`, namely 290, you could
 write:
 
