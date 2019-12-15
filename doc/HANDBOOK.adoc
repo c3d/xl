@@ -549,11 +549,11 @@ implementation details were elided as `...`:
 
 [source]
 ----
-write X:text            as fallible     is ... // <1>
+write X:text            as fallible     is ...                  // See <1>
 write X:integer         as fallible     is ...
 write X:real            as fallible     is ...
 write X:character       as fallible     is ...
-write [[true]]                          is write "true" // <2>
+write [[true]]                          is write "true"         // See <2>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
