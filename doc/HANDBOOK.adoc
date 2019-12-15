@@ -524,7 +524,7 @@ already followed by highly-successful ancestors.
 
 ==== Benefits of moving features to a library
 
-Putting basic features in the ((standard library)), as opposed to putting
+Putting basic features in the ((standard library)), as opposed to keeping
 them in the compiler, has several benefits:
 
 [arabic]
