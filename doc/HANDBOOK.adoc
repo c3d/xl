@@ -40,14 +40,14 @@ programming, as illustrated by https://github.com/c3d/elfe[ELFE].
 
 WARNING: XL is a work in progress. Even if there are some bits and
 pieces that happen to already work, and even if there were fully
-functioning releases like the XL version used in Tao3D in the past, XL
-is being reworked, and the compiler in this repository is presently not
-suitable for any serious programming. Examples given below may sometimes
-simply not work. Take it as a painful reminder that the work is far from
-finished, and, who knows, as an idea for a contribution. See
-link:#history-of-xl[HISTORY] for how we came to the present mess. The
-link:../README.md[README] will give you a quick overview of the
-language.
+functioning releases like the XL version used in https://tao3d.sf.net[Tao3D]
+in the past, XL is being totally reworked, and the compiler in this
+repository is presently not suitable for any serious
+programming. Examples given below may sometimes simply not work. Take
+it as a painful reminder that the work is far from finished, and, who
+knows, as an idea for a contribution. See link:#history-of-xl[HISTORY]
+for how we came to the present mess. The link:../README.md[README]
+will give you a quick overview of the language.
 
 toc::[]
 
