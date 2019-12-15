@@ -47,7 +47,7 @@ programming. Examples given below may sometimes simply not work. Take
 it as a painful reminder that the work is far from finished, and, who
 knows, as an idea for a contribution. See link:#history-of-xl[HISTORY]
 for how we came to the present mess. The link:../README.md[README]
-will give you a quick overview of the language.
+gives a quick overview of the language.
 
 toc::[]
 
@@ -58,26 +58,26 @@ really means three things:
 
 [arabic]
 . XL has a method to ((extend the language)) with any kind of feature, not
-  just functions or data types, but also ((programming constructs)),
-  ((optimizations)), ((domain-specific notations)), and more. Actually, all this
+  just functions or data types, but also ((programming construct))s,
+  ((optimization))s, ((domain-specific notation))s, and more. Actually, all this
   is done with a link:#one-operator-to-rule-them-all[single operator],
   `is`, called the _((definition operator))_.
 
 . As a validation of the concept, most features that are ((built-in)) in
-  other programming languages, like the `while` ((loop)), or ((integer
+  other ((programming language))s, like the `while` ((loop)), or ((integer
   arithmetic)), are _constructed_ in XL. Specifically, they are provided by
   the link:#the-standard-library[((standard library))], using techniques that
-  any programmer can use in their program. This, obviously, means that you
-  can add your own loops, or your own machine-level data types, and even
-  extend existing ones.
+  any programmer can use in their program. This, obviously, means that
+  programmers can add their own loops, or their own machine-level data
+  types, and even extend existing ones.
 
-. XL gives you link:#efficient-translation[complete control] over the
-  ((program translation)) process. This means that ((libraries)) exist
-  or can be written to make XL at least as good as C for low-level
-  ((bit-twiddling)), at least as good as C++ for ((generic algorithms)),
-  at least as good as Ada for ((tasking)), at least as good as Fortran
-  for ((numerical algorithms)), at least as good as Java for
-  ((distributed programming)), and so on.
+. XL provides link:#efficient-translation[complete control] over the
+  ((program translation)) process. This means that libraries(((library)))
+  exist or can be written to make XL at least as good as C for
+  low-level ((bit-twiddling)), at least as good as pass:[C++] for ((generic
+  algorithms)), at least as good as Ada for ((tasking)), at least as
+  good as Fortran for ((numerical algorithms)), at least as good as
+  Java for ((distributed programming)), and so on.
 
 This may all seem too good to be true. This document explains how the
 magic happens. But first of all, one thing that really matters: XL is
@@ -89,7 +89,7 @@ prove this.
 It is practically compulsory to begin the presentation of any
 programming language with a
 link:https://en.wikipedia.org/wiki/%22Hello,_World!%22_program["Hello
-World"](((Hello World))) example, immediately followed by a a
+World"] example, immediately followed by a a
 recursive definition of the
 https://en.wikipedia.org/wiki/Factorial[factorial function]. Let’s
 follow this long honored tradition.
@@ -110,19 +110,19 @@ link:#modules[((module))].  The program can then use the `print`
 function from that module to write the text on the ((terminal
 console)).
 
-Why do we need the `use` ((statement))? There is a general rule in XL that
-you only pay for things that you use. Not all programs will use a
+Why do we need the `use` ((statement))? There is a general rule in XL
+that you only pay for things that you use. Not all programs will use a
 terminal console, so the corresponding functions must be explicitly
-imported into your program. It is possible that some systems, like
-embedded systems, don’t even have a terminal console. On such a system,
-the corresponding module would not be available, and the program would
-properly fail to compile.
+imported into a program. It is possible that some systems, like
+embedded systems, don’t even have a terminal console. On such a
+system, the corresponding module would not be available, and the
+program would properly fail to compile.
 
 What is more interesting, though, is the definition of `print`. That
 definition is link:#the-case-of-text-input-output-operations[discussed
-below], and you will see that it is quite simple, in particular if you
-compare it with similar input/output operations in languages such as
-C++.
+below], and you will see that it is quite simple, in particular when
+compared with similar input/output operations in languages such
+as pass:[[C++]].
 
 ==== Factorial
 
@@ -144,8 +144,8 @@ for I in 1..5 loop
 We have used an alternative form of the `use` statement, where the
 imported module is given a local nick-name, `IO`. This form is useful
 when it’s important to avoid the risk of ((name collisions)) between
-modules. In that case, you need to refer to the `print` function of the
-module as `IO.print`.
+modules. In that case, the programmer need to refer to the `print`
+function of the module as `IO.print`.
 
 The ((definition)) of the factorial function shows how expressive XL is,
 making it possible to use the well-known ((notation)) for the factorial
@@ -165,7 +165,7 @@ the form of the `(N-1)!` expression:
 N! is N * (N-1)!
 ----
 
-That definition would not detect a problem if you wrote `-3!`. The
+That definition would not detect a problem with something like `-3!`. The
 second form would match, and presumably enter a recursion that would
 exhaust available stack space. It is possible to fix that problem by
 indicating that the definition only works for positive numbers:
@@ -177,7 +177,7 @@ N!  when N > 0  is N * (N-1)!
 ----
 
 Writing the code that way will ensure that there is a ((compile-time error))
-if you write `-3!`, because there is no definition that matches.
+for code like `-3!`, because there is no definition that matches.
 
 === One operator to rule them all
 
@@ -262,7 +262,7 @@ X + 0           is      X
 ----
 ====
 
-.((Program structures))
+.Program structures (((program structure)))
 [%collapsible]
 ====
 [source]
@@ -352,7 +352,7 @@ provide an efficient implementation, for example if all the indexes are
 contiguous integers.
 ====
 
-.Templates (C++ terminology)(((templates))) or ((generics)) (Ada terminology) (((generic code)))
+.Templates (C++ terminology)(((template))) or ((generic code)) (Ada terminology)
 [%collapsible]
 ====
 [source]
@@ -391,19 +391,23 @@ that are found in other languages, using a single, easy to read syntax.
 
 === The standard library
 
-Each programming languages offers a specific set of features, which are
-characteristic of that language. Most languages offer integer
+Each ((programming language)) offers a specific set of features, which
+are characteristic of that language. Most languages offer integer
 arithmetic, floating-point arithmetic, comparisons, boolean logic,
-loops, text manipulation (often called "strings"), but also
-programming constructs such as loops, tests, and so on.
+text manipulation (often called "_((string))s_"), but also programming
+constructs such as loops, tests, and so on.
 
-XL provides most features you are used to, but they are defined in the
-XL _((standard library))_, not by the compiler. The standard library is
-guaranteed to be present in all implementations and behave identically.
-However, it is written using only tools that are available to you as a
-developer.
+XL provides most features programmers are used to, but they are
+defined in the XL _((standard library))_, not by the compiler. The
+standard library is guaranteed to be present in all implementations
+and behave identically. However, it is written using only tools that
+are available to a regular developer, not just to compiler writers.
 
 ==== Avoiding built-in constructs
+
+Definitions in the standard library include common fixtures of
+programming that are built-in in other languages, well-known
+((programming construct))s such as ((loop))s, ((test))s, and so on.
 
 For example, the _if statement_ in XL is defined in the standard library
 as follows:
@@ -426,9 +430,10 @@ while Condition loop Body is
         while Condition loop Body
 ----
 
-With the definitions above, you can then use `if` and `while` in your
-programs much like you would in any other programming language, as in
-the following code that verifies the Syracuse conjecture:
+With the definitions above, programmers can then use `if` and `while`
+in their programs much like they would in any other programming
+language, as in the following code that verifies the Syracuse
+conjecture:
 
 [source]
 ----
@@ -466,15 +471,17 @@ the compiler. So is the meaning of `x/3`, even if some implementations
 have to make a call to a library function to actually implement that
 code.
 
-pass:[C++] went one step further than C, allowing you to _((overload))_
-operators, i.e. redefine the meaning of an operation like `X+1`, but
-only for ((custom data types)), and only for already existing
-operators. In pass:[C++], you cannot _create_ the _spaceship operator_
-`<=>` yourself. It has to be
+pass:[C++] went one step further than C, allowing programmers to
+_((overload))_ operators, i.e. redefine the meaning of an operation
+like `X+1`, but only for ((custom data types)), and only for already
+existing operators. In pass:[C++], a programmer cannot _create_ the
+_((spaceship operator))_ `<=>` using the standard language mechanisms.
+It has to be ((built-in). The spaceship operator has to be
 http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf[added
-to the language], and that takes a 35-pages article to discuss the
-implications. By contrast, all it takes in XL to implement `<=>` in a
-variant that always returns `-1`, `0` or `1` is the following:
+to the language by compiler writers], and it takes a 35-pages article
+to discuss the implications. By contrast, all it takes in XL to
+implement `<=>` in a variant that always returns `-1`, `0` or `1` is
+the following:
 
 [source]
 ----
@@ -484,9 +491,9 @@ X <=> Y     when X = Y  is  0
 X <=> Y     when X > Y  is  1
 ----
 
-Similarly, C++ makes it extremely difficult to optimize away an
-expression like `X*0`, `X*1` or `X+0`, whereas XL makes it extremely
-easy:
+Similarly, C++ makes it extremely difficult to optimize(((optimization)))
+away an expression like `X*0`, `X*1` or `X+0`, whereas XL makes it
+extremely easy:
 
 [source]
 ----
@@ -507,9 +514,9 @@ kind of operations. In XL, this is not a problem at all:
 X*Y+Z   is FusedMultiplyAdd(X,Y,Z)
 ----
 
-In other words, the XL approach represents the next evolutionary step
-for programming languages along a line already followed by
-highly-successful ancestors.
+In other words, the XL approach represents the next logical
+((evolutionary step)) for ((programming language))s along a line
+already followed by highly-successful ancestors.
 
 ==== Benefits of moving features to a library
 
@@ -518,16 +525,16 @@ them in the compiler, has several benefits:
 
 [arabic]
 . Flexibility: It is much easier to offer a large number of behaviors
-and to address special cases.
+  and to address special cases.
 . Clarity: The definition given in the library gives a very clear and
-machine-verifiable description of the operation.
+  machine-verifiable description of the operation.
 . Extensibility: If the library definition is not sufficient, it is
-possible to add what you need. It will behave exactly as what is in the
-library. If it proves useful enough, it may even make it to the standard
-library in a later iteration of the language.
+  possible to add what you need. It will behave exactly as what is in the
+  library. If it proves useful enough, it may even make it to the standard
+  library in a later iteration of the language.
 . Fixability: Built-in mechanisms, such as library versioning, make it
-possible to address bugs without breaking existing code, which can still
-use an earlier version of the library.
+  possible to address bugs without breaking existing code, which can still
+  use an earlier version of the library.
 
 The XL standard library consists of a link:../native/lib[wide variety of
 modules]. The top-level module is called `XL`, and sub-modules are
@@ -545,7 +552,7 @@ in which case you need to build everything from scratch.
 ==== The case of text input / output operations
 
 Input/output operations (often abbreviated as I/O) are a fundamental
-brick in most programming languages. In general, I/O operations are
+brick in most ((programming language))s. In general, I/O operations are
 somewhat complex. If you are curious, the source code for the venerable
 `printf` function in C is
 https://github.com/lattera/glibc/blob/master/stdio-common/vfprintf.c[available
@@ -1087,8 +1094,8 @@ program without a semi-colon to
 https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)#Statements[terminate
 or separate] statements?
 
-In reality, the difference between XL syntax and earlier programming
-languages is much more than skin deep. The syntax of XL is actually one
+In reality, the difference between XL syntax and earlier ((programming
+language))s is much more than skin deep. The syntax of XL is actually one
 of its most unique characteristics. The design of the XL syntax is
 essential to understand both the philosophy and implementation of the
 whole language.
@@ -1105,7 +1112,7 @@ the foundation upon which the touted extensibility of XL is built.
 
 In that respect, XL is very much inspired by one of the earliest and
 most enduring high-level programming languages,
-https://en.wikipedia.org/wiki/Lisp_(programming_language)[Lisp]. The
+https://en.wikipedia.org/wiki/Lisp_(programming_language)[((Lisp))]. The
 earliest implementations of Lisp date back to 1958, yet that language
 remains surprisingly modern and flourishing today, unlike languages of
 that same era like https://en.wikipedia.org/wiki/COBOL[Cobol] or
