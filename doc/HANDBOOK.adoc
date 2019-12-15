@@ -458,10 +458,10 @@ while N <> 1 loop
 ==== The next natural evolutionary step
 
 Moving ((features)) to a ((library)) is a natural evolution for
-programming languages. Consider for example the case of text I/O
+programming languages. Consider for example the case of ((text I/O))
 operations. They used to be ((built-in)) for ((early languages)) such
-as BASIC’s `PRINT` or Pascal’s `WriteLn`, but they moved to the
-library in later languages such as C with `printf`. As a result, C has
+as BASIC’s `((PRINT))` or Pascal’s `((WriteLn))`, but they moved to the
+library in later languages such as C with `((printf))`. As a result, C has
 a much wider variety of I/O functions. The same observation can be
 made on text manipulation and math functions, which were all built-in
 in BASIC, but all implemented as library functions in C. For ((tasking)),
@@ -470,20 +470,22 @@ Ada has built-in construct, C has the `pthread` library. And so on.
 Yet, while C moved a very large number of things to libraries, it still
 did not go all the way. The meaning of `x+1` in C is defined strictly by
 the compiler. So is the meaning of `x/3`, even if some implementations
-have to make a call to a library function to actually implement that
-code.
+that lack a hardware implementation of division have to make a call to
+a library function to actually implement that code.
 
 pass:[C++] went one step further than C, allowing programmers to
 _((overload))_ operators, i.e. redefine the meaning of an operation
 like `X+1`, but only for ((custom data types)), and only for already
 existing operators. In pass:[C++], a programmer cannot _create_ the
 _((spaceship operator))_ `<=>` using the standard language mechanisms.
-It has to be ((built-in). The spaceship operator has to be
+It has to be implemented in the compiler. The spaceship operator has to be
 http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf[added
 to the language by compiler writers], and it takes a 35-pages article
-to discuss the implications. By contrast, all it takes in XL to
-implement `<=>` in a variant that always returns `-1`, `0` or `1` is
-the following:
+to discuss the implications. This takes time and a large effort, since
+all compiler writers must implement the same thing.
+
+By contrast, all it takes in XL to implement `<=>` in a variant that
+always returns `-1`, `0` or `1` is the following:
 
 [source]
 ----
@@ -494,8 +496,8 @@ X <=> Y     when X > Y  is  1
 ----
 
 Similarly, C++ makes it extremely difficult to optimize(((optimization)))
-away an expression like `X*0`, `X*1` or `X+0`, whereas XL makes it
-extremely easy:
+away an expression like `X*0`, `X*1` or `X+0` using only standard
+programming techniques, whereas XL makes it extremely easy:
 
 [source]
 ----
