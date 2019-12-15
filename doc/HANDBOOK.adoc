@@ -296,7 +296,7 @@ definition, whereas `\X is 0` defines a "catch-all" pattern that will
 match `35` or `"ABC"`. This _lambda notation_ can be used to build
 something that behaves almost exactly like an _anonymous function_ in
 functional languages, although the way it actually works internally is
-link:HANDBOOK_2-evaluation.md#scoping[still based on pattern matching].
+link:#scoping[still based on pattern matching].
 
 NOTE: The current implementations of XL special-case single-defintion
 contexts, and `lambda` can be omitted in that case. In a normal context,
@@ -429,11 +429,11 @@ while N <> 1 loop
     print N
 ----
 
-NOTE: A value between two square brackets, as in `[[true]]` and
-`[[false]]`, is called a link:HANDBOOK_2-evaluation.md#metabox[metabox].
+NOTE: A value between two square brackets, as in `+[[true]]+` and
+`+[[false]]+`, is called a link:#metabox[metabox].
 It indicates that the pattern must match the actual values in the
-metabox. In other words, `foo true is ...` defines a pattern with a
-formal parameter named `true`, whereas `foo [[true]] is ...` defines a
+metabox. In other words, `+foo true is ...+` defines a pattern with a
+formal parameter named `true`, whereas `+foo [[true]] is ...+` defines a
 pattern which only matches when the argument is equal to constant
 `true`.
 
@@ -483,12 +483,11 @@ X*1     is X
 X+0     is X
 ----
 
-Finally, C++ also makes it very difficult to deal with expressions
+Finally, pass:[C++] also makes it very difficult to deal with expressions
 containing multiple operators. For example, many modern CPUs feature a
 form of
-https://en.wikipedia.org/wiki/Multiply–accumulate_operation#Fused_multiply–add[fused
-multiply-add], which has benefits that include performance and
-precision. Yet C++ will not allow you to overload `X*Y+Z` to use this
+https://en.wikipedia.org/wiki/Multiply–accumulate_operation#Fused_multiply–add[fused multiply-add], which has benefits that include performance and
+precision. Yet pass:[C++] will not allow you to overload `X*Y+Z` to use this
 kind of operations. In XL, this is not a problem at all:
 
 [source]
@@ -665,7 +664,7 @@ you need for that type to become "writable" is to add a definition of
 write Z:complex     is write "(", Z.Re, ";", Z.Im, ")"
 ----
 
-Unlike the C++ `iostream` facility, the XL compiler will naturally emit
+Unlike the pass:[C++] `iostream` facility, the XL compiler will naturally emit
 less code. In particular, it will need only one function call for every
 call to `print`, calling the generated function for the given
 combination of arguments.
@@ -684,7 +683,7 @@ locked_print Items is
 ----
 
 It is extremely difficult, if not impossible, to achieve a similar
-effect with C++ `iostream` or, more generally, with I/O facilities that
+effect with pass:[C++] `iostream` or, more generally, with I/O facilities that
 perform one call per I/O item. That’s because there is no way for the
 compiler to identify where the "line breaks" are in your code.
 
@@ -1051,9 +1050,6 @@ to the basic XL evaluation rules. In other words, adding something as
 sophisticated as transparently distributed progrmming to XL can be done
 by practically any programmer, without changing the compiler.
 
-'''''
-
-Previous: link:HANDBOOK.md[Top] Next: link:HANDBOOK_1-syntax.md[Syntax]
 
 == XL syntax
 
@@ -1109,7 +1105,7 @@ Despite its strengths, Lisp remains confined to specific markets, in
 large part because to most programmers, the language remains
 surprisingly alien to this day, even garnering such infamous nicknames
 as "__Lots of Insipid and Stupid Parentheses__". As seen from a
-link:HISTORY.md#xl-gets-a-theoretical-foundation-concept-programming[concept
+link:#xl-gets-a-theoretical-foundation-concept-programming[concept
 programming] point of view, the underlying problem is that the Lisp
 syntax departs from the usual notations as used by human beings. For
 example, adding 1 and 2 is written `1+2` in XL, like in most programming
@@ -1126,7 +1122,7 @@ a new fancy and programmer-friendly syntax.
 The XL syntax is much _simpler_ than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
 link:../src/parser.cpp[parser] for XL is less than 800 lines of
-straightforward C++ code, and the link:../src/scanner.cpp[scanner]
+straightforward pass:[C++] code, and the link:../src/scanner.cpp[scanner]
 barely adds another 900 lines. By contrast, the
 https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c[C parser]
 in GCC needs more than 20000 lines of code, which is about the size of a
@@ -1220,7 +1216,7 @@ command:
 All of XL is built on this very simple data structure. Some choices,
 like having distinct `integer` and `real` node, were guided primarily by
 considerations beyond syntax, for example the need to be able to
-precisely define link:HANDBOOK_2-evaluation.md[program evaluation] or to
+precisely define link:#xl-program-evaluation[program evaluation] or to
 represent distinct machine types.
 
 NOTE: Empty blocks are represented as a block with an "empty name" as
@@ -1328,11 +1324,11 @@ phase.
 
 ==== Text syntax
 
-Text in XL is delimited with a single or double quote, `'` or `"`, and
+Text in XL is delimited with a pair of single or double quotes.  Text
 can contain any printable character. For example, `"Hello World"` or
-`'ABC'` are valid text in XL. If the delimiter is needed in the text, it
-can be obtained by doubling it. For example, `"He said ""Hello"""` is
-text containing `He said "Hello"`.
+`'ABC'` are valid text in XL. If the delimiter is needed in the text,
+it can be obtained by doubling it. For example, `"He said ""Hello"""`
+is text containing `He said "Hello"`.
 
 Additionally, the XL syntax file can specify delimiters for "long"
 text. Long text can include line-terminating characters, and only
@@ -1462,12 +1458,12 @@ for example, the associated precedence will be that of `FUNCTION`.
 Additional sections of the syntax file define delimiters for comment,
 block and text. Comment and text delimiters come in pairs.
 
-The default syntax file specifies comments that follow the C/C++
+The default syntax file specifies comments that follow the C/pass:[C++]
 convention, i.e. comments either start with `/*` and end with `*/` or
-start with `//` and end with a new line. The basic text separators `"`
-and `'` are not specified in the syntax file because they are used to
-parse the syntax file itself. The default syntax file adds `<<` and `>>`
-as separators for multi-line text..
+start with `//` and end with a new line. The basic text separators
+(simple and double quotes) are not specified in the syntax file
+because they are used to parse the syntax file itself. The default
+syntax file adds `<<` and `>>` as separators for multi-line text..
 
 Block separators come in pairs and have a priority. The special names
 `INDENT` and `UNINDENT` are used for the indentation block. The block
@@ -1584,11 +1580,6 @@ write -A    // write (-A)
 B - A       // (B - A)
 ----
 
-'''''
-
-Previous: link:HANDBOOK_0-introduction.md[Introduction] Next:
-link:HANDBOOK_2-evaluation.md[Program evaluation]
-
 == XL program evaluation
 
 XL defines _program execution_ primarily in terms of operations on the
@@ -1657,7 +1648,7 @@ recent contexts will have higher numbers. In addition, `HIDDEN0`,
 invisible to the currently executing code. These are also known as
 https://en.wikipedia.org/wiki/Activation_record[_activation records_].
 Entries in `HIDDEN` contexts are
-link:HANDBOOK_3-types.md#lifetime[live], but invisible to the current
+link:#lifetime[live], but invisible to the current
 code. By convention, `CONTEXT0` and `HIDDEN0` are not defined in the
 examples and are assumed to be inherited from earlier execution.
 
@@ -1688,14 +1679,14 @@ performed during parsing:
 program, so they are simply eliminated during parsing.
 . Processing `syntax` statements: This must be done during parsing,
 because `syntax` is designed to modify the
-link:HANDBOOK_1-syntax.md#extending-the-syntax[spelling and precedence]
+link:#extending-the-syntax[spelling and precedence]
 of operators, and that information is used during the parsing phase.
 . Processing `use` statements: Since imported modules can contain
 `syntax` statements, they must at least partially be processed during
 parsing. Details about `use` statements are covered in the
-link:HANDBOOK_6-modules.md[chapter about modules].
+link:#modules[chapter about modules].
 . Identifying words that switch to a
-link:HANDBOOK_1-syntax.md#child-syntax[child syntax]: symbols that
+link:#child-syntax[child syntax]: symbols that
 activate a child syntax are recognized during parsing. This is the case
 for example with the `extern` name in the
 link:../src/xl.syntax#L62[default syntax].
@@ -1754,12 +1745,11 @@ ignored during the declaration and evaluation phases.
 syntax { INFIX 290 <=> }
 ----
 * An infix `is`, which is called a _definition_, an infix `:` or `as`,
-which are called link:HANDBOOK_3-types.md##type-annotations[_type
-annotations_], or an infix assignment operator `:=` with a `:` type
-annotation on the left, called a _variable initialization_. Definitions,
-type annotations and variable initializations are collectively called
-_declarations_, and are processed during the
-link:#declaration-phase[declaration phase].
+which are called link:#type-annotations[_type annotations_], or an
+infix assignment operator `:=` with a `:` type annotation on the left,
+called a _variable initialization_. Definitions, type annotations and
+variable initializations are collectively called _declarations_, and
+are processed during the link:#declaration-phase[declaration phase].
 +
 [source]
 ----
@@ -1834,15 +1824,15 @@ some form of balanced tree. Such optimizations must preserve the order
 of declarations, since correct behavior during the evaluation phase
 depends on it.
 
-In the case of a link:HANDBOOK_4-compilation.md[compiled
-implementation], the compiler will most likely assign machine locations
-to each of the declarations. When the program runs, a constant like `pi`
-or the definition of `circumference` may end up being represented as a
-machine address, and a variable such as `Radius` may be represented as a
-"stack location", i.e. a preallocated offset from the current stack
+In the case of a link:#compiled-xl[compiled implementation], the
+compiler will most likely assign machine locations to each of the
+declarations. When the program runs, a constant like `pi` or the
+definition of `circumference` may end up being represented as a
+machine address, and a variable such as `Radius` may be represented as
+a "stack location", i.e. a preallocated offset from the current stack
 pointer, the corresponding memory location only containing the value,
 i.e. the right-hand side of `:=`. Most of the
-link:HANDBOOK_3-types.md[type analysis] can be performed at compile
+link:#types[type analysis] can be performed at compile
 time, meaning that most type information is unnecessary at program run
 time and can be eliminated from the compiled program.
 
@@ -1891,16 +1881,15 @@ that receives the _argument_ 5.3 as a result of _binding_. The binding
 remains active for the duration of the evaluation of of the body of the
 definition. The binding, at least conceptually, contains the type
 annotation for the formal parameter, ensuring that all required
-link:HANDBOOK_3-types.md[type constraints] are known and respected. For
+link:#types[type constraints] are known and respected. For
 example, the context contains the `Redius:real` annotation, so that
 attempting `Radius := "Hello"` in the body of `circumference` would
 fail, because the type of `"Hello"` does not match the `real` type.
 
-Bindings can be marked as link:HANDBOOK_3-types.md#mutability[mutable]
-or constant. In this document, bindings made with `:=` are mutable,
-while binding made with `is` are constant. Since by default, an `X : T`
-annotation creates a mutable binding, the binding for `Radius` is made
-with `:=`.
+Bindings can be marked as link:#mutability[mutable] or constant. In
+this document, bindings made with `:=` are mutable, while binding made
+with `is` are constant. Since by default, an `X : T` annotation
+creates a mutable binding, the binding for `Radius` is made with `:=`.
 
 Once the new context has been created, execution of the program
 continues with the body of the definition. In that case, that means
@@ -1924,15 +1913,15 @@ case, that process needs to be repeated multiple times to complete the
 evaluation.
 
 If we apply the evaluation process with `2 * pi * Radius`, assuming the
-declarations in the link:HANDBOOK_7-standard-library.md[standard
-library], no declaration has a larger pattern like `X * Y * Z` that
-could match the whole expression. However, there is a definition for a
-multiplication between `real` numbers, with a pattern that looks like
-`X:real * Y:real as real`, as well as another for `integer`
-multiplication, with a pattern that looks like `X:integer * Y:integer`.
-There may be more, but we will ignore them for the rest of this
-discussion. The code below shows what the relevant declaration might
-look like (`...` indicates irrelevant code):
+declarations in the link:#standard-library[standard library], no
+declaration has a larger pattern like `X * Y * Z` that could match the
+whole expression. However, there is a definition for a multiplication
+between `real` numbers, with a pattern that looks like `X:real *
+Y:real as real`, as well as another for `integer` multiplication, with
+a pattern that looks like `X:integer * Y:integer`.  There may be more,
+but we will ignore them for the rest of this discussion. The code
+below shows what the relevant declaration might look like (`...`
+indicates irrelevant code):
 
 [source]
 ----
@@ -2011,8 +2000,8 @@ The result of the last multiplication is a `real` with value `33.284`.
 This is the result of evaluating `circumference 5.3`, and consequently
 the result of executing the entire program.
 
-NOTE: The link:HANDBOOK_7-standard-library.md[standard XL library] only
-provides implicit conversions that do not cause data loss. On most
+NOTE: The link:#standard-library[standard XL library] only provides
+implicit conversions that do not cause data loss. On most
 implementation, `real` has a 53-bit mantissa, which means that the
 implicit conversion from `integer` to `real` is actually closer to the
 following:
@@ -2092,7 +2081,7 @@ Type annotations
 
 When the pattern is an infix `:` or `as`, it matches an expression if
 the expression matches the pattern on the left of the infix, and if the
-link:HANDBOOK_3-types.md[type] of the expression matches the type on the
+link:#types[type] of the expression matches the type on the
 right of the infix.
 
 A type annotation as a top-level pattern is a declaration:
@@ -2182,7 +2171,7 @@ is said to be _split_ to match the parameters.
 |=======================================================================
 |Pattern |Matched by |Not matched by
 |`write X,Y` |`write Items` when `Items is "A","B"` |`wrote 0`,
-`write Items` when `Items is "A"+B"`
+`write Items` when `Items is "A"+"B"`
 |=======================================================================
 +
 NOTE: A very common idiom is to use comma `,` infix to separate
@@ -2239,10 +2228,9 @@ require link:#immediate-evaluation[immediate evaluation].
 |`0!` |`N!` when `N=0` |`N!` when `N<>0`
 |=======================================
 
-This case applies to sub-patterns, as was the case for `0! is 1` in the
-link:HANDBOOK_0-introduction.md#factorial[definition of factorial]. It
-also applies to top-level patterns, which is primarily useflu in
-link:#scoping[maps]:
+This case applies to sub-patterns, as was the case for `0! is 1` in
+the link:#factorial[definition of factorial]. It also applies to
+top-level patterns, which is primarily useflu in link:#scoping[maps]:
 
 [source]
 ----
@@ -2254,7 +2242,7 @@ link:#scoping[maps]:
 Metabox constants
 
 When the pattern is a an expression between two square brackets, like
-`[[true]]`, it is called a _metabox_, and it only matches a value that
+`+[[true]]+`, it is called a _metabox_, and it only matches a value that
 is equal to the value computed by the metabox. This equality is checked
 by evaluating `Pattern = Value`, where `Pattern` is the expression in
 the metabox, and `Value` is the expression being tested.
@@ -2262,7 +2250,7 @@ the metabox, and `Value` is the expression being tested.
 [cols=",,",options="header",]
 |==============================================
 |Pattern |Matched by |Not matched by
-|`[[true]]` |`true`, `not false` |`"true"`, `1`
+|`+[[true]]+` |`true`, `not false` |`"true"`, `1`
 |==============================================
 
 A metabox is used in particular when a name would be interpreted as a
@@ -2271,8 +2259,8 @@ parameter. The two declarations below declare a short-circuit boolean
 
 [source]
 ----
-  [[true]]  and X   is X
-  [[false]] and X   is false
+[[true]]  and X   is X
+[[false]] and X   is false
 ----
 
 By contrast, the two definitions would not work as intended, since they
@@ -2409,7 +2397,7 @@ In XL, the various declarations in the context are considered in order,
 and the first declaration that matches is selected. A candidate
 declaration matches if it matches the whole shape of the tree.
 
-NOTE: Historically, the link:HISTORY.md#bootstrapping-xl[XL2]
+NOTE: Historically, the link:#bootstrapping-xl[XL2]
 implementation does not select the first that matches, but the _largest
 and most specialized_ match. This is a slightly more complicated
 implementation, but not by far, and it has some benefits, notably with
@@ -2460,7 +2448,7 @@ fib N   is (fib(N-1) + fib(N-2))
 ----
 
 NOTE: Parentheses are required around the
-link:HANDBOOK_1-syntax.md#tweak-1-expression-vs-statement[expressions
+link:#tweak-1-expression-vs-statement[expressions
 statements] in the last declaration in order to parse this as the
 addition of `fib(N-1)` and `fib(N-2)` and not as the `fib` of
 `(N-1)+fib(N-2)`.
@@ -2573,13 +2561,13 @@ if shape1 intersects shape2 then    // selects the right combination
 ----
 
 NOTE: Type-based dynamic dispatch is relatively similar to the notion
-of _virtual function_ in C++, although the XL implementation is likely
-to be quite different. The C++ approach only allows dynamic dispatch
-along a single axis, based on the type of the object argument. C++ also
+of _virtual function_ in pass:[C++], although the XL implementation is likely
+to be quite different. The pass:[C++] approach only allows dynamic dispatch
+along a single axis, based on the type of the object argument. pass:[C++] also
 features a special syntax, `shape.Draw()`, for calls with dynamic
 dispatch, which differs from the C-style syntax for function calls,
 `Draw(shape)`. The syntax alone makes the `intersects` example difficult
-to write in C++.
+to write in pass:[C++].
 
 As another illustration of a complex dynamic dispatch not based on
 types, http://tao3d.sourceforge.net[Tao3D] uses
@@ -2721,7 +2709,7 @@ CONTEXT1 is
 ....
 
 In the body of the `while` definition, `Condition` must be evaluated
-because it is tested against metabox `[[true]]` and `[[false]]` in the
+because it is tested against metabox `+[[true]]+` and `+[[false]]+` in the
 definition of `if-then-else`. In that same definition for `while`,
 `Body` must be evaluated because it is a statement.
 
@@ -3065,7 +3053,7 @@ With this declaration, the expression `digit_spelling 3` evaluates to
 `"three"`. This kind of map application is called _indexing_. A
 suggested style choice is to make the intent more explicit using square
 brackets, as in `digit_spelling[4]`. This is a nod to the syntax of
-programming languages such as C or C++.
+programming languages such as C or pass:[C++].
 
 When the index is an expression, for example `digit_spelling[A+3]` in a
 context where `A is 2`, we must evaluate `A+3` in current context
@@ -3163,8 +3151,8 @@ eight_bits is magic_constants(8)
 print "The max value for 8 bits is ", eight_bits.max_value
 ----
 
-This forms the basis of link:HANDBOOK_3-types.md#creation[constructors]
-and link:HANDBOOK_3-types.md#interface[tagged types]in XL.
+This forms the basis of link:#creation[constructors]
+and link:#interface[tagged types]in XL.
 
 === Super lookup
 
@@ -3226,7 +3214,7 @@ In the case of Tao3D, that implicit environment was describing graphics
 attributes such as color or line width. A global variable would provide
 a convenient default, but a local variable with the correct name would
 make that default easy to override. This would play a role similar to
-the C++ implicit `this` pointer, with the added benefits that multiple
+the pass:[C++] implicit `this` pointer, with the added benefits that multiple
 such implicit parameters would be possible depending on usage (graphics
 state, window state, etc)
 
@@ -3234,7 +3222,7 @@ A second use case was also found in XL2 when looking up
 link:../xl2/native/TESTS/10.Generics/any_lookup.xl[generic code], and
 plays the role of
 https://en.wikipedia.org/wiki/Argument-dependent_name_lookup[Koenig
-lookup] in C++, i.e. make it possible to access code in the caller’s
+lookup] in pass:[C++], i.e. make it possible to access code in the caller’s
 context. For example, the definition corresponding to `write Head, Tail`
 will call `write Head`. If you want to be able to extend `write` with
 your own custom types, it is necessary to be able to lookup `write Head`
@@ -3242,7 +3230,7 @@ within the caller’s context as well. Whether this is really necessary or
 functional remains to be tested.
 
 A reasonably efficient implementation strategy for compiled code
-link:HANDBOOK_4-compilation.md#caller-lookup[seems possible].
+link:#caller-lookup[seems possible].
 
 === Assignments and moves
 
@@ -3288,16 +3276,16 @@ longer be used.
 
 Depending on the data type, `:=` may correspond to a copy or a move. The
 precise details of which operator is selected and the associated
-rationale are detailed in link:HANDBOOK_3-types.md#ownership[the next
+rationale are detailed in link:#ownership[the next
 chapter]. In all cases, the previous value that was held in the left
-operand is link:HANDBOOK_3-types.md#destruction[destroyed] by the
+operand is link:#destruction[destroyed] by the
 assignment.
 
 The `:=` operator is used to transfer arguments to parameters. This
 means that passing an argument in XL, like in Rust, can make the
 argument invalid in the caller if it is moved rather than copied. There
 are, however, multiple ways to pass arguments. This is all discussed in
-more details link:HANDBOOK_3-types.md#binding[in the next chapter].
+more details link:#binding[in the next chapter].
 
 NOTE: *RATIONALE* For simple types such as arithmetic types, an assignment
 performs a copy, which is a relatively inexpensive memmory copy between
@@ -3370,7 +3358,7 @@ link:#scoping[scoping] above.
 === Error handling
 
 Code that fails will generally report it by returning an `error` value.
-Error values have the link:HANDBOOK_3-types.md#errors[`error` type]. For
+Error values have the link:#errors[`error` type]. For
 example, consider the `sqrt` (square root) function. That function is
 only defined for positive values.
 
@@ -3494,7 +3482,7 @@ sanitized_sqrt X:real as real is
 
 NOTE: This may look like exception handling, and intentionally so.
 However, `error` values are not exceptions in that they don’t
-automatically propagate across functions like C++ exceptions do. If an
+automatically propagate across functions like pass:[C++] exceptions do. If an
 error happens at some level, you must deal with it at that level, if
 only to explicitly pass it along. This is done
 link:#error-statements[automatically] in many cases, so that the end
@@ -3569,7 +3557,7 @@ read_thing_from_file FileName:text as fallible own thing is
 ----
 
 The notation `own T` above is an
-link:HANDBOOK_3-types.md#ownership[owning type] that dynamically
+link:#ownership[owning type] that dynamically
 allocates an object from the heap.
 
 === Interface and implementation
@@ -3643,7 +3631,7 @@ definitions of the value must be provided at some point that matches the
 declaration and specifies an implementation, but that definition may be
 link:HANDBOOK_6-modules.md[in a different source file].
 
-NOTE: *RATIONALE* In languages such as C++, some members of a class can be
+NOTE: *RATIONALE* In languages such as pass:[C++], some members of a class can be
 made _private_ or _protected_. This restricts their usage, but the
 compiler (and the programmer) still have knowledge of internal details
 of the implementation. This facilitates some low-level copmiler
@@ -3663,7 +3651,7 @@ the interface.
 Previous: link:HANDBOOK_1-syntax.md[Syntax] Next:
 link:HANDBOOK_3-types.md[Type System]
 
-== XL Type System
+== Types
 
 XL types are a way to organize values by restricting which operations
 can be selected during evaluation. For example, knowing that `A` is a
@@ -3672,7 +3660,7 @@ can be selected during evaluation. For example, knowing that `A` is a
 `X:integer+Y:integer`.
 
 In XL, types are based on the _shape_ of
-link:HANDBOOK_1-syntax.md#the-xl-parse-tree[parse trees]. A type
+link:#the-xl-parse-tree[parse trees]. A type
 identifies the tree patterns that belong to the type. The expression
 `type(Pattern)` returns the type for the given type declaration pattern.
 For example, the type for all additions where the first value is a
@@ -3835,7 +3823,7 @@ be explained more in details below:
 
 * the link:#lifetime[lifetime] of a value is the amount of time during
 which the value exists in the program. Lifetime is, among other things,
-determined by link:HANDBOOKE_2-evaluation.md#scoping[scoping].
+determined by link:#scoping[scoping].
 * link:#creation[creation] and link:#destruction[destruction] defines
 how values of a given type are initialized and destroyed.
 * link:#errors[errors] are special types used to indicate failure.
@@ -3883,7 +3871,7 @@ will always be live while `X` is live. It is possible for neither
 `lifetime X < lifetime Y` nor `lifetime X > lifetime Y` to be true. This
 `lifetime` feature is used to implement
 https://doc.rust-lang.org/1.8.0/book/ownership.html[Rust-like]
-link:HANDBOOK_4-compilation.md#lifetime[restrictions on access types],
+link:#lifetime[restrictions on access types],
 i.e. a way to achieve memory safety at zero runtime cost.
 
 The lifetime of XL values fall in one of the following categories:
@@ -3908,7 +3896,7 @@ Such temporary values are typically stored in registers or on the stack,
 although some temporary values may require heap storage that will be
 freed when the value is destroyed.
 * _Named constants_ have a lifetime that corresponds to their
-link:HANDBOOKE_2-evaluation.md#scoping[scope]. As long as the named
+link:#scoping[scope]. As long as the named
 constant is visible, it exists. In the following example, the value of
 `DEGREE_TO_RADIAN`, `2 * pi / 180` exists for the duration of the
 `cos_degrees` function:
@@ -3923,7 +3911,7 @@ The compiler has a lot of freedom on how to implement named constants,
 and may use preallocated storage, functions, or immediate constants
 depending on the need.
 * _Variables_ have a lifetime that generally corresponds to their
-link:HANDBOOKE_2-evaluation.md#scoping[scope], but the value of their
+link:#scoping[scope], but the value of their
 lifetime terminates each time the value is updated. In the following
 example, `Message` is created with value `"Hello"`, but on the second
 line, that value is destroyed to be replaced with value `"Hello World"`.
@@ -4041,7 +4029,7 @@ module MY_FILE is
 ----
 
 NOTE: *RATIONALE* This mechanism is similar to _elaboration_ in Ada or to
-_constructors_ in C++. It makes it possible for programmers to provide
+_constructors_ in pass:[C++]. It makes it possible for programmers to provide
 strong guarantees about the internal state of values before they can be
 used. This is a fundamental brick of programming techniques such as
 encapsulation, programming contracts or
@@ -4066,7 +4054,7 @@ delete Anything is nil
 
 There may be multiple destructors that match a given expression. When
 this happens, normal lookup rules happen. This means that, unlike
-languages like C++, a programmer can deliberately override the
+languages like pass:[C++], a programmer can deliberately override the
 destruction of an object, and remains in control of the destruction
 process.
 
@@ -4090,7 +4078,7 @@ on error).
 It is possible to create local destructor definitions. When such a local
 definition exists, it is possible for it to override a more general
 definition. The general definition can be accessed using
-link:HANDBOOK_2-evaluation.md#super-lookup[super lookup].
+link:#super-lookup[super lookup].
 
 [source]
 ----
@@ -4193,7 +4181,7 @@ if X > 0.0 then
 
 NOTE: *RATIONALE* By returning an `error` for failure conditions, XL forces
 the programmer to deal with errors. They cannot simply be ignored like C
-return values or C++ exceptions can be. Errors that may possibly return
+return values or pass:[C++] exceptions can be. Errors that may possibly return
 from a function are a fundamental part of its type, and error handling
 is not optional.
 
@@ -4258,7 +4246,7 @@ Answer as integer is 42                 // Named constant
 
 A mutable value can be initialized or modified using the `:=` operator,
 which is called an
-link:HANDBOOK_2-evaluation.md##assignments-and-moves[_assignment_].
+link:##assignments-and-moves[_assignment_].
 There are a number of derived operators, such as `+=`, that combine a
 frequent arithmetic operation and an assignment.
 
@@ -4354,10 +4342,10 @@ connexions, devices, sensors, actuators, and so on. A common problem
 with such resources is to control their _ownership_. In other words, who
 is responsible for a given resource at any given time.
 
-In XL, like in languages like Rust or C++, ownership is largely
+In XL, like in languages like Rust or pass:[C++], ownership is largely
 determined by the type system, and relies heavily on the guarantees it
 provides, in particular with respect to link:#creation[creation] and
-link:#destruction[destruction]. In C++, the mechanism is called
+link:#destruction[destruction]. In pass:[C++], the mechanism is called
 https://en.wikipedia.org/wiki/RAII[RAII], which stands for _Resource
 Acquisition is Initialization_. The central idea is that ownership of a
 resource is an invariant during the lifetime of a value. In other words,
@@ -4484,7 +4472,7 @@ derives from.
 
 For example, from the `integer` type, one can construct a `month` type
 that matches only `integer` values between `1` and `12` using a regular
-link:HANDBOOK_2-evaluation.md#when[conditional pattern] as follows:
+link:#when[conditional pattern] as follows:
 
 [source]
 ----
@@ -4597,8 +4585,8 @@ have `text` values that sort following German rules, you would use
 ==== Interface
 
 The
-link:HANDBOOK_2-evaluation.md#interface-and-implementation[interface] of
-a type can specifiy a link:HANDBOOK_2-evaluation.md#scoping[scope] for
+link:#interface-and-implementation[interface] of
+a type can specifiy a link:#scoping[scope] for
 values that match the type, using the syntax `type T with I`, where `I`
 is a scope containing the publicly available declarations. These
 declarations are called _fields_ of the type when they denote
@@ -4708,7 +4696,7 @@ my_picture is
 ----
 
 For better readability, the pattern can also
-link:HANDBOOK_2-evaluation.md#pattern-matching-scope-values[match a
+link:#pattern-matching-scope-values[match a
 scope]
 
 [source]
@@ -4777,9 +4765,9 @@ type picture is picture
 
 ==== Copy
 
-The link:HANDBOOK_2-evaluation.md#assignments-and-moves[assignment
-operator] is written `A := B` in XL. For compact types, this is normally
-equivalent to `A :+ B`, which is guaranteed to be a _copy_.
+The link:#assignments-and-moves[assignment operator] is written `A :=
+B` in XL. For compact types, this is normally equivalent to `A :+ B`,
+which is guaranteed to be a _copy_.
 
 ==== Move
 
@@ -4813,7 +4801,7 @@ type complex32 is complex[real32]
 ----
 
 NOTE: Type expressions play for XL the role that "class templates"
-play in C++, or "generic types" in Ada. By convention, the formal
+play in pass:[C++], or "generic types" in Ada. By convention, the formal
 parameters or arguments of type expressions are placed between square
 brackets, as in `complex[real]`, although there is no requirement for
 this. In practice, exceptions are frequent, notably for types using
@@ -4982,7 +4970,7 @@ The difference matters in particular in the interface of a type, as
 declared by `with`. The non-mutable declarations using `as` are
 considered as belonging only to the type, whereas mutable declarations
 using `:` are considered as belonging to values of the type. As a
-result, much like C++ class member declarations, "functions" or
+result, much like pass:[C++] class member declarations, "functions" or
 "methods" are interpreted as belonging to the type, whereas "values"
 or "members" belong to type instances.
 
@@ -5031,14 +5019,14 @@ For example, `type complex(Re:real, Im:real)` would match the vaue
 
 Types are first-class citizen in XL: they can be stored in variables,
 passed around, and so on. The compiler will determine if a specific use
-of a type variable should be treated like "template code" to use C++
+of a type variable should be treated like "template code" to use pass:[C++]
 terminology, or if there is a better way to implement it.
 
 For example, consider an allocation of memory for type `T`:
 Allocate[type T] as pointer[T]
 
 The compiler is free to implement this as a generic function, similar to
-a C++ template, or as a function taking some pointer to type data, using
+a pass:[C++] template, or as a function taking some pointer to type data, using
 for example `T.ByteSize` to allocate memory.
 
 A type has an _interface_ and an _implementation_. An interface is
@@ -5174,7 +5162,7 @@ Ada-style syntax and semantics.
 * Similarly, arrays were defined by the language. I wanted to build them
 (or, at least, describe their interface) using standard language
 features such as generics. Remember that this was years before the STL
-made it to C++, but I was thinking along similar lines. Use cases I had
+made it to pass:[C++], but I was thinking along similar lines. Use cases I had
 in mind included:
 ** interfacing with languages that had different array layouts such as
 Fortran and C,
@@ -5267,7 +5255,7 @@ very similar feature and syntax.
 That initial development period for LX lasted between 1990, the year of
 my training period at Alsys, and 1998, when I jointed the HP California
 Language Lab in Cupertino (CLL). I moved to the United States to work on
-the HP C++ compiler and, I expected, my own programming language. That
+the HP pass:[C++] compiler and, I expected, my own programming language. That
 nice plan did not happen exactly as planned, though…
 
 One of the very first things I did after arriving in the US was to
@@ -5351,7 +5339,7 @@ of existing languages and techniques.
 
 Since then, Concept Programming has consistently guided what I am doing
 with XL. Note that Concept Programming in the XL sense has little do do
-with C++ concepts (although there may be a connection, see blog
+with pass:[C++] concepts (although there may be a connection, see blog
 referenced above for details).
 
 === Mozart and Moka: Adding Java support to XL
@@ -5366,7 +5354,7 @@ program database'', which was basically a way to store and access
 program data independently of the language being used. In other words,
 we were trying to create an API that would make it possible to
 manipulate programs in a portable way, whether the program was written
-in C, C++ or Java. That proved somewhat complicated in practice.
+in C, pass:[C++] or Java. That proved somewhat complicated in practice.
 
 Worse, Daveed Vandevoord left the HP CLL to join the Edison Design
 Group, where he’s still working to this date. Xroma instantly lost quite
@@ -5393,7 +5381,7 @@ Java to Java compiler using Mozart as its intermediate representation. I
 published an http://www.drdobbs.com/jvm/what-is-moka/184404696[article
 in Dr Dobb’s journal], a popular developers journal at the time.
 
-But my heart was never with Java anymore than with C++, as evidenced by
+But my heart was never with Java anymore than with pass:[C++], as evidenced by
 the much more extensive documentation about XL on the Mozart web site.
 As a language, Java had very little interest for me. My management at HP
 had no interest in supporting my pet language, and that was one of the
@@ -5414,40 +5402,40 @@ rule I talked about earlier allowed me to get rid of any `begin` or
 blocks.
 * Pragmas extended the language by invoking
 http://mozart-dev.sourceforge.net/tools.html#pragma[arbitrary compiler
-plug-ins]. I suspect that attributes in C++11 are distant (and less
+plug-ins]. I suspect that attributes in pass:[C++]11 are distant (and less
 powerful) descendants of this kind of annotation, if only because their
 syntax matches my recollection of the annotation syntax in Xroma, and
-because Daveed has been a regular and innovative contributor to the C++
+because Daveed has been a regular and innovative contributor to the pass:[C++]
 standard for two decades…
 * http://mozart-dev.sourceforge.net/xl_style.html#expred[Expression
 reduction] was a generalisation of operator overloading that works with
 expressions of any complexity, and could be used to name types. To this
 day, expression reduction still has no real equivalent in any other
 language that I know of, although expression templates can be used in
-C++ to achieve similar effect in a very convoluted and less powerful
+pass:[C++] to achieve similar effect in a very convoluted and less powerful
 way. Expression templates will not allow you to add operators, for
 example. In other words, you can redefine what `X+Y*Z` means, but you
-cannot create `X in Y..Z` in C++.
+cannot create `X in Y..Z` in pass:[C++].
 * http://mozart-dev.sourceforge.net/xl_style.html#truegen[True generic
 types] were a way to make generic programming much easier by declaring
 generic types that behaved like regular types. Validated generic types
 extended the idea by adding a validation to the type, and they also have
-no real equivalent in other languages that I am aware of, although C++
-concepts bring a similar kind of validation to C++ templates.
+no real equivalent in other languages that I am aware of, although pass:[C++]
+concepts bring a similar kind of validation to pass:[C++] templates.
 * http://mozart-dev.sourceforge.net/xl_style.html#vararg[Type-safe
 variable argument lists] made it possible to write type-safe variadic
 functions. They solved the `WriteLn` problem I referred to earlier,
 i.e. they made it possible to write a function in a library that behaved
 exactly like the Pascal `WriteLn`. I see them as a distant ancestor of
-variadic templates in C++11, although like for concepts, it is hard to
+variadic templates in pass:[C++]11, although like for concepts, it is hard to
 tell if variadic templates are a later reinvention of the idea, or if
-something of my e-mails influenced members of the C++ committee.
+something of my e-mails influenced members of the pass:[C++] committee.
 * A powerful standard library was in the making. Not quite there yet,
 but the key foundations were there, and I felt it was mostly a matter of
 spending the time writing it.
 link:../xl2/native/library/xl.math.complex.xl[My implementation of
 complex numbers], for example, was
-http://mozart-dev.sourceforge.net/news.html#complex[70% faster than C++
+http://mozart-dev.sourceforge.net/news.html#complex[70% faster than pass:[C++]
 on] simple examples, because it allowed everything to be in registers
 instead of memory. There were a few things that I believe also date from
 that era, like getting rid of any trace of a main function, top-level
@@ -5473,7 +5461,7 @@ of Smalltalk fame, during an HP technical conference. Kay was an HP
 Fellow at the time. I tried to show him how my language was solving some
 of the issues he had talked about during his presentation. He did not
 even bother looking. He simply asked: “_Does your language
-self-compile?_“. When I answered that the compiler was written in C++,
+self-compile?_“. When I answered that the compiler was written in pass:[C++],
 Alan Kay replied that he was not interested.
 
 That gave me a desire to consider a true bootstrap of XL. That meant
@@ -5534,7 +5522,7 @@ being given dynamically by a syntax file.
 
 === Bootstrapping XL
 
-The initial translator converts a simplified form of XL into C++ using a
+The initial translator converts a simplified form of XL into pass:[C++] using a
 very basic transcoding that involves practically no semantic analysis.
 The limited XL2 acceptable as input for this translation phase is only
 used in the bootstrap compiler. It already looks a bit like the final
@@ -5719,7 +5707,7 @@ if false then TrueBody                  is false
 NOTE: the above code now requires a
 link:HANDBOOK_2-evaluation#metabox[metabox] for true in the version of
 XL described in this document, i.e. `true` must be replaced with
-`[[true]]` in order to avoid being interpreted as a formal parameter.
+`+[[true]]+` in order to avoid being interpreted as a formal parameter.
 
 Similarly for basic loops, provided your translation mechanism
 implements tail recursion properly:
@@ -5847,7 +5835,7 @@ show_temps T1:real, T2:real ->
 ----
 
 ELFE only adds a very small number of features to the standard XL, which
-are simply regular XL functions implemented in C++:
+are simply regular XL functions implemented in pass:[C++]:
 
 * The `ask` statement sends a program, and returns the result of
 evaluating that program as if it has been evaluated locally. It works
@@ -6034,10 +6022,10 @@ practice.
 More recently, I came across another problem, which was how to properly
 insert a computed value like the square root of two in a pattern? I came
 up with an idea inspired parameters in `translate` statements in XL2,
-which I called a "metabox". The notation `[[X]]` in a pattern will
+which I called a "metabox". The notation `+[[X]]+` in a pattern will
 evaluate `X`. To match the square root of 2, you would insert the
-metabox `[[sqrt 2]]`. To match `true` instead of defining a name `true`,
-you would insert `[[true]]` instead of `true`.
+metabox `+[[sqrt 2]]+`. To match `true` instead of defining a name `true`,
+you would insert `+[[true]]+` instead of `true`.
 +
 Downside: fix all the places in the documentation that had it backwards.
 * The addition of opaque binary data in parse trees, for example to put
