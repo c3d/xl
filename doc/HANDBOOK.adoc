@@ -57,26 +57,27 @@ Extensible? What does that mean for a programming language? For XL, it
 really means three things:
 
 [arabic]
-. XL has a method to extend the language with any kind of feature, not
-  just functions or data types, but also programming constructs,
-  optimizations, domain-specific notations, and more. Actually, all this
+. XL has a method to ((extend the language)) with any kind of feature, not
+  just functions or data types, but also ((programming constructs)),
+  ((optimizations)), ((domain-specific notations)), and more. Actually, all this
   is done with a link:#one-operator-to-rule-them-all[single operator],
-  `is`, called the _definition operator_.
+  `is`, called the _((definition operator))_.
 
-. As a validation of the concept, most features that are built-in in
-  other programming languages, like the `while` loop, or integer
-  arithmetic, are _constructed_ in XL. Specifically, they are provided by
+. As a validation of the concept, most features that are ((built-in)) in
+  other programming languages, like the `while` ((loop)), or ((integer
+  arithmetic)), are _constructed_ in XL. Specifically, they are provided by
   the link:#the-standard-library[((standard library))], using techniques that
-  you, yourself, can use in your program. This, obviously, means that you
+  any programmer can use in their program. This, obviously, means that you
   can add your own loops, or your own machine-level data types, and even
   extend existing ones.
 
 . XL gives you link:#efficient-translation[complete control] over the
-  program translation process. This means that libraries exist or can be
-  written to make XL at least as good as C for low-level bit-twiddling, at
-  least as good as C++ for generic algorithms, at least as good as Ada for
-  tasking, at least as good as Fortran for numerical algorithms, at least
-  as good as Java for distributed programming, and so on.
+  ((program translation)) process. This means that ((libraries)) exist
+  or can be written to make XL at least as good as C for low-level
+  ((bit-twiddling)), at least as good as C++ for ((generic algorithms)),
+  at least as good as Ada for ((tasking)), at least as good as Fortran
+  for ((numerical algorithms)), at least as good as Java for
+  ((distributed programming)), and so on.
 
 This may all seem too good to be true. This document explains how the
 magic happens. But first of all, one thing that really matters: XL is
@@ -88,13 +89,14 @@ prove this.
 It is practically compulsory to begin the presentation of any
 programming language with a
 link:https://en.wikipedia.org/wiki/%22Hello,_World!%22_program["Hello
-World"] example, immediately followed by a a recursive definition of
-the https://en.wikipedia.org/wiki/Factorial[factorial function]. Let’s
+World"](((Hello World))) example, immediately followed by a a
+recursive definition of the
+https://en.wikipedia.org/wiki/Factorial[factorial function]. Let’s
 follow this long honored tradition.
 
 ==== Hello World
 
-In XL, a program that prints `Hello World` on the terminal console
+In XL, a program that prints `((Hello World))` on the terminal ((console))
 output will look like this:
 
 [source]
@@ -103,11 +105,12 @@ use XL.CONSOLE.TEXT_IO
 print "Hello World"
 ----
 
-The first line _imports_ the `XL.CONSOLE.TEXT_IO` module. The program
-can then use the `print` function from that module to write the text on
-the terminal console.
+The first line _imports_ (((import))) the `XL.CONSOLE.TEXT_IO`
+link:#modules[((module))].  The program can then use the `print`
+function from that module to write the text on the ((terminal
+console)).
 
-Why do we need the `use` statement? There is a general rule in XL that
+Why do we need the `use` ((statement))? There is a general rule in XL that
 you only pay for things that you use. Not all programs will use a
 terminal console, so the corresponding functions must be explicitly
 imported into your program. It is possible that some systems, like
@@ -123,7 +126,7 @@ C++.
 
 ==== Factorial
 
-A program computing the https://en.wikipedia.org/wiki/Factorial[factorial]
+A program computing the https://en.wikipedia.org/wiki/Factorial[((factorial))]
 of numbers between 1 and 5, and then showing them on the console, can
 be written as follows:
 
@@ -140,21 +143,21 @@ for I in 1..5 loop
 
 We have used an alternative form of the `use` statement, where the
 imported module is given a local nick-name, `IO`. This form is useful
-when it’s important to avoid the risk of name collisions between
+when it’s important to avoid the risk of ((name collisions)) between
 modules. In that case, you need to refer to the `print` function of the
 module as `IO.print`.
 
-The definition of the factorial function shows how expressive XL is,
-making it possible to use the well-known notation for the factorial
+The ((definition)) of the factorial function shows how expressive XL is,
+making it possible to use the well-known ((notation)) for the factorial
 function. The definition consists in two parts:
 
-* the special case of the factorial of `0` is defined as follows:
+* the ((special case)) of the factorial of `0` is defined as follows:
 +
 [source]
 ----
 0! is 1
 ----
-* the general case is defined as follows, and involves a recursion in
+* the general case is defined as follows, and involves a ((recursion)) in
 the form of the `(N-1)!` expression:
 +
 [source]
@@ -173,22 +176,22 @@ indicating that the definition only works for positive numbers:
 N!  when N > 0  is N * (N-1)!
 ----
 
-Writing the code that way will ensure that there is a compile-time error
+Writing the code that way will ensure that there is a ((compile-time error))
 if you write `-3!`, because there is no definition that matches.
 
 === One operator to rule them all
 
-XL has a single fundamental operator, `is`, called the _definition
-operator_. It is an link:#infix[infix operator] with a
-link:#pattern[pattern] on the left and an
-link:#implementation[implementation] on the right. In other words,
-its pattern is `Pattern is Implementation`, where `Pattern` is a program
-pattern, like `X+Y`, and `Implementation` is an implementation for
-that pattern, for example `Add X, Y`. This operator can also be read as
-_transforms into_, i.e. it transforms the code that is on the left
-into the code that is on the right.
+XL has a single fundamental operator, `is`, called the _((definition
+operator))_. It is an link:#infix[infix operator] with a
+link:#pattern[((pattern))] on the left and an
+link:#implementation[((implementation))] on the right. In other words,
+the pattern for the infix `is` is `Pattern is Implementation`, where
+`Pattern` is a program pattern, like `X+Y`, and `Implementation` is an
+implementation for that pattern, for example `Add X, Y`. This ((operator))
+can also be read as _transforms into_, i.e. it transforms the code
+that is on the left into the code that is on the right.
 
-This single operator can be used to define all kinds of entities.
+This single ((operator)) can be used to define all kinds of entities.
 
 .Simple variables or constants
 [%collapsible]
@@ -199,7 +202,7 @@ pi              is      3.1415926
 ----
 ====
 
-.Lists or data structures
+.Lists (((list))) or ((data structures))
 [%collapsible]
 ====
 [source]
@@ -212,7 +215,7 @@ identity_matrix is
 ----
 ====
 
-.Functions
+.Functions (((function)))
 [%collapsible]
 ====
 [source]
@@ -221,7 +224,7 @@ abs X:number    is      if X < 0 then -X else X
 ----
 ====
 
-.Operators
+.Operators (((operator)))
 [%collapsible]
 ====
 [source]
@@ -230,7 +233,7 @@ X ≠ Y           is      not X = Y
 ----
 ====
 
-.Specializations for particular inputs
+.Specializations for particular inputs (((specialization)))
 [%collapsible]
 ====
 [source]
@@ -240,7 +243,7 @@ N!  when N > 0  is      N * (N-1)!
 ----
 ====
 
-.Notations using arbitrary combinations of operators
+.Notations using arbitrary combinations of operators (((notation)))
 [%collapsible]
 ====
 [source]
@@ -249,7 +252,7 @@ A in B..C       is      A >= B and A <= C
 ----
 ====
 
-.Optimizations using specializations
+.Optimizations using specializations (((optimization)))
 [%collapsible]
 ====
 [source]
@@ -259,7 +262,7 @@ X + 0           is      X
 ----
 ====
 
-.Program structures
+.((Program structures))
 [%collapsible]
 ====
 [source]
@@ -268,7 +271,7 @@ loop Body       is      Body; loop Body
 ----
 ====
 
-.Types
+.Types ((type))
 [%collapsible]
 ====
 [source]
@@ -278,13 +281,13 @@ type cartesian  is      cartesian(re:number, im:number)
 type polar      is      polar(mod:number, arg:number)
 ----
 
-NOTE: link:#types[types] in XL indicate the shape of parse trees. In
+NOTE: link:#types[types] in XL indicate the shape of ((parse trees)). In
 other words, the `cartesian` type above will match any parse tree that
 takes the shape of the word `cartesian` followed by two numbers, like
 for example `cartesian(1,5)`.
 ====
 
-.Higher-order functions, i.e. functions that return functions
+.Higher-order functions, i.e. functions that return functions (((high-order function)))
 [%collapsible]
 ====
 [source]
@@ -320,7 +323,7 @@ However, this is not consistent with the rest of the language, and
 `lambda` will be required in future implementations.
 ====
 
-.Maps that associate a key to a value
+.Maps that associate a key to a value (((map)))
 [%collapsible]
 ====
 [source]
@@ -349,7 +352,7 @@ provide an efficient implementation, for example if all the indexes are
 contiguous integers.
 ====
 
-.Templates (C++ terminology) or generics (Ada terminology)
+.Templates (C++ terminology)(((templates))) or ((generics)) (Ada terminology) (((generic code)))
 [%collapsible]
 ====
 [source]
@@ -386,7 +389,7 @@ min 7, 42, 20, 8, 4, 5, 30
 In short, the single `is` operator covers all the kinds of declarations
 that are found in other languages, using a single, easy to read syntax.
 
-=== The ((standard library))
+=== The standard library
 
 Each programming languages offers a specific set of features, which are
 characteristic of that language. Most languages offer integer
@@ -395,14 +398,14 @@ loops, text manipulation (often called "strings"), but also
 programming constructs such as loops, tests, and so on.
 
 XL provides most features you are used to, but they are defined in the
-XL _((standard library))_, not by the compiler. The ((standard library)) is
+XL _((standard library))_, not by the compiler. The standard library is
 guaranteed to be present in all implementations and behave identically.
 However, it is written using only tools that are available to you as a
 developer.
 
-==== Definitions of control flow operations
+==== Avoiding built-in constructs
 
-For example, the _if statement_ in XL is defined in the ((standard library))
+For example, the _if statement_ in XL is defined in the standard library
 as follows:
 
 [source]
@@ -438,7 +441,7 @@ while N <> 1 loop
 ----
 
 NOTE: A value between two square brackets, as in `+[[true]]+` and
-`+[[false]]+`, is called a link:#metabox[metabox].
+`+[[false]]+`, is called a link:#metabox[((metabox))].
 It indicates that the pattern must match the actual values in the
 metabox. In other words, `+foo true is ...+` defines a pattern with a
 formal parameter named `true`, whereas `+foo [[true]] is ...+` defines a
@@ -447,15 +450,15 @@ pattern which only matches when the argument is equal to constant
 
 ==== The next natural evolutionary step
 
-Moving features to a library is a natural evolution for programming
-languages. Consider for example the case of text I/O operations. They
-used to be built-in for early languages such as BASIC’s `PRINT` or
-Pascal’s `WriteLn`, but they moved to the library in later languages
-such as C with `printf`. As a result, C has a much wider variety of I/O
-functions. The same observation can be made on text manipulation and
-math functions, which were all built-in in BASIC, but all implemented as
-library functions in C. For tasking, Ada has built-in construct, C has
-the `pthread` library. And so on.
+Moving ((features)) to a ((library)) is a natural evolution for
+programming languages. Consider for example the case of text I/O
+operations. They used to be ((built-in)) for ((early languages)) such
+as BASIC’s `PRINT` or Pascal’s `WriteLn`, but they moved to the
+library in later languages such as C with `printf`. As a result, C has
+a much wider variety of I/O functions. The same observation can be
+made on text manipulation and math functions, which were all built-in
+in BASIC, but all implemented as library functions in C. For ((tasking)),
+Ada has built-in construct, C has the `pthread` library. And so on.
 
 Yet, while C moved a very large number of things to libraries, it still
 did not go all the way. The meaning of `x+1` in C is defined strictly by
@@ -463,12 +466,13 @@ the compiler. So is the meaning of `x/3`, even if some implementations
 have to make a call to a library function to actually implement that
 code.
 
-C++ went one step further than C, allowing you to _overload_ operators,
-i.e. redefine the meaning of an operation like `X+1`, but only for
-custom data types, and only for already existing operators. In C++, you
-cannot _create_ the _spaceship operator_ `<=>` yourself. It has to be
-http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf[added to
-the language], and that takes a 35-pages article to discuss the
+pass:[C++] went one step further than C, allowing you to _((overload))_
+operators, i.e. redefine the meaning of an operation like `X+1`, but
+only for ((custom data types)), and only for already existing
+operators. In pass:[C++], you cannot _create_ the _spaceship operator_
+`<=>` yourself. It has to be
+http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf[added
+to the language], and that takes a 35-pages article to discuss the
 implications. By contrast, all it takes in XL to implement `<=>` in a
 variant that always returns `-1`, `0` or `1` is the following:
 
@@ -525,7 +529,7 @@ library in a later iteration of the language.
 possible to address bugs without breaking existing code, which can still
 use an earlier version of the library.
 
-The XL ((standard library)) consists of a link:../native/lib[wide variety of
+The XL standard library consists of a link:../native/lib[wide variety of
 modules]. The top-level module is called `XL`, and sub-modules are
 categorized in a hierarchy. For example, if you need to perform
 computations on complex numbers, you would `use XL.MATH.COMPLEX` to load
@@ -1959,8 +1963,8 @@ That result replaces `pi`, so that we now must evaluate `2 * 3.14`.
 The `2 * 3.14` tree does not match `X:real * Y:real` because `2` is an
 `integer` and not a `real`. It does not match `X:integer * Y:integer`
 either because `3.14` is a `real` and not an `integer`. However, the
-((standard library)) provides a definition of an _implicit conversion_ that
-looks something like this:
+((standard library)) provides a definition of an _((implicit conversion))_
+that looks something like this:
 
 [source]
 ----
@@ -5134,7 +5138,7 @@ example 3, Base
 
 == Basic operations
 
-== Modules
+== [[module]]Modules
 
 == ((Standard Library))
 
