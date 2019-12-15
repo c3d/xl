@@ -12,7 +12,6 @@ endif::[]
 ifndef::env-github[]
 :toc: left
 endif::[]
-:toc: left
 :toclevels: 6
 :toc-title:
 :source-highlighter: highlightjs
