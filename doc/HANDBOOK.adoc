@@ -549,17 +549,25 @@ implementation details were elided as `...`:
 
 [source]
 ----
-write X:text            as boolean      is ...
-write X:integer         as boolean      is ...
-write X:real            as boolean      is ...
-write X:character       as boolean      is ...
-write [[true]]                          is write "true"
+write X:text            as fallible     is ... # <1>
+write X:integer         as fallible     is ...
+write X:real            as fallible     is ...
+write X:character       as fallible     is ...
+write [[true]]                          is write "true" # <2>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
-print                   as boolean      is write SOME_NEWLINE_CHARACTER
+print                   as fallible     is write SOME_NEWLINE_CHARACTER
 print Items                             is write Items; print
 ----
+
+<1> The link:#fallible-types[fallible] type is used to represent
+    the `nil or error` type, in other words it indicates that the
+    function either returns nothing, or returns an error.
+
+<2> The `+[[true]]+` notation is called a link:#metabox[metabox],
+    and indicates that we must match the value of the expression
+    in the metabox, in that case, `true`.
 
 This is an example of _variadic function definition_ in XL. In other
 words, `print` can take a variable number of argument, much like
