@@ -29,7 +29,7 @@ creating a class in more traditional programming languages.
 This extensibility is demonstrated by the fact that operations that
 are built-in in other programming languages, such as integer
 arithmetic, basic types or loops, are part of the
-link:#standard-library[standard library] in XL.
+link:#standard-library[((standard library))] in XL.
 
 As a consequence of this extensibility, XL is intended to be suitable
 for programming tasks ranging from the simplest to the most complex,
@@ -66,7 +66,7 @@ really means three things:
 . As a validation of the concept, most features that are built-in in
   other programming languages, like the `while` loop, or integer
   arithmetic, are _constructed_ in XL. Specifically, they are provided by
-  the link:#the-standard-library[standard library], using techniques that
+  the link:#the-standard-library[((standard library))], using techniques that
   you, yourself, can use in your program. This, obviously, means that you
   can add your own loops, or your own machine-level data types, and even
   extend existing ones.
@@ -123,8 +123,9 @@ C++.
 
 ==== Factorial
 
-A program computing the factorial of numbers between 1 and 5, and then
-showing them on the console, can be written as follows:
+A program computing the https://en.wikipedia.org/wiki/Factorial[factorial]
+of numbers between 1 and 5, and then showing them on the console, can
+be written as follows:
 
 [source]
 ----
@@ -178,11 +179,14 @@ if you write `-3!`, because there is no definition that matches.
 === One operator to rule them all
 
 XL has a single fundamental operator, `is`, called the _definition
-operator_. You use it as follows: `Pattern is Implementation`, where
-`Pattern` is a program pattern, like `X+Y`, and `Implementation` is an
-implementation for that pattern, for example `Add X, Y`. This operator
-can be read as _transforms into_, i.e. it transforms the code that is on
-the left into the code that is on the right.
+operator_. It is an link:#infix[infix operator] with a
+link:#pattern[pattern] on the left and an
+link:#implementation[implementation] on the right. In other words,
+its pattern is `Pattern is Implementation`, where `Pattern` is a program
+pattern, like `X+Y`, and `Implementation` is an implementation for
+that pattern, for example `Add X, Y`. This operator can also be read as
+_transforms into_, i.e. it transforms the code that is on the left
+into the code that is on the right.
 
 This single operator can be used to define all kinds of entities.
 
@@ -382,7 +386,7 @@ min 7, 42, 20, 8, 4, 5, 30
 In short, the single `is` operator covers all the kinds of declarations
 that are found in other languages, using a single, easy to read syntax.
 
-=== The standard library
+=== The ((standard library))
 
 Each programming languages offers a specific set of features, which are
 characteristic of that language. Most languages offer integer
@@ -391,14 +395,14 @@ loops, text manipulation (often called "strings"), but also
 programming constructs such as loops, tests, and so on.
 
 XL provides most features you are used to, but they are defined in the
-XL _standard library_, not by the compiler. The standard library is
+XL _((standard library))_, not by the compiler. The ((standard library)) is
 guaranteed to be present in all implementations and behave identically.
 However, it is written using only tools that are available to you as a
 developer.
 
 ==== Definitions of control flow operations
 
-For example, the _if statement_ in XL is defined in the standard library
+For example, the _if statement_ in XL is defined in the ((standard library))
 as follows:
 
 [source]
@@ -505,7 +509,7 @@ highly-successful ancestors.
 
 ==== Benefits of moving features to a library
 
-Putting basic features in the standard library, as opposed to putting
+Putting basic features in the ((standard library)), as opposed to putting
 them in the compiler, has several benefits:
 
 [arabic]
@@ -521,7 +525,7 @@ library in a later iteration of the language.
 possible to address bugs without breaking existing code, which can still
 use an earlier version of the library.
 
-The XL standard library consists of a link:../native/lib[wide variety of
+The XL ((standard library)) consists of a link:../native/lib[wide variety of
 modules]. The top-level module is called `XL`, and sub-modules are
 categorized in a hierarchy. For example, if you need to perform
 computations on complex numbers, you would `use XL.MATH.COMPLEX` to load
@@ -667,7 +671,7 @@ every step, and can check that there is a matching `write` function.
 
 It is extensible, because additional definitions of `write` will be
 considered when evaluating `write Items`. For example, if you add a
-`complex` type similar to the one defined by the standard library, all
+`complex` type similar to the one defined by the ((standard library)), all
 you need for that type to become "writable" is to add a definition of
 `write` that looks like:
 
@@ -1129,9 +1133,9 @@ sense, it can be seen as an effort to make the power of Lisp more
 accessible. That being said, XL is quite a bit more than just Lisp with
 a new fancy and programmer-friendly syntax.
 
-==== The XL parse tree
+==== [[parse-tree]]The XL ((parse tree))
 
-The XL syntax is much _simpler_ than that of languages such as C, and
+The XL ((syntax)) is much _simpler_ than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
 link:../src/parser.cpp[parser] for XL is less than 800 lines of
 straightforward pass:[C++] code, and the link:../src/scanner.cpp[scanner]
@@ -1149,31 +1153,31 @@ there are no hard-coded keywords or special operators in the XL
 compiler.
 
 All XL programs can be represented with a very simple tree structure,
-called a _parse tree_. The XL parse tree contains four leaf node types
-(integer, real, text and name), and four inner node types (infix,
-prefix, postfix and block).
+called a _parse tree_. The XL parse tree contains four ((leaf node)) types
+(((integer)), ((real)), ((text)) and ((name))), and four ((inner node)) types
+(((infix)), ((prefix)), ((postfix)) and ((block))).
 
-Leaf nodes contain values that are atomic as far as XL is concerned:
+Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 
 [arabic]
-. `integer` nodes represent integer values like `1234`, `2#1001` or
+. [[integer]]`integer` nodes represent integer values like `1234`, `2#1001` or
 `16#FFFE_FFFF`.
-. `real` nodes represent floating-point values like `1.234`, `1.5e-10`
+. [[real]]`real` nodes represent floating-point values like `1.234`, `1.5e-10`
 or `2#1.0001_0001#e24`.
-. `text` nodes represent text values like `"Hello world"` or `'A'`.
-. `name` node represent names like `ABC_DEF` or symbols like `<=>`.
+. [[text]]`text` nodes represent text values like `"Hello world"` or `'A'`.
+. [[name]]`name` node represent names like `ABC_DEF` or symbols like `<=>`.
 
 Inner nodes contains combinations of other XL nodes:
 
 [arabic]
-. `infix` nodes represent two operands separated by a name or symbol,
+. [[infix]]`infix` nodes represent two operands separated by a name or symbol,
 like `A+B` or `X and Y`. Infix nodes with a "new line" name are used
 for separate program lines.
-. `prefix` nodes represent two nodes where the operand follows the
+. [[prefix]]`prefix` nodes represent two nodes where the operand follows the
 operator, like `+A` or `sin X`.
-. `postfix` nodes represent two nodes where the operator follows the
+. [[postfix]]`postfix` nodes represent two nodes where the operator follows the
 operand, like `3%` or `45km`.
-. `block` nodes represent a node surrounded by two delimiters, like
+. [[block]]`block` nodes represent a node surrounded by two delimiters, like
 `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
 
 NOTE: This list of node types is what the current implementations of XL
@@ -1266,7 +1270,7 @@ value. This limit cannot be less than the maximum value for a
 For real numbers, a dot `.` is used as decimal separator, and must
 separate digits. For example, `0.2` and `2.0` are valid but, unlike in
 C, `.2` and`2.` are not real numbers but a prefix and postifix dot
-respectively. Also note that the standard library denotes ranges using
+respectively. Also note that the ((standard library)) denotes ranges using
 two dots, so `2..3` is an infix `..` with `2` and `3` as operands,
 representing the range between 2 and 3.
 
@@ -1925,7 +1929,7 @@ case, that process needs to be repeated multiple times to complete the
 evaluation.
 
 If we apply the evaluation process with `2 * pi * Radius`, assuming the
-declarations in the link:#standard-library[standard library], no
+declarations in the link:#standard-library[((standard library))], no
 declaration has a larger pattern like `X * Y * Z` that could match the
 whole expression. However, there is a definition for a multiplication
 between `real` numbers, with a pattern that looks like `X:real *
@@ -1955,7 +1959,7 @@ That result replaces `pi`, so that we now must evaluate `2 * 3.14`.
 The `2 * 3.14` tree does not match `X:real * Y:real` because `2` is an
 `integer` and not a `real`. It does not match `X:integer * Y:integer`
 either because `3.14` is a `real` and not an `integer`. However, the
-standard library provides a definition of an _implicit conversion_ that
+((standard library)) provides a definition of an _implicit conversion_ that
 looks something like this:
 
 [source]
@@ -2023,7 +2027,7 @@ following:
 X:integer as real when X >= -2^53 and X < 2^53 is ...
 ----
 
-=== Pattern matching
+=== [[pattern]]Pattern matching
 
 As we have seen above, the key to execution in XL is _pattern matching_,
 which is the process of finding the declarations patterns that match a
@@ -2971,7 +2975,7 @@ count_vowels "Hello World" // Should return 3
 ----
 
 NOTE: This example is designed for illustration purpose only. It is not
-idiomatic XL, since the standard library provides useful tools. A better
+idiomatic XL, since the ((standard library)) provides useful tools. A better
 way to write it would be:
 
 ....
@@ -3572,11 +3576,11 @@ The notation `own T` above is an
 link:#ownership[owning type] that dynamically
 allocates an object from the heap.
 
-=== Interface and implementation
+=== [[interface]][[implementation]]Interface and implementation
 
 XL provides strong _encapsulation_ by allowing a programmer to hide
 irrelevant details of an implementation. This is fundamental to provide
-a robust link:HANDBOOK_6-modules.md[module system].
+a robust link:#modules[module system].
 
 All values in XL expose an _interface_, which define _what_ can be done
 with the value, and also have an _implementation_ of their interface to
@@ -3641,7 +3645,7 @@ The link:#declaration-phase[declarations] must specify the interface of
 the values being used, but they need not specify the implementation. A
 definitions of the value must be provided at some point that matches the
 declaration and specifies an implementation, but that definition may be
-link:HANDBOOK_6-modules.md[in a different source file].
+link:#modules[in a different source file].
 
 NOTE: *RATIONALE* In languages such as pass:[C++], some members of a class can be
 made _private_ or _protected_. This restricts their usage, but the
@@ -3657,11 +3661,6 @@ and an implementation must be able to generate code that does not depend
 on the implementation when the situation requires it, for example if the
 implementation may be in a different shared library than the code using
 the interface.
-
-'''''
-
-Previous: link:HANDBOOK_1-syntax.md[Syntax] Next:
-link:HANDBOOK_3-types.md[Type System]
 
 == Types
 
@@ -4016,7 +4015,7 @@ X:complex + Y:complex as complex    is ...
 ----
 
 A type implementation may be _hidden_ in a
-link:HANDBOOK_6-modules.md[module interface], in which case the module
+link:#modules[module interface], in which case the module
 interface should also provide some functions to create elements of the
 type. The following example illustrates this for a `file` interface
 based on Unix-style file descriptors:
@@ -4371,7 +4370,7 @@ controlled resource, that acquired the resource at construction time,
 and will release it at destruction time. It may be possible to release
 the owned resource early using `delete Value`.
 
-The link:HANDBOOK_7-standard-library.md[standard library] provides a
+The link:#standard-library[((standard library))] provides a
 number of types intended to own common classes of resources, including:
 
 * An `array`, a `buffer` and a `string` all own a contiguous sequence of
@@ -4434,7 +4433,7 @@ known as _buffer overflows_, which contribute in no small part to the
 well-deserved reputation of C as being a language that offers no memory
 safety whatsoever.
 
-The link:HANDBOOK_7-standard-library.md[standard library] provides a
+The link:#standard-library[((standard library))] provides a
 number of types intended to access common owner types, including:
 
 * A `slice` can be used to access range of items in contiguous
@@ -4821,7 +4820,7 @@ operator-like notations, like `pointer to T`.
 
 === Standard type expressions
 
-A number of type expressions are provided by the standard library. The
+A number of type expressions are provided by the ((standard library)). The
 most common and useful ones are:
 
 * `nil` is a type that contains a single value, `nil`, which evaluates
@@ -5060,7 +5059,7 @@ Arguments. It could also switch back and forth between polar and
 cartesian form based on actual field accesses, and have an
 implementation that looks like: type complex is either cartesian
 Re:real, Im:real polar Modulus:real, Argument:real The latter is closer
-to how the type is actually implemented in the standard library */
+to how the type is actually implemented in the ((standard library)) */
 
 use BITWISE, MEMORY, TEXT, BOOLEAN
 
@@ -5137,7 +5136,7 @@ example 3, Base
 
 == Modules
 
-== Standard Library
+== ((Standard Library))
 
 == History of XL
 
@@ -5212,7 +5211,7 @@ included:
 
 * Giving up on superfluous syntactic markers such as terminating
 semi-colon.
-* Using generics to write standard library component such as arrays or
+* Using generics to write ((standard library)) component such as arrays or
 I/O facilities.
 * Making the compiler an integral part of the language, which led to…
 * Having a normalised abstract syntax tree, and…
@@ -5319,7 +5318,7 @@ language, but there’s no way I will use a language with `begin` and
 transition of Pascal to C, some still wondering how C won.
 
 I was initially quite skeptical, and reluctantly tried an
-indentation-based syntax on a fragment of the XL standard library. As
+indentation-based syntax on a fragment of the XL ((standard library)). As
 soon as I tried it, however, the benefits immediately became apparent.
 It was totally consistent with a core tenet of concept programming that
 I was in the process of developing (see below), namely that the code
@@ -5442,7 +5441,7 @@ exactly like the Pascal `WriteLn`. I see them as a distant ancestor of
 variadic templates in pass:[C++]11, although like for concepts, it is hard to
 tell if variadic templates are a later reinvention of the idea, or if
 something of my e-mails influenced members of the pass:[C++] committee.
-* A powerful standard library was in the making. Not quite there yet,
+* A powerful ((standard library)) was in the making. Not quite there yet,
 but the key foundations were there, and I felt it was mostly a matter of
 spending the time writing it.
 link:../xl2/native/library/xl.math.complex.xl[My implementation of
@@ -5489,7 +5488,7 @@ types. I sometimes refer to that level of XL as ``__XML without the
 M__'', i.e. an extensble language without markup.
 * `XL1` was the core language evaluation rules, not taking any library
 into account.
-* `XL2` was the full language, including its standard library. At the
+* `XL2` was the full language, including its ((standard library)). At the
 time, the goal was to reconstruct a language that would be as close as
 possible at the version of XL written using the Mozart framework.
 
@@ -6004,7 +6003,7 @@ implementation or design. Notably, the type system was quickly
 retrofitted in the document. Also, the TexMacs document was monolithic,
 and not easy to convert to a web format.
 
-So after a while, I decided to link:HANDBOOK.md[rewrite the
+So after a while, I decided to link:#introduction-to-xl[rewrite the
 documentation in markdown]. This led me to crystalize decisions about a
 few things that have annoyed me in the previous definition, in
 particular:
@@ -6099,3 +6098,9 @@ It is unclear if I will be able to do that while at the same time
 working on my job at Red Hat and on various other little projects such
 as `make-it-quick` or `recorder` (which are themselves off-shoots of XL
 development).
+
+
+ifndef::backend-html5[]
+[index]
+== Index
+endif::[]
