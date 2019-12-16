@@ -5,7 +5,7 @@
 > for any serious programming. Examples given below may sometimes simply not
 > work. Take it as a painful reminder that the work is far from finished,
 > and, who knows, as an idea for a contribution.
-> See [HISTORY](doc/HISTORY.md) for how we came to the present mess, and
+> See [HISTORY](docs/HANDBOOK.adoc#history) for how we came to the present mess, and
 > [Compiler Status](#compiler-status) for information about what is
 > expected to work.
 
@@ -40,11 +40,12 @@ in XL than adding a function, and it uses the same syntax.
 * [Subtelty #3: Delayed evaluation](#subtlety-3-delayed-evaluation)
 * [Subtelty #4: Closures](#subtlety-4-closures)
 
-For more information, please consult the [XL handbook](doc/HANDBOOK.html),
-also available in [asciidoc format](doc/HANDBOOK.adoc) and
-[PDF format](doc/HANDBOOK.pdf)
+For more information, please consult the [XL handbook](docs/HANDBOOK.html),
+also available in [asciidoc format](docs/HANDBOOK.adoc) and
+[PDF format](docs/HANDBOOK.pdf)
 
-**WARNING** This is work in progress.
+**WARNING** This documentation, like the compiler, is work in progress
+and presently extremely messy, incomplete and inaccurate.
 
 
 ## A few simple examples
@@ -563,7 +564,7 @@ So now that's it, right? Well... No.
 
 You see, the current XL started life as a "runtime" language
 for the "real" XL. The original XL looked more like Ada,
-and had very different type semantics. See [HISTORY](doc/HISTORY.md)
+and had very different type semantics. See [HISTORY](docs/HANDBOOK/md#history)
 for all the gory details. Suffice it to say here that this
 compiler resides in the `xl2` directory (because, yes, it was
 already version 2 of the language). One reason for me to keep
