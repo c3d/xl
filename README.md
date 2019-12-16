@@ -565,7 +565,8 @@ So now that's it, right? Well... No.
 
 You see, the current XL started life as a "runtime" language
 for the "real" XL. The original XL looked more like Ada,
-and had very different type semantics. See [HISTORY](docs/HANDBOOK/md#history)
+and had very different type semantics.
+See [HISTORY](docs/HANDBOOK.adoc#history)
 for all the gory details. Suffice it to say here that this
 compiler resides in the `xl2` directory (because, yes, it was
 already version 2 of the language). One reason for me to keep

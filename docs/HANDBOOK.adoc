@@ -17,6 +17,7 @@ endif::[]
 :source-highlighter: highlightjs
 :source-language: xl
 :highlightjsdir: highlight
+:xl: http://github.com/c3d/xl/blob/master/
 
 XL is an extensible programming language, designed to accomodate a
 variety of programming needs with ease.
@@ -35,7 +36,7 @@ As a consequence of this extensibility, XL is intended to be suitable
 for programming tasks ranging from the simplest to the most complex,
 from documents and application scripting, as illustrated by
 https://tao3d.sf.net[Tao3D], to compilers, as illustrated by the XL2
-link:../xl2/native[self-compiling compiler] to distributed
+link:{xl}xl2/native[self-compiling compiler] to distributed
 programming, as illustrated by https://github.com/c3d/elfe[ELFE].
 
 WARNING: XL is a work in progress. Even if there are some bits and
@@ -46,7 +47,7 @@ repository is presently not suitable for any serious
 programming. Examples given below may sometimes simply not work. Take
 it as a painful reminder that the work is far from finished, and, who
 knows, as an idea for a contribution. See link:#history-of-xl[HISTORY]
-for how we came to the present mess. The link:../README.md[README]
+for how we came to the present mess. The link:{xl}README.md[README]
 gives a quick overview of the language.
 
 toc::[]
@@ -123,7 +124,7 @@ What is more interesting, though, is the definition of `print`. That
 definition is link:#the-case-of-text-input-output-operations[discussed
 below], and you will see that it is quite simple, in particular when
 compared with similar input/output operations in languages such
-as pass:[[C++]].
+as pass:[C++].
 
 ==== Factorial
 
@@ -543,14 +544,14 @@ them in the compiler, has several benefits:
   address ((bug))s without breaking existing code, which can still use
   an earlier version of the library.
 
-The XL standard library consists of a link:../native/lib[wide variety of
+The XL standard library consists of a link:{xl}native/lib[wide variety of
 modules]. The top-level ((module)) is called `XL`, and sub-modules are
 categorized in a hierarchy(((hierarchy,modules))). For example, if you
 need to perform computations on (((complex number)))s, you would `use
 XL.MATH.COMPLEX` to load the
-link:../native/lib/xl/math/complex.xs[complex numbers module]
+link:{xl}native/lib/xl/math/complex.xs[complex numbers module]
 
-The link:../src/builtins.xl[library builtins] is a list of definitions
+The link:{xl}src/builtins.xl[library builtins] is a list of definitions
 that are accessible to any XL program without any explicit `use`
 statement. This includes most features that you find in languages such
 as C, for example integer arithmetic or loops. Compiler options make it
@@ -975,7 +976,7 @@ relevant program fragments and the associated data over the wire for
 ((remote evaluation)).
 
 NOTE: ELFE is now integrated as part of XL, and the ELFE demos are
-stored in the link:../demo[demo] directory of XL.
+stored in the link:{xl}demo[demo] directory of XL.
 
 This was achieved by adding only four relatively simple XL functions:
 
@@ -989,7 +990,7 @@ This was achieved by adding only four relatively simple XL functions:
   original caller’s context, but with access to all the local variables
   declared by the remote.
 
-Consider the link:../demo/7-two-hops.xl[following program]:
+Consider the link:{xl}demo/7-two-hops.xl[following program]:
 
 [source]
 ----
@@ -1169,8 +1170,8 @@ a new fancy and programmer-friendly syntax.
 
 The XL ((syntax)) is much _simpler_ than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
-link:../src/parser.cpp[parser] for XL is less than 800 lines of
-straightforward pass:[C++] code, and the link:../src/scanner.cpp[scanner]
+link:{xl}src/parser.cpp[parser] for XL is less than 800 lines of
+straightforward pass:[C++] code, and the link:{xl}src/scanner.cpp[scanner]
 barely adds another 900 lines. By contrast, the
 https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c[C parser]
 in GCC needs more than 20000 lines of code, which is about the size of a
@@ -1180,7 +1181,7 @@ parser] is over twice as much!
 
 A key to keeping things really simple is that the XL syntax is
 _dynamic_. Available operators and their precedence are _configured_
-primarily through a link:../src/xl.syntax[syntax file]. As a result,
+primarily through a link:{xl}src/xl.syntax[syntax file]. As a result,
 there are no hard-coded keywords or special operators in the XL
 compiler.
 
@@ -1447,7 +1448,7 @@ loop
 ==== Operator precedence and associativity
 
 The operators available for XL programmers are defined by the
-link:../src/xl.syntax[syntax file]. The same rules apply for names or
+link:{xl}src/xl.syntax[syntax file]. The same rules apply for names or
 for symbols. The table given in this file uses keywords such as `INFIX`,
 `PREFIX` and `POSTFIX` to indicate if an operator is an infix, a prefix,
 or a postfix respectively.
@@ -1527,8 +1528,8 @@ parentheses `( )` or square brackets `[ ]` will contain expressions.
 A syntax file can define a child syntax file, which overrides the syntax
 when a given name or symbol is found.
 
-The link:../src/xl.syntax[default syntax file] contains a
-link:../src/C.syntax[child syntax] named `C` which is activated between
+The link:{xl}src/xl.syntax[default syntax file] contains a
+link:{xl}src/C.syntax[child syntax] named `C` which is activated between
 the `extern` name and a following semi-colon `;`. This is used to
 approximate C-style parsing for extern declarations, making it easier to
 reference C code from XL:
@@ -1545,7 +1546,7 @@ relatively simple function declarations.
 ==== Extending the syntax
 
 The `syntax` name followed by a block can be used to alter the default
-syntax provided by the link:../src/xl.syntax[syntax file]. Within the
+syntax provided by the link:{xl}src/xl.syntax[syntax file]. Within the
 block, operators can be defined and their precedence given using the
 link:#operator-precedence-and-associativity[same rules] as in the syntax
 file.
@@ -1708,7 +1709,7 @@ called link:#caller-lookup[_caller lookup_].
 
 The parsing phase reads source text and turns it into a parse tree using
 operator spelling and precedence information given in the
-link:../src/xl.syntax[syntax file]. This results either in a parse-time
+link:{xl}src/xl.syntax[syntax file]. This results either in a parse-time
 error, or in a faithful representation of the source code as a parse
 tree data structure that can be used for program evaluation.
 
@@ -1737,7 +1738,7 @@ link:#modules[chapter about modules].
 link:#child-syntax[child syntax]: symbols that
 activate a child syntax are recognized during parsing. This is the case
 for example with the `extern` name in the
-link:../src/xl.syntax#L62[default syntax].
+link:{xl}src/xl.syntax#L62[default syntax].
 . Identifying binary data: words such as `bits` marked as introducing
 `BINARY` data in the syntax file are treated specially during parsing,
 to generate parse tree nodes representing binary data. > NOTE: this is
@@ -3267,7 +3268,7 @@ such implicit parameters would be possible depending on usage (graphics
 state, window state, etc)
 
 A second use case was also found in XL2 when looking up
-link:../xl2/native/TESTS/10.Generics/any_lookup.xl[generic code], and
+link:{xl}xl2/native/TESTS/10.Generics/any_lookup.xl[generic code], and
 plays the role of
 https://en.wikipedia.org/wiki/Argument-dependent_name_lookup[Koenig
 lookup] in pass:[C++], i.e. make it possible to access code in the caller’s
@@ -5176,7 +5177,7 @@ example 3, Base
 
 == History of XL
 
-The status of the current XL compiler is link:../#compiler-status[a bit
+The status of the current XL compiler is link:{xl}#compiler-status[a bit
 messy]. There is a rationale to this madness. I attempt to give it here.
 
 There is also a
@@ -5277,7 +5278,7 @@ processors. That table, when pointing to procedures written in XL, would
 make writing new language extensions really easy. Or so I thought.
 
 Ultimately, I would make it work. If you are curious, you can see the
-link:../xl2/native/xl.semantics.instructions.xl#L629[grand-child of that
+link:{xl}xl2/native/xl.semantics.instructions.xl#L629[grand-child of that
 idea] in the `translation` statements under `xl2/`. But that was way
 beyond what I had initially envisionned, and the approach in the first
 XL compiler did not quite work. I will explain why soon below.
@@ -5294,7 +5295,7 @@ expanded value. For example, `{derivation} d(X+sin(X))/dX` would
 generate code that looked like `1 + cos(X)`.
 
 If you are curious what this may look like, there are still
-link:../xl2/native/TESTS/07.Plugins[tests in the XL2 test suite] using a
+link:{xl}xl2/native/TESTS/07.Plugins[tests in the XL2 test suite] using a
 very similar feature and syntax.
 
 === LX, meet Xroma
@@ -5480,7 +5481,7 @@ something of my e-mails influenced members of the pass:[C++] committee.
 * A powerful ((standard library)) was in the making. Not quite there yet,
 but the key foundations were there, and I felt it was mostly a matter of
 spending the time writing it.
-link:../xl2/native/library/xl.math.complex.xl[My implementation of
+link:{xl}xl2/native/library/xl.math.complex.xl[My implementation of
 complex numbers], for example, was
 http://mozart-dev.sourceforge.net/news.html#complex[70% faster than pass:[C++]
 on] simple examples, because it allowed everything to be in registers
@@ -5593,36 +5594,36 @@ The XL2 compiler advanced to the point where it could pass a fairly
 large number of complex tests, including practically all the things that
 I wanted to address in Ada:
 
-* Pragmas implemented as link:../xl2/native/TESTS/07.Plugins[compiler
+* Pragmas implemented as link:{xl}xl2/native/TESTS/07.Plugins[compiler
 plug-ins].
 * Expression reduction
-link:../xl2/native/TESTS/05.Expressions/multi-reduction.xl[generalising
+link:{xl}xl2/native/TESTS/05.Expressions/multi-reduction.xl[generalising
 operator overloading].
 * An I/O library that was
 link:xl2/native/TESTS/12.Library/hello_world.xl[as usable as in Pascal],
-but link:../xl2/native/library/xl.text_io.xl[written in the language]
+but link:{xl}xl2/native/library/xl.text_io.xl[written in the language]
 and
-link:../xl2/native/TESTS/12.Library/instantiation_of_complex.xl#L8[user-extensible].
+link:{xl}xl2/native/TESTS/12.Library/instantiation_of_complex.xl#L8[user-extensible].
 * A language powerful enough to define its own
-link:../xl2/native/library/xl.array.xs[arrays] or
-link:../xl2/native/library/xl.pointer.address.xs[pointers], while
+link:{xl}xl2/native/library/xl.array.xs[arrays] or
+link:{xl}xl2/native/library/xl.pointer.address.xs[pointers], while
 keeping them exactly
-link:../xl2/native/TESTS/08.Aggregates/basic-array.xl[as usable as
+link:{xl}xl2/native/TESTS/08.Aggregates/basic-array.xl[as usable as
 built-in types].
 
 === XL2 compiler plugins
 
-XL2 has link:../xl2/native/TESTS/07.Plugins[full support for compiler
+XL2 has link:{xl}xl2/native/TESTS/07.Plugins[full support for compiler
 plug-ins], in a way similar to what had been done with Mozart. However,
 plug-ins were much simpler to develop and maintain, since they had to
 deal with a very simple parse tree structure.
 
 For example, the
-link:../xl2/native/xl.plugin.differentiation.xl[differentiation plugin]
+link:{xl}xl2/native/xl.plugin.differentiation.xl[differentiation plugin]
 implements symbolic differentiation for common functions. It is tested
-link:../xl2/native/TESTS/07.Plugins/differentiation.xl#L33[here]. The
+link:{xl}xl2/native/TESTS/07.Plugins/differentiation.xl#L33[here]. The
 generated code after applying the plugin would
-link:../xl2/native/TESTS/07.Plugins/differentiation_cmd_line.ref[look
+link:{xl}xl2/native/TESTS/07.Plugins/differentiation_cmd_line.ref[look
 like this]. The plugin itself is quite simple. It simply applies basic
 mathematical rules on parse trees. For example, to perform symbolic
 differentiation on multiplications, the code looks like this:
@@ -5669,10 +5670,10 @@ phases in the compiler, and can be used a regular functions taking a
 tree as input and returning the modified tree.
 
 This approach made it possible to distribute `translation XLDeclaration`
-statements link:../xl2/native/xl.semantics.functions.xl#L371[throughout
+statements link:{xl}xl2/native/xl.semantics.functions.xl#L371[throughout
 the compiler], dealing with declaration of various entities, with
 matching `translation XLSemantics` took care of
-link:../xl2/native/xl.semantics.functions.xl#L557[the later semantics
+link:{xl}xl2/native/xl.semantics.functions.xl#L557[the later semantics
 analysis phase].
 
 Writing code this way made it quite easy to maintain the compiler over
@@ -5894,9 +5895,9 @@ executing.
 whoever `invoke`‘d it, by evaluating one of the available functions in
 the caller’s context.
 
-A few very simple link:../demo[ELFE demos] illustrate these
+A few very simple link:{xl}demo[ELFE demos] illustrate these
 remote-control capabilities. For example, it’s easy to
-link:../demo/7-two-hops.xl[monitor temperature] on two remote sensor
+link:{xl}demo/7-two-hops.xl[monitor temperature] on two remote sensor
 nodes, and to ask them to report if their temperatures differ by more
 than some specified amount. The code is very short and looks like this:
 
