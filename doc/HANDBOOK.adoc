@@ -1098,7 +1098,7 @@ to the basic XL evaluation rules. In other words, adding something as
 sophisticated as transparently distributed progrmming to XL can be done
 by practically any programmer, without changing the compiler.
 
-
+[[syntax]]
 == XL syntax
 
 For programmers familiar with other programming language, the syntax of
