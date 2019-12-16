@@ -533,7 +533,7 @@ them in the compiler, has several benefits:
   large number of behaviors and to address ((special case))s.
 . Clarity(((clarity,library))): The definition given in the library gives a very clear and
   machine-verifiable description of the operation.
-. Extensibility(((extensibity,library))): If the library definition is
+. Extensibility(((extensibility,library))): If the library definition is
   not sufficient, it is possible to add what you need. It will behave
   exactly as what is in the library. If it proves useful enough, it
   may even make it to the standard library in a later iteration of the
