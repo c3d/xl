@@ -40,7 +40,8 @@ in XL than adding a function, and it uses the same syntax.
 * [Subtelty #3: Delayed evaluation](#subtlety-3-delayed-evaluation)
 * [Subtelty #4: Closures](#subtlety-4-closures)
 
-For more information, please consult the [XL handbook](https://c3d.github.io/xl),
+For more information, please consult the
+[XL handbook](https://c3d.github.io/xl/HANDBOOK.html),
 also available in [asciidoc format](docs/HANDBOOK.adoc) and
 [PDF format](docs/HANDBOOK.pdf)
 
