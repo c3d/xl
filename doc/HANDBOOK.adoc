@@ -703,7 +703,10 @@ write Z:complex     is write "(", Z.Re, ";", Z.Im, ")"
 Unlike the pass:[C++] `iostream` facility, the XL compiler will naturally emit
 less code. In particular, it will need only one function call for every
 call to `print`, calling the generated function for the given
-combination of arguments.
+combination of arguments. That function will in turn call other
+generated functions, but the code sequence corresponding to a
+particular sequence of arguments will be factored out between all the
+call sites, minimizing ((code bloat)).
 
 Additionally, the approach used in XL makes it possible to offer
 specific features for output lines, for example to ensure that a single
