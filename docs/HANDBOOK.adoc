@@ -17,6 +17,7 @@ endif::[]
 :source-highlighter: highlightjs
 :source-language: xl
 :highlightjsdir: highlight
+:icons: font
 :xl: http://github.com/c3d/xl/blob/master/
 
 XL is an extensible programming language, designed to accomodate a

@@ -436,6 +436,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 #footer-text{color:rgba(0,0,0,.6);font-size:.9em}}
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body class="book toc2 toc-left">
 <div id="header">
@@ -678,7 +679,7 @@ programming, as illustrated by <a href="https://github.com/c3d/elfe">ELFE</a>.</
 <table>
 <tr>
 <td class="icon">
-<div class="title">Warning</div>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 XL is a work in progress. Even if there are some bits and
@@ -967,7 +968,7 @@ type polar      is      polar(mod:number, arg:number)</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <a href="#types">types</a> in XL indicate the shape of parse trees. In
@@ -1007,7 +1008,7 @@ functional languages, although the way it actually works internally is
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The current implementations of XL special-case single-defintion
@@ -1132,24 +1133,25 @@ library as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">if [[true]]  then TrueClause else FalseClause   is TrueClause   // <b class="conum">(1)</b>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">if [[true]]  then TrueClause else FalseClause   is TrueClause   <i class="conum" data-value="1"></i><b>(1)</b>
 if [[false]] then TrueClause else FalseClause   is FalseClause
 if [[true]]  then TrueClause                    is TrueClause
 if [[false]] then TrueClause                    is false</code></pre>
 </div>
 </div>
 <div class="colist arabic">
-<ol>
-<li>
-<p>A value between two square brackets, as in <code>[[true]]</code> and
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A value between two square brackets, as in <code>[[true]]</code> and
 <code>[[false]]</code>, is called a <a href="#metabox">metabox</a>.
 It indicates that the pattern must match the actual values in the
 metabox. In other words, <code>foo true is ...</code> defines a pattern with a
 formal parameter named <code>true</code>, whereas <code>foo [[true]] is ...</code> defines a
 pattern which only matches when the argument is equal to constant
-<code>true</code>.</p>
-</li>
-</ol>
+<code>true</code>.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Similarly, the <code>while</code> loop is defined as follows:</p>
@@ -1319,11 +1321,11 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as fallible     is ...                  // See <b class="conum">(1)</b>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as fallible     is ...                  // See <i class="conum" data-value="1"></i><b>(1)</b>
 write X:integer         as fallible     is ...
 write X:real            as fallible     is ...
 write X:character       as fallible     is ...
-write [[true]]                          is write "true"         // See <b class="conum">(2)</b>
+write [[true]]                          is write "true"         // See <i class="conum" data-value="2"></i><b>(2)</b>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
@@ -1332,18 +1334,20 @@ print Items                             is write Items; print</code></pre>
 </div>
 </div>
 <div class="colist arabic">
-<ol>
-<li>
-<p>The <a href="#fallible-types">fallible</a> type is used to represent
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The <a href="#fallible-types">fallible</a> type is used to represent
 the <code>nil or error</code> type, in other words it indicates that the
-function either returns nothing, or returns an error.</p>
-</li>
-<li>
-<p>The <code>[[true]]</code> notation is called a <a href="#metabox">metabox</a>,
+function either returns nothing, or returns an error.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The <code>[[true]]</code> notation is called a <a href="#metabox">metabox</a>,
 and indicates that we must match the value of the expression
-in the metabox, in that case, <code>true</code>.</p>
-</li>
-</ol>
+in the metabox, in that case, <code>true</code>.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>This is an example of <em>variadic function definition</em> in XL. In
@@ -1773,7 +1777,7 @@ remote evaluation.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 ELFE is now integrated as part of XL, and the ELFE demos are
@@ -1917,7 +1921,7 @@ report_stats Count, T, Min, Max, Avg is
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The definitions of <code>min</code>, <code>max</code>, <code>sum</code> and <code>count</code> would not be
@@ -2108,7 +2112,7 @@ operand, like <code>3%</code> or <code>45km</code>.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 This list of node types is what the current implementations of XL
@@ -2177,7 +2181,7 @@ represent distinct machine types.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Empty blocks are represented as a block with an "empty name" as
@@ -2263,7 +2267,7 @@ constant is spelled as <code>16#FF_FF</code> or as <code>65535</code>.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 One unsatisfactory aspect of XL number syntax is that it does not
@@ -2291,7 +2295,7 @@ not.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The current implementation reads its input in Unicode UTF-8
@@ -2313,7 +2317,7 @@ presently a valid XL name, and this is considered a bug.
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 For historical reasons, the current implementations are quite
@@ -2383,7 +2387,7 @@ END_HTML</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> The reason for a built-in format for text using single or
@@ -2566,7 +2570,7 @@ reference C code from XL:</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The so-called "C syntax" in XL is only a very crude and limited
@@ -2601,7 +2605,7 @@ write:</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Extending the syntax is intended to also work also in a module.
@@ -2743,7 +2747,7 @@ one.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Reasonably efficient compilers were produced for earlier
@@ -2793,7 +2797,7 @@ examples and are assumed to be inherited from earlier execution.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 By default, the context of the caller is not visible to the
@@ -2867,7 +2871,7 @@ must always be evaluated at compile-time.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> An alternative would have been to allow computed <code>use</code>
@@ -3228,7 +3232,7 @@ the result of executing the entire program.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The <a href="#standard-library">standard XL library</a> only provides
@@ -3318,7 +3322,7 @@ expressions.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 This case only applies to names, not to operators. You cannot
@@ -3375,7 +3379,7 @@ occurs on the matched argument.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 This case only applies to names, not to operators. You cannot
@@ -3613,7 +3617,7 @@ is said to be <em>split</em> to match the parameters.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 A very common idiom is to use comma <code>,</code> infix to separate
@@ -3910,7 +3914,7 @@ JohnDoe is create_person
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 This rule is a bit uncertain: the effect on readability seems
@@ -3955,7 +3959,7 @@ declaration matches if it matches the whole shape of the tree.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Historically, the <a href="#bootstrapping-xl">XL2</a>
@@ -4019,7 +4023,7 @@ fib N   is (fib(N-1) + fib(N-2))</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Parentheses are required around the
@@ -4153,7 +4157,7 @@ if shape1 intersects shape2 then    // selects the right combination
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Type-based dynamic dispatch is relatively similar to the notion
@@ -4536,7 +4540,7 @@ binding for <code>Z</code>.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> These rules are not just optimizations. They are necessary
@@ -4635,7 +4639,7 @@ count_vowels "Hello World" // Should return 3</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 This example is designed for illustration purpose only. It is not
@@ -4885,7 +4889,7 @@ foo 3                           // Returns 45</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Warning</div>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 This feature is only under consideration after a couple of
@@ -4939,7 +4943,7 @@ inner A:text is
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> The first use-case that was "discovered" using Tao3D was
@@ -4991,7 +4995,7 @@ X += 7              // Now X contains value 12</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The <code>:=</code> operator (and only that operator) is a <em>variable
@@ -5046,7 +5050,7 @@ more details <a href="#binding">in the next chapter</a>.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> For simple types such as arithmetic types, an assignment
@@ -5087,7 +5091,7 @@ apply my_function, 1        // Error: Nothing called 'my_function'</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> One reason for that choice is that
@@ -5230,7 +5234,7 @@ Double error is Error: Square root of error: Square root of negative real -1.0</
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 As the code above illustrates, <code>print</code> and <code>write</code> are examples
@@ -5312,7 +5316,7 @@ shorter and more idiomatic way as follows:</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 This may look like exception handling, and intentionally so.
@@ -5489,7 +5493,7 @@ declaration and specifies an implementation, but that definition may be
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> In languages such as C++, some members of a class can be
@@ -5659,7 +5663,7 @@ precise number of bits.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 It is likely that all these types will not be visible by default,
@@ -5807,7 +5811,7 @@ It is said to be <em>dead</em> otherwise.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Some entities may be live but not accessible from within the
@@ -6018,7 +6022,7 @@ module MY_FILE is
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> This mechanism is similar to <em>elaboration</em> in Ada or to
@@ -6062,7 +6066,7 @@ process.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> In XL, multiple patterns can match a given value. It might
@@ -6207,7 +6211,7 @@ kind of error handling:</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> By returning an <code>error</code> for failure conditions, XL forces
@@ -6338,7 +6342,7 @@ since <code>Person</code> is a constant value.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 In the case (3) above, modifying a <code>text</code> value through an access
@@ -6372,7 +6376,7 @@ has the same value for all iterations of <code>I</code></p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> There is no syntactic difference between a constant and a
@@ -6533,7 +6537,7 @@ pointers.</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The C language worked around the limitation that pointers access
@@ -6682,7 +6686,7 @@ defined as follows:</p>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The <code>bits</code> subtypes are intended to specify the bit size of the
@@ -7048,7 +7052,7 @@ type complex32 is complex[real32]</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 Type expressions play for XL the role that "class templates"
@@ -7121,7 +7125,7 @@ D * D     // Error: Cannot multiply distances</pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The code above is incomplete, since <code>distance</code> would inherit
@@ -8260,7 +8264,7 @@ if false then TrueBody                  is false</code></pre>
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 the above code now requires a <a href="#metabox">metabox</a> for <code>true</code> in
@@ -8297,7 +8301,7 @@ for Var in Low..High loop Body is
 <table>
 <tr>
 <td class="icon">
-<div class="title">Note</div>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
 The fact that such structures can be implemented in the library
@@ -8779,7 +8783,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-16 10:04:07 +0100
+Last updated 2019-12-16 10:22:09 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
