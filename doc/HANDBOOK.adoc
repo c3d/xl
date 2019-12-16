@@ -555,7 +555,7 @@ in which case you need to build everything from scratch.
 
 ==== The case of text input / output operations
 
-Input/output operations (often abbreviated as I/O) are a fundamental
+Input/output(((input/output))) operations (often abbreviated as ((I/O))) are a fundamental
 brick in most ((programming language))s. In general, I/O operations are
 somewhat complex. If you are curious, the source code for the venerable
 `printf` function in C is
@@ -588,9 +588,9 @@ print Items                             is write Items; print
     and indicates that we must match the value of the expression
     in the metabox, in that case, `true`.
 
-This is an example of _variadic function definition_ in XL. In other
-words, `print` can take a variable number of argument, much like
-`printf` in C. You can write multiple comma-separated items in a
+This is an example of _((variadic function)) definition_ in XL. In
+other words, `print` can take a ((variable number of arguments)), much
+like `printf` in C. You can write multiple comma-separated items in a
 `print`. For example, consider the following code:
 
 [source]
