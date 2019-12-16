@@ -1493,7 +1493,7 @@ forms: either a very large integer constant in big-endian format, as in
 * `NEWLINE` is used to represent the infix operators that separates
 individual source code lines.
 * `STATEMENT` is the precedence that delimits
-link:#tweak-1-expression-vs-statement[expressions from statements]. Any
+link:#expression-vs-statement[expressions from statements]. Any
 operator with a lower precedence belongs to a statement, like `if` or
 `loop`. Any operator with a higher precedence belongs to an expression,
 like `+` or `*`.
@@ -1573,7 +1573,7 @@ XL contains a couple of tweaks designed specifically to make code easier
 to read or write by humans. When the human logic is subtle, so is the XL
 compiler parsing…
 
-==== Tweak #1: expression vs. statement
+==== Expression vs. statement
 
 This first tweak is intended to put in XL an implicit grammatical
 grouping that humans apparently do. Consider for example the following:
@@ -1618,7 +1618,7 @@ the body as `(exp X - 1)`. Generally, when you see statements between
 parentheses in XL, it is to indicate that they are expression
 statements.
 
-==== Tweak #2: infix vs. prefix
+==== infix vs. prefix
 
 Another special rule is that XL will use the presence of a space on only
 one side of an operator to disambiguate between an infix or a prefix.
@@ -2498,7 +2498,7 @@ fib N   is (fib(N-1) + fib(N-2))
 ----
 
 NOTE: Parentheses are required around the
-link:#tweak-1-expression-vs-statement[expressions
+link:#expression-vs-statement[expressions
 statements] in the last declaration in order to parse this as the
 addition of `fib(N-1)` and `fib(N-2)` and not as the `fib` of
 `(N-1)+fib(N-2)`.
