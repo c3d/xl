@@ -57,7 +57,7 @@ Extensible? What does that mean for a programming language? For XL, it
 really means three things:
 
 [arabic]
-. XL has a method to extend the language(((extensibility,language))) with any
+. XL has a method to extend the language(((extensible,language))) with any
   kind of feature, not just functions or data types, but also
   ((programming construct))s, ((optimization))s, ((domain-specific
   notation))s, and more. Actually, all this is done with a
@@ -529,18 +529,18 @@ Putting basic features in the ((standard library)), as opposed to keeping
 them in the compiler, has several benefits:
 
 [arabic]
-. Flexibility(((flexibility,library))): It is much easier to offer a
+. Flexibility(((flexible,library))): It is much easier to offer a
   large number of behaviors and to address ((special case))s.
 . Clarity(((clarity,library))): The definition given in the library gives a very clear and
   machine-verifiable description of the operation.
-. Extensibility(((extensibility,library))): If the library definition is
+. Extensibility(((extensible,library))): If the library definition is
   not sufficient, it is possible to add what you need. It will behave
   exactly as what is in the library. If it proves useful enough, it
   may even make it to the standard library in a later iteration of the
   language.
-. Fixability(((flexibility,library))): Built-in mechanisms, such as
-  library versioning(((versioning,library))), make it possible to
-  address ((bugs)) without breaking existing code, which can still use
+. Fixability(((fixable,library))): Built-in mechanisms, such as
+  library versioning(((version,library))), make it possible to
+  address ((bug))s without breaking existing code, which can still use
   an earlier version of the library.
 
 The XL standard library consists of a link:../native/lib[wide variety of
@@ -682,7 +682,7 @@ All these definitions are then available as shortcuts whenever the
 compiler evaluates future function calls.
 
 The `print` function as defined above is both type-safe(((type
-safety))) and extensible(((extensible function)))(((extensibility))),
+safety))) and extensible(((extensible,function))),
 unlike similar facilities found for example in the C programming
 language.
 
