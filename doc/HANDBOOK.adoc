@@ -57,11 +57,12 @@ Extensible? What does that mean for a programming language? For XL, it
 really means three things:
 
 [arabic]
-. XL has a method to ((extend the language)) with any kind of feature, not
-  just functions or data types, but also ((programming construct))s,
-  ((optimization))s, ((domain-specific notation))s, and more. Actually, all this
-  is done with a link:#one-operator-to-rule-them-all[single operator],
-  `is`, called the _((definition operator))_.
+. XL has a method to extend the language(((extensibility,language))) with any
+  kind of feature, not just functions or data types, but also
+  ((programming construct))s, ((optimization))s, ((domain-specific
+  notation))s, and more. Actually, all this is done with a
+  link:#one-operator-to-rule-them-all[single operator], `is`, called
+  the _((definition operator))_.
 
 . As a validation of the concept, most features that are ((built-in)) in
   other ((programming language))s, like the `while` ((loop)), or ((integer
@@ -528,23 +529,26 @@ Putting basic features in the ((standard library)), as opposed to keeping
 them in the compiler, has several benefits:
 
 [arabic]
-. Flexibility: It is much easier to offer a large number of behaviors
-  and to address special cases.
-. Clarity: The definition given in the library gives a very clear and
+. Flexibility(((flexibility,library))): It is much easier to offer a
+  large number of behaviors and to address ((special case))s.
+. Clarity(((clarity,library))): The definition given in the library gives a very clear and
   machine-verifiable description of the operation.
-. Extensibility: If the library definition is not sufficient, it is
-  possible to add what you need. It will behave exactly as what is in the
-  library. If it proves useful enough, it may even make it to the standard
-  library in a later iteration of the language.
-. Fixability: Built-in mechanisms, such as library versioning, make it
-  possible to address bugs without breaking existing code, which can still
-  use an earlier version of the library.
+. Extensibility(((extensibity,library))): If the library definition is
+  not sufficient, it is possible to add what you need. It will behave
+  exactly as what is in the library. If it proves useful enough, it
+  may even make it to the standard library in a later iteration of the
+  language.
+. Fixability(((flexibility,library))): Built-in mechanisms, such as
+  library versioning(((versioning,library))), make it possible to
+  address ((bugs)) without breaking existing code, which can still use
+  an earlier version of the library.
 
 The XL standard library consists of a link:../native/lib[wide variety of
-modules]. The top-level module is called `XL`, and sub-modules are
-categorized in a hierarchy. For example, if you need to perform
-computations on complex numbers, you would `use XL.MATH.COMPLEX` to load
-the link:../native/lib/xl/math/complex.xs[complex numbers module]
+modules]. The top-level ((module)) is called `XL`, and sub-modules are
+categorized in a hierarchy(((hierarchy,modules))). For example, if you
+need to perform computations on (((complex number)))s, you would `use
+XL.MATH.COMPLEX` to load the
+link:../native/lib/xl/math/complex.xs[complex numbers module]
 
 The link:../src/builtins.xl[library builtins] is a list of definitions
 that are accessible to any XL program without any explicit `use`
@@ -677,7 +681,8 @@ write C:text, D:integer is
 All these definitions are then available as shortcuts whenever the
 compiler evaluates future function calls.
 
-The `print` function as defined above is both type-safe and extensible,
+The `print` function as defined above is both type-safe(((type
+safety))) and extensible(((extensible function)))(((extensibility))),
 unlike similar facilities found for example in the C programming
 language.
 
@@ -5049,7 +5054,11 @@ of a type variable should be treated like "template code" to use pass:[C++]
 terminology, or if there is a better way to implement it.
 
 For example, consider an allocation of memory for type `T`:
-Allocate[type T] as pointer[T]
+
+[source]
+----
+Allocate[T:type] as pointer[T]
+----
 
 The compiler is free to implement this as a generic function, similar to
 a pass:[C++] template, or as a function taking some pointer to type data, using
