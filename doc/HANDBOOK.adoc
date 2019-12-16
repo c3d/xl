@@ -603,7 +603,7 @@ print "The value of X is ", X, " and the value of Y is ", Y
 ----
 
 That would first call the last definition of `print` with the following
-_binding_ for the variable `Items`:
+link:#binding[((binding))] for the variable `Items`:
 
 [source]
 ----
@@ -709,10 +709,11 @@ particular sequence of arguments will be factored out between all the
 call sites, minimizing ((code bloat)).
 
 Additionally, the approach used in XL makes it possible to offer
-specific features for output lines, for example to ensure that a single
-line is always printed contiguously even in a multi-threaded scenario.
-Assuming a `single_thread` facility ensuring that the code is executed
-by at most one thread, creating a locked `print` is nothing more than:
+specific features for output lines, for example to ensure that a
+single line is always printed contiguously even in a multi-threaded
+scenario(((thread safety))).  Assuming a `single_thread` facility
+ensuring that the code is executed by at most one thread, creating a
+locked `print` is nothing more than:
 
 [source]
 ----
@@ -728,24 +729,26 @@ compiler to identify where the "line breaks" are in your code.
 
 === Efficient translation
 
-Despite being very high-level, XL was designed so that efficient
-translation to machine code was possible, if sometimes challenging. In
-other words, XL is designed to be able to work as a _system language_,
-in the same vein as C, Ada or Rust, i.e. a language that can be used to
-program operating systems, system libraries, compilers or other
-low-level applications.
+Despite being very high-level, XL was designed so that ((efficient
+translation)) to machine code was possible, if sometimes
+challenging. In other words, XL is designed to be able to work as a
+_((system language))_, in the same vein as C, Ada or Rust, i.e. a
+language that can be used to program ((operating system))s, system
+libraries(((library,system))), ((compiler))s or other low-level
+applications.
 
 For that reason, nothing in the semantics of XL mandates complex
-behind-the-scene activites, like garbage collection, thread safety, or
-even memory management. As for other aspects of the language, any such
-activity has to be provided by the library. You only pay for it if you
-actually use it. In other words, the only reason you’d ever get garbage
-collection in an XL program is if you explicitly need it for your own
-application.
+behind-the-scene activites, like ((garbage collection)), ((thread
+safety)), or even ((memory management)). As for other aspects of the
+language, any such activity has to be provided by the library. You
+only pay for it if you actually use it. In other words, the only
+reason you’d ever get garbage collection in an XL program is if you
+explicitly need it for your own application.
 
-This philosophy sometimes requires the XL compiler to work extra hard in
-order to be more than minimally efficient. Consider for example the
-definition of the `while` loop given above:
+This philosophy sometimes requires the XL compiler to work extra hard
+in order to be more than minimally efficient. Consider for example the
+definition of the `while` loop(((loop,optimization)))(((optimization,loop)))
+given above:
 
 [source]
 ----
@@ -766,7 +769,7 @@ while N <> 1 loop
 What happens is that the compiler looks at the code, and matches against
 the definitions at its disposal. The `while` loop in the code matches
 the form `while Condition loop Body`, provided you do the following
-_bindings_:
+link:#binding[((binding))s]:
 
 [source]
 ----
@@ -1899,12 +1902,12 @@ In our example, `circumference 5.3` will not match the declaration of
 `pi`, but it will match the declaration of `circumference Radius:real`
 since the value `5.3` is indeed a real number.
 
-When a match happens, a new context is created with _bindings_ for the
-formal parameters to the value passed as an argument in the statement.
-This new context is called a _local context_ and will be used to
-evaluate the body of the definition. For example, the local context to
-evaluate the body of the definition of `circumference Radius:real` would
-be:
+When a match happens, a new context is created with
+link:#binding[_((binding))s_] for the formal parameters to the value
+passed as an argument in the statement.  This new context is called a
+_local context_ and will be used to evaluate the body of the
+definition. For example, the local context to evaluate the body of the
+definition of `circumference Radius:real` would be:
 
 [source]
 ----
@@ -2500,8 +2503,8 @@ compare the value against the candidates. If the value is `0`, the first
 definition will be selected. If the value is `1`, the second definition
 will be used. Otherwise, the third definition will be used.
 
-A binding may contain a value that may itself need to be split in order
-to be tested against the formal parameters. This is used in the
+A ((binding)) may contain a value that may itself need to be split in
+order to be tested against the formal parameters. This is used in the
 implementation of `print`:
 
 [source]
@@ -2683,7 +2686,7 @@ A - A    is 0
 Such a definition would require the evaluation of `X` and `2 * Y` in
 expression `X - 2 * Y` in order to check if they are equal.
 . When a conditional clause requires the evaluation of the corresponding
-binding, as in the following example:
+  binding, as in the following example:
 +
 [source]
 ----
