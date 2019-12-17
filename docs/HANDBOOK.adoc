@@ -1100,25 +1100,25 @@ to the basic XL evaluation rules. In other words, adding something as
 sophisticated as transparently distributed progrmming to XL can be done
 by practically any programmer, without changing the compiler.
 
-[[syntax]]
-== XL syntax
 
-For programmers familiar with other programming language, the syntax of
-XL may not seem very innovative at first, and that is intentional. Most
-programmers should be able to read and write correct XL code in a matter
-of minutes.
+== [[syntax]]XL syntax
+
+For programmers familiar with other ((programming language))s, the
+((syntax)) of XL may not seem very innovative at first, and that is
+intentional. Most programmers should be able to read and write correct
+XL code in a matter of minutes.
 
 The first noticable thing is a disturbing lack of all these nice
-semi-random punctuation characters that have decorated programs since
+semi-random ((punctuation)) characters that have decorated programs since
 the dawn of computing and make most source code look like an ornate form
-of line noise to the uninitiated. Where are all the parentheses gone?
-Why this horrible lack of curly braces? How can you make sense of a
-program without a semi-colon to
+of ((line noise)) to the uninitiated. Where are all the ((parenthese))s gone?
+Why this horrible lack of ((curly brace))s? How can you make sense of a
+program without a ((semi-colon)) to
 https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)#Statements[terminate
-or separate] statements?
+or separate] ((statement))s?
 
-In reality, the difference between XL syntax and earlier ((programming
-language))s is much more than skin deep. The syntax of XL is actually one
+In reality, the difference between XL syntax and earlier programming
+languages is much more than skin deep. The syntax of XL is actually one
 of its most unique characteristics. The design of the XL syntax is
 essential to understand both the philosophy and implementation of the
 whole language.
@@ -1139,8 +1139,8 @@ most enduring high-level programming languages,
 https://en.wikipedia.org/wiki/Lisp_(programming_language)[((Lisp))]. The
 earliest implementations of Lisp date back to 1958, yet that language
 remains surprisingly modern and flourishing today, unlike languages of
-that same era like https://en.wikipedia.org/wiki/COBOL[Cobol] or
-https://en.wikipedia.org/wiki/Fortran[Fortran].
+that same era like https://en.wikipedia.org/wiki/COBOL[((Cobol))] or
+https://en.wikipedia.org/wiki/Fortran[((Fortran))].
 
 One reason for Lisp’s endurance is the metaprogramming capabilities
 deriving from homoiconicity. If you want to add a feature to Lisp, all
@@ -1166,12 +1166,12 @@ written `1+2` in XL, like in most programming languages, but `(+ 1 2)`
 in Lisp. In concept programming, this notational problem is called
 ((syntactic noise)).
 
-XL addresses this problem by putting human accessibility first. In that
+XL addresses this problem by putting human usability first. In that
 sense, it can be seen as an effort to make the power of Lisp more
-accessible. That being said, XL is quite a bit more than just Lisp with
-a new fancy and programmer-friendly syntax.
+((accessible)). That being said, XL is quite a bit more than just Lisp
+with a new fancy and ((programmer-friendly)) syntax.
 
-==== [[parse-tree]]The XL ((parse tree))
+==== [[parse-tree]]The XL parse tree
 
 The XL ((syntax)) is much _simpler_ than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
@@ -1191,9 +1191,9 @@ there are no hard-coded keywords or special operators in the XL
 compiler.
 
 All XL programs can be represented with a very simple tree structure,
-called a _parse tree_. The XL parse tree contains four ((leaf node)) types
-(((integer)), ((real)), ((text)) and ((name))), and four ((inner node)) types
-(((infix)), ((prefix)), ((postfix)) and ((block))).
+called a _((parse tree))_. The XL parse tree contains four ((leaf node))
+types (((integer)), ((real)), ((text)) and ((name))), and four
+((inner node)) types (((infix)), ((prefix)), ((postfix)) and ((block))).
 
 Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 
@@ -1249,7 +1249,8 @@ Assuming that this program is stored in a file called `program.xl`, the
 XL parse tree for this program can be obtained by using the following
 command:
 
-....
+[source,shell]
+----
 % xl -parse program.xl -style debug -show
 (infixthen
  (prefix
@@ -1273,7 +1274,7 @@ command:
      -
      X
     )))))
-....
+----
 
 All of XL is built on this very simple data structure. Some choices,
 like having distinct `integer` and `real` node, were guided primarily by
@@ -1289,25 +1290,32 @@ ambiguous, and possibly more difficult to process in a generic way.
 
 === Syntax for XL nodes
 
-The leaf nodes in XL all have a uniquely identifable syntax.
+The ((leaf node))s in XL all have a uniquely identifable syntax.
 
-==== Number syntax
+==== [[numbers]]Number syntax
 
-Numbers begin with a digit, i.e. one of `0123456789`.
+Numbers begin with a ((digit)), i.e. one of `0123456789`.
 
-A single underscore `_` character can be used to separate digits, as in
-`1_000_000`. The following are not valid XL numbers: `_1` (leading
-underscore), `2_` (trailing underscore), `3__0` (two underscores).
+A single ((underscore)) `+_+` character can be used to separate
+digits, as in `1_000_000`. The following are not valid XL numbers:
+`+_1+` (leading underscore), `+2_+` (trailing underscore), `+3__0+`
+(two underscores).
 
-Based numbers can be written by following the base with the `#` sign.
-The base can be any decimal value between 2 and 36, or 64.
+By default, numbers are written in ((base)) 10. Any other ((numerical base))
+ between 2 and 36 can be used, as well as base 64 using a special
+syntax. Based numbers can be written by following the base with the
+`#` sign. For example `8#76` is an ((octal)) representation of `62`.
 
-* For bases between 11 and 36, letters `A` through `Z` or `a` through
-`z` represent digit values larger than 10. For example, `A` is 10, `F`
-is 15, `z` is 35. Case does not matter.
-* For base 64, https://en.wikipedia.org/wiki/Base64[Base64] encoding is
+For bases between 11 and 36, letters `A` through `Z` or `a` through
+`z` represent digit values larger than 10, so that `A` is 10, `f`
+is 15, `Z` is 35. Case does not matter. For example, `16#FF` and
+`16#ff` are two valid ((hexadecimal)) representation of `255`.
+
+For base 64, https://en.wikipedia.org/wiki/Base64[Base64] encoding is
 used, and case matters. This is mostly indended for use in binary
-objects, i.e. after `bits`.
+objects, i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
+encoding for the number with the same binary representation as the
+sequence of characters in `Hello!`.
 
 There is an implementation-dependent limit for the maximum `integer`
 value. This limit cannot be less than the maximum value for a

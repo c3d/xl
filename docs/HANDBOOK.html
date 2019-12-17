@@ -475,7 +475,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </li>
-<li><a href="#syntax">2. XL syntax</a>
+<li><a href="#xl-syntax">2. XL syntax</a>
 <ul class="sectlevel2">
 <li><a href="#homoiconic-representation-of-programs">2.1. Homoiconic representation of programs</a>
 <ul class="sectlevel3">
@@ -1962,13 +1962,13 @@ by practically any programmer, without changing the compiler.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="syntax"><a class="anchor" href="#syntax"></a><a class="link" href="#syntax">2. XL syntax</a></h2>
+<h2 id="xl-syntax"><a class="anchor" href="#xl-syntax"></a><a class="link" href="#xl-syntax">2. <a id="syntax"></a>XL syntax</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>For programmers familiar with other programming language, the syntax of
-XL may not seem very innovative at first, and that is intentional. Most
-programmers should be able to read and write correct XL code in a matter
-of minutes.</p>
+<p>For programmers familiar with other programming languages, the
+syntax of XL may not seem very innovative at first, and that is
+intentional. Most programmers should be able to read and write correct
+XL code in a matter of minutes.</p>
 </div>
 <div class="paragraph">
 <p>The first noticable thing is a disturbing lack of all these nice
@@ -1981,7 +1981,8 @@ program without a semi-colon to
 or separate</a> statements?</p>
 </div>
 <div class="paragraph">
-<p>In reality, the difference between XL syntax and earlier programming languages is much more than skin deep. The syntax of XL is actually one
+<p>In reality, the difference between XL syntax and earlier programming
+languages is much more than skin deep. The syntax of XL is actually one
 of its most unique characteristics. The design of the XL syntax is
 essential to understand both the philosophy and implementation of the
 whole language.</p>
@@ -2034,10 +2035,10 @@ in Lisp. In concept programming, this notational problem is called
 syntactic noise.</p>
 </div>
 <div class="paragraph">
-<p>XL addresses this problem by putting human accessibility first. In that
+<p>XL addresses this problem by putting human usability first. In that
 sense, it can be seen as an effort to make the power of Lisp more
-accessible. That being said, XL is quite a bit more than just Lisp with
-a new fancy and programmer-friendly syntax.</p>
+accessible. That being said, XL is quite a bit more than just Lisp
+with a new fancy and programmer-friendly syntax.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2063,9 +2064,9 @@ compiler.</p>
 </div>
 <div class="paragraph">
 <p>All XL programs can be represented with a very simple tree structure,
-called a <em>parse tree</em>. The XL parse tree contains four leaf node types
-(integer, real, text and name), and four inner node types
-(infix, prefix, postfix and block).</p>
+called a <em>parse tree</em>. The XL parse tree contains four leaf node
+types (integer, real, text and name), and four
+inner node types (infix, prefix, postfix and block).</p>
 </div>
 <div class="paragraph">
 <p>Leaf nodes contain values that are atomic as far as XL is concerned:</p>
@@ -2166,9 +2167,9 @@ cost, notably with respect to the generated code.</p>
 XL parse tree for this program can be obtained by using the following
 command:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre>% xl -parse program.xl -style debug -show
+<pre class="highlightjs highlight"><code data-lang="shell" class="language-shell hljs">% xl -parse program.xl -style debug -show
 (infixthen
  (prefix
   if
@@ -2190,7 +2191,7 @@ command:</p>
     (prefix
      -
      X
-    )))))</pre>
+    )))))</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2224,32 +2225,34 @@ ambiguous, and possibly more difficult to process in a generic way.
 <p>The leaf nodes in XL all have a uniquely identifable syntax.</p>
 </div>
 <div class="sect3">
-<h4 id="number-syntax"><a class="anchor" href="#number-syntax"></a><a class="link" href="#number-syntax">2.2.1. Number syntax</a></h4>
+<h4 id="number-syntax"><a class="anchor" href="#number-syntax"></a><a class="link" href="#number-syntax">2.2.1. <a id="numbers"></a>Number syntax</a></h4>
 <div class="paragraph">
 <p>Numbers begin with a digit, i.e. one of <code>0123456789</code>.</p>
 </div>
 <div class="paragraph">
-<p>A single underscore <code><em></code> character can be used to separate digits, as in
-<code>1_000_000</code>. The following are not valid XL numbers: <code>_1</code> (leading
-underscore), <code>2</em></code> (trailing underscore), <code>3__0</code> (two underscores).</p>
+<p>A single underscore <code>_</code> character can be used to separate
+digits, as in <code>1_000_000</code>. The following are not valid XL numbers:
+<code>_1</code> (leading underscore), <code>2_</code> (trailing underscore), <code>3__0</code>
+(two underscores).</p>
 </div>
 <div class="paragraph">
-<p>Based numbers can be written by following the base with the <code>#</code> sign.
-The base can be any decimal value between 2 and 36, or 64.</p>
+<p>By default, numbers are written in base 10. Any other numerical base
+ between 2 and 36 can be used, as well as base 64 using a special
+syntax. Based numbers can be written by following the base with the
+<code>#</code> sign. For example <code>8#76</code> is an octal representation of <code>62</code>.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
+<div class="paragraph">
 <p>For bases between 11 and 36, letters <code>A</code> through <code>Z</code> or <code>a</code> through
-<code>z</code> represent digit values larger than 10. For example, <code>A</code> is 10, <code>F</code>
-is 15, <code>z</code> is 35. Case does not matter.</p>
-</li>
-<li>
+<code>z</code> represent digit values larger than 10, so that <code>A</code> is 10, <code>f</code>
+is 15, <code>Z</code> is 35. Case does not matter. For example, <code>16#FF</code> and
+<code>16#ff</code> are two valid hexadecimal representation of <code>255</code>.</p>
+</div>
+<div class="paragraph">
 <p>For base 64, <a href="https://en.wikipedia.org/wiki/Base64">Base64</a> encoding is
 used, and case matters. This is mostly indended for use in binary
-objects, i.e. after <code>bits</code>.</p>
-</li>
-</ul>
+objects, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
+encoding for the number with the same binary representation as the
+sequence of characters in <code>Hello!</code>.</p>
 </div>
 <div class="paragraph">
 <p>There is an implementation-dependent limit for the maximum <code>integer</code>
@@ -8806,7 +8809,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-17 08:05:36 +0100
+Last updated 2019-12-18 00:29:05 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
