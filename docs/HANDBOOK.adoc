@@ -108,7 +108,7 @@ use XL.CONSOLE.TEXT_IO
 print "Hello World"
 ----
 
-The first line _imports_ (((import))) the `XL.CONSOLE.TEXT_IO`
+The first line _imports_(((import))) the `XL.CONSOLE.TEXT_IO`
 link:#modules[((module))].  The program can then use the `print`
 function from that module to write the text on the ((terminal
 console)).
@@ -574,11 +574,11 @@ implementation details were elided as `...`:
 
 [source]
 ----
-write X:text            as fallible     is ...                  // See <1>
+write X:text            as fallible     is ... // <1>
 write X:integer         as fallible     is ...
 write X:real            as fallible     is ...
 write X:character       as fallible     is ...
-write [[true]]                          is write "true"         // See <2>
+write [[true]]                          is write "true" // <2>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
@@ -1195,9 +1195,9 @@ Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 
 [arabic]
 . [[integer]]`integer` nodes represent integer values like `1234`, `2#1001` or
-`16#FFFE_FFFF`.
+  `16#FFFE_FFFF`.
 . [[real]]`real` nodes represent floating-point values like `1.234`, `1.5e-10`
-or `2#1.0001_0001#e24`.
+  or `2#1.0001_0001#e24`.
 . [[text]]`text` nodes represent text values like `"Hello world"` or `'A'`.
 . [[name]]`name` node represent names like `ABC_DEF` or symbols like `+<=>+`.
 
@@ -1205,24 +1205,32 @@ Inner nodes contains combinations of other XL nodes:
 
 [arabic]
 . [[infix]]`infix` nodes represent two operands separated by a name or symbol,
-like `A+B` or `X and Y`. Infix nodes with a "new line" name are used
-for separate program lines.
+  like `A+B` or `X and Y`. Infix nodes with a "new line" name are used
+  for separate program lines.
 . [[prefix]]`prefix` nodes represent two nodes where the operand follows the
-operator, like `+A` or `sin X`.
+  operator, like `+A` or `sin X`.
 . [[postfix]]`postfix` nodes represent two nodes where the operator follows the
-operand, like `3%` or `45km`.
+  operand, like `3%` or `45km`.
 . [[block]]`block` nodes represent a node surrounded by two delimiters, like
-`[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
+  `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
 
-NOTE: This list of node types is what the current implementations of XL
-offer. Some changes may happen, notably: * Adding a "binary object"
-node type, which could be used to store binary data in the program. A
-possible syntax would be to prefix `bits` before a large integer value
-or file name:
-`xl       bits 16#FF_00_FF_00_FF_FF_00_FF_00       bits "image.png"` *
-Finding a more efficient representation for large sequences of items. So
-far, attempts at finding such a representation came with an unacceptable
-cost, notably with respect to the generated code.
+[NOTE]
+====
+This list of node types is what the current implementations of XL
+offer. Some changes may happen, notably:
+
+* Adding a "binary object" node type, which could be used to store
+  binary data in the program. A possible syntax would be to prefix
+  `bits` before a large integer value or file name:
+[source]
+----
+bits 16#FF_00_FF_00_FF_FF_00_FF_00
+bits "image.png"`
+----
+* Finding a more efficient representation for large sequences of items. So
+  far, attempts at finding such a representation came with an unacceptable
+  cost, notably with respect to the generated code.
+====
 
 For example, let’s consider the following code:
 

@@ -763,7 +763,7 @@ print "Hello World"</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The first line <em>imports</em>  the <code>XL.CONSOLE.TEXT_IO</code>
+<p>The first line <em>imports</em> the <code>XL.CONSOLE.TEXT_IO</code>
 <a href="#modules">module</a>.  The program can then use the <code>print</code>
 function from that module to write the text on the terminal console.</p>
 </div>
@@ -1321,11 +1321,11 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as fallible     is ...                  // See <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as fallible     is ... <i class="conum" data-value="1"></i><b>(1)</b>
 write X:integer         as fallible     is ...
 write X:real            as fallible     is ...
 write X:character       as fallible     is ...
-write [[true]]                          is write "true"         // See <i class="conum" data-value="2"></i><b>(2)</b>
+write [[true]]                          is write "true" <i class="conum" data-value="2"></i><b>(2)</b>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
@@ -2115,15 +2115,34 @@ operand, like <code>3%</code> or <code>45km</code>.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-This list of node types is what the current implementations of XL
-offer. Some changes may happen, notably: * Adding a "binary object"
-node type, which could be used to store binary data in the program. A
-possible syntax would be to prefix <code>bits</code> before a large integer value
-or file name:
-<code>xl       bits 16#FF_00_FF_00_FF_FF_00_FF_00       bits "image.png"</code> *
-Finding a more efficient representation for large sequences of items. So
+<div class="paragraph">
+<p>This list of node types is what the current implementations of XL
+offer. Some changes may happen, notably:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Adding a "binary object" node type, which could be used to store
+binary data in the program. A possible syntax would be to prefix
+<code>bits</code> before a large integer value or file name:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">bits 16#FF_00_FF_00_FF_FF_00_FF_00
+bits "image.png"`</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Finding a more efficient representation for large sequences of items. So
 far, attempts at finding such a representation came with an unacceptable
-cost, notably with respect to the generated code.
+cost, notably with respect to the generated code.</p>
+</li>
+</ul>
+</div>
 </td>
 </tr>
 </table>
@@ -8783,7 +8802,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-16 12:39:39 +0100
+Last updated 2019-12-17 07:31:44 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
