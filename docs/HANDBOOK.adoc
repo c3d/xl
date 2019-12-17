@@ -1030,11 +1030,11 @@ However, the way it runs is extremely interesting.
   transparently. For example
   * the computation `T1-T2` in `send_temps` is performed on `WORKER_1`…
   * … using a value of `T1` that actually came from `WORKER_2` through the
-  `ask` statement in `rasp1_temp`.
+    `ask` statement in `rasp1_temp`.
   * Whenever the `reply` code is executed, variable `T1` and `T2` live on
-  `WORKER_1`…
+    `WORKER_1`…
   * … but within the `reply`, they are passed transparently as arguments
-  in order to call `show_temps` on the controller.
+    in order to call `show_temps` on the controller.
 . Communication occurs primarily between `WORKER_1` and `WORKER_2`,
   which exchange a message every 1.1s. Communication with the controller
   only occurs if and when necessary. If the controller resides in Canada
@@ -1126,10 +1126,11 @@ whole language.
 === [[homoiconic]]Homoiconic representation of programs
 
 XL is a https://en.wikipedia.org/wiki/Homoiconicity[homoiconic
-language], meaning that all XL programs are data and conversely. This
-makes it particularly easy for programs to manipulate programs, an
-approach sometimes referred to as _metaprogramming_. Metaprogramming is
-the foundation upon which the touted extensibility of XL is built.
+language](((homoiconic))), meaning that all XL programs are data and
+conversely. This makes it particularly easy for programs to manipulate
+programs, an approach sometimes referred to as
+_((metaprogramming))_. Metaprogramming is the foundation upon which the
+touted extensibility of XL is built.
 
 ==== Why Lisp remains so strong to this day
 
@@ -1141,26 +1142,29 @@ remains surprisingly modern and flourishing today, unlike languages of
 that same era like https://en.wikipedia.org/wiki/COBOL[Cobol] or
 https://en.wikipedia.org/wiki/Fortran[Fortran].
 
-One reason for Lisp’s endurance is the meta-programming capabilities
+One reason for Lisp’s endurance is the metaprogramming capabilities
 deriving from homoiconicity. If you want to add a feature to Lisp, all
 you need is to write a program that translates Lisp programs with the
 new feature into previous-generation Lisp programs. This kind of
-capability made it much easier to add object-oriented programming
-https://en.wikipedia.org/wiki/Common_Lisp_Object_System[to Lisp] than to
-languages like C: neither https://en.wikipedia.org/wiki/C++[C++] nor
-https://en.wikipedia.org/wiki/Objective-C[Objective C] were implemented
-as just another C library, and there was a reason for that.
+capability made it much easier to add
+((object-oriented programming))
+https://en.wikipedia.org/wiki/Common_Lisp_Object_System[to Lisp] than
+to languages like C: neither https://en.wikipedia.org/wiki/C++[C++]
+nor https://en.wikipedia.org/wiki/Objective-C[Objective C] were
+implemented as just another C library, and there was a reason for
+that. Unlike Lisp, these languages were not
+extensible(((extensible,language))).
 
 Despite its strengths, Lisp remains confined to specific markets, in
 large part because to most programmers, the language remains
 surprisingly alien to this day, even garnering such infamous nicknames
 as "__Lots of Insipid and Stupid Parentheses__". As seen from a
-link:#xl-gets-a-theoretical-foundation-concept-programming[concept
-programming] point of view, the underlying problem is that the Lisp
-syntax departs from the usual notations as used by human beings. For
-example, adding 1 and 2 is written `1+2` in XL, like in most programming
-languages, but `(+ 1 2)` in Lisp. In concept programming, this
-notational problem is called syntactic noise.
+link:#concept-programming[((concept programming))] point of view, the
+underlying problem is that the Lisp syntax departs from the usual
+((notation))s as used by human beings. For example, adding 1 and 2 is
+written `1+2` in XL, like in most programming languages, but `(+ 1 2)`
+in Lisp. In concept programming, this notational problem is called
+((syntactic noise)).
 
 XL addresses this problem by putting human accessibility first. In that
 sense, it can be seen as an effort to make the power of Lisp more
@@ -1274,7 +1278,7 @@ command:
 All of XL is built on this very simple data structure. Some choices,
 like having distinct `integer` and `real` node, were guided primarily by
 considerations beyond syntax, for example the need to be able to
-precisely define link:#xl-program-evaluation[program evaluation] or to
+precisely define link:#evaluation[program evaluation] or to
 represent distinct machine types.
 
 NOTE: Empty blocks are represented as a block with an "empty name" as
@@ -1638,10 +1642,10 @@ write -A    // write (-A)
 B - A       // (B - A)
 ----
 
-== XL program evaluation
+== [[evaluation]]XL program evaluation
 
-XL defines _program execution_ primarily in terms of operations on the
-parse tree combined with operations on an implicit _context_ that stores
+XL defines _((program execution))_ primarily in terms of operations on the
+parse tree combined with operations on an implicit _((context))_ that stores
 the program state. The context itself is also described in XL in order
 to define the expected result of evaluation.
 
@@ -5375,7 +5379,7 @@ It took some effort to convert existing code, but I’ve never looked back
 since then. Based on the time when Alain Miniussi was at the CLL, I
 believe this happened around 1999.
 
-=== XL gets a theoretical foundation: Concept programming
+=== Concept programming
 
 The discussions around our respective languages, including the
 meta-programming egg-face moment, led me to solidify the theoretical
@@ -5384,7 +5388,7 @@ a bit beyond mere meta-programming, which was really only a technique
 being used, but not the end goal. I called my approach _Concept
 Programming_. I tried to explain what it is about in
 http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf[this
-presentation].
+presentation]. Concept programming is the theoretical foundation for XL.
 
 Concept programming deals with the way we transform concepts that reside
 in our brain into code that resides in the computer. That conversion is

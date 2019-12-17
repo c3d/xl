@@ -628,7 +628,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#lx-an-extensible-language">9.2. LX, an extensible language</a></li>
 <li><a href="#lx-meet-xroma">9.3. LX, meet Xroma</a></li>
 <li><a href="#xl-moves-to-the-off-side-rule">9.4. XL moves to the off-side rule</a></li>
-<li><a href="#xl-gets-a-theoretical-foundation-concept-programming">9.5. XL gets a theoretical foundation: Concept programming</a></li>
+<li><a href="#concept-programming">9.5. Concept programming</a></li>
 <li><a href="#mozart-and-moka-adding-java-support-to-xl">9.6. Mozart and Moka: Adding Java support to XL</a></li>
 <li><a href="#innovations-in-2000-vintage-xl">9.7. Innovations in 2000-vintage XL</a></li>
 <li><a href="#xl0-and-xl2-reinventing-the-parse-tree">9.8. XL0 and XL2: Reinventing the parse tree</a></li>
@@ -1990,10 +1990,11 @@ whole language.</p>
 <h3 id="homoiconic-representation-of-programs"><a class="anchor" href="#homoiconic-representation-of-programs"></a><a class="link" href="#homoiconic-representation-of-programs">2.1. <a id="homoiconic"></a>Homoiconic representation of programs</a></h3>
 <div class="paragraph">
 <p>XL is a <a href="https://en.wikipedia.org/wiki/Homoiconicity">homoiconic
-language</a>, meaning that all XL programs are data and conversely. This
-makes it particularly easy for programs to manipulate programs, an
-approach sometimes referred to as <em>metaprogramming</em>. Metaprogramming is
-the foundation upon which the touted extensibility of XL is built.</p>
+language</a>, meaning that all XL programs are data and
+conversely. This makes it particularly easy for programs to manipulate
+programs, an approach sometimes referred to as
+<em>metaprogramming</em>. Metaprogramming is the foundation upon which the
+touted extensibility of XL is built.</p>
 </div>
 <div class="sect3">
 <h4 id="why-lisp-remains-so-strong-to-this-day"><a class="anchor" href="#why-lisp-remains-so-strong-to-this-day"></a><a class="link" href="#why-lisp-remains-so-strong-to-this-day">2.1.1. Why Lisp remains so strong to this day</a></h4>
@@ -2007,27 +2008,30 @@ that same era like <a href="https://en.wikipedia.org/wiki/COBOL">Cobol</a> or
 <a href="https://en.wikipedia.org/wiki/Fortran">Fortran</a>.</p>
 </div>
 <div class="paragraph">
-<p>One reason for Lisp’s endurance is the meta-programming capabilities
+<p>One reason for Lisp’s endurance is the metaprogramming capabilities
 deriving from homoiconicity. If you want to add a feature to Lisp, all
 you need is to write a program that translates Lisp programs with the
 new feature into previous-generation Lisp programs. This kind of
-capability made it much easier to add object-oriented programming
-<a href="https://en.wikipedia.org/wiki/Common_Lisp_Object_System">to Lisp</a> than to
-languages like C: neither <a href="https://en.wikipedia.org/wiki/C[C" class="bare">https://en.wikipedia.org/wiki/C[C</a>] nor
-<a href="https://en.wikipedia.org/wiki/Objective-C">Objective C</a> were implemented
-as just another C library, and there was a reason for that.</p>
+capability made it much easier to add
+object-oriented programming
+<a href="https://en.wikipedia.org/wiki/Common_Lisp_Object_System">to Lisp</a> than
+to languages like C: neither <a href="https://en.wikipedia.org/wiki/C[C" class="bare">https://en.wikipedia.org/wiki/C[C</a>]
+nor <a href="https://en.wikipedia.org/wiki/Objective-C">Objective C</a> were
+implemented as just another C library, and there was a reason for
+that. Unlike Lisp, these languages were not
+extensible.</p>
 </div>
 <div class="paragraph">
 <p>Despite its strengths, Lisp remains confined to specific markets, in
 large part because to most programmers, the language remains
 surprisingly alien to this day, even garnering such infamous nicknames
 as "<em>Lots of Insipid and Stupid Parentheses</em>". As seen from a
-<a href="#xl-gets-a-theoretical-foundation-concept-programming">concept
-programming</a> point of view, the underlying problem is that the Lisp
-syntax departs from the usual notations as used by human beings. For
-example, adding 1 and 2 is written <code>1+2</code> in XL, like in most programming
-languages, but <code>(+ 1 2)</code> in Lisp. In concept programming, this
-notational problem is called syntactic noise.</p>
+<a href="#concept-programming">concept programming</a> point of view, the
+underlying problem is that the Lisp syntax departs from the usual
+notations as used by human beings. For example, adding 1 and 2 is
+written <code>1+2</code> in XL, like in most programming languages, but <code>(+ 1 2)</code>
+in Lisp. In concept programming, this notational problem is called
+syntactic noise.</p>
 </div>
 <div class="paragraph">
 <p>XL addresses this problem by putting human accessibility first. In that
@@ -2193,7 +2197,7 @@ command:</p>
 <p>All of XL is built on this very simple data structure. Some choices,
 like having distinct <code>integer</code> and <code>real</code> node, were guided primarily by
 considerations beyond syntax, for example the need to be able to
-precisely define <a href="#xl-program-evaluation">program evaluation</a> or to
+precisely define <a href="#evaluation">program evaluation</a> or to
 represent distinct machine types.</p>
 </div>
 <div class="admonitionblock note">
@@ -2715,7 +2719,7 @@ B - A       // (B - A)</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="xl-program-evaluation"><a class="anchor" href="#xl-program-evaluation"></a><a class="link" href="#xl-program-evaluation">3. XL program evaluation</a></h2>
+<h2 id="xl-program-evaluation"><a class="anchor" href="#xl-program-evaluation"></a><a class="link" href="#xl-program-evaluation">3. <a id="evaluation"></a>XL program evaluation</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>XL defines <em>program execution</em> primarily in terms of operations on the
@@ -7783,7 +7787,7 @@ believe this happened around 1999.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="xl-gets-a-theoretical-foundation-concept-programming"><a class="anchor" href="#xl-gets-a-theoretical-foundation-concept-programming"></a><a class="link" href="#xl-gets-a-theoretical-foundation-concept-programming">9.5. XL gets a theoretical foundation: Concept programming</a></h3>
+<h3 id="concept-programming"><a class="anchor" href="#concept-programming"></a><a class="link" href="#concept-programming">9.5. Concept programming</a></h3>
 <div class="paragraph">
 <p>The discussions around our respective languages, including the
 meta-programming egg-face moment, led me to solidify the theoretical
@@ -7792,7 +7796,7 @@ a bit beyond mere meta-programming, which was really only a technique
 being used, but not the end goal. I called my approach <em>Concept
 Programming</em>. I tried to explain what it is about in
 <a href="http://xlr.sourceforge.net/Concept%20Programming%20Presentation.pdf">this
-presentation</a>.</p>
+presentation</a>. Concept programming is the theoretical foundation for XL.</p>
 </div>
 <div class="paragraph">
 <p>Concept programming deals with the way we transform concepts that reside
@@ -8802,7 +8806,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-17 07:31:44 +0100
+Last updated 2019-12-17 08:05:36 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
