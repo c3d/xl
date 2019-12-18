@@ -567,7 +567,7 @@ in which case you need to build everything from scratch.
 ==== The case of text input / output operations
 
 Input/output(((input/output))) operations (often abbreviated as ((I/O))) are a fundamental
-brick in most ((programming language))s. In general, I/O operations are
+brick in most programming languages. In general, ((I/O operations)) are
 somewhat complex. If you are curious, the source code for the venerable
 `printf` function in C is
 https://github.com/lattera/glibc/blob/master/stdio-common/vfprintf.c[available
@@ -1401,14 +1401,15 @@ phase.
 
 ==== Text
 
-Text in XL is delimited with a pair of single or double quotes.  Text
-can contain any printable character. For example, `"Hello World"` or
-`'ABC'` are valid text in XL. If the delimiter is needed in the text,
-it can be obtained by doubling it. For example, `"He said ""Hello"""`
-is text containing `He said "Hello"`.
+Text(((text))) in XL is delimited with a pair of single(((single quote)))
+or ((double quotes))(((quote))). Text can contain any ((printable character)).
+For example, `"Hello World"` or `'ABC'` are valid text in XL. If the
+delimiter is needed in the text, it can be obtained by doubling
+it. For example, `"He said ""Hello"""` is text containing `He said
+"Hello"`.
 
-Additionally, the XL syntax file can specify delimiters for "long"
-text. Long text can include line-terminating characters, and only
+Additionally, the XL ((syntax file)) can specify ((delimiter))s for "long"
+text. Long text can include ((line-terminating characters)), and only
 terminates when the matching delimiter is reached. By default, `<<` and
 `>>` are long-text delimiters, so that the following is valid text:
 
@@ -1420,10 +1421,10 @@ MyLongText is <<
 >>
 ----
 
-Additional separators can be configured, and can be used to define
-specific types of text. For example, a program that often has to
-manipulate HTML data could allow `HTML` and `END_HTML` as delimiters, so
-that you could write:
+Additional delimiters(((delimiter,text))) can be configured, and can
+be used to define specific types of text. For example, a program that
+often has to manipulate ((HTML)) data could allow `HTML` and
+`END_HTML` as delimiters, so that you could write:
 
 [source]
 ----
@@ -1432,20 +1433,21 @@ MyHTML is HTML
 END_HTML
 ----
 
-NOTE: *RATIONALE* The reason for a built-in format for text using single or
-double quotes is because the syntax file is read using the standard XL
-parser, and it needs text tokens in some specific cases that would
-otherwise parse incorrectly such as block or comment delimiters.
+NOTE: *RATIONALE* The reason for a built-in format for text using
+single or double quotes is because the syntax file is read using the
+standard XL parser, and it needs text tokens in some specific cases
+that would otherwise parse incorrectly such as block or comment
+delimiters.
 
 ==== Indentation and off-side rule
 
-Indentation in XL is significant, and is parsed as a special kind of
-block. Individual program line are parsed as infix nodes with the first
-line as the left operand, and the second line as the right operand.
-
-In other words, the two `loop` instructions below have exactly the same
-structure, except for the block delimiters (curly braces or indentation)
-and for the line-separating infix names (semi-colon or line terminator):
+Indentation(((indentation))) in XL is significant. XL follows the
+_((off-side rule))_ to define program blocks. There is no need for
+keywords such as `begin` and `end`, nor for block delimiters such as
+`{` or `}`. However, `{` and `}` can be used as block
+delimiters(((delimiter,block))) when needed, for example to create a
+block on a single line. The code below shows two equivalent ways to
+write the same loop:
 
 [source]
 ----
@@ -1456,10 +1458,36 @@ loop
     Love
 ----
 
-Indentation must use the same indentation character within a single
-file, either tab or space. In other words, either your whole file is
-indented with tabs, or it is indented with spaces, but it is a syntax
-error to mix both.
+The two ways to write the loop above are not just functionally equivalent.
+They also share the same parse tree structure, the only difference
+being the operators being used. For example, `A;B` is an infix `;`
+with `A` on the left and `B` on the right, whereas individual lines
+are operands of an infix _new-line_ operator. Similarly, `{A}` is a
+block containing `A`, and indentation is represented in the parse tree
+by a block delimited by _indent_ and _outdent_ invisible symbols.
+
+The structure of the second loop from the previous listing can be
+shown by the XL compiler using the `-show` option, as illustrated
+below:
+
+[source,shell]
+----
+% xl -parse loop.xl -style debug -show
+(prefix
+ loop
+ (block indent
+  (infix CR
+   Eat
+   (infix CR
+    Pray
+    Love
+   ))))
+----
+
+Indentation must use the same ((indentation character)) within a
+single file, either ((tab)) or ((space)). In other words, either your
+whole file is indented with tabs, or it is indented with spaces, but
+it is a ((syntax error)) to mix both.
 
 Indentation within a block must be consistent. For example, the
 following code will cause a syntax error because of the incorrect

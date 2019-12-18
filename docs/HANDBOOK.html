@@ -2377,11 +2377,12 @@ phase.</p>
 <div class="sect3">
 <h4 id="text-2"><a class="anchor" href="#text-2"></a><a class="link" href="#text-2">2.2.3. Text</a></h4>
 <div class="paragraph">
-<p>Text in XL is delimited with a pair of single or double quotes.  Text
-can contain any printable character. For example, <code>"Hello World"</code> or
-<code>'ABC'</code> are valid text in XL. If the delimiter is needed in the text,
-it can be obtained by doubling it. For example, <code>"He said ""Hello"""</code>
-is text containing <code>He said "Hello"</code>.</p>
+<p>Text in XL is delimited with a pair of single
+or double quotes. Text can contain any printable character.
+For example, <code>"Hello World"</code> or <code>'ABC'</code> are valid text in XL. If the
+delimiter is needed in the text, it can be obtained by doubling
+it. For example, <code>"He said ""Hello"""</code> is text containing <code>He said
+"Hello"</code>.</p>
 </div>
 <div class="paragraph">
 <p>Additionally, the XL syntax file can specify delimiters for "long"
@@ -2398,10 +2399,10 @@ terminates when the matching delimiter is reached. By default, <code>&lt;&lt;</c
 </div>
 </div>
 <div class="paragraph">
-<p>Additional separators can be configured, and can be used to define
-specific types of text. For example, a program that often has to
-manipulate HTML data could allow <code>HTML</code> and <code>END_HTML</code> as delimiters, so
-that you could write:</p>
+<p>Additional delimiters can be configured, and can
+be used to define specific types of text. For example, a program that
+often has to manipulate HTML data could allow <code>HTML</code> and
+<code>END_HTML</code> as delimiters, so that you could write:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2417,10 +2418,11 @@ END_HTML</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<strong>RATIONALE</strong> The reason for a built-in format for text using single or
-double quotes is because the syntax file is read using the standard XL
-parser, and it needs text tokens in some specific cases that would
-otherwise parse incorrectly such as block or comment delimiters.
+<strong>RATIONALE</strong> The reason for a built-in format for text using
+single or double quotes is because the syntax file is read using the
+standard XL parser, and it needs text tokens in some specific cases
+that would otherwise parse incorrectly such as block or comment
+delimiters.
 </td>
 </tr>
 </table>
@@ -2429,14 +2431,13 @@ otherwise parse incorrectly such as block or comment delimiters.
 <div class="sect3">
 <h4 id="indentation-and-off-side-rule"><a class="anchor" href="#indentation-and-off-side-rule"></a><a class="link" href="#indentation-and-off-side-rule">2.2.4. Indentation and off-side rule</a></h4>
 <div class="paragraph">
-<p>Indentation in XL is significant, and is parsed as a special kind of
-block. Individual program line are parsed as infix nodes with the first
-line as the left operand, and the second line as the right operand.</p>
-</div>
-<div class="paragraph">
-<p>In other words, the two <code>loop</code> instructions below have exactly the same
-structure, except for the block delimiters (curly braces or indentation)
-and for the line-separating infix names (semi-colon or line terminator):</p>
+<p>Indentation in XL is significant. XL follows the
+<em>off-side rule</em> to define program blocks. There is no need for
+keywords such as <code>begin</code> and <code>end</code>, nor for block delimiters such as
+<code>{</code> or <code>}</code>. However, <code>{</code> and <code>}</code> can be used as block
+delimiters when needed, for example to create a
+block on a single line. The code below shows two equivalent ways to
+write the same loop:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2448,10 +2449,38 @@ loop
 </div>
 </div>
 <div class="paragraph">
-<p>Indentation must use the same indentation character within a single
-file, either tab or space. In other words, either your whole file is
-indented with tabs, or it is indented with spaces, but it is a syntax
-error to mix both.</p>
+<p>The two ways to write the loop above are not just functionally equivalent.
+They also share the same parse tree structure, the only difference
+being the operators being used. For example, <code>A;B</code> is an infix <code>;</code>
+with <code>A</code> on the left and <code>B</code> on the right, whereas individual lines
+are operands of an infix <em>new-line</em> operator. Similarly, <code>{A}</code> is a
+block containing <code>A</code>, and indentation is represented in the parse tree
+by a block delimited by <em>indent</em> and <em>outdent</em> invisible symbols.</p>
+</div>
+<div class="paragraph">
+<p>The structure of the second loop from the previous listing can be
+shown by the XL compiler using the <code>-show</code> option, as illustrated
+below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="shell" class="language-shell hljs">% xl -parse loop.xl -style debug -show
+(prefix
+ loop
+ (block indent
+  (infix CR
+   Eat
+   (infix CR
+    Pray
+    Love
+   ))))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Indentation must use the same indentation character within a
+single file, either tab or space. In other words, either your
+whole file is indented with tabs, or it is indented with spaces, but
+it is a syntax error to mix both.</p>
 </div>
 <div class="paragraph">
 <p>Indentation within a block must be consistent. For example, the
@@ -8811,7 +8840,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-19 07:28:40 +0100
+Last updated 2019-12-19 07:29:12 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
