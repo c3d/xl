@@ -1011,23 +1011,25 @@ functional languages, although the way it actually works internally is
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The current implementations of XL special-case single-defintion
+<div class="paragraph">
+<p>The current implementations of XL special-case single-defintion
 contexts, and <code>lambda</code> can be omitted in that case. In a normal context,
 <code>X is Y</code> defines a name <code>X</code>, but it did not seem very useful to have
 single-definition contexts defining only a name. The above example could
-have been written as:
-</td>
-</tr>
-</table>
+have been written as:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre>adder N is (X is N + X)</pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">adder N is (X is N + X)</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>However, this is not consistent with the rest of the language, and
 <code>lambda</code> will be required in future implementations.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </details>
@@ -1074,8 +1076,8 @@ type array [1] of T is
 type array [N] of T when N &gt; 1 is
     Head  : array[N-1] of T
     Tail  : T
-    I when I&lt;N is Head[I]
-    I when I=N is Tail
+    lambda I when I&lt;N is Head[I]
+    lambda I when I=N is Tail
 
 A : array[5] of integer
 for I in 1..5 loop
@@ -8809,7 +8811,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-18 00:29:05 +0100
+Last updated 2019-12-19 00:32:57 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

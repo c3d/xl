@@ -312,18 +312,23 @@ something that behaves almost exactly like an _anonymous function_ in
 functional languages, although the way it actually works internally is
 link:#scoping[still based on pattern matching].
 
-NOTE: The current implementations of XL special-case single-defintion
+[NOTE]
+=====
+The current implementations of XL special-case single-defintion
 contexts, and `lambda` can be omitted in that case. In a normal context,
 `X is Y` defines a name `X`, but it did not seem very useful to have
 single-definition contexts defining only a name. The above example could
 have been written as:
 
-....
+[source]
+----
 adder N is (X is N + X)
-....
+----
 
 However, this is not consistent with the rest of the language, and
 `lambda` will be required in future implementations.
+=====
+
 ====
 
 .Maps that associate a key to a value (((map)))
@@ -367,8 +372,8 @@ type array [1] of T is
 type array [N] of T when N > 1 is
     Head  : array[N-1] of T
     Tail  : T
-    I when I<N is Head[I]
-    I when I=N is Tail
+    lambda I when I<N is Head[I]
+    lambda I when I=N is Tail
 
 A : array[5] of integer
 for I in 1..5 loop
