@@ -655,7 +655,7 @@ matches the type of `Y`.
 All this can be done at compile-time. The generated code can then be
 reused whenever the combination of argument types is the same. For
 example, if `X` and `Y` are `integer` values, the generated code could
-be used for
+be used for the following code:
 
 [source]
 ----
@@ -1203,10 +1203,10 @@ types (((integer)), ((real)), ((text)) and ((name))), and four
 Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 
 [arabic]
-. [[integer]]`integer` nodes represent integer values like `1234`, `2#1001` or
-  `16#FFFE_FFFF`.
-. [[real]]`real` nodes represent floating-point values like `1.234`, `1.5e-10`
-  or `2#1.0001_0001#e24`.
+. [[unsigned]]`unsigned` nodes represent unsigned numbers
+  like `1234`, `2#1001` or `16#FFFE_FFFF`.
+. [[real]]`real` nodes represent floating-point numbers like `1.234`,
+  `1.5e-10` or `2#1.0001_0001#e24`.
 . [[text]]`text` nodes represent text values like `"Hello world"` or `'A'`.
 . [[name]]`name` node represent names like `ABC_DEF` or symbols like `+<=>+`.
 
@@ -1228,7 +1228,8 @@ Inner nodes contains combinations of other XL nodes:
 This list of node types is what the current implementations of XL
 offer. Some changes may happen, notably:
 
-* Adding a "binary object" node type, which could be used to store
+[[bits]]
+* Adding a "((binary object))" node type, which could be used to store
   binary data in the program. A possible syntax would be to prefix
   `bits` before a large integer value or file name:
 [source]
@@ -1297,9 +1298,10 @@ ambiguous, and possibly more difficult to process in a generic way.
 
 The ((leaf node))s in XL all have a uniquely identifable syntax.
 
-==== [[numbers]]Number syntax
+==== Numbers
 
-Numbers begin with a ((digit)), i.e. one of `0123456789`.
+Numbers begin with a ((digit)), i.e. one of `0123456789`. For example,
+`0` and `42` are valid XL numbers.
 
 A single ((underscore)) `+_+` character can be used to separate
 digits, as in `1_000_000`. The following are not valid XL numbers:
@@ -1317,48 +1319,47 @@ is 15, `Z` is 35. Case does not matter. For example, `16#FF` and
 `16#ff` are two valid ((hexadecimal)) representation of `255`.
 
 For base 64, https://en.wikipedia.org/wiki/Base64[Base64] encoding is
-used, and case matters. This is mostly indended for use in binary
-objects, i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
+used, and case matters. This is mostly indended for use in link:#bits[((binary
+objects))], i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
 encoding for the number with the same binary representation as the
-sequence of characters in `Hello!`.
+sequence of ASCII characters in `Hello!`.
 
-There is an implementation-dependent limit for the maximum `integer`
-value. This limit cannot be less than the maximum value for a
-2-complement 64-bit signed integer.
+For ((fractional number))s, a dot `.` is used as ((decimal separator)),
+and must separate digits. For example, `0.2` and `2.0` are valid but,
+unlike in C, `.2` and`2.` are not numbers but a prefix and
+postifix `.` respectively. This is necessary to avoid ambiguities,
+because the ((standard library)) denotes link:#range[((range))s] using
+an infix `..`, so `2..3` is an infix `..` with `2` and `3` as
+operands, representing the range between 2 and 3.
 
-For real numbers, a dot `.` is used as decimal separator, and must
-separate digits. For example, `0.2` and `2.0` are valid but, unlike in
-C, `.2` and`2.` are not real numbers but a prefix and postifix dot
-respectively. Also note that the ((standard library)) denotes ranges using
-two dots, so `2..3` is an infix `..` with `2` and `3` as operands,
-representing the range between 2 and 3.
+Numbers can contain an exponent, specified by the letter `e` or
+`E`. If the exponent is negative, then the number is parsed as a
+fractional number. Therefore, `1e3` is integer value 1000, but `1e-3`
+is the same as `0.001`. The exponent is always given in base 10, and it
+indicates an exponentiation in the given base, so that `2#1e8` is
+2^8^, in other words decimal value 256. For based numbers, the
+exponent may be preceded by a `#` sign, which is mandatory if `e` or
+`E` are valid digits in the base, as in `16#FF#e2` which is an
+hexadecimal representation of decimal value 65280.
 
-Both `integer` and `real` numbers can contain an exponent, specified by
-the letter `e` or `E`. If the exponent is negative, then the number is
-parsed as a real number. Therefore, `1e3` is integer value 1000, but
-`1e-3` is real value `0.001`. The exponent is always given in base 10,
-and it indicates an exponentiation in the given base, so that `2#1e8` is
-decimal value 256. For based numbers, the exponent may be preceded by a
-`#` sign, which is mandatory if `e` or `E` are valid digits in the base,
-as in `16#FF#e2` which represents decimal value 65280.
-
-If a sign precedes a number, like `+3` or `-5.3`, it is parsed by the
-compiler as a prefix `+` or `-` and not as part of the number. It is
-possible, however, for an `integer` or `real` node to contain negative
-values as a result of program evaluation.
+There is an implementation-dependent limit for the maximum value an
+integer literal can have. This limit cannot be less than 2^64^-1.
+If a value is preceded by a `+` or `-` sign, that sign is parsed as a
+prefix operator and not as part of the number. For example, `-2` is a
+prefix `-` with `2` as an argument.
 
 The various syntactic possibilities for XL numbers are only for
 convenience, and are all strictly equivalent as far as program execution
 is concerned. In other words, a program may not behave differently if a
 constant is spelled as `16#FF_FF` or as `65535`.
 
-NOTE: One unsatisfactory aspect of XL number syntax is that it does not
+WARNING: One unsatisfactory aspect of XL number syntax is that it does not
 offer an obvious path to correctly represent "semantic" version
 numbers in the code. For example, a notation like `2.3.1` will parse as
 an infix `.` between real number `2.3` and integer `1`, making it
 indistinguishable from `2.30.1`.
 
-==== Name and symbol syntax
+==== Names and symbols
 
 Names in XL begin with an letter, followed by letters, symbols or
 digits. For example, `MyName` and `A22` are valid XL names.
@@ -1388,16 +1389,16 @@ Symbols begin with one of the ASCII punctuation characters:
 ....
 
 Symbols longer than one character must be specified in the XL syntax
-file. For example, the XL syntax file defines a `<=` operator, but no
-`+<=>+` operator. Consequently, the sequence `1 <=> 2` will be parsed as
-`(1 <= (> 2))`. In order to add this operator, it is necessary to
+file. For example, the XL syntax file defines a `+<=+` operator, but no
+`+<=>+` operator. Consequently, the sequence `+1 <=> 2+` will be parsed as
+`+(1 <= (> 2))+`. In order to add this operator, it is necessary to
 link:#extending-the-syntax[extend the syntax] using a `syntax`
 statement.
 
 Names and symbols are treated interchangeably by XL after the parsing
 phase.
 
-==== Text syntax
+==== Text
 
 Text in XL is delimited with a pair of single or double quotes.  Text
 can contain any printable character. For example, `"Hello World"` or

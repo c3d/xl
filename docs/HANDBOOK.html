@@ -485,9 +485,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#syntax-for-xl-nodes">2.2. Syntax for XL nodes</a>
 <ul class="sectlevel3">
-<li><a href="#number-syntax">2.2.1. Number syntax</a></li>
-<li><a href="#name-and-symbol-syntax">2.2.2. Name and symbol syntax</a></li>
-<li><a href="#text-syntax">2.2.3. Text syntax</a></li>
+<li><a href="#numbers">2.2.1. Numbers</a></li>
+<li><a href="#names-and-symbols">2.2.2. Names and symbols</a></li>
+<li><a href="#text-2">2.2.3. Text</a></li>
 <li><a href="#indentation-and-off-side-rule">2.2.4. Indentation and off-side rule</a></li>
 <li><a href="#operator-precedence-and-associativity">2.2.5. Operator precedence and associativity</a></li>
 <li><a href="#delimiters">2.2.6. Delimiters</a></li>
@@ -1414,7 +1414,7 @@ matches the type of <code>Y</code>.</p>
 <p>All this can be done at compile-time. The generated code can then be
 reused whenever the combination of argument types is the same. For
 example, if <code>X</code> and <code>Y</code> are <code>integer</code> values, the generated code could
-be used for</p>
+be used for the following code:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2076,12 +2076,12 @@ inner node types (infix, prefix, postfix and block).</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><a id="integer"></a><code>integer</code> nodes represent integer values like <code>1234</code>, <code>2#1001</code> or
-<code>16#FFFE_FFFF</code>.</p>
+<p><a id="unsigned"></a><code>unsigned</code> nodes represent unsigned numbers
+like <code>1234</code>, <code>2#1001</code> or <code>16#FFFE_FFFF</code>.</p>
 </li>
 <li>
-<p><a id="real"></a><code>real</code> nodes represent floating-point values like <code>1.234</code>, <code>1.5e-10</code>
-or <code>2#1.0001_0001#e24</code>.</p>
+<p><a id="real"></a><code>real</code> nodes represent floating-point numbers like <code>1.234</code>,
+<code>1.5e-10</code> or <code>2#1.0001_0001#e24</code>.</p>
 </li>
 <li>
 <p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code> or <code>'A'</code>.</p>
@@ -2126,7 +2126,7 @@ operand, like <code>3%</code> or <code>45km</code>.</p>
 <p>This list of node types is what the current implementations of XL
 offer. Some changes may happen, notably:</p>
 </div>
-<div class="ulist">
+<div id="bits" class="ulist">
 <ul>
 <li>
 <p>Adding a "binary object" node type, which could be used to store
@@ -2227,9 +2227,10 @@ ambiguous, and possibly more difficult to process in a generic way.
 <p>The leaf nodes in XL all have a uniquely identifable syntax.</p>
 </div>
 <div class="sect3">
-<h4 id="number-syntax"><a class="anchor" href="#number-syntax"></a><a class="link" href="#number-syntax">2.2.1. <a id="numbers"></a>Number syntax</a></h4>
+<h4 id="numbers"><a class="anchor" href="#numbers"></a><a class="link" href="#numbers">2.2.1. Numbers</a></h4>
 <div class="paragraph">
-<p>Numbers begin with a digit, i.e. one of <code>0123456789</code>.</p>
+<p>Numbers begin with a digit, i.e. one of <code>0123456789</code>. For example,
+<code>0</code> and <code>42</code> are valid XL numbers.</p>
 </div>
 <div class="paragraph">
 <p>A single underscore <code>_</code> character can be used to separate
@@ -2251,39 +2252,36 @@ is 15, <code>Z</code> is 35. Case does not matter. For example, <code>16#FF</cod
 </div>
 <div class="paragraph">
 <p>For base 64, <a href="https://en.wikipedia.org/wiki/Base64">Base64</a> encoding is
-used, and case matters. This is mostly indended for use in binary
-objects, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
+used, and case matters. This is mostly indended for use in <a href="#bits">binary objects</a>, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
 encoding for the number with the same binary representation as the
-sequence of characters in <code>Hello!</code>.</p>
+sequence of ASCII characters in <code>Hello!</code>.</p>
 </div>
 <div class="paragraph">
-<p>There is an implementation-dependent limit for the maximum <code>integer</code>
-value. This limit cannot be less than the maximum value for a
-2-complement 64-bit signed integer.</p>
+<p>For fractional numbers, a dot <code>.</code> is used as decimal separator,
+and must separate digits. For example, <code>0.2</code> and <code>2.0</code> are valid but,
+unlike in C, <code>.2</code> and`2.` are not numbers but a prefix and
+postifix <code>.</code> respectively. This is necessary to avoid ambiguities,
+because the standard library denotes <a href="#range">ranges</a> using
+an infix <code>..</code>, so <code>2..3</code> is an infix <code>..</code> with <code>2</code> and <code>3</code> as
+operands, representing the range between 2 and 3.</p>
 </div>
 <div class="paragraph">
-<p>For real numbers, a dot <code>.</code> is used as decimal separator, and must
-separate digits. For example, <code>0.2</code> and <code>2.0</code> are valid but, unlike in
-C, <code>.2</code> and`2.` are not real numbers but a prefix and postifix dot
-respectively. Also note that the standard library denotes ranges using
-two dots, so <code>2..3</code> is an infix <code>..</code> with <code>2</code> and <code>3</code> as operands,
-representing the range between 2 and 3.</p>
+<p>Numbers can contain an exponent, specified by the letter <code>e</code> or
+<code>E</code>. If the exponent is negative, then the number is parsed as a
+fractional number. Therefore, <code>1e3</code> is integer value 1000, but <code>1e-3</code>
+is the same as <code>0.001</code>. The exponent is always given in base 10, and it
+indicates an exponentiation in the given base, so that <code>2#1e8</code> is
+2<sup>8</sup>, in other words decimal value 256. For based numbers, the
+exponent may be preceded by a <code>#</code> sign, which is mandatory if <code>e</code> or
+<code>E</code> are valid digits in the base, as in <code>16#FF#e2</code> which is an
+hexadecimal representation of decimal value 65280.</p>
 </div>
 <div class="paragraph">
-<p>Both <code>integer</code> and <code>real</code> numbers can contain an exponent, specified by
-the letter <code>e</code> or <code>E</code>. If the exponent is negative, then the number is
-parsed as a real number. Therefore, <code>1e3</code> is integer value 1000, but
-<code>1e-3</code> is real value <code>0.001</code>. The exponent is always given in base 10,
-and it indicates an exponentiation in the given base, so that <code>2#1e8</code> is
-decimal value 256. For based numbers, the exponent may be preceded by a
-<code>#</code> sign, which is mandatory if <code>e</code> or <code>E</code> are valid digits in the base,
-as in <code>16#FF#e2</code> which represents decimal value 65280.</p>
-</div>
-<div class="paragraph">
-<p>If a sign precedes a number, like <code>+3</code> or <code>-5.3</code>, it is parsed by the
-compiler as a prefix <code>+</code> or <code>-</code> and not as part of the number. It is
-possible, however, for an <code>integer</code> or <code>real</code> node to contain negative
-values as a result of program evaluation.</p>
+<p>There is an implementation-dependent limit for the maximum value an
+integer literal can have. This limit cannot be less than 2<sup>64</sup>-1.
+If a value is preceded by a <code>+</code> or <code>-</code> sign, that sign is parsed as a
+prefix operator and not as part of the number. For example, <code>-2</code> is a
+prefix <code>-</code> with <code>2</code> as an argument.</p>
 </div>
 <div class="paragraph">
 <p>The various syntactic possibilities for XL numbers are only for
@@ -2291,11 +2289,11 @@ convenience, and are all strictly equivalent as far as program execution
 is concerned. In other words, a program may not behave differently if a
 constant is spelled as <code>16#FF_FF</code> or as <code>65535</code>.</p>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock warning">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 One unsatisfactory aspect of XL number syntax is that it does not
@@ -2309,7 +2307,7 @@ indistinguishable from <code>2.30.1</code>.
 </div>
 </div>
 <div class="sect3">
-<h4 id="name-and-symbol-syntax"><a class="anchor" href="#name-and-symbol-syntax"></a><a class="link" href="#name-and-symbol-syntax">2.2.2. Name and symbol syntax</a></h4>
+<h4 id="names-and-symbols"><a class="anchor" href="#names-and-symbols"></a><a class="link" href="#names-and-symbols">2.2.2. Names and symbols</a></h4>
 <div class="paragraph">
 <p>Names in XL begin with an letter, followed by letters, symbols or
 digits. For example, <code>MyName</code> and <code>A22</code> are valid XL names.</p>
@@ -2364,9 +2362,9 @@ lacking in that respect.
 </div>
 <div class="paragraph">
 <p>Symbols longer than one character must be specified in the XL syntax
-file. For example, the XL syntax file defines a <code>&#8656;</code> operator, but no
-<code>&lt;=&gt;</code> operator. Consequently, the sequence <code>1 &lt;&#8658; 2</code> will be parsed as
-<code>(1 &#8656; (&gt; 2))</code>. In order to add this operator, it is necessary to
+file. For example, the XL syntax file defines a <code>&lt;=</code> operator, but no
+<code>&lt;=&gt;</code> operator. Consequently, the sequence <code>1 &lt;=&gt; 2</code> will be parsed as
+<code>(1 &lt;= (&gt; 2))</code>. In order to add this operator, it is necessary to
 <a href="#extending-the-syntax">extend the syntax</a> using a <code>syntax</code>
 statement.</p>
 </div>
@@ -2376,7 +2374,7 @@ phase.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="text-syntax"><a class="anchor" href="#text-syntax"></a><a class="link" href="#text-syntax">2.2.3. Text syntax</a></h4>
+<h4 id="text-2"><a class="anchor" href="#text-2"></a><a class="link" href="#text-2">2.2.3. Text</a></h4>
 <div class="paragraph">
 <p>Text in XL is delimited with a pair of single or double quotes.  Text
 can contain any printable character. For example, <code>"Hello World"</code> or
@@ -8812,7 +8810,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-19 01:03:19 +0100
+Last updated 2019-12-19 07:27:48 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
