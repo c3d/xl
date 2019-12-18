@@ -1368,7 +1368,7 @@ A single underscore `_` can be used to separate two valid characters in
 a name. Therefore, `A_2` is a valid XL name, but `A__2` and `_A` are
 not.
 
-NOTE: The current implementation reads its input in Unicode UTF-8
+WARNING: The current implementation reads its input in Unicode UTF-8
 format, and makes crude attempts at accepting Unicode. This was good
 enough for Tao3D to deal with multi-lingual text, including in languages
 such as Hebrew or Arabic. However, that implementation is a bit naive
@@ -1379,8 +1379,9 @@ presently a valid XL name, and this is considered a bug.
 Case and delimiters are not significant in XL, so that `JOE_DALTON` and
 `JoeDalton` are treated identically.
 
-NOTE: For historical reasons, the current implementations are quite
-lacking in that respect.
+WARNING: For historical reasons, the current implementations are quite
+lacking in that respect, and will treat `V` and `v` differently. There
+is still an open debate about giving a semantic role to capitalization.
 
 Symbols begin with one of the ASCII punctuation characters:
 

@@ -2317,11 +2317,11 @@ digits. For example, <code>MyName</code> and <code>A22</code> are valid XL names
 a name. Therefore, <code>A_2</code> is a valid XL name, but <code>A__2</code> and <code>_A</code> are
 not.</p>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock warning">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 The current implementation reads its input in Unicode UTF-8
@@ -2339,15 +2339,16 @@ presently a valid XL name, and this is considered a bug.
 <p>Case and delimiters are not significant in XL, so that <code>JOE_DALTON</code> and
 <code>JoeDalton</code> are treated identically.</p>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock warning">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
 For historical reasons, the current implementations are quite
-lacking in that respect.
+lacking in that respect, and will treat <code>V</code> and <code>v</code> differently. There
+is still an open debate about giving a semantic role to capitalization.
 </td>
 </tr>
 </table>
@@ -8810,7 +8811,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-19 07:27:48 +0100
+Last updated 2019-12-19 07:28:40 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
