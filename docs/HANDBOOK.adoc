@@ -553,7 +553,7 @@ them in the compiler, has several benefits:
 The XL standard library consists of a link:{xl}native/lib[wide variety of
 modules]. The top-level ((module)) is called `XL`, and sub-modules are
 categorized in a hierarchy(((hierarchy,modules))). For example, if you
-need to perform computations on (((complex number)))s, you would `use
+need to perform computations on ((complex number)))s, you would `use
 XL.MATH.COMPLEX` to load the
 link:{xl}native/lib/xl/math/complex.xs[complex numbers module]
 
@@ -976,7 +976,7 @@ image:images/Tao3D-clock.png[Animated clock]
 
 https://github.com/c3d/elfe[ELFE] is another XL-based experiment
 targeting ((distributed programming)), notably for the ((Internet of things)).
-The idea was to use the link:#homoiconic[((homoiconic))]] aspect of XL
+The idea was to use the link:#homoiconic[((homoiconic))] aspect of XL
 to evaluate parts of the program on different machines, by sending the
 relevant program fragments and the associated data over the wire for
 ((remote evaluation)).
@@ -1154,7 +1154,7 @@ new feature into previous-generation Lisp programs. This kind of
 capability made it much easier to add
 ((object-oriented programming))
 https://en.wikipedia.org/wiki/Common_Lisp_Object_System[to Lisp] than
-to languages like C: neither https://en.wikipedia.org/wiki/C++[C++]
+to languages like C: neither link:https://en.wikipedia.org/wiki/C%2B%2B[C++]
 nor https://en.wikipedia.org/wiki/Objective-C[Objective C] were
 implemented as just another C library, and there was a reason for
 that. Unlike Lisp, these languages were not
