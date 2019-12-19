@@ -1534,7 +1534,7 @@ Additional sections of the syntax file define delimiters for comment,
 block and text. Comment and text delimiters come in pairs.
 
 The default syntax file specifies comments that follow the C/pass:[C++]
-convention, i.e. comments either start with `/*` and end with `*/` or
+convention, i.e. comments either start with `+/*+` and end with `+*/+` or
 start with `//` and end with a new line. The basic text separators
 (simple and double quotes) are not specified in the syntax file
 because they are used to parse the syntax file itself. The default
