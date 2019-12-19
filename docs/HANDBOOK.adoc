@@ -1169,7 +1169,7 @@ underlying problem is that the Lisp syntax departs from the usual
 ((notation))s as used by human beings. For example, adding 1 and 2 is
 written `1+2` in XL, like in most programming languages, but `(+ 1 2)`
 in Lisp. In concept programming, this notational problem is called
-((syntactic noise)).
+_((syntactic noise))_.
 
 XL addresses this problem by putting human usability first. In that
 sense, it can be seen as an effort to make the power of Lisp more
@@ -5407,7 +5407,8 @@ Concept programming deals with the way we transform concepts that reside
 in our brain into code that resides in the computer. That conversion is
 lossy, and concept programming explores various techniques to limit the
 losses. It introduces pseudo-metrics inspired by signal processing such
-as syntactic noise, semantic noise, bandwidth and signal/noise ratio.
+as ((syntactic noise)), ((semantic noise)), ((bandwidth)) and
+((signal/noise ratio)).
 These tools, as simple as they were, powerfully demonstrated limitations
 of existing languages and techniques.
 
