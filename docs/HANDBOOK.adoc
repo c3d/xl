@@ -270,7 +270,7 @@ X + 0           is      X
 ====
 [source]
 ----
-loop Body       is      Body; loop Body
+loop Body       is      Body; loop Body     // Define an infnite loop
 ----
 ====
 
@@ -1320,8 +1320,8 @@ bits "image.png"`
 
 The ((leaf node))s in XL each have a uniquely identifable syntax.
 For example, simply by looking at the sequence of characters, we can
-tell that `42` is an unsigned value, `3.5` is a real value, `"ABC"`
-is a text value, `'a'` is a character value, `ABC` is a name, and `-`
+tell that `42` is a whole number, `3.5` is a fractional number, `"ABC"`
+is a text value, `'a'` is a character value, `ABC` is a name, and `->`
 is an operator.
 
 NOTE: There is currently no provision in the compiler to add new kinds
