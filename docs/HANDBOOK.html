@@ -483,22 +483,26 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#the-xl-parse-tree">2.1.2. The XL parse tree</a></li>
 </ul>
 </li>
-<li><a href="#syntax-for-xl-nodes">2.2. Syntax for XL nodes</a>
+<li><a href="#leaf-nodes">2.2. Leaf nodes</a>
 <ul class="sectlevel3">
-<li><a href="#numbers">2.2.1. Numbers</a></li>
+<li><a href="#whole-numbers">2.2.1. Whole numbers</a></li>
 <li><a href="#names-and-symbols">2.2.2. Names and symbols</a></li>
 <li><a href="#text-2">2.2.3. Text</a></li>
-<li><a href="#indentation-and-off-side-rule">2.2.4. Indentation and off-side rule</a></li>
-<li><a href="#operator-precedence-and-associativity">2.2.5. Operator precedence and associativity</a></li>
-<li><a href="#delimiters">2.2.6. Delimiters</a></li>
-<li><a href="#child-syntax">2.2.7. Child syntax</a></li>
-<li><a href="#extending-the-syntax">2.2.8. Extending the syntax</a></li>
 </ul>
 </li>
-<li><a href="#making-the-syntax-easy-for-humans">2.3. Making the syntax easy for humans</a>
+<li><a href="#inner-nodes">2.3. Inner nodes</a>
 <ul class="sectlevel3">
-<li><a href="#expression-vs-statement">2.3.1. Expression vs. statement</a></li>
-<li><a href="#infix-vs-prefix">2.3.2. infix vs. prefix</a></li>
+<li><a href="#indentation-and-off-side-rule">2.3.1. Indentation and off-side rule</a></li>
+<li><a href="#operator-precedence-and-associativity">2.3.2. Operator precedence and associativity</a></li>
+<li><a href="#delimiters">2.3.3. Delimiters</a></li>
+<li><a href="#child-syntax">2.3.4. Child syntax</a></li>
+<li><a href="#extending-the-syntax">2.3.5. Extending the syntax</a></li>
+</ul>
+</li>
+<li><a href="#making-the-syntax-easy-for-humans">2.4. Making the syntax easy for humans</a>
+<ul class="sectlevel3">
+<li><a href="#expression-vs-statement">2.4.1. Expression vs. statement</a></li>
+<li><a href="#infix-vs-prefix">2.4.2. infix vs. prefix</a></li>
 </ul>
 </li>
 </ul>
@@ -612,7 +616,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#compiled-xl">5. Compiled XL</a>
 <ul class="sectlevel2">
 <li><a href="#compiled-representations">5.1. Compiled representations</a></li>
-<li><a href="#data">5.2. Data</a></li>
+<li><a href="#data-2">5.2. Data</a></li>
 <li><a href="#lifetime-2">5.3. Lifetime</a></li>
 <li><a href="#closures-2">5.4. Closures</a></li>
 <li><a href="#caller-lookup-2">5.5. Caller lookup</a></li>
@@ -2054,8 +2058,8 @@ barely adds another 900 lines. By contrast, the
 <a href="https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c">C parser</a>
 in GCC needs more than 20000 lines of code, which is about the size of a
 complete XL interpreter, and the
-<a href="https://github.com/gcc-mirror/gcc/blob/master/gcc/cp/parser.c">C++
-parser</a> is over twice as much!</p>
+<a href="https://github.com/gcc-mirror/gcc/blob/master/gcc/cp/parser.c">C++ parser</a>
+is over twice as much!</p>
 </div>
 <div class="paragraph">
 <p>A key to keeping things really simple is that the XL syntax is
@@ -2066,9 +2070,12 @@ compiler.</p>
 </div>
 <div class="paragraph">
 <p>All XL programs can be represented with a very simple tree structure,
-called a <em>parse tree</em>. The XL parse tree contains four leaf node
-types (integer, real, text and name), and four
-inner node types (infix, prefix, postfix and block).</p>
+called a <em>parse tree</em>. The XL parse tree contains <em>leaf nodes</em>
+that don&#8217;t have any children, such as integer, real, text
+or symbol nodes, and <em>inner nodes</em> that have at least
+one child node, such as infix, prefix, postfix and
+block nodes. In general, when a node can have children, these
+children can be of any kind.</p>
 </div>
 <div class="paragraph">
 <p>Leaf nodes contain values that are atomic as far as XL is concerned:</p>
@@ -2076,18 +2083,32 @@ inner node types (infix, prefix, postfix and block).</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><a id="unsigned"></a><code>unsigned</code> nodes represent unsigned numbers
+<p><a id="integer"></a><code>integer</code> nodes represent non-negative whole numbers
 like <code>1234</code>, <code>2#1001</code> or <code>16#FFFE_FFFF</code>.</p>
 </li>
 <li>
-<p><a id="real"></a><code>real</code> nodes represent floating-point numbers like <code>1.234</code>,
-<code>1.5e-10</code> or <code>2#1.0001_0001#e24</code>.</p>
+<p><a id="real"></a><code>real</code> nodes represent a floating-point approximation of
+real numbers like <code>1.234</code>, <code>1.5e-10</code> or <code>2#1.0001_0001#e24</code>.</p>
 </li>
 <li>
-<p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code> or <code>'A'</code>.</p>
+<p><a id="character"></a><code>character</code> nodes represent individual characters, like&#8217;A'`.</p>
 </li>
 <li>
-<p><a id="name"></a><code>name</code> node represent names like <code>ABC_DEF</code> or symbols like <code>&lt;=&gt;</code>.</p>
+<p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code></p>
+</li>
+<li>
+<p><a id="name"></a><code>name</code> nodes represent names like <code>JOHN_DOE</code></p>
+</li>
+<li>
+<p><a id="operator"></a><code>operator</code> nodes represent non-alphabetical operators
+like <code>&lt;=&gt;</code>.</p>
+</li>
+<li>
+<p><a id="symbols"></a><code>symbols</code> nodes regroup names, symbols and a special empty
+symbol used in the representation of empty blocks like <code>()</code>.</p>
+</li>
+<li>
+<p><a id="data"></a><code>data</code> nodes hold an arbitrary amount of binary data.</p>
 </li>
 </ol>
 </div>
@@ -2113,46 +2134,20 @@ operand, like <code>3%</code> or <code>45km</code>.</p>
 <p><a id="block"></a><code>block</code> nodes represent a node surrounded by two delimiters, like
 <code>[a]</code>, <code>(a)</code>, <code>{a}</code>. Blocks are also used to represent indentation.</p>
 </li>
+<li>
+<p><a id="parenthese_block"></a><code>parenthese_block</code> nodes are delimited with <code>(</code> and <code>)</code>.</p>
+</li>
+<li>
+<p><a id="square_block"></a><code>square_block</code> nodes are delimited with <code>[</code> and <code>]</code>.</p>
+</li>
+<li>
+<p><a id="curly_block"></a><code>curly_block</code> nodes are delimited with <code>{</code> and <code>}</code>.</p>
+</li>
+<li>
+<p><a id="indent"></a><code>indent_block</code> nodes are delimited by
+<a href="#indentation">code indentation</a>.</p>
+</li>
 </ol>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>This list of node types is what the current implementations of XL
-offer. Some changes may happen, notably:</p>
-</div>
-<div id="bits" class="ulist">
-<ul>
-<li>
-<p>Adding a "binary object" node type, which could be used to store
-binary data in the program. A possible syntax would be to prefix
-<code>bits</code> before a large integer value or file name:</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">bits 16#FF_00_FF_00_FF_FF_00_FF_00
-bits "image.png"`</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Finding a more efficient representation for large sequences of items. So
-far, attempts at finding such a representation came with an unacceptable
-cost, notably with respect to the generated code.</p>
-</li>
-</ul>
-</div>
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>For example, let’s consider the following code:</p>
@@ -2210,11 +2205,49 @@ represent distinct machine types.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Empty blocks are represented as a block with an "empty name" as
-a child. This is not very satisfactory. Alternatives such as
-representing blocks as possibly empty sequences of items have proven
-even more complicated, since the representation of [A,B,C] becomes
-ambiguous, and possibly more difficult to process in a generic way.
+<div class="paragraph">
+<p>The list of node types given above is what the current implementations
+of XL offer. Some changes may happen in the future, notably:</p>
+</div>
+<div id="bits" class="ulist">
+<ul>
+<li>
+<p>Adding a "binary object" node type, which could be used to store
+binary data in the program. A possible syntax would be to prefix
+<code>bits</code> before a large integer value or file name:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">bits 16#FF_00_FF_00_FF_FF_00_FF_00
+bits "image.png"`</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Finding a better representation for empty blocks such as <code>()</code>.
+In the current implementation, they are represented as a block with
+an "empty symbol" as a child. With this choice, the parse tree has no
+"null" node anywhere in the tree. However, this is not very
+satisfactory, since the empty symbol cannot exist anywhere else in
+the parse tree. Alternatives such as representing blocks as possibly
+empty sequences of items have proven even more complicated, since the
+representation of <code>[A,B,C]</code> becomes ambiguous (it could be a block
+containing three elements, or a block containing two elements, one
+of them being an infix, or any other combination), and proved more
+difficult to process in a generic way.</p>
+</li>
+<li>
+<p>Finding a more efficient representation for large sequences of items.
+Currently, they are represented by an unbalanced tree, i.e. a tree
+where one side is disproportionately larger than the other.
+So far, attempts at finding a better representation all had at
+least one severe drawback that precluded their use.</p>
+</li>
+</ul>
+</div>
 </td>
 </tr>
 </table>
@@ -2222,14 +2255,35 @@ ambiguous, and possibly more difficult to process in a generic way.
 </div>
 </div>
 <div class="sect2">
-<h3 id="syntax-for-xl-nodes"><a class="anchor" href="#syntax-for-xl-nodes"></a><a class="link" href="#syntax-for-xl-nodes">2.2. Syntax for XL nodes</a></h3>
+<h3 id="leaf-nodes"><a class="anchor" href="#leaf-nodes"></a><a class="link" href="#leaf-nodes">2.2. Leaf nodes</a></h3>
 <div class="paragraph">
-<p>The leaf nodes in XL all have a uniquely identifable syntax.</p>
+<p>The leaf nodes in XL each have a uniquely identifable syntax.
+For example, simply by looking at the sequence of characters, we can
+tell that <code>42</code> is an unsigned value, <code>3.5</code> is a real value, <code>"ABC"</code>
+is a text value, <code>'a'</code> is a character value, <code>ABC</code> is a name, and <code>-</code>
+is an operator.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+There is currently no provision in the compiler to add new kinds
+of leaf nodes. This is being considered, and would require a minimal
+addition to the syntax file. The primary implementation issue is that
+it would require the syntax of the syntax file to diverge from the XL
+syntax itself, since numbers or names in the syntax file have to be
+"hardcoded" somehow
+</td>
+</tr>
+</table>
 </div>
 <div class="sect3">
-<h4 id="numbers"><a class="anchor" href="#numbers"></a><a class="link" href="#numbers">2.2.1. Numbers</a></h4>
+<h4 id="whole-numbers"><a class="anchor" href="#whole-numbers"></a><a class="link" href="#whole-numbers">2.2.1. Whole numbers</a></h4>
 <div class="paragraph">
-<p>Numbers begin with a digit, i.e. one of <code>0123456789</code>. For example,
+<p>Whole numbers begin with a digit, i.e. one of <code>0123456789</code>. For example,
 <code>0</code> and <code>42</code> are valid XL numbers.</p>
 </div>
 <div class="paragraph">
@@ -2385,10 +2439,11 @@ it. For example, <code>"He said ""Hello"""</code> is text containing <code>He sa
 "Hello"</code>.</p>
 </div>
 <div class="paragraph">
-<p>Additionally, the XL syntax file can specify delimiters for "long"
-text. Long text can include line-terminating characters, and only
-terminates when the matching delimiter is reached. By default, <code>&lt;&lt;</code> and
-<code>&gt;&gt;</code> are long-text delimiters, so that the following is valid text:</p>
+<p>Additionally, the XL <a href="#syntax-file">syntax file</a> can specify
+delimiters for "long" text. Long text can include
+line-terminating characters, and only terminates when the matching
+delimiter is reached. By default, <code>&lt;&lt;</code> and <code>&gt;&gt;</code> are long-text
+delimiters, so that the following is valid text:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2419,17 +2474,24 @@ END_HTML</code></pre>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> The reason for a built-in format for text using
-single or double quotes is because the syntax file is read using the
-standard XL parser, and it needs text tokens in some specific cases
-that would otherwise parse incorrectly such as block or comment
-delimiters.
+single or double quotes is because the <a href="#syntax-file">syntax file</a>
+is read using the standard XL parser, and it needs text tokens in some
+specific cases that would otherwise parse incorrectly such as block or
+comment delimiters.
 </td>
 </tr>
 </table>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="inner-nodes"><a class="anchor" href="#inner-nodes"></a><a class="link" href="#inner-nodes">2.3. Inner nodes</a></h3>
+<div class="paragraph">
+<p>The inner nodes are defined by the <a href="#syntax-file">syntax file</a>,
+which specifies their precedence and associativity.</p>
+</div>
 <div class="sect3">
-<h4 id="indentation-and-off-side-rule"><a class="anchor" href="#indentation-and-off-side-rule"></a><a class="link" href="#indentation-and-off-side-rule">2.2.4. Indentation and off-side rule</a></h4>
+<h4 id="indentation-and-off-side-rule"><a class="anchor" href="#indentation-and-off-side-rule"></a><a class="link" href="#indentation-and-off-side-rule">2.3.1. <a id="indentation"></a>Indentation and off-side rule</a></h4>
 <div class="paragraph">
 <p>Indentation in XL is significant. XL follows the
 <em>off-side rule</em> to define program blocks. There is no need for
@@ -2497,7 +2559,7 @@ indentation of <code>Pray</code>:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="operator-precedence-and-associativity"><a class="anchor" href="#operator-precedence-and-associativity"></a><a class="link" href="#operator-precedence-and-associativity">2.2.5. Operator precedence and associativity</a></h4>
+<h4 id="operator-precedence-and-associativity"><a class="anchor" href="#operator-precedence-and-associativity"></a><a class="link" href="#operator-precedence-and-associativity">2.3.2. <a id="syntax-file"></a>Operator precedence and associativity</a></h4>
 <div class="paragraph">
 <p>The operators available for XL programmers are defined by the
 <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>. The same rules apply for names or
@@ -2579,7 +2641,7 @@ for example, the associated precedence will be that of <code>FUNCTION</code>.</p
 </div>
 </div>
 <div class="sect3">
-<h4 id="delimiters"><a class="anchor" href="#delimiters"></a><a class="link" href="#delimiters">2.2.6. Delimiters</a></h4>
+<h4 id="delimiters"><a class="anchor" href="#delimiters"></a><a class="link" href="#delimiters">2.3.3. Delimiters</a></h4>
 <div class="paragraph">
 <p>Additional sections of the syntax file define delimiters for comment,
 block and text. Comment and text delimiters come in pairs.</p>
@@ -2605,7 +2667,7 @@ parentheses <code>( )</code> or square brackets <code>[ ]</code> will contain ex
 </div>
 </div>
 <div class="sect3">
-<h4 id="child-syntax"><a class="anchor" href="#child-syntax"></a><a class="link" href="#child-syntax">2.2.7. Child syntax</a></h4>
+<h4 id="child-syntax"><a class="anchor" href="#child-syntax"></a><a class="link" href="#child-syntax">2.3.4. Child syntax</a></h4>
 <div class="paragraph">
 <p>A syntax file can define a child syntax file, which overrides the syntax
 when a given name or symbol is found.</p>
@@ -2638,7 +2700,7 @@ relatively simple function declarations.
 </div>
 </div>
 <div class="sect3">
-<h4 id="extending-the-syntax"><a class="anchor" href="#extending-the-syntax"></a><a class="link" href="#extending-the-syntax">2.2.8. Extending the syntax</a></h4>
+<h4 id="extending-the-syntax"><a class="anchor" href="#extending-the-syntax"></a><a class="link" href="#extending-the-syntax">2.3.5. <a id="syntax-statements"></a>Extending the syntax</a></h4>
 <div class="paragraph">
 <p>The <code>syntax</code> name followed by a block can be used to alter the default
 syntax provided by the <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>. Within the
@@ -2675,14 +2737,14 @@ extension does not presently work.
 </div>
 </div>
 <div class="sect2">
-<h3 id="making-the-syntax-easy-for-humans"><a class="anchor" href="#making-the-syntax-easy-for-humans"></a><a class="link" href="#making-the-syntax-easy-for-humans">2.3. Making the syntax easy for humans</a></h3>
+<h3 id="making-the-syntax-easy-for-humans"><a class="anchor" href="#making-the-syntax-easy-for-humans"></a><a class="link" href="#making-the-syntax-easy-for-humans">2.4. Making the syntax easy for humans</a></h3>
 <div class="paragraph">
 <p>XL contains a couple of tweaks designed specifically to make code easier
 to read or write by humans. When the human logic is subtle, so is the XL
 compiler parsing…</p>
 </div>
 <div class="sect3">
-<h4 id="expression-vs-statement"><a class="anchor" href="#expression-vs-statement"></a><a class="link" href="#expression-vs-statement">2.3.1. Expression vs. statement</a></h4>
+<h4 id="expression-vs-statement"><a class="anchor" href="#expression-vs-statement"></a><a class="link" href="#expression-vs-statement">2.4.1. Expression vs. statement</a></h4>
 <div class="paragraph">
 <p>This first tweak is intended to put in XL an implicit grammatical
 grouping that humans apparently do. Consider for example the following:</p>
@@ -2735,7 +2797,7 @@ statements.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="infix-vs-prefix"><a class="anchor" href="#infix-vs-prefix"></a><a class="link" href="#infix-vs-prefix">2.3.2. infix vs. prefix</a></h4>
+<h4 id="infix-vs-prefix"><a class="anchor" href="#infix-vs-prefix"></a><a class="link" href="#infix-vs-prefix">2.4.2. infix vs. prefix</a></h4>
 <div class="paragraph">
 <p>Another special rule is that XL will use the presence of a space on only
 one side of an operator to disambiguate between an infix or a prefix.
@@ -7491,7 +7553,7 @@ the IEEE-754 64-bit representation.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="data"><a class="anchor" href="#data"></a><a class="link" href="#data">5.2. Data</a></h3>
+<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">5.2. Data</a></h3>
 
 </div>
 <div class="sect2">
@@ -8840,7 +8902,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-19 07:29:12 +0100
+Last updated 2019-12-27 17:23:26 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

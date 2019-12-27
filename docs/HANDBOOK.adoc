@@ -1186,8 +1186,8 @@ barely adds another 900 lines. By contrast, the
 https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c[C parser]
 in GCC needs more than 20000 lines of code, which is about the size of a
 complete XL interpreter, and the
-https://github.com/gcc-mirror/gcc/blob/master/gcc/cp/parser.c[C++
-parser] is over twice as much!
+https://github.com/gcc-mirror/gcc/blob/master/gcc/cp/parser.c[C++ parser]
+is over twice as much!
 
 A key to keeping things really simple is that the XL syntax is
 _dynamic_. Available operators and their precedence are _configured_
@@ -1196,19 +1196,28 @@ there are no hard-coded keywords or special operators in the XL
 compiler.
 
 All XL programs can be represented with a very simple tree structure,
-called a _((parse tree))_. The XL parse tree contains four ((leaf node))
-types (((integer)), ((real)), ((text)) and ((name))), and four
-((inner node)) types (((infix)), ((prefix)), ((postfix)) and ((block))).
+called a _((parse tree))_. The XL parse tree contains _((leaf node))s_
+that don't have any children, such as ((integer)), ((real)), ((text))
+or ((symbol)) nodes, and _((inner node))s_ that have at least
+one child node, such as ((infix)), ((prefix)), ((postfix)) and
+((block)) nodes. In general, when a node can have children, these
+children can be of any kind.
 
 Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 
 [arabic]
-. [[unsigned]]`unsigned` nodes represent unsigned numbers
+. [[integer]]`integer` nodes represent non-negative whole numbers
   like `1234`, `2#1001` or `16#FFFE_FFFF`.
-. [[real]]`real` nodes represent floating-point numbers like `1.234`,
-  `1.5e-10` or `2#1.0001_0001#e24`.
-. [[text]]`text` nodes represent text values like `"Hello world"` or `'A'`.
-. [[name]]`name` node represent names like `ABC_DEF` or symbols like `+<=>+`.
+. [[real]]`real` nodes represent a floating-point approximation of
+  real numbers like `1.234`, `1.5e-10` or `2#1.0001_0001#e24`.
+. [[character]]`character` nodes represent individual characters, like`'A'`.
+. [[text]]`text` nodes represent text values like `"Hello world"`
+. [[name]]`name` nodes represent names like `JOHN_DOE`
+. [[operator]]`operator` nodes represent non-alphabetical operators
+  like `+<=>+`.
+. [[symbols]]`symbols` nodes regroup names, symbols and a special empty
+  symbol used in the representation of empty blocks like `()`.
+. [[data]]`data` nodes hold an arbitrary amount of binary data.
 
 Inner nodes contains combinations of other XL nodes:
 
@@ -1222,25 +1231,11 @@ Inner nodes contains combinations of other XL nodes:
   operand, like `3%` or `45km`.
 . [[block]]`block` nodes represent a node surrounded by two delimiters, like
   `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
-
-[NOTE]
-====
-This list of node types is what the current implementations of XL
-offer. Some changes may happen, notably:
-
-[[bits]]
-* Adding a "((binary object))" node type, which could be used to store
-  binary data in the program. A possible syntax would be to prefix
-  `bits` before a large integer value or file name:
-[source]
-----
-bits 16#FF_00_FF_00_FF_FF_00_FF_00
-bits "image.png"`
-----
-* Finding a more efficient representation for large sequences of items. So
-  far, attempts at finding such a representation came with an unacceptable
-  cost, notably with respect to the generated code.
-====
+. [[parenthese_block]]`parenthese_block` nodes are delimited with `(` and `)`.
+. [[square_block]]`square_block` nodes are delimited with `[` and `]`.
+. [[curly_block]]`curly_block` nodes are delimited with `{` and `}`.
+. [[indent]]`indent_block` nodes are delimited by
+  link:#indentation[code indentation].
 
 For example, let’s consider the following code:
 
@@ -1288,19 +1283,57 @@ considerations beyond syntax, for example the need to be able to
 precisely define link:#evaluation[program evaluation] or to
 represent distinct machine types.
 
-NOTE: Empty blocks are represented as a block with an "empty name" as
-a child. This is not very satisfactory. Alternatives such as
-representing blocks as possibly empty sequences of items have proven
-even more complicated, since the representation of [A,B,C] becomes
-ambiguous, and possibly more difficult to process in a generic way.
+[NOTE]
+====
+The list of node types given above is what the current implementations
+of XL offer. Some changes may happen in the future, notably:
 
-=== Syntax for XL nodes
+[[bits]]
+* Adding a "((binary object))" node type, which could be used to store
+  binary data in the program. A possible syntax would be to prefix
+  `bits` before a large integer value or file name:
+[source]
+----
+bits 16#FF_00_FF_00_FF_FF_00_FF_00
+bits "image.png"`
+----
+* Finding a better representation for empty blocks such as `+()+`.
+  In the current implementation, they are represented as a block with
+  an "empty symbol" as a child. With this choice, the parse tree has no
+  "null" node anywhere in the tree. However, this is not very
+  satisfactory, since the empty symbol cannot exist anywhere else in
+  the parse tree. Alternatives such as representing blocks as possibly
+  empty sequences of items have proven even more complicated, since the
+  representation of `[A,B,C]` becomes ambiguous (it could be a block
+  containing three elements, or a block containing two elements, one
+  of them being an infix, or any other combination), and proved more
+  difficult to process in a generic way.
 
-The ((leaf node))s in XL all have a uniquely identifable syntax.
+* Finding a more efficient representation for large sequences of items.
+  Currently, they are represented by an unbalanced tree, i.e. a tree
+  where one side is disproportionately larger than the other.
+  So far, attempts at finding a better representation all had at
+  least one severe drawback that precluded their use.
+====
 
-==== Numbers
+=== Leaf nodes
 
-Numbers begin with a ((digit)), i.e. one of `0123456789`. For example,
+The ((leaf node))s in XL each have a uniquely identifable syntax.
+For example, simply by looking at the sequence of characters, we can
+tell that `42` is an unsigned value, `3.5` is a real value, `"ABC"`
+is a text value, `'a'` is a character value, `ABC` is a name, and `-`
+is an operator.
+
+NOTE: There is currently no provision in the compiler to add new kinds
+of leaf nodes. This is being considered, and would require a minimal
+addition to the syntax file. The primary implementation issue is that
+it would require the syntax of the syntax file to diverge from the XL
+syntax itself, since numbers or names in the syntax file have to be
+"hardcoded" somehow
+
+==== Whole numbers
+
+Whole numbers begin with a ((digit)), i.e. one of `0123456789`. For example,
 `0` and `42` are valid XL numbers.
 
 A single ((underscore)) `+_+` character can be used to separate
@@ -1408,10 +1441,11 @@ delimiter is needed in the text, it can be obtained by doubling
 it. For example, `"He said ""Hello"""` is text containing `He said
 "Hello"`.
 
-Additionally, the XL ((syntax file)) can specify ((delimiter))s for "long"
-text. Long text can include ((line-terminating characters)), and only
-terminates when the matching delimiter is reached. By default, `<<` and
-`>>` are long-text delimiters, so that the following is valid text:
+Additionally, the XL link:#syntax-file[((syntax file))] can specify
+((delimiter))s for "long" text. Long text can include
+((line-terminating characters)), and only terminates when the matching
+delimiter is reached. By default, `<<` and `>>` are long-text
+delimiters, so that the following is valid text:
 
 [source]
 ----
@@ -1434,12 +1468,17 @@ END_HTML
 ----
 
 NOTE: *RATIONALE* The reason for a built-in format for text using
-single or double quotes is because the syntax file is read using the
-standard XL parser, and it needs text tokens in some specific cases
-that would otherwise parse incorrectly such as block or comment
-delimiters.
+single or double quotes is because the link:#syntax-file[syntax file]
+is read using the standard XL parser, and it needs text tokens in some
+specific cases that would otherwise parse incorrectly such as block or
+comment delimiters.
 
-==== Indentation and off-side rule
+=== Inner nodes
+
+The ((inner nodes)) are defined by the link:#syntax-file[((syntax file))],
+which specifies their precedence and associativity.
+
+==== [[indentation]]Indentation and off-side rule
 
 Indentation(((indentation))) in XL is significant. XL follows the
 _((off-side rule))_ to define program blocks. There is no need for
@@ -1501,7 +1540,8 @@ loop
     Love
 ----
 
-==== Operator precedence and associativity
+
+==== [[syntax-file]]Operator precedence and associativity
 
 The operators available for XL programmers are defined by the
 link:{xl}src/xl.syntax[syntax file]. The same rules apply for names or
@@ -1599,7 +1639,7 @@ NOTE: The so-called "C syntax" in XL is only a very crude and limited
 approximation of the actual C syntax, which is only intended for
 relatively simple function declarations.
 
-==== Extending the syntax
+==== [[syntax-statements]]Extending the syntax
 
 The `syntax` name followed by a block can be used to alter the default
 syntax provided by the link:{xl}src/xl.syntax[syntax file]. Within the
