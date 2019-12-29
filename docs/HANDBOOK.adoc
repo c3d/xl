@@ -1338,6 +1338,15 @@ numbers. XL describes two kinds of numbers: _((whole number))s_, which
 have no fractional part, and _((fractional number))s_, which have a
 fractional part.
 
+NOTE: In the rest of the document, other terminologies, such as
+_integer_ or _real_ numbers may be applied for whole numbers and
+fractional numnbers respectively. This corresponds to numbers having
+been given a link:#types[type] for evaluation purpose. This is notably
+the case whenever a computer font is used, e.g. when we refer to
+`integer` or `real` values. Except as far as syntax is concerned, this
+document will very rarely talk about whole numbers or fractional
+numbers.
+
 A single ((underscore)) `+_+` character can be used to separate
 digits, as in `1_000_000`, in order to increase readability. The
 following are not valid XL numbers: `+_1+` (leading underscore),
