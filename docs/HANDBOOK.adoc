@@ -1221,7 +1221,7 @@ Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 Inner nodes contains combinations of other XL nodes:
 
 [arabic]
-. [[infix]]`infix` nodes represent two operands separated by a name or symbol,
+. [[infix]]`infix` nodes represent two operands separated by a name or operator,
   like `A+B` or `X and Y`. Infix nodes with a "new line" name are used
   for separate program lines.
 . [[prefix]]`prefix` nodes represent two nodes where the operand follows the
@@ -1576,10 +1576,10 @@ loop
 ==== [[syntax-file]]Operator precedence and associativity
 
 The operators available for XL programmers are defined by the
-link:{xl}src/xl.syntax[syntax file]. The same rules apply for names or
-for symbols. The table given in this file uses keywords such as `INFIX`,
-`PREFIX` and `POSTFIX` to indicate if an operator is an infix, a prefix,
-or a postfix respectively.
+link:{xl}src/xl.syntax[syntax file]. The same rules apply for all
+symbols, i.e. for names or for operators. The table given in this file
+uses keywords such as `INFIX`, `PREFIX` and `POSTFIX` to indicate if
+an operator is an infix, a prefix, or a postfix respectively.
 
 The table also gives operators a precedence. For example, the following
 segment in the `INFIX` portion of the table indicates that `*` and `/`
@@ -1654,7 +1654,7 @@ parentheses `( )` or square brackets `[ ]` will contain expressions.
 ==== Child syntax
 
 A syntax file can define a child syntax file, which overrides the syntax
-when a given name or symbol is found.
+when a given symbol is found.
 
 The link:{xl}src/xl.syntax[default syntax file] contains a
 link:{xl}src/C.syntax[child syntax] named `C` which is activated between
