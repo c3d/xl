@@ -1157,8 +1157,7 @@ https://en.wikipedia.org/wiki/Common_Lisp_Object_System[to Lisp] than
 to languages like C: neither link:https://en.wikipedia.org/wiki/C%2B%2B[C++]
 nor https://en.wikipedia.org/wiki/Objective-C[Objective C] were
 implemented as just another C library, and there was a reason for
-that. Unlike Lisp, these languages were not
-extensible(((extensible,language))).
+that. Unlike Lisp, C is not extensible(((extensible,language))).
 
 Despite its strengths, Lisp remains confined to specific markets, in
 large part because to most programmers, the language remains
