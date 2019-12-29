@@ -1350,13 +1350,10 @@ By default, numbers are written in ((base)) 10. Any other ((numerical
 base)) between 2 and 36 can be used, as well as base 64 using a
 special syntax. Based numbers can be written by following the base
 with the `#` sign. For example `8#76` is an ((octal)) representation
-of `62`.
-
-For bases between 11 and 36, letters `A` through `Z` or `a` through
+of `62`. For bases between 11 and 36, letters `A` through `Z` or `a` through
 `z` represent digit values larger than 10, so that `A` is 10, `f`
 is 15, `Z` is 35. Case does not matter. For example, `16#FF` and
 `16#ff` are two valid ((hexadecimal)) representation of `255`.
-
 For base 64, https://en.wikipedia.org/wiki/Base64[Base64] encoding is
 used, and case matters. This is mostly indended for use in link:#bits[((binary
 objects))], i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
@@ -1366,8 +1363,8 @@ sequence of ASCII characters in `Hello!`.
 For ((fractional number))s, a dot `.` is used as ((decimal separator)),
 and must separate digits. For example, `0.2` and `2.0` are valid but,
 unlike in C, `.2` and`2.` are not numbers but a prefix and
-postifix `.` respectively. This is necessary to avoid ambiguities,
-because the ((standard library)) denotes link:#range[((range))s] using
+postifix `.` respectively. This is necessary to avoid ambiguities.
+Also, the ((standard library)) denotes link:#range[((range))s] using
 an infix `..`, so `2..3` is an infix `..` with `2` and `3` as
 operands, representing the range between 2 and 3.
 
@@ -1384,6 +1381,7 @@ hexadecimal representation of decimal value 65280.
 There is an implementation-dependent limit for the maximum value a
 number can have. This limit cannot be less than 2^64^-1 for
 whole numbers, and less than `9.99e99` for floating-point numbers.
+
 If a value is preceded by a `+` or `-` sign, that sign is parsed as a
 prefix operator and not as part of the number. For example, `-2` is a
 prefix `-` with `2` as an argument.
@@ -1420,22 +1418,20 @@ distinction, and refer to a `real`, knowing full well that there is a
 "largest" `real` value and a limited number of digits.
 ====
 
-==== Names and symbols
+==== Symbols
 
-Names in XL begin with an letter, followed by letters, symbols or
-digits. For example, `MyName` and `A22` are valid XL names.
-
-A single underscore `_` can be used to separate two valid characters in
-a name. Therefore, `A_2` is a valid XL name, but `A__2` and `_A` are
-not.
+Names in XL begin with an letter, followed by letters or digits. For
+example, `MyName` and `A22` are valid XL names.  A single underscore
+`_` can be used to separate two valid characters in a name. Therefore,
+`A_2` is a valid XL name, but `A__2` and `_A` are not.
 
 WARNING: The current implementation reads its input in Unicode UTF-8
 format, and makes crude attempts at accepting Unicode. This was good
 enough for Tao3D to deal with multi-lingual text, including in languages
 such as Hebrew or Arabic. However, that implementation is a bit naive
-with respect to filtering Unicode letters. For example, `𝝿_2` or
-`étalon` are valid XL names, and this is intentional, but `⇒A2` is
-presently a valid XL name, and this is considered a bug.
+with respect to distinguishing  Unicode letters from non-letter characters.
+For example, `𝝿_2` or `étalon` are valid XL names, and this is intentional,
+but `⇒A2` is presently a valid XL name, and this is considered a bug.
 
 Case and delimiters are not significant in XL, so that `JOE_DALTON` and
 `JoeDalton` are treated identically.
@@ -1444,21 +1440,21 @@ WARNING: For historical reasons, the current implementations are quite
 lacking in that respect, and will treat `V` and `v` differently. There
 is still an open debate about giving a semantic role to capitalization.
 
-Symbols begin with one of the ASCII punctuation characters:
+Operators begin with one of the ASCII punctuation characters:
 
 ....
-    ! # $ % & ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
+! # $ % & ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
 ....
 
-Symbols longer than one character must be specified in the XL syntax
+Operators longer than one character must be specified in the XL syntax
 file. For example, the XL syntax file defines a `+<=+` operator, but no
 `+<=>+` operator. Consequently, the sequence `+1 <=> 2+` will be parsed as
 `+(1 <= (> 2))+`. In order to add this operator, it is necessary to
 link:#extending-the-syntax[extend the syntax] using a `syntax`
 statement.
 
-Names and symbols are treated interchangeably by XL after the parsing
-phase.
+Names and operators are treated interchangeably by XL after the parsing
+phase, and are collectively called _symbols_.
 
 ==== Text
 

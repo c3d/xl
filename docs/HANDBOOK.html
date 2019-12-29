@@ -486,7 +486,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#leaf-nodes">2.2. Leaf nodes</a>
 <ul class="sectlevel3">
 <li><a href="#numbers">2.2.1. Numbers</a></li>
-<li><a href="#names-and-symbols">2.2.2. Names and symbols</a></li>
+<li><a href="#symbols-2">2.2.2. Symbols</a></li>
 <li><a href="#text-2">2.2.3. Text</a></li>
 </ul>
 </li>
@@ -2301,16 +2301,11 @@ equal-sized chunks, for example <code>1_000_000</code> or <code>04_92_98_05_55</
 <p>By default, numbers are written in base 10. Any other numerical base between 2 and 36 can be used, as well as base 64 using a
 special syntax. Based numbers can be written by following the base
 with the <code>#</code> sign. For example <code>8#76</code> is an octal representation
-of <code>62</code>.</p>
-</div>
-<div class="paragraph">
-<p>For bases between 11 and 36, letters <code>A</code> through <code>Z</code> or <code>a</code> through
+of <code>62</code>. For bases between 11 and 36, letters <code>A</code> through <code>Z</code> or <code>a</code> through
 <code>z</code> represent digit values larger than 10, so that <code>A</code> is 10, <code>f</code>
 is 15, <code>Z</code> is 35. Case does not matter. For example, <code>16#FF</code> and
-<code>16#ff</code> are two valid hexadecimal representation of <code>255</code>.</p>
-</div>
-<div class="paragraph">
-<p>For base 64, <a href="https://en.wikipedia.org/wiki/Base64">Base64</a> encoding is
+<code>16#ff</code> are two valid hexadecimal representation of <code>255</code>.
+For base 64, <a href="https://en.wikipedia.org/wiki/Base64">Base64</a> encoding is
 used, and case matters. This is mostly indended for use in <a href="#bits">binary objects</a>, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
 encoding for the number with the same binary representation as the
 sequence of ASCII characters in <code>Hello!</code>.</p>
@@ -2319,8 +2314,8 @@ sequence of ASCII characters in <code>Hello!</code>.</p>
 <p>For fractional numbers, a dot <code>.</code> is used as decimal separator,
 and must separate digits. For example, <code>0.2</code> and <code>2.0</code> are valid but,
 unlike in C, <code>.2</code> and`2.` are not numbers but a prefix and
-postifix <code>.</code> respectively. This is necessary to avoid ambiguities,
-because the standard library denotes <a href="#range">ranges</a> using
+postifix <code>.</code> respectively. This is necessary to avoid ambiguities.
+Also, the standard library denotes <a href="#range">ranges</a> using
 an infix <code>..</code>, so <code>2..3</code> is an infix <code>..</code> with <code>2</code> and <code>3</code> as
 operands, representing the range between 2 and 3.</p>
 </div>
@@ -2338,8 +2333,10 @@ hexadecimal representation of decimal value 65280.</p>
 <div class="paragraph">
 <p>There is an implementation-dependent limit for the maximum value a
 number can have. This limit cannot be less than 2<sup>64</sup>-1 for
-whole numbers, and less than <code>9.99e99</code> for floating-point numbers.
-If a value is preceded by a <code>+</code> or <code>-</code> sign, that sign is parsed as a
+whole numbers, and less than <code>9.99e99</code> for floating-point numbers.</p>
+</div>
+<div class="paragraph">
+<p>If a value is preceded by a <code>+</code> or <code>-</code> sign, that sign is parsed as a
 prefix operator and not as part of the number. For example, <code>-2</code> is a
 prefix <code>-</code> with <code>2</code> as an argument.</p>
 </div>
@@ -2398,15 +2395,12 @@ distinction, and refer to a <code>real</code>, knowing full well that there is a
 </div>
 </div>
 <div class="sect3">
-<h4 id="names-and-symbols"><a class="anchor" href="#names-and-symbols"></a><a class="link" href="#names-and-symbols">2.2.2. Names and symbols</a></h4>
+<h4 id="symbols-2"><a class="anchor" href="#symbols-2"></a><a class="link" href="#symbols-2">2.2.2. Symbols</a></h4>
 <div class="paragraph">
-<p>Names in XL begin with an letter, followed by letters, symbols or
-digits. For example, <code>MyName</code> and <code>A22</code> are valid XL names.</p>
-</div>
-<div class="paragraph">
-<p>A single underscore <code>_</code> can be used to separate two valid characters in
-a name. Therefore, <code>A_2</code> is a valid XL name, but <code>A__2</code> and <code>_A</code> are
-not.</p>
+<p>Names in XL begin with an letter, followed by letters or digits. For
+example, <code>MyName</code> and <code>A22</code> are valid XL names.  A single underscore
+<code>_</code> can be used to separate two valid characters in a name. Therefore,
+<code>A_2</code> is a valid XL name, but <code>A__2</code> and <code>_A</code> are not.</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -2419,9 +2413,9 @@ The current implementation reads its input in Unicode UTF-8
 format, and makes crude attempts at accepting Unicode. This was good
 enough for Tao3D to deal with multi-lingual text, including in languages
 such as Hebrew or Arabic. However, that implementation is a bit naive
-with respect to filtering Unicode letters. For example, <code>𝝿_2</code> or
-<code>étalon</code> are valid XL names, and this is intentional, but <code>⇒A2</code> is
-presently a valid XL name, and this is considered a bug.
+with respect to distinguishing  Unicode letters from non-letter characters.
+For example, <code>𝝿_2</code> or <code>étalon</code> are valid XL names, and this is intentional,
+but <code>⇒A2</code> is presently a valid XL name, and this is considered a bug.
 </td>
 </tr>
 </table>
@@ -2445,15 +2439,15 @@ is still an open debate about giving a semantic role to capitalization.
 </table>
 </div>
 <div class="paragraph">
-<p>Symbols begin with one of the ASCII punctuation characters:</p>
+<p>Operators begin with one of the ASCII punctuation characters:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>    ! # $ % &amp; ( ) * + , - . / : ; &lt; = &gt; ? @ [ \ ] ^ _ ` { | } ~</pre>
+<pre>! # $ % &amp; ( ) * + , - . / : ; &lt; = &gt; ? @ [ \ ] ^ _ ` { | } ~</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Symbols longer than one character must be specified in the XL syntax
+<p>Operators longer than one character must be specified in the XL syntax
 file. For example, the XL syntax file defines a <code>&lt;=</code> operator, but no
 <code>&lt;=&gt;</code> operator. Consequently, the sequence <code>1 &lt;=&gt; 2</code> will be parsed as
 <code>(1 &lt;= (&gt; 2))</code>. In order to add this operator, it is necessary to
@@ -2461,8 +2455,8 @@ file. For example, the XL syntax file defines a <code>&lt;=</code> operator, but
 statement.</p>
 </div>
 <div class="paragraph">
-<p>Names and symbols are treated interchangeably by XL after the parsing
-phase.</p>
+<p>Names and operators are treated interchangeably by XL after the parsing
+phase, and are collectively called <em>symbols</em>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -8939,7 +8933,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-29 04:27:16 +0100
+Last updated 2019-12-29 04:35:24 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
