@@ -3437,9 +3437,9 @@ type, meaning that <code>1.25</code> matches the sub-pattern <code>X:real</code>
 <p>There are several kinds of patterns, each maching different kinds of
 expressions.</p>
 </div>
-<div class="paragraph">
-<p>Name definitions</p>
-</div>
+<details>
+<summary class="title">Name definitions</summary>
+<div class="content">
 <div class="paragraph">
 <p>Top-level name patterns only match the exact same name.</p>
 </div>
@@ -3480,9 +3480,11 @@ define a <code>+</code> operator that way.
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>Wildcards</p>
 </div>
+</details>
+<details>
+<summary class="title">Wildcards</summary>
+<div class="content">
 <div class="paragraph">
 <p>Name patterns that are not at the top-level can match any expression,
 and this does not require <a href="#immediate-evaluation">immediate
@@ -3537,9 +3539,11 @@ define a <code>+</code> parameter that way.
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>Type annotations</p>
 </div>
+</details>
+<details>
+<summary class="title">Type annotations</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is an infix <code>:</code> or <code>as</code>, it matches an expression if
 the expression matches the pattern on the left of the infix, and if the
@@ -3616,9 +3620,11 @@ in the example below:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">  X:real + Y:real as real is ...</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Function (prefix) definitions</p>
 </div>
+</details>
+<details>
+<summary class="title">Function (prefix) definitions</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is a prefix, like <code>sin X</code>, the expression will match
 only if it is a prefix with the same name, and when the pattern on the
@@ -3656,9 +3662,11 @@ right of the prefix matches the right operand of the expression.</p>
 called <em>function calls</em>. Otherwise, they are called <em>prefix
 definitions</em>.</p>
 </div>
-<div class="paragraph">
-<p>Postfix definitions</p>
 </div>
+</details>
+<details>
+<summary class="title">Postfix definitions</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is a postfix, like <code>X%</code>, the expression will match only
 if it is a postfix with the same name, and when the pattern on the left
@@ -3695,9 +3703,11 @@ of the postfix matches the left operand of the expression.</p>
 corresponding expressions are usually called <em>postfix expressions</em>. The
 name or operator is sometimes called the <em>suffix</em>.</p>
 </div>
-<div class="paragraph">
-<p>Infix definitions</p>
 </div>
+</details>
+<details>
+<summary class="title">Infix definitions</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is an infix, it only matches:</p>
 </div>
@@ -3733,8 +3743,7 @@ operands of the expression.</p>
 </tr>
 </tbody>
 </table>
-<div class="ulist">
-<ul>
+</li>
 <li>
 <p>a name bound to an infix with the same infix operator when both the
 left and right operands of the pattern match the corresponding left and
@@ -3769,17 +3778,9 @@ is said to be <em>split</em> to match the parameters.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-A very common idiom is to use comma <code>,</code> infix to separate
-multiple parameters, as in the following definition:
-</td>
-</tr>
-</table>
-</div>
-</li>
-</ul>
-</div>
-</li>
-</ul>
+<div class="paragraph">
+<p>A very common idiom is to use comma <code>,</code> infix to separate
+multiple parameters, as in the following definition:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3792,14 +3793,22 @@ and <code>Tail is 2,3</code>. In the evaluation of the body with these bindings,
 <code>write Tail</code> will then match the same declaration again with <code>Tail</code>
 being split, resulting in bindings <code>Head is 2</code> and <code>Tail is 3</code>.</p>
 </div>
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>+
-A definition for an infix pattern is called an <em>infix definition</em>, and
+<p>A definition for an infix pattern is called an <em>infix definition</em>, and
 the expressions are called <em>infix expressions</em>.</p>
 </div>
-<div class="paragraph">
-<p>Conditional patterns</p>
+</li>
+</ul>
 </div>
+</div>
+</details>
+<details>
+<summary class="title">Conditional patterns</summary>
+<div class="content">
 <div class="paragraph">
 <p>When a top-level pattern is an infix like <code>Pattern when Condition</code>, then
 the pattern matches an expression if the pattern on the left of the
@@ -3838,9 +3847,11 @@ to any kind of error. For example:</p>
   log "Logging an error"        // Will not match the definition above</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Literal constants</p>
 </div>
+</details>
+<details>
+<summary class="title">Literal constants</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is an <code>integer</code> like <code>0</code>, a <code>real</code> like <code>3.5</code>, a <code>text</code>
 like <code>"ABC"</code>, it only matches an expression with the same value, as
@@ -3882,9 +3893,11 @@ top-level patterns, which is primarily useflu in <a href="#scoping">maps</a>:</p
       1 is "One"</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Metabox constants</p>
 </div>
+</details>
+<details>
+<summary class="title">Metabox constants</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is a an expression between two square brackets, like
 <code>[[true]]</code>, it is called a <em>metabox</em>, and it only matches a value that
@@ -3935,9 +3948,11 @@ causing the first one to be evaluated for any <code>A and B</code> expression:</
   false and X       is false</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Block elimination</p>
 </div>
+</details>
+<details>
+<summary class="title">Blocks</summary>
+<div class="content">
 <div class="paragraph">
 <p>When the pattern is a block, it matches what the block’s child would
 match. In other words, blocks in patterns can be used to change the
@@ -3981,16 +3996,25 @@ argument is delimited with parentheses:</p>
   has_parentheses B:block                                           is false</code></pre>
 </div>
 </div>
+</div>
+</details>
 <div class="paragraph">
 <p>In some cases, checking if an argument matches a pattern requires
 evaluation of the corresponding expression or sub-expression. This is
 called <a href="#immediate-evaluation">immediate evaluation</a>. Otherwise,
 <a href="#lazy-evaluation">evaluation will be lazy</a>.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p><strong>STYLE</strong> The rules of pattern matching give a lot of freedom with respect
-to coding style. Several conventions are recommended and are generally
-followed in this document:</p>
+<p><strong>STYLE</strong> The rules of pattern matching give a lot of freedom with
+respect to coding style. Several conventions are recommended and are
+generally followed in this document:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -4013,12 +4037,16 @@ create a <code>circle</code> object rather than to draw a circle, the above
 definition might be written as follows:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle CenterX:real, CenterY:real, Radius:real as circle is ...
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle (CenterX:real, CenterY:real, Radius:real) as circle is ...
 C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 </div>
 </div>
 </li>
 </ul>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="sect3">
 <h4 id="pattern-matching-scope-values"><a class="anchor" href="#pattern-matching-scope-values"></a><a class="link" href="#pattern-matching-scope-values">3.3.1. Pattern matching scope values</a></h4>
@@ -8933,7 +8961,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-29 04:35:24 +0100
+Last updated 2019-12-29 04:51:59 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

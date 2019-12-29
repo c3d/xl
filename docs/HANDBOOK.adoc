@@ -2206,8 +2206,9 @@ type, meaning that `1.25` matches the sub-pattern `X:real`.
 There are several kinds of patterns, each maching different kinds of
 expressions.
 
-Name definitions
-
+.Name definitions
+[%collapsible]
+====
 Top-level name patterns only match the exact same name.
 
 [cols=",,",options="header",]
@@ -2220,9 +2221,11 @@ Definitions with a top-level name pattern are called _name definitions_.
 
 NOTE: This case only applies to names, not to operators. You cannot
 define a `+` operator that way.
+====
 
-Wildcards
-
+.Wildcards
+[%collapsible]
+====
 Name patterns that are not at the top-level can match any expression,
 and this does not require link:#immediate-evaluation[immediate
 evaluation]. In that case, the expression will be bound to the name in
@@ -2245,9 +2248,11 @@ occurs on the matched argument.
 
 NOTE: This case only applies to names, not to operators. You cannot
 define a `+` parameter that way.
+====
 
-Type annotations
-
+.Type annotations
+[%collapsible]
+====
 When the pattern is an infix `:` or `as`, it matches an expression if
 the expression matches the pattern on the left of the infix, and if the
 link:#types[type] of the expression matches the type on the
@@ -2281,9 +2286,11 @@ in the example below:
 ----
   X:real + Y:real as real is ...
 ----
+====
 
-Function (prefix) definitions
-
+.Function (prefix) definitions
+[%collapsible]
+====
 When the pattern is a prefix, like `sin X`, the expression will match
 only if it is a prefix with the same name, and when the pattern on the
 right of the prefix matches the right operand of the expression.
@@ -2299,9 +2306,11 @@ When the prefix is a name, definitions for such patterns are called
 _function definitions_, and the corresponding expressions are usually
 called _function calls_. Otherwise, they are called _prefix
 definitions_.
+====
 
-Postfix definitions
-
+.Postfix definitions
+[%collapsible]
+====
 When the pattern is a postfix, like `X%`, the expression will match only
 if it is a postfix with the same name, and when the pattern on the left
 of the postfix matches the left operand of the expression.
@@ -2316,9 +2325,11 @@ of the postfix matches the left operand of the expression.
 Definitions for such patterns are called _postfix definitions_, and the
 corresponding expressions are usually called _postfix expressions_. The
 name or operator is sometimes called the _suffix_.
+====
 
-Infix definitions
-
+.Infix definitions
+[%collapsible]
+=====
 When the pattern is an infix, it only matches:
 
 * an infix expression with the same infix operator when both the left
@@ -2331,7 +2342,8 @@ operands of the expression.
 |`X:real+Y:real` |`3.5+2.9` |`3+2`, `3.5-2.9`
 |`X and Y` |`N and 3` |`N or 3`
 |============================================
-** a name bound to an infix with the same infix operator when both the
++
+* a name bound to an infix with the same infix operator when both the
 left and right operands of the pattern match the corresponding left and
 right operands of the bound value. In that case, the value in the name
 is said to be _split_ to match the parameters.
@@ -2343,7 +2355,9 @@ is said to be _split_ to match the parameters.
 `write Items` when `Items is "A"+"B"`
 |=======================================================================
 +
-NOTE: A very common idiom is to use comma `,` infix to separate
+[NOTE]
+====
+A very common idiom is to use comma `,` infix to separate
 multiple parameters, as in the following definition:
 
 [source]
@@ -2355,12 +2369,15 @@ This declaration will match `write 1, 2, 3` with bindings `Head is 1`
 and `Tail is 2,3`. In the evaluation of the body with these bindings,
 `write Tail` will then match the same declaration again with `Tail`
 being split, resulting in bindings `Head is 2` and `Tail is 3`.
+====
 +
 A definition for an infix pattern is called an _infix definition_, and
 the expressions are called _infix expressions_.
+=====
 
-Conditional patterns
-
+.Conditional patterns
+[%collapsible]
+====
 When a top-level pattern is an infix like `Pattern when Condition`, then
 the pattern matches an expression if the pattern on the left of the
 infix matches the expression, and if the expression on the right
@@ -2381,9 +2398,11 @@ to any kind of error. For example:
   log X when X > 0 is ...
   log "Logging an error"        // Will not match the definition above
 ----
+====
 
-Literal constants
-
+.Literal constants
+[%collapsible]
+====
 When the pattern is an `integer` like `0`, a `real` like `3.5`, a `text`
 like `"ABC"`, it only matches an expression with the same value, as
 verified by evaluating the `Pattern = Value` expression, where `Pattern`
@@ -2407,9 +2426,11 @@ top-level patterns, which is primarily useflu in link:#scoping[maps]:
       0 is "Zero"
       1 is "One"
 ----
+====
 
-Metabox constants
-
+.Metabox constants
+[%collapsible]
+====
 When the pattern is a an expression between two square brackets, like
 `+[[true]]+`, it is called a _metabox_, and it only matches a value that
 is equal to the value computed by the metabox. This equality is checked
@@ -2441,9 +2462,11 @@ causing the first one to be evaluated for any `A and B` expression:
   true  and X       is X
   false and X       is false
 ----
+====
 
-Block elimination
-
+.Blocks
+[%collapsible]
+====
 When the pattern is a block, it matches what the block’s child would
 match. In other words, blocks in patterns can be used to change the
 relative precedence of operators in a complex expression, but play
@@ -2468,15 +2491,18 @@ argument is delimited with parentheses:
   has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
   has_parentheses B:block                                           is false
 ----
+====
 
 In some cases, checking if an argument matches a pattern requires
 evaluation of the corresponding expression or sub-expression. This is
 called link:#immediate-evaluation[immediate evaluation]. Otherwise,
 link:#lazy-evaluation[evaluation will be lazy].
 
-*STYLE* The rules of pattern matching give a lot of freedom with respect
-to coding style. Several conventions are recommended and are generally
-followed in this document:
+[NOTE]
+====
+*STYLE* The rules of pattern matching give a lot of freedom with
+respect to coding style. Several conventions are recommended and are
+generally followed in this document:
 
 * When a function takes multiple parameters, they are generally
 represented using a comma-separated parameter list, altough in some
@@ -2495,9 +2521,10 @@ definition might be written as follows:
 +
 [source]
 ----
-circle CenterX:real, CenterY:real, Radius:real as circle is ...
+circle (CenterX:real, CenterY:real, Radius:real) as circle is ...
 C : circle := circle(0.3, 2.6, 4.0)
 ----
+====
 
 ==== Pattern matching scope values
 
