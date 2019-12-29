@@ -1321,8 +1321,8 @@ bits "image.png"`
 The ((leaf node))s in XL each have a uniquely identifable syntax.
 For example, simply by looking at the sequence of characters, we can
 tell that `42` is a whole number, `3.5` is a fractional number, `"ABC"`
-is a text value, `'a'` is a character value, `ABC` is a name, and `->`
-is an operator.
+is a text value, `'a'` is a character value, `ABC` is a name, and `+->+`
+is an operator. This section describes the syntax for leaf nodes.
 
 NOTE: There is currently no provision in the compiler to add new kinds
 of leaf nodes. This is being considered, and would require a minimal
@@ -1331,20 +1331,26 @@ it would require the syntax of the syntax file to diverge from the XL
 syntax itself, since numbers or names in the syntax file have to be
 "hardcoded" somehow
 
-==== Whole numbers
+==== Numbers
 
-Whole numbers begin with a ((digit)), i.e. one of `0123456789`. For example,
-`0` and `42` are valid XL numbers.
+Numbers in XL begin with a ((digit)), i.e. one of `0123456789`, possibly
+followed by other digits. For example, `0` and `42` are valid XL
+numbers. XL describes two kinds of numbers: _((whole number))s_, which
+have no fractional part, and _((fractional number))s_, which have a
+fractional part.
 
 A single ((underscore)) `+_+` character can be used to separate
-digits, as in `1_000_000`. The following are not valid XL numbers:
-`+_1+` (leading underscore), `+2_+` (trailing underscore), `+3__0+`
-(two underscores).
+digits, as in `1_000_000`, in order to increase readability. The
+following are not valid XL numbers: `+_1+` (leading underscore),
+`+2_+` (trailing underscore), `+3__0+` (two underscores). While this
+is not a requirement, it is considered good style to group digits in
+equal-sized chunks, for example `1_000_000` or `04_92_98_05_55`.
 
-By default, numbers are written in ((base)) 10. Any other ((numerical base))
- between 2 and 36 can be used, as well as base 64 using a special
-syntax. Based numbers can be written by following the base with the
-`#` sign. For example `8#76` is an ((octal)) representation of `62`.
+By default, numbers are written in ((base)) 10. Any other ((numerical
+base)) between 2 and 36 can be used, as well as base 64 using a
+special syntax. Based numbers can be written by following the base
+with the `#` sign. For example `8#76` is an ((octal)) representation
+of `62`.
 
 For bases between 11 and 36, letters `A` through `Z` or `a` through
 `z` represent digit values larger than 10, so that `A` is 10, `f`
@@ -1375,8 +1381,9 @@ exponent may be preceded by a `#` sign, which is mandatory if `e` or
 `E` are valid digits in the base, as in `16#FF#e2` which is an
 hexadecimal representation of decimal value 65280.
 
-There is an implementation-dependent limit for the maximum value an
-integer literal can have. This limit cannot be less than 2^64^-1.
+There is an implementation-dependent limit for the maximum value a
+number can have. This limit cannot be less than 2^64^-1 for
+whole numbers, and less than `9.99e99` for floating-point numbers.
 If a value is preceded by a `+` or `-` sign, that sign is parsed as a
 prefix operator and not as part of the number. For example, `-2` is a
 prefix `-` with `2` as an argument.
@@ -1391,6 +1398,27 @@ offer an obvious path to correctly represent "semantic" version
 numbers in the code. For example, a notation like `2.3.1` will parse as
 an infix `.` between real number `2.3` and integer `1`, making it
 indistinguishable from `2.30.1`.
+
+[NOTE]
+====
+Computers cannot really represent mathematical numbers. For
+example, the set of natural numbers is infinite, so there is no such
+thing as "the largest natural number". Due to hardware limitations,
+there is however such a thing as the largest 64-bit unsigned number.
+Similarly, there is no way to accurately represent real numbers in a
+computer, but there are at least two widely used representations
+called
+link:https://en.wikipedia.org/wiki/Floating_point[floating-point] and
+link:https://en.wikipedia.org/wiki/Fixed-point_arithmetic[fixed-point].
+
+From a link:#concept-programming[concept programming] point of view,
+this is a blatant case of link:#concept-cast[concept cast]. A computer
+`integer` is not a mathematical _integer_, and a computer `real` is
+only a floating-point or fixed-point approximation of a true _real
+number_. In the rest of this document, we will ignore this
+distinction, and refer to a `real`, knowing full well that there is a
+"largest" `real` value and a limited number of digits.
+====
 
 ==== Names and symbols
 

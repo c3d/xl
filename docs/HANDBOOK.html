@@ -485,7 +485,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#leaf-nodes">2.2. Leaf nodes</a>
 <ul class="sectlevel3">
-<li><a href="#whole-numbers">2.2.1. Whole numbers</a></li>
+<li><a href="#numbers">2.2.1. Numbers</a></li>
 <li><a href="#names-and-symbols">2.2.2. Names and symbols</a></li>
 <li><a href="#text-2">2.2.3. Text</a></li>
 </ul>
@@ -2260,8 +2260,8 @@ least one severe drawback that precluded their use.</p>
 <p>The leaf nodes in XL each have a uniquely identifable syntax.
 For example, simply by looking at the sequence of characters, we can
 tell that <code>42</code> is a whole number, <code>3.5</code> is a fractional number, <code>"ABC"</code>
-is a text value, <code>'a'</code> is a character value, <code>ABC</code> is a name, and <code>&#8594;</code>
-is an operator.</p>
+is a text value, <code>'a'</code> is a character value, <code>ABC</code> is a name, and <code>-&gt;</code>
+is an operator. This section describes the syntax for leaf nodes.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2281,22 +2281,27 @@ syntax itself, since numbers or names in the syntax file have to be
 </table>
 </div>
 <div class="sect3">
-<h4 id="whole-numbers"><a class="anchor" href="#whole-numbers"></a><a class="link" href="#whole-numbers">2.2.1. Whole numbers</a></h4>
+<h4 id="numbers"><a class="anchor" href="#numbers"></a><a class="link" href="#numbers">2.2.1. Numbers</a></h4>
 <div class="paragraph">
-<p>Whole numbers begin with a digit, i.e. one of <code>0123456789</code>. For example,
-<code>0</code> and <code>42</code> are valid XL numbers.</p>
+<p>Numbers in XL begin with a digit, i.e. one of <code>0123456789</code>, possibly
+followed by other digits. For example, <code>0</code> and <code>42</code> are valid XL
+numbers. XL describes two kinds of numbers: <em>whole numbers</em>, which
+have no fractional part, and <em>fractional numbers</em>, which have a
+fractional part.</p>
 </div>
 <div class="paragraph">
 <p>A single underscore <code>_</code> character can be used to separate
-digits, as in <code>1_000_000</code>. The following are not valid XL numbers:
-<code>_1</code> (leading underscore), <code>2_</code> (trailing underscore), <code>3__0</code>
-(two underscores).</p>
+digits, as in <code>1_000_000</code>, in order to increase readability. The
+following are not valid XL numbers: <code>_1</code> (leading underscore),
+<code>2_</code> (trailing underscore), <code>3__0</code> (two underscores). While this
+is not a requirement, it is considered good style to group digits in
+equal-sized chunks, for example <code>1_000_000</code> or <code>04_92_98_05_55</code>.</p>
 </div>
 <div class="paragraph">
-<p>By default, numbers are written in base 10. Any other numerical base
- between 2 and 36 can be used, as well as base 64 using a special
-syntax. Based numbers can be written by following the base with the
-<code>#</code> sign. For example <code>8#76</code> is an octal representation of <code>62</code>.</p>
+<p>By default, numbers are written in base 10. Any other numerical base between 2 and 36 can be used, as well as base 64 using a
+special syntax. Based numbers can be written by following the base
+with the <code>#</code> sign. For example <code>8#76</code> is an octal representation
+of <code>62</code>.</p>
 </div>
 <div class="paragraph">
 <p>For bases between 11 and 36, letters <code>A</code> through <code>Z</code> or <code>a</code> through
@@ -2331,8 +2336,9 @@ exponent may be preceded by a <code>#</code> sign, which is mandatory if <code>e
 hexadecimal representation of decimal value 65280.</p>
 </div>
 <div class="paragraph">
-<p>There is an implementation-dependent limit for the maximum value an
-integer literal can have. This limit cannot be less than 2<sup>64</sup>-1.
+<p>There is an implementation-dependent limit for the maximum value a
+number can have. This limit cannot be less than 2<sup>64</sup>-1 for
+whole numbers, and less than <code>9.99e99</code> for floating-point numbers.
 If a value is preceded by a <code>+</code> or <code>-</code> sign, that sign is parsed as a
 prefix operator and not as part of the number. For example, <code>-2</code> is a
 prefix <code>-</code> with <code>2</code> as an argument.</p>
@@ -2355,6 +2361,37 @@ offer an obvious path to correctly represent "semantic" version
 numbers in the code. For example, a notation like <code>2.3.1</code> will parse as
 an infix <code>.</code> between real number <code>2.3</code> and integer <code>1</code>, making it
 indistinguishable from <code>2.30.1</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Computers cannot really represent mathematical numbers. For
+example, the set of natural numbers is infinite, so there is no such
+thing as "the largest natural number". Due to hardware limitations,
+there is however such a thing as the largest 64-bit unsigned number.
+Similarly, there is no way to accurately represent real numbers in a
+computer, but there are at least two widely used representations
+called
+<a href="https://en.wikipedia.org/wiki/Floating_point">floating-point</a> and
+<a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic">fixed-point</a>.</p>
+</div>
+<div class="paragraph">
+<p>From a <a href="#concept-programming">concept programming</a> point of view,
+this is a blatant case of <a href="#concept-cast">concept cast</a>. A computer
+<code>integer</code> is not a mathematical <em>integer</em>, and a computer <code>real</code> is
+only a floating-point or fixed-point approximation of a true <em>real
+number</em>. In the rest of this document, we will ignore this
+distinction, and refer to a <code>real</code>, knowing full well that there is a
+"largest" <code>real</code> value and a limited number of digits.</p>
+</div>
 </td>
 </tr>
 </table>
@@ -8902,7 +8939,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-27 17:31:06 +0100
+Last updated 2019-12-29 04:27:16 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
