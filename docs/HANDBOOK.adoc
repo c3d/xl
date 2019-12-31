@@ -3154,9 +3154,9 @@ can be written as follows:
 ----
 count_vowels InputText is
     is_vowel C is
-        Item in Head, Tail is Item in Head or Item in Tail
-        Item in RefItem is Item = RefItem
-        C in 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', Y'
+        Item in Head, Tail  is Item in Head or Item in Tail
+        Item in RefItem     is Item = RefItem
+        C in 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'
 
     Count : integer := 0
     for C in InputText loop
