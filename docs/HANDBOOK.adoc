@@ -890,7 +890,7 @@ will use the cached graphics, without re-evaluating the code under
 `locally`.
 
 All this can be implemented entirely within the constraints of the
-normal XL evaluation rules. In other words, the language did not have to
+normal XL ((evaluation)) rules. In other words, the language did not have to
 be changed in order to implement Tao3D.
 
 ==== Declarative programming in Tao3D
@@ -1102,7 +1102,7 @@ You can then run the program on a third machine with:
 
 Like for Tao3D, the implementation of these functions is not very
 complicated, and more importantly, it did not require any kind of change
-to the basic XL evaluation rules. In other words, adding something as
+to the basic XL ((evaluation)) rules. In other words, adding something as
 sophisticated as transparently distributed progrmming to XL can be done
 by practically any programmer, without changing the compiler.
 
@@ -1342,7 +1342,7 @@ fractional part.
 NOTE: In the rest of the document, other terminologies, such as
 _integer_ or _real_ numbers may be applied for whole numbers and
 fractional numnbers respectively. This corresponds to numbers having
-been given a link:#types[type] for evaluation purpose. This is notably
+been given a link:#types[type] for ((evaluation)) purpose. This is notably
 the case whenever a computer font is used, e.g. when we refer to
 `integer` or `real` values. Except as far as syntax is concerned, this
 document will very rarely talk about whole numbers or fractional
@@ -1763,7 +1763,7 @@ B - A       // (B - A)
 XL defines _((program execution))_ primarily in terms of operations on the
 parse tree combined with operations on an implicit _((context))_ that stores
 the program state. The context itself is also described in XL in order
-to define the expected result of evaluation.
+to define the expected result of ((evaluation)).
 
 For efficiency, actual implementations are unlikely to store everything
 as an actual parse tree, although there is an _interpreter_
@@ -1815,7 +1815,7 @@ That data structure is only intended to explain the effect of evaluating
 the program. It is not intended to be a model of how things are actually
 implemented. As a matter of fact, care was taken in the design of XL to
 allow standard compilation and optimization techniques to remain
-applicable, and to leave a lot of freedom regarding actual evaluation
+applicable, and to leave a lot of freedom regarding actual ((evaluation))
 techniques.
 
 In the examples below, `CONTEXT0`, `CONTEXT1`, … will denote
@@ -1884,8 +1884,8 @@ statement, but disallow `syntax` in them. However, for convenience,
 anyway. If computed `use` statement ever become necessary, it will be
 easy enough to use the syntax `use "path"` for them.
 
-Once parsing completes successfully, the parse tree can be handed to the
-declaration and evaluation phases. Parsing occurs for the _entire
+Once ((parsing)) completes successfully, the parse tree can be handed to the
+((declaration)) and ((evaluation)) phases. Parsing occurs for the _entire
 program_, including imported modules, before the other phases begin.
 
 ==== Sequences
@@ -2861,7 +2861,7 @@ syracuse N when N mod 2 = 1  is N * 3 + 1
 syracuse X+5 // Must evaluate "X+5" for the conditional clause
 ----
 
-Evaluation of sub-expressions is performed in the order required to test
+Evaluation of ((sub-expressions)) is performed in the order required to test
 pattern matching, and from left to right, depth first. Patterns are
 tested in the order of declarations. Computed values for sub-expressions
 are link:#memoization[memoized], meaning that they are computed at most
@@ -3163,16 +3163,8 @@ count_vowels InputText is
         if is_vowel C then
             Count += 1
     Count
-count_vowels "Hello World" // Should return 3
+count_vowels "Hello World" // Returns 3
 ----
-
-NOTE: This example is designed for illustration purpose only. It is not
-idiomatic XL, since the ((standard library)) provides useful tools. A better
-way to write it would be:
-
-....
-count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"
-....
 
 This code example defines a local helper `is_vowel C` that checks if `C`
 is a vowel by comparing it against a list of vowels. That local helper
@@ -3181,7 +3173,11 @@ outer program, since it is not present in the outer context. It is,
 however, visible while evaluating the body of `count_vowels T`.
 
 Similarly, the local helper itself defines an even more local helper
-infix `in` in order ot evaluate the expression `C in 'a', 'e', ...`.
+infix `in` in order ot evaluate the following expression:
+
+....
+C in 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'
+....
 
 While evaluating `count_vowels "Hello World"`, the context will look
 something like:
@@ -3211,6 +3207,17 @@ The context is sorted so that the innermost definitions are visible
 first. Also, outer declarations are visible from the body of inner ones.
 In the example above, the body of `is_vowel Char` could validly refer to
 `Count` or to `InputText`.
+
+[NOTE]
+====
+This example is designed for illustration purpose only. It is not
+idiomatic XL, since the ((standard library)) provides useful tools. A better
+way to write it would be:
+
+....
+count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"
+....
+====
 
 === Scoping
 
@@ -3258,12 +3265,12 @@ digit_spelling is
 ----
 
 With this declaration, the expression `digit_spelling 3` evaluates to
-`"three"`. This kind of map application is called _indexing_. A
-suggested style choice is to make the intent more explicit using square
-brackets, as in `digit_spelling[4]`. This is a nod to the syntax of
+`"three"`. This kind of map application is called _((indexing))_. A
+suggested style choice is to make the intent more explicit using ((square
+brackets)), i.e. `digit_spelling[4]`, as a nod to the syntax of
 programming languages such as C or pass:[C++].
 
-When the index is an expression, for example `digit_spelling[A+3]` in a
+When the ((index)) is an expression, for example `digit_spelling[A+3]` in a
 context where `A is 2`, we must evaluate `A+3` in current context
 augmented with the declarations in `digit_spelling`. The first candidate
 has pattern `0`. This requires the evaluation of expression `A+3` to

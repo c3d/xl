@@ -4767,26 +4767,7 @@ can be written as follows:</p>
         if is_vowel C then
             Count += 1
     Count
-count_vowels "Hello World" // Should return 3</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This example is designed for illustration purpose only. It is not
-idiomatic XL, since the standard library provides useful tools. A better
-way to write it would be:
-</td>
-</tr>
-</table>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"</pre>
+count_vowels "Hello World" // Returns 3</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4798,7 +4779,12 @@ however, visible while evaluating the body of <code>count_vowels T</code>.</p>
 </div>
 <div class="paragraph">
 <p>Similarly, the local helper itself defines an even more local helper
-infix <code>in</code> in order ot evaluate the expression <code>C in 'a', 'e', &#8230;&#8203;</code>.</p>
+infix <code>in</code> in order ot evaluate the following expression:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>C in 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'</pre>
+</div>
 </div>
 <div class="paragraph">
 <p>While evaluating <code>count_vowels "Hello World"</code>, the context will look
@@ -4831,6 +4817,27 @@ somethign like:</p>
 first. Also, outer declarations are visible from the body of inner ones.
 In the example above, the body of <code>is_vowel Char</code> could validly refer to
 <code>Count</code> or to <code>InputText</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This example is designed for illustration purpose only. It is not
+idiomatic XL, since the standard library provides useful tools. A better
+way to write it would be:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -4891,8 +4898,7 @@ patterns are constant values. For example, you can use a map called
 <div class="paragraph">
 <p>With this declaration, the expression <code>digit_spelling 3</code> evaluates to
 <code>"three"</code>. This kind of map application is called <em>indexing</em>. A
-suggested style choice is to make the intent more explicit using square
-brackets, as in <code>digit_spelling[4]</code>. This is a nod to the syntax of
+suggested style choice is to make the intent more explicit using square brackets, i.e. <code>digit_spelling[4]</code>, as a nod to the syntax of
 programming languages such as C or C++.</p>
 </div>
 <div class="paragraph">
@@ -8919,7 +8925,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-31 08:54:33 +0100
+Last updated 2019-12-31 19:11:22 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
