@@ -3460,9 +3460,9 @@ expressions.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3512,9 +3512,9 @@ expression, and the pattern only matches if that check evaluates to
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3570,9 +3570,9 @@ right of the infix.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3599,9 +3599,9 @@ right of the infix.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3632,7 +3632,7 @@ in the example below:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">  X:real + Y:real as real is ...</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X:real + Y:real as real is ...</code></pre>
 </div>
 </div>
 </div>
@@ -3647,9 +3647,9 @@ right of the prefix matches the right operand of the expression.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3689,9 +3689,9 @@ of the postfix matches the left operand of the expression.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3724,19 +3724,16 @@ name or operator is sometimes called the <em>suffix</em>.</p>
 <summary class="title">Infix definitions</summary>
 <div class="content">
 <div class="paragraph">
-<p>When the pattern is an infix, it only matches:</p>
+<p>When the pattern is an infix, it matches an infix expression with the
+same infix operator when both the left and right operands of the
+pattern match the corresponding left and right operands of the
+expression.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>an infix expression with the same infix operator when both the left
-and right operands of the pattern match the corresponding left and right
-operands of the expression.</p>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3758,18 +3755,26 @@ operands of the expression.</p>
 </tr>
 </tbody>
 </table>
-</li>
-<li>
-<p><a id="splitting"></a>a name bound to an infix with the same infix operator
-when both the left and right operands of the pattern match the
-corresponding left and right operands of the bound value. In that
-case, the value in the name is said to be <em>split</em> to match the
-parameters.</p>
+<div class="paragraph">
+<p>Definitions for such patterns are called <em>infix definitions</em>, and the
+corresponding expressions are called <em>infix expressions</em>.</p>
+</div>
+</div>
+</details>
+<details>
+<summary class="title">Infix argument splitting</summary>
+<div class="content">
+<div class="paragraph">
+<p>When the pattern is an infix, it also matches a name if that name is
+bound to an infix expression that would match. In that case, the
+bound value is said to be <em>split</em> to match the parameters.
+</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 37%;">
-<col style="width: 30%;">
-<col style="width: 33%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3782,8 +3787,10 @@ parameters.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>write X,Y</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>write Items</code> when <code>Items is "A","B"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wrote 0</code>,
-<code>write Items</code> when <code>Items is "A"+"B"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write Items</code>
+                                                        when
+                                                        <code>Items is "A"+"B"</code>,
+                                                        <code>wrote 0,1</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3813,13 +3820,6 @@ being split, resulting in bindings <code>Head is 2</code> and <code>Tail is 3</c
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>A definition for an infix pattern is called an <em>infix definition</em>, and
-the expressions are called <em>infix expressions</em>.</p>
-</div>
-</li>
-</ul>
-</div>
 </div>
 </details>
 <details>
@@ -3833,9 +3833,9 @@ evaluates to <code>true</code> after bindings</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3859,8 +3859,8 @@ to any kind of error. For example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">  log X when X &gt; 0 is ...
-  log "Logging an error"        // Will not match the definition above</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">log X when X &gt; 0 is ...
+log "Logging an error"        // Will not match the definition above</code></pre>
 </div>
 </div>
 </div>
@@ -3878,9 +3878,9 @@ require <a href="#immediate-evaluation">immediate evaluation</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3904,9 +3904,9 @@ top-level patterns, which is primarily useful in <a href="#scoping">maps</a>:</p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">  digits is
-      0 is "Zero"
-      1 is "One"</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">digits is
+    0 is "Zero"
+    1 is "One"</code></pre>
 </div>
 </div>
 </div>
@@ -3923,9 +3923,9 @@ the metabox, and <code>Value</code> is the expression being tested.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3960,8 +3960,8 @@ causing the first one to be evaluated for any <code>A and B</code> expression:</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">  true  and X       is X
-  false and X       is false</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">true  and X       is X
+false and X       is false</code></pre>
 </div>
 </div>
 </div>
@@ -3977,9 +3977,9 @@ otherwise no other role in pattern matching.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
 </colgroup>
 <thead>
 <tr>
@@ -3990,7 +3990,7 @@ otherwise no other role in pattern matching.</p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>(X+Y)*(X-Y) is X<sup>2-Y</sup>2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>(X+Y)*(X-Y) is X^2-Y^2</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>[A+3]*[A-3]</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>(A+3)*(A-4)</code></p></td>
 </tr>
@@ -4008,8 +4008,8 @@ argument is delimited with parentheses:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">  has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
-  has_parentheses B:block                                           is false</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
+has_parentheses B:block                                           is false</code></pre>
 </div>
 </div>
 </div>
@@ -8934,7 +8934,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-31 20:33:46 +0100
+Last updated 2019-12-31 23:55:26 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

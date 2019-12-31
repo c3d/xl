@@ -2220,11 +2220,11 @@ expressions.
 ====
 Top-level name patterns only match the exact same name.
 
-[cols=",,",options="header",]
-|=======================================
-|Declaration |Matched by |Not matched by
-|`pi is 3.14` |`pi` |`ip`, `3.14`
-|=======================================
+[cols="24%,38%,38%",options="header",]
+|===========================================
+| Declaration  | Matched by | Not matched by
+| `pi is 3.14` | `pi`       | `ip`, `3.14`
+|===========================================
 
 Definitions with a top-level name pattern are called _name definitions_.
 
@@ -2244,12 +2244,12 @@ with the already bound value `Old` by evaluating the `New=Old`
 expression, and the pattern only matches if that check evaluates to
 `true`.
 
-[cols=",,",options="header",]
-|============================================
-|Declaration |Matched by |Not matched by
-|`X+Y` |`2+"A"` |`2-3`, `+3`, `3+`
-|`N+N` |`3+3`, `A+B` when `A=B` |`3-3`, `3+4`
-|============================================
+[cols="24%,38%,38%",options="header",]
+|==========================================================
+| Declaration | Matched by              | Not matched by
+| `X+Y`       | `2+"A"`                 | `2-3`, `+3`, `3+`
+| `N+N`       | `3+3`, `A+B` when `A=B` | `3-3`, `3+4`
+|==========================================================
 
 Such name patterns are called _wildcard parameters_ because they can
 match any expression, or _untyped parameters_ because no type checking
@@ -2269,21 +2269,21 @@ right of the infix.
 
 A type annotation as a top-level pattern is a declaration:
 
-[cols=",,",options="header",]
-|=================================================
-|Top-level pattern |Matched by |Not matched by
-|`X:integer` |`X` |`2`, `'X'`
-|`seconds as integer` |`seconds` |`2`, `"seconds"`
-|=================================================
+[cols="24%,38%,38%",options="header",]
+|=====================================================
+| Top-level pattern    | Matched by | Not matched by
+| `X:integer`          | `X`        | `2`, `'X'`
+| `seconds as integer` | `seconds`  | `2`, `"seconds"`
+|=====================================================
 
 A type annotation as a sub-pattern declares a parameter:
 
-[cols=",,",options="header",]
-|=======================================================================
-|Parameter pattern |Matched by |Not matched by
-|`X:integer` |`42` |`X` (unless bound to an `integer`)
-|`seconds as integer` |`42` |`X` (unless constant bound to an `integer`)
-|=======================================================================
+[cols="24%,38%,38%",options="header",]
+|==============================================================================
+| Parameter pattern    | Matched by| Not matched by
+| `X:integer`          | `42`      | `X` (unless bound to an `integer`)
+| `seconds as integer` | `42`      |`X` (unless constant bound to an `integer`)
+|==============================================================================
 
 Such patterns are called _type annotations_, and are used to perform
 type checking. Normally, type annotations using `:` are used to declare
@@ -2293,7 +2293,7 @@ in the example below:
 
 [source]
 ----
-  X:real + Y:real as real is ...
+X:real + Y:real as real is ...
 ----
 ====
 
@@ -2304,12 +2304,12 @@ When the pattern is a prefix, like `sin X`, the expression will match
 only if it is a prefix with the same name, and when the pattern on the
 right of the prefix matches the right operand of the expression.
 
-[cols=",,",options="header",]
-|=========================================
-|Pattern |Matched by |Not matched by
-|`sin X` |`sin (2.27 + A)` |`cos 3.27`
-|`+X:real` |`+2.27` |`+"A"`, `-3.1`, `1+1`
-|=========================================
+[cols="24%,38%,38%",options="header",]
+|=====================================================
+| Pattern   | Matched by       | Not matched by
+| `sin X`   | `sin (2.27 + A)` | `cos 3.27`
+| `+X:real` | `+2.27`          | `+"A"`, `-3.1`, `1+1`
+|=====================================================
 
 When the prefix is a name, definitions for such patterns are called
 _function definitions_, and the corresponding expressions are usually
@@ -2324,12 +2324,12 @@ When the pattern is a postfix, like `X%`, the expression will match only
 if it is a postfix with the same name, and when the pattern on the left
 of the postfix matches the left operand of the expression.
 
-[cols=",,",options="header",]
-|===================================
-|Pattern |Matched by |Not matched by
-|`X%` |`2.27%`, `"A"%` |`%3`, `3%2`
-|`X km` |`2.27 km` |`km 3`, `1 km 3`
-|===================================
+[cols="24%,38%,38%",options="header",]
+|=============================================
+| Pattern | Matched by      | Not matched by
+| `X%`    | `2.27%`, `"A"%` | `%3`, `3%2`
+| `X km`  | `2.27 km`       | `km 3`, `1 km 3`
+|=============================================
 
 Definitions for such patterns are called _postfix definitions_, and the
 corresponding expressions are usually called _postfix expressions_. The
@@ -2339,32 +2339,38 @@ name or operator is sometimes called the _suffix_.
 .Infix definitions
 [%collapsible]
 =====
-When the pattern is an infix, it only matches:
+When the pattern is an infix, it matches an infix expression with the
+same infix operator when both the left and right operands of the
+pattern match the corresponding left and right operands of the
+expression.
 
-* an infix expression with the same infix operator when both the left
-and right operands of the pattern match the corresponding left and right
-operands of the expression.
-+
-[cols=",,",options="header",]
-|============================================
-|Pattern |Matched by |Not matched by
-|`X:real+Y:real` |`3.5+2.9` |`3+2`, `3.5-2.9`
-|`X and Y` |`N and 3` |`N or 3`
-|============================================
-+
-* [[splitting]]a name bound to an infix with the same infix operator
-when both the left and right operands of the pattern match the
-corresponding left and right operands of the bound value. In that
-case, the value in the name is said to be _((split))_ to match the
-parameters.(((argument splitting)))
-+
-[width="100%",cols="37%,30%,33%",options="header",]
-|=======================================================================
-|Pattern |Matched by |Not matched by
-|`write X,Y` |`write Items` when `Items is "A","B"` |`wrote 0`,
-`write Items` when `Items is "A"+"B"`
-|=======================================================================
-+
+[cols="24%,38%,38%",options="header",]
+|================================================
+| Pattern         | Matched by | Not matched by
+| `X:real+Y:real` | `3.5+2.9`  | `3+2`, `3.5-2.9`
+| `X and Y`       | `N and 3`  | `N or 3`
+|================================================
+Definitions for such patterns are called _infix definitions_, and the
+corresponding expressions are called _infix expressions_.
+=====
+
+.Infix argument splitting
+[%collapsible]
+=====
+When the pattern is an infix, it also matches a name if that name is
+bound to an infix expression that would match. In that case, the
+bound value is said to be _((split))_ to match the parameters.
+(((argument splitting)))
+
+[width="100%",cols="24%,38%,38%",options="header",]
+|==========================================================================
+| Pattern     | Matched by                            | Not matched by
+| `write X,Y` | `write Items` when `Items is "A","B"` | `write Items`
+                                                        when
+                                                        `Items is "A"+"B"`,
+                                                        `wrote 0,1`
+|==========================================================================
+
 [NOTE]
 ====
 A very common idiom is to use comma `,` infix to separate
@@ -2380,9 +2386,6 @@ and `Tail is 2,3`. In the evaluation of the body with these bindings,
 `write Tail` will then match the same declaration again with `Tail`
 being split, resulting in bindings `Head is 2` and `Tail is 3`.
 ====
-+
-A definition for an infix pattern is called an _infix definition_, and
-the expressions are called _infix expressions_.
 =====
 
 .Conditional patterns
@@ -2393,11 +2396,11 @@ the pattern matches an expression if the pattern on the left of the
 infix matches the expression, and if the expression on the right
 evaluates to `true` after bindings
 
-[cols=",,",options="header",]
-|==========================================
-|Pattern |Matched by |Not matched by
-|`log X when X > 0` |`log 3.5` |`log(-3.5)`
-|==========================================
+[cols="24%,38%,38%",options="header",]
+|=================================================
+| Pattern            | Matched by | Not matched by
+| `log X when X > 0` | `log 3.5`  | `log(-3.5)`
+|=================================================
 
 Such patterns are called _conditional patterns_. They do not match if
 the expression evaluates to anything but `true`, notably if it evaluates
@@ -2405,8 +2408,8 @@ to any kind of error. For example:
 
 [source]
 ----
-  log X when X > 0 is ...
-  log "Logging an error"        // Will not match the definition above
+log X when X > 0 is ...
+log "Logging an error"        // Will not match the definition above
 ----
 ====
 
@@ -2420,11 +2423,11 @@ is the literal constant in the pattern, and `Value` is the evaluated
 value of the expression. Checking that the value matches will therefore
 require link:#immediate-evaluation[immediate evaluation].
 
-[cols=",,",options="header",]
-|=======================================
-|Pattern |Matched by |Not matched by
-|`0!` |`N!` when `N=0` |`N!` when `N<>0`
-|=======================================
+[cols="24%,38%,38%",options="header",]
+|==============================================
+| Pattern  | Matched by      | Not matched by
+| `0!`     | `N!` when `N=0` | `N!` when `N<>0`
+|==============================================
 
 This case applies to sub-patterns, as was the case for `0! is 1` in
 the link:#factorial[definition of factorial]. It also applies to
@@ -2432,9 +2435,9 @@ top-level patterns, which is primarily useful in link:#scoping[maps]:
 
 [source]
 ----
-  digits is
-      0 is "Zero"
-      1 is "One"
+digits is
+    0 is "Zero"
+    1 is "One"
 ----
 ====
 
@@ -2447,11 +2450,11 @@ is equal to the value computed by the metabox. This equality is checked
 by evaluating `Pattern = Value`, where `Pattern` is the expression in
 the metabox, and `Value` is the expression being tested.
 
-[cols=",,",options="header",]
-|==============================================
-|Pattern |Matched by |Not matched by
-|`+[[true]]+` |`true`, `not false` |`"true"`, `1`
-|==============================================
+[cols="24%,38%,38%",options="header",]
+|====================================================
+| Pattern      | Matched by          | Not matched by
+| `+[[true]]+` | `true`, `not false` | `"true"`, `1`
+|====================================================
 
 A metabox is used in particular when a name would be interpreted as a
 parameter. The two declarations below declare a short-circuit boolean
@@ -2469,8 +2472,8 @@ causing the first one to be evaluated for any `A and B` expression:
 
 [source]
 ----
-  true  and X       is X
-  false and X       is false
+true  and X       is X
+false and X       is false
 ----
 ====
 
@@ -2482,11 +2485,11 @@ match. In other words, blocks in patterns can be used to change the
 relative precedence of operators in a complex expression, but play
 otherwise no other role in pattern matching.
 
-[cols=",,",options="header",]
-|======================================================
-|Definition |Matched by |Not matched by
-|`(X+Y)*(X-Y) is X^2-Y^2` |`[A+3]*[A-3]` |`(A+3)*(A-4)`
-|======================================================
+[cols="24%,38%,38%",options="header",]
+|============================================================
+| Definition                 | Matched by    | Not matched by
+| `+(X+Y)*(X-Y) is X^2-Y^2+` | `[A+3]*[A-3]` | `(A+3)*(A-4)`
+|============================================================
 
 The delimiters of a block cannot be tested that way. In other words, a
 pattern with angle brackets can match parentheses or conversely. For
@@ -2498,8 +2501,8 @@ argument is delimited with parentheses:
 
 [source]
 ----
-  has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
-  has_parentheses B:block                                           is false
+has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
+has_parentheses B:block                                           is false
 ----
 ====
 
