@@ -2428,7 +2428,7 @@ require link:#immediate-evaluation[immediate evaluation].
 
 This case applies to sub-patterns, as was the case for `0! is 1` in
 the link:#factorial[definition of factorial]. It also applies to
-top-level patterns, which is primarily useflu in link:#scoping[maps]:
+top-level patterns, which is primarily useful in link:#scoping[maps]:
 
 [source]
 ----
