@@ -304,13 +304,14 @@ add3            is      adder 3
 
 The notation `lambda X`, which can also be written `\X`, is inspired by
 https://en.wikipedia.org/wiki/Lambda_calculus[lambda calculus]. It makes
-it possible to create patterns that match entire expressions. In other
-words, `X is 0` defines a name, and only the expression `X` matches that
-definition, whereas `\X is 0` defines a "catch-all" pattern that will
-match `35` or `"ABC"`. This _lambda notation_ can be used to build
-something that behaves almost exactly like an _anonymous function_ in
-functional languages, although the way it actually works internally is
-link:#scoping[still based on pattern matching].
+it possible to create link:#pattern[patterns] that match entire
+expressions. In other words, `X is 0` defines a name, and only the
+expression `X` matches that definition, whereas `\X is 0` defines a
+"catch-all" pattern that will match `35` or `"ABC"`. This _((lambda))
+notation_ can be used to build something that behaves almost exactly
+like an _anonymous function_ in functional languages, although the way
+it actually works internally is link:#scoping[still based on pattern
+matching].
 
 [NOTE]
 =====
@@ -639,7 +640,7 @@ Rest    is " and the value of Y is ", Y
 
 The call to `write Head` will then match one of the implementations of
 `write`, depending on the actual type of `X`. For example, if `X` is an
-integer, then it will match with `write X:integer`. Then the last split
+integer, then it will match with `write X:integer`. Then the last ((split))
 occurs for `write Rest` with the following bindings:
 
 [source]
@@ -2351,10 +2352,11 @@ operands of the expression.
 |`X and Y` |`N and 3` |`N or 3`
 |============================================
 +
-* a name bound to an infix with the same infix operator when both the
-left and right operands of the pattern match the corresponding left and
-right operands of the bound value. In that case, the value in the name
-is said to be _split_ to match the parameters.
+* [[splitting]]a name bound to an infix with the same infix operator
+when both the left and right operands of the pattern match the
+corresponding left and right operands of the bound value. In that
+case, the value in the name is said to be _((split))_ to match the
+parameters.
 +
 [width="100%",cols="37%,30%,33%",options="header",]
 |=======================================================================
@@ -2534,6 +2536,7 @@ C : circle := circle(0.3, 2.6, 4.0)
 ----
 ====
 
+ifdef::pattern-matching-scope-values[]
 ==== Pattern matching scope values
 
 When a pattern is a comma-separated parameter list, it can be matched to
@@ -2578,6 +2581,7 @@ unclear that this can easily be implemented within the language as a
 definition for `X,Y`, which is a bit concerning. (In other words, this
 might be the kind of language rule that is not very natural to write in
 XL - To be verified…)
+endif::[]
 
 === Overloading
 
