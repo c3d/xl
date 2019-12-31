@@ -2735,7 +2735,7 @@ draw C:circle       is ... // Implementation for circle
 draw P:polygon      is ... // Implementation for polygon
 draw S:shape        is ... // Implementation for shape
 
-draw Something      // Calls the right implementation based type of Something
+draw Something      // Calls the right implementation based on type of Something
 ----
 
 A single dynamic dispatch may require multiple tests on different
