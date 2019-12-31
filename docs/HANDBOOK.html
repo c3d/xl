@@ -3172,7 +3172,7 @@ finishes.</p>
 <p>During the declaration phase, all declarations are stored in order in
 the context, so that they appear before any declaration that was already
 in the context. As a result, the new declarations may <em>shadow</em> existing
-declarations that match.</p>
+declarations that match(declaration,shadowing.</p>
 </div>
 <div class="paragraph">
 <p>In the example above, the declaration phase would result in a context
@@ -4180,9 +4180,9 @@ definition will be selected. If the value is <code>1</code>, the second definiti
 will be used. Otherwise, the third definition will be used.</p>
 </div>
 <div class="paragraph">
-<p>A binding may contain a value that may itself need to be split in
-order to be tested against the formal parameters. This is used in the
-implementation of <code>print</code>:</p>
+<p>A binding may contain a value that may itself need to be
+split in order to be tested against the formal
+parameters. This is used in the implementation of <code>print</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4296,13 +4296,13 @@ if shape1 intersects shape2 then    // selects the right combination
 </td>
 <td class="content">
 Type-based dynamic dispatch is relatively similar to the notion
-of <em>virtual function</em> in C++, although the XL implementation is likely
-to be quite different. The C++ approach only allows dynamic dispatch
-along a single axis, based on the type of the object argument. C++ also
-features a special syntax, <code>shape.Draw()</code>, for calls with dynamic
-dispatch, which differs from the C-style syntax for function calls,
-<code>Draw(shape)</code>. The syntax alone makes the <code>intersects</code> example difficult
-to write in C++.
+of <em>virtual function</em> in C++, although the XL
+implementation is likely to be quite different. The C++
+approach only allows dynamic dispatch along a single axis, based on
+the type of the object argument. C++ also features a special
+syntax, <code>shape.Draw()</code>, for calls with dynamic dispatch, which differs
+from the C-style syntax for function calls, <code>Draw(shape)</code>. The syntax
+alone makes the <code>intersects</code> example difficult to write in C++.
 </td>
 </tr>
 </table>
@@ -4331,13 +4331,12 @@ argument tests.</p>
 <div class="sect2">
 <h3 id="immediate-evaluation"><a class="anchor" href="#immediate-evaluation"></a><a class="link" href="#immediate-evaluation">3.6. Immediate evaluation</a></h3>
 <div class="paragraph">
-<p>In the <code>circumference</code> examples, matching <code>2 * pi * Radius</code> against the
-possible candidates for <code>X * Y</code> expressions required an evaluation of
-<code>2 * pi</code> in order to check whether it was a <code>real</code> or <code>integer</code> value.</p>
-</div>
-<div class="paragraph">
-<p>This is called <em>immediate evaluation</em> of arguments, and is required in
-XL for statements, but also in the following cases:</p>
+<p>In the <code>circumference</code> examples, matching <code>2 * pi * Radius</code> against
+the possible candidates for <code>X * Y</code> expressions required an evaluation
+of <code>2 * pi</code> in order to check whether it was a <code>real</code> or <code>integer</code>
+value.  This is called <em>immediate evaluation</em> of arguments, and is
+required in XL for statements, but
+also in the following cases:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -4413,8 +4412,8 @@ syracuse X+5 // Must evaluate "X+5" for the conditional clause</code></pre>
 <p>Evaluation of sub-expressions is performed in the order required to test
 pattern matching, and from left to right, depth first. Patterns are
 tested in the order of declarations. Computed values for sub-expressions
-are <a href="#memoization">memoized</a>, meaning that they are computed at most
-once in a given statement.</p>
+are <a href="#memoization">memoized</a>, meaning that they
+are computed at most once in a given statement.</p>
 </div>
 </div>
 <div class="sect2">
@@ -4423,8 +4422,7 @@ once in a given statement.</p>
 <p>In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter in such a way that an evaluation of
 the formal argument in the body of the declaration will evaluate the
-original expression in the original context. This is called <em>lazy
-evaluation</em>. The original expression will be evaluated every time the
+original expression in the original context. This is called <em>lazy evaluation</em>. The original expression will be evaluated every time the
 parameter is evaluated.</p>
 </div>
 <div class="paragraph">
@@ -4475,7 +4473,8 @@ body of the definition is somewhat equivalent to the following:</p>
 <p>In the body of the <code>while</code> definition, <code>Condition</code> must be evaluated
 because it is tested against metabox <code>[[true]]</code> and <code>[[false]]</code> in the
 definition of <code>if-then-else</code>. In that same definition for <code>while</code>,
-<code>Body</code> must be evaluated because it is a statement.</p>
+<code>Body</code> must be evaluated because it is a
+statement.</p>
 </div>
 <div class="paragraph">
 <p>The value of <code>Body</code> or <code>Condition</code> is not changed by them being
@@ -4487,9 +4486,10 @@ value of <code>N</code>.</p>
 </div>
 <div class="paragraph">
 <p>Lazy evaluation can also be used to implement "short circuit" boolean
-operators. The following code for the <code>and</code> operator will not evaluate
-<code>Condition</code> if its left operand is <code>false</code>, making this implementation
-of <code>and</code> more efficient than the one given earlier:</p>
+operators. The following code for
+the <code>and</code> operator will not evaluate <code>Condition</code> if its left operand
+is <code>false</code>, making this implementation of <code>and</code> more efficient than
+the one given earlier:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4575,7 +4575,7 @@ could be written something like <code>{ N is 3; M is "Hello" }</code>.</p>
 </div>
 <div class="paragraph">
 <p>The value returned by <code>adder N</code> is not simply <code>{ lambda X is X + N }</code>,
-but something like <code>{N is 3} { lambda X is X + N }</code>, i.e. a closure that
+but something like <code>{ N is 3 } { lambda X is X + N }</code>, i.e. a closure that
 captures the bindings necessary for evaluation of the body <code>X + N</code> at a
 later time.</p>
 </div>
@@ -4642,7 +4642,7 @@ available, and <code>write Tail</code> will correctly write <code>42</code>.</p>
 of overload candidates considered or of the number of tests performed on
 the value. Once a sub-expression has been computed, the computed value
 is always used for testing or binding that specific sub-expression, and
-only that sub-expression.</p>
+only that sub-expression. This is called <em>memoization</em>.</p>
 </div>
 <div class="paragraph">
 <p>For example, consider the following declarations:</p>
@@ -4695,10 +4695,11 @@ general case to be called with a value that is <code>0</code> or <code>1</code>.
 <div class="sect2">
 <h3 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.10. Self</a></h3>
 <div class="paragraph">
-<p>In a definition body, <code>self</code> refers to the input tree. A special idiom
-is a definition where the body is <code>self</code>, called a <em>self definition</em>.
-Such definitions indicates that the item being defined needs no further
-evaluation. For example, <code>true</code> and <code>false</code> can be defined as:</p>
+<p>In a definition body, <code>self</code> refers to the input parse tree. A
+special idiom is a definition where the body is <code>self</code>, called a
+<em>self definition</em>.  Such definitions indicates that the item being
+defined needs no further evaluation. For example, <code>true</code> and <code>false</code>
+can be defined as:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4708,9 +4709,10 @@ false   is self</code></pre>
 </div>
 <div class="paragraph">
 <p>This means that evaluating <code>true</code> will return <code>true</code>, and evaluating
-<code>false</code> will return <code>false</code>, without any further evaluation. Note that
-you cannot write for example <code>true is true</code>, as <code>true</code> in the body is a
-statement, which would require further evaluation, hence an infinite recursion.</p>
+<code>false</code> will return <code>false</code>, without any further
+evaluation. Note that you cannot write for
+example <code>true is true</code>, as <code>true</code> in the body is a statement, which
+would require further evaluation, hence an infinite recursion.</p>
 </div>
 <div class="paragraph">
 <p>It is possible to use <code>self</code> for data structures. For example, in order
@@ -4732,7 +4734,8 @@ in the current context matches.</p>
 </li>
 <li>
 <p>Sequences of declarations, like <code>{ Zero is 0; One is 1 }</code>, in
-particular the contexts captured for <a href="#closures">closures</a>.</p>
+particular the contexts captured for
+<a href="#closures">closures</a>.</p>
 </li>
 </ol>
 </div>
@@ -4744,11 +4747,12 @@ particular the contexts captured for <a href="#closures">closures</a>.</p>
 <em>nested declarations</em>.</p>
 </div>
 <div class="paragraph">
-<p>When the body is evaluated, a <em>local declaration phase</em> will run,
-followed by a <em>local evaluation phase</em>. The local declaration phase will
-add the local declarations at the beginning of a new context, which will
-be destroyed when the body evaluation terminates. The local declarations
-therefore shadow declarations from the enclosing context.</p>
+<p>When the body is evaluated, a <em>local declaration
+phase</em> will run, followed by a <em>local evaluation phase</em>. The local
+declaration phase will add the local declarations at the beginning of
+a new context, which will be destroyed when the body evaluation
+terminates. The local declarations therefore shadow declarations from
+the enclosing context.</p>
 </div>
 <div class="paragraph">
 <p>For example, a function that returns the number of vowels in some text
@@ -4773,9 +4777,10 @@ count_vowels "Hello World" // Returns 3</code></pre>
 <div class="paragraph">
 <p>This code example defines a local helper <code>is_vowel C</code> that checks if <code>C</code>
 is a vowel by comparing it against a list of vowels. That local helper
-is not visible to the outer program. You cannot use <code>is_vowel X</code> in the
-outer program, since it is not present in the outer context. It is,
-however, visible while evaluating the body of <code>count_vowels T</code>.</p>
+is not visible to the outer scopes, in other words, to the rest of the
+program. You cannot use <code>is_vowel X</code> elsewhere in the program, since it is
+not present in the outer context. It is, however, visible while
+evaluating the body of <code>count_vowels T</code>.</p>
 </div>
 <div class="paragraph">
 <p>Similarly, the local helper itself defines an even more local helper
@@ -4801,7 +4806,7 @@ something like:</p>
 </div>
 <div class="paragraph">
 <p>In turn, while evaluating <code>is_vowel Char</code>, the context will look
-somethign like:</p>
+something like:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4814,9 +4819,10 @@ somethign like:</p>
 </div>
 <div class="paragraph">
 <p>The context is sorted so that the innermost definitions are visible
-first. Also, outer declarations are visible from the body of inner ones.
-In the example above, the body of <code>is_vowel Char</code> could validly refer to
-<code>Count</code> or to <code>InputText</code>.</p>
+first, possibly shadowing outer
+declarations. Also, outer declarations are
+visible from the body of inner ones.  In the example above, the body
+of <code>is_vowel Char</code> could validly refer to <code>Count</code> or to <code>InputText</code>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -4846,9 +4852,10 @@ way to write it would be:</p>
 <p>A list of declarations, similar to the kind that is used in
 <a href="#closures">closures</a>, is called a <em>map</em> and evaluates as itself. One
 of the primary uses for maps is <em>scoping</em>, in other words defining a
-common <em>scope</em> for the declarations that it contains. Since the
-<a href="#declaration-phase">declaration phase</a> operates on entire blocks,
-all declarations within a scope are visible at the same time.</p>
+common <em>scope</em> for the declarations that it
+contains. Since the <a href="#declaration-phase">declaration phase</a>
+operates on entire blocks, all declarations within a scope are visible
+at the same time.</p>
 </div>
 <div class="paragraph">
 <p>There are two primary operations that apply to a map:</p>
@@ -4856,9 +4863,9 @@ all declarations within a scope are visible at the same time.</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><em>Applying</em> a map as a prefix to an operand, as we saw with closures,
-evaluates the operand in the context defined by overlaying the map
-definitions on top of the current context.</p>
+<p><em>Applying</em> a map as a prefix to an operand, as
+we saw with closures, evaluates the operand in the context defined by
+overlaying the map definitions on top of the current context.</p>
 </li>
 <li>
 <p><em>Scoping</em> an expression within a map uses the infix <code>.</code> operator,
@@ -4868,17 +4875,19 @@ consists <em>exclusively</em> of the declarations in the map on the left.</p>
 </ol>
 </div>
 <div class="paragraph">
-<p>Evaluating a closure is a prime example of map application. The context
-is captured by the closure in a map, and the closure itself is a prefix
-that corresponds to the map application. Such an expression can also be
-created explicitly. For example, <code>{ X is 40; Y is 2 } { X + Y }</code> will
-evaluate as <code>42</code>, taking <code>X</code> and <code>Y</code> from the map, and taking the
-declaration used to evaluate <code>X + Y</code> from the current context.</p>
+<p>Evaluating a closure is a prime example of map application. The
+context is captured by the closure in a map, and
+the closure itself is a prefix that corresponds to the map
+application. Such an expression can also be created explicitly. For
+example, <code>{ X is 40; Y is 2 } { X + Y }</code> will evaluate as <code>42</code>, taking
+<code>X</code> and <code>Y</code> from the map, and taking the declaration used to evaluate
+<code>X + Y</code> from the current context.</p>
 </div>
 <div class="paragraph">
 <p>Another common usage for maps is to store declarations where the
-patterns are constant values. For example, you can use a map called
-<code>digit_spelling</code> to convert a digit to its English spelling:</p>
+patterns are constant values. For example, you
+can use a map called <code>digit_spelling</code> to convert a digit to its
+English spelling:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8925,7 +8934,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-31 19:11:22 +0100
+Last updated 2019-12-31 20:30:22 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -284,7 +284,7 @@ type cartesian  is      cartesian(re:number, im:number)
 type polar      is      polar(mod:number, arg:number)
 ----
 
-NOTE: link:#types[types] in XL indicate the shape of ((parse trees)). In
+NOTE: link:#types[types] in XL indicate the shape of ((parse tree))s. In
 other words, the `cartesian` type above will match any parse tree that
 takes the shape of the word `cartesian` followed by two numbers, like
 for example `cartesian(1,5)`.
@@ -309,7 +309,7 @@ expressions. In other words, `X is 0` defines a name, and only the
 expression `X` matches that definition, whereas `\X is 0` defines a
 "catch-all" pattern that will match `35` or `"ABC"`. This _((lambda))
 notation_ can be used to build something that behaves almost exactly
-like an _anonymous function_ in functional languages, although the way
+like an _((anonymous function))_ in functional languages, although the way
 it actually works internally is link:#scoping[still based on pattern
 matching].
 
@@ -1180,8 +1180,8 @@ with a new fancy and ((programmer-friendly)) syntax.
 
 The XL ((syntax)) is much _simpler_ than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
-link:{xl}src/parser.cpp[parser] for XL is less than 800 lines of
-straightforward pass:[C++] code, and the link:{xl}src/scanner.cpp[scanner]
+link:{xl}src/parser.cpp[((parser))] for XL is less than 800 lines of
+straightforward pass:[C++] code, and the link:{xl}src/scanner.cpp[((scanner))]
 barely adds another 900 lines. By contrast, the
 https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c[C parser]
 in GCC needs more than 20000 lines of code, which is about the size of a
@@ -1815,8 +1815,8 @@ That data structure is only intended to explain the effect of evaluating
 the program. It is not intended to be a model of how things are actually
 implemented. As a matter of fact, care was taken in the design of XL to
 allow standard compilation and optimization techniques to remain
-applicable, and to leave a lot of freedom regarding actual ((evaluation))
-techniques.
+applicable, and to leave a lot of freedom regarding actual evaluation
+techniques(((evaluation,technique))).
 
 In the examples below, `CONTEXT0`, `CONTEXT1`, … will denote
 pseudo-variables that describe the various currently visible execution
@@ -1982,7 +1982,7 @@ finishes.
 During the declaration phase, all declarations are stored in order in
 the context, so that they appear before any declaration that was already
 in the context. As a result, the new declarations may _shadow_ existing
-declarations that match.
+declarations that match(((declaration,shadowing)).
 
 In the example above, the declaration phase would result in a context
 that looks something like:
@@ -2356,7 +2356,7 @@ operands of the expression.
 when both the left and right operands of the pattern match the
 corresponding left and right operands of the bound value. In that
 case, the value in the name is said to be _((split))_ to match the
-parameters.
+parameters.(((argument splitting)))
 +
 [width="100%",cols="37%,30%,33%",options="header",]
 |=======================================================================
@@ -2504,9 +2504,9 @@ argument is delimited with parentheses:
 ====
 
 In some cases, checking if an argument matches a pattern requires
-evaluation of the corresponding expression or sub-expression. This is
+evaluation of the corresponding expression or ((sub-expression)). This is
 called link:#immediate-evaluation[immediate evaluation]. Otherwise,
-link:#lazy-evaluation[evaluation will be lazy].
+link:#lazy-evaluation[evaluation will be lazy](((lazy evaluation))).
 
 [NOTE]
 ====
@@ -2612,7 +2612,7 @@ implementation, but not by far, and it has some benefits, notably with
 respect to making the code more robust to reorganizations. For this
 reason, this remains an open option. However, it is likely to be more
 complicated with the more dynamic semantics of XL, notably for
-link:#dynamic-dispatch[dynamic dispatch], where the runtime cost of
+link:#dynamic-dispatch[((dynamic dispatch))], where the runtime cost of
 finding the proper candidate might be a bit too high to be practical.
 
 For example, `X+1` can match any of the declarations patterns below:
@@ -2669,9 +2669,9 @@ compare the value against the candidates. If the value is `0`, the first
 definition will be selected. If the value is `1`, the second definition
 will be used. Otherwise, the third definition will be used.
 
-A ((binding)) may contain a value that may itself need to be split in
-order to be tested against the formal parameters. This is used in the
-implementation of `print`:
+A ((binding)) may contain a value that may itself need to be
+split(((argument splitting))) in order to be tested against the formal
+parameters. This is used in the implementation of `print`:
 
 [source]
 ----
@@ -2711,7 +2711,7 @@ given parse tree may depend on the dynamic value of the arguments. In
 the Fibonacci example above, `fib(N-1)` may select any of the three
 declarations of `fib` depending on the actual value of `N`. This runtime
 selection of declarations based on the value of arguments is called
-_dynamic dispatch_.
+_((dynamic dispatch))_.
 
 In the case of `fib`, the selection of the correct definition is a
 function of an `integer` argument. This is not the only kind of test
@@ -2769,13 +2769,13 @@ if shape1 intersects shape2 then    // selects the right combination
 ----
 
 NOTE: Type-based dynamic dispatch is relatively similar to the notion
-of _virtual function_ in pass:[C++], although the XL implementation is likely
-to be quite different. The pass:[C++] approach only allows dynamic dispatch
-along a single axis, based on the type of the object argument. pass:[C++] also
-features a special syntax, `shape.Draw()`, for calls with dynamic
-dispatch, which differs from the C-style syntax for function calls,
-`Draw(shape)`. The syntax alone makes the `intersects` example difficult
-to write in pass:[C++].
+of _((virtual function))_ in pass:[C++], although the XL
+implementation is likely to be quite different. The pass:[C++]
+approach only allows dynamic dispatch along a single axis, based on
+the type of the object argument. pass:[C++] also features a special
+syntax, `shape.Draw()`, for calls with dynamic dispatch, which differs
+from the C-style syntax for function calls, `Draw(shape)`. The syntax
+alone makes the `intersects` example difficult to write in pass:[C++].
 
 As another illustration of a complex dynamic dispatch not based on
 types, http://tao3d.sourceforge.net[Tao3D] uses
@@ -2792,17 +2792,17 @@ theme_font SlideTheme,  SlideMaster,  SlideItem is font "Arial"
 ----
 
 As the example above illustrates, the XL approach to dynamic dispatch
-takes advantage of pattern matching to allow complex combinations of
+takes advantage of ((pattern matching)) to allow complex combinations of
 argument tests.
 
 === Immediate evaluation
 
-In the `circumference` examples, matching `2 * pi * Radius` against the
-possible candidates for `X * Y` expressions required an evaluation of
-`2 * pi` in order to check whether it was a `real` or `integer` value.
-
-This is called _immediate evaluation_ of arguments, and is required in
-XL for statements, but also in the following cases:
+In the `circumference` examples, matching `2 * pi * Radius` against
+the possible candidates for `X * Y` expressions required an evaluation
+of `2 * pi` in order to check whether it was a `real` or `integer`
+value.  This is called _((immediate evaluation))_ of arguments, and is
+required in XL for statements(((statement,immediate evaluation))), but
+also in the following cases:
 
 [arabic]
 . When the formal parameter being checked has a type annotation, like
@@ -2861,19 +2861,19 @@ syracuse N when N mod 2 = 1  is N * 3 + 1
 syracuse X+5 // Must evaluate "X+5" for the conditional clause
 ----
 
-Evaluation of ((sub-expressions)) is performed in the order required to test
+Evaluation of ((sub-expression))s is performed in the order required to test
 pattern matching, and from left to right, depth first. Patterns are
 tested in the order of declarations. Computed values for sub-expressions
-are link:#memoization[memoized], meaning that they are computed at most
-once in a given statement.
+are link:#memoization[memoized](((memoization))), meaning that they
+are computed at most once in a given statement.
 
 === Lazy evaluation
 
 In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter in such a way that an evaluation of
 the formal argument in the body of the declaration will evaluate the
-original expression in the original context. This is called _lazy
-evaluation_. The original expression will be evaluated every time the
+original expression in the original context. This is called _((lazy
+evaluation))_. The original expression will be evaluated every time the
 parameter is evaluated.
 
 To understand these rules, consider the canonical definition of `while`
@@ -2919,7 +2919,8 @@ CONTEXT1 is
 In the body of the `while` definition, `Condition` must be evaluated
 because it is tested against metabox `+[[true]]+` and `+[[false]]+` in the
 definition of `if-then-else`. In that same definition for `while`,
-`Body` must be evaluated because it is a statement.
+`Body` must be evaluated because it is a
+statement(((statement,immediate evaluation))).
 
 The value of `Body` or `Condition` is not changed by them being
 evaluated. In our example, the `Body` and `Condition` passed in the
@@ -2929,9 +2930,10 @@ same reason, each test of `N <> 1` in our example is with the latest
 value of `N`.
 
 Lazy evaluation can also be used to implement "short circuit" boolean
-operators. The following code for the `and` operator will not evaluate
-`Condition` if its left operand is `false`, making this implementation
-of `and` more efficient than the one given earlier:
+operators(((optimization,boolean operators))). The following code for
+the `and` operator will not evaluate `Condition` if its left operand
+is `false`, making this implementation of `and` more efficient than
+the one given earlier:
 
 [source]
 ----
@@ -2976,9 +2978,9 @@ CONTEXT2 is
 ----
 
 The notation `CONTEXT1 { Condition }` means that we evaluate `Condition`
-in context `CONTEXT1`. This one of the link:#scoping[scoping operators],
+in ((context)) `CONTEXT1`. This one of the link:#scoping[((scoping operator))s],
 which is explained in more details below. A prefix with a context on the
-left and a block on the right is called a _closure_.
+left and a block on the right is called a _((closure))_.
 
 In the above example, we gave an arbitrary name to the closure,
 `CONTEXT1`, which is the same for both `Condition` and `Body`. This name
@@ -2991,7 +2993,7 @@ A closure may be returned as a result of evaluation, in which case all
 or part of a context may need to be captured in the returned value, even
 after that context would otherwise normally be discarded.
 
-For example, consider the following code defining an anonymous function:
+For example, consider the following code defining an ((anonymous function)):
 
 [source]
 ----
@@ -3000,13 +3002,13 @@ add3 is adder 3     // Creates a function that adds 3 to its input
 add3 5              // Computes 8
 ----
 
-When we evaluate `add3`, a binding `N is 3` is created in a new context
+When we evaluate `add3`, a ((binding)) `N is 3` is created in a new context
 that contains declaration `N is 3`. That context can simply be written
 as `{ N is 3 }`. A context with an additional binding for `M is "Hello"`
 could be written something like `{ N is 3; M is "Hello" }`.
 
 The value returned by `adder N` is not simply `{ lambda X is X + N }`,
-but something like `{N is 3} { lambda X is X + N }`, i.e. a closure that
+but something like `{ N is 3 } { lambda X is X + N }`, i.e. a closure that
 captures the bindings necessary for evaluation of the body `X + N` at a
 later time.
 
@@ -3014,16 +3016,16 @@ This closure can correctly be evaluated even in a context where there is
 no longer any binding for `N`, like the global context after the
 finishing the evaluation of `add3`. This ensures that `add3 5` correctly
 evaluates as `8`, because the value `N is 3` is _captured_ in the
-closure.
+closure(((closure,capture))).
 
 A closure looks like a prefix `CONTEXT EXPR`, where `CONTEXT` and `EXPR`
 are blocks, and where `CONTEXT` is a sequence of declarations.
 Evaluating such a closure is equivalent to evaluating `EXPR` in the
-current context with `CONTEXT` as a local context, i.e. with the
+current context with `CONTEXT` as a ((local context)), i.e. with the
 declarations in `CONTEXT` possibly shadowing declarations in the current
-context.
+context(((declaration,shadowing))).
 
-In particular, if argument splitting is required to evaluate the
+In particular, if ((argument splitting)) is required to evaluate the
 expression, each of the split arguments shares the same context.
 Consider the `write` and `print` implementation, with the following
 declarations:
@@ -3061,11 +3063,11 @@ available, and `write Tail` will correctly write `42`.
 
 === Memoization
 
-A sub-expression will only be computed once irrespective of the number
+A ((sub-expression)) will only be computed once irrespective of the number
 of overload candidates considered or of the number of tests performed on
 the value. Once a sub-expression has been computed, the computed value
 is always used for testing or binding that specific sub-expression, and
-only that sub-expression.
+only that sub-expression. This is called _((memoization))_.
 
 For example, consider the following declarations:
 
@@ -3092,7 +3094,7 @@ evaluation of `foo C`, then that evaluated version will be used as a
 binding for `Z`.
 
 NOTE: *RATIONALE* These rules are not just optimizations. They are necessary
-to preserve the semantics of the language during dynamic dispatch for
+to preserve the semantics of the language during ((dynamic dispatch)) for
 expressions that are not constant. For example, consider a call like
 `fib(random(3..10))`, which evaluates the `fib` function with a random
 value between `3` and `10`. Every time `random` is evaluated, it returns
@@ -3103,10 +3105,11 @@ general case to be called with a value that is `0` or `1`.
 
 === Self
 
-In a definition body, `self` refers to the input tree. A special idiom
-is a definition where the body is `self`, called a _self definition_.
-Such definitions indicates that the item being defined needs no further
-evaluation. For example, `true` and `false` can be defined as:
+In a definition body, `self` refers to the input ((parse tree)). A
+special idiom is a definition where the body is `self`, called a
+_((self definition))_.  Such definitions indicates that the item being
+defined needs no further evaluation. For example, `true` and `false`
+can be defined as:
 
 [source]
 ----
@@ -3115,10 +3118,10 @@ false   is self
 ----
 
 This means that evaluating `true` will return `true`, and evaluating
-`false` will return `false`, without any further evaluation. Note that
-you cannot write for example `true is true`, as `true` in the body is a
-statement, which would require further evaluation, hence an ((infinite
-recursion)).
+`false` will return `false`, without any further
+evaluation(((evaluation,self))). Note that you cannot write for
+example `true is true`, as `true` in the body is a statement, which
+would require further evaluation, hence an ((infinite recursion)).
 
 It is possible to use `self` for data structures. For example, in order
 to ensure that comma-separated lists are not evaluated, you can write :
@@ -3134,18 +3137,20 @@ Note that the following values also evaluate as themselves:
 . `integer`, `real` or `text` constants, unless an explicit declaration
 in the current context matches.
 . Sequences of declarations, like `{ Zero is 0; One is 1 }`, in
-particular the contexts captured for link:#closures[closures].
+particular the contexts captured(((closure,capture))) for
+link:#closures[((closure))s].
 
 === Nested declarations
 
 A definition body may itself contain declarations, which are called
-_nested declarations_.
+_((nested declarations))_(((declaration,nested))).
 
-When the body is evaluated, a _local declaration phase_ will run,
-followed by a _local evaluation phase_. The local declaration phase will
-add the local declarations at the beginning of a new context, which will
-be destroyed when the body evaluation terminates. The local declarations
-therefore shadow declarations from the enclosing context.
+When the body is evaluated, a _((local declaration))(((declaration,local)))
+phase_ will run, followed by a _local evaluation phase_. The local
+declaration phase will add the local declarations at the beginning of
+a new context, which will be destroyed when the body evaluation
+terminates. The local declarations therefore shadow declarations from
+the enclosing context.
 
 For example, a function that returns the number of vowels in some text
 can be written as follows:
@@ -3168,9 +3173,10 @@ count_vowels "Hello World" // Returns 3
 
 This code example defines a local helper `is_vowel C` that checks if `C`
 is a vowel by comparing it against a list of vowels. That local helper
-is not visible to the outer program. You cannot use `is_vowel X` in the
-outer program, since it is not present in the outer context. It is,
-however, visible while evaluating the body of `count_vowels T`.
+is not visible to the outer scopes, in other words, to the rest of the
+program. You cannot use `is_vowel X` elsewhere in the program, since it is
+not present in the outer context. It is, however, visible while
+evaluating the body of `count_vowels T`.
 
 Similarly, the local helper itself defines an even more local helper
 infix `in` in order ot evaluate the following expression:
@@ -3192,7 +3198,7 @@ CONTEXT1 is
 ----
 
 In turn, while evaluating `is_vowel Char`, the context will look
-somethign like:
+something like:
 
 [source]
 ----
@@ -3204,9 +3210,10 @@ CONTEXT2 is
 ----
 
 The context is sorted so that the innermost definitions are visible
-first. Also, outer declarations are visible from the body of inner ones.
-In the example above, the body of `is_vowel Char` could validly refer to
-`Count` or to `InputText`.
+first, possibly shadowing outer
+declarations(((declaration,shadowing))). Also, outer declarations are
+visible from the body of inner ones.  In the example above, the body
+of `is_vowel Char` could validly refer to `Count` or to `InputText`.
 
 [NOTE]
 ====
@@ -3222,32 +3229,35 @@ count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"
 === Scoping
 
 A list of declarations, similar to the kind that is used in
-link:#closures[closures], is called a _map_ and evaluates as itself. One
-of the primary uses for maps is _scoping_, in other words defining a
-common _scope_ for the declarations that it contains. Since the
-link:#declaration-phase[declaration phase] operates on entire blocks,
-all declarations within a scope are visible at the same time.
+link:#closures[((closure))s], is called a _((map))_ and evaluates as itself. One
+of the primary uses for maps is _((scoping))_, in other words defining a
+common _((scope))_ for the declarations(((declaration,scope))) that it
+contains. Since the link:#declaration-phase[declaration phase]
+operates on entire blocks, all declarations within a scope are visible
+at the same time.
 
 There are two primary operations that apply to a map:
 
 [arabic]
-. _Applying_ a map as a prefix to an operand, as we saw with closures,
-evaluates the operand in the context defined by overlaying the map
-definitions on top of the current context.
+. _Applying_ a map(((map,application))) as a prefix to an operand, as
+we saw with closures, evaluates the operand in the context defined by
+overlaying the map definitions on top of the current context.
 . _Scoping_ an expression within a map uses the infix `.` operator,
 where the expression on the right is evaluated in a context that
 consists _exclusively_ of the declarations in the map on the left.
 
-Evaluating a closure is a prime example of map application. The context
-is captured by the closure in a map, and the closure itself is a prefix
-that corresponds to the map application. Such an expression can also be
-created explicitly. For example, `{ X is 40; Y is 2 } { X + Y }` will
-evaluate as `42`, taking `X` and `Y` from the map, and taking the
-declaration used to evaluate `X + Y` from the current context.
+Evaluating a closure is a prime example of map application. The
+context is captured by the closure(((closure,capture))) in a map, and
+the closure itself is a prefix that corresponds to the map
+application. Such an expression can also be created explicitly. For
+example, `{ X is 40; Y is 2 } { X + Y }` will evaluate as `42`, taking
+`X` and `Y` from the map, and taking the declaration used to evaluate
+`X + Y` from the current context.
 
 Another common usage for maps is to store declarations where the
-patterns are constant values. For example, you can use a map called
-`digit_spelling` to convert a digit to its English spelling:
+patterns are constant values(((pattern,constant))). For example, you
+can use a map called `digit_spelling` to convert a digit to its
+English spelling:
 
 [source]
 ----
