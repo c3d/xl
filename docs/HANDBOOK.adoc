@@ -580,19 +580,19 @@ implementation details were elided as `...`:
 
 [source]
 ----
-write X:text            as fallible     is ... // <1>
-write X:integer         as fallible     is ...
-write X:real            as fallible     is ...
-write X:character       as fallible     is ...
+write X:text            as mayfail      is ... // <1>
+write X:integer         as mayfail      is ...
+write X:real            as mayfail      is ...
+write X:character       as mayfail      is ...
 write [[true]]                          is write "true" // <2>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
-print                   as fallible     is write SOME_NEWLINE_CHARACTER
+print                   as mayfail      is write SOME_NEWLINE_CHARACTER
 print Items                             is write Items; print
 ----
 
-<1> The link:#fallible-types[fallible] type is used to represent
+<1> The link:#fallible-types[mayfail] type is used to represent
     the `nil or error` type, in other words it indicates that the
     function either returns nothing, or returns an error.
 
@@ -3612,13 +3612,13 @@ functions will print the associated error message.
 
 ==== Fallible types
 
-Another way to handle errors is to use `fallible T` types, which hold
-either a `T` or an `error`. The `faillible` type (without a type
-argument) is the same as `fallible nil`, and is normally used for
+Another way to handle errors is to use `mayfail T` types, which hold
+either a `T` or an `error`. The `mayfail` type (without a type
+argument) is the same as `mayfail nil`, and is normally used for
 functions that are not expected to return a value, but can return an
 error.
 
-`fallible T` contains four accessible fields:
+`mayfail T` contains four accessible fields:
 
 * `value` is a `T` value, and can only be accessed when there was no
 error (otherwise, it returns… an `error`!)
@@ -3627,13 +3627,13 @@ was an error. Otherwise, it returns `nil`.
 * `good` is `true` if there was no error, and `bad` otherwise.
 * `bad` is equivalent to `not good`.
 
-The following code shows how to use a `fallible real` type to return
+The following code shows how to use a `mayfail real` type to return
 `0.0` for the `sqrt` of a negative value:
 
 [source]
 ----
 sanitized_sqrt X:real as real is
-    R : fallible real := sqrt X
+    R : mayfail real := sqrt X
     if R.bad then
         print "Got an error in sqrt: ", R.error
         R := 0.0
@@ -3725,7 +3725,7 @@ above can be written as follows:
 
 [source]
 ----
-read_thing_from_file FileName:text as fallible own thing is
+read_thing_from_file FileName:text as mayfail own thing is
     F:file := file.open(FileName)       // May error out
     H:own thing_header := read(F)       // May error out (and close F)
     if H.size < MIN_SIZE then
@@ -4319,11 +4319,11 @@ type error is either
 ----
 
 A function that may fail will often have a `T or error` return value.
-There is a specific shortcut for that, `fallible T`:
+There is a specific shortcut for that, `mayfail T`:
 
 [source]
 ----
-fallible T:type is T or error
+mayfail T:type is T or error
 ----
 
 For example, a logarithm returns an error for non-positive values, so
@@ -4331,7 +4331,7 @@ that the signature of the `log` functions is:
 
 [source]
 ----
-log X:real as fallible real     is ... // May return real or error
+log X:real as mayfail real     is ... // May return real or error
 ----
 
 If possible, error detection should be pushed to the interface of the
@@ -5034,7 +5034,7 @@ finding something is not an error but an expected result. > NOTE:
 Compilers should perform specific optimizations such as > representing
 the value with a pointer and reserving the null > pointer for value
 `nil`.
-* `fallible T` is a shortcut for `T or error`, and should be used for
+* `mayfail T` is a shortcut for `T or error`, and should be used for
 link:#error-handling[functions that may fail]. Unlike `nil`, an `error`
 carries a payload that gives information about the error, and can be
 used to generate an error message.

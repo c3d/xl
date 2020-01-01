@@ -1336,15 +1336,15 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as fallible     is ... <i class="conum" data-value="1"></i><b>(1)</b>
-write X:integer         as fallible     is ...
-write X:real            as fallible     is ...
-write X:character       as fallible     is ...
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as mayfail      is ... <i class="conum" data-value="1"></i><b>(1)</b>
+write X:integer         as mayfail      is ...
+write X:real            as mayfail      is ...
+write X:character       as mayfail      is ...
 write [[true]]                          is write "true" <i class="conum" data-value="2"></i><b>(2)</b>
 write [[false]]                         is write "false"
 write Head, Rest                        is write Head; write Rest
 
-print                   as fallible     is write SOME_NEWLINE_CHARACTER
+print                   as mayfail      is write SOME_NEWLINE_CHARACTER
 print Items                             is write Items; print</code></pre>
 </div>
 </div>
@@ -1352,7 +1352,7 @@ print Items                             is write Items; print</code></pre>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <a href="#fallible-types">fallible</a> type is used to represent
+<td>The <a href="#fallible-types">mayfail</a> type is used to represent
 the <code>nil or error</code> type, in other words it indicates that the
 function either returns nothing, or returns an error.</td>
 </tr>
@@ -5440,14 +5440,14 @@ functions will print the associated error message.
 <div class="sect3">
 <h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.16.2. Fallible types</a></h4>
 <div class="paragraph">
-<p>Another way to handle errors is to use <code>fallible T</code> types, which hold
-either a <code>T</code> or an <code>error</code>. The <code>faillible</code> type (without a type
-argument) is the same as <code>fallible nil</code>, and is normally used for
+<p>Another way to handle errors is to use <code>mayfail T</code> types, which hold
+either a <code>T</code> or an <code>error</code>. The <code>mayfail</code> type (without a type
+argument) is the same as <code>mayfail nil</code>, and is normally used for
 functions that are not expected to return a value, but can return an
 error.</p>
 </div>
 <div class="paragraph">
-<p><code>fallible T</code> contains four accessible fields:</p>
+<p><code>mayfail T</code> contains four accessible fields:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -5468,13 +5468,13 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>The following code shows how to use a <code>fallible real</code> type to return
+<p>The following code shows how to use a <code>mayfail real</code> type to return
 <code>0.0</code> for the <code>sqrt</code> of a negative value:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">sanitized_sqrt X:real as real is
-    R : fallible real := sqrt X
+    R : mayfail real := sqrt X
     if R.bad then
         print "Got an error in sqrt: ", R.error
         R := 0.0
@@ -5583,7 +5583,7 @@ above can be written as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">read_thing_from_file FileName:text as fallible own thing is
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">read_thing_from_file FileName:text as mayfail own thing is
     F:file := file.open(FileName)       // May error out
     H:own thing_header := read(F)       // May error out (and close F)
     if H.size &lt; MIN_SIZE then
@@ -6361,11 +6361,11 @@ payload:</p>
 </div>
 <div class="paragraph">
 <p>A function that may fail will often have a <code>T or error</code> return value.
-There is a specific shortcut for that, <code>fallible T</code>:</p>
+There is a specific shortcut for that, <code>mayfail T</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">fallible T:type is T or error</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">mayfail T:type is T or error</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6374,7 +6374,7 @@ that the signature of the <code>log</code> functions is:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">log X:real as fallible real     is ... // May return real or error</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">log X:real as mayfail real     is ... // May return real or error</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7336,7 +7336,7 @@ the value with a pointer and reserving the null &gt; pointer for value
 <code>nil</code>.</p>
 </li>
 <li>
-<p><code>fallible T</code> is a shortcut for <code>T or error</code>, and should be used for
+<p><code>mayfail T</code> is a shortcut for <code>T or error</code>, and should be used for
 <a href="#error-handling">functions that may fail</a>. Unlike <code>nil</code>, an <code>error</code>
 carries a payload that gives information about the error, and can be
 used to generate an error message.</p>
@@ -8949,7 +8949,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 00:31:46 +0100
+Last updated 2020-01-02 00:39:06 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
