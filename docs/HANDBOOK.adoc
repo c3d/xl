@@ -2572,51 +2572,6 @@ Z:complex := complex(1.3, 4.5) + complex(6.3, 2.5) <3>
     `Z1.Re`, the name `Re` is looked up in pattern-matching scope for
     these constructors, so that `Z1.Re` is `1.3` and `Z2.Im` is `2.5`.
 
-==== Scope patterns
-
-When a pattern is a comma-separated parameter list, it can be matched to
-a comma-separated argument list as explained above, but it can also be
-matched by looking up the relevant parameter names in a scope passed as
-an argument.
-
-This, combined with the rules about matching blocks, makes it possible
-to pass arguments by name for clarity in very long parameter lists.
-
-[source]
-----
-// Function to create a person, with many parameters
-create_person FirstName     : text,
-              LastName      : text,
-              DateOfBirth   : date,
-              Gender        : gender,
-              Weight        : weight,
-              Height        : length,
-              Address       : address as person is ...
-
-// The above function can be invoked with as scope as an argument
-// Notice that since this is based on lookup, the order can be different
-JohnDoe is create_person
-    LastName    is "Doe"
-    FirstName   is "John"
-    Gender      is Male
-    Weight      is 87.3kg
-    Height      is 182cm
-    Address     is address
-        Street  is "Sesame Street"
-        Number  is 42
-        ZipCode is 97777
-        City    is "Flooontch"
-    DateOfBirth is 1902/12/05
-----
-
-NOTE: This rule is a bit uncertain: the effect on readability seems
-desirable, but there is a bit of ad-hockery in this rule, and it’s
-unclear that long parameter list are that useful in XL. It is also
-unclear that this can easily be implemented within the language as a
-definition for `X,Y`, which is a bit concerning. (In other words, this
-might be the kind of language rule that is not very natural to write in
-XL - To be verified…)
-
 
 === Overloading
 

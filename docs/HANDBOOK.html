@@ -533,7 +533,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#metabox-constants">3.3.10. Metabox constants</a></li>
 <li><a href="#blocks">3.3.11. Blocks</a></li>
 <li><a href="#pattern-matching-scope">3.3.12. Pattern-matching scope</a></li>
-<li><a href="#scope-patterns">3.3.13. Scope patterns</a></li>
 </ul>
 </li>
 <li><a href="#overloading">3.4. Overloading</a></li>
@@ -4131,145 +4130,6 @@ these constructors, so that <code>Z1.Re</code> is <code>1.3</code> and <code>Z2.
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>A common idiom in XL to define types is to prefix a scope with a name,
-the name being intended to document the intent for the programmer, and
-the prefix form creating a pattern that is specific to that type. For
-example, a <code>complex</code> type could be created as follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>It is then possible to <a href="#creation">create</a> a <code>complex</code> value using
-the pattern on the right of <code>type</code>. This kind of expression is called
-a <em>constructor</em> for the type. Values constructed that way contain a
-number of declarations corresponding to the formal parameters in the
-pattern. These declarations are placed in the same context, which is
-called a <em>constructor scope</em>. When a constructor value is referenced
-on the left of a <a href="#scoping">scoping operator</a>, the scope being
-looked up is the constructor scope.</p>
-</div>
-<div class="paragraph">
-<p>For example, you could write an addition for complex values as
-follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In this example, the <code>complex</code> in type annotation <code>Z1:complex</code>
-indicates that we expect something that matches the shape of the
-pattern <code>complex(Re:real,Im:real)</code>. When value <code>Z1</code> is placed on the
-left of a scoping operator, its parse tree shape is therefore
-something that matches that pattern, e.g. <code>complex(0.0,1.0)</code>. Within
-the body of the definition above, we would then have a binding for
-<code>Z1</code> and <code>Z2</code> that might look like:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Z1 as complex is complex(0.0,1.0)
-Z2 as complex is complex(2.3,4.6)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In reality, however, the actual representation uses
-<a href="#closures">closures</a> to bind the values, i.e. it actually looks
-more like:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Z1 as complex is { Re is 0.0; Im is 1.0 } complex (Re:real, Im:real)
-Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In that case, a scoping lookup like <code>Z1.Re</code> is evaluating <code>Re</code> in the
-closure context associated with <code>Z1</code>, i.e. <code>{ Re is 0.0; Im is 1.0 }</code>.
-As a result, evaluates to <code>0.0</code>. Similarly, <code>Z2.Im</code> would evaluate to <code>4.6</code>.</p>
-</div>
-<div class="paragraph">
-<p>This approach is not restricted to prefix forms. The type <code>real_addition</code>
-could be defined as follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>real_addition is type (Left:real + Right:real)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The following rule could then be used to "flatten" real additions
-using associativity (this example being only intended as an
-illustration of how constructor scoping works, not to be seen as a
-useful coding suggestion):</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>A1:real_addition + A2:real_addition is A1.Left+A1.Right+A2.Left+A2.Right</pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="scope-patterns"><a class="anchor" href="#scope-patterns"></a><a class="link" href="#scope-patterns">3.3.13. Scope patterns</a></h4>
-<div class="paragraph">
-<p>When a pattern is a comma-separated parameter list, it can be matched to
-a comma-separated argument list as explained above, but it can also be
-matched by looking up the relevant parameter names in a scope passed as
-an argument.</p>
-</div>
-<div class="paragraph">
-<p>This, combined with the rules about matching blocks, makes it possible
-to pass arguments by name for clarity in very long parameter lists.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Function to create a person, with many parameters
-create_person FirstName     : text,
-              LastName      : text,
-              DateOfBirth   : date,
-              Gender        : gender,
-              Weight        : weight,
-              Height        : length,
-              Address       : address as person is ...
-
-// The above function can be invoked with as scope as an argument
-// Notice that since this is based on lookup, the order can be different
-JohnDoe is create_person
-    LastName    is "Doe"
-    FirstName   is "John"
-    Gender      is Male
-    Weight      is 87.3kg
-    Height      is 182cm
-    Address     is address
-        Street  is "Sesame Street"
-        Number  is 42
-        ZipCode is 97777
-        City    is "Flooontch"
-    DateOfBirth is 1902/12/05</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This rule is a bit uncertain: the effect on readability seems
-desirable, but there is a bit of ad-hockery in this rule, and it’s
-unclear that long parameter list are that useful in XL. It is also
-unclear that this can easily be implemented within the language as a
-definition for <code>X,Y</code>, which is a bit concerning. (In other words, this
-might be the kind of language rule that is not very natural to write in
-XL - To be verified…)
-</td>
-</tr>
-</table>
-</div>
 </div>
 </div>
 <div class="sect2">
@@ -6313,7 +6173,7 @@ example, we defined a <code>complex</code> type as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type complex is complex(Re:real, Im:real)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">complex is type complex(Re:real, Im:real)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6369,13 +6229,13 @@ based on Unix-style file descriptors:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">module MY_FILE with
-    type file
-    open Name:text as file
+    file as type
+    open(Name:text) as file
     close F:file
 
 module MY_FILE is
-    type file is file(fd:integer)
-    open Name:text as file is
+    file is type file(fd:integer)
+    open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
     close F:inout file is
@@ -9151,7 +9011,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-01 22:39:41 +0100
+Last updated 2020-01-01 23:38:35 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
