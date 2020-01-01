@@ -3410,13 +3410,13 @@ follows:
 
 [source]
 ----
-X += Y      is X := X + Y
-X -= Y      is X := X - Y
-X *= Y      is X := X * Y
-X /= Y      is X := X / Y
-X &= Y      is X := X & Y
-X |= Y      is X := X | Y
-X ^= Y      is X := X ^ Y
+X += Y      is      X := X + Y
+X -= Y      is      X := X - Y
+X *= Y      is      X := X * Y
+X /= Y      is      X := X / Y
+X &= Y      is      X := X & Y
+X |= Y      is      X := X | Y
+X ^= Y      is      X := X ^ Y
 ----
 
 XL offers two additional operators, the `:+` _copy_ operator and the
