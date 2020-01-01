@@ -3210,8 +3210,8 @@ time and can be eliminated from the compiled program.</p>
 all declarations in the program will be visible during the evaluation
 phase. In our example, it is possible to use <code>circumference</code> before it
 has been declared. Definitions may therefore refer to one another in a
-circular way. Some other languages such as C require ``forward
-declarations'' in such cases, XL does not.</p>
+circular way. Some other languages such as C require "forward
+declarations" in such cases, XL does not.</p>
 </div>
 <div class="paragraph">
 <p>The parse tree on the left of <code>is</code>, <code>as</code> or <code>:</code> is called the <em>pattern</em>
@@ -5217,7 +5217,7 @@ apply my_function, 1        // Error: Nothing called 'my_function'</code></pre>
 often need to be considered for a single expression. Another reason is
 that declarations can have arbitrarily complex patterns. It is not
 obvious what name should be given to a declaration of a pattern like
-<code>A in B..C</code>: a "name'' like <code>in..</code> does not even ``work"
+<code>A in B..C</code>: a "name" like <code>in..</code> does not even "work"
 syntactically.
 </td>
 </tr>
@@ -7760,9 +7760,9 @@ XL compiler did not quite work. I will explain why soon below.</p>
 <p>The first experiment I ran with this, which became a staple of XL since
 then, was the <code>{derivation}</code> annotation. It should have been
 <code>{differentiation}</code>, but at that time, my English was quite crappy, and
-in French, the word for "differentiation'' is <code>`derivation". The idea
+in French, the word for "differentiation" is "derivation". The idea
 is that if you prefixed some code, like a function, with a
-`{derivation}</code> annotation, the parse tree for that function would be
+<code>{derivation}</code> annotation, the parse tree for that function would be
 passed to the <code>derivation</code> pragma handler, and that would replace
 expressions that looked like differential expressions with their
 expanded value. For example, <code>{derivation} d(X+sin(X))/dX</code> would
@@ -7834,9 +7834,9 @@ language (release 1.0 was in early 1994).</p>
 <div class="paragraph">
 <p>Alain Miniussi, who made a brief stint at the CLL, convinced me to give
 up the Ada-style <code>begin</code> and <code>end</code> keywords, using an solid
-argumentation that was more or less along the lines of <code>`I like your
-language, but there’s no way I will use a language with `begin</code> and
-<code>end</code> ever again''. Those were the times where many had lived the
+argumentation that was more or less along the lines of "I like your
+language, but there’s no way I will use a language with <code>begin</code> and
+<code>end</code> ever again". Those were the times where many had lived the
 transition of Pascal to C, some still wondering how C won.</p>
 </div>
 <div class="paragraph">
@@ -7887,13 +7887,13 @@ referenced above for details).</p>
 <h3 id="mozart-and-moka-adding-java-support-to-xl"><a class="anchor" href="#mozart-and-moka-adding-java-support-to-xl"></a><a class="link" href="#mozart-and-moka-adding-java-support-to-xl">9.6. Mozart and Moka: Adding Java support to XL</a></h3>
 <div class="paragraph">
 <p>At the time, Java was all the rage, and dealing with multiple languages
-within a compiler was seen as a good idea. GCC being renamed from ``GNU
-C Compiler'' to the "GNU Compiler Collection" is an example of this
+within a compiler was seen as a good idea. GCC being renamed from "GNU
+C Compiler" to the "GNU Compiler Collection" is an example of this
 trend.</p>
 </div>
 <div class="paragraph">
-<p>So with Daveed, we had started working on what we called a ``universal
-program database'', which was basically a way to store and access
+<p>So with Daveed, we had started working on what we called a "universal
+program database", which was basically a way to store and access
 program data independently of the language being used. In other words,
 we were trying to create an API that would make it possible to
 manipulate programs in a portable way, whether the program was written
@@ -8046,8 +8046,8 @@ because I was seeing things as a three-layer construction:</p>
 <ul>
 <li>
 <p><code>XL0</code> was just a very simple parse tree format with only eight node
-types. I sometimes refer to that level of XL as ``<em>XML without the
-M</em>'', i.e. an extensble language without markup.</p>
+types. I sometimes refer to that level of XL as "<em>XML without the
+M</em>", i.e. an extensble language without markup.</p>
 </li>
 <li>
 <p><code>XL1</code> was the core language evaluation rules, not taking any library
@@ -8537,8 +8537,8 @@ evaluating that program as if it has been evaluated locally. It works
 like a remote function call.</p>
 </li>
 <li>
-<p>An <code>invoke</code> statement sends a program to a remote node. It’s a ``fire
-and forget'' operation, but leaves a reply channel open while it’s
+<p>An <code>invoke</code> statement sends a program to a remote node. It’s a "fire
+and forget" operation, but leaves a reply channel open while it’s
 executing.</p>
 </li>
 <li>
@@ -8875,7 +8875,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 00:00:07 +0100
+Last updated 2020-01-02 00:07:27 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

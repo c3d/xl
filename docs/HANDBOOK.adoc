@@ -2014,8 +2014,8 @@ Note that since the declaration phase occurs before the execution phase,
 all declarations in the program will be visible during the evaluation
 phase. In our example, it is possible to use `circumference` before it
 has been declared. Definitions may therefore refer to one another in a
-circular way. Some other languages such as C require ``forward
-declarations'' in such cases, XL does not.
+circular way. Some other languages such as C require "forward
+declarations" in such cases, XL does not.
 
 The parse tree on the left of `is`, `as` or `:` is called the _pattern_
 of the declaration. The pattern will be checked against the _form_ of
@@ -3474,7 +3474,7 @@ link:#overloading[overloading] means a multiplicity of declarations
 often need to be considered for a single expression. Another reason is
 that declarations can have arbitrarily complex patterns. It is not
 obvious what name should be given to a declaration of a pattern like
-`A in B..C`: a "name'' like `in..` does not even ``work"
+`A in B..C`: a "name" like `in..` does not even "work"
 syntactically.
 
 It is not clear how such a name would be called as a function either,
@@ -5368,7 +5368,7 @@ XL compiler did not quite work. I will explain why soon below.
 The first experiment I ran with this, which became a staple of XL since
 then, was the `{derivation}` annotation. It should have been
 `{differentiation}`, but at that time, my English was quite crappy, and
-in French, the word for "differentiation'' is ``derivation". The idea
+in French, the word for "differentiation" is "derivation". The idea
 is that if you prefixed some code, like a function, with a
 `{derivation}` annotation, the parse tree for that function would be
 passed to the `derivation` pragma handler, and that would replace
@@ -5431,9 +5431,9 @@ language (release 1.0 was in early 1994).
 
 Alain Miniussi, who made a brief stint at the CLL, convinced me to give
 up the Ada-style `begin` and `end` keywords, using an solid
-argumentation that was more or less along the lines of ``I like your
+argumentation that was more or less along the lines of "I like your
 language, but there’s no way I will use a language with `begin` and
-`end` ever again''. Those were the times where many had lived the
+`end` ever again". Those were the times where many had lived the
 transition of Pascal to C, some still wondering how C won.
 
 I was initially quite skeptical, and reluctantly tried an
@@ -5476,12 +5476,12 @@ referenced above for details).
 === Mozart and Moka: Adding Java support to XL
 
 At the time, Java was all the rage, and dealing with multiple languages
-within a compiler was seen as a good idea. GCC being renamed from ``GNU
-C Compiler'' to the "GNU Compiler Collection" is an example of this
+within a compiler was seen as a good idea. GCC being renamed from "GNU
+C Compiler" to the "GNU Compiler Collection" is an example of this
 trend.
 
-So with Daveed, we had started working on what we called a ``universal
-program database'', which was basically a way to store and access
+So with Daveed, we had started working on what we called a "universal
+program database", which was basically a way to store and access
 program data independently of the language being used. In other words,
 we were trying to create an API that would make it possible to
 manipulate programs in a portable way, whether the program was written
@@ -5604,8 +5604,8 @@ The new implementation was called XL2, not just as a version number, but
 because I was seeing things as a three-layer construction:
 
 * `XL0` was just a very simple parse tree format with only eight node
-types. I sometimes refer to that level of XL as ``__XML without the
-M__'', i.e. an extensble language without markup.
+types. I sometimes refer to that level of XL as "__XML without the
+M__", i.e. an extensble language without markup.
 * `XL1` was the core language evaluation rules, not taking any library
 into account.
 * `XL2` was the full language, including its ((standard library)). At the
@@ -5971,8 +5971,8 @@ are simply regular XL functions implemented in pass:[C++]:
 * The `ask` statement sends a program, and returns the result of
 evaluating that program as if it has been evaluated locally. It works
 like a remote function call.
-* An `invoke` statement sends a program to a remote node. It’s a ``fire
-and forget'' operation, but leaves a reply channel open while it’s
+* An `invoke` statement sends a program to a remote node. It’s a "fire
+and forget" operation, but leaves a reply channel open while it’s
 executing.
 * Finally, the `reply` statement allows a remote node to respond to
 whoever `invoke`‘d it, by evaluating one of the available functions in
