@@ -3442,8 +3442,8 @@ Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)
 ....
 
 In that case, a scoping lookup like `Z1.Re` is evaluating `Re` in the
-closure context associated with `Z1`, and as a result, evaluates to
-`0.0`. Similarly, `Z2.Im` would evaluate to `4.6`.
+closure context associated with `Z1`, i.e. `{ Re is 0.0; Im is 1.0 }`.
+As a result, evaluates to `0.0`. Similarly, `Z2.Im` would evaluate to `4.6`.
 
 This approach is not restricted to prefix forms. The type `real_addition`
 could be defined as follows:

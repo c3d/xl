@@ -5091,8 +5091,8 @@ Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)</pre>
 </div>
 <div class="paragraph">
 <p>In that case, a scoping lookup like <code>Z1.Re</code> is evaluating <code>Re</code> in the
-closure context associated with <code>Z1</code>, and as a result, evaluates to
-<code>0.0</code>. Similarly, <code>Z2.Im</code> would evaluate to <code>4.6</code>.</p>
+closure context associated with <code>Z1</code>, i.e. <code>{ Re is 0.0; Im is 1.0 }</code>.
+As a result, evaluates to <code>0.0</code>. Similarly, <code>Z2.Im</code> would evaluate to <code>4.6</code>.</p>
 </div>
 <div class="paragraph">
 <p>This approach is not restricted to prefix forms. The type <code>real_addition</code>
@@ -9029,7 +9029,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-01 13:51:40 +0100
+Last updated 2020-01-01 19:18:03 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
