@@ -545,18 +545,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#nested-declarations">3.11. Nested declarations</a></li>
 <li><a href="#scoping">3.12. Scoping</a></li>
 <li><a href="#super-lookup">3.13. Super lookup</a></li>
-<li><a href="#caller-lookup">3.14. Caller lookup</a></li>
-<li><a href="#assignments-and-moves">3.15. Assignments and moves</a></li>
-<li><a href="#functions-as-values">3.16. Functions as values</a></li>
-<li><a href="#error-handling">3.17. Error handling</a>
+<li><a href="#assignments-and-moves">3.14. Assignments and moves</a></li>
+<li><a href="#functions-as-values">3.15. Functions as values</a></li>
+<li><a href="#error-handling">3.16. Error handling</a>
 <ul class="sectlevel3">
-<li><a href="#taking-error-parameters">3.17.1. Taking error parameters</a></li>
-<li><a href="#fallible-types">3.17.2. Fallible types</a></li>
-<li><a href="#try-catch">3.17.3. Try-Catch</a></li>
-<li><a href="#error-statements">3.17.4. Error statements</a></li>
+<li><a href="#taking-error-parameters">3.16.1. Taking error parameters</a></li>
+<li><a href="#fallible-types">3.16.2. Fallible types</a></li>
+<li><a href="#try-catch">3.16.3. Try-Catch</a></li>
+<li><a href="#error-statements">3.16.4. Error statements</a></li>
 </ul>
 </li>
-<li><a href="#interface-and-implementation">3.18. Interface and implementation</a></li>
+<li><a href="#interface-and-implementation">3.17. Interface and implementation</a></li>
 </ul>
 </li>
 <li><a href="#types">4. Types</a>
@@ -629,8 +628,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#data-2">5.2. Data</a></li>
 <li><a href="#lifetime-2">5.3. Lifetime</a></li>
 <li><a href="#closures-2">5.4. Closures</a></li>
-<li><a href="#caller-lookup-2">5.5. Caller lookup</a></li>
-<li><a href="#compact-vs-packed">5.6. Compact vs. Packed</a></li>
+<li><a href="#compact-vs-packed">5.5. Compact vs. Packed</a></li>
 </ul>
 </li>
 <li><a href="#basic-operations">6. Basic operations</a></li>
@@ -2971,20 +2969,6 @@ Entries in <code>HIDDEN</code> contexts are
 code. By convention, <code>CONTEXT0</code> and <code>HIDDEN0</code> are not defined in the
 examples and are assumed to be inherited from earlier execution.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-By default, the context of the caller is not visible to the
-callee. A feature making it visible if necessary is being considered,
-called <a href="#caller-lookup"><em>caller lookup</em></a>.
-</td>
-</tr>
-</table>
-</div>
 </div>
 <div class="sect3">
 <h4 id="parsing-phase"><a class="anchor" href="#parsing-phase"></a><a class="link" href="#parsing-phase">3.1.2. Parsing phase</a></h4>
@@ -5111,105 +5095,12 @@ foo 3                           // Returns 45</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="caller-lookup"><a class="anchor" href="#caller-lookup"></a><a class="link" href="#caller-lookup">3.14. Caller lookup</a></h3>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-This feature is only under consideration after a couple of
-use-cases for this kind of lookup popped up while experimenting with
-<a href="http://tao3d.sourceforge.net">Tao3D</a>, see RATIONALE.
-</td>
-</tr>
-</table>
-</div>
+<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.14. Assignments and moves</a></h3>
 <div class="paragraph">
-<p>In general, the context of the caller is invisible to the callee. For
-example, the following code prints <code>"X=Global"</code>.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">outer "Argument"
-
-X is "Global"
-
-outer X:text is
-    inner X
-
-inner A:text is
-    print "X=", X</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>While evaluating <code>inner</code>, the value <code>"Argument"</code> bound to <code>X</code> while
-evaluating <code>outer</code> is no longer visible. The scoping rules mean that the
-<code>X</code> that is being seen from within <code>inner</code> is the one defined in the
-global context.</p>
-</div>
-<div class="paragraph">
-<p>However, the <code>caller</code> context may be explicitly referenced by scoping
-operators. The following example will print <code>X=Argument</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">outer "Argument"
-
-X is "Global"
-
-outer X:text is
-    inner X
-
-inner A:text is
-    print "X=", caller.X</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<strong>RATIONALE</strong> The first use-case that was "discovered" using Tao3D was
-passing an implicit environment to a large number of related functions.
-In the case of Tao3D, that implicit environment was describing graphics
-attributes such as color or line width. A global variable would provide
-a convenient default, but a local variable with the correct name would
-make that default easy to override. This would play a role similar to
-the C++ implicit <code>this</code> pointer, with the added benefits that multiple
-such implicit parameters would be possible depending on usage (graphics
-state, window state, etc)
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>A second use case was also found in XL2 when looking up
-<a href="http://github.com/c3d/xl/blob/master/xl2/native/TESTS/10.Generics/any_lookup.xl">generic code</a>, and
-plays the role of
-<a href="https://en.wikipedia.org/wiki/Argument-dependent_name_lookup">Koenig
-lookup</a> in C++, i.e. make it possible to access code in the caller’s
-context. For example, the definition corresponding to <code>write Head, Tail</code>
-will call <code>write Head</code>. If you want to be able to extend <code>write</code> with
-your own custom types, it is necessary to be able to lookup <code>write Head</code>
-within the caller’s context as well. Whether this is really necessary or
-functional remains to be tested.</p>
-</div>
-<div class="paragraph">
-<p>A reasonably efficient implementation strategy for compiled code
-<a href="#caller-lookup">seems possible</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.15. Assignments and moves</a></h3>
-<div class="paragraph">
-<p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and returns the
-value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code> are
-equivalent to performing the corresponding operating and assigning the
-result.</p>
+<p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
+returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
+<code>/=</code> are equivalent to performing the corresponding operating and
+assigning the result.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -5296,7 +5187,7 @@ having the possibility to explicitly request a copy or a move.
 </div>
 </div>
 <div class="sect2">
-<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.16. Functions as values</a></h3>
+<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.15. Functions as values</a></h3>
 <div class="paragraph">
 <p>Unlike in several functional languages, when you declare a "function",
 you do not automatically declare a named entity or value with the
@@ -5369,7 +5260,7 @@ markedly different internally, and is detailed in the section on
 </div>
 </div>
 <div class="sect2">
-<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.17. Error handling</a></h3>
+<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.16. Error handling</a></h3>
 <div class="paragraph">
 <p>Code that fails will generally report it by returning an <code>error</code> value.
 Error values have the <a href="#errors"><code>error</code> type</a>. For
@@ -5434,7 +5325,7 @@ errors without cluttering your code with error checking conditions.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.17.1. Taking error parameters</a></h4>
+<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.16.1. Taking error parameters</a></h4>
 <div class="paragraph">
 <p>The simplest way to handle errors is to have a variant of the function
 that takes an <code>error</code> as an argument. For example, you could extend your
@@ -5473,7 +5364,7 @@ functions will print the associated error message.
 </div>
 </div>
 <div class="sect3">
-<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.17.2. Fallible types</a></h4>
+<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.16.2. Fallible types</a></h4>
 <div class="paragraph">
 <p>Another way to handle errors is to use <code>fallible T</code> types, which hold
 either a <code>T</code> or an <code>error</code>. The <code>faillible</code> type (without a type
@@ -5518,7 +5409,7 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.17.3. Try-Catch</a></h4>
+<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.16.3. Try-Catch</a></h4>
 <div class="paragraph">
 <p>A third way to handle errors is to use a <code>try Body catch Handler</code> form,
 which evaluates <code>Body</code>, and if <code>Body</code> returns an <code>error</code>, evaluates
@@ -5560,7 +5451,7 @@ always an <code>error</code> value being returned, not an exception being thrown
 </div>
 </div>
 <div class="sect3">
-<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.17.4. Error statements</a></h4>
+<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.16.4. Error statements</a></h4>
 <div class="paragraph">
 <p>If a statement, assignment or declaration returns an <code>error</code>, then as a
 special evaluation rule, that <code>error</code> valuea is immediately returned by
@@ -5637,7 +5528,7 @@ allocates an object from the heap.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.18. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
+<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.17. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
 <div class="paragraph">
 <p>XL provides strong <em>encapsulation</em> by allowing a programmer to hide
 irrelevant details of an implementation. This is fundamental to provide
@@ -7674,34 +7565,7 @@ the IEEE-754 64-bit representation.</p>
 
 </div>
 <div class="sect2">
-<h3 id="caller-lookup-2"><a class="anchor" href="#caller-lookup-2"></a><a class="link" href="#caller-lookup-2">5.5. Caller lookup</a></h3>
-<div class="paragraph">
-<p>Whenever code contains <code>caller.X</code>, an implicit <code>X</code> argument is added to
-the enclosing function, wich needs to be passed by all callers.</p>
-</div>
-<div class="paragraph">
-<p>For example, the following code:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">example X:integer as integer is X + caller.Base
-Base : integer := 25
-example 3</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>is transformed into:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">example X:integer, Base:integer as integer is X + Base
-Base : integer := 25
-example 3, Base</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">5.6. Compact vs. Packed</a></h3>
+<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">5.5. Compact vs. Packed</a></h3>
 
 </div>
 </div>
@@ -9011,7 +8875,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-01 23:38:35 +0100
+Last updated 2020-01-01 23:55:31 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
