@@ -4069,9 +4069,9 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 <h3 id="overloading"><a class="anchor" href="#overloading"></a><a class="link" href="#overloading">3.4. Overloading</a></h3>
 <div class="paragraph">
 <p>There may be multiple declarations where the pattern matches a given
-parse tree. This is called <em>overloading</em>. For example, as we have seen
-above, for the multiplication expression <code>X*Y</code> we have at least
-<code>integer</code> and <code>real</code> candidates. This looks like:</p>
+parse tree. This is called <em>overloading</em>. For example, as we
+have seen above, for the multiplication expression <code>X*Y</code> we have at
+least <code>integer</code> and <code>real</code> candidates that look something like:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -4133,14 +4133,14 @@ X * Y</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Knowing which candidate matches may be possible at compile-time, for
-example if the selection of the declaration can be done solely based on
-the type of the arguments and parameters. This would be the case if
-matching an`integer` argument against an <code>integer</code> parameter, since any
-value of that argument would match. In other cases, it may require
-run-time tests against the values in the declaration. This would be the
-case if matching an <code>integer</code> argument against <code>0</code>, or against
-<code>N:integer when N mod 2 = 0</code>.</p>
+<p>Knowing which candidate matches may be possible statically, e.g. at
+compile-time, for example if the selection of the declaration can
+be done solely based on the type of the arguments and parameters. This
+would be the case if matching an`integer` argument against an
+<code>integer</code> parameter, since any value of that argument would match. In
+other cases, it may require run-time tests against the values in the
+declaration. This would be the case if matching an <code>integer</code> argument
+against <code>0</code>, or against <code>N:integer when N mod 2 = 0</code>.</p>
 </div>
 <div class="paragraph">
 <p>For example, a definition of the
@@ -4162,10 +4162,9 @@ fib N   is (fib(N-1) + fib(N-2))</code></pre>
 </td>
 <td class="content">
 Parentheses are required around the
-<a href="#expression-vs-statement">expressions
-statements</a> in the last declaration in order to parse this as the
-addition of <code>fib(N-1)</code> and <code>fib(N-2)</code> and not as the <code>fib</code> of
-<code>(N-1)+fib(N-2)</code>.
+<a href="#expression-vs-statement">expressions statements</a> in the last
+declaration in order to parse this as the addition of <code>fib(N-1)</code> and
+<code>fib(N-2)</code> and not as the <code>fib</code> of <code>(N-1)+fib(N-2)</code>.
 </td>
 </tr>
 </table>
@@ -4174,10 +4173,11 @@ addition of <code>fib(N-1)</code> and <code>fib(N-2)</code> and not as the <code
 <p>When evaluating a sub-expression like <code>fib(N-1)</code>, three candidates for
 <code>fib</code> are available, and type information is not sufficient to eliminate
 any of them. The generated code will therefore have to evaluate <code>N-1</code>.
-<a href="#immediate-evaluation">Immediate evaluation</a> is needed in order to
-compare the value against the candidates. If the value is <code>0</code>, the first
-definition will be selected. If the value is <code>1</code>, the second definition
-will be used. Otherwise, the third definition will be used.</p>
+<a href="#immediate-evaluation">Immediate evaluation</a>
+is needed in order to compare the value against the candidates. If the
+value is <code>0</code>, the first definition will be selected. If the value is
+<code>1</code>, the second definition will be used. Otherwise, the third
+definition will be used.</p>
 </div>
 <div class="paragraph">
 <p>A binding may contain a value that may itself need to be
@@ -4671,6 +4671,25 @@ does not preclude the consideration of different sub-expressions such as
 evaluation of <code>foo C</code>, then that evaluated version will be used as a
 binding for <code>Z</code>.</p>
 </div>
+<div class="paragraph">
+<p>Another important effect of memoization is that it limits the number
+of evaluation of top-level constants. In other words, a single
+evaluation will not "chase constants". Consider the following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">do_not_chase is
+    0 is 1
+    1 is 2
+    2 is 3
+do_not_chase 0          // Returns 1, not 3</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The evaluation of sub-expression <code>0</code> happens only once, and therefore,
+<code>1</code> is not itself evaluated again for the same sub-expression. This is
+quite important to get sensible results for <a href="#scoping">maps</a>.</p>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -4912,17 +4931,37 @@ programming languages such as C or C++.</p>
 </div>
 <div class="paragraph">
 <p>When the index is an expression, for example <code>digit_spelling[A+3]</code> in a
-context where <code>A is 2</code>, we must evaluate <code>A+3</code> in current context
-augmented with the declarations in <code>digit_spelling</code>. The first candidate
-has pattern <code>0</code>. This requires the evaluation of expression <code>A+3</code> to
-check if it matches the value. As indicated
-<a href="#pattern-matching">earlier</a>, this evaluation will not consider
-constants, since it is performed to match a constant. In other words, it
-will match the pattern <code>X+Y</code> for <code>A+2</code>, and therefore compute the value
-<code>5</code>. That computed value will fail the check against pattern <code>0</code>, but
-because of <a href="#memoization">memoization</a>, it will then be used against
-the various constants in the map. As a result, <code>digit_spelling[A+2]</code>
-evaluates as <code>"five"</code>.</p>
+context where <code>A is 2</code>, we must evaluate <code>A+3</code> in the current context
+augmented with the declarations in <code>digit_spelling</code>. In other words,
+the relevant context for evaluation will look something like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>{ X:integer+Y:integer as integer is ... }
+  { A is 2 }
+    { 0 is "zero"; 1 is "one"; ... }
+      [A+3]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first candidate for evaluation has pattern <code>0</code>. This requires
+<a href="#immediate-evaluation">immediate evaluation</a> of expression <code>A+3</code> to
+check if it matches the value. Naively, one might think that
+evaluating it requires matching once more against <code>0</code>, and that the
+evaluation would neve terminate. However,
+<a href="#memoization">memoization</a> of sub-expression <code>A+3</code> means that it
+can no longer be evaluated in the inner context.</p>
+</div>
+<div class="paragraph">
+<p>It can still, however, be evaluted in the outer context. In that outer
+context, the pattern matches the <code>X:integer+Y:integer</code> pattern, from
+which it computes value <code>2+3</code>, and then returns <code>5</code> for comparison in
+the inner context, in order to compare it against <code>0</code>. Since <code>0=5</code>
+fails, it then considers the next candidate, but does not need to
+re-evaluate the value of sub-expression <code>A+3</code>. Instead, the computed
+value <code>5</code> will be compared successively against <code>1</code>, <code>2</code>, and so on,
+until it matches <code>5</code>. The returned value for the inner expression is
+therefore <code>"five"</code>.</p>
 </div>
 <div class="paragraph">
 <p>A map is not restricted to constant patterns. For example, the following
@@ -8934,7 +8973,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-12-31 23:55:26 +0100
+Last updated 2020-01-01 00:42:11 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

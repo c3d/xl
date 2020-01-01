@@ -2589,9 +2589,9 @@ endif::[]
 === Overloading
 
 There may be multiple declarations where the pattern matches a given
-parse tree. This is called _overloading_. For example, as we have seen
-above, for the multiplication expression `X*Y` we have at least
-`integer` and `real` candidates. This looks like:
+((parse tree)). This is called _((overloading))_. For example, as we
+have seen above, for the multiplication expression `X*Y` we have at
+least `integer` and `real` candidates that look something like:
 
 [source]
 ----
@@ -2638,14 +2638,14 @@ foo X
 X * Y
 ----
 
-Knowing which candidate matches may be possible at compile-time, for
-example if the selection of the declaration can be done solely based on
-the type of the arguments and parameters. This would be the case if
-matching an`integer` argument against an `integer` parameter, since any
-value of that argument would match. In other cases, it may require
-run-time tests against the values in the declaration. This would be the
-case if matching an `integer` argument against `0`, or against
-`N:integer when N mod 2 = 0`.
+Knowing which candidate matches may be possible statically, e.g. at
+((compile-time)), for example if the selection of the declaration can
+be done solely based on the type of the arguments and parameters. This
+would be the case if matching an`integer` argument against an
+`integer` parameter, since any value of that argument would match. In
+other cases, it may require run-time tests against the values in the
+declaration. This would be the case if matching an `integer` argument
+against `0`, or against `N:integer when N mod 2 = 0`.
 
 For example, a definition of the
 https://en.wikipedia.org/wiki/Fibonacci_number[Fibonacci sequence] in XL
@@ -2659,18 +2659,18 @@ fib N   is (fib(N-1) + fib(N-2))
 ----
 
 NOTE: Parentheses are required around the
-link:#expression-vs-statement[expressions
-statements] in the last declaration in order to parse this as the
-addition of `fib(N-1)` and `fib(N-2)` and not as the `fib` of
-`(N-1)+fib(N-2)`.
+link:#expression-vs-statement[expressions statements] in the last
+declaration in order to parse this as the addition of `fib(N-1)` and
+`fib(N-2)` and not as the `fib` of `(N-1)+fib(N-2)`.
 
 When evaluating a sub-expression like `fib(N-1)`, three candidates for
 `fib` are available, and type information is not sufficient to eliminate
 any of them. The generated code will therefore have to evaluate `N-1`.
-link:#immediate-evaluation[Immediate evaluation] is needed in order to
-compare the value against the candidates. If the value is `0`, the first
-definition will be selected. If the value is `1`, the second definition
-will be used. Otherwise, the third definition will be used.
+link:#immediate-evaluation[Immediate evaluation](((immediate evaluation)))
+is needed in order to compare the value against the candidates. If the
+value is `0`, the first definition will be selected. If the value is
+`1`, the second definition will be used. Otherwise, the third
+definition will be used.
 
 A ((binding)) may contain a value that may itself need to be
 split(((argument splitting))) in order to be tested against the formal
@@ -3096,6 +3096,23 @@ does not preclude the consideration of different sub-expressions such as
 evaluation of `foo C`, then that evaluated version will be used as a
 binding for `Z`.
 
+Another important effect of memoization is that it limits the number
+of evaluation of top-level constants. In other words, a single
+evaluation will not "chase constants". Consider the following example:
+
+[source]
+----
+do_not_chase is
+    0 is 1
+    1 is 2
+    2 is 3
+do_not_chase 0          // Returns 1, not 3
+----
+
+The evaluation of sub-expression `0` happens only once, and therefore,
+`1` is not itself evaluated again for the same sub-expression. This is
+quite important to get sensible results for link:#scoping[maps].
+
 NOTE: *RATIONALE* These rules are not just optimizations. They are necessary
 to preserve the semantics of the language during ((dynamic dispatch)) for
 expressions that are not constant. For example, consider a call like
@@ -3284,17 +3301,34 @@ brackets)), i.e. `digit_spelling[4]`, as a nod to the syntax of
 programming languages such as C or pass:[C++].
 
 When the ((index)) is an expression, for example `digit_spelling[A+3]` in a
-context where `A is 2`, we must evaluate `A+3` in current context
-augmented with the declarations in `digit_spelling`. The first candidate
-has pattern `0`. This requires the evaluation of expression `A+3` to
-check if it matches the value. As indicated
-link:#pattern-matching[earlier], this evaluation will not consider
-constants, since it is performed to match a constant. In other words, it
-will match the pattern `X+Y` for `A+2`, and therefore compute the value
-`5`. That computed value will fail the check against pattern `0`, but
-because of link:#memoization[memoization], it will then be used against
-the various constants in the map. As a result, `digit_spelling[A+2]`
-evaluates as `"five"`.
+context where `A is 2`, we must evaluate `A+3` in the current context
+augmented with the declarations in `digit_spelling`. In other words,
+the relevant context for evaluation will look something like:
+
+....
+{ X:integer+Y:integer as integer is ... }
+  { A is 2 }
+    { 0 is "zero"; 1 is "one"; ... }
+      [A+3]
+....
+
+The first candidate for evaluation has pattern `0`. This requires
+link:#immediate-evaluation[immediate evaluation] of expression `A+3` to
+check if it matches the value. Naively, one might think that
+evaluating it requires matching once more against `0`, and that the
+evaluation would neve terminate. However,
+link:#memoization[memoization] of sub-expression `A+3` means that it
+can no longer be evaluated in the inner context.
+
+It can still, however, be evaluted in the outer context. In that outer
+context, the pattern matches the `X:integer+Y:integer` pattern, from
+which it computes value `2+3`, and then returns `5` for comparison in
+the inner context, in order to compare it against `0`. Since `0=5`
+fails, it then considers the next candidate, but does not need to
+re-evaluate the value of sub-expression `A+3`. Instead, the computed
+value `5` will be compared successively against `1`, `2`, and so on,
+until it matches `5`. The returned value for the inner expression is
+therefore `"five"`.
 
 A map is not restricted to constant patterns. For example, the following
 map performs a more complete spelling conversion for numbers below 1000
