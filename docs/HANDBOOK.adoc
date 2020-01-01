@@ -3391,30 +3391,76 @@ with `use IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in the
 current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
 
-=== Named scopes
+=== Constructor scope
 
-A common idiom in XL is to prefix a scope with a name, so as to better
-document the intent for the programmer and create patterns that are more
-specific, minimizing the risk of ambiguity. A scope following a name is
-called a _named scope_, and can be used like a regular scope, i.e. the
-prefix name does not play a role in the lookup.
+In XL, link:#types[types] are defined by the shape of a parse tree.
+A common idiom in XL to define types is to prefix a scope with a name,
+the name being intended to document the intent for the programmer, and
+the prefix form creating a pattern that is specific to that type. For
+example, a `complex` type could be created as follows:
 
-For example, the `magic_constants` could be defined as
+....
+complex is type complex(Re:real, Im:real)
+....
 
-[source]
-----
-magic_constants Bits is size_constants
-    num_bits    is Bits
-    min_value   is 0
-    max_value   is 2^Bits - 1
+It is then possible to link:#creation[create] a `complex` value using
+the pattern on the right of `type`. This kind of expression is called
+a _((constructor))_ for the type. Values constructed that way contain a
+number of declarations corresponding to the formal parameters in the
+pattern. These declarations are placed in the same context, which is
+called a _constructor scope_. When a constructor value is referenced
+on the left of a link:#scoping[scoping operator], the scope being
+looked up is the constructor scope.
 
-eight_bits is magic_constants(8)
+For example, you could write an addition for complex values as
+follows:
 
-print "The max value for 8 bits is ", eight_bits.max_value
-----
+....
+Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im)
+....
 
-This forms the basis of link:#creation[constructors]
-and link:#interface[tagged types]in XL.
+In this example, the `complex` in type annotation `Z1:complex`
+indicates that we expect something that matches the shape of the
+pattern `complex(Re:real,Im:real)`. When value `Z1` is placed on the
+left of a scoping operator, its parse tree shape is therefore
+something that matches that pattern, e.g. `complex(0.0,1.0)`. Within
+the body of the definition above, we would then have a binding for
+`Z1` and `Z2` that might look like:
+
+....
+Z1 as complex is complex(0.0,1.0)
+Z2 as complex is complex(2.3,4.6)
+....
+
+In reality, however, the actual representation uses
+link:#closures[closures] to bind the values, i.e. it actually looks
+more like:
+
+....
+Z1 as complex is { Re is 0.0; Im is 1.0 } complex (Re:real, Im:real)
+Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)
+....
+
+In that case, a scoping lookup like `Z1.Re` is evaluating `Re` in the
+closure context associated with `Z1`, and as a result, evaluates to
+`0.0`. Similarly, `Z2.Im` would evaluate to `4.6`.
+
+This approach is not restricted to prefix forms. The type `real_addition`
+could be defined as follows:
+
+....
+real_addition is type (Left:real + Right:real)
+
+....
+
+The following rule could then be used to "flatten" real additions
+using associativity (this example being only intended as an
+illustration of how constructor scoping works, not to be seen as a
+useful coding suggestion):
+
+....
+A1:real_addition + A2:real_addition is A1.Left+A1.Right+A2.Left+A2.Right
+....
 
 === Super lookup
 

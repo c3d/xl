@@ -529,7 +529,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#self">3.10. Self</a></li>
 <li><a href="#nested-declarations">3.11. Nested declarations</a></li>
 <li><a href="#scoping">3.12. Scoping</a></li>
-<li><a href="#named-scopes">3.13. Named scopes</a></li>
+<li><a href="#constructor-scope">3.13. Constructor scope</a></li>
 <li><a href="#super-lookup">3.14. Super lookup</a></li>
 <li><a href="#caller-lookup">3.15. Caller lookup</a></li>
 <li><a href="#assignments-and-moves">3.16. Assignments and moves</a></li>
@@ -5031,32 +5031,88 @@ result, <code>IO.write</code> will refer to the declaration in the module.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="named-scopes"><a class="anchor" href="#named-scopes"></a><a class="link" href="#named-scopes">3.13. Named scopes</a></h3>
+<h3 id="constructor-scope"><a class="anchor" href="#constructor-scope"></a><a class="link" href="#constructor-scope">3.13. Constructor scope</a></h3>
 <div class="paragraph">
-<p>A common idiom in XL is to prefix a scope with a name, so as to better
-document the intent for the programmer and create patterns that are more
-specific, minimizing the risk of ambiguity. A scope following a name is
-called a <em>named scope</em>, and can be used like a regular scope, i.e. the
-prefix name does not play a role in the lookup.</p>
+<p>In XL, <a href="#types">types</a> are defined by the shape of a parse tree.
+A common idiom in XL to define types is to prefix a scope with a name,
+the name being intended to document the intent for the programmer, and
+the prefix form creating a pattern that is specific to that type. For
+example, a <code>complex</code> type could be created as follows:</p>
 </div>
-<div class="paragraph">
-<p>For example, the <code>magic_constants</code> could be defined as</p>
-</div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">magic_constants Bits is size_constants
-    num_bits    is Bits
-    min_value   is 0
-    max_value   is 2^Bits - 1
-
-eight_bits is magic_constants(8)
-
-print "The max value for 8 bits is ", eight_bits.max_value</code></pre>
+<pre>complex is type complex(Re:real, Im:real)</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This forms the basis of <a href="#creation">constructors</a>
-and <a href="#interface">tagged types</a>in XL.</p>
+<p>It is then possible to <a href="#creation">create</a> a <code>complex</code> value using
+the pattern on the right of <code>type</code>. This kind of expression is called
+a <em>constructor</em> for the type. Values constructed that way contain a
+number of declarations corresponding to the formal parameters in the
+pattern. These declarations are placed in the same context, which is
+called a <em>constructor scope</em>. When a constructor value is referenced
+on the left of a <a href="#scoping">scoping operator</a>, the scope being
+looked up is the constructor scope.</p>
+</div>
+<div class="paragraph">
+<p>For example, you could write an addition for complex values as
+follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, the <code>complex</code> in type annotation <code>Z1:complex</code>
+indicates that we expect something that matches the shape of the
+pattern <code>complex(Re:real,Im:real)</code>. When value <code>Z1</code> is placed on the
+left of a scoping operator, its parse tree shape is therefore
+something that matches that pattern, e.g. <code>complex(0.0,1.0)</code>. Within
+the body of the definition above, we would then have a binding for
+<code>Z1</code> and <code>Z2</code> that might look like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z1 as complex is complex(0.0,1.0)
+Z2 as complex is complex(2.3,4.6)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In reality, however, the actual representation uses
+<a href="#closures">closures</a> to bind the values, i.e. it actually looks
+more like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z1 as complex is { Re is 0.0; Im is 1.0 } complex (Re:real, Im:real)
+Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In that case, a scoping lookup like <code>Z1.Re</code> is evaluating <code>Re</code> in the
+closure context associated with <code>Z1</code>, and as a result, evaluates to
+<code>0.0</code>. Similarly, <code>Z2.Im</code> would evaluate to <code>4.6</code>.</p>
+</div>
+<div class="paragraph">
+<p>This approach is not restricted to prefix forms. The type <code>real_addition</code>
+could be defined as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>real_addition is type (Left:real + Right:real)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following rule could then be used to "flatten" real additions
+using associativity (this example being only intended as an
+illustration of how constructor scoping works, not to be seen as a
+useful coding suggestion):</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>A1:real_addition + A2:real_addition is A1.Left+A1.Right+A2.Left+A2.Right</pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -8973,7 +9029,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-01 01:07:01 +0100
+Last updated 2020-01-01 13:51:40 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
