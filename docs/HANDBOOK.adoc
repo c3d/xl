@@ -3378,7 +3378,7 @@ A declaration like this can of course be more than a simple name:
 
 [source]
 ----
-magic_constants Bits is
+magic_constants(Bits) is
     num_bits    is Bits
     min_value   is 0
     max_value   is 2^Bits - 1
