@@ -3672,7 +3672,7 @@ always an `error` value being returned, not an exception being thrown.
 ==== Error statements
 
 If a statement, assignment or declaration returns an `error`, then as a
-special evaluation rule, that `error` valuea is immediately returned by
+special evaluation rule, that any `error` value is immediately returned by
 the enclosing function. It is a type error if the interface of the
 enclosing function does not allow an `error` return value.
 
