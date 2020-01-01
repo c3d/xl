@@ -2208,12 +2208,21 @@ prefix in the pattern.
 type, meaning that `1.25` matches the sub-pattern `X:real`.
 . The condition `X > 0.0` is true with binding `X is 1.25`
 
-There are several kinds of patterns, each maching different kinds of
-expressions: <<Name definitions>>, <<Wildcards>>,
-<<Type annotations>>, <<Function (prefix) definitions>>,
-<<Postfix definitions>>, <<Infix definitions>>, <<Infix argument splitting>>,
-<<Conditional patterns>>, <<Literal constants>>, <<Metabox constants>>
-and <<Blocks>>.
+There are several kinds of patterns that will match different kinds of
+expressions:
+
+* <<Name definitions>> match whole names.
+* <<Wildcards>> match arbitrary arguments.
+* <<Type annotations>> match arguments based on their type.
+* <<Function (prefix) definitions>> match prefix forms ("functions").
+* <<Postfix definitions>> match postfix forms.
+* <<Infix definitions>> match infix forms.
+* <<Argument splitting>> match names bound to infix, prefix or postfix
+  values to infix, prefix or postfix patterns.
+* <<Conditional patterns>> match values based on arbitrary conditions
+* <<Literal constants>> match constants with the same value.
+* <<Metabox values>> match values computed by the comiler.
+* <<Blocks>> change the priority of expressions.
 
 ==== Name definitions
 
@@ -2252,6 +2261,16 @@ expression, and the pattern only matches if that check evaluates to
 Such name patterns are called _wildcard parameters_ because they can
 match any expression, or _untyped parameters_ because no type checking
 occurs on the matched argument.
+
+In order to catch anything at the top-level, for example in
+link:#scoping[maps], it is necessary to use the `lambda` notation:
+
+[cols="24%,38%,38%",options="header",]
+|==========================================================
+| Declaration | Matched by              | Not matched by
+| `\N`        | Any value               | Nothing
+|==========================================================
+
 
 NOTE: This case only applies to names, not to operators. You cannot
 define a `+` parameter that way.
@@ -2344,11 +2363,12 @@ expression.
 Definitions for such patterns are called _infix definitions_, and the
 corresponding expressions are called _infix expressions_.
 
-==== Infix argument splitting
+==== Argument splitting
 
-When the pattern is an infix, it also matches a name if that name is
-bound to an infix expression that would match. In that case, the
-bound value is said to be _((split))_ to match the parameters.
+When the pattern is an infix, a prefix or a postfix, it also matches a
+name if that name is bound to an infix, prefix or postfix expression
+that would match. In that case, the bound value is said to be
+_((split))_ to match the parameters.
 (((argument splitting)))
 
 [width="100%",cols="24%,38%,38%",options="header",]
@@ -2358,6 +2378,12 @@ bound value is said to be _((split))_ to match the parameters.
                                                         when
                                                         `Items is "A"+"B"`,
                                                         `wrote 0,1`
+| `write X%`  | `write Items` when `Items is 2%`      | `write Items`
+                                                        when
+                                                        `Items is 2!`
+| `write -X`  | `write Items` when `Items is -2`      | `write Items`
+                                                        when
+                                                        `Items is +2`
 |==========================================================================
 
 [NOTE]
@@ -2425,7 +2451,7 @@ digits is
     1 is "One"
 ----
 
-==== Metabox constants
+==== Metabox values
 
 When the pattern is a an expression between two square brackets, like
 `+[[true]]+`, it is called a _metabox_, and it only matches a value that
@@ -3537,7 +3563,7 @@ to add specific error messages for well-identified conditions:
 [source]
 ----
 sqrt X:real as real     when X >= 0     is ...
-sqrt X:real as real     when X <  0     is error "Square root of negative real ", X
+sqrt X:real as error    when X <  0     is error "Square root of negative real ", X
 ----
 
 In that case, the output will change to something like:
@@ -3567,7 +3593,7 @@ square root function as follows:
 [source]
 ----
 sqrt X:real as real     when X >= 0     is ...
-sqrt X:real as real     when X <  0     is error "Square root of negative real ", X
+sqrt X:real as error    when X <  0     is error "Square root of negative real ", X
 sqrt E:error as error                   is error "Square root of error: ", E
 ----
 

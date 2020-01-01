@@ -527,10 +527,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#function-prefix-definitions">3.3.4. Function (prefix) definitions</a></li>
 <li><a href="#postfix-definitions">3.3.5. Postfix definitions</a></li>
 <li><a href="#infix-definitions">3.3.6. Infix definitions</a></li>
-<li><a href="#infix-argument-splitting">3.3.7. Infix argument splitting</a></li>
+<li><a href="#argument-splitting">3.3.7. Argument splitting</a></li>
 <li><a href="#conditional-patterns">3.3.8. Conditional patterns</a></li>
 <li><a href="#literal-constants">3.3.9. Literal constants</a></li>
-<li><a href="#metabox-constants">3.3.10. Metabox constants</a></li>
+<li><a href="#metabox-values">3.3.10. Metabox values</a></li>
 <li><a href="#blocks">3.3.11. Blocks</a></li>
 <li><a href="#pattern-matching-scope">3.3.12. Pattern-matching scope</a></li>
 </ul>
@@ -3447,12 +3447,46 @@ type, meaning that <code>1.25</code> matches the sub-pattern <code>X:real</code>
 </ol>
 </div>
 <div class="paragraph">
-<p>There are several kinds of patterns, each maching different kinds of
-expressions: <a href="#name-definitions">Name definitions</a>, <a href="#wildcards">Wildcards</a>,
-<a href="#type-annotations">Type annotations</a>, <a href="#function-prefix-definitions">Function (prefix) definitions</a>,
-<a href="#postfix-definitions">Postfix definitions</a>, <a href="#infix-definitions">Infix definitions</a>, <a href="#infix-argument-splitting">Infix argument splitting</a>,
-<a href="#conditional-patterns">Conditional patterns</a>, <a href="#literal-constants">Literal constants</a>, <a href="#metabox-constants">Metabox constants</a>
-and <a href="#blocks">Blocks</a>.</p>
+<p>There are several kinds of patterns that will match different kinds of
+expressions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#name-definitions">Name definitions</a> match whole names.</p>
+</li>
+<li>
+<p><a href="#wildcards">Wildcards</a> match arbitrary arguments.</p>
+</li>
+<li>
+<p><a href="#type-annotations">Type annotations</a> match arguments based on their type.</p>
+</li>
+<li>
+<p><a href="#function-prefix-definitions">Function (prefix) definitions</a> match prefix forms ("functions").</p>
+</li>
+<li>
+<p><a href="#postfix-definitions">Postfix definitions</a> match postfix forms.</p>
+</li>
+<li>
+<p><a href="#infix-definitions">Infix definitions</a> match infix forms.</p>
+</li>
+<li>
+<p><a href="#argument-splitting">Argument splitting</a> match names bound to infix, prefix or postfix
+values to infix, prefix or postfix patterns.</p>
+</li>
+<li>
+<p><a href="#conditional-patterns">Conditional patterns</a> match values based on arbitrary conditions</p>
+</li>
+<li>
+<p><a href="#literal-constants">Literal constants</a> match constants with the same value.</p>
+</li>
+<li>
+<p><a href="#metabox-values">Metabox values</a> match values computed by the comiler.</p>
+</li>
+<li>
+<p><a href="#blocks">Blocks</a> change the priority of expressions.</p>
+</li>
+</ul>
 </div>
 <div class="sect3">
 <h4 id="name-definitions"><a class="anchor" href="#name-definitions"></a><a class="link" href="#name-definitions">3.3.1. Name definitions</a></h4>
@@ -3540,6 +3574,31 @@ expression, and the pattern only matches if that check evaluates to
 match any expression, or <em>untyped parameters</em> because no type checking
 occurs on the matched argument.</p>
 </div>
+<div class="paragraph">
+<p>In order to catch anything at the top-level, for example in
+<a href="#scoping">maps</a>, it is necessary to use the <code>lambda</code> notation:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Declaration</th>
+<th class="tableblock halign-left valign-top">Matched by</th>
+<th class="tableblock halign-left valign-top">Not matched by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>\N</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Any value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Nothing</p></td>
+</tr>
+</tbody>
+</table>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -3752,11 +3811,12 @@ corresponding expressions are called <em>infix expressions</em>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="infix-argument-splitting"><a class="anchor" href="#infix-argument-splitting"></a><a class="link" href="#infix-argument-splitting">3.3.7. Infix argument splitting</a></h4>
+<h4 id="argument-splitting"><a class="anchor" href="#argument-splitting"></a><a class="link" href="#argument-splitting">3.3.7. Argument splitting</a></h4>
 <div class="paragraph">
-<p>When the pattern is an infix, it also matches a name if that name is
-bound to an infix expression that would match. In that case, the
-bound value is said to be <em>split</em> to match the parameters.
+<p>When the pattern is an infix, a prefix or a postfix, it also matches a
+name if that name is bound to an infix, prefix or postfix expression
+that would match. In that case, the bound value is said to be
+<em>split</em> to match the parameters.
 </p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
@@ -3780,6 +3840,20 @@ bound value is said to be <em>split</em> to match the parameters.
                                                         when
                                                         <code>Items is "A"+"B"</code>,
                                                         <code>wrote 0,1</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write X%</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write Items</code> when <code>Items is 2%</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write Items</code>
+                                                        when
+                                                        <code>Items is 2!</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write -X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write Items</code> when <code>Items is -2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>write Items</code>
+                                                        when
+                                                        <code>Items is +2</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3896,7 +3970,7 @@ top-level patterns, which is primarily useful in <a href="#scoping">maps</a>:</p
 </div>
 </div>
 <div class="sect3">
-<h4 id="metabox-constants"><a class="anchor" href="#metabox-constants"></a><a class="link" href="#metabox-constants">3.3.10. Metabox constants</a></h4>
+<h4 id="metabox-values"><a class="anchor" href="#metabox-values"></a><a class="link" href="#metabox-values">3.3.10. Metabox values</a></h4>
 <div class="paragraph">
 <p>When the pattern is a an expression between two square brackets, like
 <code>[[true]]</code>, it is called a <em>metabox</em>, and it only matches a value that
@@ -5290,7 +5364,7 @@ to add specific error messages for well-identified conditions:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">sqrt X:real as real     when X &gt;= 0     is ...
-sqrt X:real as real     when X &lt;  0     is error "Square root of negative real ", X</code></pre>
+sqrt X:real as error    when X &lt;  0     is error "Square root of negative real ", X</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5334,7 +5408,7 @@ square root function as follows:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">sqrt X:real as real     when X &gt;= 0     is ...
-sqrt X:real as real     when X &lt;  0     is error "Square root of negative real ", X
+sqrt X:real as error    when X &lt;  0     is error "Square root of negative real ", X
 sqrt E:error as error                   is error "Square root of error: ", E</code></pre>
 </div>
 </div>
@@ -8875,7 +8949,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 00:07:27 +0100
+Last updated 2020-01-02 00:31:46 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
