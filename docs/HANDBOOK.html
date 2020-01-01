@@ -4957,11 +4957,11 @@ can no longer be evaluated in the inner context.</p>
 context, the pattern matches the <code>X:integer+Y:integer</code> pattern, from
 which it computes value <code>2+3</code>, and then returns <code>5</code> for comparison in
 the inner context, in order to compare it against <code>0</code>. Since <code>0=5</code>
-fails, it then considers the next candidate, but does not need to
-re-evaluate the value of sub-expression <code>A+3</code>. Instead, the computed
-value <code>5</code> will be compared successively against <code>1</code>, <code>2</code>, and so on,
-until it matches <code>5</code>. The returned value for the inner expression is
-therefore <code>"five"</code>.</p>
+fails, it then considers the next candidate, but again because of
+memoization, there is no need to re-evaluate the value of
+sub-expression <code>A+3</code>. Instead, the computed value <code>5</code> will be compared
+successively against <code>1</code>, <code>2</code>, and so on, until it matches <code>5</code>. The
+returned value for the inner expression is therefore <code>"five"</code>.</p>
 </div>
 <div class="paragraph">
 <p>A map is not restricted to constant patterns. For example, the following
@@ -8973,7 +8973,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-01 00:42:11 +0100
+Last updated 2020-01-01 01:03:37 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

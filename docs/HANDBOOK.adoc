@@ -3324,11 +3324,11 @@ It can still, however, be evaluted in the outer context. In that outer
 context, the pattern matches the `X:integer+Y:integer` pattern, from
 which it computes value `2+3`, and then returns `5` for comparison in
 the inner context, in order to compare it against `0`. Since `0=5`
-fails, it then considers the next candidate, but does not need to
-re-evaluate the value of sub-expression `A+3`. Instead, the computed
-value `5` will be compared successively against `1`, `2`, and so on,
-until it matches `5`. The returned value for the inner expression is
-therefore `"five"`.
+fails, it then considers the next candidate, but again because of
+memoization, there is no need to re-evaluate the value of
+sub-expression `A+3`. Instead, the computed value `5` will be compared
+successively against `1`, `2`, and so on, until it matches `5`. The
+returned value for the inner expression is therefore `"five"`.
 
 A map is not restricted to constant patterns. For example, the following
 map performs a more complete spelling conversion for numbers below 1000
