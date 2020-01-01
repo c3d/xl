@@ -519,7 +519,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#expression-evaluation">3.2. Expression evaluation</a></li>
-<li><a href="#pattern-matching">3.3. Pattern matching</a></li>
+<li><a href="#pattern-matching">3.3. Pattern matching</a>
+<ul class="sectlevel3">
+<li><a href="#name-definitions">3.3.1. Name definitions</a></li>
+<li><a href="#wildcards">3.3.2. Wildcards</a></li>
+<li><a href="#type-annotations">3.3.3. Type annotations</a></li>
+<li><a href="#function-prefix-definitions">3.3.4. Function (prefix) definitions</a></li>
+<li><a href="#postfix-definitions">3.3.5. Postfix definitions</a></li>
+<li><a href="#infix-definitions">3.3.6. Infix definitions</a></li>
+<li><a href="#infix-argument-splitting">3.3.7. Infix argument splitting</a></li>
+<li><a href="#conditional-patterns">3.3.8. Conditional patterns</a></li>
+<li><a href="#literal-constants">3.3.9. Literal constants</a></li>
+<li><a href="#metabox-constants">3.3.10. Metabox constants</a></li>
+<li><a href="#blocks">3.3.11. Blocks</a></li>
+<li><a href="#pattern-matching-scope">3.3.12. Pattern-matching scope</a></li>
+<li><a href="#scope-patterns">3.3.13. Scope patterns</a></li>
+</ul>
+</li>
 <li><a href="#overloading">3.4. Overloading</a></li>
 <li><a href="#dynamic-dispatch">3.5. Dynamic dispatch</a></li>
 <li><a href="#immediate-evaluation">3.6. Immediate evaluation</a></li>
@@ -529,25 +545,24 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#self">3.10. Self</a></li>
 <li><a href="#nested-declarations">3.11. Nested declarations</a></li>
 <li><a href="#scoping">3.12. Scoping</a></li>
-<li><a href="#constructor-scope">3.13. Constructor scope</a></li>
-<li><a href="#super-lookup">3.14. Super lookup</a></li>
-<li><a href="#caller-lookup">3.15. Caller lookup</a></li>
-<li><a href="#assignments-and-moves">3.16. Assignments and moves</a></li>
-<li><a href="#functions-as-values">3.17. Functions as values</a></li>
-<li><a href="#error-handling">3.18. Error handling</a>
+<li><a href="#super-lookup">3.13. Super lookup</a></li>
+<li><a href="#caller-lookup">3.14. Caller lookup</a></li>
+<li><a href="#assignments-and-moves">3.15. Assignments and moves</a></li>
+<li><a href="#functions-as-values">3.16. Functions as values</a></li>
+<li><a href="#error-handling">3.17. Error handling</a>
 <ul class="sectlevel3">
-<li><a href="#taking-error-parameters">3.18.1. Taking error parameters</a></li>
-<li><a href="#fallible-types">3.18.2. Fallible types</a></li>
-<li><a href="#try-catch">3.18.3. Try-Catch</a></li>
-<li><a href="#error-statements">3.18.4. Error statements</a></li>
+<li><a href="#taking-error-parameters">3.17.1. Taking error parameters</a></li>
+<li><a href="#fallible-types">3.17.2. Fallible types</a></li>
+<li><a href="#try-catch">3.17.3. Try-Catch</a></li>
+<li><a href="#error-statements">3.17.4. Error statements</a></li>
 </ul>
 </li>
-<li><a href="#interface-and-implementation">3.19. Interface and implementation</a></li>
+<li><a href="#interface-and-implementation">3.18. Interface and implementation</a></li>
 </ul>
 </li>
 <li><a href="#types">4. Types</a>
 <ul class="sectlevel2">
-<li><a href="#type-annotations">4.1. Type annotations</a></li>
+<li><a href="#type-annotations-2">4.1. Type annotations</a></li>
 <li><a href="#basic-types">4.2. Basic types</a>
 <ul class="sectlevel3">
 <li><a href="#basic-data-types">4.2.1. Basic data types</a></li>
@@ -3450,11 +3465,14 @@ type, meaning that <code>1.25</code> matches the sub-pattern <code>X:real</code>
 </div>
 <div class="paragraph">
 <p>There are several kinds of patterns, each maching different kinds of
-expressions.</p>
+expressions: <a href="#name-definitions">Name definitions</a>, <a href="#wildcards">Wildcards</a>,
+<a href="#type-annotations">Type annotations</a>, <a href="#function-prefix-definitions">Function (prefix) definitions</a>,
+<a href="#postfix-definitions">Postfix definitions</a>, <a href="#infix-definitions">Infix definitions</a>, <a href="#infix-argument-splitting">Infix argument splitting</a>,
+<a href="#conditional-patterns">Conditional patterns</a>, <a href="#literal-constants">Literal constants</a>, <a href="#metabox-constants">Metabox constants</a>
+and <a href="#blocks">Blocks</a>.</p>
 </div>
-<details>
-<summary class="title">Name definitions</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="name-definitions"><a class="anchor" href="#name-definitions"></a><a class="link" href="#name-definitions">3.3.1. Name definitions</a></h4>
 <div class="paragraph">
 <p>Top-level name patterns only match the exact same name.</p>
 </div>
@@ -3496,10 +3514,8 @@ define a <code>+</code> operator that way.
 </table>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Wildcards</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="wildcards"><a class="anchor" href="#wildcards"></a><a class="link" href="#wildcards">3.3.2. Wildcards</a></h4>
 <div class="paragraph">
 <p>Name patterns that are not at the top-level can match any expression,
 and this does not require <a href="#immediate-evaluation">immediate
@@ -3555,10 +3571,8 @@ define a <code>+</code> parameter that way.
 </table>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Type annotations</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="type-annotations"><a class="anchor" href="#type-annotations"></a><a class="link" href="#type-annotations">3.3.3. Type annotations</a></h4>
 <div class="paragraph">
 <p>When the pattern is an infix <code>:</code> or <code>as</code>, it matches an expression if
 the expression matches the pattern on the left of the infix, and if the
@@ -3636,10 +3650,8 @@ in the example below:</p>
 </div>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Function (prefix) definitions</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="function-prefix-definitions"><a class="anchor" href="#function-prefix-definitions"></a><a class="link" href="#function-prefix-definitions">3.3.4. Function (prefix) definitions</a></h4>
 <div class="paragraph">
 <p>When the pattern is a prefix, like <code>sin X</code>, the expression will match
 only if it is a prefix with the same name, and when the pattern on the
@@ -3678,10 +3690,8 @@ called <em>function calls</em>. Otherwise, they are called <em>prefix
 definitions</em>.</p>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Postfix definitions</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="postfix-definitions"><a class="anchor" href="#postfix-definitions"></a><a class="link" href="#postfix-definitions">3.3.5. Postfix definitions</a></h4>
 <div class="paragraph">
 <p>When the pattern is a postfix, like <code>X%</code>, the expression will match only
 if it is a postfix with the same name, and when the pattern on the left
@@ -3719,10 +3729,8 @@ corresponding expressions are usually called <em>postfix expressions</em>. The
 name or operator is sometimes called the <em>suffix</em>.</p>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Infix definitions</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="infix-definitions"><a class="anchor" href="#infix-definitions"></a><a class="link" href="#infix-definitions">3.3.6. Infix definitions</a></h4>
 <div class="paragraph">
 <p>When the pattern is an infix, it matches an infix expression with the
 same infix operator when both the left and right operands of the
@@ -3760,10 +3768,8 @@ expression.</p>
 corresponding expressions are called <em>infix expressions</em>.</p>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Infix argument splitting</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="infix-argument-splitting"><a class="anchor" href="#infix-argument-splitting"></a><a class="link" href="#infix-argument-splitting">3.3.7. Infix argument splitting</a></h4>
 <div class="paragraph">
 <p>When the pattern is an infix, it also matches a name if that name is
 bound to an infix expression that would match. In that case, the
@@ -3821,10 +3827,8 @@ being split, resulting in bindings <code>Head is 2</code> and <code>Tail is 3</c
 </table>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Conditional patterns</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="conditional-patterns"><a class="anchor" href="#conditional-patterns"></a><a class="link" href="#conditional-patterns">3.3.8. Conditional patterns</a></h4>
 <div class="paragraph">
 <p>When a top-level pattern is an infix like <code>Pattern when Condition</code>, then
 the pattern matches an expression if the pattern on the left of the
@@ -3864,10 +3868,8 @@ log "Logging an error"        // Will not match the definition above</code></pre
 </div>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Literal constants</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="literal-constants"><a class="anchor" href="#literal-constants"></a><a class="link" href="#literal-constants">3.3.9. Literal constants</a></h4>
 <div class="paragraph">
 <p>When the pattern is an <code>integer</code> like <code>0</code>, a <code>real</code> like <code>3.5</code>, a <code>text</code>
 like <code>"ABC"</code>, it only matches an expression with the same value, as
@@ -3910,10 +3912,8 @@ top-level patterns, which is primarily useful in <a href="#scoping">maps</a>:</p
 </div>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Metabox constants</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="metabox-constants"><a class="anchor" href="#metabox-constants"></a><a class="link" href="#metabox-constants">3.3.10. Metabox constants</a></h4>
 <div class="paragraph">
 <p>When the pattern is a an expression between two square brackets, like
 <code>[[true]]</code>, it is called a <em>metabox</em>, and it only matches a value that
@@ -3965,10 +3965,8 @@ false and X       is false</code></pre>
 </div>
 </div>
 </div>
-</details>
-<details>
-<summary class="title">Blocks</summary>
-<div class="content">
+<div class="sect3">
+<h4 id="blocks"><a class="anchor" href="#blocks"></a><a class="link" href="#blocks">3.3.11. Blocks</a></h4>
 <div class="paragraph">
 <p>When the pattern is a block, it matches what the block’s child would
 match. In other words, blocks in patterns can be used to change the
@@ -4012,8 +4010,6 @@ argument is delimited with parentheses:</p>
 has_parentheses B:block                                           is false</code></pre>
 </div>
 </div>
-</div>
-</details>
 <div class="paragraph">
 <p>In some cases, checking if an argument matches a pattern requires
 evaluation of the corresponding expression or sub-expression. This is
@@ -4063,6 +4059,217 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 </td>
 </tr>
 </table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.3.12. Pattern-matching scope</a></h4>
+<div class="paragraph">
+<p>When matching a pattern, a <a href="#execution-context">local execution context</a>
+is created that holds the bindings associated to the patterns being
+matched. This <em>pattern-matching scope</em> is used while evaluating
+the body of the definition.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following simple example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>foo T:text, A:real is
+    print "T=", T, " A=", A
+foo "Hello", 2.5</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As <a href="#evaluation-phase">indicated earlier</a>, the body associated to
+the <code>foo</code> pattern will evaluate with a pattern-matching scope that
+looks like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>CONTEXT1 is
+    T : text is "Hello"
+    A : real is 2.5</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is particularly useful for structured data values and
+user-defined data types. In XL, <a href="#types">types</a> are defined by the
+shape of a parse tree, and that shape is typically defined using a
+pattern. The <a href="#scoping">scoping operator</a> can then be used on
+values of the type to access the pattern scope.</p>
+</div>
+<div class="paragraph">
+<p>For example, a <code>complex</code> data type and the addition of <code>complex</code>
+numbers can be written as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex is type complex(Re:real, Im:real) <i class="conum" data-value="1"></i><b>(1)</b>
+Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im) <i class="conum" data-value="2"></i><b>(2)</b>
+Z:complex := complex(1.3, 4.5) + complex(6.3, 2.5) <i class="conum" data-value="3"></i><b>(3)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is a <a href="#types">type definition</a> based on a pattern.
+It indicates that the <code>complex</code> data type corresponds to all the
+values that have the parse-tree shape following <code>type</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The <code>Z1.Re</code> notation is a <a href="#scoping">scoping operator</a>, and
+evaluates <code>Re</code> in the pattern-matching scope of <code>Z1</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Two <a href="#creation">constructors</a> create two <code>complex</code> values, that
+are bound to <code>Z1</code> and <code>Z2</code> respectively. In the expression
+<code>Z1.Re</code>, the name <code>Re</code> is looked up in pattern-matching scope for
+these constructors, so that <code>Z1.Re</code> is <code>1.3</code> and <code>Z2.Im</code> is <code>2.5</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A common idiom in XL to define types is to prefix a scope with a name,
+the name being intended to document the intent for the programmer, and
+the prefix form creating a pattern that is specific to that type. For
+example, a <code>complex</code> type could be created as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is then possible to <a href="#creation">create</a> a <code>complex</code> value using
+the pattern on the right of <code>type</code>. This kind of expression is called
+a <em>constructor</em> for the type. Values constructed that way contain a
+number of declarations corresponding to the formal parameters in the
+pattern. These declarations are placed in the same context, which is
+called a <em>constructor scope</em>. When a constructor value is referenced
+on the left of a <a href="#scoping">scoping operator</a>, the scope being
+looked up is the constructor scope.</p>
+</div>
+<div class="paragraph">
+<p>For example, you could write an addition for complex values as
+follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, the <code>complex</code> in type annotation <code>Z1:complex</code>
+indicates that we expect something that matches the shape of the
+pattern <code>complex(Re:real,Im:real)</code>. When value <code>Z1</code> is placed on the
+left of a scoping operator, its parse tree shape is therefore
+something that matches that pattern, e.g. <code>complex(0.0,1.0)</code>. Within
+the body of the definition above, we would then have a binding for
+<code>Z1</code> and <code>Z2</code> that might look like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z1 as complex is complex(0.0,1.0)
+Z2 as complex is complex(2.3,4.6)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In reality, however, the actual representation uses
+<a href="#closures">closures</a> to bind the values, i.e. it actually looks
+more like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z1 as complex is { Re is 0.0; Im is 1.0 } complex (Re:real, Im:real)
+Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In that case, a scoping lookup like <code>Z1.Re</code> is evaluating <code>Re</code> in the
+closure context associated with <code>Z1</code>, i.e. <code>{ Re is 0.0; Im is 1.0 }</code>.
+As a result, evaluates to <code>0.0</code>. Similarly, <code>Z2.Im</code> would evaluate to <code>4.6</code>.</p>
+</div>
+<div class="paragraph">
+<p>This approach is not restricted to prefix forms. The type <code>real_addition</code>
+could be defined as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>real_addition is type (Left:real + Right:real)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following rule could then be used to "flatten" real additions
+using associativity (this example being only intended as an
+illustration of how constructor scoping works, not to be seen as a
+useful coding suggestion):</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>A1:real_addition + A2:real_addition is A1.Left+A1.Right+A2.Left+A2.Right</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="scope-patterns"><a class="anchor" href="#scope-patterns"></a><a class="link" href="#scope-patterns">3.3.13. Scope patterns</a></h4>
+<div class="paragraph">
+<p>When a pattern is a comma-separated parameter list, it can be matched to
+a comma-separated argument list as explained above, but it can also be
+matched by looking up the relevant parameter names in a scope passed as
+an argument.</p>
+</div>
+<div class="paragraph">
+<p>This, combined with the rules about matching blocks, makes it possible
+to pass arguments by name for clarity in very long parameter lists.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Function to create a person, with many parameters
+create_person FirstName     : text,
+              LastName      : text,
+              DateOfBirth   : date,
+              Gender        : gender,
+              Weight        : weight,
+              Height        : length,
+              Address       : address as person is ...
+
+// The above function can be invoked with as scope as an argument
+// Notice that since this is based on lookup, the order can be different
+JohnDoe is create_person
+    LastName    is "Doe"
+    FirstName   is "John"
+    Gender      is Male
+    Weight      is 87.3kg
+    Height      is 182cm
+    Address     is address
+        Street  is "Sesame Street"
+        Number  is 42
+        ZipCode is 97777
+        City    is "Flooontch"
+    DateOfBirth is 1902/12/05</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This rule is a bit uncertain: the effect on readability seems
+desirable, but there is a bit of ad-hockery in this rule, and it’s
+unclear that long parameter list are that useful in XL. It is also
+unclear that this can easily be implemented within the language as a
+definition for <code>X,Y</code>, which is a bit concerning. (In other words, this
+might be the kind of language rule that is not very natural to write in
+XL - To be verified…)
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -5031,92 +5238,7 @@ result, <code>IO.write</code> will refer to the declaration in the module.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="constructor-scope"><a class="anchor" href="#constructor-scope"></a><a class="link" href="#constructor-scope">3.13. Constructor scope</a></h3>
-<div class="paragraph">
-<p>In XL, <a href="#types">types</a> are defined by the shape of a parse tree.
-A common idiom in XL to define types is to prefix a scope with a name,
-the name being intended to document the intent for the programmer, and
-the prefix form creating a pattern that is specific to that type. For
-example, a <code>complex</code> type could be created as follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>complex is type complex(Re:real, Im:real)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>It is then possible to <a href="#creation">create</a> a <code>complex</code> value using
-the pattern on the right of <code>type</code>. This kind of expression is called
-a <em>constructor</em> for the type. Values constructed that way contain a
-number of declarations corresponding to the formal parameters in the
-pattern. These declarations are placed in the same context, which is
-called a <em>constructor scope</em>. When a constructor value is referenced
-on the left of a <a href="#scoping">scoping operator</a>, the scope being
-looked up is the constructor scope.</p>
-</div>
-<div class="paragraph">
-<p>For example, you could write an addition for complex values as
-follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In this example, the <code>complex</code> in type annotation <code>Z1:complex</code>
-indicates that we expect something that matches the shape of the
-pattern <code>complex(Re:real,Im:real)</code>. When value <code>Z1</code> is placed on the
-left of a scoping operator, its parse tree shape is therefore
-something that matches that pattern, e.g. <code>complex(0.0,1.0)</code>. Within
-the body of the definition above, we would then have a binding for
-<code>Z1</code> and <code>Z2</code> that might look like:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Z1 as complex is complex(0.0,1.0)
-Z2 as complex is complex(2.3,4.6)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In reality, however, the actual representation uses
-<a href="#closures">closures</a> to bind the values, i.e. it actually looks
-more like:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Z1 as complex is { Re is 0.0; Im is 1.0 } complex (Re:real, Im:real)
-Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In that case, a scoping lookup like <code>Z1.Re</code> is evaluating <code>Re</code> in the
-closure context associated with <code>Z1</code>, i.e. <code>{ Re is 0.0; Im is 1.0 }</code>.
-As a result, evaluates to <code>0.0</code>. Similarly, <code>Z2.Im</code> would evaluate to <code>4.6</code>.</p>
-</div>
-<div class="paragraph">
-<p>This approach is not restricted to prefix forms. The type <code>real_addition</code>
-could be defined as follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>real_addition is type (Left:real + Right:real)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The following rule could then be used to "flatten" real additions
-using associativity (this example being only intended as an
-illustration of how constructor scoping works, not to be seen as a
-useful coding suggestion):</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>A1:real_addition + A2:real_addition is A1.Left+A1.Right+A2.Left+A2.Right</pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="super-lookup"><a class="anchor" href="#super-lookup"></a><a class="link" href="#super-lookup">3.14. Super lookup</a></h3>
+<h3 id="super-lookup"><a class="anchor" href="#super-lookup"></a><a class="link" href="#super-lookup">3.13. Super lookup</a></h3>
 <div class="paragraph">
 <p>In a given context, <code>super</code> is a way to refer to the enclosing scope.</p>
 </div>
@@ -5129,7 +5251,7 @@ foo 3                           // Returns 45</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="caller-lookup"><a class="anchor" href="#caller-lookup"></a><a class="link" href="#caller-lookup">3.15. Caller lookup</a></h3>
+<h3 id="caller-lookup"><a class="anchor" href="#caller-lookup"></a><a class="link" href="#caller-lookup">3.14. Caller lookup</a></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -5222,7 +5344,7 @@ functional remains to be tested.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.16. Assignments and moves</a></h3>
+<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.15. Assignments and moves</a></h3>
 <div class="paragraph">
 <p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and returns the
 value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code> are
@@ -5314,7 +5436,7 @@ having the possibility to explicitly request a copy or a move.
 </div>
 </div>
 <div class="sect2">
-<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.17. Functions as values</a></h3>
+<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.16. Functions as values</a></h3>
 <div class="paragraph">
 <p>Unlike in several functional languages, when you declare a "function",
 you do not automatically declare a named entity or value with the
@@ -5387,7 +5509,7 @@ markedly different internally, and is detailed in the section on
 </div>
 </div>
 <div class="sect2">
-<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.18. Error handling</a></h3>
+<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.17. Error handling</a></h3>
 <div class="paragraph">
 <p>Code that fails will generally report it by returning an <code>error</code> value.
 Error values have the <a href="#errors"><code>error</code> type</a>. For
@@ -5452,7 +5574,7 @@ errors without cluttering your code with error checking conditions.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.18.1. Taking error parameters</a></h4>
+<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.17.1. Taking error parameters</a></h4>
 <div class="paragraph">
 <p>The simplest way to handle errors is to have a variant of the function
 that takes an <code>error</code> as an argument. For example, you could extend your
@@ -5491,7 +5613,7 @@ functions will print the associated error message.
 </div>
 </div>
 <div class="sect3">
-<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.18.2. Fallible types</a></h4>
+<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.17.2. Fallible types</a></h4>
 <div class="paragraph">
 <p>Another way to handle errors is to use <code>fallible T</code> types, which hold
 either a <code>T</code> or an <code>error</code>. The <code>faillible</code> type (without a type
@@ -5536,7 +5658,7 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.18.3. Try-Catch</a></h4>
+<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.17.3. Try-Catch</a></h4>
 <div class="paragraph">
 <p>A third way to handle errors is to use a <code>try Body catch Handler</code> form,
 which evaluates <code>Body</code>, and if <code>Body</code> returns an <code>error</code>, evaluates
@@ -5578,7 +5700,7 @@ always an <code>error</code> value being returned, not an exception being thrown
 </div>
 </div>
 <div class="sect3">
-<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.18.4. Error statements</a></h4>
+<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.17.4. Error statements</a></h4>
 <div class="paragraph">
 <p>If a statement, assignment or declaration returns an <code>error</code>, then as a
 special evaluation rule, that <code>error</code> valuea is immediately returned by
@@ -5655,7 +5777,7 @@ allocates an object from the heap.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.19. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
+<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.18. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
 <div class="paragraph">
 <p>XL provides strong <em>encapsulation</em> by allowing a programmer to hide
 irrelevant details of an implementation. This is fundamental to provide
@@ -5796,7 +5918,7 @@ value of <code>X</code>, for example <code>2</code>, may also belong to other ty
 contains the value <code>2</code>.</p>
 </div>
 <div class="sect2">
-<h3 id="type-annotations"><a class="anchor" href="#type-annotations"></a><a class="link" href="#type-annotations">4.1. Type annotations</a></h3>
+<h3 id="type-annotations-2"><a class="anchor" href="#type-annotations-2"></a><a class="link" href="#type-annotations-2">4.1. Type annotations</a></h3>
 <div class="paragraph">
 <p>A type can be associated to a name using a <em>type annotation</em>. For
 example, a type annotation such as <code>X:integer</code> indicates that the values
@@ -9029,7 +9151,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-01 19:18:03 +0100
+Last updated 2020-01-01 22:39:41 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

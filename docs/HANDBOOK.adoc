@@ -2213,11 +2213,14 @@ type, meaning that `1.25` matches the sub-pattern `X:real`.
 . The condition `X > 0.0` is true with binding `X is 1.25`
 
 There are several kinds of patterns, each maching different kinds of
-expressions.
+expressions: <<Name definitions>>, <<Wildcards>>,
+<<Type annotations>>, <<Function (prefix) definitions>>,
+<<Postfix definitions>>, <<Infix definitions>>, <<Infix argument splitting>>,
+<<Conditional patterns>>, <<Literal constants>>, <<Metabox constants>>
+and <<Blocks>>.
 
-.Name definitions
-[%collapsible]
-====
+==== Name definitions
+
 Top-level name patterns only match the exact same name.
 
 [cols="24%,38%,38%",options="header",]
@@ -2230,11 +2233,10 @@ Definitions with a top-level name pattern are called _name definitions_.
 
 NOTE: This case only applies to names, not to operators. You cannot
 define a `+` operator that way.
-====
 
-.Wildcards
-[%collapsible]
-====
+
+==== Wildcards
+
 Name patterns that are not at the top-level can match any expression,
 and this does not require link:#immediate-evaluation[immediate
 evaluation]. In that case, the expression will be bound to the name in
@@ -2257,11 +2259,9 @@ occurs on the matched argument.
 
 NOTE: This case only applies to names, not to operators. You cannot
 define a `+` parameter that way.
-====
 
-.Type annotations
-[%collapsible]
-====
+==== Type annotations
+
 When the pattern is an infix `:` or `as`, it matches an expression if
 the expression matches the pattern on the left of the infix, and if the
 link:#types[type] of the expression matches the type on the
@@ -2295,11 +2295,9 @@ in the example below:
 ----
 X:real + Y:real as real is ...
 ----
-====
 
-.Function (prefix) definitions
-[%collapsible]
-====
+==== Function (prefix) definitions
+
 When the pattern is a prefix, like `sin X`, the expression will match
 only if it is a prefix with the same name, and when the pattern on the
 right of the prefix matches the right operand of the expression.
@@ -2315,11 +2313,9 @@ When the prefix is a name, definitions for such patterns are called
 _function definitions_, and the corresponding expressions are usually
 called _function calls_. Otherwise, they are called _prefix
 definitions_.
-====
 
-.Postfix definitions
-[%collapsible]
-====
+==== Postfix definitions
+
 When the pattern is a postfix, like `X%`, the expression will match only
 if it is a postfix with the same name, and when the pattern on the left
 of the postfix matches the left operand of the expression.
@@ -2334,11 +2330,9 @@ of the postfix matches the left operand of the expression.
 Definitions for such patterns are called _postfix definitions_, and the
 corresponding expressions are usually called _postfix expressions_. The
 name or operator is sometimes called the _suffix_.
-====
 
-.Infix definitions
-[%collapsible]
-=====
+==== Infix definitions
+
 When the pattern is an infix, it matches an infix expression with the
 same infix operator when both the left and right operands of the
 pattern match the corresponding left and right operands of the
@@ -2350,13 +2344,12 @@ expression.
 | `X:real+Y:real` | `3.5+2.9`  | `3+2`, `3.5-2.9`
 | `X and Y`       | `N and 3`  | `N or 3`
 |================================================
+
 Definitions for such patterns are called _infix definitions_, and the
 corresponding expressions are called _infix expressions_.
-=====
 
-.Infix argument splitting
-[%collapsible]
-=====
+==== Infix argument splitting
+
 When the pattern is an infix, it also matches a name if that name is
 bound to an infix expression that would match. In that case, the
 bound value is said to be _((split))_ to match the parameters.
@@ -2386,11 +2379,9 @@ and `Tail is 2,3`. In the evaluation of the body with these bindings,
 `write Tail` will then match the same declaration again with `Tail`
 being split, resulting in bindings `Head is 2` and `Tail is 3`.
 ====
-=====
 
-.Conditional patterns
-[%collapsible]
-====
+==== Conditional patterns
+
 When a top-level pattern is an infix like `Pattern when Condition`, then
 the pattern matches an expression if the pattern on the left of the
 infix matches the expression, and if the expression on the right
@@ -2411,11 +2402,9 @@ to any kind of error. For example:
 log X when X > 0 is ...
 log "Logging an error"        // Will not match the definition above
 ----
-====
 
-.Literal constants
-[%collapsible]
-====
+==== Literal constants
+
 When the pattern is an `integer` like `0`, a `real` like `3.5`, a `text`
 like `"ABC"`, it only matches an expression with the same value, as
 verified by evaluating the `Pattern = Value` expression, where `Pattern`
@@ -2439,11 +2428,9 @@ digits is
     0 is "Zero"
     1 is "One"
 ----
-====
 
-.Metabox constants
-[%collapsible]
-====
+==== Metabox constants
+
 When the pattern is a an expression between two square brackets, like
 `+[[true]]+`, it is called a _metabox_, and it only matches a value that
 is equal to the value computed by the metabox. This equality is checked
@@ -2475,11 +2462,9 @@ causing the first one to be evaluated for any `A and B` expression:
 true  and X       is X
 false and X       is false
 ----
-====
 
-.Blocks
-[%collapsible]
-====
+==== Blocks
+
 When the pattern is a block, it matches what the block’s child would
 match. In other words, blocks in patterns can be used to change the
 relative precedence of operators in a complex expression, but play
@@ -2504,7 +2489,6 @@ argument is delimited with parentheses:
 has_parentheses B:block when B.opening = "(" and B.closing = ")"  is true
 has_parentheses B:block                                           is false
 ----
-====
 
 In some cases, checking if an argument matches a pattern requires
 evaluation of the corresponding expression or ((sub-expression)). This is
@@ -2512,7 +2496,7 @@ called link:#immediate-evaluation[immediate evaluation]. Otherwise,
 link:#lazy-evaluation[evaluation will be lazy](((lazy evaluation))).
 
 [NOTE]
-====
+=====
 *STYLE* The rules of pattern matching give a lot of freedom with
 respect to coding style. Several conventions are recommended and are
 generally followed in this document:
@@ -2537,10 +2521,58 @@ definition might be written as follows:
 circle (CenterX:real, CenterY:real, Radius:real) as circle is ...
 C : circle := circle(0.3, 2.6, 4.0)
 ----
-====
+=====
 
-ifdef::pattern-matching-scope-values[]
-==== Pattern matching scope values
+==== Pattern-matching scope
+
+When matching a pattern, a link:#execution-context[local execution context]
+is created that holds the bindings associated to the patterns being
+matched. This _((pattern-matching scope))_ is used while evaluating
+the body of the definition.
+
+Consider the following simple example:
+
+....
+foo T:text, A:real is
+    print "T=", T, " A=", A
+foo "Hello", 2.5
+....
+
+As link:#evaluation-phase[indicated earlier], the body associated to
+the `foo` pattern will evaluate with a pattern-matching scope that
+looks like:
+
+....
+CONTEXT1 is
+    T : text is "Hello"
+    A : real is 2.5
+....
+
+This is particularly useful for structured data values and
+user-defined data types. In XL, link:#types[types] are defined by the
+shape of a parse tree, and that shape is typically defined using a
+pattern. The link:#scoping[scoping operator] can then be used on
+values of the type to access the pattern scope.
+
+For example, a `complex` data type and the addition of `complex`
+numbers can be written as follows:
+
+....
+complex is type complex(Re:real, Im:real) <1>
+Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im) <2>
+Z:complex := complex(1.3, 4.5) + complex(6.3, 2.5) <3>
+....
+<1> This is a link:#types[((type definition))] based on a pattern.
+    It indicates that the `complex` data type corresponds to all the
+    values that have the parse-tree shape following `type`.
+<2> The `Z1.Re` notation is a link:#scoping[scoping operator], and
+    evaluates `Re` in the pattern-matching scope of `Z1`.
+<3> Two link:#creation[constructors] create two `complex` values, that
+    are bound to `Z1` and `Z2` respectively. In the expression
+    `Z1.Re`, the name `Re` is looked up in pattern-matching scope for
+    these constructors, so that `Z1.Re` is `1.3` and `Z2.Im` is `2.5`.
+
+==== Scope patterns
 
 When a pattern is a comma-separated parameter list, it can be matched to
 a comma-separated argument list as explained above, but it can also be
@@ -2584,7 +2616,7 @@ unclear that this can easily be implemented within the language as a
 definition for `X,Y`, which is a bit concerning. (In other words, this
 might be the kind of language rule that is not very natural to write in
 XL - To be verified…)
-endif::[]
+
 
 === Overloading
 
@@ -3391,76 +3423,6 @@ with `use IO = XL.CONSOLE.TEXT_IO`, a local name `IO` is created in the
 current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
 
-=== Constructor scope
-
-In XL, link:#types[types] are defined by the shape of a parse tree.
-A common idiom in XL to define types is to prefix a scope with a name,
-the name being intended to document the intent for the programmer, and
-the prefix form creating a pattern that is specific to that type. For
-example, a `complex` type could be created as follows:
-
-....
-complex is type complex(Re:real, Im:real)
-....
-
-It is then possible to link:#creation[create] a `complex` value using
-the pattern on the right of `type`. This kind of expression is called
-a _((constructor))_ for the type. Values constructed that way contain a
-number of declarations corresponding to the formal parameters in the
-pattern. These declarations are placed in the same context, which is
-called a _constructor scope_. When a constructor value is referenced
-on the left of a link:#scoping[scoping operator], the scope being
-looked up is the constructor scope.
-
-For example, you could write an addition for complex values as
-follows:
-
-....
-Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im)
-....
-
-In this example, the `complex` in type annotation `Z1:complex`
-indicates that we expect something that matches the shape of the
-pattern `complex(Re:real,Im:real)`. When value `Z1` is placed on the
-left of a scoping operator, its parse tree shape is therefore
-something that matches that pattern, e.g. `complex(0.0,1.0)`. Within
-the body of the definition above, we would then have a binding for
-`Z1` and `Z2` that might look like:
-
-....
-Z1 as complex is complex(0.0,1.0)
-Z2 as complex is complex(2.3,4.6)
-....
-
-In reality, however, the actual representation uses
-link:#closures[closures] to bind the values, i.e. it actually looks
-more like:
-
-....
-Z1 as complex is { Re is 0.0; Im is 1.0 } complex (Re:real, Im:real)
-Z2 as complex is { Re is 2.3; Im is 4.6 } complex (Re:real, Im:real)
-....
-
-In that case, a scoping lookup like `Z1.Re` is evaluating `Re` in the
-closure context associated with `Z1`, i.e. `{ Re is 0.0; Im is 1.0 }`.
-As a result, evaluates to `0.0`. Similarly, `Z2.Im` would evaluate to `4.6`.
-
-This approach is not restricted to prefix forms. The type `real_addition`
-could be defined as follows:
-
-....
-real_addition is type (Left:real + Right:real)
-
-....
-
-The following rule could then be used to "flatten" real additions
-using associativity (this example being only intended as an
-illustration of how constructor scoping works, not to be seen as a
-useful coding suggestion):
-
-....
-A1:real_addition + A2:real_addition is A1.Left+A1.Right+A2.Left+A2.Right
-....
 
 === Super lookup
 
@@ -4264,7 +4226,7 @@ example, we defined a `complex` type as follows:
 
 [source]
 ----
-type complex is complex(Re:real, Im:real)
+complex is type complex(Re:real, Im:real)
 ----
 
 This means that a shape like `complex(2.3, 5.6)` is a `complex`. This
@@ -4315,13 +4277,13 @@ based on Unix-style file descriptors:
 [source]
 ----
 module MY_FILE with
-    type file
-    open Name:text as file
+    file as type
+    open(Name:text) as file
     close F:file
 
 module MY_FILE is
-    type file is file(fd:integer)
-    open Name:text as file is
+    file is type file(fd:integer)
+    open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
     close F:inout file is
