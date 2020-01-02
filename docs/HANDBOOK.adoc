@@ -2531,12 +2531,13 @@ cases, other infix operators would do just as well:
 ----
 circle CenterX:real, CenterY:real, Radius:real is ...
 ----
-* When there is such a comma-separated parameter list, it is customary
-to surround it with parentheses when the function is intended to be used
-in expressions, because in such an expression context, the parentheses
-are necessary at the call site. For example, if `circle` is intended to
-create a `circle` object rather than to draw a circle, the above
-definition might be written as follows:
+* When there is such a comma-separated parameter list and when there
+is more than one formal parameter, it is customary to surround it with
+parentheses when the function is intended to be used in expressions,
+because in such an expression context, the parentheses are necessary
+at the call site. For example, if `circle` is intended to create a
+`circle` object rather than to draw a circle, the above definition
+might be written as follows:
 +
 [source]
 ----
@@ -3776,7 +3777,7 @@ value is even could expose the following interface:
 
 [source]
 ----
-is_odd(N:integer) as boolean
+is_odd N:integer as boolean
 ----
 
 Based on this interface alone, I know that I can write code that checks
@@ -3785,7 +3786,7 @@ if a value is even or odd:
 [source]
 ----
 for I in 1..100 loop
-    if is_odd(I) then
+    if is_odd I then
         print I, " is odd"
     else
         print I, " is even"
@@ -3795,14 +3796,14 @@ It does not matter if `is_odd` is actually implemented as follows:
 
 [source]
 ----
-is_odd(N:integer) as boolean is N mod 2 <> 0
+is_odd N:integer as boolean is N mod 2 <> 0
 ----
 
 or maybe as folows using the bitwise `and` operator:
 
 [source]
 ----
-is_odd(N:integer) as boolean is N and 1 = 1
+is_odd N:integer as boolean is N and 1 = 1
 ----
 
 The link:#declaration-phase[declarations] must specify the interface of

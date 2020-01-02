@@ -4098,12 +4098,13 @@ cases, other infix operators would do just as well:</p>
 </div>
 </li>
 <li>
-<p>When there is such a comma-separated parameter list, it is customary
-to surround it with parentheses when the function is intended to be used
-in expressions, because in such an expression context, the parentheses
-are necessary at the call site. For example, if <code>circle</code> is intended to
-create a <code>circle</code> object rather than to draw a circle, the above
-definition might be written as follows:</p>
+<p>When there is such a comma-separated parameter list and when there
+is more than one formal parameter, it is customary to surround it with
+parentheses when the function is intended to be used in expressions,
+because in such an expression context, the parentheses are necessary
+at the call site. For example, if <code>circle</code> is intended to create a
+<code>circle</code> object rather than to draw a circle, the above definition
+might be written as follows:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle (CenterX:real, CenterY:real, Radius:real) as circle is ...
@@ -5642,7 +5643,7 @@ value is even could expose the following interface:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd(N:integer) as boolean</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd N:integer as boolean</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5652,7 +5653,7 @@ if a value is even or odd:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">for I in 1..100 loop
-    if is_odd(I) then
+    if is_odd I then
         print I, " is odd"
     else
         print I, " is even"</code></pre>
@@ -5663,7 +5664,7 @@ if a value is even or odd:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd(N:integer) as boolean is N mod 2 &lt;&gt; 0</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd N:integer as boolean is N mod 2 &lt;&gt; 0</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5671,7 +5672,7 @@ if a value is even or odd:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd(N:integer) as boolean is N and 1 = 1</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd N:integer as boolean is N and 1 = 1</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8950,7 +8951,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 11:26:07 +0100
+Last updated 2020-01-02 11:28:42 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
