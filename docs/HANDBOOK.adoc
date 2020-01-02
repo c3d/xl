@@ -3908,13 +3908,13 @@ implementations, without any `use` statement. They includes:
   operations on `integer` operations behaves like the underlying
   hardware of the ((target machine)), typically ((wrapping values))
   around on all modern hardware. `integer` is a type that matches
-  litteral values below `integer.min`, such as `12`, or the result of
+  literal values below `integer.min`, such as `12`, or the result of
   the prefix negation operator on literal values, such as `-3`.
 
 * `unsigned` is an approximation of unsigned numbers, with a limited
   range, typically between 0 and 2^64^-1. Like `integer`, it behaves
   like the underlying hardware in case of overflow. `unsigned` matches
-  whole number litteral values such as `0` or `42`.
+  whole number literal values such as `0` or `42`.
 
 * `character` is a representation of the ((native character set)) on the
   target machine. On modern machines, it should generally follow the
@@ -3948,6 +3948,11 @@ For portability, XL features sized variants of these types:
 
 The size types are named by apppending the type name and the bit size,
 for example `integer32` or `real64`.
+
+The sized types are guaranteed to wrap around at the boundary for the
+given number of bits. For example, `unsigned8` holds values between
+`0` and `255`, and will wrap around so that the next value after `255`
+is `0`, and the value preceding `0` is `255`.
 
 When the standard sizes are not sufficient, it is easy to use
 link:#subtypes[integer subtypes] to identify precise ranges of values or

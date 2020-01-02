@@ -5807,14 +5807,14 @@ less than -2<sup>31</sup> and 2<sup>31</sup>-1. Overflowing while performing
 operations on <code>integer</code> operations behaves like the underlying
 hardware of the target machine, typically wrapping values
 around on all modern hardware. <code>integer</code> is a type that matches
-litteral values below <code>integer.min</code>, such as <code>12</code>, or the result of
+literal values below <code>integer.min</code>, such as <code>12</code>, or the result of
 the prefix negation operator on literal values, such as <code>-3</code>.</p>
 </li>
 <li>
 <p><code>unsigned</code> is an approximation of unsigned numbers, with a limited
 range, typically between 0 and 2<sup>64</sup>-1. Like <code>integer</code>, it behaves
 like the underlying hardware in case of overflow. <code>unsigned</code> matches
-whole number litteral values such as <code>0</code> or <code>42</code>.</p>
+whole number literal values such as <code>0</code> or <code>42</code>.</p>
 </li>
 <li>
 <p><code>character</code> is a representation of the native character set on the
@@ -5865,6 +5865,12 @@ for the target architecture the program runs on.</p>
 <div class="paragraph">
 <p>The size types are named by apppending the type name and the bit size,
 for example <code>integer32</code> or <code>real64</code>.</p>
+</div>
+<div class="paragraph">
+<p>The sized types are guaranteed to wrap around at the boundary for the
+given number of bits. For example, <code>unsigned8</code> holds values between
+<code>0</code> and <code>255</code>, and will wrap around so that the next value after <code>255</code>
+is <code>0</code>, and the value preceding <code>0</code> is <code>255</code>.</p>
 </div>
 <div class="paragraph">
 <p>When the standard sizes are not sufficient, it is easy to use
@@ -8990,7 +8996,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 19:07:34 +0100
+Last updated 2020-01-02 23:00:35 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
