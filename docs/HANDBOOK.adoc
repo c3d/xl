@@ -3831,17 +3831,16 @@ the interface.
 == Types
 
 XL types are a way to organize values by restricting which operations
-can be selected during evaluation. For example, knowing that `A` is a
-`real` allows expression `A+A` to match declaration pattern
+can be selected during ((evaluation)). For example, knowing that `A` is a
+`real` allows expression `A+A` to match ((declaration pattern))
 `X:real+Y:real`, but prevents it from matching pattern
 `X:integer+Y:integer`.
 
-In XL, types are based on the _shape_ of
-link:#the-xl-parse-tree[parse trees]. A type
-identifies the tree patterns that belong to the type. The expression
-`type(Pattern)` returns the type for the given type declaration pattern.
-For example, the type for all additions where the first value is a
-`real` is `type(A:real+B)`.
+In XL, types are based on the _shape_ of link:#the-xl-parse-tree[parse trees].
+A type identifies the tree patterns that belong to the type. The
+expression `type(Pattern)` returns the type for the given type
+declaration pattern.  For example, the type for all additions where
+the first value is a `real` is `type(A:real+B)`.
 
 This approach to typing means in particular that a same value can belong
 to _multiple_ types. For example, the expression `2+3*5` belongs to
@@ -3858,9 +3857,10 @@ contains the value `2`.
 
 === Type annotations
 
-A type can be associated to a name using a _type annotation_. For
-example, a type annotation such as `X:integer` indicates that the values
-that can be bound to the name `X` must belong to the `integer` type.
+A ((type)) can be associated to a name or expression using a
+_((type annotation))_. For example, a type annotation such as
+`X:integer` indicates that the values that can be bound to the name
+`X` must belong to the `integer` type.
 
 Two infix operators can be used for type annotations, `X:T` and
 `X as T`. Both are annotations indicating that `X` belongs to type `T`.
@@ -3882,13 +3882,13 @@ This is illustrated in the example above, where `X:integer` and
 the pattern `X < Y`, and the `as boolean` part indicates that the result
 of an operation like `3 < 5` has the `boolean` type.
 
-Another difference is link:#mutability[mutability]. If type `T` is not
+Another difference is link:#mutability[((mutability))]. If type `T` is not
 explicitly marked as `constant` or `variable`, `X:T` indicates that `X`
 is mutable, whereas `X as T` indicates that `X` is not mutable. For
-example, `seconds : integer` declares a _variable_ named seconds, where
-you can store your own seconds values, whereas `seconds as integer`
-declares a _function_ named seconds, possibly returning the number of
-seconds in the current time from some real-time clock.
+example, `seconds : integer` declares a _((variable))_ named seconds,
+where you can store your own seconds values, whereas `seconds as
+integer` declares a _((function))_ named seconds, possibly returning
+the number of seconds in the current time from some real-time clock.
 
 === Basic types
 
@@ -3898,11 +3898,42 @@ the types used as building blocks for a parse tree.
 
 ==== Basic data types
 
-The basic data types include `integer`, `unsigned`, `real`, `character`,
-`text`, `boolean`. The `boolean` type in XL matches the values `true`
-and `false`, but unlike languages like C, it is not a numerical type. In
-other words, there is no equivalence between `true` and `1` or between
-`false` and `0`.
+XL offers a number of basic data types that are available on all
+implementations, without any `use` statement. They includes:
+
+* `integer` is an approximation of integer numbers with a limited
+  range, typically between -2^63^ and 2^63^-1, which are accessible as
+  `integer.min` and `integer.max` respectively. That range cannot be
+  less than -2^31^ and 2^31^-1. Overflowing while performing
+  operations on `integer` operations behaves like the underlying
+  hardware of the ((target machine)), typically ((wrapping values))
+  around on all modern hardware. `integer` is a type that matches
+  litteral values below `integer.min`, such as `12`, or the result of
+  the prefix negation operator on literal values, such as `-3`.
+
+* `unsigned` is an approximation of unsigned numbers, with a limited
+  range, typically between 0 and 2^64^-1. Like `integer`, it behaves
+  like the underlying hardware in case of overflow. `unsigned` matches
+  whole number litteral values such as `0` or `42`.
+
+* `character` is a representation of the ((native character set)) on the
+  target machine. On modern machines, it should generally follow the
+  https://en.wikipedia.org/wiki/Unicode[Unicode] standard for encoding
+  characters. The `character` type matches single-quote
+  single-character literal text constants like `'A'`.
+
+* `text` is a representation for sequences of characters. On modern
+  machines, it should generally use a compact representation such as
+  https://en.wikipedia.org/wiki/UTF-8[UTF-8], and have an
+  link:#interface[interface] that is compatible with the
+  link:#string[`string of character`] type. The `text` type matches
+  literal text constants that contain any number of characters, for
+  example `"Hello World"`.
+
+* `boolean` is a type containing two values, `true` or `false`, and
+  intended to represent truth values, for example conditions in tests.
+  Unlike languages like C, the `boolean` type is not a numerical type.
+
 
 ==== Sized data types
 

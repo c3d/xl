@@ -5722,12 +5722,11 @@ can be selected during evaluation. For example, knowing that <code>A</code> is a
 <code>X:integer+Y:integer</code>.</p>
 </div>
 <div class="paragraph">
-<p>In XL, types are based on the <em>shape</em> of
-<a href="#the-xl-parse-tree">parse trees</a>. A type
-identifies the tree patterns that belong to the type. The expression
-<code>type(Pattern)</code> returns the type for the given type declaration pattern.
-For example, the type for all additions where the first value is a
-<code>real</code> is <code>type(A:real+B)</code>.</p>
+<p>In XL, types are based on the <em>shape</em> of <a href="#the-xl-parse-tree">parse trees</a>.
+A type identifies the tree patterns that belong to the type. The
+expression <code>type(Pattern)</code> returns the type for the given type
+declaration pattern.  For example, the type for all additions where
+the first value is a <code>real</code> is <code>type(A:real+B)</code>.</p>
 </div>
 <div class="paragraph">
 <p>This approach to typing means in particular that a same value can belong
@@ -5747,9 +5746,10 @@ contains the value <code>2</code>.</p>
 <div class="sect2">
 <h3 id="type-annotations-2"><a class="anchor" href="#type-annotations-2"></a><a class="link" href="#type-annotations-2">4.1. Type annotations</a></h3>
 <div class="paragraph">
-<p>A type can be associated to a name using a <em>type annotation</em>. For
-example, a type annotation such as <code>X:integer</code> indicates that the values
-that can be bound to the name <code>X</code> must belong to the <code>integer</code> type.</p>
+<p>A type can be associated to a name or expression using a
+<em>type annotation</em>. For example, a type annotation such as
+<code>X:integer</code> indicates that the values that can be bound to the name
+<code>X</code> must belong to the <code>integer</code> type.</p>
 </div>
 <div class="paragraph">
 <p>Two infix operators can be used for type annotations, <code>X:T</code> and
@@ -5778,10 +5778,10 @@ of an operation like <code>3 &lt; 5</code> has the <code>boolean</code> type.</p
 <p>Another difference is <a href="#mutability">mutability</a>. If type <code>T</code> is not
 explicitly marked as <code>constant</code> or <code>variable</code>, <code>X:T</code> indicates that <code>X</code>
 is mutable, whereas <code>X as T</code> indicates that <code>X</code> is not mutable. For
-example, <code>seconds : integer</code> declares a <em>variable</em> named seconds, where
-you can store your own seconds values, whereas <code>seconds as integer</code>
-declares a <em>function</em> named seconds, possibly returning the number of
-seconds in the current time from some real-time clock.</p>
+example, <code>seconds : integer</code> declares a <em>variable</em> named seconds,
+where you can store your own seconds values, whereas <code>seconds as
+integer</code> declares a <em>function</em> named seconds, possibly returning
+the number of seconds in the current time from some real-time clock.</p>
 </div>
 </div>
 <div class="sect2">
@@ -5794,11 +5794,50 @@ the types used as building blocks for a parse tree.</p>
 <div class="sect3">
 <h4 id="basic-data-types"><a class="anchor" href="#basic-data-types"></a><a class="link" href="#basic-data-types">4.2.1. Basic data types</a></h4>
 <div class="paragraph">
-<p>The basic data types include <code>integer</code>, <code>unsigned</code>, <code>real</code>, <code>character</code>,
-<code>text</code>, <code>boolean</code>. The <code>boolean</code> type in XL matches the values <code>true</code>
-and <code>false</code>, but unlike languages like C, it is not a numerical type. In
-other words, there is no equivalence between <code>true</code> and <code>1</code> or between
-<code>false</code> and <code>0</code>.</p>
+<p>XL offers a number of basic data types that are available on all
+implementations, without any <code>use</code> statement. They includes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>integer</code> is an approximation of integer numbers with a limited
+range, typically between -2<sup>63</sup> and 2<sup>63</sup>-1, which are accessible as
+<code>integer.min</code> and <code>integer.max</code> respectively. That range cannot be
+less than -2<sup>31</sup> and 2<sup>31</sup>-1. Overflowing while performing
+operations on <code>integer</code> operations behaves like the underlying
+hardware of the target machine, typically wrapping values
+around on all modern hardware. <code>integer</code> is a type that matches
+litteral values below <code>integer.min</code>, such as <code>12</code>, or the result of
+the prefix negation operator on literal values, such as <code>-3</code>.</p>
+</li>
+<li>
+<p><code>unsigned</code> is an approximation of unsigned numbers, with a limited
+range, typically between 0 and 2<sup>64</sup>-1. Like <code>integer</code>, it behaves
+like the underlying hardware in case of overflow. <code>unsigned</code> matches
+whole number litteral values such as <code>0</code> or <code>42</code>.</p>
+</li>
+<li>
+<p><code>character</code> is a representation of the native character set on the
+target machine. On modern machines, it should generally follow the
+<a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a> standard for encoding
+characters. The <code>character</code> type matches single-quote
+single-character literal text constants like <code>'A'</code>.</p>
+</li>
+<li>
+<p><code>text</code> is a representation for sequences of characters. On modern
+machines, it should generally use a compact representation such as
+<a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>, and have an
+<a href="#interface">interface</a> that is compatible with the
+<a href="#string"><code>string of character</code></a> type. The <code>text</code> type matches
+literal text constants that contain any number of characters, for
+example <code>"Hello World"</code>.</p>
+</li>
+<li>
+<p><code>boolean</code> is a type containing two values, <code>true</code> or <code>false</code>, and
+intended to represent truth values, for example conditions in tests.
+Unlike languages like C, the <code>boolean</code> type is not a numerical type.</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect3">
@@ -8951,7 +8990,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 11:28:42 +0100
+Last updated 2020-01-02 19:07:34 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
