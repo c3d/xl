@@ -5642,7 +5642,7 @@ value is even could expose the following interface:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd N:integer as boolean</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd(N:integer) as boolean</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5652,7 +5652,7 @@ if a value is even or odd:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">for I in 1..100 loop
-    if is_odd I then
+    if is_odd(I) then
         print I, " is odd"
     else
         print I, " is even"</code></pre>
@@ -5663,7 +5663,7 @@ if a value is even or odd:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd N:integer as boolean is N mod 2 &lt;&gt; 0</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd(N:integer) as boolean is N mod 2 &lt;&gt; 0</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5671,7 +5671,7 @@ if a value is even or odd:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd N:integer as boolean is N and 1 = 1</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">is_odd(N:integer) as boolean is N and 1 = 1</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5692,7 +5692,8 @@ declaration and specifies an implementation, but that definition may be
 made <em>private</em> or <em>protected</em>. This restricts their usage, but the
 compiler (and the programmer) still have knowledge of internal details
 of the implementation. This facilitates some low-level copmiler
-optimizations (most of which are obsolete or irrelevant today), but also
+optimizations (most of which are obsolete or irrelevant today when
+link-time optimizations are widely available), but also
 results in a number of long-term maintenance issues. Exposing
 implementation details in the interface worsens the
 <a href="https://en.wikipedia.org/wiki/Fragile_base_class">fragile base class</a>
@@ -8949,7 +8950,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 00:42:36 +0100
+Last updated 2020-01-02 11:26:07 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

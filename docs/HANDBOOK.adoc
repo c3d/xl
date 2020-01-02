@@ -3776,7 +3776,7 @@ value is even could expose the following interface:
 
 [source]
 ----
-is_odd N:integer as boolean
+is_odd(N:integer) as boolean
 ----
 
 Based on this interface alone, I know that I can write code that checks
@@ -3785,7 +3785,7 @@ if a value is even or odd:
 [source]
 ----
 for I in 1..100 loop
-    if is_odd I then
+    if is_odd(I) then
         print I, " is odd"
     else
         print I, " is even"
@@ -3795,14 +3795,14 @@ It does not matter if `is_odd` is actually implemented as follows:
 
 [source]
 ----
-is_odd N:integer as boolean is N mod 2 <> 0
+is_odd(N:integer) as boolean is N mod 2 <> 0
 ----
 
 or maybe as folows using the bitwise `and` operator:
 
 [source]
 ----
-is_odd N:integer as boolean is N and 1 = 1
+is_odd(N:integer) as boolean is N and 1 = 1
 ----
 
 The link:#declaration-phase[declarations] must specify the interface of
@@ -3815,7 +3815,8 @@ NOTE: *RATIONALE* In languages such as pass:[C++], some members of a class can b
 made _private_ or _protected_. This restricts their usage, but the
 compiler (and the programmer) still have knowledge of internal details
 of the implementation. This facilitates some low-level copmiler
-optimizations (most of which are obsolete or irrelevant today), but also
+optimizations (most of which are obsolete or irrelevant today when
+link-time optimizations are widely available), but also
 results in a number of long-term maintenance issues. Exposing
 implementation details in the interface worsens the
 https://en.wikipedia.org/wiki/Fragile_base_class[fragile base class]
