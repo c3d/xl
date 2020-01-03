@@ -3907,6 +3907,8 @@ Some fundamental data types are available on all implementations, and
 do not require any `use` statement. These fundamental types are called
 _((basic types))_, and include:
 
+* `type` is the type used for types...
+
 * `integer` is an approximation of integer numbers with a limited
   range, typically between -2^63^ and 2^63^-1, which are accessible as
   `integer.min` and `integer.max` respectively. That range cannot be
