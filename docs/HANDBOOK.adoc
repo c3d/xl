@@ -3846,7 +3846,6 @@ the first value is a `real` is `type(A:real+B)`.
 This approach to typing means in particular that a same value can belong
 to _multiple_ types. For example, the expression `2+3*5` belongs to
 `type(A+B*C)`, but also to `type(A:integer+B:integer)`, or to `infix`.
-
 Therefore, for XL, you shouldn’t talk about _the_ type of a value, but
 rather about _a_ type. However, in the presence of a type annotation, it
 is customary to talk about _the type_ to denote the single type
@@ -3891,11 +3890,12 @@ where you can store your own seconds values, whereas `seconds as
 integer` declares a _((function))_ named seconds, possibly returning
 the number of seconds in the current time from some real-time clock.
 
-=== Basic types
+=== Standard types
 
 The XL library provides a number of standard types representing
-fundamental data types common in most programming languages, as well as
-the types used as building blocks for a parse tree.
+fundamental data types common in most programming languages, as well
+as more advanced and more idiomatic data types, such as the types used
+as building blocks for a parse tree.
 
 ==== Basic data types
 
@@ -3957,6 +3957,110 @@ is `0`, and the value preceding `0` is `255`.
 When the standard sizes are not sufficient, it is easy to use
 link:#subtypes[integer subtypes] to identify precise ranges of values or
 precise number of bits.
+
+
+=== Generic types
+
+The XL standard library features a large number of _((generic types))_,
+i.e. types that have parameters and are _instantiated_ with arguments
+to create the desired types. Besides
+link:#generic-containers[generic containers], which are discussed
+below, this includes a number of useful types:
+
+* `range` of values, defined in `XL.DATA.RANGE
+
+
+
+=== Generic containers
+
+An interesteding subset of generic types are _((container types))_,
+i.e. types that are primarily designed to store a possibly large
+number of values from some other type. The corresponding modules are
+submodules of the `XL.DATA` module.
+
+Container types include in particular:
+
+* `array`, storing a fixed number of consecutive elements, defined in
+  module `XL.DATA.ARRAY`. They exist in multiple flavors:
+  ** Zero-based arrays, such as `array[5] of integer`.
+  ** Range-indexed arrays, such as `array['A'..'Z'] of boolean`.
+  ** Multi-dimensional arrays, such as `array[5,5] of character`.
++
+....
+A : array[1..5, 'A'..'Z', 8] of real
+A[3, 'C', 2] := 3.3
+....
+
+* `string`, storing a variable number of consecutive elements, defined
+  in module `XL.DATA.STRING`. The `text` type exposes a `string of
+  character` interface. They also exist in multiple flavors:
+  ** Unbounded, zero-based strings, such as `string of integer`.
+  ** Bounded, zero-based strings, such as `string[1000] of integer`.
+  ** Bounded, range-indexed strings, such as `string[1..10] of real`.
+  ** Multi-dimesional strings, such as `string[5,1..5] of boolean`.
++
+....
+S : string of integer
+for I in 1..100 loop
+    S := S & I
+if not (S contains 4) then
+    error "There is a problem with your string implementation"
+....
+
+* `list`, storing a variable number of linked elements, defined in
+  module `XL.DATA.LIST`. Unlike arrays, elements in lists are
+  individually allocated in memory. They exist in several flavors:
+  ** Single-linked lists such as `list of integer`.
+  ** Doubly-linked lists, called double-ended queue, such as `queue of integer`.
+  ** Xor-linked lists such as `xor_list of integer`.
++
+....
+L : list of integer
+for I in 1..100 loop
+    S &= I
+if not (S contains 3) then
+    error "There is a problem with your list implementation"
+....
+
+* `stack`, exposing `push` and `pop` operations, and the type is matched
+  by several container type such as `string`, `list` or `queue`. In
+  other words, you can treat a `list of T` as a `stack of T`.
++
+....
+S : stack of integer
+for I in 1..100 loop
+    push S, I
+if pop S <> 100 then
+    error "There is a problem with your stack implementation"
+....
+
+* `map`, offering efficient ways to associate (map) an index value to
+  a contained value. For example, `map[text] of real` creates a map
+  between `text` index values and `real` stored values:
++
+....
+M : map[text] of real
+M["Hello"] := 3.14
+....
+
+=== Parse tree types
+
+The `XL.PARSER` module offers a number of types intended to represent
+or match elements in the parse tree:
+
+* `tree` matches any parse tree.
+* `integer` matches link:#numbers[whole number] literals such as `42`.
+* `real` matches link:#numbers[fractional number] literals such as `3.14`.
+* `text` matches link:#text[text] literals such as `"ABC"`.
+* `character` matches link:#text[character] literals such as `'A'`.
+* `name` matches names such as `A`.
+* `operator` matches operators such as `+`.
+* `symbol` matches either name or operators, as well as an empty
+   symbol used in empty blocks, e.g. `()`.
+* `infix` matches infix expressions such as `A+B`.
+* `prefix` matches prefix expressions such as `+3`.
+* `postfix` matches postfix expressions such as `4%`.
+* `block` matches block expressions such as `(A)`.
 
 
 === Type definitions
@@ -5294,28 +5398,6 @@ fields `Mutable` and `Constant` indicate if the type was explicitly //
 made mutable or constant.
 
 == Compiled XL
-
-=== Parse tree types
-
-The `XL.PARSER` module offers a number of types intended to represent
-or match elements in the parse tree:
-
-* `tree` matches any parse tree.
-* `integer` matches link:#numbers[whole number] literals such as `42`.
-* `real` matches link:#numbers[fractional number] literals such as `3.14`.
-* `text` matches link:#text[text] literals such as `"ABC"`.
-* `character` matches link:#text[character] literals such as `'A'`.
-* `name` matches names such as `A`.
-* `operator` matches operators such as `+`.
-* `symbol` matches either name or operators, as well as an empty
-   symbol used in empty blocks, e.g. `()`.
-* `infix` matches infix expressions such as `A+B`.
-* `prefix` matches prefix expressions such as `+3`.
-* `postfix` matches postfix expressions such as `4%`.
-* `block` matches block expressions such as `(A)`.
-
-
-
 
 
 === Compiled representations
