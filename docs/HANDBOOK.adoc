@@ -3895,12 +3895,17 @@ the number of seconds in the current time from some real-time clock.
 The XL library provides a number of standard types representing
 fundamental data types common in most programming languages, as well
 as more advanced and more idiomatic data types, such as the types used
-as building blocks for a parse tree.
+as building blocks for a parse tree. This section will only give an
+quick overview of many of the available types, with the intent to list
+them more than to describe them. A more complete description of the
+available types will be given in a later section about the
+link:#standard-library[standard XL library].
 
-==== Basic data types
+==== Basic types
 
-XL offers a number of basic data types that are available on all
-implementations, without any `use` statement. They includes:
+Some fundamental data types are available on all implementations, and
+do not require any `use` statement. These fundamental types are called
+_((basic types))_, and include:
 
 * `integer` is an approximation of integer numbers with a limited
   range, typically between -2^63^ and 2^63^-1, which are accessible as
@@ -3937,17 +3942,26 @@ implementations, without any `use` statement. They includes:
 
 ==== Sized data types
 
-Types such as `integer`, `unsigned`, `character` or `real` are optimized
-for the target architecture the program runs on.
+Basic data types are not very precisely sized, in order to leave the
+implementation free to pick up a size that is maximally efficient on
+the target machine. For example, `integer` should hold 32-bit values on
+a 32-bit machine, and 64-bit values on a 64-bit machine.
 
-For portability, XL features sized variants of these types:
+This may adversely affect portability, and for that reason, XL also
+offers _((sized types))_, with a precise number of bits specified in the
+name. The size is appended to the type name. For example, `integer64`
+is an `integer` type that is guaranteed to be exactly 64-bit.
 
-* `integer` and `unsigned` for at least 8, 16, 32 and 64 bits,
+Such sized data types exist for the following base types:
+
+* `integer` for at least 8, 16, 32 and 64 bits,
+* `unsigned` for at least 8, 16, 32 and 64 bits,
 * `real` for at least 32 and 64 bits,
 * `character` for at least 8, 16 and 32 bits.
 
-The size types are named by apppending the type name and the bit size,
-for example `integer32` or `real64`.
+Additional sizes may be added if they are native to the target
+machine. For example, some DSPs feature 24-bit operations, and such
+machines should feature types like `unsigned24` to match.
 
 The sized types are guaranteed to wrap around at the boundary for the
 given number of bits. For example, `unsigned8` holds values between
@@ -3955,93 +3969,126 @@ given number of bits. For example, `unsigned8` holds values between
 is `0`, and the value preceding `0` is `255`.
 
 When the standard sizes are not sufficient, it is easy to use
-link:#subtypes[integer subtypes] to identify precise ranges of values or
-precise number of bits.
+link:#subtypes[integer subtypes] to identify precise ranges of values,
+as in `integer range 1..5`, which only accepts values between `1` and
+`5`, or precise number of bits, such as `integer bits 24`, which
+wraps around like a 24-bit `integer` value.
 
+==== Category types
 
-=== Generic types
+Some types are intended primarily as an easy way to categorize
+values along genereally useful boundaries, and are naturally called
+_((category types))_. Examples include:
 
-The XL standard library features a large number of _((generic types))_,
-i.e. types that have parameters and are _instantiated_ with arguments
-to create the desired types. Besides
-link:#generic-containers[generic containers], which are discussed
-below, this includes a number of useful types:
+* `number`, a type that matches numerical data types such as
+  `integer`, `real` or `complex`.
+* `positive`, a type that accepts only positive values.
+* `ordered`, a type that only matches values that can be compared
+   using `<`.
+* `discrete`, a type that only matches discrete types, such as
+  `integer` or `character`. Discrete types feature an `index` function
+  that returns the index of the value in the type.
+* `access`, a type that accepts only values used to access other types,
+  such as pointers or references.
 
-* `range` of values, defined in `XL.DATA.RANGE
+Category types are often used to implement _((generic algorithm))s_
+and _((generic type))s_ without overly burdening the code. For
+example, the `vector` type represents a mathematical vector, and that
+requires a `number` type for the values in the vector. Similarly, the
+`sort` algorithm only works on `ordered` values.
 
+==== Generic containers
 
+In some cases, a general structure is shared by a number of data types.
+For example, all array types share an internal organzation and provide
+similar features. XL features _((generic type))s_ to address this kind
+of need. Most often, generic types are declared with formal parameters,
+and are _instantiated_(((instantiation))) by supplying arguments for
+the required parameters.
 
-=== Generic containers
+This is particularly useful for _((container types))_, i.e. types that
+are primarily designed to store a possibly large number of values from
+some other type.
 
-An interesteding subset of generic types are _((container types))_,
-i.e. types that are primarily designed to store a possibly large
-number of values from some other type. The corresponding modules are
-submodules of the `XL.DATA` module.
+Container types include in particular the following:
 
-Container types include in particular:
+* `array` store a fixed number of consecutive elements. They exist
+  in multiple flavors:
+  ** Zero-based arrays such as `array[5] of integer`
+  ** Range-indexed arrays, such as `array['A'..'Z'] of boolean`, which
+     are indexed with a`link:#discrete[discrete]` range of values
+  ** Multi-dimensional arrays such as `array[1..8, 'A'..'H'] of chess_piece`
+     are simply a convenient shortcut for arrays of arrays.
 
-* `array`, storing a fixed number of consecutive elements, defined in
-  module `XL.DATA.ARRAY`. They exist in multiple flavors:
-  ** Zero-based arrays, such as `array[5] of integer`.
-  ** Range-indexed arrays, such as `array['A'..'Z'] of boolean`.
-  ** Multi-dimensional arrays, such as `array[5,5] of character`.
-+
-....
-A : array[1..5, 'A'..'Z', 8] of real
-A[3, 'C', 2] := 3.3
-....
-
-* `string`, storing a variable number of consecutive elements, defined
-  in module `XL.DATA.STRING`. The `text` type exposes a `string of
-  character` interface. They also exist in multiple flavors:
+* `string` store a variable number of consecutive elements. They also
+  exist in multiple flavors:
   ** Unbounded, zero-based strings, such as `string of integer`.
-  ** Bounded, zero-based strings, such as `string[1000] of integer`.
-  ** Bounded, range-indexed strings, such as `string[1..10] of real`.
-  ** Multi-dimesional strings, such as `string[5,1..5] of boolean`.
-+
-....
-S : string of integer
-for I in 1..100 loop
-    S := S & I
-if not (S contains 4) then
-    error "There is a problem with your string implementation"
-....
+     The `text` type exposes a `string of character` interface.
+  ** Bounded, zero-based strings, such as `string[1000] of integer`,
+     which can hold up to `1000` values of the `integer` type.
+  ** Bounded, range-indexed strings, such as `string[1..10] of real`,
+     which can hold up to `10` values, indexed starting at `1`.
+  ** Multi-dimesional strings, such as `string[25,80] of character`,
+     which is a storage-efficient way to store possibly blank text screens.
 
-* `list`, storing a variable number of linked elements, defined in
-  module `XL.DATA.LIST`. Unlike arrays, elements in lists are
-  individually allocated in memory. They exist in several flavors:
+* `list` to store a variable number of linked elements. Unlike arrays,
+  elements in lists are individually allocated in memory. Lists exist
+  in several flavors:
   ** Single-linked lists such as `list of integer`.
   ** Doubly-linked lists, called double-ended queue, such as `queue of integer`.
   ** Xor-linked lists such as `xor_list of integer`.
-+
-....
-L : list of integer
-for I in 1..100 loop
-    S &= I
-if not (S contains 3) then
-    error "There is a problem with your list implementation"
-....
 
-* `stack`, exposing `push` and `pop` operations, and the type is matched
+* `stack` to expose `push` and `pop` operations, and the type is matched
   by several container type such as `string`, `list` or `queue`. In
   other words, you can treat a `list of T` as a `stack of T`.
-+
-....
-S : stack of integer
-for I in 1..100 loop
-    push S, I
-if pop S <> 100 then
-    error "There is a problem with your stack implementation"
-....
 
-* `map`, offering efficient ways to associate (map) an index value to
-  a contained value. For example, `map[text] of real` creates a map
-  between `text` index values and `real` stored values:
-+
-....
-M : map[text] of real
-M["Hello"] := 3.14
-....
+* `map` to efficiently map source values to a stored value. For
+  example, `map[text] of real` creates a map between `text` index
+  values and `real` stored values:
+
+* `set` to efficiently store a set of value, and make it easy to know
+  if a value is in the set or not. A `set of character` holds an
+  arbitrary number of `character` values.
+
+==== Other generic types
+
+Many generic types are not intended as containers.
+They include the following:
+
+* `range of T` holds ranges of values of `T` type. For example, the
+  type `range of integer` can hold a value such as `1..5`, which is
+  the range between values `1` and `5` inclusive.
+
+* `own T` holds a dynamically allocated value of type `T` that is
+  link:#ownership[owned] by the `own` value, i.e. it is disposed of
+  when the `own` value is link:#destruction[destroyed].
+
+* `ref T` holds a reference to a value of type `T`. Its
+  link:#lifetime[lifetime] must be less than the value being
+  referenced.
+
+* `in T` can be used to pass input arguments of type `T`, i.e. values
+  that are initialized and owned by the caller.
+
+* `out T` can be used for output arguments of type `T`, i.e. values
+  that are initialized by the callee.
+
+* `inout T` can be used for input-output arguments of type `T`,
+  i.e. values that can be modified by the callee in a way that
+  respects ownership in the caller.
+
+* `any T` can hold a value of type `T` or any
+  link:#inheritance[derived type], preserving the original type
+  information, so that dynamic dispatch will happen based on the
+  actual type.
+
+* `slice of T` holds a slice of contiguous containers such as `array`
+  or `string`, and makes it possible to manipulate subsets of the
+  container. This is also useful with `text`.
+
+* `access T` matches any type that can be used to access values of
+  type `T`, such as `own T`, `ref T` or `slice of T`.
+
 
 === Parse tree types
 
