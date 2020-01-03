@@ -184,6 +184,7 @@ for code like `-3!`, because there is no definition that matches.
 
 === One operator to rule them all
 
+[[definition]]
 XL has a single fundamental operator, `is`, called the _((definition
 operator))_. It is an link:#infix[infix operator] with a
 link:#pattern[((pattern))] on the left and an
@@ -1277,11 +1278,11 @@ command:
     )))))
 ----
 
-All of XL is built on this very simple data structure. Some choices,
-like having distinct `integer` and `real` node, were guided primarily by
-considerations beyond syntax, for example the need to be able to
-precisely define link:#evaluation[program evaluation] or to
-represent distinct machine types.
+All of XL is built on this very simple link:#parse-tree-types[data structure].
+Some choices, like having distinct `integer` and `real` node, were
+guided primarily by considerations beyond syntax, for example the need
+to be able to precisely define link:#evaluation[program evaluation] or
+to represent distinct machine types.
 
 [NOTE]
 ====
@@ -3934,7 +3935,6 @@ implementations, without any `use` statement. They includes:
   intended to represent truth values, for example conditions in tests.
   Unlike languages like C, the `boolean` type is not a numerical type.
 
-
 ==== Sized data types
 
 Types such as `integer`, `unsigned`, `character` or `real` are optimized
@@ -3958,76 +3958,76 @@ When the standard sizes are not sufficient, it is easy to use
 link:#subtypes[integer subtypes] to identify precise ranges of values or
 precise number of bits.
 
-==== Parse tree types
 
-The types that are used to represent parse tree elements include
-`integer`, `real`, `text`, `symbol`, `infix`, `prefix`, `postfix` and
-`block`, as well as the `parse_tree` type, which can be any of them.
+=== Type definitions
 
-[source]
-----
-parse_tree is either
-    I:integer
-    R:real
-    T:text
-    S:symbol
-    I:infix
-    P:prefix
-    P:postfix
-    B:block
-----
+In XL, types are values like any other value, which simply match the
+`type` type. In particular, types can be declared or
+link:#definition[defined] like any other value.
 
-NOTE: It is likely that all these types will not be visible by default,
-but will ultimately require a `use XL.PARSER`.
+The simplest case of _((type definition))_ simply gives a new name to
+an existing type. The following code will create a type named `int`
+that is just another name for `integer`:
 
-In addition, the following link:#subtypes[subtypes] help identify
-particular syntactic structures:
+....
+int is integer
+....
 
-* `name` is a subtype of `symbol` for syntactically valid XL names,
-e.g. it will accept `A_2` but not `_A2`
-* `operator` is a subtype of `symbol` that accepts only syntactically
-valid XL operators, i.e. it will accept `+` but not `A`.
-* `paren_block`, `square_block`, `curly_block` and `indent_block` are
-subtypes of `block` that require specific separators.
+More interesting types can be used using the `type` function, which
+takes a pattern as an argument, and returns a type that
+link:#pattern-matching[matches that pattern]. The expression `type(42)`
+returns a type that only matches the value `42`.
 
-=== Type declarations
+The `type` function can obviously be used to create much more
+interesting types. In order to create a `positive` type that only
+matches positive values, one only needs the following code:
 
-Like other XL values, a type can be given a name. For example, a
-`complex` type made of two `real` numbers representing the real and
-imaginary parts can be described as follows:
+....
+positive is type(X when X > 0)
+....
 
-[source]
-----
-complex is type(complex(Re:real, Im:real))
-----
+A common usage is to use a named prefix to create types that are
+easier to identify. This kind of notation is called a
+link:#creation[constructor], and plays for XL the role that `struct`
+plays for C or `record` for Pascal. A `complex` data type can be
+created and used as shown in the following code:
 
-This declaration means that any parse tree like `complex(1.3,2.5)` will
-match the `complex` type.
+....
+complex is type complex(Re:real, Im:real)
+Z:complex := complex(4.3, 2.1)
+....
 
-There is a shortcut notation for declaring types, where the `type` word
-can be placed in the pattern instead of in the body of the definition.
-This is nothing more than syntactic sugar for readability. The previous
-example should be written as follows:
+The definition of `complex` states that a value matches the type
+`complex` if and only if it matches the pattern `complex(Re:real, Im:real)`.
+In particular, it matches the value `complex(4.3, 2.1)`, which makes
+the assignment on the second line of code possible.
 
-[source]
-----
-type complex is complex(Re:real, Im:real)
-----
+For example, a `complex` type made of two `real` numbers representing
+the real and imaginary parts can be described as follows:
 
-A declaration `type T is P` is equivalent to `T is type (P)`. This is
-important to remember if you write type expressions. For example:
+....
+complex is type complex(Re:real, Im:real)
+....
 
-[source]
-----
-// This is `type(integer)`, which only accepts the name `integer`
-type int is integer
+This declaration means that any value that has a shape matching the
+given pattern, like `complex(1.3,2.5)`,  will match the `complex` type.
 
-// This is `type(X:integer8)`, which accepts `integer8` values
-type int8 is X:integer8
+Type definitions are not restricted to names. For example, the
+`complex` type might take the `real` type as an argument, instead of
+assuming the standard `real` type:
 
-// This creates an alternate name for `unsigned`
-positive is unsigned
-----
+....
+complex[real:type] is type complex(Re:real, Im:real)
+complex is complex[real]
+Z:complex := complex(4.3, 2.1)
+K:complex[real32] := complex(1.2, 3.4)
+....
+
+This creates what is called a _((generic type))_ in languages like Ada,
+or a _((template))_ in languages like pass:[C++]. However, as far as
+syntax is concerned, it is indistinguishable from a function taking a
+type argument and returning a type.
+
 
 === Type-related concepts
 
@@ -5294,6 +5294,29 @@ fields `Mutable` and `Constant` indicate if the type was explicitly //
 made mutable or constant.
 
 == Compiled XL
+
+=== Parse tree types
+
+The `XL.PARSER` module offers a number of types intended to represent
+or match elements in the parse tree:
+
+* `tree` matches any parse tree.
+* `integer` matches link:#numbers[whole number] literals such as `42`.
+* `real` matches link:#numbers[fractional number] literals such as `3.14`.
+* `text` matches link:#text[text] literals such as `"ABC"`.
+* `character` matches link:#text[character] literals such as `'A'`.
+* `name` matches names such as `A`.
+* `operator` matches operators such as `+`.
+* `symbol` matches either name or operators, as well as an empty
+   symbol used in empty blocks, e.g. `()`.
+* `infix` matches infix expressions such as `A+B`.
+* `prefix` matches prefix expressions such as `+3`.
+* `postfix` matches postfix expressions such as `4%`.
+* `block` matches block expressions such as `(A)`.
+
+
+
+
 
 === Compiled representations
 

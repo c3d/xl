@@ -565,10 +565,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel3">
 <li><a href="#basic-data-types">4.2.1. Basic data types</a></li>
 <li><a href="#sized-data-types">4.2.2. Sized data types</a></li>
-<li><a href="#parse-tree-types">4.2.3. Parse tree types</a></li>
 </ul>
 </li>
-<li><a href="#type-declarations">4.3. Type declarations</a></li>
+<li><a href="#type-definitions">4.3. Type definitions</a></li>
 <li><a href="#type-related-concepts">4.4. Type-related concepts</a>
 <ul class="sectlevel3">
 <li><a href="#lifetime">4.4.1. Lifetime</a></li>
@@ -624,11 +623,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#compiled-xl">5. Compiled XL</a>
 <ul class="sectlevel2">
-<li><a href="#compiled-representations">5.1. Compiled representations</a></li>
-<li><a href="#data-2">5.2. Data</a></li>
-<li><a href="#lifetime-2">5.3. Lifetime</a></li>
-<li><a href="#closures-2">5.4. Closures</a></li>
-<li><a href="#compact-vs-packed">5.5. Compact vs. Packed</a></li>
+<li><a href="#parse-tree-types">5.1. Parse tree types</a></li>
+<li><a href="#compiled-representations">5.2. Compiled representations</a></li>
+<li><a href="#data-2">5.3. Data</a></li>
+<li><a href="#lifetime-2">5.4. Lifetime</a></li>
+<li><a href="#closures-2">5.5. Closures</a></li>
+<li><a href="#compact-vs-packed">5.6. Compact vs. Packed</a></li>
 </ul>
 </li>
 <li><a href="#basic-operations">6. Basic operations</a></li>
@@ -867,7 +867,7 @@ for code like <code>-3!</code>, because there is no definition that matches.</p>
 </div>
 <div class="sect2">
 <h3 id="one-operator-to-rule-them-all"><a class="anchor" href="#one-operator-to-rule-them-all"></a><a class="link" href="#one-operator-to-rule-them-all">1.2. One operator to rule them all</a></h3>
-<div class="paragraph">
+<div id="definition" class="paragraph">
 <p>XL has a single fundamental operator, <code>is</code>, called the <em>definition operator</em>. It is an <a href="#infix">infix operator</a> with a
 <a href="#pattern">pattern</a> on the left and an
 <a href="#implementation">implementation</a> on the right. In other words,
@@ -2200,11 +2200,11 @@ command:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>All of XL is built on this very simple data structure. Some choices,
-like having distinct <code>integer</code> and <code>real</code> node, were guided primarily by
-considerations beyond syntax, for example the need to be able to
-precisely define <a href="#evaluation">program evaluation</a> or to
-represent distinct machine types.</p>
+<p>All of XL is built on this very simple <a href="#parse-tree-types">data structure</a>.
+Some choices, like having distinct <code>integer</code> and <code>real</code> node, were
+guided primarily by considerations beyond syntax, for example the need
+to be able to precisely define <a href="#evaluation">program evaluation</a> or
+to represent distinct machine types.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -5878,103 +5878,90 @@ is <code>0</code>, and the value preceding <code>0</code> is <code>255</code>.</
 precise number of bits.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="parse-tree-types"><a class="anchor" href="#parse-tree-types"></a><a class="link" href="#parse-tree-types">4.2.3. Parse tree types</a></h4>
-<div class="paragraph">
-<p>The types that are used to represent parse tree elements include
-<code>integer</code>, <code>real</code>, <code>text</code>, <code>symbol</code>, <code>infix</code>, <code>prefix</code>, <code>postfix</code> and
-<code>block</code>, as well as the <code>parse_tree</code> type, which can be any of them.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">parse_tree is either
-    I:integer
-    R:real
-    T:text
-    S:symbol
-    I:infix
-    P:prefix
-    P:postfix
-    B:block</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-It is likely that all these types will not be visible by default,
-but will ultimately require a <code>use XL.PARSER</code>.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>In addition, the following <a href="#subtypes">subtypes</a> help identify
-particular syntactic structures:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>name</code> is a subtype of <code>symbol</code> for syntactically valid XL names,
-e.g. it will accept <code>A_2</code> but not <code>_A2</code></p>
-</li>
-<li>
-<p><code>operator</code> is a subtype of <code>symbol</code> that accepts only syntactically
-valid XL operators, i.e. it will accept <code>+</code> but not <code>A</code>.</p>
-</li>
-<li>
-<p><code>paren_block</code>, <code>square_block</code>, <code>curly_block</code> and <code>indent_block</code> are
-subtypes of <code>block</code> that require specific separators.</p>
-</li>
-</ul>
-</div>
-</div>
 </div>
 <div class="sect2">
-<h3 id="type-declarations"><a class="anchor" href="#type-declarations"></a><a class="link" href="#type-declarations">4.3. Type declarations</a></h3>
+<h3 id="type-definitions"><a class="anchor" href="#type-definitions"></a><a class="link" href="#type-definitions">4.3. Type definitions</a></h3>
 <div class="paragraph">
-<p>Like other XL values, a type can be given a name. For example, a
-<code>complex</code> type made of two <code>real</code> numbers representing the real and
-imaginary parts can be described as follows:</p>
+<p>In XL, types are values like any other value, which simply match the
+<code>type</code> type. In particular, types can be declared or
+<a href="#definition">defined</a> like any other value.</p>
 </div>
-<div class="listingblock">
+<div class="paragraph">
+<p>The simplest case of <em>type definition</em> simply gives a new name to
+an existing type. The following code will create a type named <code>int</code>
+that is just another name for <code>integer</code>:</p>
+</div>
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">complex is type(complex(Re:real, Im:real))</code></pre>
+<pre>int is integer</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This declaration means that any parse tree like <code>complex(1.3,2.5)</code> will
-match the <code>complex</code> type.</p>
+<p>More interesting types can be used using the <code>type</code> function, which
+takes a pattern as an argument, and returns a type that
+<a href="#pattern-matching">matches that pattern</a>. The expression <code>type(42)</code>
+returns a type that only matches the value <code>42</code>.</p>
 </div>
 <div class="paragraph">
-<p>There is a shortcut notation for declaring types, where the <code>type</code> word
-can be placed in the pattern instead of in the body of the definition.
-This is nothing more than syntactic sugar for readability. The previous
-example should be written as follows:</p>
+<p>The <code>type</code> function can obviously be used to create much more
+interesting types. In order to create a <code>positive</code> type that only
+matches positive values, one only needs the following code:</p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type complex is complex(Re:real, Im:real)</code></pre>
+<pre>positive is type(X when X &gt; 0)</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>A declaration <code>type T is P</code> is equivalent to <code>T is type (P)</code>. This is
-important to remember if you write type expressions. For example:</p>
+<p>A common usage is to use a named prefix to create types that are
+easier to identify. This kind of notation is called a
+<a href="#creation">constructor</a>, and plays for XL the role that <code>struct</code>
+plays for C or <code>record</code> for Pascal. A <code>complex</code> data type can be
+created and used as shown in the following code:</p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// This is `type(integer)`, which only accepts the name `integer`
-type int is integer
-
-// This is `type(X:integer8)`, which accepts `integer8` values
-type int8 is X:integer8
-
-// This creates an alternate name for `unsigned`
-positive is unsigned</code></pre>
+<pre>complex is type complex(Re:real, Im:real)
+Z:complex := complex(4.3, 2.1)</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The definition of <code>complex</code> states that a value matches the type
+<code>complex</code> if and only if it matches the pattern <code>complex(Re:real, Im:real)</code>.
+In particular, it matches the value <code>complex(4.3, 2.1)</code>, which makes
+the assignment on the second line of code possible.</p>
+</div>
+<div class="paragraph">
+<p>For example, a <code>complex</code> type made of two <code>real</code> numbers representing
+the real and imaginary parts can be described as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex is type complex(Re:real, Im:real)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This declaration means that any value that has a shape matching the
+given pattern, like <code>complex(1.3,2.5)</code>,  will match the <code>complex</code> type.</p>
+</div>
+<div class="paragraph">
+<p>Type definitions are not restricted to names. For example, the
+<code>complex</code> type might take the <code>real</code> type as an argument, instead of
+assuming the standard <code>real</code> type:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex[real:type] is type complex(Re:real, Im:real)
+complex is complex[real]
+Z:complex := complex(4.3, 2.1)
+K:complex[real32] := complex(1.2, 3.4)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates what is called a <em>generic type</em> in languages like Ada,
+or a <em>template</em> in languages like C++. However, as far as
+syntax is concerned, it is indistinguishable from a function taking a
+type argument and returning a type.</p>
 </div>
 </div>
 <div class="sect2">
@@ -7659,7 +7646,55 @@ made mutable or constant.</p>
 <h2 id="compiled-xl"><a class="anchor" href="#compiled-xl"></a><a class="link" href="#compiled-xl">5. Compiled XL</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">5.1. Compiled representations</a></h3>
+<h3 id="parse-tree-types"><a class="anchor" href="#parse-tree-types"></a><a class="link" href="#parse-tree-types">5.1. Parse tree types</a></h3>
+<div class="paragraph">
+<p>The <code>XL.PARSER</code> module offers a number of types intended to represent
+or match elements in the parse tree:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>tree</code> matches any parse tree.</p>
+</li>
+<li>
+<p><code>integer</code> matches <a href="#numbers">whole number</a> literals such as <code>42</code>.</p>
+</li>
+<li>
+<p><code>real</code> matches <a href="#numbers">fractional number</a> literals such as <code>3.14</code>.</p>
+</li>
+<li>
+<p><code>text</code> matches <a href="#text">text</a> literals such as <code>"ABC"</code>.</p>
+</li>
+<li>
+<p><code>character</code> matches <a href="#text">character</a> literals such as <code>'A'</code>.</p>
+</li>
+<li>
+<p><code>name</code> matches names such as <code>A</code>.</p>
+</li>
+<li>
+<p><code>operator</code> matches operators such as <code>+</code>.</p>
+</li>
+<li>
+<p><code>symbol</code> matches either name or operators, as well as an empty
+symbol used in empty blocks, e.g. <code>()</code>.</p>
+</li>
+<li>
+<p><code>infix</code> matches infix expressions such as <code>A+B</code>.</p>
+</li>
+<li>
+<p><code>prefix</code> matches prefix expressions such as <code>+3</code>.</p>
+</li>
+<li>
+<p><code>postfix</code> matches postfix expressions such as <code>4%</code>.</p>
+</li>
+<li>
+<p><code>block</code> matches block expressions such as <code>(A)</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">5.2. Compiled representations</a></h3>
 <div class="paragraph">
 <p>Code and any data can also have one or several <em>compiled forms</em>. The
 compiled forms are generally very implementation-dependent, varying with
@@ -7674,19 +7709,19 @@ the IEEE-754 64-bit representation.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">5.2. Data</a></h3>
+<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">5.3. Data</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="lifetime-2"><a class="anchor" href="#lifetime-2"></a><a class="link" href="#lifetime-2">5.3. Lifetime</a></h3>
+<h3 id="lifetime-2"><a class="anchor" href="#lifetime-2"></a><a class="link" href="#lifetime-2">5.4. Lifetime</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="closures-2"><a class="anchor" href="#closures-2"></a><a class="link" href="#closures-2">5.4. Closures</a></h3>
+<h3 id="closures-2"><a class="anchor" href="#closures-2"></a><a class="link" href="#closures-2">5.5. Closures</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">5.5. Compact vs. Packed</a></h3>
+<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">5.6. Compact vs. Packed</a></h3>
 
 </div>
 </div>
@@ -8996,7 +9031,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-02 23:00:35 +0100
+Last updated 2020-01-03 01:02:04 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
