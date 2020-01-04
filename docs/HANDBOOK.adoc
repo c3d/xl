@@ -3982,7 +3982,7 @@ link:#standard-library[standard XL library].
 
 Some fundamental data types are available on all implementations, and
 do not require any `use` statement. These fundamental types are called
-_((basic types))_, and include:
+_((basic types))_, and include the following:
 
 * `type` is the type used for types...
 
