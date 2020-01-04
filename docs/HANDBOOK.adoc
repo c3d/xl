@@ -2614,14 +2614,15 @@ C3 : circle := circle <4>
     CenterX is 3.5
     CenterY is 2.4
 ----
-<1> Notice that the formal parameters are a comma-separated sequence of
+<1> The formal parameters are a comma-separated sequence of
     declarations, meaning that they form a valid scope. A semi-colon
     or new-line could interchangeably be used there.
 <2> This is the normal _((positional form))_ for argument passing.
 <3> An argument scope is passed, which contains the necessary
     definitions to match the parameter scope. A semi-colon `;` must be
     used to separate the definitions, because the comma `,` has a
-    higher precedence than `is`.
+    higher precedence than `is`, and therefore cannot be used to
+    separate `is` definitions without parentheses.
 <4> The argument scope need not use the same separators as the
     parameter scope. Using indentation and line separators removes the
     need for parentheses, since all kinds of blocks are equivalent.

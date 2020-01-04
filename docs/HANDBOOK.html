@@ -4228,7 +4228,7 @@ C3 : circle := circle <i class="conum" data-value="4"></i><b>(4)</b>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Notice that the formal parameters are a comma-separated sequence of
+<td>The formal parameters are a comma-separated sequence of
 declarations, meaning that they form a valid scope. A semi-colon
 or new-line could interchangeably be used there.</td>
 </tr>
@@ -4241,7 +4241,8 @@ or new-line could interchangeably be used there.</td>
 <td>An argument scope is passed, which contains the necessary
 definitions to match the parameter scope. A semi-colon <code>;</code> must be
 used to separate the definitions, because the comma <code>,</code> has a
-higher precedence than <code>is</code>.</td>
+higher precedence than <code>is</code>, and therefore cannot be used to
+separate <code>is</code> definitions without parentheses.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
@@ -9659,7 +9660,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 23:09:50 +0100
+Last updated 2020-01-04 23:12:31 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
