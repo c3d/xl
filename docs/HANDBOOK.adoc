@@ -5072,8 +5072,9 @@ hundredth is real range 0.0..1.0 quantum 0.01
 ===== Saturating subtypes
 
 The `saturating` prefix operator can be used on `integer` and `real`
-types (primarily intended for use with fixed-point subtypes) to
-select a "saturating" behavior in case of overflow.
+types (primarily intended for use with fixed-point subtypes) to select
+link:https://en.wikipedia.org/wiki/Saturation_arithmetic[_((saturation arithmetic))_]
+in case of overflow.
 
 For example, a `color_component` type that has values between `0.0`
 and `1.0` and saturates can be defined as follows:
