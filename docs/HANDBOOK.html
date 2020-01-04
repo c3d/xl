@@ -6013,6 +6013,10 @@ do not require any <code>use</code> statement. These fundamental types are calle
 <p><code>type</code> is the type used for types&#8230;&#8203;</p>
 </li>
 <li>
+<p><code>nil</code> is a type that contains only the value <code>nil</code>. It is generally
+used to represent an absence of value.</p>
+</li>
+<li>
 <p><code>integer</code> is an approximation of integer numbers with a limited
 range, typically between -2<sup>63</sup> and 2<sup>63</sup>-1, which are accessible as
 <code>integer.min</code> and <code>integer.max</code> respectively. That range cannot be
@@ -6028,6 +6032,16 @@ the prefix negation operator on literal values, such as <code>-3</code>.</p>
 range, typically between 0 and 2<sup>64</sup>-1. Like <code>integer</code>, it behaves
 like the underlying hardware in case of overflow. <code>unsigned</code> matches
 whole number literal values such as <code>0</code>, <code>16#FF</code> or <code>42</code>.</p>
+</li>
+<li>
+<p><code>size</code> is a type similar to <code>unsigned</code>, but specifically intended to
+represent a size. In some cases, it may have a different range than
+<code>unsigned</code>.</p>
+</li>
+<li>
+<p><code>offset</code> is a type that plays for <code>integer</code> the role that <code>size</code>
+plays for <code>unsigned</code>, i.e. it is intended to indicate offsets for
+example while indexing an array.</p>
 </li>
 <li>
 <p><code>character</code> is a representation of the native character set on the
@@ -9575,7 +9589,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 13:11:25 +0100
+Last updated 2020-01-04 13:14:20 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

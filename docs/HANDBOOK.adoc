@@ -4059,6 +4059,9 @@ _((basic types))_, and include the following:
 
 * `type` is the type used for types...
 
+* `nil` is a type that contains only the value `nil`. It is generally
+  used to represent an absence of value.
+
 * `integer` is an approximation of integer numbers with a limited
   range, typically between -2^63^ and 2^63^-1, which are accessible as
   `integer.min` and `integer.max` respectively. That range cannot be
@@ -4073,6 +4076,14 @@ _((basic types))_, and include the following:
   range, typically between 0 and 2^64^-1. Like `integer`, it behaves
   like the underlying hardware in case of overflow. `unsigned` matches
   whole number literal values such as `0`, `16#FF` or `42`.
+
+* `size` is a type similar to `unsigned`, but specifically intended to
+  represent a size. In some cases, it may have a different range than
+  `unsigned`.
+
+* `offset` is a type that plays for `integer` the role that `size`
+  plays for `unsigned`, i.e. it is intended to indicate offsets for
+  example while indexing an array.
 
 * `character` is a representation of the ((native character set)) on the
   target machine. On modern machines, it should generally follow the
