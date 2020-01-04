@@ -5112,23 +5112,24 @@ operators:
 The `text` type can be subtyped with the `encoding`, `locale` and
 `collation` operators, with the same meaning as for `character`.
 
-==== Interface
+==== Type interface
 
 The link:#interface-and-implementation[interface] of a type can
 specifiy a link:#scoping[scope] for values that match the type, using
-the syntax `type T with I`, where `I` is a scope containing the
-publicly available declarations. These declarations are called
-_fields_ of the type when they denote link:#mutability[mutable]
-values, and _members_ of the type if they are constant. Globally, they
-are called the _features_ of the type.
+the infix form `[[type]] with Interface`, where `Interface` is an
+_((interface scope))_ containing the publicly available
+declarations. These declarations are called _features_ of the
+type. The terms _fields_ of the type are also used for
+link:#mutability[mutable] values, and _methods_ of the type for
+constant values.
 
 The code below defines a `picture` type that exposes `width`, `height`
-and `data` fields, as well as a `size` member that is used to compute
+and `data` fields, as well as a `size` method that is used to compute
 the size of the `data` buffer.
 
 [source]
 ----
-type picture with
+picture as type with
     width  : unsigned
     height : unsigned
     data   : buffer[size] of unsigned8
@@ -5136,10 +5137,14 @@ type picture with
 ----
 
 Note that only knowing the interface of a type does not allow values of
-the type to be created. Typically, the interface of a function making it
+the type to be created. It is sometimes useful to preclude the
+creation of values of the type, for example when creating
+link:#true-generic-types[true generic types].
+
+For concrete types, however, the interface of a function making it
 possible to create values will also be provided. In the rest of the
 discussion for the `picture` type, we will also assume that there is a
-`create_picture` function with the following interface:
+`picture` function with the following interface:
 
 [source]
 ----
@@ -5152,7 +5157,7 @@ link:#inheritance[derive] from one or several other types using the
 
 [source]
 ----
-type derived like base1, base2, base3 with
+derived as type like base1, base2, base3 with
     additional : field
 ----
 
@@ -5161,8 +5166,8 @@ announcing anything at all:
 
 [source]
 ----
-type derived like base      // All we know is that it derives from base
-type totally_abstract       // All we know is that the type exists
+derived as type like base      // All we know is that it derives from base
+totally_abstract as type       // All we know is that the type exists
 ----
 
 ===== Information hiding

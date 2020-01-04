@@ -595,7 +595,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#text-subtypes">4.4.10.6. Text subtypes</a></li>
 </ul>
 </li>
-<li><a href="#interface">4.4.11. Interface</a>
+<li><a href="#type-interface">4.4.11. Type interface</a>
 <ul class="sectlevel4">
 <li><a href="#information-hiding">4.4.11.1. Information hiding</a></li>
 <li><a href="#anonymous-scope-implementation">4.4.11.2. Anonymous scope implementation</a></li>
@@ -7503,24 +7503,25 @@ have <code>character</code> values that sort following German rules, you would u
 </div>
 </div>
 <div class="sect3">
-<h4 id="interface"><a class="anchor" href="#interface"></a><a class="link" href="#interface">4.4.11. Interface</a></h4>
+<h4 id="type-interface"><a class="anchor" href="#type-interface"></a><a class="link" href="#type-interface">4.4.11. Type interface</a></h4>
 <div class="paragraph">
 <p>The <a href="#interface-and-implementation">interface</a> of a type can
 specifiy a <a href="#scoping">scope</a> for values that match the type, using
-the syntax <code>type T with I</code>, where <code>I</code> is a scope containing the
-publicly available declarations. These declarations are called
-<em>fields</em> of the type when they denote <a href="#mutability">mutable</a>
-values, and <em>members</em> of the type if they are constant. Globally, they
-are called the <em>features</em> of the type.</p>
+the infix form <code><a id="type"></a> with Interface</code>, where <code>Interface</code> is an
+<em>interface scope</em> containing the publicly available
+declarations. These declarations are called <em>features</em> of the
+type. The terms <em>fields</em> of the type are also used for
+<a href="#mutability">mutable</a> values, and <em>methods</em> of the type for
+constant values.</p>
 </div>
 <div class="paragraph">
 <p>The code below defines a <code>picture</code> type that exposes <code>width</code>, <code>height</code>
-and <code>data</code> fields, as well as a <code>size</code> member that is used to compute
+and <code>data</code> fields, as well as a <code>size</code> method that is used to compute
 the size of the <code>data</code> buffer.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
     width  : unsigned
     height : unsigned
     data   : buffer[size] of unsigned8
@@ -7529,10 +7530,15 @@ the size of the <code>data</code> buffer.</p>
 </div>
 <div class="paragraph">
 <p>Note that only knowing the interface of a type does not allow values of
-the type to be created. Typically, the interface of a function making it
+the type to be created. It is sometimes useful to preclude the
+creation of values of the type, for example when creating
+<a href="#true-generic-types">true generic types</a>.</p>
+</div>
+<div class="paragraph">
+<p>For concrete types, however, the interface of a function making it
 possible to create values will also be provided. In the rest of the
 discussion for the <code>picture</code> type, we will also assume that there is a
-<code>create_picture</code> function with the following interface:</p>
+<code>picture</code> function with the following interface:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7546,7 +7552,7 @@ discussion for the <code>picture</code> type, we will also assume that there is 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type derived like base1, base2, base3 with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">derived as type like base1, base2, base3 with
     additional : field</code></pre>
 </div>
 </div>
@@ -7556,8 +7562,8 @@ announcing anything at all:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type derived like base      // All we know is that it derives from base
-type totally_abstract       // All we know is that the type exists</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">derived as type like base      // All we know is that it derives from base
+totally_abstract as type       // All we know is that the type exists</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -9465,7 +9471,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 10:55:29 +0100
+Last updated 2020-01-04 11:29:39 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
