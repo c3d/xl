@@ -3972,9 +3972,10 @@ given number of bits. For example, `unsigned8` holds values between
 is `0`, and the value preceding `0` is `255`.
 
 When the standard sizes are not sufficient, it is easy to use
-link:#subtypes[integer subtypes] to identify precise ranges of values,
-as in `integer range 1..5`, which only accepts values between `1` and
-`5`, or precise number of bits, such as `integer bits 24`, which
+integer link:#subtypes[subtypes] to identify precise
+link:#range-subtypes[ranges] of values, as in `integer range 1..5`,
+which only accepts values between `1` and `5`, or precise
+link:#size-subtypes[number of bits], such as `integer bits 24`, which
 wraps around like a 24-bit `integer` value.
 
 ==== Category types
@@ -3983,6 +3984,9 @@ Some types are intended primarily as an easy way to categorize
 values along generally useful boundaries, and are naturally called
 _((category types))_. Examples include:
 
+* `anything` is the _((most general type))_, which accepts any
+  value. It is typically used to create
+  link:#true-generic-types[true generic types].
 * `number`, a type that matches numerical data types such as
   `integer`, `real` or `complex`.
 * `positive`, a type that accepts only positive values.
@@ -4053,6 +4057,52 @@ Container types include in particular the following:
   if a value is in the set or not. A `set of character` holds an
   arbitrary number of `character` values.
 
+==== True generic types
+
+Often, an algorithm will apply to all variants of a generic type. For
+example, consider the operation that sums all the elements in an
+array. Its body can be written so as to not really depend on the type
+or number of elements.
+
+In order to makea it easier to write such generic code, XL code
+typically creates a _((true generic type))_, which is a type that will
+accept any variant of the generic type. For example, for `array`, one
+could write the true generic type as follows:
+
+....
+array is type (array[index:array_index] of value:type)
+....
+
+This makes it possible to write true generic code that takes an
+`array` argument, as follows:
+
+....
+sum(A:array) as A.value is
+    result := 0
+    for I in A loop
+        S += I
+....
+
+[NOTE]
+=====
+*RATIONALE* In languages such as pass:[C++], the lack of this feature
+often leads to code that largely repeats the same `template` arguments
+for each individual declaration:
+
+[source,c++]
+----
+template <typename T>
+T sum(const vector<T> &v)
+{
+    T s = 0;
+    for (auto i : v)
+        s += i;
+    return s;
+}
+----
+=====
+
+
 ==== Other generic types
 
 Many generic types are not intended as containers.
@@ -4091,6 +4141,44 @@ They include the following:
 
 * `access T` matches any type that can be used to access values of
   type `T`, such as `own T`, `ref T` or `slice of T`.
+
+==== Mathematical types
+
+Computers are often used to perform mathematical operations. XL
+features several mathematical types designed for that purpose:
+
+* `real` is the base floating-point type, but it also provides
+  fixed-point link:#real-subtypes[subtypes].
+
+* `complex[T]` is a generic representation for complex numbers using
+  `T` as the representation for real numbers. Without an argument,
+  `complex` denotes `complex[real]`. Values with the `complex` type
+  have a `polar` and `cartesian` representation, and the compiler will
+  select the representation based on usage.
+
+* `quaternion[T]` is a generic representation for mathematical
+  link:https://en.wikipedia.org/wiki/Quaternion[quaternions], and are
+  particularly useful in the field of 3D graphics. Without an
+  argument, `quaternion` is the same as `quaternion[real]`.
+
+* `vector` is a generic representation of mathematical
+  link:https://en.wikipedia.org/wiki/Vector_(mathematics_and_physics)[vectors],
+  which takes a size and a number type, so that `vector[3] of real32`
+  represents a 3-dimensional vector of `real32` values, and
+  `vector[4]` is a 4-dimensional `real` vector. The `vector`
+  type exposes an `array` interface, but also provides additional
+  capabilities such as vector arithmetic. Operations on the `vector`
+  type typically take advantage of
+  link:https://en.wikipedia.org/wiki/SIMD[SIMD] or "multimedia"
+  operations on the processor if available.
+
+* `matrix` is a generic representation of mathematical
+  link:https://en.wikipedia.org/wiki/Matrix_(mathematics)[matrices],
+  with two underlying representations, `sparse` and `dense`. It
+  features matrix algebra, and is intended to be used with `vector`.
+  Operations on the `matrix` type are often highly parallelizable.
+  The `matrix[4,3] of integer32` type will
+
 
 ==== Parse tree types
 
