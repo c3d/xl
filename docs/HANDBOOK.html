@@ -532,7 +532,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#literal-constants">3.3.9. Literal constants</a></li>
 <li><a href="#metabox-values">3.3.10. Metabox values</a></li>
 <li><a href="#blocks">3.3.11. Blocks</a></li>
-<li><a href="#pattern-matching-scope">3.3.12. Pattern-matching scope</a></li>
+<li><a href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></li>
+<li><a href="#pattern-matching-scope">3.3.13. Pattern-matching scope</a></li>
 </ul>
 </li>
 <li><a href="#overloading">3.4. Overloading</a></li>
@@ -3493,6 +3494,10 @@ values to infix, prefix or postfix patterns.</p>
 <li>
 <p><a href="#blocks">Blocks</a> change the priority of expressions.</p>
 </li>
+<li>
+<p><a href="#scope-pattern-matching">Scope pattern matching</a> allows large lists of paraameters to be
+passed as argument ina more readable way.</p>
+</li>
 </ul>
 </div>
 <div class="sect3">
@@ -3697,6 +3702,29 @@ in the example below:</p>
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X:real + Y:real as real is ...</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>For readability, a type annotation for a name can also be matched by an
+<em>assignment</em> or a definition with the same name:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle (Radius:real, CenterX:real, CenterY:real) as circle
+C : circle := circle(Radius := 3.5, CenterX := 6.5, CenterY := 3.3)
+
+picture is type picture
+    Width  : size
+    Height : size
+    Buffer : buffer
+P : picture is picture
+    Width  is 640
+    Height is 480
+    Buffer is my_buffer</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The second example above matches a <a href="#scope-pattern-matching">scope</a>,
+which means that the arguments may be given in a different order.</p>
 </div>
 </div>
 <div class="sect3">
@@ -4127,7 +4155,76 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.3.12. Pattern-matching scope</a></h4>
+<h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></h4>
+<div class="paragraph">
+<p>When a block in a pattern defines a <a href="#scoping"><em>parameter scope</em></a>, i.e. a <a href="#sequences">sequence</a> of declarations or
+definitions, it can be matched by any scope that provides matching
+definitions. In that case, the definitions in the <em>argument scope</em>
+may be provided in a different order, or with different separators for
+the scope:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle(Radius:real; CenterX:real; CenterY:real) as circle <i class="conum" data-value="1"></i><b>(1)</b>
+C1 : circle := circle(3.5; 2.6; 3.2) <i class="conum" data-value="2"></i><b>(2)</b>
+C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <i class="conum" data-value="3"></i><b>(3)</b>
+C3 : circle := circle <i class="conum" data-value="4"></i><b>(4)</b>
+    Radius  is 1.5
+    CenterX is 3.5
+    CenterY is 2.4</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Notice that the formal parameters are separated by semi-colons,
+which means that the block is a scope</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This is the normal <em>positional form</em> for argument passing</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>An argument scope is passed, which contains the necessary
+definitions to match the parameter scope. The definitons need not
+be in the same order as in the parameter scope.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The argument scope need not use the same separators as the
+parameter scope.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This form is often used for data types containing a large number of
+parameters:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">person is type person
+    first_name : text
+    middle_name: text
+    last_name  : text
+    birthdate  : date
+    address    : address
+JohnDoe : person := person
+    last_name   is "Doe"
+    first_name  is "John"
+    middle_name is "W"
+    birthdate   is date { Month is December; Day is 5; Year is 1968 }
+    address     is address
+        city    is "New-York"
+        street  is "42nd"
+        no      is 42
+        zip     is 00002</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.3.13. Pattern-matching scope</a></h4>
 <div class="paragraph">
 <p>When matching a pattern, a <a href="#execution-context">local execution context</a>
 is created that holds the bindings associated to the patterns being
@@ -7532,13 +7629,11 @@ the size of the <code>data</code> buffer.</p>
 <p>Note that only knowing the interface of a type does not allow values of
 the type to be created. It is sometimes useful to preclude the
 creation of values of the type, for example when creating
-<a href="#true-generic-types">true generic types</a>.</p>
-</div>
-<div class="paragraph">
-<p>For concrete types, however, the interface of a function making it
-possible to create values will also be provided. In the rest of the
-discussion for the <code>picture</code> type, we will also assume that there is a
-<code>picture</code> function with the following interface:</p>
+<a href="#true-generic-types">true generic types</a>. For concrete types,
+however, the interface of a function making it possible to create
+values will also be provided. In the rest of the discussion for the
+<code>picture</code> type, we will also assume that there is a <code>picture</code> function
+with the following interface, which returns a <code>picture</code> value:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7572,12 +7667,14 @@ totally_abstract as type       // All we know is that the type exists</code></pr
 <p>The interface does not reveal any information on the actual shape of the
 parse tree for <code>picture</code> values. In other words, it does not specify how
 the <code>picture</code> type is actually implemented. A type that has a name but
-no implementation, like <code>picture</code> above, is called a <em>tag type</em>. A tag
-type can only match values that were <em>tagged</em> with the same type using
-some explicit type annotation.</p>
+no implementation, like <code>picture</code> above, is called a <em>tag type</em>.
+Since nothing is known about the parse tree shape associated with the
+type, a tag type can only match values that were <em>tagged</em> with the
+same type using some explicit type annotation.</p>
 </div>
 <div class="paragraph">
-<p>The type interface above remains sufficient to validate code like the
+<p>The type interface for <code>picture</code> above does not tell us how the type
+is implemented, yet it remains sufficient to validate code like the
 following definition of <code>is_square</code>:</p>
 </div>
 <div class="listingblock">
@@ -7601,18 +7698,6 @@ the <code>picture</code> type, this could be the following code:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is
-    width   : unsigned
-    height  : unsigned
-    data    : buffer[size] of unsigned8
-    size is width * height</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Remember that this is equivalent to:</p>
-</div>
-<div class="listingblock">
-<div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type
     width   : unsigned
     height  : unsigned
@@ -7633,9 +7718,8 @@ values that have the exact same structure, such as:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>For better readability, the pattern can also
-<a href="#pattern-matching-scope-values">match a
-scope</a></p>
+<p>For better readability, the pattern can also match a scope with
+<a href="#pattern-matching-definitions">matching definitions</a>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -9471,7 +9555,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 11:29:39 +0100
+Last updated 2020-01-04 13:06:22 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

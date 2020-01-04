@@ -2224,6 +2224,8 @@ expressions:
 * <<Literal constants>> match constants with the same value.
 * <<Metabox values>> match values computed by the comiler.
 * <<Blocks>> change the priority of expressions.
+* <<Scope pattern matching>> allows large lists of paraameters to be
+  passed as argument ina more readable way.
 
 ==== Name definitions
 
@@ -2311,6 +2313,27 @@ in the example below:
 ----
 X:real + Y:real as real is ...
 ----
+
+For readability, a type annotation for a name can also be matched by an
+_assignment_ or a definition with the same name:
+
+[source]
+----
+circle (Radius:real, CenterX:real, CenterY:real) as circle
+C : circle := circle(Radius := 3.5, CenterX := 6.5, CenterY := 3.3)
+
+picture is type picture
+    Width  : size
+    Height : size
+    Buffer : buffer
+P : picture is picture
+    Width  is 640
+    Height is 480
+    Buffer is my_buffer
+----
+
+The second example above matches a link:#scope-pattern-matching[scope],
+which means that the arguments may be given in a different order.
 
 ==== Function (prefix) definitions
 
@@ -2546,6 +2569,57 @@ circle (CenterX:real, CenterY:real, Radius:real) as circle is ...
 C : circle := circle(0.3, 2.6, 4.0)
 ----
 =====
+
+==== Scope pattern matching
+
+When a block in a pattern defines a link:#scoping[_((parameter
+scope))_], i.e. a link:#sequences[sequence] of declarations or
+definitions, it can be matched by any scope that provides matching
+definitions. In that case, the definitions in the _((argument scope))_
+may be provided in a different order, or with different separators for
+the scope:
+
+[source]
+----
+circle(Radius:real; CenterX:real; CenterY:real) as circle <1>
+C1 : circle := circle(3.5; 2.6; 3.2) <2>
+C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <3>
+C3 : circle := circle <4>
+    Radius  is 1.5
+    CenterX is 3.5
+    CenterY is 2.4
+----
+<1> Notice that the formal parameters are separated by semi-colons,
+    which means that the block is a scope
+<2> This is the normal _((positional form))_ for argument passing
+<3> An argument scope is passed, which contains the necessary
+    definitions to match the parameter scope. The definitons need not
+    be in the same order as in the parameter scope.
+<4> The argument scope need not use the same separators as the
+    parameter scope.
+
+This form is often used for data types containing a large number of
+parameters:
+
+[source]
+----
+person is type person
+    first_name : text
+    middle_name: text
+    last_name  : text
+    birthdate  : date
+    address    : address
+JohnDoe : person := person
+    last_name   is "Doe"
+    first_name  is "John"
+    middle_name is "W"
+    birthdate   is date { Month is December; Day is 5; Year is 1968 }
+    address     is address
+        city    is "New-York"
+        street  is "42nd"
+        no      is 42
+        zip     is 00002
+----
 
 ==== Pattern-matching scope
 
@@ -5139,12 +5213,11 @@ picture as type with
 Note that only knowing the interface of a type does not allow values of
 the type to be created. It is sometimes useful to preclude the
 creation of values of the type, for example when creating
-link:#true-generic-types[true generic types].
-
-For concrete types, however, the interface of a function making it
-possible to create values will also be provided. In the rest of the
-discussion for the `picture` type, we will also assume that there is a
-`picture` function with the following interface:
+link:#true-generic-types[true generic types]. For concrete types,
+however, the interface of a function making it possible to create
+values will also be provided. In the rest of the discussion for the
+`picture` type, we will also assume that there is a `picture` function
+with the following interface, which returns a `picture` value:
 
 [source]
 ----
@@ -5175,11 +5248,13 @@ totally_abstract as type       // All we know is that the type exists
 The interface does not reveal any information on the actual shape of the
 parse tree for `picture` values. In other words, it does not specify how
 the `picture` type is actually implemented. A type that has a name but
-no implementation, like `picture` above, is called a _tag type_. A tag
-type can only match values that were _tagged_ with the same type using
-some explicit type annotation.
+no implementation, like `picture` above, is called a _((tag type))_.
+Since nothing is known about the parse tree shape associated with the
+type, a tag type can only match values that were _tagged_ with the
+same type using some explicit type annotation.
 
-The type interface above remains sufficient to validate code like the
+The type interface for `picture` above does not tell us how the type
+is implemented, yet it remains sufficient to validate code like the
 following definition of `is_square`:
 
 [source]
@@ -5197,17 +5272,6 @@ interface alone.
 The simplest way to implement fields is to create a type that has a
 structure exposing declarations that directly match the interface. For
 the `picture` type, this could be the following code:
-
-[source]
-----
-type picture is
-    width   : unsigned
-    height  : unsigned
-    data    : buffer[size] of unsigned8
-    size is width * height
-----
-
-Remember that this is equivalent to:
 
 [source]
 ----
@@ -5229,9 +5293,8 @@ my_picture is
     my_buffer
 ----
 
-For better readability, the pattern can also
-link:#pattern-matching-scope-values[match a
-scope]
+For better readability, the pattern can also match a scope with
+link:#pattern-matching-definitions[matching definitions]:
 
 [source]
 ----
