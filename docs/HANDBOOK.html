@@ -4157,11 +4157,11 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 <div class="sect3">
 <h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></h4>
 <div class="paragraph">
-<p>When a block in a pattern defines a <a href="#scoping"><em>parameter scope</em></a>, i.e. a <a href="#sequences">sequence</a> of declarations or
-definitions, it can be matched by any scope that provides matching
-definitions. In that case, the definitions in the <em>argument scope</em>
-may be provided in a different order, or with different separators for
-the scope:</p>
+<p>When a block in a pattern defines a <a href="#scoping"><em>parameter scope</em></a>,
+ i.e. a <a href="#sequences">sequence</a> of declarations or definitions, it
+can be matched by any scope that provides matching definitions. In
+that case, the definitions in the <em>argument scope</em> may be provided
+in a different order, or with different separators for the scope:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7719,7 +7719,7 @@ values that have the exact same structure, such as:</p>
 </div>
 <div class="paragraph">
 <p>For better readability, the pattern can also match a scope with
-<a href="#pattern-matching-definitions">matching definitions</a>:</p>
+<a href="#scope-pattern-matching">matching definitions</a>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7727,6 +7727,26 @@ values that have the exact same structure, such as:</p>
     width  is 1024
     height is 768
     buffer is another_buffer</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that in order to make patterns more specific, a type is typically
+defined using a prefix, not just a block, in order to define a
+<a href="#creation">constructor</a>. For example, it would be
+considered better taste to define the <code>picture</code> type as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    width   : unsigned
+    height  : unsigned
+    data    : buffer[size] of unsigned8
+    size is width * height
+
+my_picture : picture := picture
+    width  is 640
+    height is 480
+    data   is my_buffer</code></pre>
 </div>
 </div>
 </div>
@@ -9555,7 +9575,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 13:06:22 +0100
+Last updated 2020-01-04 13:11:25 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -2572,12 +2572,11 @@ C : circle := circle(0.3, 2.6, 4.0)
 
 ==== Scope pattern matching
 
-When a block in a pattern defines a link:#scoping[_((parameter
-scope))_], i.e. a link:#sequences[sequence] of declarations or
-definitions, it can be matched by any scope that provides matching
-definitions. In that case, the definitions in the _((argument scope))_
-may be provided in a different order, or with different separators for
-the scope:
+When a block in a pattern defines a link:#scoping[_((parameter scope))_],
+ i.e. a link:#sequences[sequence] of declarations or definitions, it
+can be matched by any scope that provides matching definitions. In
+that case, the definitions in the _((argument scope))_ may be provided
+in a different order, or with different separators for the scope:
 
 [source]
 ----
@@ -5294,7 +5293,7 @@ my_picture is
 ----
 
 For better readability, the pattern can also match a scope with
-link:#pattern-matching-definitions[matching definitions]:
+link:#scope-pattern-matching[matching definitions]:
 
 [source]
 ----
@@ -5303,6 +5302,27 @@ another_picture is
     height is 768
     buffer is another_buffer
 ----
+
+Note that in order to make patterns more specific, a type is typically
+defined using a prefix, not just a block, in order to define a
+link:#creation[constructor]. For example, it would be
+considered better taste to define the `picture` type as follows:
+
+[source]
+----
+picture is type picture
+    width   : unsigned
+    height  : unsigned
+    data    : buffer[size] of unsigned8
+    size is width * height
+
+my_picture : picture := picture
+    width  is 640
+    height is 480
+    data   is my_buffer
+----
+
+
 
 ===== Named scope implementation
 
