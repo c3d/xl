@@ -5027,6 +5027,7 @@ convenient or more efficient machine representation. For example, on a
 32-bit machine, `integer bits 22` might be more efficiently represented
 as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 
+
 ===== Real subtypes
 
 The `real` type can be subtype with a `range` and a `bits` size, as well
@@ -5068,21 +5069,47 @@ internally by `integer` values between `0` and `100`, and converted to
 hundredth is real range 0.0..1.0 quantum 0.01
 ----
 
-===== Character and text subtypes
+===== Saturating subtypes
 
-The `character` and `text` can be subtyped with the `range` and, for
-`character`, the `bits` operators.
+The `saturating` prefix operator can be used on `integer` and `real`
+types (primarily intended for use with fixed-point subtypes) to
+select a "saturating" behavior in case of overflow.
 
-In addition, they both can be subtyped with the following infix
+For example, a `color_component` type that has values between `0.0`
+and `1.0` and saturates can be defined as follows:
+
+....
+color_component is saturating real range 0.0..1.0 bits 16
+Red : color_component := 0.5
+Red += 0.75             // Red is now 1.0
+....
+
+===== Character subtypes
+
+The `character` types can be subtyped with the `range` and `bits`
+operators:
+
+....
+letter is character range 'A'..'Z'
+ASCII  is character bits 7
+....
+
+In addition, character types can be subtyped with the following infix
 operators:
 
 * The `encoding` operator specifies the encoding used for the text, for
-example `text encoding UTF8` or `character encoding ASCII`.
+  example `character encoding "ASCII"`.
 * The `locale` operator specifies the locale for the text, for example
-`text locale fr_FR` will select a French locale.
+  `character locale "fr_FR"` will select a French locale.
 * The `collation` operator specifies collating order. For example, to
-have `text` values that sort following German rules, you would use
-`text collate de_DE`
+  have `character` values that sort following German rules, you would use
+  `character collation "de_DE"`
+
+
+===== Text subtypes
+
+The `text` type can be subtyped with the `encoding`, `locale` and
+`collation` operators, with the same meaning as for `character.
 
 ==== Interface
 

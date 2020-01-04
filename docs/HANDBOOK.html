@@ -590,7 +590,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#range-subtypes">4.4.10.1. Range subtypes</a></li>
 <li><a href="#size-subtypes">4.4.10.2. Size subtypes</a></li>
 <li><a href="#real-subtypes">4.4.10.3. Real subtypes</a></li>
-<li><a href="#character-and-text-subtypes">4.4.10.4. Character and text subtypes</a></li>
+<li><a href="#saturating-subtypes">4.4.10.4. Saturating subtypes</a></li>
+<li><a href="#character-subtypes">4.4.10.5. Character subtypes</a></li>
+<li><a href="#text-subtypes">4.4.10.6. Text subtypes</a></li>
 </ul>
 </li>
 <li><a href="#interface">4.4.11. Interface</a>
@@ -7439,31 +7441,63 @@ internally by <code>integer</code> values between <code>0</code> and <code>100</
 </div>
 </div>
 <div class="sect4">
-<h5 id="character-and-text-subtypes"><a class="anchor" href="#character-and-text-subtypes"></a><a class="link" href="#character-and-text-subtypes">4.4.10.4. Character and text subtypes</a></h5>
+<h5 id="saturating-subtypes"><a class="anchor" href="#saturating-subtypes"></a><a class="link" href="#saturating-subtypes">4.4.10.4. Saturating subtypes</a></h5>
 <div class="paragraph">
-<p>The <code>character</code> and <code>text</code> can be subtyped with the <code>range</code> and, for
-<code>character</code>, the <code>bits</code> operators.</p>
+<p>The <code>saturating</code> prefix operator can be used on <code>integer</code> and <code>real</code>
+types (primarily intended for use with fixed-point subtypes) to
+select a "saturating" behavior in case of overflow.</p>
 </div>
 <div class="paragraph">
-<p>In addition, they both can be subtyped with the following infix
+<p>For example, a <code>color_component</code> type that has values between <code>0.0</code>
+and <code>1.0</code> and saturates can be defined as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>color_component is saturating real range 0.0..1.0 bits 16
+Red : color_component := 0.5
+Red += 0.75             // Red is now 1.0</pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="character-subtypes"><a class="anchor" href="#character-subtypes"></a><a class="link" href="#character-subtypes">4.4.10.5. Character subtypes</a></h5>
+<div class="paragraph">
+<p>The <code>character</code> types can be subtyped with the <code>range</code> and <code>bits</code>
+operators:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>letter is character range 'A'..'Z'
+ASCII  is character bits 7</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In addition, character types can be subtyped with the following infix
 operators:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
 <p>The <code>encoding</code> operator specifies the encoding used for the text, for
-example <code>text encoding UTF8</code> or <code>character encoding ASCII</code>.</p>
+example <code>character encoding "ASCII"</code>.</p>
 </li>
 <li>
 <p>The <code>locale</code> operator specifies the locale for the text, for example
-<code>text locale fr_FR</code> will select a French locale.</p>
+<code>character locale "fr_FR"</code> will select a French locale.</p>
 </li>
 <li>
 <p>The <code>collation</code> operator specifies collating order. For example, to
-have <code>text</code> values that sort following German rules, you would use
-<code>text collate de_DE</code></p>
+have <code>character</code> values that sort following German rules, you would use
+<code>character collation "de_DE"</code></p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="text-subtypes"><a class="anchor" href="#text-subtypes"></a><a class="link" href="#text-subtypes">4.4.10.6. Text subtypes</a></h5>
+<div class="paragraph">
+<p>The <code>text</code> type can be subtyped with the <code>encoding</code>, <code>locale</code> and
+<code>collation</code> operators, with the same meaning as for `character.</p>
 </div>
 </div>
 </div>
@@ -9430,7 +9464,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 10:11:34 +0100
+Last updated 2020-01-04 10:26:31 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
