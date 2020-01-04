@@ -3904,7 +3904,7 @@ that is just another name for `integer`:
 int is integer
 ....
 
-More interesting types can be used using the `type` function, which
+More interesting types can be defined using the `type` function, which
 takes a pattern as an argument, and returns a type that
 link:#pattern-matching[matches that pattern]. The expression `type(42)`
 returns a type that only matches the value `42`.
@@ -5109,7 +5109,7 @@ operators:
 ===== Text subtypes
 
 The `text` type can be subtyped with the `encoding`, `locale` and
-`collation` operators, with the same meaning as for `character.
+`collation` operators, with the same meaning as for `character`.
 
 ==== Interface
 
