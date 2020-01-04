@@ -927,7 +927,7 @@ identity_matrix is
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X ≠ Y           is      not X = Y</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X ≠ Y           is      (not X = Y)</code></pre>
 </div>
 </div>
 </div>
@@ -969,7 +969,7 @@ X + 0           is      X</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">loop Body       is      Body; loop Body     // Define an infnite loop</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">loop Body       is      { Body; loop Body }     // Define an infnite loop</code></pre>
 </div>
 </div>
 </div>
@@ -979,9 +979,9 @@ X + 0           is      X</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type complex    is      polar or cartesian
-type cartesian  is      cartesian(re:number, im:number)
-type polar      is      polar(mod:number, arg:number)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">complex         is      polar or cartesian
+cartesian       is      type cartesian(re:number, im:number)
+polar           is      type polar(mod:number, arg:number)</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1007,7 +1007,7 @@ for example <code>cartesian(1,5)</code>.
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">adder N         is      { lambda X is N + X }
-add3            is      adder 3
+add3            is      ( adder 3 )
 
  // This will compute 8
  add3 5</code></pre>
@@ -1091,10 +1091,10 @@ contiguous integers.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// An (inefficient) implementation of a generic 1-based array type
-type array [1] of T is
+array[1] of T is type
     Value : T
     1 is Value
-type array [N] of T when N &gt; 1 is
+array[N] of T when N &gt; 1 is type
     Head  : array[N-1] of T
     Tail  : T
     lambda I when I&lt;N is Head[I]
@@ -1348,12 +1348,12 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 write X:integer         as mayfail      is ...
 write X:real            as mayfail      is ...
 write X:character       as mayfail      is ...
-write [[true]]                          is write "true" <i class="conum" data-value="2"></i><b>(2)</b>
-write [[false]]                         is write "false"
-write Head, Rest                        is write Head; write Rest
+write [[true]]                          is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
+write [[false]]                         is { write "false" }
+write Head, Rest                        is { write Head; write Rest }
 
-print                   as mayfail      is write SOME_NEWLINE_CHARACTER
-print Items                             is write Items; print</code></pre>
+print                   as mayfail      is { write SOME_NEWLINE_CHARACTER }
+print Items                             is { write Items; print }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1463,7 +1463,7 @@ write B:integer, C:text, D:integer is
 
 write C:text, D:integer is
     write C
-    write  D</code></pre>
+    write D</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2840,26 +2840,69 @@ lists. An indent or <code>{ }</code> block begins a statement, whereas parenthes
 <div class="paragraph">
 <p>There are rare cases where the default rule will not achieve the desired
 objective, and you will need additional parentheses. One important such
-case is <em>expression statements</em>, i.e. statements that you would like to
-see as an expression. Consider the following two declarations:</p>
+case is what follow <code>is</code> if it is not a block. Consider the following
+declarations:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">debug X     is write "X=", X
-expm1 X     is exp X - 1</code></pre>
+expm1 X     is exp X - 1
+double X    is X; X</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>The first example parses as intended, as a statement. The second one,
 however, is not, despite being syntactically similar. On could want to
 see this parse as <code>(exp X) -1</code>, but in reality, it parses as <code>exp (X-1)</code>
-for the same reason that the line above parses as <code>write ("X=", X)</code>.</p>
+for the same reason that the line above parses as <code>write ("X=", X)</code>.
+Another issue occurs with the body of <code>double X</code>, because it actually
+only contains the first <code>X</code>. The <code>;</code> operator has lower precedence
+than <code>is</code>, which is useful for <a href="#scoping">maps</a>, but does not
+achieve the expected effect above.</p>
 </div>
 <div class="paragraph">
-<p>The solution is to add parentheses around the expression, i.e. to write
-the body as <code>(exp X - 1)</code>. Generally, when you see statements between
-parentheses in XL, it is to indicate that they are expression
-statements.</p>
+<p>The solution to these problems is use a block on the right of <code>is</code> in
+all these cases. The correct way to write the above code is therefore:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">debug X     is { write "X=", X } <i class="conum" data-value="1"></i><b>(1)</b>
+expm1 X     is ( exp X - 1 )  <i class="conum" data-value="2"></i><b>(2)</b>
+double X    is { X; X } <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The curly braces indicate that we expect <code>write</code> to be a statement.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The parentheses indicate that we expect <code>exp</code> to be an expression.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The curly braces ensure that we interpret the sequence as the body
+of <code>double X</code>.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A quality implementation of XL should probably warn if a prefix
+is seen on the right of <code>is</code> and has an infix as an
+argument. Expressions such as <code>type X</code> or <code>foo(A,B,C)</code> do not present
+a risk, but expressions such as <code>foo A-1</code> do represent present a risk,
+and should always be written in a block.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect3">
@@ -3078,8 +3121,13 @@ block’s child</p>
 </div>
 </li>
 <li>
-<p>An infix <code>NEWLINE</code> or semi-colon <code>;</code>, in which case the left and right
-operands of the infix are processed in that order.</p>
+<p>An infix <code>NEWLINE</code>, semi-colon <code>;</code> or comma <code>,</code>, in which case the
+left and right operands of the infix are processed in that order.
+The comma is typically used in parameter lists and to separate
+expressions, whereas the semi-colon and new-line are used to separate
+statements. Processing the infix as a sequence only happens if
+<a href="#pattern-matching">pattern matching</a> did not succeed with the
+infix form.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">print "One"; print "Two"
@@ -3705,7 +3753,8 @@ in the example below:</p>
 </div>
 <div class="paragraph">
 <p>For readability, a type annotation for a name can also be matched by an
-<em>assignment</em> or a definition with the same name:</p>
+<a href="#assignment">assignment</a> or a <a href="#name-definitions">name definition</a>
+with the same name as the formal parameter:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3723,8 +3772,8 @@ P : picture is picture
 </div>
 </div>
 <div class="paragraph">
-<p>The second example above matches a <a href="#scope-pattern-matching">scope</a>,
-which means that the arguments may be given in a different order.</p>
+<p>The <a href="#scope-pattern-matching">scope pattern matching</a> makes it
+possible to give arguments in a different order in that case.</p>
 </div>
 </div>
 <div class="sect3">
@@ -4158,16 +4207,16 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 <h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></h4>
 <div class="paragraph">
 <p>When a block in a pattern defines a <a href="#scoping"><em>parameter scope</em></a>,
- i.e. a <a href="#sequences">sequence</a> of declarations or definitions, it
+i.e. a <a href="#sequences">sequence</a> of declarations or definitions, it
 can be matched by any scope that provides matching definitions. In
 that case, the definitions in the <em>argument scope</em> may be provided
 in a different order, or with different separators for the scope:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle(Radius:real; CenterX:real; CenterY:real) as circle <i class="conum" data-value="1"></i><b>(1)</b>
-C1 : circle := circle(3.5; 2.6; 3.2) <i class="conum" data-value="2"></i><b>(2)</b>
-C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <i class="conum" data-value="3"></i><b>(3)</b>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle(Radius:real, CenterX:real, CenterY:real) as circle <i class="conum" data-value="1"></i><b>(1)</b>
+C1 : circle := circle(3.5, 2.6, 3.2) <i class="conum" data-value="2"></i><b>(2)</b>
+C2 : circle := circle((CenterX is 0.0), (CenterY is 1.5), (Radius is 2.4)) <i class="conum" data-value="3"></i><b>(3)</b>
 C3 : circle := circle <i class="conum" data-value="4"></i><b>(4)</b>
     Radius  is 1.5
     CenterX is 3.5
@@ -4178,8 +4227,9 @@ C3 : circle := circle <i class="conum" data-value="4"></i><b>(4)</b>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Notice that the formal parameters are separated by semi-colons,
-which means that the block is a scope</td>
+<td>Notice that the formal parameters are a comma-separated sequence of
+declarations, meaning that they form a valid scope. A semi-colon
+or new-line could interchangeably be used there.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -4189,12 +4239,15 @@ which means that the block is a scope</td>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>An argument scope is passed, which contains the necessary
 definitions to match the parameter scope. The definitons need not
-be in the same order as in the parameter scope.</td>
+be in the same order as in the parameter scope. However, passing
+them with the comma operator is inconvenient, because <code>,</code> is
+higher precedence than <code>is</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>The argument scope need not use the same separators as the
-parameter scope.</td>
+parameter scope. Using indentation and line separators is more
+convenient, since it removes the need for parentheses.</td>
 </tr>
 </table>
 </div>
@@ -5275,7 +5328,7 @@ foo 3                           // Returns 45</code></pre>
 </div>
 <div class="sect2">
 <h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.14. Assignments and moves</a></h3>
-<div class="paragraph">
+<div id="assignment" class="paragraph">
 <p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
 returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
 <code>/=</code> are equivalent to performing the corresponding operating and
@@ -7767,15 +7820,15 @@ my_picture : picture := picture
 <div class="sect4">
 <h5 id="named-scope-implementation"><a class="anchor" href="#named-scope-implementation"></a><a class="link" href="#named-scope-implementation">4.4.11.3. Named scope implementation</a></h5>
 <div class="paragraph">
-<p>In general, you want the pattern to be more specific, so it is customary
-to add a prefix that matches the type name and add infix <code>,</code> operators
-separating the values, therefore creating a <a href="#creation">constructor</a>.</p>
+<p>In general, you want the pattern for a type to be more specific, so it
+is customary to add a prefix that matches the type name, therefore
+creating a <a href="#creation">constructor</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is picture
-    width   : unsigned,         // Notice the comma
-    height  : unsigned,         // Here too
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    width   : unsigned
+    height  : unsigned
     data    : buffer[size] of unsigned8
     size is width * height
 
@@ -9055,6 +9108,22 @@ writeln as boolean                  is C xl_write_cr
 writeln X as boolean                is write X; writeln</code></pre>
 </div>
 </div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+The precedence of <code>;</code> was changed over time. It is now lower
+than <code>is</code>, but was higher at the time to make it possible to write the
+code above without curly braces. See the rationale in
+<a href="#expression-vs-statemnt">expression vs. statement</a> for an
+explanation of why this was changed.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>More interestingly, even if-then-else can be described that way:</p>
 </div>
@@ -9066,11 +9135,11 @@ if true  then TrueBody                  is TrueBody
 if false then TrueBody                  is false</code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock caution">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-caution" title="Caution"></i>
 </td>
 <td class="content">
 the above code now requires a <a href="#metabox">metabox</a> for <code>true</code> in
@@ -9094,7 +9163,7 @@ implements tail recursion properly:</p>
 
 until Condition loop Body is while not Condition loop Body
 
-loop Body is Body; loop Body
+loop Body is { Body; loop Body }
 
 for Var in Low..High loop Body is
     Var := Low
@@ -9589,7 +9658,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 13:14:20 +0100
+Last updated 2020-01-04 17:54:11 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -233,7 +233,7 @@ abs X:number    is      if X < 0 then -X else X
 ====
 [source]
 ----
-X ≠ Y           is      not X = Y
+X ≠ Y           is      (not X = Y)
 ----
 ====
 
@@ -271,7 +271,7 @@ X + 0           is      X
 ====
 [source]
 ----
-loop Body       is      Body; loop Body     // Define an infnite loop
+loop Body       is      { Body; loop Body }     // Define an infnite loop
 ----
 ====
 
@@ -280,9 +280,9 @@ loop Body       is      Body; loop Body     // Define an infnite loop
 ====
 [source]
 ----
-type complex    is      polar or cartesian
-type cartesian  is      cartesian(re:number, im:number)
-type polar      is      polar(mod:number, arg:number)
+complex         is      polar or cartesian
+cartesian       is      type cartesian(re:number, im:number)
+polar           is      type polar(mod:number, arg:number)
 ----
 
 NOTE: link:#types[types] in XL indicate the shape of ((parse tree))s. In
@@ -297,7 +297,7 @@ for example `cartesian(1,5)`.
 [source]
 ----
 adder N         is      { lambda X is N + X }
-add3            is      adder 3
+add3            is      ( adder 3 )
 
  // This will compute 8
  add3 5
@@ -368,10 +368,10 @@ contiguous integers.
 [source]
 ----
 // An (inefficient) implementation of a generic 1-based array type
-type array [1] of T is
+array[1] of T is type
     Value : T
     1 is Value
-type array [N] of T when N > 1 is
+array[N] of T when N > 1 is type
     Head  : array[N-1] of T
     Tail  : T
     lambda I when I<N is Head[I]
@@ -585,12 +585,12 @@ write X:text            as mayfail      is ... // <1>
 write X:integer         as mayfail      is ...
 write X:real            as mayfail      is ...
 write X:character       as mayfail      is ...
-write [[true]]                          is write "true" // <2>
-write [[false]]                         is write "false"
-write Head, Rest                        is write Head; write Rest
+write [[true]]                          is { write "true"  } // <2>
+write [[false]]                         is { write "false" }
+write Head, Rest                        is { write Head; write Rest }
 
-print                   as mayfail      is write SOME_NEWLINE_CHARACTER
-print Items                             is write Items; print
+print                   as mayfail      is { write SOME_NEWLINE_CHARACTER }
+print Items                             is { write Items; print }
 ----
 
 <1> The link:#fallible-types[mayfail] type is used to represent
@@ -684,7 +684,7 @@ write B:integer, C:text, D:integer is
 
 write C:text, D:integer is
     write C
-    write  D
+    write D
 ----
 
 All these definitions are then available as shortcuts whenever the
@@ -1728,24 +1728,44 @@ lists. An indent or `{ }` block begins a statement, whereas parentheses
 
 There are rare cases where the default rule will not achieve the desired
 objective, and you will need additional parentheses. One important such
-case is _expression statements_, i.e. statements that you would like to
-see as an expression. Consider the following two declarations:
+case is what follow `is` if it is not a block. Consider the following
+declarations:
 
 [source]
 ----
 debug X     is write "X=", X
 expm1 X     is exp X - 1
+double X    is X; X
 ----
 
 The first example parses as intended, as a statement. The second one,
 however, is not, despite being syntactically similar. On could want to
 see this parse as `(exp X) -1`, but in reality, it parses as `exp (X-1)`
 for the same reason that the line above parses as `write ("X=", X)`.
+Another issue occurs with the body of `double X`, because it actually
+only contains the first `X`. The `;` operator has lower precedence
+than `is`, which is useful for link:#scoping[maps], but does not
+achieve the expected effect above.
 
-The solution is to add parentheses around the expression, i.e. to write
-the body as `(exp X - 1)`. Generally, when you see statements between
-parentheses in XL, it is to indicate that they are expression
-statements.
+The solution to these problems is use a block on the right of `is` in
+all these cases. The correct way to write the above code is therefore:
+
+[source]
+----
+debug X     is { write "X=", X } <1>
+expm1 X     is ( exp X - 1 )  <2>
+double X    is { X; X } <3>
+----
+<1> The curly braces indicate that we expect `write` to be a statement.
+<2> The parentheses indicate that we expect `exp` to be an expression.
+<3> The curly braces ensure that we interpret the sequence as the body
+    of `double X`.
+
+NOTE: A quality implementation of XL should probably warn if a prefix
+is seen on the right of `is` and has an infix as an
+argument. Expressions such as `type X` or `foo(A,B,C)` do not present
+a risk, but expressions such as `foo A-1` do represent present a risk,
+and should always be written in a block.
 
 ==== infix vs. prefix
 
@@ -1897,8 +1917,13 @@ block’s child
 ----
 loop { print "Hello World" }
 ----
-* An infix `NEWLINE` or semi-colon `;`, in which case the left and right
-operands of the infix are processed in that order.
+* An infix `NEWLINE`, semi-colon `;` or comma `,`, in which case the
+left and right operands of the infix are processed in that order.
+The comma is typically used in parameter lists and to separate
+expressions, whereas the semi-colon and new-line are used to separate
+statements. Processing the infix as a sequence only happens if
+link:#pattern-matching[pattern matching] did not succeed with the
+infix form.
 +
 [source]
 ----
@@ -2242,7 +2267,6 @@ Definitions with a top-level name pattern are called _name definitions_.
 NOTE: This case only applies to names, not to operators. You cannot
 define a `+` operator that way.
 
-
 ==== Wildcards
 
 Name patterns that are not at the top-level can match any expression,
@@ -2315,7 +2339,8 @@ X:real + Y:real as real is ...
 ----
 
 For readability, a type annotation for a name can also be matched by an
-_assignment_ or a definition with the same name:
+link:#assignment[assignment] or a link:#name-definitions[name definition]
+with the same name as the formal parameter:
 
 [source]
 ----
@@ -2332,8 +2357,8 @@ P : picture is picture
     Buffer is my_buffer
 ----
 
-The second example above matches a link:#scope-pattern-matching[scope],
-which means that the arguments may be given in a different order.
+The link:#scope-pattern-matching[scope pattern matching] makes it
+possible to give arguments in a different order in that case.
 
 ==== Function (prefix) definitions
 
@@ -2573,29 +2598,33 @@ C : circle := circle(0.3, 2.6, 4.0)
 ==== Scope pattern matching
 
 When a block in a pattern defines a link:#scoping[_((parameter scope))_],
- i.e. a link:#sequences[sequence] of declarations or definitions, it
+i.e. a link:#sequences[sequence] of declarations or definitions, it
 can be matched by any scope that provides matching definitions. In
 that case, the definitions in the _((argument scope))_ may be provided
 in a different order, or with different separators for the scope:
 
 [source]
 ----
-circle(Radius:real; CenterX:real; CenterY:real) as circle <1>
-C1 : circle := circle(3.5; 2.6; 3.2) <2>
-C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <3>
+circle(Radius:real, CenterX:real, CenterY:real) as circle <1>
+C1 : circle := circle(3.5, 2.6, 3.2) <2>
+C2 : circle := circle((CenterX is 0.0), (CenterY is 1.5), (Radius is 2.4)) <3>
 C3 : circle := circle <4>
     Radius  is 1.5
     CenterX is 3.5
     CenterY is 2.4
 ----
-<1> Notice that the formal parameters are separated by semi-colons,
-    which means that the block is a scope
+<1> Notice that the formal parameters are a comma-separated sequence of
+    declarations, meaning that they form a valid scope. A semi-colon
+    or new-line could interchangeably be used there.
 <2> This is the normal _((positional form))_ for argument passing
 <3> An argument scope is passed, which contains the necessary
     definitions to match the parameter scope. The definitons need not
-    be in the same order as in the parameter scope.
+    be in the same order as in the parameter scope. However, passing
+    them with the comma operator is inconvenient, because `,` is
+    higher precedence than `is`.
 <4> The argument scope need not use the same separators as the
-    parameter scope.
+    parameter scope. Using indentation and line separators is more
+    convenient, since it removes the need for parentheses.
 
 This form is often used for data types containing a large number of
 parameters:
@@ -3489,6 +3518,7 @@ foo 3                           // Returns 45
 
 === Assignments and moves
 
+[[assignment]]
 The infix `:=` operator is used to perform _((assignments))_ and
 returns the value being assigned. Variants such as `+=`, `-=`, `*=`,
 `/=` are equivalent to performing the corresponding operating and
@@ -5337,15 +5367,15 @@ my_picture : picture := picture
 
 ===== Named scope implementation
 
-In general, you want the pattern to be more specific, so it is customary
-to add a prefix that matches the type name and add infix `,` operators
-separating the values, therefore creating a link:#creation[constructor].
+In general, you want the pattern for a type to be more specific, so it
+is customary to add a prefix that matches the type name, therefore
+creating a link:#creation[constructor].
 
 [source]
 ----
-type picture is picture
-    width   : unsigned,         // Notice the comma
-    height  : unsigned,         // Here too
+picture is type picture
+    width   : unsigned
+    height  : unsigned
     data    : buffer[size] of unsigned8
     size is width * height
 
@@ -6305,6 +6335,12 @@ writeln as boolean                  is C xl_write_cr
 writeln X as boolean                is write X; writeln
 ----
 
+CAUTION: The precedence of `;` was changed over time. It is now lower
+than `is`, but was higher at the time to make it possible to write the
+code above without curly braces. See the rationale in
+link:#expression-vs-statemnt[expression vs. statement] for an
+explanation of why this was changed.
+
 More interestingly, even if-then-else can be described that way:
 
 [source]
@@ -6315,7 +6351,7 @@ if true  then TrueBody                  is TrueBody
 if false then TrueBody                  is false
 ----
 
-NOTE: the above code now requires a link:#metabox[metabox] for `true` in
+CAUTION: the above code now requires a link:#metabox[metabox] for `true` in
 the version of XL described in this document, i.e._`true` must be
 replaced with `+[[true]]+` in order to avoid being interpreted as a
 formal parameter.
@@ -6332,7 +6368,7 @@ while Condition loop Body is
 
 until Condition loop Body is while not Condition loop Body
 
-loop Body is Body; loop Body
+loop Body is { Body; loop Body }
 
 for Var in Low..High loop Body is
     Var := Low
