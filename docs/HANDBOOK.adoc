@@ -4066,18 +4066,20 @@ or number of elements.
 
 In order to makea it easier to write such generic code, XL code
 typically creates a _((true generic type))_, which is a type that will
-accept any variant of the generic type. For example, for `array`, one
-could write the true generic type as follows:
+accept any variant of the generic type. It is customary to begin the
+name of such types with `some_`, in order to indicate the intent. For
+example, for `array`, one could write the true generic type as
+follows:
 
 ....
-array is type (array[index:array_index] of value:type)
+some_array is type (array[index:array_index] of value:type)
 ....
 
 This makes it possible to write true generic code that takes an
 `array` argument, as follows:
 
 ....
-sum(A:array) as A.value is
+sum(A:some_array) as A.value is
     result := 0
     for I in A loop
         S += I
@@ -4089,7 +4091,7 @@ create a type that only accepts numbers for the `real` type, in other
 words something like:
 
 ....
-complex is type (complex[real:type like number])
+some_complex is type complex[real:type like number]
 ....
 
 A type constructed like this is called a _((constrained generic type))_.
@@ -4929,7 +4931,31 @@ other types, a feature sometimes called multiple inheritance. There is
 also no need for the base and derived type to share any specific data
 representation, although this is link:#data-inheritance[often done in
 practice]. For example, there is an implicit conversion from `integer16`
-to `integer32`, altough the machine representation is different.
+to `integer32`, altough the machine representation is different, so in
+XL, one can say that `integer16` derives from `integer32`.
+
+Sometimes, it is necessary to denote a type that inherits from a
+specific type. For example, if you want to create a constrained
+generic type for `complex`, you might want it to accept only `number`
+for its type argument. The following code is an incorrect way to do
+it, since it creates a type that only accept `number` _values_ as an
+argument, i.e. it would accept `complex[3.5]` but not `complex[real]`:
+
+....
+some_complex is type complex[real:number]
+....
+
+To denote a type that derives from a base type, one can use the `type
+like base` notation. The correct way to implement the above
+restriction is as follows, which indicates that the argument is a
+type, not a value:
+
+....
+some_complex is type complex[real:type like number]
+....
+
+The notation `type like base` can also be used in the
+link:#interface[interface] for a type.
 
 ==== Subtypes
 

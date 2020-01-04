@@ -6060,12 +6060,14 @@ or number of elements.</p>
 <div class="paragraph">
 <p>In order to makea it easier to write such generic code, XL code
 typically creates a <em>true generic type</em>, which is a type that will
-accept any variant of the generic type. For example, for <code>array</code>, one
-could write the true generic type as follows:</p>
+accept any variant of the generic type. It is customary to begin the
+name of such types with <code>some_</code>, in order to indicate the intent. For
+example, for <code>array</code>, one could write the true generic type as
+follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>array is type (array[index:array_index] of value:type)</pre>
+<pre>some_array is type (array[index:array_index] of value:type)</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6074,7 +6076,7 @@ could write the true generic type as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>sum(A:array) as A.value is
+<pre>sum(A:some_array) as A.value is
     result := 0
     for I in A loop
         S += I</pre>
@@ -6088,7 +6090,7 @@ words something like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex is type (complex[real:type like number])</pre>
+<pre>some_complex is type complex[real:type like number]</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7240,7 +7242,36 @@ other types, a feature sometimes called multiple inheritance. There is
 also no need for the base and derived type to share any specific data
 representation, although this is <a href="#data-inheritance">often done in
 practice</a>. For example, there is an implicit conversion from <code>integer16</code>
-to <code>integer32</code>, altough the machine representation is different.</p>
+to <code>integer32</code>, altough the machine representation is different, so in
+XL, one can say that <code>integer16</code> derives from <code>integer32</code>.</p>
+</div>
+<div class="paragraph">
+<p>Sometimes, it is necessary to denote a type that inherits from a
+specific type. For example, if you want to create a constrained
+generic type for <code>complex</code>, you might want it to accept only <code>number</code>
+for its type argument. The following code is an incorrect way to do
+it, since it creates a type that only accept <code>number</code> <em>values</em> as an
+argument, i.e. it would accept <code>complex[3.5]</code> but not <code>complex[real]</code>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>some_complex is type complex[real:number]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To denote a type that derives from a base type, one can use the <code>type
+like base</code> notation. The correct way to implement the above
+restriction is as follows, which indicates that the argument is a
+type, not a value:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>some_complex is type complex[real:type like number]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The notation <code>type like base</code> can also be used in the
+<a href="#interface">interface</a> for a type.</p>
 </div>
 </div>
 <div class="sect3">
@@ -9383,7 +9414,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 09:49:12 +0100
+Last updated 2020-01-04 10:00:48 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
