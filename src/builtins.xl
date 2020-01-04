@@ -125,8 +125,8 @@ print                   as boolean      is C xl_write_cr
 
 write true              is write "true"
 write false             is write "false"
-write Head, Rest        is write Head; write Rest
-print Items             is write Items; print
+write Head, Rest        is { write Head; write Rest }
+print Items             is { write Items; print }
 
 // Tree shape and attributes
 kind  X:tree            as integer      is builtin TreeKind
@@ -180,15 +180,15 @@ while Condition loop Body is
     if Condition then
         Body
         while Condition loop Body
-until Condition loop Body               is while not Condition loop Body
-loop Body                               is Body; loop Body
+until Condition loop Body               is { while not Condition loop Body }
+loop Body                               is { Body; loop Body }
 for Var in Low..High loop Body is
     Var := Low
     while Var < High loop
         Body
         Var := Var + 1
 
-every Duration, Body is loop { Body; sleep Duration}
+every Duration, Body is loop { Body; sleep Duration }
 Duration:real h  is Duration * 3600
 Duration:real m  is Duration * 60
 Duration:real s  is Duration

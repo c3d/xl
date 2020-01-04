@@ -1,10 +1,9 @@
 INFIX
-        11      NEWLINE
+        11      NEWLINE ;
         21      -> is has
         31      else into
         40      loop while until
         50      then require ensure
-        61      ;
         75      with as
         85      := += -= *= /= ^= |= &= :+ :<
         100     STATEMENT
