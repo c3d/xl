@@ -6080,6 +6080,20 @@ could write the true generic type as follows:</p>
         S += I</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>It is possible for the pattern of the true generic type to be somewhat
+more restrictive. For example, for a <code>complex</code> type, one might want to
+create a type that only accepts numbers for the <code>real</code> type, in other
+words something like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex is type (complex[real:type like number])</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A type constructed like this is called a <em>constrained generic type</em>.</p>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -6103,6 +6117,11 @@ T sum(const vector&lt;T&gt; &amp;v)
     return s;
 }</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>The recent standards for C++ have introduced the notion of
+<a href="https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)">concepts</a> to
+address the need to constrain generic types.</p>
 </div>
 </td>
 </tr>
@@ -9364,7 +9383,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 09:28:06 +0100
+Last updated 2020-01-04 09:49:12 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

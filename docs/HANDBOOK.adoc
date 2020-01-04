@@ -4083,6 +4083,17 @@ sum(A:array) as A.value is
         S += I
 ....
 
+It is possible for the pattern of the true generic type to be somewhat
+more restrictive. For example, for a `complex` type, one might want to
+create a type that only accepts numbers for the `real` type, in other
+words something like:
+
+....
+complex is type (complex[real:type like number])
+....
+
+A type constructed like this is called a _((constrained generic type))_.
+
 [NOTE]
 =====
 *RATIONALE* In languages such as pass:[C++], the lack of this feature
@@ -4100,6 +4111,10 @@ T sum(const vector<T> &v)
     return s;
 }
 ----
+
+The recent standards for pass:[C++] have introduced the notion of
+link:https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)[concepts] to
+address the need to constrain generic types.
 =====
 
 
