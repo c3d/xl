@@ -4388,7 +4388,6 @@ features several mathematical types designed for that purpose:
   Operations on the `matrix` type are often highly parallelizable.
   The `matrix[4,3] of integer32` type will
 
-
 ==== Parse tree types
 
 The `XL.PARSER` module offers a number of types intended to represent
@@ -4408,6 +4407,14 @@ or match elements in the parse tree:
 * `postfix` matches postfix expressions such as `4%`.
 * `block` matches block expressions such as `(A)`.
 
+==== Program-related types
+
+A few other types are related to program evaluation, notably:
+
+* `lifetime` represents the link:#lifetime[lifetime] of values.
+* `parser` represents an XL parser.
+* `evaluator` represents an XL program evaluator.
+* `task` represent a running task.
 
 === Type-related concepts
 
@@ -4449,8 +4456,8 @@ The lifetime of a value is the amount of time during which the value
 exists in the program, in other words the time between its
 link:#creation[creation] and its link:#destruction[destruction].
 
-An entity is said to be _live_ if it was created but not yet destroyed.
-It is said to be _dead_ otherwise.
+An entity is said to be _live_(((live value))) if it was created but
+not yet destroyed.  It is said to be _dead_(((dead value))) otherwise.
 
 NOTE: Some entities may be live but not accessible from within the
 current context because they are not visible. This is the case for

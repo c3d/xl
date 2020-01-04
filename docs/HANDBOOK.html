@@ -573,6 +573,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#other-generic-types">4.3.6. Other generic types</a></li>
 <li><a href="#mathematical-types">4.3.7. Mathematical types</a></li>
 <li><a href="#parse-tree-types">4.3.8. Parse tree types</a></li>
+<li><a href="#program-related-types">4.3.9. Program-related types</a></li>
 </ul>
 </li>
 <li><a href="#type-related-concepts">4.4. Type-related concepts</a>
@@ -6549,6 +6550,28 @@ symbol used in empty blocks, e.g. <code>()</code>.</p>
 </ul>
 </div>
 </div>
+<div class="sect3">
+<h4 id="program-related-types"><a class="anchor" href="#program-related-types"></a><a class="link" href="#program-related-types">4.3.9. Program-related types</a></h4>
+<div class="paragraph">
+<p>A few other types are related to program evaluation, notably:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>lifetime</code> represents the <a href="#lifetime">lifetime</a> of values.</p>
+</li>
+<li>
+<p><code>parser</code> represents an XL parser.</p>
+</li>
+<li>
+<p><code>evaluator</code> represents an XL program evaluator.</p>
+</li>
+<li>
+<p><code>task</code> represent a running task.</p>
+</li>
+</ul>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="type-related-concepts"><a class="anchor" href="#type-related-concepts"></a><a class="link" href="#type-related-concepts">4.4. Type-related concepts</a></h3>
@@ -6616,8 +6639,8 @@ exists in the program, in other words the time between its
 <a href="#creation">creation</a> and its <a href="#destruction">destruction</a>.</p>
 </div>
 <div class="paragraph">
-<p>An entity is said to be <em>live</em> if it was created but not yet destroyed.
-It is said to be <em>dead</em> otherwise.</p>
+<p>An entity is said to be <em>live</em> if it was created but
+not yet destroyed.  It is said to be <em>dead</em> otherwise.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -9660,7 +9683,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 23:12:31 +0100
+Last updated 2020-01-04 23:28:21 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
