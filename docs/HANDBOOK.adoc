@@ -5318,9 +5318,10 @@ interface alone.
 
 ===== Anonymous scope implementation
 
-The simplest way to implement fields is to create a type that has a
-structure exposing declarations that directly match the interface. For
-the `picture` type, this could be the following code:
+The simplest way to implement the features for a type is to create a
+type that has a structure exposing declarations that directly match
+the interface. For the `picture` type, this could be the following
+code:
 
 [source]
 ----
