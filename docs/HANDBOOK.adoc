@@ -3620,7 +3620,7 @@ argument) is the same as `mayfail nil`, and is normally used for
 functions that are not expected to return a value, but can return an
 error.
 
-`mayfail T` contains four accessible fields:
+`mayfail T` contains four accessible features:
 
 * `value` is a `T` value, and can only be accessed when there was no
 error (otherwise, it returns… an `error`!)
@@ -4312,7 +4312,7 @@ link:#access[access] values of an associated owning type.
 all operations from another type, so that its values can safely be
 implicitly converted to values of that other type.
 * the link:#interface[interface] of a type is an optional scope that
-exposes _fields_ of the type, i.e. individually accessible values. The
+exposes _features_ of the type, i.e. individually accessible values. The
 _implementation_ of the type must provide all interfaces exposed in the
 type’s interface.
 * link:#copy[copy], link:#move[move] and link:#binding[binding] are
@@ -5079,14 +5079,13 @@ have `text` values that sort following German rules, you would use
 
 ==== Interface
 
-The
-link:#interface-and-implementation[interface] of
-a type can specifiy a link:#scoping[scope] for
-values that match the type, using the syntax `type T with I`, where `I`
-is a scope containing the publicly available declarations. These
-declarations are called _fields_ of the type when they denote
-link:#mutability[mutable] values, and _members_ of the type if they are
-constant.
+The link:#interface-and-implementation[interface] of a type can
+specifiy a link:#scoping[scope] for values that match the type, using
+the syntax `type T with I`, where `I` is a scope containing the
+publicly available declarations. These declarations are called
+_fields_ of the type when they denote link:#mutability[mutable]
+values, and _members_ of the type if they are constant. Globally, they
+are called the _features_ of the type.
 
 The code below defines a `picture` type that exposes `width`, `height`
 and `data` fields, as well as a `size` member that is used to compute

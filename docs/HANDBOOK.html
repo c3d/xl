@@ -5453,7 +5453,7 @@ functions that are not expected to return a value, but can return an
 error.</p>
 </div>
 <div class="paragraph">
-<p><code>mayfail T</code> contains four accessible fields:</p>
+<p><code>mayfail T</code> contains four accessible features:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -6409,7 +6409,7 @@ implicitly converted to values of that other type.</p>
 </li>
 <li>
 <p>the <a href="#interface">interface</a> of a type is an optional scope that
-exposes <em>fields</em> of the type, i.e. individually accessible values. The
+exposes <em>features</em> of the type, i.e. individually accessible values. The
 <em>implementation</em> of the type must provide all interfaces exposed in the
 type’s interface.</p>
 </li>
@@ -7453,14 +7453,13 @@ have <code>text</code> values that sort following German rules, you would use
 <div class="sect3">
 <h4 id="interface"><a class="anchor" href="#interface"></a><a class="link" href="#interface">4.4.11. Interface</a></h4>
 <div class="paragraph">
-<p>The
-<a href="#interface-and-implementation">interface</a> of
-a type can specifiy a <a href="#scoping">scope</a> for
-values that match the type, using the syntax <code>type T with I</code>, where <code>I</code>
-is a scope containing the publicly available declarations. These
-declarations are called <em>fields</em> of the type when they denote
-<a href="#mutability">mutable</a> values, and <em>members</em> of the type if they are
-constant.</p>
+<p>The <a href="#interface-and-implementation">interface</a> of a type can
+specifiy a <a href="#scoping">scope</a> for values that match the type, using
+the syntax <code>type T with I</code>, where <code>I</code> is a scope containing the
+publicly available declarations. These declarations are called
+<em>fields</em> of the type when they denote <a href="#mutability">mutable</a>
+values, and <em>members</em> of the type if they are constant. Globally, they
+are called the <em>features</em> of the type.</p>
 </div>
 <div class="paragraph">
 <p>The code below defines a <code>picture</code> type that exposes <code>width</code>, <code>height</code>
@@ -9414,7 +9413,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 10:00:48 +0100
+Last updated 2020-01-04 10:03:41 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
