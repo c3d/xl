@@ -8,12 +8,12 @@ INFIX
         75      with as
         85      := += -= *= /= ^= |= &=
         100     STATEMENT
+        105     ,
         110     =>
         120     written
         130     where
         200     DEFAULT
         211     when
-        231     ,
         240     return
         250     and or xor
         260     in at contains
