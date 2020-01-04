@@ -4206,17 +4206,18 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 <div class="sect3">
 <h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></h4>
 <div class="paragraph">
-<p>When a block in a pattern defines a <a href="#scoping"><em>parameter scope</em></a>,
-i.e. a <a href="#sequences">sequence</a> of declarations or definitions, it
-can be matched by any scope that provides matching definitions. In
-that case, the definitions in the <em>argument scope</em> may be provided
-in a different order, or with different separators for the scope:</p>
+<p>When a block in a pattern defines a <a href="#scoping">scope</a>, i.e. a
+<a href="#sequences">sequence</a> of declarations or definitions, that scope
+is called a <em>parameter scope</em>, and it can be matched by any
+<em>argument scope</em> that provides matching definitions. In that case,
+the definitions in the argument scope may be provided in a different
+order, and the scope does not need to use the same delimiters or separators:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">circle(Radius:real, CenterX:real, CenterY:real) as circle <i class="conum" data-value="1"></i><b>(1)</b>
 C1 : circle := circle(3.5, 2.6, 3.2) <i class="conum" data-value="2"></i><b>(2)</b>
-C2 : circle := circle((CenterX is 0.0), (CenterY is 1.5), (Radius is 2.4)) <i class="conum" data-value="3"></i><b>(3)</b>
+C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <i class="conum" data-value="3"></i><b>(3)</b>
 C3 : circle := circle <i class="conum" data-value="4"></i><b>(4)</b>
     Radius  is 1.5
     CenterX is 3.5
@@ -4233,21 +4234,20 @@ or new-line could interchangeably be used there.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>This is the normal <em>positional form</em> for argument passing</td>
+<td>This is the normal <em>positional form</em> for argument passing.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>An argument scope is passed, which contains the necessary
-definitions to match the parameter scope. The definitons need not
-be in the same order as in the parameter scope. However, passing
-them with the comma operator is inconvenient, because <code>,</code> is
+definitions to match the parameter scope. A semi-colon <code>;</code> must be
+used to separate the definitions, because the comma <code>,</code> has a
 higher precedence than <code>is</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
 <td>The argument scope need not use the same separators as the
-parameter scope. Using indentation and line separators is more
-convenient, since it removes the need for parentheses.</td>
+parameter scope. Using indentation and line separators removes the
+need for parentheses, since all kinds of blocks are equivalent.</td>
 </tr>
 </table>
 </div>
@@ -7671,7 +7671,7 @@ have <code>character</code> values that sort following German rules, you would u
 <div class="paragraph">
 <p>The <a href="#interface-and-implementation">interface</a> of a type can
 specifiy a <a href="#scoping">scope</a> for values that match the type, using
-the infix form <code><a id="type"></a> with Interface</code>, where <code>Interface</code> is an
+the infix form <code>[[type]] with Interface</code>, where <code>Interface</code> is an
 <em>interface scope</em> containing the publicly available
 declarations. These declarations are called <em>features</em> of the
 type. The terms <em>fields</em> of the type are also used for
@@ -7681,24 +7681,25 @@ constant values.</p>
 <div class="paragraph">
 <p>The code below defines a <code>picture</code> type that exposes <code>width</code>, <code>height</code>
 and <code>data</code> fields, as well as a <code>size</code> method that is used to compute
-the size of the <code>data</code> buffer.</p>
+the size of <code>buffer</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
     width  : unsigned
     height : unsigned
-    data   : buffer[size] of unsigned8
+    buffer : buffer[size] of unsigned8
     size as unsigned</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Note that only knowing the interface of a type does not allow values of
+<p>Knowing only the interface of a type does not allow values of
 the type to be created. It is sometimes useful to preclude the
 creation of values of the type, for example when creating
 <a href="#true-generic-types">true generic types</a>. For concrete types,
 however, the interface of a function making it possible to create
-values will also be provided. In the rest of the discussion for the
+values must also be provided if you want to make it possible to create
+values of the type. In the rest of the discussion for the
 <code>picture</code> type, we will also assume that there is a <code>picture</code> function
 with the following interface, which returns a <code>picture</code> value:</p>
 </div>
@@ -7768,7 +7769,7 @@ the <code>picture</code> type, this could be the following code:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type
     width   : unsigned
     height  : unsigned
-    data    : buffer[size] of unsigned8
+    buffer  : buffer[size] of unsigned8
     size is width * height</code></pre>
 </div>
 </div>
@@ -7807,13 +7808,13 @@ considered better taste to define the <code>picture</code> type as follows:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
     width   : unsigned
     height  : unsigned
-    data    : buffer[size] of unsigned8
+    buffer  : buffer[size] of unsigned8
     size is width * height
 
 my_picture : picture := picture
     width  is 640
     height is 480
-    data   is my_buffer</code></pre>
+    buffer is my_buffer</code></pre>
 </div>
 </div>
 </div>
@@ -7829,7 +7830,7 @@ creating a <a href="#creation">constructor</a>.</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
     width   : unsigned
     height  : unsigned
-    data    : buffer[size] of unsigned8
+    buffer  : buffer[size] of unsigned8
     size is width * height
 
 my_picture is picture(1024, 768, my_buffer)
@@ -7837,7 +7838,7 @@ my_picture is picture(1024, 768, my_buffer)
 another_picture is picture
     width  is 256
     height is 256
-    data   is another_buffer</code></pre>
+    buffer is another_buffer</code></pre>
 </div>
 </div>
 </div>
@@ -8109,7 +8110,7 @@ on <a href="#ownership">ownership</a> below.</p>
     width  : unsigned
     height : unsigned
     format : either { RGB; GRAY }
-    data   : buffer
+    buffer : buffer
     size is width * height
     type grayscale is fixed_point range 0.0..1.0 bits 8
     type buffer is buffer[1..size] of pixel
@@ -9658,7 +9659,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 17:54:11 +0100
+Last updated 2020-01-04 23:09:50 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

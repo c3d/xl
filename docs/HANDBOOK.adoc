@@ -2597,17 +2597,18 @@ C : circle := circle(0.3, 2.6, 4.0)
 
 ==== Scope pattern matching
 
-When a block in a pattern defines a link:#scoping[_((parameter scope))_],
-i.e. a link:#sequences[sequence] of declarations or definitions, it
-can be matched by any scope that provides matching definitions. In
-that case, the definitions in the _((argument scope))_ may be provided
-in a different order, or with different separators for the scope:
+When a block in a pattern defines a link:#scoping[scope], i.e. a
+link:#sequences[sequence] of declarations or definitions, that scope
+is called a _((parameter scope))_, and it can be matched by any
+_((argument scope))_ that provides matching definitions. In that case,
+the definitions in the argument scope may be provided in a different
+order, and the scope does not need to use the same delimiters or separators:
 
 [source]
 ----
 circle(Radius:real, CenterX:real, CenterY:real) as circle <1>
 C1 : circle := circle(3.5, 2.6, 3.2) <2>
-C2 : circle := circle((CenterX is 0.0), (CenterY is 1.5), (Radius is 2.4)) <3>
+C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <3>
 C3 : circle := circle <4>
     Radius  is 1.5
     CenterX is 3.5
@@ -2616,15 +2617,14 @@ C3 : circle := circle <4>
 <1> Notice that the formal parameters are a comma-separated sequence of
     declarations, meaning that they form a valid scope. A semi-colon
     or new-line could interchangeably be used there.
-<2> This is the normal _((positional form))_ for argument passing
+<2> This is the normal _((positional form))_ for argument passing.
 <3> An argument scope is passed, which contains the necessary
-    definitions to match the parameter scope. The definitons need not
-    be in the same order as in the parameter scope. However, passing
-    them with the comma operator is inconvenient, because `,` is
+    definitions to match the parameter scope. A semi-colon `;` must be
+    used to separate the definitions, because the comma `,` has a
     higher precedence than `is`.
 <4> The argument scope need not use the same separators as the
-    parameter scope. Using indentation and line separators is more
-    convenient, since it removes the need for parentheses.
+    parameter scope. Using indentation and line separators removes the
+    need for parentheses, since all kinds of blocks are equivalent.
 
 This form is often used for data types containing a large number of
 parameters:
@@ -5230,7 +5230,7 @@ The `text` type can be subtyped with the `encoding`, `locale` and
 
 The link:#interface-and-implementation[interface] of a type can
 specifiy a link:#scoping[scope] for values that match the type, using
-the infix form `[[type]] with Interface`, where `Interface` is an
+the infix form `+[[type]] with Interface+`, where `Interface` is an
 _((interface scope))_ containing the publicly available
 declarations. These declarations are called _features_ of the
 type. The terms _fields_ of the type are also used for
@@ -5239,23 +5239,24 @@ constant values.
 
 The code below defines a `picture` type that exposes `width`, `height`
 and `data` fields, as well as a `size` method that is used to compute
-the size of the `data` buffer.
+the size of `buffer`.
 
 [source]
 ----
 picture as type with
     width  : unsigned
     height : unsigned
-    data   : buffer[size] of unsigned8
+    buffer : buffer[size] of unsigned8
     size as unsigned
 ----
 
-Note that only knowing the interface of a type does not allow values of
+Knowing only the interface of a type does not allow values of
 the type to be created. It is sometimes useful to preclude the
 creation of values of the type, for example when creating
 link:#true-generic-types[true generic types]. For concrete types,
 however, the interface of a function making it possible to create
-values will also be provided. In the rest of the discussion for the
+values must also be provided if you want to make it possible to create
+values of the type. In the rest of the discussion for the
 `picture` type, we will also assume that there is a `picture` function
 with the following interface, which returns a `picture` value:
 
@@ -5318,7 +5319,7 @@ the `picture` type, this could be the following code:
 picture is type
     width   : unsigned
     height  : unsigned
-    data    : buffer[size] of unsigned8
+    buffer  : buffer[size] of unsigned8
     size is width * height
 ----
 
@@ -5354,13 +5355,13 @@ considered better taste to define the `picture` type as follows:
 picture is type picture
     width   : unsigned
     height  : unsigned
-    data    : buffer[size] of unsigned8
+    buffer  : buffer[size] of unsigned8
     size is width * height
 
 my_picture : picture := picture
     width  is 640
     height is 480
-    data   is my_buffer
+    buffer is my_buffer
 ----
 
 
@@ -5376,7 +5377,7 @@ creating a link:#creation[constructor].
 picture is type picture
     width   : unsigned
     height  : unsigned
-    data    : buffer[size] of unsigned8
+    buffer  : buffer[size] of unsigned8
     size is width * height
 
 my_picture is picture(1024, 768, my_buffer)
@@ -5384,7 +5385,7 @@ my_picture is picture(1024, 768, my_buffer)
 another_picture is picture
     width  is 256
     height is 256
-    data   is another_buffer
+    buffer is another_buffer
 ----
 
 ===== Indirect implementation
@@ -5578,7 +5579,7 @@ type picture with
     width  : unsigned
     height : unsigned
     format : either { RGB; GRAY }
-    data   : buffer
+    buffer : buffer
     size is width * height
     type grayscale is fixed_point range 0.0..1.0 bits 8
     type buffer is buffer[1..size] of pixel
