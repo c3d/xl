@@ -561,19 +561,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#types">4. Types</a>
 <ul class="sectlevel2">
 <li><a href="#type-annotations-2">4.1. Type annotations</a></li>
-<li><a href="#standard-types">4.2. Standard types</a>
+<li><a href="#type-definitions">4.2. Type definitions</a></li>
+<li><a href="#standard-types">4.3. Standard types</a>
 <ul class="sectlevel3">
-<li><a href="#basic-types">4.2.1. Basic types</a></li>
-<li><a href="#sized-data-types">4.2.2. Sized data types</a></li>
-<li><a href="#category-types">4.2.3. Category types</a></li>
-<li><a href="#generic-containers">4.2.4. Generic containers</a></li>
-<li><a href="#true-generic-types">4.2.5. True generic types</a></li>
-<li><a href="#other-generic-types">4.2.6. Other generic types</a></li>
-<li><a href="#mathematical-types">4.2.7. Mathematical types</a></li>
-<li><a href="#parse-tree-types">4.2.8. Parse tree types</a></li>
+<li><a href="#basic-types">4.3.1. Basic types</a></li>
+<li><a href="#sized-data-types">4.3.2. Sized data types</a></li>
+<li><a href="#category-types">4.3.3. Category types</a></li>
+<li><a href="#generic-containers">4.3.4. Generic containers</a></li>
+<li><a href="#true-generic-types">4.3.5. True generic types</a></li>
+<li><a href="#other-generic-types">4.3.6. Other generic types</a></li>
+<li><a href="#mathematical-types">4.3.7. Mathematical types</a></li>
+<li><a href="#parse-tree-types">4.3.8. Parse tree types</a></li>
 </ul>
 </li>
-<li><a href="#type-definitions">4.3. Type definitions</a></li>
 <li><a href="#type-related-concepts">4.4. Type-related concepts</a>
 <ul class="sectlevel3">
 <li><a href="#lifetime">4.4.1. Lifetime</a></li>
@@ -5788,7 +5788,109 @@ the number of seconds in the current time from some real-time clock.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="standard-types"><a class="anchor" href="#standard-types"></a><a class="link" href="#standard-types">4.2. Standard types</a></h3>
+<h3 id="type-definitions"><a class="anchor" href="#type-definitions"></a><a class="link" href="#type-definitions">4.2. Type definitions</a></h3>
+<div class="paragraph">
+<p>In XL, types are values like any other value, which simply match the
+<code>type</code> type. In particular, types can be declared or
+<a href="#definition">defined</a> like any other value.</p>
+</div>
+<div class="paragraph">
+<p>The simplest case of <em>type definition</em> simply gives a new name to
+an existing type. The following code will create a type named <code>int</code>
+that is just another name for <code>integer</code>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>int is integer</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>More interesting types can be used using the <code>type</code> function, which
+takes a pattern as an argument, and returns a type that
+<a href="#pattern-matching">matches that pattern</a>. The expression <code>type(42)</code>
+returns a type that only matches the value <code>42</code>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>type</code> function can obviously be used to create much more
+interesting types. In order to create a <code>positive</code> type that only
+matches positive values, one only needs the following code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>positive is type(X when X &gt; 0)</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you come from another language, it is important to realize
+that <code>positive</code> as defined above is a type that accepts both <code>integer</code>
+values such as <code>27</code> and <code>real</code> values such as <code>3.14</code>, since the
+expression <code>X &gt; 0</code> is valid in both cases. Using such types makes it
+possible to write <em>constrained generic code</em>, i.e. code that
+applies on a large class of cases, while being properly constrained.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A common usage is to use a named prefix to create types that are
+easier to identify. This kind of notation is called a
+<a href="#creation">constructor</a>, and plays for XL the role that <code>struct</code>
+plays for C or <code>record</code> for Pascal. A <code>complex</code> data type can be
+created and used as shown in the following code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex is type complex(Re:real, Im:real)
+Z:complex := complex(4.3, 2.1)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The definition of <code>complex</code> states that a value matches the type
+<code>complex</code> if and only if it matches the pattern <code>complex(Re:real, Im:real)</code>.
+In particular, it matches the value <code>complex(4.3, 2.1)</code>, which makes
+the assignment on the second line of code possible.</p>
+</div>
+<div class="paragraph">
+<p>For example, a <code>complex</code> type made of two <code>real</code> numbers representing
+the real and imaginary parts can be described as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex is type complex(Re:real, Im:real)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This declaration means that any value that has a shape matching the
+given pattern, like <code>complex(1.3,2.5)</code>,  will match the <code>complex</code> type.</p>
+</div>
+<div class="paragraph">
+<p>Type definitions are not restricted to names. For example, the
+<code>complex</code> type might take the <code>real</code> type as an argument, instead of
+assuming the standard <code>real</code> type:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex[real:type] is type complex(Re:real, Im:real)
+complex is complex[real]
+Z:complex := complex(4.3, 2.1)
+K:complex[real32] := complex(1.2, 3.4)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This creates what is called a <em>generic type</em> in languages like Ada,
+or a <em>template</em> in languages like C++. However, as far as
+syntax is concerned, it is indistinguishable from a function taking a
+type argument and returning a type.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="standard-types"><a class="anchor" href="#standard-types"></a><a class="link" href="#standard-types">4.3. Standard types</a></h3>
 <div class="paragraph">
 <p>The XL library provides a number of standard types representing
 fundamental data types common in most programming languages, as well
@@ -5800,7 +5902,7 @@ available types will be given in a later section about the
 <a href="#standard-library">standard XL library</a>.</p>
 </div>
 <div class="sect3">
-<h4 id="basic-types"><a class="anchor" href="#basic-types"></a><a class="link" href="#basic-types">4.2.1. Basic types</a></h4>
+<h4 id="basic-types"><a class="anchor" href="#basic-types"></a><a class="link" href="#basic-types">4.3.1. Basic types</a></h4>
 <div class="paragraph">
 <p>Some fundamental data types are available on all implementations, and
 do not require any <code>use</code> statement. These fundamental types are called
@@ -5853,7 +5955,7 @@ Unlike languages like C, the <code>boolean</code> type is not a numerical type.<
 </div>
 </div>
 <div class="sect3">
-<h4 id="sized-data-types"><a class="anchor" href="#sized-data-types"></a><a class="link" href="#sized-data-types">4.2.2. Sized data types</a></h4>
+<h4 id="sized-data-types"><a class="anchor" href="#sized-data-types"></a><a class="link" href="#sized-data-types">4.3.2. Sized data types</a></h4>
 <div class="paragraph">
 <p>Basic data types are not very precisely sized, in order to leave the
 implementation free to pick up a size that is maximally efficient on
@@ -5907,7 +6009,7 @@ wraps around like a 24-bit <code>integer</code> value.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="category-types"><a class="anchor" href="#category-types"></a><a class="link" href="#category-types">4.2.3. Category types</a></h4>
+<h4 id="category-types"><a class="anchor" href="#category-types"></a><a class="link" href="#category-types">4.3.3. Category types</a></h4>
 <div class="paragraph">
 <p>Some types are intended primarily as an easy way to categorize
 values along generally useful boundaries, and are naturally called
@@ -5951,7 +6053,7 @@ requires a <code>number</code> type for the values in the vector. Similarly, the
 </div>
 </div>
 <div class="sect3">
-<h4 id="generic-containers"><a class="anchor" href="#generic-containers"></a><a class="link" href="#generic-containers">4.2.4. Generic containers</a></h4>
+<h4 id="generic-containers"><a class="anchor" href="#generic-containers"></a><a class="link" href="#generic-containers">4.3.4. Generic containers</a></h4>
 <div class="paragraph">
 <p>In some cases, a general structure is shared by a number of data types.
 For example, all array types share an internal organzation and provide
@@ -6050,7 +6152,7 @@ arbitrary number of <code>character</code> values.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="true-generic-types"><a class="anchor" href="#true-generic-types"></a><a class="link" href="#true-generic-types">4.2.5. True generic types</a></h4>
+<h4 id="true-generic-types"><a class="anchor" href="#true-generic-types"></a><a class="link" href="#true-generic-types">4.3.5. True generic types</a></h4>
 <div class="paragraph">
 <p>Often, an algorithm will apply to all variants of a generic type. For
 example, consider the operation that sums all the elements in an
@@ -6131,7 +6233,7 @@ address the need to constrain generic types.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="other-generic-types"><a class="anchor" href="#other-generic-types"></a><a class="link" href="#other-generic-types">4.2.6. Other generic types</a></h4>
+<h4 id="other-generic-types"><a class="anchor" href="#other-generic-types"></a><a class="link" href="#other-generic-types">4.3.6. Other generic types</a></h4>
 <div class="paragraph">
 <p>Many generic types are not intended as containers.
 They include the following:</p>
@@ -6185,7 +6287,7 @@ type <code>T</code>, such as <code>own T</code>, <code>ref T</code> or <code>sli
 </div>
 </div>
 <div class="sect3">
-<h4 id="mathematical-types"><a class="anchor" href="#mathematical-types"></a><a class="link" href="#mathematical-types">4.2.7. Mathematical types</a></h4>
+<h4 id="mathematical-types"><a class="anchor" href="#mathematical-types"></a><a class="link" href="#mathematical-types">4.3.7. Mathematical types</a></h4>
 <div class="paragraph">
 <p>Computers are often used to perform mathematical operations. XL
 features several mathematical types designed for that purpose:</p>
@@ -6233,7 +6335,7 @@ The <code>matrix[4,3] of integer32</code> type will</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="parse-tree-types"><a class="anchor" href="#parse-tree-types"></a><a class="link" href="#parse-tree-types">4.2.8. Parse tree types</a></h4>
+<h4 id="parse-tree-types"><a class="anchor" href="#parse-tree-types"></a><a class="link" href="#parse-tree-types">4.3.8. Parse tree types</a></h4>
 <div class="paragraph">
 <p>The <code>XL.PARSER</code> module offers a number of types intended to represent
 or match elements in the parse tree:</p>
@@ -6279,91 +6381,6 @@ symbol used in empty blocks, e.g. <code>()</code>.</p>
 </li>
 </ul>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="type-definitions"><a class="anchor" href="#type-definitions"></a><a class="link" href="#type-definitions">4.3. Type definitions</a></h3>
-<div class="paragraph">
-<p>In XL, types are values like any other value, which simply match the
-<code>type</code> type. In particular, types can be declared or
-<a href="#definition">defined</a> like any other value.</p>
-</div>
-<div class="paragraph">
-<p>The simplest case of <em>type definition</em> simply gives a new name to
-an existing type. The following code will create a type named <code>int</code>
-that is just another name for <code>integer</code>:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>int is integer</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>More interesting types can be used using the <code>type</code> function, which
-takes a pattern as an argument, and returns a type that
-<a href="#pattern-matching">matches that pattern</a>. The expression <code>type(42)</code>
-returns a type that only matches the value <code>42</code>.</p>
-</div>
-<div class="paragraph">
-<p>The <code>type</code> function can obviously be used to create much more
-interesting types. In order to create a <code>positive</code> type that only
-matches positive values, one only needs the following code:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>positive is type(X when X &gt; 0)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>A common usage is to use a named prefix to create types that are
-easier to identify. This kind of notation is called a
-<a href="#creation">constructor</a>, and plays for XL the role that <code>struct</code>
-plays for C or <code>record</code> for Pascal. A <code>complex</code> data type can be
-created and used as shown in the following code:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>complex is type complex(Re:real, Im:real)
-Z:complex := complex(4.3, 2.1)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The definition of <code>complex</code> states that a value matches the type
-<code>complex</code> if and only if it matches the pattern <code>complex(Re:real, Im:real)</code>.
-In particular, it matches the value <code>complex(4.3, 2.1)</code>, which makes
-the assignment on the second line of code possible.</p>
-</div>
-<div class="paragraph">
-<p>For example, a <code>complex</code> type made of two <code>real</code> numbers representing
-the real and imaginary parts can be described as follows:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>complex is type complex(Re:real, Im:real)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This declaration means that any value that has a shape matching the
-given pattern, like <code>complex(1.3,2.5)</code>,  will match the <code>complex</code> type.</p>
-</div>
-<div class="paragraph">
-<p>Type definitions are not restricted to names. For example, the
-<code>complex</code> type might take the <code>real</code> type as an argument, instead of
-assuming the standard <code>real</code> type:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>complex[real:type] is type complex(Re:real, Im:real)
-complex is complex[real]
-Z:complex := complex(4.3, 2.1)
-K:complex[real32] := complex(1.2, 3.4)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This creates what is called a <em>generic type</em> in languages like Ada,
-or a <em>template</em> in languages like C++. However, as far as
-syntax is concerned, it is indistinguishable from a function taking a
-type argument and returning a type.</p>
 </div>
 </div>
 <div class="sect2">
@@ -9413,7 +9430,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 10:03:41 +0100
+Last updated 2020-01-04 10:11:34 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
