@@ -3922,7 +3922,7 @@ _((basic types))_, and include:
 * `unsigned` is an approximation of unsigned numbers, with a limited
   range, typically between 0 and 2^64^-1. Like `integer`, it behaves
   like the underlying hardware in case of overflow. `unsigned` matches
-  whole number literal values such as `0` or `42`.
+  whole number literal values such as `0`, `16#FF` or `42`.
 
 * `character` is a representation of the ((native character set)) on the
   target machine. On modern machines, it should generally follow the
@@ -3961,9 +3961,10 @@ Such sized data types exist for the following base types:
 * `real` for at least 32 and 64 bits,
 * `character` for at least 8, 16 and 32 bits.
 
-Additional sizes may be added if they are native to the target
-machine. For example, some DSPs feature 24-bit operations, and such
-machines should feature types like `unsigned24` to match.
+Additional sizes may be provided if they are native to the target
+machine. For example, some DSPs feature 24-bit operations, and
+compilers for such machines should provide types like `unsigned24` to
+match.
 
 The sized types are guaranteed to wrap around at the boundary for the
 given number of bits. For example, `unsigned8` holds values between
@@ -3979,7 +3980,7 @@ wraps around like a 24-bit `integer` value.
 ==== Category types
 
 Some types are intended primarily as an easy way to categorize
-values along genereally useful boundaries, and are naturally called
+values along generally useful boundaries, and are naturally called
 _((category types))_. Examples include:
 
 * `number`, a type that matches numerical data types such as
@@ -4016,10 +4017,10 @@ Container types include in particular the following:
 
 * `array` store a fixed number of consecutive elements. They exist
   in multiple flavors:
-  ** Zero-based arrays such as `array[5] of integer`
+  ** Zero-based arrays such as `array[5] of integer`.
   ** Range-indexed arrays, such as `array['A'..'Z'] of boolean`, which
-     are indexed with a`link:#discrete[discrete]` range of values
-  ** Multi-dimensional arrays such as `array[1..8, 'A'..'H'] of chess_piece`
+     are indexed with a `discrete` range of values.
+  ** Multi-dimensional arrays such as `array['A'..'H', 1..8] of chess_piece`
      are simply a convenient shortcut for arrays of arrays.
 
 * `string` store a variable number of consecutive elements. They also
@@ -4037,7 +4038,7 @@ Container types include in particular the following:
   elements in lists are individually allocated in memory. Lists exist
   in several flavors:
   ** Single-linked lists such as `list of integer`.
-  ** Doubly-linked lists, called double-ended queue, such as `queue of integer`.
+  ** Doubly-linked, double-ended queues, such as `queue of integer`.
   ** Xor-linked lists such as `xor_list of integer`.
 
 * `stack` to expose `push` and `pop` operations, and the type is matched
@@ -4057,7 +4058,7 @@ Container types include in particular the following:
 Many generic types are not intended as containers.
 They include the following:
 
-* `range of T` holds ranges of values of `T` type. For example, the
+* `range of T` holds ranges of values of type `T`. For example, the
   type `range of integer` can hold a value such as `1..5`, which is
   the range between values `1` and `5` inclusive.
 
@@ -4070,14 +4071,14 @@ They include the following:
   referenced.
 
 * `in T` can be used to pass input arguments of type `T`, i.e. values
-  that are initialized and owned by the caller.
+  that are link:#creation[created] and owned by the caller.
 
 * `out T` can be used for output arguments of type `T`, i.e. values
-  that are initialized by the callee.
+  that are created by the callee.
 
-* `inout T` can be used for input-output arguments of type `T`,
-  i.e. values that can be modified by the callee in a way that
-  respects ownership in the caller.
+* `in_out T` can be used for input-output arguments of type `T`,
+  i.e. values that can be modified by the callee but are created and
+  owned by the caller.
 
 * `any T` can hold a value of type `T` or any
   link:#inheritance[derived type], preserving the original type
@@ -4091,8 +4092,7 @@ They include the following:
 * `access T` matches any type that can be used to access values of
   type `T`, such as `own T`, `ref T` or `slice of T`.
 
-
-=== Parse tree types
+==== Parse tree types
 
 The `XL.PARSER` module offers a number of types intended to represent
 or match elements in the parse tree:
