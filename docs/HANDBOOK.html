@@ -642,7 +642,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#basic-operations">6. Basic operations</a></li>
 <li><a href="#modules">7. Modules</a></li>
-<li><a href="#standard-library">8. Standard Library</a></li>
+<li><a href="#standard-library">8. Standard Library</a>
+<ul class="sectlevel2">
+<li><a href="#garbage-collection">8.1. Garbage collection</a></li>
+</ul>
+</li>
 <li><a href="#history-of-xl">9. History of XL</a>
 <ul class="sectlevel2">
 <li><a href="#it-started-as-an-experimental-language">9.1. It started as an experimental language</a></li>
@@ -1338,7 +1342,7 @@ somewhat complex. If you are curious, the source code for the venerable
 <a href="https://github.com/lattera/glibc/blob/master/stdio-common/vfprintf.c">available
 online</a>.</p>
 </div>
-<div class="paragraph">
+<div id="print" class="paragraph">
 <p>The implementation of text I/O in XL is comparatively very simple. The
 definition of <code>print</code> looks something like, where irrelevant
 implementation details were elided as <code>&#8230;&#8203;</code>:</p>
@@ -1443,7 +1447,7 @@ be used for the following code:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">print "The sum is ", X+Y, " and the difference is ", X-Y</code></pre>
 </div>
 </div>
-<div class="paragraph">
+<div id="print_instances" class="paragraph">
 <p>This is because the sequence of types is the same. Everything happens as
 if the above mechanism had created a series of additional definition
 that looks like:</p>
@@ -4471,8 +4475,8 @@ parameters. This is used in the implementation of <code>print</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">print Items             is write Items; print
-write Head, Rest        is write Head; write Rest
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">print Items             is { write Items; print }
+write Head, Rest        is { write Head; write Rest }
 write Item:integer      is ...  // Implementation for integer
 write Item:real         is ...  // implementation for real</code></pre>
 </div>
@@ -4823,7 +4827,7 @@ to address this.</p>
     CONTEXT0</code></pre>
 </div>
 </div>
-<div class="paragraph">
+<div id="closure" class="paragraph">
 <p>The notation <code>CONTEXT1 { Condition }</code> means that we evaluate <code>Condition</code>
 in context <code>CONTEXT1</code>. This one of the <a href="#scoping">scoping operators</a>,
 which is explained in more details below. A prefix with a context on the
@@ -4887,8 +4891,8 @@ declarations:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write Head, Tail        is write Head; write Tail
-print Items             is write Items; print</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write Head, Tail        is { write Head; write Tail }
+print Items             is { write Items; print }</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6714,6 +6718,128 @@ the stack.</p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>For example, consider the following piece of code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>use XL.CONSOLE.TEXT_IO <i class="conum" data-value="1"></i><b>(1)</b>
+use XL.TEXT.FORMAT
+
+print "Starting printing Fibonacci sequences" <i class="conum" data-value="2"></i><b>(2)</b>
+
+fib 0 is 1 <i class="conum" data-value="3"></i><b>(3)</b>
+fib 1 is 1
+fib N is (fib(N-1) + fib(N-2)) <i class="conum" data-value="4"></i><b>(4)</b>
+
+for I in 1..5 loop <i class="conum" data-value="5"></i><b>(5)</b>
+    F is fib I <i class="conum" data-value="6"></i><b>(6)</b>
+    print format("Fib(%1) is %2", I, F) <i class="conum" data-value="7"></i><b>(7)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The <code>use</code> statements import global values defined in other
+files. Here, the <code>XL</code> module, its sub-module <code>XL.CONSOLE</code>, and a
+third-level sub-module <code>XL.CONSOLE.TEXT_IO</code> are all imported by
+the first statement, and similarly, <code>XL.TEXT</code> and <code>XL.TEXT.FORMAT</code>
+are added by the second statement (<code>XL</code> being already imported)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The declaration of <code>print</code> is a global value <a href="#print">defined</a>
+in <code>XL.CONSOLE.TEXT_IO</code>. This <code>print</code> statement is the first thing
+to be executed during program evaluated. Its evaluation will call
+code for an implementation of <code>print</code>, thereby adding a new
+context on the call stack. As we indicated
+<a href="#print_instances">earlier</a>, this may involve further calls
+making the call stack deeper.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The three definitions with <code>fib</code> as a prefix are three distinct
+global values, even if, thanks to dynamic dispatch, they may be
+considered as implementing a single entity. Evaluating <code>fib N</code> or
+<code>fib I</code> may require considering all three global values as
+candidates.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The evaluation of the expression <code>(fib(N-1)+fib(N-2))</code> will need
+to create a number of temporaries, for example to compute <code>N-1</code> or
+<code>N-2</code>. It may <a href="#destruction">destroy</a> temporaries as soon as
+they are no longer needed. For example, the code to evaluate the
+expression could be someting similar to the following code, where
+<code>tmp1</code>, <code>tmp2</code>, <code>tmp3</code>, <code>tmp4</code> and <code>tmp5</code> are the required
+temporaries:
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">tmp1 is N-1
+tmp2 is fib(tmp1)
+delete tmp1
+tmp3 is N-2
+tmp4 is fib(tmp3)
+delete tmp3
+tmp5 is tmp2+tmp4
+delete tmp2
+delete tmp4
+tmp5</code></pre>
+</div>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The <code>for</code> loop creates a local variable named <code>I</code> that will
+successively take values <code>1</code>, <code>2</code>, <code>3</code>, <code>4</code>, <code>5</code>. The value for
+<code>I</code> will only be live within one iteration of the loop. In other
+words, the execution will be identical to the following
+(using a <a href="#closure">closure</a> for the different values of <code>I</code>):
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">tmpBody is
+    F is fib I
+    print format("Fib(%1) is %2", I, F)
+{ I is 1 } ( tmpBody )
+{ I is 2 } ( tmpBody )
+{ I is 3 } ( tmpBody )
+{ I is 4 } ( tmpBody )
+{ I is 5 } ( tmpBody )</code></pre>
+</div>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>The value defined by <code>F is fib I</code> is a local value that will be
+live for the duration of the evaluation of the enclosing block. It
+will be destroyed the end of each block. In other words, a more
+accurate description for <code>tmpBody</code> in the example above would have
+a <code>delete F</code> statement at the end, as follows:
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">tmpBody is
+    F is fib I
+    print format("Fib(%1) is %2", I, F)
+    delete F</code></pre>
+</div>
+</div></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>It may come as a suprise to people coming from C or C++ that XL
+does not <em>require</em> the call to <code>fib I</code> to be done before this
+point. The fact that <code>F</code> is defined to be <code>fib I</code> can be read as a
+function, and an it is correct to evaluate it that way, i.e. to
+only "call" <code>F</code> when it&#8217;s used. However, for a named constant
+like <code>F</code> here, it is also mandatory to evaluate its value at most
+once per evaluation of the scope, so that if there was another
+occurence of <code>F</code> in the same scope, a correct implementation must
+reuse the previously computed value for <code>F</code>. Otherwise, that value
+might not be constant within the scope.</td>
+</tr>
+</table>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -8342,7 +8468,14 @@ the IEEE-754 64-bit representation.</p>
 <div class="sect1">
 <h2 id="standard-library"><a class="anchor" href="#standard-library"></a><a class="link" href="#standard-library">8. Standard Library</a></h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>The standard library provides the vast majority of the features
+available to the XL developer.</p>
+</div>
+<div class="sect2">
+<h3 id="garbage-collection"><a class="anchor" href="#garbage-collection"></a><a class="link" href="#garbage-collection">8.1. Garbage collection</a></h3>
 
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -9648,7 +9781,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-05 14:03:11 +0100
+Last updated 2020-01-05 18:52:47 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

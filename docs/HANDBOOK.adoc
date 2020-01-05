@@ -575,6 +575,7 @@ somewhat complex. If you are curious, the source code for the venerable
 https://github.com/lattera/glibc/blob/master/stdio-common/vfprintf.c[available
 online].
 
+[[print]]
 The implementation of text I/O in XL is comparatively very simple. The
 definition of `print` looks something like, where irrelevant
 implementation details were elided as `...`:
@@ -664,6 +665,7 @@ be used for the following code:
 print "The sum is ", X+Y, " and the difference is ", X-Y
 ----
 
+[[print_instances]]
 This is because the sequence of types is the same. Everything happens as
 if the above mechanism had created a series of additional definition
 that looks like:
@@ -2792,8 +2794,8 @@ parameters. This is used in the implementation of `print`:
 
 [source]
 ----
-print Items             is write Items; print
-write Head, Rest        is write Head; write Rest
+print Items             is { write Items; print }
+write Head, Rest        is { write Head; write Rest }
 write Item:integer      is ...  // Implementation for integer
 write Item:real         is ...  // implementation for real
 ----
@@ -3094,6 +3096,7 @@ CONTEXT2 is
     CONTEXT0
 ----
 
+[[closure]]
 The notation `CONTEXT1 { Condition }` means that we evaluate `Condition`
 in ((context)) `CONTEXT1`. This one of the link:#scoping[((scoping operator))s],
 which is explained in more details below. A prefix with a context on the
@@ -3149,8 +3152,8 @@ declarations:
 
 [source]
 ----
-write Head, Tail        is write Head; write Tail
-print Items             is write Items; print
+write Head, Tail        is { write Head; write Tail }
+print Items             is { write Items; print }
 ----
 
 When evaluating `{ X is 42 } { print "X=", X }`, `Items` will be bound
@@ -4511,6 +4514,101 @@ The lifetime of XL values fall in one of the following categories:
   been evaluated. Temporary valuaes are typically also allocated on
   the stack.
 
+For example, consider the following piece of code:
+
+....
+use XL.CONSOLE.TEXT_IO <1>
+use XL.TEXT.FORMAT
+
+print "Starting printing Fibonacci sequences" <2>
+
+fib 0 is 1 <3>
+fib 1 is 1
+fib N is (fib(N-1) + fib(N-2)) <4>
+
+for I in 1..5 loop <5>
+    F is fib I <6>
+    print format("Fib(%1) is %2", I, F) <7>
+....
+<1> The `use` statements import global values defined in other
+    files. Here, the `XL` module, its sub-module `XL.CONSOLE`, and a
+    third-level sub-module `XL.CONSOLE.TEXT_IO` are all imported by
+    the first statement, and similarly, `XL.TEXT` and `XL.TEXT.FORMAT`
+    are added by the second statement (`XL` being already imported)
+<2> The declaration of `print` is a global value link:#print[defined]
+    in `XL.CONSOLE.TEXT_IO`. This `print` statement is the first thing
+    to be executed during program evaluated. Its evaluation will call
+    code for an implementation of `print`, thereby adding a new
+    context on the call stack. As we indicated
+    link:#print_instances[earlier], this may involve further calls
+    making the call stack deeper.
+<3> The three definitions with `fib` as a prefix are three distinct
+    global values, even if, thanks to dynamic dispatch, they may be
+    considered as implementing a single entity. Evaluating `fib N` or
+    `fib I` may require considering all three global values as
+    candidates.
+<4> The evaluation of the expression `(fib(N-1)+fib(N-2))` will need
+    to create a number of temporaries, for example to compute `N-1` or
+    `N-2`. It may link:#destruction[destroy] temporaries as soon as
+    they are no longer needed. For example, the code to evaluate the
+    expression could be someting similar to the following code, where
+    `tmp1`, `tmp2`, `tmp3`, `tmp4` and `tmp5` are the required
+    temporaries:
++
+[source]
+----
+tmp1 is N-1
+tmp2 is fib(tmp1)
+delete tmp1
+tmp3 is N-2
+tmp4 is fib(tmp3)
+delete tmp3
+tmp5 is tmp2+tmp4
+delete tmp2
+delete tmp4
+tmp5
+----
+<5> The `for` loop creates a local variable named `I` that will
+    successively take values `1`, `2`, `3`, `4`, `5`. The value for
+    `I` will only be live within one iteration of the loop. In other
+    words, the execution will be identical to the following
+    (using a link:#closure[closure] for the different values of `I`):
++
+[source]
+----
+tmpBody is
+    F is fib I
+    print format("Fib(%1) is %2", I, F)
+{ I is 1 } ( tmpBody )
+{ I is 2 } ( tmpBody )
+{ I is 3 } ( tmpBody )
+{ I is 4 } ( tmpBody )
+{ I is 5 } ( tmpBody )
+----
+<6> The value defined by `F is fib I` is a local value that will be
+    live for the duration of the evaluation of the enclosing block. It
+    will be destroyed the end of each block. In other words, a more
+    accurate description for `tmpBody` in the example above would have
+    a `delete F` statement at the end, as follows:
++
+[source]
+----
+tmpBody is
+    F is fib I
+    print format("Fib(%1) is %2", I, F)
+    delete F
+----
+<7> It may come as a suprise to people coming from C or C++ that XL
+    does not _require_ the call to `fib I` to be done before this
+    point. The fact that `F` is defined to be `fib I` can be read as a
+    function, and an it is correct to evaluate it that way, i.e. to
+    only "call" `F` when it's used. However, for a named constant
+    like `F` here, it is also mandatory to evaluate its value at most
+    once per evaluation of the scope, so that if there was another
+    occurence of `F` in the same scope, a correct implementation must
+    reuse the previously computed value for `F`. Otherwise, that value
+    might not be constant within the scope.
+
 NOTE: Typically, a good compiler also makes use of machine
 _registers_, very fast storage in the processor itself, as a cache for
 values that are logically part of the call stack. In general, we will
@@ -5743,7 +5841,12 @@ the IEEE-754 64-bit representation.
 
 == [[module]]Modules
 
-== ((Standard Library))
+== Standard Library
+
+The ((standard library)) provides the vast majority of the features
+available to the XL developer.
+
+=== Garbage collection
 
 == History of XL
 
