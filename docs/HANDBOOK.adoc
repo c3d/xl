@@ -4549,7 +4549,7 @@ for I in 1..5 loop <5>
     candidates.
 <4> The evaluation of the expression `(fib(N-1)+fib(N-2))` will need
     to create a number of temporaries, for example to compute `N-1` or
-    `N-2`. It may link:#destruction[destroy] temporaries as soon as
+    `N-2`. Temporaries may be link:#destruction[destroyed] as soon as
     they are no longer needed. For example, the code to evaluate the
     expression could be someting similar to the following code, where
     `tmp1`, `tmp2`, `tmp3`, `tmp4` and `tmp5` are the required
