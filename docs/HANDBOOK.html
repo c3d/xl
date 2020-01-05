@@ -5053,10 +5053,10 @@ particular the contexts captured for
 <div class="paragraph">
 <p>When the body is evaluated, a <em>local declaration
 phase</em> will run, followed by a <em>local evaluation phase</em>. The local
-declaration phase will add the local declarations at the beginning of
-a new context, which will be destroyed when the body evaluation
-terminates. The local declarations therefore shadow declarations from
-the enclosing context.</p>
+<a href="#declaratiion-phase">declaration phase</a> will add the local
+declarations at the beginning of a new context, which will be
+destroyed when the body evaluation terminates. The local declarations
+therefore shadow declarations from the enclosing context.</p>
 </div>
 <div class="paragraph">
 <p>For example, a function that returns the number of vowels in some text
@@ -6674,97 +6674,61 @@ i.e. a way to achieve memory safety at zero runtime cost.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><em>Global</em> entities are live at least as long as they are visible. This
-includes builtin-enttiies, entitites declared in the top-level of the
-modules used by the program, and most entities created by the compiler
-itself. The compiler can generally assign preallocated storage to such
-entities, at compilation time.</p>
+<p><em>global values</em> become live during the
+<a href="#declaration-phase">declaration phase</a> of the program, just
+before its <a href="#evaluation-phase">evaluation phase</a>, and they remain
+live until the end of that evaluation phase. Global values are
+typically allocated statically in a reserved area of memory,
+preallocated before program evaluation, typically by a program
+called a linker.</p>
 </li>
 <li>
-<p><em>Temporary values</em> hold the result of evaluation of functions. They
-are created in the called function, and <a href="#copy">copied</a> or
-<a href="#move">moved</a> to the function caller. The temporary value is
-destroyed before the end of the statement, and possibly as early as it
-is no longer used. In the following example, the value of <code>x*3</code> can be
-destroyed as soon as the expression <code>x*3+5</code> is computed.</p>
-<div class="literalblock">
-<div class="content">
-<pre>f(x) is (x*3+5)/2</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Such temporary values are typically stored in registers or on the stack,
-although some temporary values may require heap storage that will be
-freed when the value is destroyed.</p>
-</div>
+<p><em>local values</em> become live during the
+<a href="#nested-declarations">local declaration phase</a> of the bodies of
+the declarations corresponding to patterns
+<a href="#pattern-matching">being matched</a> during the evaluation phase.
+Local values are typically allocated dynamically on a
+<a href="https://en.wikipedia.org/wiki/Call_stack">call stack</a>
+allocated for each thread of execuion. That stack has a limited
+"depth", which may limit the depth of recursion allowed for a
+program.</p>
 </li>
 <li>
-<p><em>Named constants</em> have a lifetime that corresponds to their
-<a href="#scoping">scope</a>. As long as the named
-constant is visible, it exists. In the following example, the value of
-<code>DEGREE_TO_RADIAN</code>, <code>2 * pi / 180</code> exists for the duration of the
-<code>cos_degrees</code> function:</p>
-<div class="literalblock">
-<div class="content">
-<pre>cos_degrees X is
-   DEGREE_TO_RADIAN is 2 * pi / 180
-   cos(X * DEGREE_TO_RADIAN)</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The compiler has a lot of freedom on how to implement named constants,
-and may use preallocated storage, functions, or immediate constants
-depending on the need.</p>
-</div>
+<p><em>dynamic values</em> are dynamically allocated using a "heap", and
+remain live as long as some other value <a href="#ownership">owns them</a>.
+That owning value may itself be a global, local or dynamic value.
+The heap is typically the largest available memory space for the
+program. XL offers a number of facilities to help you manage how
+this dynamic allocation happens, including facilities to build
+<a href="#garbage-collection">garbage collectors</a> if and when this is an
+efficient management strategy.</p>
 </li>
 <li>
-<p><em>Variables</em> have a lifetime that generally corresponds to their
-<a href="#scoping">scope</a>, but the value of their
-lifetime terminates each time the value is updated. In the following
-example, <code>Message</code> is created with value <code>"Hello"</code>, but on the second
-line, that value is destroyed to be replaced with value <code>"Hello World"</code>.</p>
-<div class="literalblock">
-<div class="content">
-<pre>Message : text := "Hello"
-Message := Message &amp; " World"</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Except for global variables, variables are usually stored on the stock
-or in registers.</p>
-</div>
-</li>
-<li>
-<p><em>Dynamic values</em> require dynamic storage, generally in a heap. The
-lifetime of such values is normally controlled by the values used to
-access the storage. With the exception of data types used to access data
-not owned by the XL program (e.g. data allocated from another language),
-XL ownership rules ensure that dynamic values are destroyed as soon as
-they can no longer be accessed.</p>
-<div class="paragraph">
-<p>For example, the code below creates a <code>string of integer</code>, which uses
-dynamically allocated storage, to hold an arbitrary large sequence of
-<code>integer</code> values. Thus, the <code>string of integer</code> value extends the
-lifetime of all values geneated in the sequence. However, it also
-guarantees that these values are destroyed when the <code>string of integer</code>
-value itself is no longer needed.</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>syracuse N:integer as string of integer is
-    loop
-        result := result &amp; N
-        N := if N mod 2 = 0 then N/2 else N*3+1
-    until N = 1</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Dynamic data is normally stored on a standard heap, but XL provides
-hooks that make it possible to provide your own allocation for data
-storage.</p>
-</div>
+<p><em>temporary values</em> are  created during evaluation of
+expressions, and can be discarded as soon as they have been
+consumed. For example, assuming a definition for <code>x+y</code>, the
+expression <code>a+b+c+d</code> will be processed as <code>((a+b)+c)+d</code>, and the
+result of evaluating <code>a+b</code> can be destroyed as soon as <code>(a+b)+c</code> has
+been evaluated. Temporary valuaes are typically also allocated on
+the stack.</p>
 </li>
 </ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Typically, a good compiler also makes use of machine
+<em>registers</em>, very fast storage in the processor itself, as a cache for
+values that are logically part of the call stack. In general, we will
+only talk about the stack, with the understanding that this includes
+registers where applicable.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect3">
@@ -9684,7 +9648,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-04 23:37:40 +0100
+Last updated 2020-01-05 14:03:11 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -3281,10 +3281,10 @@ _((nested declarations))_(((declaration,nested))).
 
 When the body is evaluated, a _((local declaration))(((declaration,local)))
 phase_ will run, followed by a _local evaluation phase_. The local
-declaration phase will add the local declarations at the beginning of
-a new context, which will be destroyed when the body evaluation
-terminates. The local declarations therefore shadow declarations from
-the enclosing context.
+link:#declaratiion-phase[declaration phase] will add the local
+declarations at the beginning of a new context, which will be
+destroyed when the body evaluation terminates. The local declarations
+therefore shadow declarations from the enclosing context.
 
 For example, a function that returns the number of vowels in some text
 can be written as follows:
@@ -4476,78 +4476,46 @@ i.e. a way to achieve memory safety at zero runtime cost.
 
 The lifetime of XL values fall in one of the following categories:
 
-* _Global_ entities are live at least as long as they are visible. This
-includes builtin-enttiies, entitites declared in the top-level of the
-modules used by the program, and most entities created by the compiler
-itself. The compiler can generally assign preallocated storage to such
-entities, at compilation time.
-* _Temporary values_ hold the result of evaluation of functions. They
-are created in the called function, and link:#copy[copied] or
-link:#move[moved] to the function caller. The temporary value is
-destroyed before the end of the statement, and possibly as early as it
-is no longer used. In the following example, the value of `x*3` can be
-destroyed as soon as the expression `x*3+5` is computed.
-+
-....
-f(x) is (x*3+5)/2
-....
-+
-Such temporary values are typically stored in registers or on the stack,
-although some temporary values may require heap storage that will be
-freed when the value is destroyed.
-* _Named constants_ have a lifetime that corresponds to their
-link:#scoping[scope]. As long as the named
-constant is visible, it exists. In the following example, the value of
-`DEGREE_TO_RADIAN`, `2 * pi / 180` exists for the duration of the
-`cos_degrees` function:
-+
-....
-cos_degrees X is
-   DEGREE_TO_RADIAN is 2 * pi / 180
-   cos(X * DEGREE_TO_RADIAN)
-....
-+
-The compiler has a lot of freedom on how to implement named constants,
-and may use preallocated storage, functions, or immediate constants
-depending on the need.
-* _Variables_ have a lifetime that generally corresponds to their
-link:#scoping[scope], but the value of their
-lifetime terminates each time the value is updated. In the following
-example, `Message` is created with value `"Hello"`, but on the second
-line, that value is destroyed to be replaced with value `"Hello World"`.
-+
-....
-Message : text := "Hello"
-Message := Message & " World"
-....
-+
-Except for global variables, variables are usually stored on the stock
-or in registers.
-* _Dynamic values_ require dynamic storage, generally in a heap. The
-lifetime of such values is normally controlled by the values used to
-access the storage. With the exception of data types used to access data
-not owned by the XL program (e.g. data allocated from another language),
-XL ownership rules ensure that dynamic values are destroyed as soon as
-they can no longer be accessed.
-+
-For example, the code below creates a `string of integer`, which uses
-dynamically allocated storage, to hold an arbitrary large sequence of
-`integer` values. Thus, the `string of integer` value extends the
-lifetime of all values geneated in the sequence. However, it also
-guarantees that these values are destroyed when the `string of integer`
-value itself is no longer needed.
-+
-....
-syracuse N:integer as string of integer is
-    loop
-        result := result & N
-        N := if N mod 2 = 0 then N/2 else N*3+1
-    until N = 1
-....
-+
-Dynamic data is normally stored on a standard heap, but XL provides
-hooks that make it possible to provide your own allocation for data
-storage.
+* _((global value))s_ become live during the
+  link:#declaration-phase[declaration phase] of the program, just
+  before its link:#evaluation-phase[evaluation phase], and they remain
+  live until the end of that evaluation phase. Global values are
+  typically allocated statically in a reserved area of memory,
+  preallocated before program evaluation, typically by a program
+  called a linker.
+
+* _((local value))s_ become live during the
+  link:#nested-declarations[local declaration phase] of the bodies of
+  the declarations corresponding to patterns
+  link:#pattern-matching[being matched] during the evaluation phase.
+  Local values are typically allocated dynamically on a
+  link:https://en.wikipedia.org/wiki/Call_stack[call stack]
+  allocated for each thread of execuion. That stack has a limited
+  "depth", which may limit the depth of recursion allowed for a
+  program.
+
+* _((dynamic value))s_ are dynamically allocated using a "heap", and
+  remain live as long as some other value link:#ownership[owns them].
+  That owning value may itself be a global, local or dynamic value.
+  The heap is typically the largest available memory space for the
+  program. XL offers a number of facilities to help you manage how
+  this dynamic allocation happens, including facilities to build
+  link:#garbage-collection[garbage collectors] if and when this is an
+  efficient management strategy.
+
+* _((temporary value))s_ are  created during evaluation of
+  expressions, and can be discarded as soon as they have been
+  consumed. For example, assuming a definition for `x+y`, the
+  expression `a+b+c+d` will be processed as `((a+b)+c)+d`, and the
+  result of evaluating `a+b` can be destroyed as soon as `(a+b)+c` has
+  been evaluated. Temporary valuaes are typically also allocated on
+  the stack.
+
+NOTE: Typically, a good compiler also makes use of machine
+_registers_, very fast storage in the processor itself, as a cache for
+values that are logically part of the call stack. In general, we will
+only talk about the stack, with the understanding that this includes
+registers where applicable.
 
 ==== Creation
 
