@@ -625,7 +625,7 @@ them in the compiler, has several benefits:
 The XL standard library consists of a link:{xl}native/lib[wide variety of
 modules]. The top-level ((module)) is called `XL`, and sub-modules are
 categorized in a hierarchy(((hierarchy,modules))). For example, if you
-need to perform computations on ((complex number)))s, you would `use
+need to perform computations on ((complex number))s, you would `use
 XL.MATH.COMPLEX` to load the
 link:{xl}native/lib/xl/math/complex.xs[complex numbers module]
 
