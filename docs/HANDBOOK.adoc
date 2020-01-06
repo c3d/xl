@@ -144,6 +144,12 @@ the language described in this document.
 
 [source]
 ----
+color "white"
+milkyway 10000
+rotatez -23
+earth 400
+hello_world 440
+
 milkyway R ->
 // ----------------------------------------------------------------------------
 //    Draw the Milky Way
@@ -186,7 +192,8 @@ hello_world R ->
         color 20% , 20% , 20% , 70%
         sphere 0, 0, 0, R - 30
         color 100% , 90% , 20% , 90%
-        sphere 0, 0, 0, Rmilkyway R ->
+        sphere 0, 0, 0, R
+
 ----
 =====
 
