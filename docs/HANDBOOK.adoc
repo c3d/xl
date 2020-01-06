@@ -4755,12 +4755,12 @@ based on Unix-style file descriptors:
 
 [source]
 ----
-module MY_FILE with
+MY_FILE as module with
     file as type
     open(Name:text) as file
     close F:file
 
-module MY_FILE is
+MY_FILE as module is
     file is type file(fd:integer)
     open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)

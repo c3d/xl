@@ -7010,12 +7010,12 @@ based on Unix-style file descriptors:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">module MY_FILE with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">MY_FILE as module with
     file as type
     open(Name:text) as file
     close F:file
 
-module MY_FILE is
+MY_FILE as module is
     file is type file(fd:integer)
     open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
@@ -9865,7 +9865,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-06 12:53:10 +0100
+Last updated 2020-01-06 23:44:28 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
