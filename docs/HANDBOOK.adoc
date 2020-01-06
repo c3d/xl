@@ -4207,6 +4207,14 @@ _((basic types))_, and include the following:
   intended to represent truth values, for example conditions in tests.
   Unlike languages like C, the `boolean` type is not a numerical type.
 
+* `byte` is a type representing the smallest addressable unit of
+  memory, typically 8-bit on most modern implementations.
+
+* `address` is a type representing addresses for the target machine,
+  i.e. values that can be used to index individual `byte` elements in
+  memory.
+
+
 ==== Sized data types
 
 Basic data types are not very precisely sized, in order to leave the
