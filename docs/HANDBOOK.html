@@ -7165,15 +7165,15 @@ of the assignment.</p>
 <div class="sect3">
 <h4 id="errors"><a class="anchor" href="#errors"></a><a class="link" href="#errors">4.4.4. Errors</a></h4>
 <div class="paragraph">
-<p>Errors in XL are represented by values with the <code>error</code> type (or any
+<p>Errors in XL are represented by values with the <code>error</code> type, or any
 type that can be implicitly converted to <code>error</code>, in other words, any
-value that <a href="#inheritance">inherits</a> from error). The error type has a
+value that <a href="#inheritance">inherits</a> from error. The error type has a
 constructor that takes a simple error message, or a simple message and a
 payload:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type error is either
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">error as type is either
     error Message:text
     error Message:text, Payload</code></pre>
 </div>
@@ -7184,7 +7184,7 @@ There is a specific shortcut for that, <code>mayfail T</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">mayfail T:type is T or error</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">mayfail T:type as type is T or error</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9867,7 +9867,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-06 23:49:08 +0100
+Last updated 2020-01-06 23:54:17 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -4877,15 +4877,15 @@ of the assignment.
 
 ==== Errors
 
-Errors in XL are represented by values with the `error` type (or any
+Errors in XL are represented by values with the `error` type, or any
 type that can be implicitly converted to `error`, in other words, any
-value that link:#inheritance[inherits] from error). The error type has a
+value that link:#inheritance[inherits] from error. The error type has a
 constructor that takes a simple error message, or a simple message and a
 payload:
 
 [source]
 ----
-type error is either
+error as type is either
     error Message:text
     error Message:text, Payload
 ----
@@ -4895,7 +4895,7 @@ There is a specific shortcut for that, `mayfail T`:
 
 [source]
 ----
-mayfail T:type is T or error
+mayfail T:type as type is T or error
 ----
 
 For example, a logarithm returns an error for non-positive values, so
