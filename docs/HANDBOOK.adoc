@@ -133,7 +133,7 @@ of XL that produces this result:
 
 video::6WIMWlUZJvs[youtube,title=Helo World in Tao3D,width=800,height=600]
 
-.Source code details
+.Source code for the Tao3D "Hello World"
 [%collapsible]
 =====
 
