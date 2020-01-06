@@ -1428,12 +1428,12 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 write X:integer         as mayfail      is ...
 write X:real            as mayfail      is ...
 write X:character       as mayfail      is ...
-write [[true]]                          is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
-write [[false]]                         is { write "false" }
-write Head, Rest                        is { write Head; write Rest }
+write [[true]]          as mayfail      is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
+write [[false]]         as mayfail      is { write "false" }
+write Head, Rest        as mayfail      is { write Head; write Rest }
 
 print                   as mayfail      is { write SOME_NEWLINE_CHARACTER }
-print Items                             is { write Items; print }</code></pre>
+print Items             as mayfail      is { write Items; print }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9867,7 +9867,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-06 23:54:17 +0100
+Last updated 2020-01-06 23:55:14 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

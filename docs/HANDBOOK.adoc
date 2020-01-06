@@ -656,12 +656,12 @@ write X:text            as mayfail      is ... // <1>
 write X:integer         as mayfail      is ...
 write X:real            as mayfail      is ...
 write X:character       as mayfail      is ...
-write [[true]]                          is { write "true"  } // <2>
-write [[false]]                         is { write "false" }
-write Head, Rest                        is { write Head; write Rest }
+write [[true]]          as mayfail      is { write "true"  } // <2>
+write [[false]]         as mayfail      is { write "false" }
+write Head, Rest        as mayfail      is { write Head; write Rest }
 
 print                   as mayfail      is { write SOME_NEWLINE_CHARACTER }
-print Items                             is { write Items; print }
+print Items             as mayfail      is { write Items; print }
 ----
 
 <1> The link:#fallible-types[mayfail] type is used to represent
