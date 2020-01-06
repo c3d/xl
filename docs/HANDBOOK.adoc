@@ -4922,7 +4922,7 @@ kind of error handling:
 [source]
 ----
 if X > 0.0 then
-    print "Log(", X, ") is ", log X
+    print format("Log(%1) is %2", X, log X)
 ----
 
 NOTE: *RATIONALE* By returning an `error` for failure conditions, XL forces
