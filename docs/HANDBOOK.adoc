@@ -338,7 +338,7 @@ loop Body       is      { Body; loop Body }     // Define an infnite loop
 ----
 ====
 
-.Types ((type))
+.Types
 [%collapsible]
 ====
 [source]
@@ -348,7 +348,7 @@ cartesian       is      type cartesian(re:number, im:number)
 polar           is      type polar(mod:number, arg:number)
 ----
 
-NOTE: link:#types[types] in XL indicate the shape of ((parse tree))s. In
+NOTE: link:#types[((type))s] in XL indicate the shape of ((parse tree))s. In
 other words, the `cartesian` type above will match any parse tree that
 takes the shape of the word `cartesian` followed by two numbers, like
 for example `cartesian(1,5)`.
