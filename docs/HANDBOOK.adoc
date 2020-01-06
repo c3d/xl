@@ -4802,7 +4802,9 @@ languages like pass:[C++], a programmer can deliberately override the
 destruction of an object, and remains in control of the destruction
 process.
 
-NOTE: *RATIONALE* In XL, multiple patterns can match a given value. It might
+[NOTE]
+====
+*RATIONALE* In XL, multiple patterns can match a given value. It might
 seem desirable to call all the patterns that match, but not only would
 it introduce a special-case lookup, it would also be extremely dangerous
 in a number of easily identified cases. As an illustration, consider the
@@ -4818,6 +4820,7 @@ Clearly, the intent of the programmer is to special-case the destruction
 of `file` values that have an invalid file descriptor, for example as a
 result of an error condition from the C `open` call (which returns `-1`
 on error).
+====
 
 It is possible to create local destructor definitions. When such a local
 definition exists, it is possible for it to override a more general

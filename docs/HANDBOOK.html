@@ -7078,14 +7078,12 @@ process.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<strong>RATIONALE</strong> In XL, multiple patterns can match a given value. It might
+<div class="paragraph">
+<p><strong>RATIONALE</strong> In XL, multiple patterns can match a given value. It might
 seem desirable to call all the patterns that match, but not only would
 it introduce a special-case lookup, it would also be extremely dangerous
 in a number of easily identified cases. As an illustration, consider the
-following code:
-</td>
-</tr>
-</table>
+following code:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7098,6 +7096,10 @@ delete F:inout file                is ... // Case 2</code></pre>
 of <code>file</code> values that have an invalid file descriptor, for example as a
 result of an error condition from the C <code>open</code> call (which returns <code>-1</code>
 on error).</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>It is possible to create local destructor definitions. When such a local
@@ -9865,7 +9867,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-06 23:44:28 +0100
+Last updated 2020-01-06 23:49:08 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
