@@ -808,6 +808,75 @@ below</a>, and you will see that it is quite simple, in particular when
 compared with similar input/output operations in languages such
 as C++.</p>
 </div>
+<div class="paragraph">
+<p>Another interesting, if slightly more complicated version of "Hello
+World" is one written in the <a href="https://tao3d.sf.net">Tao3D</a> dialect
+of XL that produces this result:</p>
+</div>
+<div class="videoblock">
+<div class="title">Helo World in Tao3D</div>
+<div class="content">
+<iframe width="800" height="600" src="https://www.youtube.com/embed/6WIMWlUZJvs?rel=0" frameborder="0" allowfullscreen></iframe>
+</div>
+</div>
+<details>
+<summary class="title">Source code details</summary>
+<div class="content">
+<div class="paragraph">
+<p>The source code for this example can be found below. The Tao3D dialect
+of XL still uses <code>-&gt;</code> instead of <code>is</code> as the definition
+operator. Apart from that change, the following code is valid XL for
+the language described in this document.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">milkyway R -&gt;
+// ----------------------------------------------------------------------------
+//    Draw the Milky Way
+// ----------------------------------------------------------------------------
+    locally
+        texture_wrap true, true
+        texture_transform {scale 5, 5, 5}
+        texture "milkyway.jpg"
+        rotatey 0.02 * page_time + 100
+        scale 1, -1, 1
+        sphere R
+
+
+earth R -&gt;
+// ----------------------------------------------------------------------------
+//    Draw Earth
+// ----------------------------------------------------------------------------
+    locally
+        texture "earth.bmp"
+        texture_wrap true, true
+        rotatey 5 * page_time + 250
+        sphere 0, 0, 0, R
+
+
+hello_world R -&gt;
+// ----------------------------------------------------------------------------
+//    Draw "hello world" text
+// ----------------------------------------------------------------------------
+    locally
+        frame_texture 1900, 600,
+            color 1, 1, 1, 1
+            reset_transform
+            // If font Arial Unicode installed, it will be used.
+            // Otherwise, unifont will be used (unifont is packaged
+            // with Tao presentations).
+            font "Arial Unicode MS", "unifont", 72
+            move_to -800, -9, 0
+            text "Hello World! or Καλημέρα κόσμε; or こんにちは 世界"
+        rotatey -11 * page_time + 180
+        color 20% , 20% , 20% , 70%
+        sphere 0, 0, 0, R - 30
+        color 100% , 90% , 20% , 90%
+        sphere 0, 0, 0, Rmilkyway R -&gt;</code></pre>
+</div>
+</div>
+</div>
+</details>
 </div>
 <div class="sect3">
 <h4 id="factorial"><a class="anchor" href="#factorial"></a><a class="link" href="#factorial">1.1.2. Factorial</a></h4>
@@ -9781,7 +9850,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-05 22:09:30 +0100
+Last updated 2020-01-06 09:29:36 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

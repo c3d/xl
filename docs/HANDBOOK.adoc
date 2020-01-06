@@ -127,6 +127,69 @@ below], and you will see that it is quite simple, in particular when
 compared with similar input/output operations in languages such
 as pass:[C++].
 
+Another interesting, if slightly more complicated version of "Hello
+World" is one written in the link:https://tao3d.sf.net[Tao3D] dialect
+of XL that produces this result:
+
+video::6WIMWlUZJvs[youtube,title=Helo World in Tao3D,width=800,height=600]
+
+.Source code details
+[%collapsible]
+=====
+
+The source code for this example can be found below. The Tao3D dialect
+of XL still uses `+->+` instead of `is` as the definition
+operator. Apart from that change, the following code is valid XL for
+the language described in this document.
+
+[source]
+----
+milkyway R ->
+// ----------------------------------------------------------------------------
+//    Draw the Milky Way
+// ----------------------------------------------------------------------------
+    locally
+        texture_wrap true, true
+        texture_transform {scale 5, 5, 5}
+        texture "milkyway.jpg"
+        rotatey 0.02 * page_time + 100
+        scale 1, -1, 1
+        sphere R
+
+
+earth R ->
+// ----------------------------------------------------------------------------
+//    Draw Earth
+// ----------------------------------------------------------------------------
+    locally
+        texture "earth.bmp"
+        texture_wrap true, true
+        rotatey 5 * page_time + 250
+        sphere 0, 0, 0, R
+
+
+hello_world R ->
+// ----------------------------------------------------------------------------
+//    Draw "hello world" text
+// ----------------------------------------------------------------------------
+    locally
+        frame_texture 1900, 600,
+            color 1, 1, 1, 1
+            reset_transform
+            // If font Arial Unicode installed, it will be used.
+            // Otherwise, unifont will be used (unifont is packaged
+            // with Tao presentations).
+            font "Arial Unicode MS", "unifont", 72
+            move_to -800, -9, 0
+            text "Hello World! or Καλημέρα κόσμε; or こんにちは 世界"
+        rotatey -11 * page_time + 180
+        color 20% , 20% , 20% , 70%
+        sphere 0, 0, 0, R - 30
+        color 100% , 90% , 20% , 90%
+        sphere 0, 0, 0, Rmilkyway R ->
+----
+=====
+
 ==== Factorial
 
 A program computing the https://en.wikipedia.org/wiki/Factorial[((factorial))]
