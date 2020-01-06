@@ -4877,11 +4877,10 @@ of the assignment.
 
 ==== Errors
 
-Errors in XL are represented by values with the `error` type, or any
-type that can be implicitly converted to `error`, in other words, any
-value that link:#inheritance[inherits] from error. The error type has a
-constructor that takes a simple error message, or a simple message and a
-payload:
+Errors in XL(((error))) are represented by values with the `error`
+type, or any type that link:#inheritance[inherits] from
+error. The error type has a constructor that takes a simple error
+message, or a simple message and a payload:
 
 [source]
 ----
