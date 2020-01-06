@@ -970,7 +970,7 @@ be changed in order to implement Tao3D.
 
 Tao3D also demonstrates how a single language can be used to define
 documents in a way that feels declarative like a ((declarative language)),
-i.e._similar to HTML, but still offers the power of ((imperative programming))
+i.e. similar to HTML, but still offers the power of ((imperative programming))
 like JavaScript, as well as style sheets reminiscent of CSS. In other
 words, Tao3D does with a single language, XL, what HTML5 does with
 three.
@@ -6503,7 +6503,7 @@ if false then TrueBody                  is false
 ----
 
 CAUTION: the above code now requires a link:#metabox[metabox] for `true` in
-the version of XL described in this document, i.e._`true` must be
+the version of XL described in this document, i.e. `true` must be
 replaced with `+[[true]]+` in order to avoid being interpreted as a
 formal parameter.
 
