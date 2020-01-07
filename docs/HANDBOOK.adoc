@@ -4726,7 +4726,7 @@ The lifetime of XL values fall in one of the following categories:
   consumed. For example, assuming a definition for `x+y`, the
   expression `a+b+c+d` will be processed as `((a+b)+c)+d`, and the
   result of evaluating `a+b` can be destroyed as soon as `(a+b)+c` has
-  been evaluated. Temporary valuaes are typically also allocated on
+  been evaluated. Temporary values are typically also allocated on
   the stack.
 
 For example, consider the following piece of code:
