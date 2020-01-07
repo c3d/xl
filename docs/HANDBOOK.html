@@ -6456,9 +6456,10 @@ which is a storage-efficient way to store possibly blank text screens.</p>
 </div>
 </li>
 <li>
-<p><code>list</code> to store a variable number of linked elements. Unlike arrays,
-elements in lists are individually allocated in memory. Lists exist
-in several flavors:</p>
+<p><code>list</code> to store a variable number of linked elements. Unlike arrays
+or strings, elements in lists are individually allocated in memory
+rather than as a large contiguous chunk. Lists exist in several
+flavors:</p>
 <div class="ulist">
 <ul>
 <li>
@@ -6518,10 +6519,10 @@ follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>sum(A:some_array) as A.value is
+<pre>sum A:some_array as A.value is
     result := 0
     for I in A loop
-        S += I</pre>
+        result += I</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10058,7 +10059,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 23:06:09 +0100
+Last updated 2020-01-07 23:18:45 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

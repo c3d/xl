@@ -4370,9 +4370,10 @@ Container types include in particular the following:
   ** Multi-dimesional strings, such as `string[25,80] of character`,
      which is a storage-efficient way to store possibly blank text screens.
 
-* `list` to store a variable number of linked elements. Unlike arrays,
-  elements in lists are individually allocated in memory. Lists exist
-  in several flavors:
+* `list` to store a variable number of linked elements. Unlike arrays
+  or strings, elements in lists are individually allocated in memory
+  rather than as a large contiguous chunk. Lists exist in several
+  flavors:
   ** Single-linked lists such as `list of integer`.
   ** Doubly-linked, double-ended queues, such as `queue of integer`.
   ** Xor-linked lists such as `xor_list of integer`.
@@ -4411,10 +4412,10 @@ This makes it possible to write true generic code that takes an
 `array` argument, as follows:
 
 ....
-sum(A:some_array) as A.value is
+sum A:some_array as A.value is
     result := 0
     for I in A loop
-        S += I
+        result += I
 ....
 
 It is possible for the pattern of the true generic type to be somewhat
