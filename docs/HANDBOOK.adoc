@@ -4699,9 +4699,8 @@ The lifetime of XL values fall in one of the following categories:
   link:#declaration-phase[declaration phase] of the program, just
   before its link:#evaluation-phase[evaluation phase], and they remain
   live until the end of that evaluation phase. Global values are
-  typically allocated statically in a reserved area of memory,
-  preallocated before program evaluation, typically by a program
-  called a linker.
+  typically preallocated statically in a reserved area of memory,
+  before any program evaluation, by a program called a linker.
 
 * _((local value))s_ become live during the
   link:#nested-declarations[local declaration phase] of the bodies of
