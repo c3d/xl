@@ -3536,8 +3536,8 @@ the result of executing the entire program.</p>
 The <a href="#standard-library">standard XL library</a> only provides
 implicit conversions that do not cause data loss. On most
 implementation, <code>real</code> has a 53-bit mantissa, which means that the
-implicit conversion from <code>integer</code> to <code>real</code> is actually closer to the
-following:
+implicit conversion from <code>integer</code> to <code>real</code> actually needs to check
+the converted value in a platform-dependent way:
 </td>
 </tr>
 </table>
@@ -5823,20 +5823,46 @@ above can be written as follows:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">read_thing_from_file FileName:text as mayfail own thing is
-    F:file := file.open(FileName)       // May error out
-    H:own thing_header := read(F)       // May error out (and close F)
+    F:file := file(FileName)            // May error out <i class="conum" data-value="1"></i><b>(1)</b>
+    H:own thing_header := read(F)       // May error out (and close F) <i class="conum" data-value="2"></i><b>(2)</b>
     if H.size &lt; MIN_SIZE then
         // Explicitly error out with custom message
-        error "Header size is too small", H.size
-    T:own thing := thing(H)             // May error out, dispose H, close F
+        error "Header size %1 is too small", H.size <i class="conum" data-value="3"></i><b>(3)</b>
+    T:own thing := thing(H)             // May error out, dispose H, close F <i class="conum" data-value="4"></i><b>(4)</b>
     // ... possibly more of the same
     T</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This may error out if you cannot open the file, for example
+because it does not exist. This would typically return a
+<code>file_error</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This may error out because of an I/O error, but also because of a
+storage error if there isn&#8217;t enough heap space to allocate the
+<code>thing_header</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>This is a case where you explicit error out. Since <code>error</code> builds
+an `error value, it also implicitly returns from the function.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>This might error out if making a <code>thing</code> out of <code>H</code> fails, but
+also if a <code>storage_error</code> is raised trying to find some heap space
+for a <code>thing</code>.</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>The notation <code>own T</code> above is an
-<a href="#ownership">owning type</a> that dynamically
-allocates an object from the heap.</p>
+<p>The notation <code>own T</code> above is an <a href="#ownership">owning type</a> that
+dynamically allocates an object from the heap.</p>
 </div>
 </div>
 </div>
@@ -6782,14 +6808,14 @@ allocated for each thread of execuion. That stack has a limited
 program.</p>
 </li>
 <li>
-<p><em>dynamic values</em> are dynamically allocated using a "heap", and
-remain live as long as some other value <a href="#ownership">owns them</a>.
-That owning value may itself be a global, local or dynamic value.
-The heap is typically the largest available memory space for the
-program. XL offers a number of facilities to help you manage how
-this dynamic allocation happens, including facilities to build
-<a href="#garbage-collection">garbage collectors</a> if and when this is an
-efficient management strategy.</p>
+<p><a id="dynamic_value"></a><em>dynamic values</em> are dynamically allocated
+using a "heap", and remain live as long as some other value
+<a href="#ownership">owns them</a>.  That owning value may itself be a
+global, local or dynamic value.  The heap is typically the largest
+available memory space for the program. XL offers a number of
+facilities to help you manage how this dynamic allocation happens,
+including facilities to build <a href="#garbage-collection">garbage
+collectors</a> if and when this is an efficient management strategy.</p>
 </li>
 <li>
 <p><em>temporary values</em> are  created during evaluation of
@@ -7048,12 +7074,13 @@ encapsulation, programming contracts or
 <div class="sect3">
 <h4 id="destruction"><a class="anchor" href="#destruction"></a><a class="link" href="#destruction">4.4.3. Destruction</a></h4>
 <div class="paragraph">
-<p>When the lifetime of a value <code>V</code> terminates, the statement <code>delete V</code>
+<p>
+When the lifetime of a value <code>V</code> terminates, the statement <code>delete V</code>
 automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration. A <code>delete X:T</code> definition is called a
 <em>destructor</em> for type <code>T</code>. It often has an <a href="#inout">inout</a> parameter
 for the value to destroy, in order to be able to modify its argument,
-i.e. a destructor often has a signature like <code>delete X:inout T</code>.</p>
+i.e. a destructor often has a signature like <code>delete X:inout T</code>.</p>
 </div>
 <div class="paragraph">
 <p>There is a built-in default definition of that statement that has no
@@ -7168,13 +7195,24 @@ of the assignment.</p>
 <p>Errors in XL are represented by values with the <code>error</code>
 type, or any type that <a href="#inheritance">inherits</a> from
 error. The error type has a constructor that takes a simple error
-message, or a simple message and a payload:</p>
+message, or a simple message and a payload.:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">error as type is either
     error Message:text
     error Message:text, Payload</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The message is typically a localizable format text taking elements in
+the payload as numbered argument in a way similar to the
+<a href="#text-format"><code>format</code> function</a>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>log X:real as error when X &lt;= 0 is
+    error "Logarithm of negative value %1", X</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7224,11 +7262,12 @@ kind of error handling:</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<strong>RATIONALE</strong> By returning an <code>error</code> for failure conditions, XL forces
-the programmer to deal with errors. They cannot simply be ignored like C
-return values or C++ exceptions can be. Errors that may possibly return
-from a function are a fundamental part of its type, and error handling
-is not optional.
+<strong>RATIONALE</strong> By returning an <code>error</code> for failure conditions,
+XL forces the programmer to deal with errors simply to satisfy the
+type system. They cannot simply be ignored like C return values or
+C++ exceptions can be. Errors that may possibly return from a
+function are a fundamental part of its type, and error handling is not
+optional.
 </td>
 </tr>
 </table>
@@ -7240,34 +7279,25 @@ to feature additional properties:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>A <code>compile_error</code> helps the compiler emit better diagnostic for
-situations which would lead to an invalid program.</p>
+<p>A <code>range_error</code> indicates that a given value is out
+of range. The default message provided is supplemented with
+information comparing the value with the expected range.</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Emit a specific diagnostic when writing a real into an integer
-X:integer := Y:real       is compile_error "Possible truncation"</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>A <code>range_error</code> indicates that a given value is out of range. The
-default message provided is supplemented with information comparing the
-value with the expected range.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">T:text[A:integer] as character or range_error is
-    if A &lt; 0 or A &gt;= length T then
-        range_error "Text index is out of bounds", A, T
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">T:text[I:offset] as character or range_error is
+    if I &gt;= length T then
+        range_error "Text index %2 is out of bounds for text %2", I, T
     else
         P : memory_address[character] := memory_address(T.first)
-        P += A
+        P += I
         *P</code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>A <code>logic_error</code> indicates an unexpected condition in the program, and
-can be returned by <code>assert</code>, <code>require</code> and <code>ensure</code>.</p>
+<p>A <code>logic_error</code> indicates an unexpected condition
+in the program, and can be returned by contract checks like <code>assert</code>,
+<code>require</code> and <code>ensure</code>.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">if X &gt; 0 then
@@ -7275,7 +7305,53 @@ can be returned by <code>assert</code>, <code>require</code> and <code>ensure</c
 else if X &lt; 0 then
     print "X is negative"
 else
-    logic_error "I never considered that case"</code></pre>
+    logic_error "Some programmer forgot to consider this case"</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>A <code>storage_error</code> whenever a
+<a href="#dynamic_value">dynamic value</a> is created, notably each time an
+<code>own T</code> object is created, but also when additional storage is
+needed for containers.</p>
+<div class="literalblock">
+<div class="content">
+<pre>S : string of integer           // The string requires storage
+loop
+    V : own integer := 3        // This allocates an integer, freed each loop
+    S &amp;= V                      // Accumulate integers in an unbounded way</pre>
+</div>
+</div>
+</li>
+<li>
+<p>A <code>file_error</code> reports when there is an error
+opening a file, for example because a file does not exist.</p>
+</li>
+<li>
+<p>A <code>permission_error</code> reports when a resource
+access is denied, whether it&#8217;s a file or any other resource.</p>
+</li>
+<li>
+<p>A <code>compile_error</code> helps the compiler emit better
+diagnostic for situations which would lead to an invalid program. All
+errors can be emitted at compile-time if the compiler can detect that
+they will occur unconditionally, but <code>compile_error</code> makes it clearer
+that this is intended to detect an error at compile-time. A variant,
+<code>compile_warning</code>, emits a message but lets the compilation proceed.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Emit a specific compile-time error if assigning text to an integer
+X:integer := Y:text is
+    compile_error "Cannot assign text %1 to integer %2", Y, X
+
+// Emit a specific warning when writing a real into an integer
+X:integer := Y:real is
+    compile_warning "Assigning real to integer may lose data"
+    T is integer Y
+    if real T = Y then
+        X := T
+    else
+        range_error "Assigned real value %1 is out of range for integer", Y</code></pre>
 </div>
 </div>
 </li>
@@ -9866,7 +9942,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 00:00:06 +0100
+Last updated 2020-01-07 09:20:19 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

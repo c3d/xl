@@ -2275,8 +2275,8 @@ the result of executing the entire program.
 NOTE: The link:#standard-library[standard XL library] only provides
 implicit conversions that do not cause data loss. On most
 implementation, `real` has a 53-bit mantissa, which means that the
-implicit conversion from `integer` to `real` is actually closer to the
-following:
+implicit conversion from `integer` to `real` actually needs to check
+the converted value in a platform-dependent way:
 
 [source]
 ----
@@ -3905,19 +3905,29 @@ above can be written as follows:
 [source]
 ----
 read_thing_from_file FileName:text as mayfail own thing is
-    F:file := file.open(FileName)       // May error out
-    H:own thing_header := read(F)       // May error out (and close F)
+    F:file := file(FileName)            // May error out <1>
+    H:own thing_header := read(F)       // May error out (and close F) <2>
     if H.size < MIN_SIZE then
         // Explicitly error out with custom message
-        error "Header size is too small", H.size
-    T:own thing := thing(H)             // May error out, dispose H, close F
+        error "Header size %1 is too small", H.size <3>
+    T:own thing := thing(H)             // May error out, dispose H, close F <4>
     // ... possibly more of the same
     T
 ----
+<1> This may error out if you cannot open the file, for example
+    because it does not exist. This would typically return a
+    `file_error`.
+<2> This may error out because of an I/O error, but also because of a
+    storage error if there isn't enough heap space to allocate the
+    `thing_header`.
+<3> This is a case where you explicit error out. Since `error` builds
+    an `error value, it also implicitly returns from the function.
+<4> This might error out if making a `thing` out of `H` fails, but
+    also if a `storage_error` is raised trying to find some heap space
+    for a `thing`.
 
-The notation `own T` above is an
-link:#ownership[owning type] that dynamically
-allocates an object from the heap.
+The notation `own T` above is an link:#ownership[owning type] that
+dynamically allocates an object from the heap.
 
 === [[interface]][[implementation]]Interface and implementation
 
@@ -4575,14 +4585,14 @@ The lifetime of XL values fall in one of the following categories:
   "depth", which may limit the depth of recursion allowed for a
   program.
 
-* _((dynamic value))s_ are dynamically allocated using a "heap", and
-  remain live as long as some other value link:#ownership[owns them].
-  That owning value may itself be a global, local or dynamic value.
-  The heap is typically the largest available memory space for the
-  program. XL offers a number of facilities to help you manage how
-  this dynamic allocation happens, including facilities to build
-  link:#garbage-collection[garbage collectors] if and when this is an
-  efficient management strategy.
+* [[dynamic_value]]_((dynamic value))s_ are dynamically allocated
+  using a "heap", and remain live as long as some other value
+  link:#ownership[owns them].  That owning value may itself be a
+  global, local or dynamic value.  The heap is typically the largest
+  available memory space for the program. XL offers a number of
+  facilities to help you manage how this dynamic allocation happens,
+  including facilities to build link:#garbage-collection[garbage
+  collectors] if and when this is an efficient management strategy.
 
 * _((temporary value))s_ are  created during evaluation of
   expressions, and can be discarded as soon as they have been
@@ -4781,12 +4791,13 @@ https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization[RAII].
 
 ==== Destruction
 
-When the lifetime of a value `V` terminates, the statement `delete V`
+(((destruction)))
+When the ((lifetime)) of a value `V` terminates, the statement `delete V`
 automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration. A `delete X:T` definition is called a
-_destructor_ for type `T`. It often has an link:#inout[inout] parameter
+_((destructor))_ for type `T`. It often has an link:#inout[inout] parameter
 for the value to destroy, in order to be able to modify its argument,
-i.e. a destructor often has a signature like `delete X:inout T`.
+i.e. a destructor often has a signature like `delete X:inout T`.
 
 There is a built-in default definition of that statement that has no
 effect and matches any value:
@@ -4822,7 +4833,7 @@ result of an error condition from the C `open` call (which returns `-1`
 on error).
 ====
 
-It is possible to create local destructor definitions. When such a local
+It is possible to create ((local destructor)) definitions. When such a local
 definition exists, it is possible for it to override a more general
 definition. The general definition can be accessed using
 link:#super-lookup[super lookup].
@@ -4847,7 +4858,7 @@ Deleted 57.2
 Deleted 42
 ----
 
-The first value being output is the temporary value created by the
+The first value being output is the ((temporary value)) created by the
 necessary implicit conversion of `X` from `integer` to `real`. Note that
 additional temporary values may appear depending on the optimizations
 performed by the compiler. The value returned by the function should not
@@ -4880,7 +4891,7 @@ of the assignment.
 Errors in XL(((error))) are represented by values with the `error`
 type, or any type that link:#inheritance[inherits] from
 error. The error type has a constructor that takes a simple error
-message, or a simple message and a payload:
+message, or a simple message and a payload.:
 
 [source]
 ----
@@ -4888,6 +4899,15 @@ error as type is either
     error Message:text
     error Message:text, Payload
 ----
+
+The message is typically a localizable format text taking elements in
+the payload as numbered argument in a way similar to the
+link:#text-format[`format` function]:
+
+....
+log X:real as error when X <= 0 is
+    error "Logarithm of negative value %1", X
+....
 
 A function that may fail will often have a `T or error` return value.
 There is a specific shortcut for that, `mayfail T`:
@@ -4925,39 +4945,33 @@ if X > 0.0 then
     print format("Log(%1) is %2", X, log X)
 ----
 
-NOTE: *RATIONALE* By returning an `error` for failure conditions, XL forces
-the programmer to deal with errors. They cannot simply be ignored like C
-return values or pass:[C++] exceptions can be. Errors that may possibly return
-from a function are a fundamental part of its type, and error handling
-is not optional.
+NOTE: *RATIONALE* By returning an `error` for ((failure)) conditions,
+XL forces the programmer to deal with errors simply to satisfy the
+((type system)). They cannot simply be ignored like C return values or
+pass:[C++] ((exception))s can be. Errors that may possibly return from a
+function are a fundamental part of its type, and error handling is not
+optional.
 
 A number of types link:#inheritance[derive] from the base `error` type
 to feature additional properties:
 
-* A `compile_error` helps the compiler emit better diagnostic for
-situations which would lead to an invalid program.
+* A `range_error`(((range error))) indicates that a given value is out
+  of range. The default message provided is supplemented with
+  information comparing the value with the expected range.
 +
 [source]
 ----
-// Emit a specific diagnostic when writing a real into an integer
-X:integer := Y:real       is compile_error "Possible truncation"
-----
-* A `range_error` indicates that a given value is out of range. The
-default message provided is supplemented with information comparing the
-value with the expected range.
-+
-[source]
-----
-T:text[A:integer] as character or range_error is
-    if A < 0 or A >= length T then
-        range_error "Text index is out of bounds", A, T
+T:text[I:offset] as character or range_error is
+    if I >= length T then
+        range_error "Text index %2 is out of bounds for text %2", I, T
     else
         P : memory_address[character] := memory_address(T.first)
-        P += A
+        P += I
         *P
 ----
-* A `logic_error` indicates an unexpected condition in the program, and
-can be returned by `assert`, `require` and `ensure`.
+* A `logic_error`(((logic error))) indicates an unexpected condition
+  in the program, and can be returned by contract checks like `assert`,
+  `require` and `ensure`.
 +
 [source]
 ----
@@ -4966,7 +4980,44 @@ if X > 0 then
 else if X < 0 then
     print "X is negative"
 else
-    logic_error "I never considered that case"
+    logic_error "Some programmer forgot to consider this case"
+----
+* A `storage_error`(((storage error))) whenever a
+  link:#dynamic_value[dynamic value] is created, notably each time an
+  `own T` object is created, but also when additional storage is
+  needed for containers.
++
+....
+S : string of integer           // The string requires storage
+loop
+    V : own integer := 3        // This allocates an integer, freed each loop
+    S &= V                      // Accumulate integers in an unbounded way
+....
+* A `file_error`(((file error))) reports when there is an error
+  opening a file, for example because a file does not exist.
+* A `permission_error`(((permission error))) reports when a resource
+  access is denied, whether it's a file or any other resource.
+* A `compile_error`(((compile error))) helps the compiler emit better
+  diagnostic for situations which would lead to an invalid program. All
+  errors can be emitted at compile-time if the compiler can detect that
+  they will occur unconditionally, but `compile_error` makes it clearer
+  that this is intended to detect an error at compile-time. A variant,
+  `compile_warning`, emits a message but lets the compilation proceed.
++
+[source]
+----
+// Emit a specific compile-time error if assigning text to an integer
+X:integer := Y:text is
+    compile_error "Cannot assign text %1 to integer %2", Y, X
+
+// Emit a specific warning when writing a real into an integer
+X:integer := Y:real is
+    compile_warning "Assigning real to integer may lose data"
+    T is integer Y
+    if real T = Y then
+        X := T
+    else
+        range_error "Assigned real value %1 is out of range for integer", Y
 ----
 
 ==== Mutability
