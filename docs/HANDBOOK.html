@@ -6091,9 +6091,12 @@ matches positive values, one only needs the following code:</p>
 If you come from another language, it is important to realize
 that <code>positive</code> as defined above is a type that accepts both <code>integer</code>
 values such as <code>27</code> and <code>real</code> values such as <code>3.14</code>, since the
-expression <code>X &gt; 0</code> is valid in both cases. Using such types makes it
-possible to write <em>constrained generic code</em>, i.e. code that
-applies on a large class of cases, while being properly constrained.
+expression <code>X &gt; 0</code> is valid in both cases. As a matter of fact, it
+applies to any type where the expression <code>X &gt; 0</code> is valid. Types like
+this are often used in type expressoins such as <code>integer and positive</code>.
+Using such types makes it possible to write <em>constrained generic code</em>,
+i.e. code that applies on a large class of cases, while being properly
+constrained.
 </td>
 </tr>
 </table>
@@ -10046,7 +10049,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 21:57:56 +0100
+Last updated 2020-01-07 22:03:04 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

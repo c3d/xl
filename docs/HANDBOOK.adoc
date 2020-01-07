@@ -4107,9 +4107,12 @@ positive is type(X when X > 0)
 NOTE: If you come from another language, it is important to realize
 that `positive` as defined above is a type that accepts both `integer`
 values such as `27` and `real` values such as `3.14`, since the
-expression `X > 0` is valid in both cases. Using such types makes it
-possible to write _((constrained generic code))_, i.e. code that
-applies on a large class of cases, while being properly constrained.
+expression `X > 0` is valid in both cases. As a matter of fact, it
+applies to any type where the expression `X > 0` is valid. Types like
+this are often used in type expressoins such as `integer and positive`.
+Using such types makes it possible to write _((constrained generic code))_,
+i.e. code that applies on a large class of cases, while being properly
+constrained.
 
 A common usage is to use a named prefix to create types that are
 easier to identify. This kind of notation is called a
