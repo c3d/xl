@@ -3347,6 +3347,51 @@ in the current context matches.
 particular the contexts captured(((closure,capture))) for
 link:#closures[((closure))s].
 
+=== Implicit result variable
+
+Within the body of a definition, an implicit variable called `result`
+holds the value that will be given to the caller. For example, an
+iterative version of the factorial function can be written as follows:
+
+....
+factorial N:unsigned as unsigned is
+    result := 1
+    for I in 2..N loop
+        result *= I
+....
+
+
+=== Returned value
+
+The value returned by the body of a definition is, in order:
+
+. the value of a `return` statement if there is one. A `return`
+  statement immediately stops evaluation.
+. the value of any statement that link:#error-handling[returns an `error`].
+. the last value assigned to the `result` variable
+. if `result` was never assigned to in the body, the value of the last
+  statement evaluated in the body.
+
+For example, in addition to the definition given in the previous
+section, a factorial can be written as follows using a `return`
+statement, although it is not quite idiomatic:
+
+....
+factorial_return N:unsigned as unsigned is
+    if N = 0 then
+        return 1
+    return N * factorial_return(N-1)
+....
+
+An alternate form would use the last returned value:
+....
+factorial_last N:unsigned as unsigned is
+    if N = 0 then
+        1
+    else
+        N * factorial_last(N-1)
+....
+
 === Nested declarations
 
 A definition body may itself contain declarations, which are called

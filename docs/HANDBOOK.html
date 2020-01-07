@@ -543,20 +543,22 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#closures">3.8. Closures</a></li>
 <li><a href="#memoization">3.9. Memoization</a></li>
 <li><a href="#self">3.10. Self</a></li>
-<li><a href="#nested-declarations">3.11. Nested declarations</a></li>
-<li><a href="#scoping">3.12. Scoping</a></li>
-<li><a href="#super-lookup">3.13. Super lookup</a></li>
-<li><a href="#assignments-and-moves">3.14. Assignments and moves</a></li>
-<li><a href="#functions-as-values">3.15. Functions as values</a></li>
-<li><a href="#error-handling">3.16. Error handling</a>
+<li><a href="#implicit-result-variable">3.11. Implicit result variable</a></li>
+<li><a href="#returned-value">3.12. Returned value</a></li>
+<li><a href="#nested-declarations">3.13. Nested declarations</a></li>
+<li><a href="#scoping">3.14. Scoping</a></li>
+<li><a href="#super-lookup">3.15. Super lookup</a></li>
+<li><a href="#assignments-and-moves">3.16. Assignments and moves</a></li>
+<li><a href="#functions-as-values">3.17. Functions as values</a></li>
+<li><a href="#error-handling">3.18. Error handling</a>
 <ul class="sectlevel3">
-<li><a href="#taking-error-parameters">3.16.1. Taking error parameters</a></li>
-<li><a href="#fallible-types">3.16.2. Fallible types</a></li>
-<li><a href="#try-catch">3.16.3. Try-Catch</a></li>
-<li><a href="#error-statements">3.16.4. Error statements</a></li>
+<li><a href="#taking-error-parameters">3.18.1. Taking error parameters</a></li>
+<li><a href="#fallible-types">3.18.2. Fallible types</a></li>
+<li><a href="#try-catch">3.18.3. Try-Catch</a></li>
+<li><a href="#error-statements">3.18.4. Error statements</a></li>
 </ul>
 </li>
-<li><a href="#interface-and-implementation">3.17. Interface and implementation</a></li>
+<li><a href="#interface-and-implementation">3.19. Interface and implementation</a></li>
 </ul>
 </li>
 <li><a href="#types">4. Types</a>
@@ -5126,7 +5128,72 @@ particular the contexts captured for
 </div>
 </div>
 <div class="sect2">
-<h3 id="nested-declarations"><a class="anchor" href="#nested-declarations"></a><a class="link" href="#nested-declarations">3.11. Nested declarations</a></h3>
+<h3 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.11. Implicit result variable</a></h3>
+<div class="paragraph">
+<p>Within the body of a definition, an implicit variable called <code>result</code>
+holds the value that will be given to the caller. For example, an
+iterative version of the factorial function can be written as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>factorial N:unsigned as unsigned is
+    result := 1
+    for I in 2..N loop
+        result *= I</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.12. Returned value</a></h3>
+<div class="paragraph">
+<p>The value returned by the body of a definition is, in order:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>the value of a <code>return</code> statement if there is one. A <code>return</code>
+statement immediately stops evaluation.</p>
+</li>
+<li>
+<p>the value of any statement that <a href="#error-handling">returns an <code>error</code></a>.</p>
+</li>
+<li>
+<p>the last value assigned to the <code>result</code> variable</p>
+</li>
+<li>
+<p>if <code>result</code> was never assigned to in the body, the value of the last
+statement evaluated in the body.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>For example, in addition to the definition given in the previous
+section, a factorial can be written as follows using a <code>return</code>
+statement, although it is not quite idiomatic:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>factorial_return N:unsigned as unsigned is
+    if N = 0 then
+        return 1
+    return N * factorial_return(N-1)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An alternate form would use the last returned value:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>factorial_last N:unsigned as unsigned is
+    if N = 0 then
+        1
+    else
+        N * factorial_last(N-1)</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="nested-declarations"><a class="anchor" href="#nested-declarations"></a><a class="link" href="#nested-declarations">3.13. Nested declarations</a></h3>
 <div class="paragraph">
 <p>A definition body may itself contain declarations, which are called
 <em>nested declarations</em>.</p>
@@ -5232,7 +5299,7 @@ way to write it would be:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="scoping"><a class="anchor" href="#scoping"></a><a class="link" href="#scoping">3.12. Scoping</a></h3>
+<h3 id="scoping"><a class="anchor" href="#scoping"></a><a class="link" href="#scoping">3.14. Scoping</a></h3>
 <div class="paragraph">
 <p>A list of declarations, similar to the kind that is used in
 <a href="#closures">closures</a>, is called a <em>map</em> and evaluates as itself. One
@@ -5397,7 +5464,7 @@ result, <code>IO.write</code> will refer to the declaration in the module.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="super-lookup"><a class="anchor" href="#super-lookup"></a><a class="link" href="#super-lookup">3.13. Super lookup</a></h3>
+<h3 id="super-lookup"><a class="anchor" href="#super-lookup"></a><a class="link" href="#super-lookup">3.15. Super lookup</a></h3>
 <div class="paragraph">
 <p>In a given context, <code>super</code> is a way to refer to the enclosing scope.</p>
 </div>
@@ -5410,7 +5477,7 @@ foo 3                           // Returns 45</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.14. Assignments and moves</a></h3>
+<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.16. Assignments and moves</a></h3>
 <div id="assignment" class="paragraph">
 <p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
 returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
@@ -5502,7 +5569,7 @@ having the possibility to explicitly request a copy or a move.
 </div>
 </div>
 <div class="sect2">
-<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.15. Functions as values</a></h3>
+<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.17. Functions as values</a></h3>
 <div class="paragraph">
 <p>Unlike in several functional languages, when you declare a "function",
 you do not automatically declare a named entity or value with the
@@ -5575,7 +5642,7 @@ markedly different internally, and is detailed in the section on
 </div>
 </div>
 <div class="sect2">
-<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.16. Error handling</a></h3>
+<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.18. Error handling</a></h3>
 <div class="paragraph">
 <p>Code that fails will generally report it by returning an <code>error</code> value.
 Error values have the <a href="#errors"><code>error</code> type</a>. For
@@ -5640,7 +5707,7 @@ errors without cluttering your code with error checking conditions.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.16.1. Taking error parameters</a></h4>
+<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.18.1. Taking error parameters</a></h4>
 <div class="paragraph">
 <p>The simplest way to handle errors is to have a variant of the function
 that takes an <code>error</code> as an argument. For example, you could extend your
@@ -5679,7 +5746,7 @@ functions will print the associated error message.
 </div>
 </div>
 <div class="sect3">
-<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.16.2. Fallible types</a></h4>
+<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.18.2. Fallible types</a></h4>
 <div class="paragraph">
 <p>Another way to handle errors is to use <code>mayfail T</code> types, which hold
 either a <code>T</code> or an <code>error</code>. The <code>mayfail</code> type (without a type
@@ -5724,7 +5791,7 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.16.3. Try-Catch</a></h4>
+<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.18.3. Try-Catch</a></h4>
 <div class="paragraph">
 <p>A third way to handle errors is to use a <code>try Body catch Handler</code> form,
 which evaluates <code>Body</code>, and if <code>Body</code> returns an <code>error</code>, evaluates
@@ -5766,7 +5833,7 @@ always an <code>error</code> value being returned, not an exception being thrown
 </div>
 </div>
 <div class="sect3">
-<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.16.4. Error statements</a></h4>
+<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.18.4. Error statements</a></h4>
 <div class="paragraph">
 <p>If a statement, assignment or declaration returns an <code>error</code>, then as a
 special evaluation rule, that any <code>error</code> value is immediately returned by
@@ -5869,7 +5936,7 @@ dynamically allocates an object from the heap.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.17. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
+<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.19. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
 <div class="paragraph">
 <p>XL provides strong <em>encapsulation</em> by allowing a programmer to hide
 irrelevant details of an implementation. This is fundamental to provide
@@ -10059,7 +10126,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 23:18:45 +0100
+Last updated 2020-01-07 23:32:25 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
