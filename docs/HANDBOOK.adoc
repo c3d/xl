@@ -4339,7 +4339,7 @@ requires a `number` type for the values in the vector. Similarly, the
 ==== Generic containers
 
 In some cases, a general structure is shared by a number of data types.
-For example, all array types share an internal organzation and provide
+For example, all array types share an internal organization and provide
 similar features. XL features _((generic type))s_ to address this kind
 of need. Most often, generic types are declared with formal parameters,
 and are _instantiated_(((instantiation))) by supplying arguments for
