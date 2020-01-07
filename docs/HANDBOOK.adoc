@@ -4815,14 +4815,12 @@ tmpBody is
 ----
 <7> It may come as a suprise to people coming from C or C++ that XL
     does not _require_ the call to `fib I` to be done before this
-    point. The fact that `F` is defined to be `fib I` can be read as a
-    function, and an it is correct to evaluate it that way, i.e. to
-    only "call" `F` when it's used. However, for a named constant
-    like `F` here, it is also mandatory to evaluate its value at most
-    once per evaluation of the scope, so that if there was another
-    occurence of `F` in the same scope, a correct implementation must
-    reuse the previously computed value for `F`. Otherwise, that value
-    might not be constant within the scope.
+    point. The definition `F is fib I` can be read as either a
+    constant initialized with `fib I`, or as a function returning `fib I`.
+    If the compiler can determine that the result of calling
+    evaluating `F` will always be identical, it is allowed to
+    implement memoization, i.e. to store the value computed for `F`
+    the first time, for example in an expression like `F+F`.
 
 NOTE: Typically, a good compiler also makes use of machine
 _registers_, very fast storage in the processor itself, as a cache for

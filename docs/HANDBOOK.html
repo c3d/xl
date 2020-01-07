@@ -7127,14 +7127,12 @@ a <code>delete F</code> statement at the end, as follows:
 <td><i class="conum" data-value="7"></i><b>7</b></td>
 <td>It may come as a suprise to people coming from C or C++ that XL
 does not <em>require</em> the call to <code>fib I</code> to be done before this
-point. The fact that <code>F</code> is defined to be <code>fib I</code> can be read as a
-function, and an it is correct to evaluate it that way, i.e. to
-only "call" <code>F</code> when it&#8217;s used. However, for a named constant
-like <code>F</code> here, it is also mandatory to evaluate its value at most
-once per evaluation of the scope, so that if there was another
-occurence of <code>F</code> in the same scope, a correct implementation must
-reuse the previously computed value for <code>F</code>. Otherwise, that value
-might not be constant within the scope.</td>
+point. The definition <code>F is fib I</code> can be read as either a
+constant initialized with <code>fib I</code>, or as a function returning <code>fib I</code>.
+If the compiler can determine that the result of calling
+evaluating <code>F</code> will always be identical, it is allowed to
+implement memoization, i.e. to store the value computed for <code>F</code>
+the first time, for example in an expression like <code>F+F</code>.</td>
 </tr>
 </table>
 </div>
@@ -10130,7 +10128,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 23:53:37 +0100
+Last updated 2020-01-08 00:02:13 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
