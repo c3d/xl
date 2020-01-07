@@ -4442,12 +4442,12 @@ example, consider the operation that sums all the elements in an
 array. Its body can be written so as to not really depend on the type
 or number of elements.
 
-In order to makea it easier to write such generic code, XL code
-typically creates a _((true generic type))_, which is a type that will
-accept any variant of the generic type. It is customary to begin the
-name of such types with `some_`, in order to indicate the intent. For
-example, for `array`, one could write the true generic type as
-follows:
+In order to makea it easier to write such generic code, XL programmers
+can take advantage of a feature called _((true generic type))_, which
+is a way to define a type that will accept any variant of some
+underlying generic type. It is customary to begin the name of such
+types with `some_`, in order to indicate the intent. For example, for
+`array`, one could write the true generic type as follows:
 
 ....
 some_array is type (array[index:array_index] of value:type)
@@ -4523,7 +4523,8 @@ They include the following:
 
 * `in_out T` can be used for input-output arguments of type `T`,
   i.e. values that can be modified by the callee but are created and
-  owned by the caller.
+  owned by the caller. Due to the rules about name lookup in XL, it is
+  also possible to spell this type as `inout T`.
 
 * `any T` can hold a value of type `T` or any
   link:#inheritance[derived type], preserving the original type
@@ -4569,10 +4570,14 @@ features several mathematical types designed for that purpose:
 
 * `matrix` is a generic representation of mathematical
   link:https://en.wikipedia.org/wiki/Matrix_(mathematics)[matrices],
-  with two underlying representations, `sparse` and `dense`. It
-  features matrix algebra, and is intended to be used with `vector`.
-  Operations on the `matrix` type are often highly parallelizable.
-  The `matrix[4,3] of integer32` type will
+  with two underlying representations, `sparse` and `dense`. The
+  `matrix` type exposes an interface for a two-dimensional `array`
+  type. It features matrix algebra and matrix-specific operations,
+  as well as operations combining matrix` and `vector` for the same
+  underlying numerical type. Operations on the `matrix` type are often
+  highly parallelizable.  The `matrix[4,3] of integer32` will create a
+  4x3 matrix with `integer32` as the underlying numerical type,
+  whereas `matrix[2,2]` will create a 2x2 matrix of `real` values.
 
 ==== Parse tree types
 

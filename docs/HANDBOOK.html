@@ -6568,12 +6568,12 @@ array. Its body can be written so as to not really depend on the type
 or number of elements.</p>
 </div>
 <div class="paragraph">
-<p>In order to makea it easier to write such generic code, XL code
-typically creates a <em>true generic type</em>, which is a type that will
-accept any variant of the generic type. It is customary to begin the
-name of such types with <code>some_</code>, in order to indicate the intent. For
-example, for <code>array</code>, one could write the true generic type as
-follows:</p>
+<p>In order to makea it easier to write such generic code, XL programmers
+can take advantage of a feature called <em>true generic type</em>, which
+is a way to define a type that will accept any variant of some
+underlying generic type. It is customary to begin the name of such
+types with <code>some_</code>, in order to indicate the intent. For example, for
+<code>array</code>, one could write the true generic type as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -6674,7 +6674,8 @@ that are created by the callee.</p>
 <li>
 <p><code>in_out T</code> can be used for input-output arguments of type <code>T</code>,
 i.e. values that can be modified by the callee but are created and
-owned by the caller.</p>
+owned by the caller. Due to the rules about name lookup in XL, it is
+also possible to spell this type as <code>inout T</code>.</p>
 </li>
 <li>
 <p><code>any T</code> can hold a value of type <code>T</code> or any
@@ -6734,10 +6735,14 @@ operations on the processor if available.</p>
 <li>
 <p><code>matrix</code> is a generic representation of mathematical
 <a href="https://en.wikipedia.org/wiki/Matrix_(mathematics)">matrices</a>,
-with two underlying representations, <code>sparse</code> and <code>dense</code>. It
-features matrix algebra, and is intended to be used with <code>vector</code>.
-Operations on the <code>matrix</code> type are often highly parallelizable.
-The <code>matrix[4,3] of integer32</code> type will</p>
+with two underlying representations, <code>sparse</code> and <code>dense</code>. The
+<code>matrix</code> type exposes an interface for a two-dimensional <code>array</code>
+type. It features matrix algebra and matrix-specific operations,
+as well as operations combining matrix` and <code>vector</code> for the same
+underlying numerical type. Operations on the <code>matrix</code> type are often
+highly parallelizable.  The <code>matrix[4,3] of integer32</code> will create a
+4x3 matrix with <code>integer32</code> as the underlying numerical type,
+whereas <code>matrix[2,2]</code> will create a 2x2 matrix of <code>real</code> values.</p>
 </li>
 </ul>
 </div>
@@ -10126,7 +10131,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 23:32:25 +0100
+Last updated 2020-01-07 23:42:41 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
