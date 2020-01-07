@@ -4263,13 +4263,6 @@ _((basic types))_, and include the following:
   intended to represent truth values, for example conditions in tests.
   Unlike languages like C, the `boolean` type is not a numerical type.
 
-* `byte` is a type representing the smallest addressable unit of
-  memory, typically 8-bit on most modern implementations.
-
-* `address` is a type representing addresses for the target machine,
-  i.e. values that can be used to index individual `byte` elements in
-  memory.
-
 
 ==== Sized data types
 
@@ -4552,6 +4545,34 @@ A few other types are related to program evaluation, notably:
 * `parser` represents an XL parser.
 * `evaluator` represents an XL program evaluator.
 * `task` represent a running task.
+
+==== Other common types
+
+A number of modules provide various generally useful, if more
+specialized types. Here are some examples:
+
+* In module `XL.MEMORY`
+** `byte` is a type representing the smallest addressable unit of
+   memory, typically 8-bit on most modern implementations.
+** `address` is a type representing addresses for the target machine,
+   i.e. values that can be used to index individual `byte` elements in
+   memory.
+
+* In module `XL.FILE`
+** `file` is a representation for a file on the file system, allowing
+   *operations such as reading or writing.
+** `name` is a representation for file names that can be converted to
+   and from `text`.
+** `path` is a representation for hierarchical access paths made of
+   individual `name` instances
+** `directory` is a representation for directories, allowing to get a
+    of files.
+** `attributes` describe file-related attributes, such as creation and
+   modification date or access rights.
+
+There are many more, documented in the section about the
+link:#standard-library[standard library].
+
 
 === Type-related concepts
 

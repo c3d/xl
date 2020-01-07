@@ -575,6 +575,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#mathematical-types">4.4.7. Mathematical types</a></li>
 <li><a href="#parse-tree-types">4.4.8. Parse tree types</a></li>
 <li><a href="#program-related-types">4.4.9. Program-related types</a></li>
+<li><a href="#other-common-types">4.4.10. Other common types</a></li>
 </ul>
 </li>
 <li><a href="#type-related-concepts">4.5. Type-related concepts</a>
@@ -6278,15 +6279,6 @@ example <code>"Hello World"</code>.</p>
 intended to represent truth values, for example conditions in tests.
 Unlike languages like C, the <code>boolean</code> type is not a numerical type.</p>
 </li>
-<li>
-<p><code>byte</code> is a type representing the smallest addressable unit of
-memory, typically 8-bit on most modern implementations.</p>
-</li>
-<li>
-<p><code>address</code> is a type representing addresses for the target machine,
-i.e. values that can be used to index individual <code>byte</code> elements in
-memory.</p>
-</li>
 </ul>
 </div>
 </div>
@@ -6738,6 +6730,64 @@ symbol used in empty blocks, e.g. <code>()</code>.</p>
 <p><code>task</code> represent a running task.</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="other-common-types"><a class="anchor" href="#other-common-types"></a><a class="link" href="#other-common-types">4.4.10. Other common types</a></h4>
+<div class="paragraph">
+<p>A number of modules provide various generally useful, if more
+specialized types. Here are some examples:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>In module <code>XL.MEMORY</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>byte</code> is a type representing the smallest addressable unit of
+memory, typically 8-bit on most modern implementations.</p>
+</li>
+<li>
+<p><code>address</code> is a type representing addresses for the target machine,
+i.e. values that can be used to index individual <code>byte</code> elements in
+memory.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>In module <code>XL.FILE</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>file</code> is a representation for a file on the file system, allowing
+*operations such as reading or writing.</p>
+</li>
+<li>
+<p><code>name</code> is a representation for file names that can be converted to
+and from <code>text</code>.</p>
+</li>
+<li>
+<p><code>path</code> is a representation for hierarchical access paths made of
+individual <code>name</code> instances</p>
+</li>
+<li>
+<p><code>directory</code> is a representation for directories, allowing to get a
+of files.</p>
+</li>
+<li>
+<p><code>attributes</code> describe file-related attributes, such as creation and
+modification date or access rights.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>There are many more, documented in the section about the
+<a href="#standard-library">standard library</a>.</p>
 </div>
 </div>
 </div>
@@ -9996,7 +10046,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 09:48:06 +0100
+Last updated 2020-01-07 21:57:56 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
