@@ -4830,10 +4830,10 @@ registers where applicable.
 
 ==== Creation
 
-_Creation_ is the process of preparing a value for use. The XL compiler
-ensures that specific rules are followed to invoke creation code
-provided by the programmer before any other possible use of the value
-being created.
+_Creation_(((creation))) is the process of preparing a value for
+use. The XL language rules ensures that specific rules are followed to
+invoke creation code provided by the programmer before any other
+possible use of the value being created.
 
 When you define a type, you need to specify the associate shape. For
 example, we defined a `complex` type as follows:
