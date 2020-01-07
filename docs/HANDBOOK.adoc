@@ -4153,6 +4153,52 @@ or a _((template))_ in languages like pass:[C++]. However, as far as
 syntax is concerned, it is indistinguishable from a function taking a
 type argument and returning a type.
 
+=== Shared type annotations
+
+In some cases, notably for link:#modules[modules], a number of very
+similar declarations will have to be written again and again. For
+example, consider that you are writing code for implementing complex
+arithmetic. This might look something like:
+
+....
+complex is type complex(Re:real, Im:real)
+Z1:complex + Z2:complex as complex is ...
+Z1:complex - Z2:complex as complex is ...
+Z1:complex * Z2:complex as complex is ...
+Z1:complex / Z2:complex as complex is ...
+....
+
+In this code, `Z1` and `Z2` are always `complex` values. It seems
+unnecessary to have to repeat the time over and over again. XL offers
+a feature, called _((shared type annotations))_, where a `with`
+prefix, followed by a block of declarations, can be used to give local
+type annotations that will be valid in the entire scope where they are
+being used. The above examples could then be written as:
+
+....
+complex is type complex(Re:real, Im:real)
+with
+    Z1 : complex
+    Z2 : complex
+Z1 + Z2 as complex is ...
+Z1 - Z2 as complex is ...
+Z1 * Z2 as complex is ...
+Z1 / Z2 as complex is ...
+....
+
+A shared type annotation may contain more complicated type
+information. For example, you might declare the type for expressions.
+For example, if you define a factorial expression, you might ensure
+that all variants of the definition have a consistent type as follows:
+
+....
+with
+    N as integer and positive
+    N! as unsigned
+0! is 1
+N! is N * (N-1)!
+....
+
 
 === Standard types
 
