@@ -4180,7 +4180,7 @@ Z1 / Z2 as complex is ...
 ....
 
 A shared type annotation may contain more complicated type
-information. For example, you might declare the type for expressions.
+information. In particular, you can declare the type for expressions.
 For example, if you define a factorial expression, you might ensure
 that all variants of the definition have a consistent type as follows:
 
