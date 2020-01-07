@@ -6186,10 +6186,32 @@ that all variants of the definition have a consistent type as follows:</p>
 <div class="literalblock">
 <div class="content">
 <pre>with
-    N as integer and positive
+    N  :  unsigned
     N! as unsigned
 0! is 1
 N! is N * (N-1)!</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first declaration within the <code>with</code> block indicates that any
+variable named <code>N</code> will have type <code>unsigned</code>. This is in particular
+true for the declaration on the next line. In other words, the second
+line in the <code>with</code> block is equivalent to:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>N:unsigned! as unsigned</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The pattern <code>0!</code> matches <code>N:unsigned!</code>, and the same is true for the
+next declaration. Therefore, the two definitions for the factorial are
+equivalent to the code below:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>0:unsigned! as unsigned is 1
+N:unsigned! as unsigned is N * (N-1)!</pre>
 </div>
 </div>
 </div>
@@ -10036,7 +10058,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-07 22:25:17 +0100
+Last updated 2020-01-07 22:45:39 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

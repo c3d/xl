@@ -4186,12 +4186,29 @@ that all variants of the definition have a consistent type as follows:
 
 ....
 with
-    N as integer and positive
+    N  :  unsigned
     N! as unsigned
 0! is 1
 N! is N * (N-1)!
 ....
 
+The first declaration within the `with` block indicates that any
+variable named `N` will have type `unsigned`. This is in particular
+true for the declaration on the next line. In other words, the second
+line in the `with` block is equivalent to:
+
+....
+N:unsigned! as unsigned
+....
+
+The pattern `0!` matches `N:unsigned!`, and the same is true for the
+next declaration. Therefore, the two definitions for the factorial are
+equivalent to the code below:
+
+....
+0:unsigned! as unsigned is 1
+N:unsigned! as unsigned is N * (N-1)!
+....
 
 === Standard types
 
