@@ -7156,13 +7156,121 @@ registers where applicable.
 <div class="sect3">
 <h4 id="creation"><a class="anchor" href="#creation"></a><a class="link" href="#creation">4.5.2. Creation</a></h4>
 <div class="paragraph">
-<p><em>Creation</em> is the process of preparing a value for
-use. The XL language rules ensures that specific rules are followed to
-invoke creation code provided by the programmer before any other
-possible use of the value being created.</p>
+<p><em>Creation</em> is the process of preparing a value for use.
+The XL language rules guarantee that values are never undefined while
+the value is live, by calling programmer-supplied code at the
+appropriate times.</p>
 </div>
 <div class="paragraph">
-<p>When you define a type, you need to specify the associate shape. For
+<p>The lifetime of a value <code>V</code> begins by implicitly evaluating
+a _creation_statement <code>create V</code>. This happens in particular
+if you create a local variable without initializing it.</p>
+</div>
+<div class="paragraph">
+<p>For example, consider the following code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Add Z:complex is
+   T:complex
+   Z+T</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The code above is really equivalent to the following, where the
+implicitly-generated code has been put between parentheses:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Add Z:complex is
+   T:complex
+   (create T)
+   Z+T</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Values in <a href="#generic-containers">containers</a> receive well-defined
+values through creation. For example, if you create an <code>array[1..5] of complex</code>,
+the 5 <code>complex</code> values are created before you can access them.</p>
+</div>
+<div id="field-creation" class="paragraph">
+<p>A <code>create</code> operation must take a single <code>out</code> argument. All the values
+in this <code>out</code> argument are themselves created before the body of the
+definition begins. For example, consider the following:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>create Z:out complex is
+    print "Creator called"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This code does not lead to uninitialized values, because it is really
+equivalent to the following:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>create Z:out complex is
+   (create Z.Re)        // Implicit creation of complex fields
+   (create Z.Im)
+   print "Creator called"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>create</code> operator for <a href="#basic-types">basic types</a> is said to
+<em>zero initialize</em> them as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>type</code> and <code>nil</code> values receive <code>nil</code>.</p>
+</li>
+<li>
+<p><code>integer</code>, <code>unsigned</code>, <code>size</code> and <code>offset</code> types receive <code>0</code>.</p>
+</li>
+<li>
+<p><code>character</code> receive <code>character 0</code>.</p>
+</li>
+<li>
+<p><code>text</code> receive <code>""</code>.</p>
+</li>
+<li>
+<p><code>boolean</code> receive <code>false</code>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <code>create</code> operation can be called by the programmer, and therefore
+must behave correctly if it is called multiple times. This is true by
+default because of the rule that <code>out</code> parameters are
+<a href="#destruction">destroyed</a> before a call.</p>
+</div>
+<div class="paragraph">
+<p>For example, if you explicitly call <code>create</code> as in the following code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z:complex
+create Z</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>this is really equivalent to the following, where implicit statements
+are between parentheses:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Z:complex
+(create Z)      // because of the declaration above
+(delete Z)      // because Z is passed as out argument to `create`
+create Z</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The compiler may be able to elide some of these calls in such cases.
+Another important case where a compiler should elide creation calls is
+called <em>construction</em>, and is based on the shape defined for types.
+When you define a type, you need to specify the associate shape. For
 example, we defined a <code>complex</code> type as follows:</p>
 </div>
 <div class="listingblock">
@@ -7173,17 +7281,18 @@ example, we defined a <code>complex</code> type as follows:</p>
 <div class="paragraph">
 <p>This means that a shape like <code>complex(2.3, 5.6)</code> is a <code>complex</code>. This
 also means that the <em>only</em> elementary way to create a <code>complex</code> is by
-creating such a shape. It is not possible to have an uninitialized
-element in a <code>complex</code>, since for example <code>complex(1.3)</code> would not match
-the shape and not have the right type.</p>
+creating such a shape. It is therefore not possible to have an
+uninitialized element in a <code>complex</code>, since for example <code>complex(1.3)</code>
+would not match the shape and not have the right type.</p>
 </div>
 <div class="paragraph">
 <p>Using the shape explicitly given for the type is called the
-<em>constructor</em> for the type. A constructor can never fail nor build a
-partial object. If an argument returns an <a href="#errors">error</a> during
-evaluation, then that <code>error</code> value will not match the expected
-argument, except naturally if the constructor is written to accept
-<code>error</code> values.</p>
+<em>constructor</em> for the type, and can be used in definitions or in
+variable declarations with an initial value. A constructor can never
+fail nor build a partial object. If an argument returns an
+<a href="#errors">error</a> during evaluation, then that <code>error</code> value will
+not match the expected argument, except naturally if the constructor
+is written to accept <code>error</code> values.</p>
 </div>
 <div class="paragraph">
 <p>Often, developers will offer alternate ways to create values of a given
@@ -7214,6 +7323,44 @@ X:complex + Y:complex as complex    is ...
 </div>
 </div>
 <div class="paragraph">
+<p>The fact that the only elementary way to create a type is through the
+constructor is illustrated by the following code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>large is type (N when N &gt; 42)
+A:large := 44   // OK
+B:large := 99.1 // OK
+C:large         // Error
+create V:out large is
+    print "Creator called"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>A:large</code> and <code>B:large</code> initializations are acceptable, because it
+is possible to validate that the initial values match the <code>large</code>
+pattern. The <code>C:large</code> definition, however, is not acceptable, despite
+the presence of a <code>create</code> operation. The reason is that there is no
+way to <code>create V.N</code>, first because the type to use cannot be deduced,
+second because if we picked a type like <code>integer</code>, the default initial
+value <code>0</code> would not match the pattern.</p>
+</div>
+<div class="paragraph">
+<p>The code above can be fixed, however, by using a constructor for the
+<code>large</code> type inside the creator, which means supplying a value that
+matches the type&#8217;s pattern. The following is an acceptable version of
+the <code>create</code> function:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>large is type (N when N &gt; 42)
+C:large         // OK
+create V:out large is
+    print "Creator called"
+    V := 44     // Creator for a large value</pre>
+</div>
+</div>
+<div class="paragraph">
 <p>A type implementation may be <em>hidden</em> in a
 <a href="#modules">module interface</a>, in which case the module
 interface should also provide some functions to create elements of the
@@ -7238,6 +7385,13 @@ MY_FILE as module is
             F.fd := -2
     delete F:inout file is close F    // Destruction, see below</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>If the interface provides a <code>create</code> operation, it must be ready to
+accept default-created values as input in all other functions of the
+module. In the module above, however, the only way to get a value of
+the <code>file</code> type is by using the <code>open</code> function. This also means that
+you cannot create a variable of type <code>file</code> without initializing it.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -7371,8 +7525,9 @@ through.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Also, remember that assigning to a value implicitly destroys the target
-of the assignment.</p>
+<p>Also, remember that passing a value as an <code>out</code> argument implicitly
+destroys it. This is in particular the case for the target of an
+assignment.</p>
 </div>
 </div>
 <div class="sect3">
@@ -10128,7 +10283,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-08 00:03:52 +0100
+Last updated 2020-01-08 10:26:43 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

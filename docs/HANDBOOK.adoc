@@ -4830,11 +4830,91 @@ registers where applicable.
 
 ==== Creation
 
-_Creation_(((creation))) is the process of preparing a value for
-use. The XL language rules ensures that specific rules are followed to
-invoke creation code provided by the programmer before any other
-possible use of the value being created.
+_Creation_(((creation))) is the process of preparing a value for use.
+The XL language rules guarantee that values are never undefined while
+the value is live, by calling programmer-supplied code at the
+appropriate times.
 
+The ((lifetime)) of a value `V` begins by implicitly evaluating
+a _((creation))_statement `create V`. This happens in particular
+if you create a local variable without initializing it.
+
+For example, consider the following code:
+
+....
+Add Z:complex is
+   T:complex
+   Z+T
+....
+
+The code above is really equivalent to the following, where the
+implicitly-generated code has been put between parentheses:
+
+....
+Add Z:complex is
+   T:complex
+   (create T)
+   Z+T
+....
+
+Values in link:#generic-containers[containers] receive well-defined
+values through creation. For example, if you create an `array[1..5] of complex`,
+the 5 `complex` values are created before you can access them.
+
+[[field-creation]]
+A `create` operation must take a single `out` argument. All the values
+in this `out` argument are themselves created before the body of the
+definition begins. For example, consider the following:
+
+....
+create Z:out complex is
+    print "Creator called"
+....
+
+This code does not lead to uninitialized values, because it is really
+equivalent to the following:
+
+....
+create Z:out complex is
+   (create Z.Re)        // Implicit creation of complex fields
+   (create Z.Im)
+   print "Creator called"
+....
+
+The `create` operator for link:#basic-types[basic types] is said to
+_((zero initialize))_ them as follows:
+
+* `type` and `nil` values receive `nil`.
+* `integer`, `unsigned`, `size` and `offset` types receive `0`.
+* `character` receive `character 0`.
+* `text` receive `""`.
+* `boolean` receive `false`.
+
+The `create` operation can be called by the programmer, and therefore
+must behave correctly if it is called multiple times. This is true by
+default because of the rule that `out` parameters are
+link:#destruction[destroyed] before a call.
+
+For example, if you explicitly call `create` as in the following code:
+
+....
+Z:complex
+create Z
+....
+
+this is really equivalent to the following, where implicit statements
+are between parentheses:
+
+....
+Z:complex
+(create Z)      // because of the declaration above
+(delete Z)      // because Z is passed as out argument to `create`
+create Z
+....
+
+The compiler may be able to elide some of these calls in such cases.
+Another important case where a compiler should elide creation calls is
+called _((construction))_, and is based on the shape defined for types.
 When you define a type, you need to specify the associate shape. For
 example, we defined a `complex` type as follows:
 
@@ -4845,16 +4925,17 @@ complex is type complex(Re:real, Im:real)
 
 This means that a shape like `complex(2.3, 5.6)` is a `complex`. This
 also means that the _only_ elementary way to create a `complex` is by
-creating such a shape. It is not possible to have an uninitialized
-element in a `complex`, since for example `complex(1.3)` would not match
-the shape and not have the right type.
+creating such a shape. It is therefore not possible to have an
+uninitialized element in a `complex`, since for example `complex(1.3)`
+would not match the shape and not have the right type.
 
 Using the shape explicitly given for the type is called the
-_constructor_ for the type. A constructor can never fail nor build a
-partial object. If an argument returns an link:#errors[error] during
-evaluation, then that `error` value will not match the expected
-argument, except naturally if the constructor is written to accept
-`error` values.
+_constructor_ for the type, and can be used in definitions or in
+variable declarations with an initial value. A constructor can never
+fail nor build a partial object. If an argument returns an
+link:#errors[error] during evaluation, then that `error` value will
+not match the expected argument, except naturally if the constructor
+is written to accept `error` values.
 
 Often, developers will offer alternate ways to create values of a given
 type. These alternate helpers are nothing else than regular definitions
@@ -4882,6 +4963,39 @@ X:complex + Y:complex as complex    is ...
 2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)
 ----
 
+The fact that the only elementary way to create a type is through the
+constructor is illustrated by the following code:
+
+....
+large is type (N when N > 42)
+A:large := 44   // OK
+B:large := 99.1 // OK
+C:large         // Error
+create V:out large is
+    print "Creator called"
+....
+
+The `A:large` and `B:large` initializations are acceptable, because it
+is possible to validate that the initial values match the `large`
+pattern. The `C:large` definition, however, is not acceptable, despite
+the presence of a `create` operation. The reason is that there is no
+way to `create V.N`, first because the type to use cannot be deduced,
+second because if we picked a type like `integer`, the default initial
+value `0` would not match the pattern.
+
+The code above can be fixed, however, by using a constructor for the
+`large` type inside the creator, which means supplying a value that
+matches the type's pattern. The following is an acceptable version of
+the `create` function:
+
+....
+large is type (N when N > 42)
+C:large         // OK
+create V:out large is
+    print "Creator called"
+    V := 44     // Creator for a large value
+....
+
 A type implementation may be _hidden_ in a
 link:#modules[module interface], in which case the module
 interface should also provide some functions to create elements of the
@@ -4906,6 +5020,12 @@ MY_FILE as module is
             F.fd := -2
     delete F:inout file is close F    // Destruction, see below
 ----
+
+If the interface provides a `create` operation, it must be ready to
+accept default-created values as input in all other functions of the
+module. In the module above, however, the only way to get a value of
+the `file` type is by using the `open` function. This also means that
+you cannot create a variable of type `file` without initializing it.
 
 NOTE: *RATIONALE* This mechanism is similar to _elaboration_ in Ada or to
 _constructors_ in pass:[C++]. It makes it possible for programmers to provide
@@ -5008,8 +5128,9 @@ for I in 1..LARGE_NUMBER loop
     delete Value
 ....
 
-Also, remember that assigning to a value implicitly destroys the target
-of the assignment.
+Also, remember that passing a value as an `out` argument implicitly
+destroys it. This is in particular the case for the target of an
+assignment.
 
 ==== Errors
 
