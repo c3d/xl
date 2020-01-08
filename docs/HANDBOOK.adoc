@@ -1754,7 +1754,7 @@ link:#operator-precedence-and-associativity[same rules] as in the syntax
 file.
 
 For example, if you want to add the spaceship operator `+<=>+` in your
-program, and give the same precedence as `<=`, namely 290, you could
+program, and give the same precedence as `+<=+`, namely 290, you could
 write:
 
 [source]
@@ -6605,7 +6605,7 @@ numbers and digit grouping.
 `2#1.001_001#e-3`. Like for `Integer`, XL supports based floating-point
 numbers and digit grouping.
 * `Text` represents textual constants like `"Hello"` or `'A'`.
-* `Name` represents names like `ABC` or symbols like `<=`.
+* `Name` represents names like `ABC` or symbols like `+<=+`.
 * `Infix` represents operations where a name is between two operands,
 like `A+B` or `A and B`.
 * `Prefix` represents operations where an operator precedes its operand,
@@ -6809,7 +6809,7 @@ if true  then TrueBody                  is TrueBody
 if false then TrueBody                  is false
 ----
 
-CAUTION: the above code now requires a link:#metabox[metabox] for `true` in
+CAUTION: The above code now requires a link:#metabox[metabox] for `true` in
 the version of XL described in this document, i.e. `true` must be
 replaced with `+[[true]]+` in order to avoid being interpreted as a
 formal parameter.
