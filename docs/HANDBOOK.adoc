@@ -6192,13 +6192,14 @@ picture as type with
     area as unsigned
 ----
 
-===== Implementation, exposed
+These various examples show that XL provides powerful tools that makes
+it possible to evolve software significantly without having to change
+the interface, preserving compatibility for client code. However,
+information hiding can never be perfect. The XL type system will catch
+a large number of errors and force you to deal with them, giving you
+several ways to safely evolve the code.
 
-XL provides powerful tools that makes it possible to evolve software
-significantly without having to change the interface, preserving
-compatibility for client code. However, information hiding can never
-be perfect. The XL type system will catch a large number of errors and force
-you to deal with them, giving you several ways to evolve the code.
+===== Implementation, exposed
 
 A similar, if slightly more complicated problem arises with the
 proposed interface for `buffer` in the `picture` type, because
