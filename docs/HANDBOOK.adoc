@@ -5307,6 +5307,9 @@ log X:real as real  when X > 0.0    is ... // Always return a real
 log X:real as error                 is ... // Always return an error
 ----
 
+With the definitions above, the type of `log X` will be `real` if it
+is known that `X > 0.0`, `error` if it is known that the condition is
+false, and `real or error`, i.e. `mayfail real`, in the more general case.
 A benefit of writing code this way is that the compiler can more easily
 figure out that the following code is correct and does not require any
 kind of error handling:

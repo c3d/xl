@@ -7751,7 +7751,10 @@ log X:real as error                 is ... // Always return an error</code></pre
 </div>
 </div>
 <div class="paragraph">
-<p>A benefit of writing code this way is that the compiler can more easily
+<p>With the definitions above, the type of <code>log X</code> will be <code>real</code> if it
+is known that <code>X &gt; 0.0</code>, <code>error</code> if it is known that the condition is
+false, and <code>real or error</code>, i.e. <code>mayfail real</code>, in the more general case.
+A benefit of writing code this way is that the compiler can more easily
 figure out that the following code is correct and does not require any
 kind of error handling:</p>
 </div>
@@ -10448,7 +10451,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 09:42:16 +0100
+Last updated 2020-01-09 09:54:18 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
