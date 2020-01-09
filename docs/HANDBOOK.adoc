@@ -5939,9 +5939,10 @@ a _((direct implementation))_ of the feature.
 
 A feature is directly implemented by providing a definition for it in
 the link:#pattern-matching-scope[pattern matching scope] for the type
-implementation. For example, the formal parameters for a
+implementation. In particular, the formal parameters for a
 link:#creation[constructor] naturally provide a direct implementation
-for the interface:
+for the interface. For example, a constructor for type `picture` might
+look like:
 
 ....
 picture is type picture
@@ -5950,27 +5951,19 @@ picture is type picture
     height : unsigned
 ....
 
-In a context where the implementation above is visible, a `picture`
-value can be created by using a constructor, allowing us to build the
-`picture` function referred to earlier:
-
-....
-picture(width:unsigned, height:unsigned) as picture is
-    picture
-        pixels is buffer(area, unsigned8(0))
-        width  is super.width
-        height is super.height
-....
-
-In such a context, the pattern matching scope for `picture` values
-will necessarily contain a binding for `width` as an `integer`.
+In a scope where the implementation is known, if `P` is a `picture`,
+we know that there is a pattern matching scope in `P` which contains
+the bindings of the formal parameters to the argument values.
+This pattern matching scope is where the binding, and therefore value
+of `width` in `P.width` is found.
 
 In a context where only the interface is visible, an expression like
-`P.width` is known to be valid and match the declaration of `width` in
-the `picture` interface. Evaluating `P.width` with `P` corresponding
-to the pattern matching scope also finds a definition for `width` that
-matches what was declared in the interface. This is the mechanism
-underlying a direct implementation.
+`P.width` is known to be valid because we can look it up in the
+interface for the `picture` type. However, in order to identify the
+implementation for `P.width`, we must look this expression up in a
+context where the implementation of `picture` is known. Finding an
+implementation definition that matches the interface definition is the
+mechanism underlying direct implementation of the feature.
 
 ===== Indirect implementation
 

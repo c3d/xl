@@ -8605,9 +8605,10 @@ a <em>direct implementation</em> of the feature.</p>
 <div class="paragraph">
 <p>A feature is directly implemented by providing a definition for it in
 the <a href="#pattern-matching-scope">pattern matching scope</a> for the type
-implementation. For example, the formal parameters for a
+implementation. In particular, the formal parameters for a
 <a href="#creation">constructor</a> naturally provide a direct implementation
-for the interface:</p>
+for the interface. For example, a constructor for type <code>picture</code> might
+look like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -8618,30 +8619,20 @@ for the interface:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In a context where the implementation above is visible, a <code>picture</code>
-value can be created by using a constructor, allowing us to build the
-<code>picture</code> function referred to earlier:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>picture(width:unsigned, height:unsigned) as picture is
-    picture
-        pixels is buffer(area, unsigned8(0))
-        width  is super.width
-        height is super.height</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In such a context, the pattern matching scope for <code>picture</code> values
-will necessarily contain a binding for <code>width</code> as an <code>integer</code>.</p>
+<p>In a scope where the implementation is known, if <code>P</code> is a <code>picture</code>,
+we know that there is a pattern matching scope in <code>P</code> which contains
+the bindings of the formal parameters to the argument values.
+This pattern matching scope is where the binding, and therefore value
+of <code>width</code> in <code>P.width</code> is found.</p>
 </div>
 <div class="paragraph">
 <p>In a context where only the interface is visible, an expression like
-<code>P.width</code> is known to be valid and match the declaration of <code>width</code> in
-the <code>picture</code> interface. Evaluating <code>P.width</code> with <code>P</code> corresponding
-to the pattern matching scope also finds a definition for <code>width</code> that
-matches what was declared in the interface. This is the mechanism
-underlying a direct implementation.</p>
+<code>P.width</code> is known to be valid because we can look it up in the
+interface for the <code>picture</code> type. However, in order to identify the
+implementation for <code>P.width</code>, we must look this expression up in a
+context where the implementation of <code>picture</code> is known. Finding an
+implementation definition that matches the interface definition is the
+mechanism underlying direct implementation of the feature.</p>
 </div>
 </div>
 <div class="sect4">
@@ -10642,7 +10633,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 23:59:51 +0100
+Last updated 2020-01-10 00:11:40 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
