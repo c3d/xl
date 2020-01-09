@@ -2132,12 +2132,13 @@ In our example, `circumference 5.3` will not match the declaration of
 `pi`, but it will match the declaration of `circumference Radius:real`
 since the value `5.3` is indeed a real number.
 
-When a match happens, a new context is created with
-link:#binding[_((binding))s_] for the formal parameters to the value
-passed as an argument in the statement.  This new context is called a
-_local context_ and will be used to evaluate the body of the
-definition. For example, the local context to evaluate the body of the
-definition of `circumference Radius:real` would be:
+[[binding]]
+When a match happens, a new context is created with definitions that
+_bind_ formal parameters to the corresponding argument. Such
+definitions are, unsurprisingly, called _((bindings))_.
+This new context is called a _local context_ and will be used to
+evaluate the body of the definition. For example, the local context
+for `circumference Radius:real` would be:
 
 [source]
 ----

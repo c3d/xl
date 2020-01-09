@@ -611,7 +611,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#copy">4.5.12. Copy</a></li>
 <li><a href="#move">4.5.13. Move</a></li>
-<li><a href="#binding">4.5.14. Binding</a>
+<li><a href="#binding-2">4.5.14. Binding</a>
 <ul class="sectlevel4">
 <li><a href="#in-arguments">4.5.14.1. <code>in</code> arguments</a></li>
 <li><a href="#out-arguments">4.5.14.2. <code>out</code> arguments</a></li>
@@ -3373,13 +3373,13 @@ In our example, <code>circumference 5.3</code> will not match the declaration of
 <code>pi</code>, but it will match the declaration of <code>circumference Radius:real</code>
 since the value <code>5.3</code> is indeed a real number.</p>
 </div>
-<div class="paragraph">
-<p>When a match happens, a new context is created with
-<a href="#binding"><em>bindings</em></a> for the formal parameters to the value
-passed as an argument in the statement.  This new context is called a
-<em>local context</em> and will be used to evaluate the body of the
-definition. For example, the local context to evaluate the body of the
-definition of <code>circumference Radius:real</code> would be:</p>
+<div id="binding" class="paragraph">
+<p>When a match happens, a new context is created with definitions that
+<em>bind</em> formal parameters to the corresponding argument. Such
+definitions are, unsurprisingly, called <em>bindings</em>.
+This new context is called a <em>local context</em> and will be used to
+evaluate the body of the definition. For example, the local context
+for <code>circumference Radius:real</code> would be:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8679,7 +8679,7 @@ which is guaranteed to be a <em>copy</em>.</p>
 
 </div>
 <div class="sect3">
-<h4 id="binding"><a class="anchor" href="#binding"></a><a class="link" href="#binding">4.5.14. Binding</a></h4>
+<h4 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.5.14. Binding</a></h4>
 <div class="sect4">
 <h5 id="in-arguments"><a class="anchor" href="#in-arguments"></a><a class="link" href="#in-arguments">4.5.14.1. <code>in</code> arguments</a></h5>
 
@@ -10451,7 +10451,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 10:07:28 +0100
+Last updated 2020-01-09 23:47:03 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
