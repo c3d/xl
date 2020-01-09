@@ -4661,33 +4661,33 @@ A number of essential concepts are related to the type system, and will
 be explained more in details below:
 
 * the link:#lifetime[lifetime] of a value is the amount of time during
-which the value exists in the program. Lifetime is, among other things,
-determined by link:#scoping[scoping].
+  which the value exists in the program. Lifetime is, among other things,
+  determined by link:#scoping[scoping].
 * link:#creation[creation] and link:#destruction[destruction] defines
-how values of a given type are initialized and destroyed.
+  how values of a given type are initialized and destroyed.
 * link:#errors[errors] are special types used to indicate failure.
 * link:#mutability[mutability] is the ability for an entity to change
-value over its lifetime.
+  value over its lifetime.
 * link:#compactness[compactness] is the property of some types to have
-their values represented in the machine in a compact way, i.e. a
-fixed-size sequence of consecutive memory storage units (most generally
-bytes).
+  their values represented in the machine in a compact way, i.e. a
+  fixed-size sequence of consecutive memory storage units (most generally
+  bytes).
 * link:#ownership[ownership] is a properties of some types to control
-the lifetime of the associated values or possibly some other resource
-such as a network connection. Non-owning types can be used to
-link:#access[access] values of an associated owning type.
+  the lifetime of the associated values or possibly some other resource
+  such as a network connection. Non-owning types can be used to
+  link:#access[access] values of an associated owning type.
 * link:#inheritance[inheritance] is the ability for a type to inherit
-all operations from another type, so that its values can safely be
-implicitly converted to values of that other type.
+  all operations from another type, so that its values can safely be
+  implicitly converted to values of that other type.
 * the link:#interface[interface] of a type is an optional scope that
-exposes _features_ of the type, i.e. individually accessible values. The
-_implementation_ of the type must provide all interfaces exposed in the
-type’s interface.
+  exposes _features_ of the type, i.e. individually accessible values. The
+  _implementation_ of the type must provide all interfaces exposed in the
+  type’s interface.
 * link:#copy[copy], link:#move[move] and link:#binding[binding] are
-operations used to transfer values across parts of a program.
+  operations used to transfer values across parts of a program.
 * link:#atomicity[atomicity] is the ability to perform operations in a
-way that allows consistent behavior across multiple threads of
-execution, possibly executing concurrently on different CPUs.
+  way that allows consistent behavior across multiple threads of
+  execution, possibly executing concurrently on different CPUs.
 
 ==== Lifetime
 
