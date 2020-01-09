@@ -8328,24 +8328,26 @@ as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 <div class="sect4">
 <h5 id="real-subtypes"><a class="anchor" href="#real-subtypes"></a><a class="link" href="#real-subtypes">4.5.10.3. Real subtypes</a></h5>
 <div class="paragraph">
-<p>The <code>real</code> type can be subtype with a <code>range</code> and a <code>bits</code> size, as well
-as with additional constraints more specific to the <code>real</code> type:</p>
+<p>The <code>real</code> type can be subtyped with a <code>range</code> and a <code>bits</code> size, as
+well as with additional constraints more specific to the <code>real</code> type:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>a <code>digits</code> count specifies the number of accurate decimal digits. For
-example, <code>real digits 3</code> is represents values with at least 3
+<p>a <code>digits</code> count specifies the number of accurate decimal digits,</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>For example, <code>real digits 3</code> is represents values with at least 3
 significant digits.</p>
+</li>
+</ol>
+</div>
 </li>
 <li>
 <p>a <code>quantum</code> followed by a literal real value specifies a
-representation that should be representable exactly. For example, on a
-machine using <a href="https://en.wikipedia.org/wiki/IEEE-754">IEEE-754</a>, the
-value <code>0.01</code> cannot be
-<a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding">represented
-accurately</a> but <code>real quantum 0.01</code> will accurately represent it. &gt;
-NOTE: Converting to a <code>real</code> will lose that accuracy.</p>
+representation that should be representable exactly. For example,
+<code>real quantum 0.25</code> that value <code>0.25</code> must be represented exactly.</p>
 </li>
 <li>
 <p>an <code>exponent</code> specifies the maximum decimal exponent. For example,
@@ -8354,25 +8356,45 @@ represented.</p>
 </li>
 <li>
 <p>a <code>base</code> specifies the base for the internal representation. Only
-bases <code>2</code>, <code>10</code> and <code>16</code> are allowed. Base <code>2</code> requires a binary
-floating-point representation. Base <code>10</code> requires a decimal
-floating-point representation. Base <code>16</code> requires an hexadecimal
-floating-point representation on historical platforms that support it.</p>
+bases <code>2</code>, <code>10</code> and <code>16</code> are allowed. Base <code>2</code> requires a binary floating-point representation. Base <code>10</code> requires a decimal floating-point representation. Base <code>16</code> requires an hexadecimal floating-point representation on historical platforms that support it.</p>
 </li>
 </ul>
 </div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>A <code>real</code> subtype is represented as a <em>fixed point</em> representation if one
-of the following conditions is true:</p>
+<p>In some cases, the types created using one of these operators may not
+be subtypes of <code>real</code>. For example, on any machine using machine using
+the most common floating-point representation available in hardware,
+<a href="https://en.wikipedia.org/wiki/IEEE-754">IEEE-754</a>, the value <code>0.01</code> cannot be
+<a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,<em>conversion_and_rounding">represented accurately</a>.
+This means that an implicit conversion from <code>real quantum 0.01</code> to
+<code>real</code> would implicitly destroy accuracy. As a result, <code>real quantum
+0.01</code> must be _explicitly</em> converted to <code>real</code>. In some other cases,
+implementation limitations may cause errors. For example, an
+implementation is not required to accept <code>real digits 100</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A <code>real</code> subtype should be represented using
+<a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic"><em>fixed-point arithmetic</em></a> if one of the following conditions is true:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>The <code>exponent</code> is specified as <code>0</code></p>
+<p>The <code>exponent</code> is specified as <code>0</code>.</p>
 </li>
 <li>
 <p>The <code>range</code> is small enough to be representable entirely with the same
-exponent</p>
+exponent and the available number of bits.</p>
 </li>
 <li>
 <p>A <code>quantum</code> is specified and no <code>exponent</code> is specified.</p>
@@ -8381,7 +8403,7 @@ exponent</p>
 </div>
 <div class="paragraph">
 <p>For example, the <code>hundredth</code> type defined below could be represented
-internally by <code>integer</code> values between <code>0</code> and <code>100</code>, and converted to
+internally by an <code>unsigned</code> values between <code>0</code> and <code>100</code>, and converted to
 <code>real</code> by multiplying this value by the given <code>quantum</code> value.</p>
 </div>
 <div class="listingblock">
@@ -10453,7 +10475,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 23:47:07 +0100
+Last updated 2020-01-09 23:47:08 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

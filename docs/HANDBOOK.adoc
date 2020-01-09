@@ -5732,41 +5732,51 @@ convenient or more efficient machine representation. For example, on a
 32-bit machine, `integer bits 22` might be more efficiently represented
 as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 
-
 ===== Real subtypes
 
-The `real` type can be subtype with a `range` and a `bits` size, as well
-as with additional constraints more specific to the `real` type:
+The `real` type can be subtyped with a `range` and a `bits` size, as
+well as with additional constraints more specific to the `real` type:
 
-* a `digits` count specifies the number of accurate decimal digits. For
-example, `real digits 3` is represents values with at least 3
-significant digits.
+* a `digits` count specifies the number of accurate decimal digits,
+. For example, `real digits 3` is represents values with at least 3
+  significant digits.
 * a `quantum` followed by a literal real value specifies a
-representation that should be representable exactly. For example, on a
-machine using https://en.wikipedia.org/wiki/IEEE-754[IEEE-754], the
-value `0.01` cannot be
-https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding[represented
-accurately] but `real quantum 0.01` will accurately represent it. >
-NOTE: Converting to a `real` will lose that accuracy.
+  representation that should be representable exactly. For example,
+  `real quantum 0.25` that value `0.25` must be represented exactly.
 * an `exponent` specifies the maximum decimal exponent. For example,
-`real exponent 100` will ensure that values up to `1.0e100` can be
-represented.
+  `real exponent 100` will ensure that values up to `1.0e100` can be
+  represented.
 * a `base` specifies the base for the internal representation. Only
-bases `2`, `10` and `16` are allowed. Base `2` requires a binary
-floating-point representation. Base `10` requires a decimal
-floating-point representation. Base `16` requires an hexadecimal
-floating-point representation on historical platforms that support it.
+  bases `2`, `10` and `16` are allowed. Base `2` requires a ((binary
+  floating-point representation)). Base `10` requires a ((decimal
+  floating-point representation)). Base `16` requires an ((hexadecimal
+  floating-point representation)) on historical platforms that support it.
 
-A `real` subtype is represented as a _fixed point_ representation if one
-of the following conditions is true:
+[WARNING]
+====
+In some cases, the types created using one of these operators may not
+be subtypes of `real`. For example, on any machine using machine using
+the most common floating-point representation available in hardware,
+link:https://en.wikipedia.org/wiki/IEEE-754[IEEE-754], the value `0.01` cannot be
+link:https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding[represented accurately].
+This means that an implicit conversion from `real quantum 0.01` to
+`real` would implicitly destroy accuracy. As a result, `real quantum
+0.01` must be _explicitly_ converted to `real`. In some other cases,
+implementation limitations may cause errors. For example, an
+implementation is not required to accept `real digits 100`.
+====
 
-* The `exponent` is specified as `0`
+A `real` subtype should be represented using
+link:https://en.wikipedia.org/wiki/Fixed-point_arithmetic[_((fixed-point
+arithmetic))_] if one of the following conditions is true:
+
+* The `exponent` is specified as `0`.
 * The `range` is small enough to be representable entirely with the same
-exponent
+  exponent and the available number of bits.
 * A `quantum` is specified and no `exponent` is specified.
 
 For example, the `hundredth` type defined below could be represented
-internally by `integer` values between `0` and `100`, and converted to
+internally by an `unsigned` values between `0` and `100`, and converted to
 `real` by multiplying this value by the given `quantum` value.
 
 [source]
