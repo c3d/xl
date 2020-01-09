@@ -5829,75 +5829,95 @@ The `text` type can be subtyped with the `encoding`, `locale` and
 
 ==== Type interface
 
-The link:#interface-and-implementation[interface] of a type can
-specifiy a link:#scoping[scope] for values that match the type, using
-the infix form `+[[type]] with Interface+`, where `Interface` is an
-_((interface scope))_ containing the publicly available
-declarations. These declarations are called _features_ of the
-type. The terms _fields_ of the type are also used for
-link:#mutability[mutable] values, and _methods_ of the type for
-constant values.
+The link:#interface-and-implementation[interface] of a type specifies
+how the type can be used, and what operations can be performed with
+it. Specifically, the interface defines:
 
-The code below defines a `picture` type that exposes `width`, `height`
-and `data` fields, as well as a `size` method that is used to compute
-the size of `buffer`.
+* _((feature))s_ of the type, which are elements that are visible in
+  the link:#pattern-matching-scope[scope] defined by a value of the type.
+  link:#mutability[Mutable] features are sometimes called _fields_,
+  whereas constant features are sometimes called _methods_.
+
+* _((inheritance))_ of the type, which indicates what type, if any,
+  the type link:#inheritance[derives from].
+
+A feature is said to be _advertised_(((advertised feature))) if it is
+explicitly and intentionally part of the interface. A feature is said
+to be _exposed_(((exposed feature))) if it is made visible as an
+unintentional or even undesirable side effect of the interface.
+For example, as we shall see shortly, an interface may avertise a
+`buffer` interface, but may need to expose details of the
+implementation through the presence of link:#storage_error[`storage_error`]
+in specific locations.
+
+The code below defines a `picture` type that advertises `width`, `height`
+and `pixels` fields, as well as an `area` method that is used to compute
+the total number of pixels and is the size for the `pixels` buffer. In
+this interface, one might argue that the fact that `pixels` is a
+`buffer` falls more in the "exposed" category than "advertised", and
+we shall see that this is indeed true.
 
 [source]
 ----
 picture as type with
     width  : unsigned
     height : unsigned
-    buffer : buffer[size] of unsigned8
-    size as unsigned
+    pixels : buffer[area] of unsigned8
+    area as unsigned
 ----
 
-Knowing only the interface of a type does not allow values of
-the type to be created. It is sometimes useful to preclude the
-creation of values of the type, for example when creating
-link:#true-generic-types[true generic types]. For concrete types,
-however, the interface of a function making it possible to create
-values must also be provided if you want to make it possible to create
-values of the type. In the rest of the discussion for the
-`picture` type, we will also assume that there is a `picture` function
-with the following interface, which returns a `picture` value:
+The code below indicates that the type `text` derives from `string of
+character` with additional features:
+
+[source]
+----
+text as type like string of character with
+    byte_count as size                  // Number of bytes used by characters
+    as_number[T:type like number] as T  // Numerical conversion
+----
+
+An _abstract type_ is a type for which features or inheritance are not
+provide. The only thing known about such a type is its name. In the
+link:#my_file[[`MY_FILE`]] example, we defined `file` as an abstract
+type:
+
+....
+file as type
+....
+
+A type for which only the interface is known is called a _((tag type))_.
+Since nothing is known about the parse tree shape associated with the
+type, a tag type can only match values that were _tagged_ with the
+same type using some explicit type annotation.
+
+In partticular, knowing only the interface of a type does not allow
+values of the type to be link:#creation[created]. It is sometimes
+useful or desirable to preclude the creation of values of the type,
+for example when creating link:#true-generic-types[true generic types].
+For most concrete types, however, the interface of a function creating
+values of the type should generally also be provided. In the rest of
+the discussion for the `picture` type, we will assume that there is a
+`picture` function returning a `picture` value with the following
+function interface:
 
 [source]
 ----
 picture(width:unsigned, height:unsigned) as picture
 ----
 
-A type interface can announce that the declared type will
-link:#inheritance[derive] from one or several other types using the
-`like` infix:
-
-[source]
-----
-derived as type like base1, base2, base3 with
-    additional : field
-----
-
-An interface may consist of only announcing the inheritance, or of not
-announcing anything at all:
-
-[source]
-----
-derived as type like base      // All we know is that it derives from base
-totally_abstract as type       // All we know is that the type exists
-----
 
 ===== Information hiding
 
-The interface does not reveal any information on the actual shape of the
-parse tree for `picture` values. In other words, it does not specify how
-the `picture` type is actually implemented. A type that has a name but
-no implementation, like `picture` above, is called a _((tag type))_.
-Since nothing is known about the parse tree shape associated with the
-type, a tag type can only match values that were _tagged_ with the
-same type using some explicit type annotation.
+The interface of a type does not reveal any information on the actual
+implementation of the type, e.g. on the shape of the parse tree
+associated with it. This is called _((information hiding))_ and
+is the primary way in XL to achieve
+link:https://en.wikipedia.org/wiki/Encapsulation_(computer_programming)[_((encapsulation))_].
 
-The type interface for `picture` above does not tell us how the type
-is implemented, yet it remains sufficient to validate code like the
-following definition of `is_square`:
+While the type interface for `picture` above does not give us any clue
+about how the type is actually implemented, it still provides very
+useful information. It remains sufficient to validate code that uses
+values of the type, like the following definition of `is_square`:
 
 [source]
 ----
@@ -5909,120 +5929,243 @@ even if we have no idea how that type is implemented, we can still use
 `P.width` and deduce that it’s an `integer` value based on the type
 interface alone.
 
-===== Anonymous scope implementation
+Information hiding is specially useful in the context of
+link:#modules[modules], where the interface and implementation
+typically reside in different source files.
 
-The simplest way to implement the features for a type is to create a
-type that has a structure exposing declarations that directly match
-the interface. For the `picture` type, this could be the following
-code:
+===== Direct implementation
 
-[source]
-----
-picture is type
-    width   : unsigned
-    height  : unsigned
-    buffer  : buffer[size] of unsigned8
-    size is width * height
-----
+The simplest way to implement any feature of a type is to ensure that
+the implementation of the type has a matching feature. This is called
+a _((direct implementation))_ of the feature.
 
-This implementation of the `picture` type is a pattern that matches
-values that have the exact same structure, such as:
+A feature is directly implemented by providing a definition for it in
+the link:#pattern-matching-scope[pattern matching scope] for the type
+implementation. For example, the formal parameters for a
+link:#creation[constructor] naturally provide a direct implementation
+for the interface:
 
-[source]
-----
-my_picture is
-    1024
-    768
-    my_buffer
-----
-
-For better readability, the pattern can also match a scope with
-link:#scope-pattern-matching[matching definitions]:
-
-[source]
-----
-another_picture is
-    width  is 1024
-    height is 768
-    buffer is another_buffer
-----
-
-Note that in order to make patterns more specific, a type is typically
-defined using a prefix, not just a block, in order to define a
-link:#creation[constructor]. For example, it would be
-considered better taste to define the `picture` type as follows:
-
-[source]
-----
+....
 picture is type picture
-    width   : unsigned
-    height  : unsigned
-    buffer  : buffer[size] of unsigned8
-    size is width * height
+    pixels : buffer[area] of unsigned8
+    width  : unsigned
+    height : unsigned
+....
 
-my_picture : picture := picture
-    width  is 640
-    height is 480
-    buffer is my_buffer
-----
+In a context where the implementation above is visible, a `picture`
+value can be created by using a constructor, allowing us to build the
+`picture` function referred to earlier:
 
+....
+picture(width:unsigned, height:unsigned) as picture is
+    picture
+        pixels is buffer(area, unsigned8(0))
+        width  is super.width
+        height is super.height
+....
 
+In such a context, the pattern matching scope for `picture` values
+will necessarily contain a binding for `width` as an `integer`.
 
-===== Named scope implementation
-
-In general, you want the pattern for a type to be more specific, so it
-is customary to add a prefix that matches the type name, therefore
-creating a link:#creation[constructor].
-
-[source]
-----
-picture is type picture
-    width   : unsigned
-    height  : unsigned
-    buffer  : buffer[size] of unsigned8
-    size is width * height
-
-my_picture is picture(1024, 768, my_buffer)
-
-another_picture is picture
-    width  is 256
-    height is 256
-    buffer is another_buffer
-----
+In a context where only the interface is visible, an expression like
+`P.width` is known to be valid through the interface, and evaluating
+this expression in the context of the pattern matching scope finds a
+definition that matches what the interface specifies. The expression
+is therefore directly available from the type implementation.
 
 ===== Indirect implementation
 
-However, the implementation is often entirely different, and merely
-needs to _expose_ the interface in some way. This is called an _indirect
-implementation_ of the interface.
+However, the implementation may be entirely different from the
+interface, as long as any expression that is valid knowing the
+interface is valid in a context where the implementation is known.
+An implementation that provides an advertised feature of the interface
+withtout using a similar definition is called an _((indirect implementation))_
+of that feature.
 
-For example, the `picture` type can be implemented by _delegating_ the
-implementation to another value that provides the required information.
-For the sake of illustration, we will imagine that we use a `bitmap`
-type defined as follows:
+A simple case of indirect implementation for inheritance is to provide
+an implicit conversion function. For example, the implementation of
+`text` may simply be defined in a scope that also features the
+following function:
 
-[source]
-----
-type bitmap with
+....
+T:text as string of character is convert_to_string(T)
+....
+
+While it is reasonable to infer from the interface that `text` and
+`string of character` might share a common internal representation,
+this is only an efficient way to provide inheritance, but it is not a
+constraint on the implementation.
+
+A type may also _delegate_(((delegation))) most of its implementation
+to some other type. For example, the `picture` type might actually be
+using a `bitmap` type as its internal representation:
+
+....
+bitmap as type with
     width  : unsigned16
     height : unsigned16
     buf    : array[width, height] of unsigned8
-----
+picture as type picture
+    bits:bitmap
+....
 
-This means that the implementation of the `picture` type must perform
-some adjustments in order to delegate the work to the underlying
-`bitmap` value.
+Such an implementation of the `picture` type must perform some serious
+adjustments in order to delegate the work to the underlying `bitmap`
+value while providing the expected interface. Dealing with the `width`
+and `height` fields seems relatively straightforward:
 
 [source]
 ----
-type picture is picture
-    Bitmap:bitmap
-    buffer:optional[buffer[size] of unsigned8]
+picture is type picture
+    bits:bitmap
 
-(P:picture).width   is P.Image.width
-(P:picture).height  is P.Image.height
-(P:picture).buffer  is P.Image.buffer
+    width  is bits.width
+    height is bits.height
 ----
+
+This, however, will not work as is, because we have only provided a
+way to _read_ `width` and `height`, not to write it. This does not
+match the interface. A simple solution would be to modify the
+`picture` interface, for example so that it reads `width as unsigned`.
+
+Let's assume that we still want to be able to _write_ into `width` and
+`height`. This requires us to provide a way to assign to the field.
+The first problem here is with the notation that properly identifies
+this operation. The following for example does not work:
+
+[source]
+----
+picture is type picture
+    bits:bitmap
+
+    width  is bits.width
+    height is bits.height
+
+    width  := W is bits.width := W
+    height := H is bits.width := H
+----
+
+The reason it does not work is that `width` in the `width := W`
+pattern is a formal parameter. The link:#metabox[metabox] solution
+does not work in that context, since writing `[[width]] := W` would
+match the _value_ of `width`, not its shape. It is possible to resort
+to a more convoluted solution that intercepts assignments to `width`
+and height by using `type(width)` as a way to only match `width`,
+which leads to somewhat inelegant and unreadable code like:
+
+[source]
+----
+picture is type picture
+    bits:bitmap
+
+    width  is bits.width
+    height is bits.height
+
+    width:type(width)   := W is bits.width := W
+    height:type(height) := H is bits.width := H
+----
+
+To avoid this issue, there is a general convention that writing to a
+feature is done using a prefix with the feature name. In other words,
+the following code is the correct way to achieve the intended objective:
+
+[source]
+----
+picture is type picture
+    bits:bitmap
+
+    width       is bits.width
+    height      is bits.height
+
+    width W     is bits.width := W
+    height H    is bits.height := H
+----
+
+As you might guess, it is also possible to write:
+
+[source]
+----
+picture is type picture
+    bits:bitmap
+
+    width       is bits.width
+    height      is bits.height
+
+    width W     is bits.width W
+    height H    is bits.height H
+----
+
+The code as written above will be accepted by the compiler until you
+try to use it. It is accepted because it is not typed, therefore
+generic, so that some errors cannot be detected until you instantiate
+it. Actually, if `P` is a `picture` and `N` is an `unsigned`, `P.width
+300` will work, but `P.width := N` will complain. The reason is that
+the type of `bits.width` is `unsigned16`, and there is no implicit
+conversion from `unsigned` to `unsigned16` to avoid truncations.
+
+This in turn can be fixed, but if we want to do it correctly, we need
+to range-check the input. One cheap way to do it is to ignore bad
+input and just print some run-time error.
+
+[source]
+----
+picture is type picture
+    bits:bitmap
+
+    width       is bits.width
+    height      is bits.height
+
+    width  W:unsigned16 is bits.width W
+    height H:unsigned16 is bits.height H
+
+    width  W:unsigned is
+        print error("Invalid picture width %1", W)
+        bits.width      // Return previous value
+    height  H:unsigned is
+        print error("Invalid picture height %1", H)
+        bits.height     // Return previous value
+----
+
+If we instead want to return the error, then we need to _expose_ the
+error in the interface, for example:
+
+[source]
+----
+picture as type with
+    width  : mayfail unsigned
+    height : mayfail unsigned
+    pixels : buffer[area] of unsigned8
+    area as unsigned
+----
+
+XL provides powerful tools that makes it possible to evolve software
+significantly without having to change the interface, preserving
+compatibility for client code. However, information hiding can never
+be perfect. The XL type system will catch this kind of error and force
+you to deal with them.
+
+A similar, if slightly more complicated problem arises with the
+proposed interface for `buffer`, because `buffer` is a type that may
+require dynamic allocation, and therefore some operations may have to
+return a link:#storage_error[`storage_error`]. This is already present
+in the interface for the `buffer` type, so one might feel a bit safer.
+
+However, since there is no actual `buffer` present in `bitmap`, a
+buffer may need to be created or at least given storage in the
+implementation of `P.buffer` for `picture` values.
+This may involve the _creation_ of a buffer while simply
+reading a field. In other words, a `storage_error` may now result from
+apparently _reading_ a buffer (`P.buffer`), something that would not
+happen with a direct implementation.
+
+In that case too, the interface may need to be changed to expose an
+implementation detail regarding when the buffer is actually created.
+It is a good thing that the type system will catch such things, even
+if it means that information hiding seems less perfect. The details
+that will not be hidden in that case are what might cause your program
+to crash or your rocket to explode.
+
+
 
 ==== Copy
 

@@ -604,9 +604,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#type-interface">4.5.11. Type interface</a>
 <ul class="sectlevel4">
 <li><a href="#information-hiding">4.5.11.1. Information hiding</a></li>
-<li><a href="#anonymous-scope-implementation">4.5.11.2. Anonymous scope implementation</a></li>
-<li><a href="#named-scope-implementation">4.5.11.3. Named scope implementation</a></li>
-<li><a href="#indirect-implementation">4.5.11.4. Indirect implementation</a></li>
+<li><a href="#direct-implementation">4.5.11.2. Direct implementation</a></li>
+<li><a href="#indirect-implementation">4.5.11.3. Indirect implementation</a></li>
 </ul>
 </li>
 <li><a href="#copy">4.5.12. Copy</a></li>
@@ -8477,81 +8476,109 @@ have <code>character</code> values that sort following German rules, you would u
 <div class="sect3">
 <h4 id="type-interface"><a class="anchor" href="#type-interface"></a><a class="link" href="#type-interface">4.5.11. Type interface</a></h4>
 <div class="paragraph">
-<p>The <a href="#interface-and-implementation">interface</a> of a type can
-specifiy a <a href="#scoping">scope</a> for values that match the type, using
-the infix form <code>[[type]] with Interface</code>, where <code>Interface</code> is an
-<em>interface scope</em> containing the publicly available
-declarations. These declarations are called <em>features</em> of the
-type. The terms <em>fields</em> of the type are also used for
-<a href="#mutability">mutable</a> values, and <em>methods</em> of the type for
-constant values.</p>
+<p>The <a href="#interface-and-implementation">interface</a> of a type specifies
+how the type can be used, and what operations can be performed with
+it. Specifically, the interface defines:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>features</em> of the type, which are elements that are visible in
+the <a href="#pattern-matching-scope">scope</a> defined by a value of the type.
+<a href="#mutability">Mutable</a> features are sometimes called <em>fields</em>,
+whereas constant features are sometimes called <em>methods</em>.</p>
+</li>
+<li>
+<p><em>inheritance</em> of the type, which indicates what type, if any,
+the type <a href="#inheritance">derives from</a>.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>The code below defines a <code>picture</code> type that exposes <code>width</code>, <code>height</code>
-and <code>data</code> fields, as well as a <code>size</code> method that is used to compute
-the size of <code>buffer</code>.</p>
+<p>A feature is said to be <em>advertised</em> if it is
+explicitly and intentionally part of the interface. A feature is said
+to be <em>exposed</em> if it is made visible as an
+unintentional or even undesirable side effect of the interface.
+For example, as we shall see shortly, an interface may avertise a
+<code>buffer</code> interface, but may need to expose details of the
+implementation through the presence of <a href="#storage_error"><code>storage_error</code></a>
+in specific locations.</p>
+</div>
+<div class="paragraph">
+<p>The code below defines a <code>picture</code> type that advertises <code>width</code>, <code>height</code>
+and <code>pixels</code> fields, as well as an <code>area</code> method that is used to compute
+the total number of pixels and is the size for the <code>pixels</code> buffer. In
+this interface, one might argue that the fact that <code>pixels</code> is a
+<code>buffer</code> falls more in the "exposed" category than "advertised", and
+we shall see that this is indeed true.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
     width  : unsigned
     height : unsigned
-    buffer : buffer[size] of unsigned8
-    size as unsigned</code></pre>
+    pixels : buffer[area] of unsigned8
+    area as unsigned</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Knowing only the interface of a type does not allow values of
-the type to be created. It is sometimes useful to preclude the
-creation of values of the type, for example when creating
-<a href="#true-generic-types">true generic types</a>. For concrete types,
-however, the interface of a function making it possible to create
-values must also be provided if you want to make it possible to create
-values of the type. In the rest of the discussion for the
-<code>picture</code> type, we will also assume that there is a <code>picture</code> function
-with the following interface, which returns a <code>picture</code> value:</p>
+<p>The code below indicates that the type <code>text</code> derives from <code>string of
+character</code> with additional features:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">text as type like string of character with
+    byte_count as size                  // Number of bytes used by characters
+    as_number[T:type like number] as T  // Numerical conversion</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An <em>abstract type</em> is a type for which features or inheritance are not
+provide. The only thing known about such a type is its name. In the
+<a href="#my_file">[<code>MY_FILE</code></a>] example, we defined <code>file</code> as an abstract
+type:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>file as type</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A type for which only the interface is known is called a <em>tag type</em>.
+Since nothing is known about the parse tree shape associated with the
+type, a tag type can only match values that were <em>tagged</em> with the
+same type using some explicit type annotation.</p>
+</div>
+<div class="paragraph">
+<p>In partticular, knowing only the interface of a type does not allow
+values of the type to be <a href="#creation">created</a>. It is sometimes
+useful or desirable to preclude the creation of values of the type,
+for example when creating <a href="#true-generic-types">true generic types</a>.
+For most concrete types, however, the interface of a function creating
+values of the type should generally also be provided. In the rest of
+the discussion for the <code>picture</code> type, we will assume that there is a
+<code>picture</code> function returning a <code>picture</code> value with the following
+function interface:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture(width:unsigned, height:unsigned) as picture</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>A type interface can announce that the declared type will
-<a href="#inheritance">derive</a> from one or several other types using the
-<code>like</code> infix:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">derived as type like base1, base2, base3 with
-    additional : field</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>An interface may consist of only announcing the inheritance, or of not
-announcing anything at all:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">derived as type like base      // All we know is that it derives from base
-totally_abstract as type       // All we know is that the type exists</code></pre>
-</div>
-</div>
 <div class="sect4">
 <h5 id="information-hiding"><a class="anchor" href="#information-hiding"></a><a class="link" href="#information-hiding">4.5.11.1. Information hiding</a></h5>
 <div class="paragraph">
-<p>The interface does not reveal any information on the actual shape of the
-parse tree for <code>picture</code> values. In other words, it does not specify how
-the <code>picture</code> type is actually implemented. A type that has a name but
-no implementation, like <code>picture</code> above, is called a <em>tag type</em>.
-Since nothing is known about the parse tree shape associated with the
-type, a tag type can only match values that were <em>tagged</em> with the
-same type using some explicit type annotation.</p>
+<p>The interface of a type does not reveal any information on the actual
+implementation of the type, e.g. on the shape of the parse tree
+associated with it. This is called <em>information hiding</em> and
+is the primary way in XL to achieve
+<a href="https://en.wikipedia.org/wiki/Encapsulation_(computer_programming)"><em>encapsulation</em></a>.</p>
 </div>
 <div class="paragraph">
-<p>The type interface for <code>picture</code> above does not tell us how the type
-is implemented, yet it remains sufficient to validate code like the
-following definition of <code>is_square</code>:</p>
+<p>While the type interface for <code>picture</code> above does not give us any clue
+about how the type is actually implemented, it still provides very
+useful information. It remains sufficient to validate code that uses
+values of the type, like the following definition of <code>is_square</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8564,129 +8591,270 @@ even if we have no idea how that type is implemented, we can still use
 <code>P.width</code> and deduce that it’s an <code>integer</code> value based on the type
 interface alone.</p>
 </div>
-</div>
-<div class="sect4">
-<h5 id="anonymous-scope-implementation"><a class="anchor" href="#anonymous-scope-implementation"></a><a class="link" href="#anonymous-scope-implementation">4.5.11.2. Anonymous scope implementation</a></h5>
 <div class="paragraph">
-<p>The simplest way to implement the features for a type is to create a
-type that has a structure exposing declarations that directly match
-the interface. For the <code>picture</code> type, this could be the following
-code:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type
-    width   : unsigned
-    height  : unsigned
-    buffer  : buffer[size] of unsigned8
-    size is width * height</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This implementation of the <code>picture</code> type is a pattern that matches
-values that have the exact same structure, such as:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">my_picture is
-    1024
-    768
-    my_buffer</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>For better readability, the pattern can also match a scope with
-<a href="#scope-pattern-matching">matching definitions</a>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">another_picture is
-    width  is 1024
-    height is 768
-    buffer is another_buffer</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Note that in order to make patterns more specific, a type is typically
-defined using a prefix, not just a block, in order to define a
-<a href="#creation">constructor</a>. For example, it would be
-considered better taste to define the <code>picture</code> type as follows:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
-    width   : unsigned
-    height  : unsigned
-    buffer  : buffer[size] of unsigned8
-    size is width * height
-
-my_picture : picture := picture
-    width  is 640
-    height is 480
-    buffer is my_buffer</code></pre>
-</div>
+<p>Information hiding is specially useful in the context of
+<a href="#modules">modules</a>, where the interface and implementation
+typically reside in different source files.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="named-scope-implementation"><a class="anchor" href="#named-scope-implementation"></a><a class="link" href="#named-scope-implementation">4.5.11.3. Named scope implementation</a></h5>
+<h5 id="direct-implementation"><a class="anchor" href="#direct-implementation"></a><a class="link" href="#direct-implementation">4.5.11.2. Direct implementation</a></h5>
 <div class="paragraph">
-<p>In general, you want the pattern for a type to be more specific, so it
-is customary to add a prefix that matches the type name, therefore
-creating a <a href="#creation">constructor</a>.</p>
+<p>The simplest way to implement any feature of a type is to ensure that
+the implementation of the type has a matching feature. This is called
+a <em>direct implementation</em> of the feature.</p>
 </div>
-<div class="listingblock">
+<div class="paragraph">
+<p>A feature is directly implemented by providing a definition for it in
+the <a href="#pattern-matching-scope">pattern matching scope</a> for the type
+implementation. For example, the formal parameters for a
+<a href="#creation">constructor</a> naturally provide a direct implementation
+for the interface:</p>
+</div>
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
-    width   : unsigned
-    height  : unsigned
-    buffer  : buffer[size] of unsigned8
-    size is width * height
-
-my_picture is picture(1024, 768, my_buffer)
-
-another_picture is picture
-    width  is 256
-    height is 256
-    buffer is another_buffer</code></pre>
+<pre>picture is type picture
+    pixels : buffer[area] of unsigned8
+    width  : unsigned
+    height : unsigned</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>In a context where the implementation above is visible, a <code>picture</code>
+value can be created by using a constructor, allowing us to build the
+<code>picture</code> function referred to earlier:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>picture(width:unsigned, height:unsigned) as picture is
+    picture
+        pixels is buffer(area, unsigned8(0))
+        width  is super.width
+        height is super.height</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In such a context, the pattern matching scope for <code>picture</code> values
+will necessarily contain a binding for <code>width</code> as an <code>integer</code>.</p>
+</div>
+<div class="paragraph">
+<p>In a context where only the interface is visible, an expression like
+<code>P.width</code> is known to be valid through the interface, and evaluating
+this expression in the context of the pattern matching scope finds a
+definition that matches what the interface specifies. The expression
+is therefore directly available from the type implementation.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="indirect-implementation"><a class="anchor" href="#indirect-implementation"></a><a class="link" href="#indirect-implementation">4.5.11.4. Indirect implementation</a></h5>
+<h5 id="indirect-implementation"><a class="anchor" href="#indirect-implementation"></a><a class="link" href="#indirect-implementation">4.5.11.3. Indirect implementation</a></h5>
 <div class="paragraph">
-<p>However, the implementation is often entirely different, and merely
-needs to <em>expose</em> the interface in some way. This is called an <em>indirect
-implementation</em> of the interface.</p>
+<p>However, the implementation may be entirely different from the
+interface, as long as any expression that is valid knowing the
+interface is valid in a context where the implementation is known.
+An implementation that provides an advertised feature of the interface
+withtout using a similar definition is called an <em>indirect implementation</em>
+of that feature.</p>
 </div>
 <div class="paragraph">
-<p>For example, the <code>picture</code> type can be implemented by <em>delegating</em> the
-implementation to another value that provides the required information.
-For the sake of illustration, we will imagine that we use a <code>bitmap</code>
-type defined as follows:</p>
+<p>A simple case of indirect implementation for inheritance is to provide
+an implicit conversion function. For example, the implementation of
+<code>text</code> may simply be defined in a scope that also features the
+following function:</p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type bitmap with
+<pre>T:text as string of character is convert_to_string(T)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>While it is reasonable to infer from the interface that <code>text</code> and
+<code>string of character</code> might share a common internal representation,
+this is only an efficient way to provide inheritance, but it is not a
+constraint on the implementation.</p>
+</div>
+<div class="paragraph">
+<p>A type may also <em>delegate</em> most of its implementation
+to some other type. For example, the <code>picture</code> type might actually be
+using a <code>bitmap</code> type as its internal representation:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>bitmap as type with
     width  : unsigned16
     height : unsigned16
-    buf    : array[width, height] of unsigned8</code></pre>
+    buf    : array[width, height] of unsigned8
+picture as type picture
+    bits:bitmap</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This means that the implementation of the <code>picture</code> type must perform
-some adjustments in order to delegate the work to the underlying
-<code>bitmap</code> value.</p>
+<p>Such an implementation of the <code>picture</code> type must perform some serious
+adjustments in order to delegate the work to the underlying <code>bitmap</code>
+value while providing the expected interface. Dealing with the <code>width</code>
+and <code>height</code> fields seems relatively straightforward:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is picture
-    Bitmap:bitmap
-    buffer:optional[buffer[size] of unsigned8]
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    bits:bitmap
 
-(P:picture).width   is P.Image.width
-(P:picture).height  is P.Image.height
-(P:picture).buffer  is P.Image.buffer</code></pre>
+    width  is bits.width
+    height is bits.height</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>This, however, will not work as is, because we have only provided a
+way to <em>read</em> <code>width</code> and <code>height</code>, not to write it. This does not
+match the interface. A simple solution would be to modify the
+<code>picture</code> interface, for example so that it reads <code>width as unsigned</code>.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s assume that we still want to be able to <em>write</em> into <code>width</code> and
+<code>height</code>. This requires us to provide a way to assign to the field.
+The first problem here is with the notation that properly identifies
+this operation. The following for example does not work:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    bits:bitmap
+
+    width  is bits.width
+    height is bits.height
+
+    width  := W is bits.width := W
+    height := H is bits.width := H</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The reason it does not work is that <code>width</code> in the <code>width := W</code>
+pattern is a formal parameter. The <a href="#metabox">metabox</a> solution
+does not work in that context, since writing <code><a id="width"></a> := W</code> would
+match the <em>value</em> of <code>width</code>, not its shape. It is possible to resort
+to a more convoluted solution that intercepts assignments to <code>width</code>
+and height by using <code>type(width)</code> as a way to only match <code>width</code>,
+which leads to somewhat inelegant and unreadable code like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    bits:bitmap
+
+    width  is bits.width
+    height is bits.height
+
+    width:type(width)   := W is bits.width := W
+    height:type(height) := H is bits.width := H</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To avoid this issue, there is a general convention that writing to a
+feature is done using a prefix with the feature name. In other words,
+the following code is the correct way to achieve the intended objective:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    bits:bitmap
+
+    width       is bits.width
+    height      is bits.height
+
+    width W     is bits.width := W
+    height H    is bits.height := H</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As you might guess, it is also possible to write:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    bits:bitmap
+
+    width       is bits.width
+    height      is bits.height
+
+    width W     is bits.width W
+    height H    is bits.height H</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The code as written above will be accepted by the compiler until you
+try to use it. It is accepted because it is not typed, therefore
+generic, so that some errors cannot be detected until you instantiate
+it. Actually, if <code>P</code> is a <code>picture</code> and <code>N</code> is an <code>unsigned</code>, <code>P.width
+300</code> will work, but <code>P.width := N</code> will complain. The reason is that
+the type of <code>bits.width</code> is <code>unsigned16</code>, and there is no implicit
+conversion from <code>unsigned</code> to <code>unsigned16</code> to avoid truncations.</p>
+</div>
+<div class="paragraph">
+<p>This in turn can be fixed, but if we want to do it correctly, we need
+to range-check the input. One cheap way to do it is to ignore bad
+input and just print some run-time error.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+    bits:bitmap
+
+    width       is bits.width
+    height      is bits.height
+
+    width  W:unsigned16 is bits.width W
+    height H:unsigned16 is bits.height H
+
+    width  W:unsigned is
+        print error("Invalid picture width %1", W)
+        bits.width      // Return previous value
+    height  H:unsigned is
+        print error("Invalid picture height %1", H)
+        bits.height     // Return previous value</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we instead want to return the error, then we need to <em>expose</em> the
+error in the interface, for example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
+    width  : mayfail unsigned
+    height : mayfail unsigned
+    pixels : buffer[area] of unsigned8
+    area as unsigned</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>XL provides powerful tools that makes it possible to evolve software
+significantly without having to change the interface, preserving
+compatibility for client code. However, information hiding can never
+be perfect. The XL type system will catch this kind of error and force
+you to deal with them.</p>
+</div>
+<div class="paragraph">
+<p>A similar, if slightly more complicated problem arises with the
+proposed interface for <code>buffer</code>, because <code>buffer</code> is a type that may
+require dynamic allocation, and therefore some operations may have to
+return a <a href="#storage_error"><code>storage_error</code></a>. This is already present
+in the interface for the <code>buffer</code> type, so one might feel a bit safer.</p>
+</div>
+<div class="paragraph">
+<p>However, since there is no actual <code>buffer</code> present in <code>bitmap</code>, a
+buffer may need to be created or at least given storage in the
+implementation of <code>P.buffer</code> for <code>picture</code> values.
+This may involve the <em>creation</em> of a buffer while simply
+reading a field. In other words, a <code>storage_error</code> may now result from
+apparently <em>reading</em> a buffer (<code>P.buffer</code>), something that would not
+happen with a direct implementation.</p>
+</div>
+<div class="paragraph">
+<p>In that case too, the interface may need to be changed to expose an
+implementation detail regarding when the buffer is actually created.
+It is a good thing that the type system will catch such things, even
+if it means that information hiding seems less perfect. The details
+that will not be hidden in that case are what might cause your program
+to crash or your rocket to explode.</p>
 </div>
 </div>
 </div>
