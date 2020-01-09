@@ -8046,6 +8046,11 @@ number of types intended to own common classes of resources, including:</p>
 <div class="ulist">
 <ul>
 <li>
+<p>An <code>own</code> value owns a single item allocated in dynamic storage.
+Note that the value <code>nil</code> is not a valid <code>own</code> value (except for
+<code>own nil</code>). If you need <code>nil</code> as a value, you must use <code>own T or nil</code>.</p>
+</li>
+<li>
 <p>An <code>array</code>, a <code>buffer</code> and a <code>string</code> all own a contiguous sequence of
 items of the same type.</p>
 <div class="ulist">
@@ -8055,7 +8060,7 @@ items of the same type.</p>
 directly, e.g. on the execution stack.</p>
 </li>
 <li>
-<p>A <code>buffer</code> has a fixed size during its lifteime, and allocates items
+<p>A <code>buffer</code> has a fixed size during its lifetime, and allocates items
 dynamically, typically from a heap.</p>
 </li>
 <li>
@@ -8066,8 +8071,8 @@ may move items around in memory as a result of specific operations.</p>
 </div>
 </li>
 <li>
-<p>A <code>text</code> owns a variable number of <code>character</code> items, being equivalent
-to <code>string of character</code>.</p>
+<p>A <code>text</code> owns a variable number of <code>character</code> items, and inherits
+from the <code>string of character</code> type.</p>
 </li>
 <li>
 <p>A <code>file</code> owns an open file.</p>
@@ -8092,10 +8097,6 @@ and address space.</p>
 </li>
 <li>
 <p>A <code>context</code> captures an execution context.</p>
-</li>
-<li>
-<p>An <code>own</code> value owns a single item allocated in dynamic storage, or the
-value <code>nil</code>.</p>
 </li>
 </ul>
 </div>

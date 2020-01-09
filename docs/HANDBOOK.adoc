@@ -5540,28 +5540,30 @@ the owned resource early using `delete Value`.
 The link:#standard-library[((standard library))] provides a
 number of types intended to own common classes of resources, including:
 
+* An `own` value owns a single item allocated in dynamic storage.
+  Note that the value `nil` is not a valid `own` value (except for
+  `own nil`). If you need `nil` as a value, you must use `own T or nil`.
 * An `array`, a `buffer` and a `string` all own a contiguous sequence of
-items of the same type.
+  items of the same type.
 ** An `array` has a fixed size during its lifetime and allocates items
-directly, e.g. on the execution stack.
-** A `buffer` has a fixed size during its lifteime, and allocates items
-dynamically, typically from a heap.
+  directly, e.g. on the execution stack.
+** A `buffer` has a fixed size during its lifetime, and allocates items
+  dynamically, typically from a heap.
 ** A `string` has a variable size during its lifetime, and consequently
-may move items around in memory as a result of specific operations.
-* A `text` owns a variable number of `character` items, being equivalent
-to `string of character`.
+  may move items around in memory as a result of specific operations.
+* A `text` owns a variable number of `character` items, and inherits
+  from the `string of character` type.
 * A `file` owns an open file.
 * A `mutex` owns execution by a single thread while it’s live.
 * A `timer` owns a resource that can be used to measure time and
-schedule execution.
+  schedule execution.
 * A `thread` owns an execution thread and the associated call stack.
 * A `task` owns an operation to perform that can be dispatched to one of
-the available threads of execution.
+  the available threads of execution.
 * A `process` owns an operating system process, including its threads
-and address space.
+  and address space.
 * A `context` captures an execution context.
-* An `own` value owns a single item allocated in dynamic storage, or the
-value `nil`.
+
 
 ==== Access
 
