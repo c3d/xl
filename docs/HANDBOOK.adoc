@@ -4049,21 +4049,21 @@ definitions of the value must be provided at some point that matches the
 declaration and specifies an implementation, but that definition may be
 link:#modules[in a different source file].
 
-NOTE: *RATIONALE* In languages such as pass:[C++], some members of a class can be
-made _private_ or _protected_. This restricts their usage, but the
-compiler (and the programmer) still have knowledge of internal details
-of the implementation. This facilitates some low-level copmiler
-optimizations (most of which are obsolete or irrelevant today when
-link-time optimizations are widely available), but also
-results in a number of long-term maintenance issues. Exposing
+NOTE: *RATIONALE* In languages such as pass:[C++], some members of a
+class can be made _private_ or _protected_. This restricts their
+usage, but the compiler (and the programmer) still have knowledge of
+internal details of the implementation. This facilitates some
+low-level copmiler optimizations (most of which are obsolete or
+irrelevant today when link-time optimizations are widely available),
+but also results in a number of long-term maintenance issues. Exposing
 implementation details in the interface worsens the
 https://en.wikipedia.org/wiki/Fragile_base_class[fragile base class]
-problem, since some aspects of the implementation are public enough that
-they cannot be modified. In XL, the implementation can be truly hidden,
-and an implementation must be able to generate code that does not depend
-on the implementation when the situation requires it, for example if the
-implementation may be in a different shared library than the code using
-the interface.
+problem, since some aspects of the implementation are public enough
+that they cannot be modified. In XL, the implementation can be truly
+hidden, and an implementation must be able to generate code that does
+not depend on the implementation when the situation requires it, for
+example if the implementation may be in a different shared library
+than the code using the interface.
 
 == Types
 

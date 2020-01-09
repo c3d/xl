@@ -6022,21 +6022,21 @@ declaration and specifies an implementation, but that definition may be
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<strong>RATIONALE</strong> In languages such as C++, some members of a class can be
-made <em>private</em> or <em>protected</em>. This restricts their usage, but the
-compiler (and the programmer) still have knowledge of internal details
-of the implementation. This facilitates some low-level copmiler
-optimizations (most of which are obsolete or irrelevant today when
-link-time optimizations are widely available), but also
-results in a number of long-term maintenance issues. Exposing
+<strong>RATIONALE</strong> In languages such as C++, some members of a
+class can be made <em>private</em> or <em>protected</em>. This restricts their
+usage, but the compiler (and the programmer) still have knowledge of
+internal details of the implementation. This facilitates some
+low-level copmiler optimizations (most of which are obsolete or
+irrelevant today when link-time optimizations are widely available),
+but also results in a number of long-term maintenance issues. Exposing
 implementation details in the interface worsens the
 <a href="https://en.wikipedia.org/wiki/Fragile_base_class">fragile base class</a>
-problem, since some aspects of the implementation are public enough that
-they cannot be modified. In XL, the implementation can be truly hidden,
-and an implementation must be able to generate code that does not depend
-on the implementation when the situation requires it, for example if the
-implementation may be in a different shared library than the code using
-the interface.
+problem, since some aspects of the implementation are public enough
+that they cannot be modified. In XL, the implementation can be truly
+hidden, and an implementation must be able to generate code that does
+not depend on the implementation when the situation requires it, for
+example if the implementation may be in a different shared library
+than the code using the interface.
 </td>
 </tr>
 </table>
