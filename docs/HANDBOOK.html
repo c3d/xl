@@ -8535,8 +8535,8 @@ character</code> with additional features:</p>
 <div class="paragraph">
 <p>An <em>abstract type</em> is a type for which features or inheritance are not
 provide. The only thing known about such a type is its name. In the
-<a href="#my_file">[<code>MY_FILE</code></a>] example, we defined <code>file</code> as an abstract
-type:</p>
+<a href="#my_file"><code>MY_FILE</code></a> example, <code>file</code> was an abstract type defined
+as folows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -8639,10 +8639,11 @@ will necessarily contain a binding for <code>width</code> as an <code>integer</c
 </div>
 <div class="paragraph">
 <p>In a context where only the interface is visible, an expression like
-<code>P.width</code> is known to be valid through the interface, and evaluating
-this expression in the context of the pattern matching scope finds a
-definition that matches what the interface specifies. The expression
-is therefore directly available from the type implementation.</p>
+<code>P.width</code> is known to be valid and match the declaration of <code>width</code> in
+the <code>picture</code> interface. Evaluating <code>P.width</code> with <code>P</code> corresponding
+to the pattern matching scope also finds a definition for <code>width</code> that
+matches what was declared in the interface. This is the mechanism
+underlying a direct implementation.</p>
 </div>
 </div>
 <div class="sect4">
@@ -10643,7 +10644,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 23:47:08 +0100
+Last updated 2020-01-09 23:52:48 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

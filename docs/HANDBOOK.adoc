@@ -5878,8 +5878,8 @@ text as type like string of character with
 
 An _abstract type_ is a type for which features or inheritance are not
 provide. The only thing known about such a type is its name. In the
-link:#my_file[[`MY_FILE`]] example, we defined `file` as an abstract
-type:
+link:#my_file[`MY_FILE`] example, `file` was an abstract type defined
+as folows:
 
 ....
 file as type
@@ -5968,10 +5968,11 @@ In such a context, the pattern matching scope for `picture` values
 will necessarily contain a binding for `width` as an `integer`.
 
 In a context where only the interface is visible, an expression like
-`P.width` is known to be valid through the interface, and evaluating
-this expression in the context of the pattern matching scope finds a
-definition that matches what the interface specifies. The expression
-is therefore directly available from the type implementation.
+`P.width` is known to be valid and match the declaration of `width` in
+the `picture` interface. Evaluating `P.width` with `P` corresponding
+to the pattern matching scope also finds a definition for `width` that
+matches what was declared in the interface. This is the mechanism
+underlying a direct implementation.
 
 ===== Indirect implementation
 
