@@ -5988,9 +5988,11 @@ While it is reasonable to infer from the interface that `text` and
 this is only an efficient way to provide inheritance, but it is not a
 constraint on the implementation.
 
-A type may also _delegate_(((delegation))) most of its implementation
-to some other type. For example, the `picture` type might actually be
-using a `bitmap` type as its internal representation:
+A type may also provide entirely different implementations. An
+interesting case is when the type _delegates_(((delegation))) most of
+its implementation to some other type. For example, the `picture` type
+might actually be using a `bitmap` type as its internal
+representation:
 
 ....
 bitmap as type with
@@ -6019,9 +6021,11 @@ This, however, will not work as is, because we have only provided a
 way to _read_ `width` and `height`, not to write it. This does not
 match the interface. A simple solution would be to modify the
 `picture` interface, for example so that it reads `width as unsigned`.
+With this interface change, the code above will correctly allow us to
+find an implementation for expressions such as `P.width`.
 
-Let's assume that we still want to be able to _write_ into `width` and
-`height`. This requires us to provide a way to assign to the field.
+If, however, we still want to be able to _write_ into `width` and
+`height`, the implementation must provide a way to assign to the field.
 The first problem here is with the notation that properly identifies
 this operation. The following for example does not work:
 
@@ -6039,7 +6043,7 @@ picture is type picture
 
 The reason it does not work is that `width` in the `width := W`
 pattern is a formal parameter. The link:#metabox[metabox] solution
-does not work in that context, since writing `[[width]] := W` would
+does not work in that context, since writing `+[[width]] := W+` would
 match the _value_ of `width`, not its shape. It is possible to resort
 to a more convoluted solution that intercepts assignments to `width`
 and height by using `type(width)` as a way to only match `width`,

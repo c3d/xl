@@ -8663,9 +8663,11 @@ this is only an efficient way to provide inheritance, but it is not a
 constraint on the implementation.</p>
 </div>
 <div class="paragraph">
-<p>A type may also <em>delegate</em> most of its implementation
-to some other type. For example, the <code>picture</code> type might actually be
-using a <code>bitmap</code> type as its internal representation:</p>
+<p>A type may also provide entirely different implementations. An
+interesting case is when the type <em>delegates</em> most of
+its implementation to some other type. For example, the <code>picture</code> type
+might actually be using a <code>bitmap</code> type as its internal
+representation:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -8696,11 +8698,13 @@ and <code>height</code> fields seems relatively straightforward:</p>
 <p>This, however, will not work as is, because we have only provided a
 way to <em>read</em> <code>width</code> and <code>height</code>, not to write it. This does not
 match the interface. A simple solution would be to modify the
-<code>picture</code> interface, for example so that it reads <code>width as unsigned</code>.</p>
+<code>picture</code> interface, for example so that it reads <code>width as unsigned</code>.
+With this interface change, the code above will correctly allow us to
+find an implementation for expressions such as <code>P.width</code>.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s assume that we still want to be able to <em>write</em> into <code>width</code> and
-<code>height</code>. This requires us to provide a way to assign to the field.
+<p>If, however, we still want to be able to <em>write</em> into <code>width</code> and
+<code>height</code>, the implementation must provide a way to assign to the field.
 The first problem here is with the notation that properly identifies
 this operation. The following for example does not work:</p>
 </div>
@@ -8719,7 +8723,7 @@ this operation. The following for example does not work:</p>
 <div class="paragraph">
 <p>The reason it does not work is that <code>width</code> in the <code>width := W</code>
 pattern is a formal parameter. The <a href="#metabox">metabox</a> solution
-does not work in that context, since writing <code><a id="width"></a> := W</code> would
+does not work in that context, since writing <code>[[width]] := W</code> would
 match the <em>value</em> of <code>width</code>, not its shape. It is possible to resort
 to a more convoluted solution that intercepts assignments to <code>width</code>
 and height by using <code>type(width)</code> as a way to only match <code>width</code>,
@@ -10633,7 +10637,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 00:11:40 +0100
+Last updated 2020-01-10 00:16:16 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
