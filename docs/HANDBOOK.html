@@ -8193,10 +8193,11 @@ when not absolutely necessary.</p>
 <div class="sect3">
 <h4 id="inheritance"><a class="anchor" href="#inheritance"></a><a class="link" href="#inheritance">4.5.9. Inheritance</a></h4>
 <div class="paragraph">
-<p>A type is said to <em>inherit</em> another type, called its <em>base type</em>, if it
-can use all its operations. The type is then said to <em>derive</em> from the
-base type. In XL, this is achieved simply by providing an <em>implicit
-conversion</em> between the derived type and the base type:</p>
+<p>A type is said to <em>inherit</em> another type, called its
+<em>base type</em>, if it can use all its operations. The type is then
+said to <em>derive</em> from the base type. In XL, this is
+achieved simply by providing an <em>implicit conversion</em> between the
+derived type and the base type:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8205,17 +8206,17 @@ conversion</em> between the derived type and the base type:</p>
 </div>
 <div class="paragraph">
 <p>As a consequence of this approach, a type can derive from any number of
-other types, a feature sometimes called multiple inheritance. There is
-also no need for the base and derived type to share any specific data
-representation, although this is <a href="#data-inheritance">often done in
-practice</a>. For example, there is an implicit conversion from <code>integer16</code>
-to <code>integer32</code>, altough the machine representation is different, so in
-XL, one can say that <code>integer16</code> derives from <code>integer32</code>.</p>
+other types, a feature sometimes called <em>multiple inheritance</em>. There is
+also no need for the base and derived type to share
+any specific data representation, although this is
+<a href="#data-inheritance">often done in practice</a>. For example, there is
+an implicit conversion from <code>integer16</code> to <code>integer32</code>, altough the
+machine representation is different, so in XL, one can say that
+<code>integer16</code> derives from <code>integer32</code>.</p>
 </div>
 <div class="paragraph">
 <p>Sometimes, it is necessary to denote a type that inherits from a
-specific type. For example, if you want to create a constrained
-generic type for <code>complex</code>, you might want it to accept only <code>number</code>
+specific type. For example, if you want to create a constrained generic type for <code>complex</code>, you might want it to accept only <code>number</code>
 for its type argument. The following code is an incorrect way to do
 it, since it creates a type that only accept <code>number</code> <em>values</em> as an
 argument, i.e. it would accept <code>complex[3.5]</code> but not <code>complex[real]</code>:</p>
