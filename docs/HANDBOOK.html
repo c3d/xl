@@ -8105,11 +8105,11 @@ and address space.</p>
 <h4 id="access"><a class="anchor" href="#access"></a><a class="link" href="#access">4.5.8. Access</a></h4>
 <div class="paragraph">
 <p>Not all types are intended to be owner types. Many types delegate
-ownership to another type. Such types are called <em>access types</em>. When an
-access type is destroyed, the resources that it accesses are <em>not</em>
-disposed of, since the access type does not own the value. A value of
-the acces type merely provides <em>access</em> to a particular value of the
-associated owner type.</p>
+ownership to another type. Such types are called <em>access types</em>.
+When an access type is destroyed, the resources that it accesses are
+<em>not</em> disposed of, since the access type does not own the value. A
+value of the acces type merely provides <em>access</em> to a particular value
+of the associated owner type.</p>
 </div>
 <div class="paragraph">
 <p>For example, if <code>T</code> is a <code>text</code> value and if <code>A</code> and <code>B</code> are <code>integer</code>
@@ -8122,12 +8122,12 @@ on <code>A</code> and <code>B</code> to make sure that no operation ever accesse
 perfectly safe to use.</p>
 </div>
 <div class="paragraph">
-<p>Access types generalize <em>pointers</em> or <em>references</em> found in other
-languages, because they can describe a much wider class of access
-patterns. A pointer can only access a single element, whereas access
-types have no such restriction, as the <code>T[A..B]</code> example demonstrates.
-Access types can also enforce much stricter ownership rules than mere
-pointers.</p>
+<p>Access types generalize <em>pointers</em> or <em>references</em> found in
+other languages, because they can describe a much wider class of
+access patterns. A pointer can only access a single element, whereas
+access types have no such restriction, as the <code>T[A..B]</code> example
+demonstrates.  Access types can also enforce much stricter ownership
+rules than mere pointers.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -8145,8 +8145,7 @@ also makes sense as a way to access the element that precedes <code>ptr</code>.
 Unfortunately, this hack, which may have been cute when machines had 32K
 of memory, is now the root cause of a whole class of programming errors
 known as <em>buffer overflows</em>, which contribute in no small part to the
-well-deserved reputation of C as being a language that offers no memory
-safety whatsoever.
+well-deserved reputation of C as being a language that offers no memory safety whatsoever.
 </td>
 </tr>
 </table>
@@ -8158,9 +8157,12 @@ number of types intended to access common owner types, including:</p>
 <div class="ulist">
 <ul>
 <li>
+<p>A <code>ref</code> is a reference to a live <code>own</code> value.</p>
+</li>
+<li>
 <p>A <code>slice</code> can be used to access range of items in contiguous
 sequences, including <code>array</code>, <code>buffer</code> or <code>string</code> (and therefore
-<code>text</code>, which is <code>string of character</code>).</p>
+<code>text</code> considered as a <code>string of character</code>).</p>
 </li>
 <li>
 <p>A <code>reader</code> or a <code>writer</code> can be used to access a <code>file</code> either for
@@ -8175,18 +8177,15 @@ given piece of code.</p>
 will combine <code>timer</code>, <code>thread</code>, <code>task</code> and <code>context</code> values.</p>
 </li>
 <li>
-<p>A <code>ref</code> is a reference to a live <code>own</code> value.</p>
-</li>
-<li>
 <p>The <code>in</code>, <code>out</code> and <code>inout</code> type expressions can sometimes be
 equivalent to an access types if that is the most efficient way to pass
 an argument around. However, this is mostly invisible to the programmer.</p>
 </li>
 <li>
-<p>A <code>memory_address</code> references a specific address in memory, and is the
-closest there is in XL to a raw C pointer. It is purposely verbose and
-cumbersome to use, so as to discourage its use when not absolutely
-necessary.</p>
+<p>An <code>XL.SYSTEM.MEMORY.address</code> references a specific address in
+memory, and is the closest there is in XL to a raw C pointer. It is
+purposely verbose and cumbersome to use, so as to discourage its use
+when not absolutely necessary.</p>
 </li>
 </ul>
 </div>
@@ -10452,7 +10451,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 23:47:06 +0100
+Last updated 2020-01-09 23:47:07 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

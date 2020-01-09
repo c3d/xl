@@ -5568,11 +5568,11 @@ number of types intended to own common classes of resources, including:
 ==== Access
 
 Not all types are intended to be owner types. Many types delegate
-ownership to another type. Such types are called _access types_. When an
-access type is destroyed, the resources that it accesses are _not_
-disposed of, since the access type does not own the value. A value of
-the acces type merely provides _access_ to a particular value of the
-associated owner type.
+ownership to another type. Such types are called _((access type))s_.
+When an access type is destroyed, the resources that it accesses are
+_not_ disposed of, since the access type does not own the value. A
+value of the acces type merely provides _access_ to a particular value
+of the associated ((owner type)).
 
 For example, if `T` is a `text` value and if `A` and `B` are `integer`
 values, then `T[A..B]` is a particular kind of access value called a
@@ -5583,45 +5583,45 @@ on `A` and `B` to make sure that no operation ever accesses any
 `character` value outside of `T`. As a result, this access value is
 perfectly safe to use.
 
-Access types generalize _pointers_ or _references_ found in other
-languages, because they can describe a much wider class of access
-patterns. A pointer can only access a single element, whereas access
-types have no such restriction, as the `T[A..B]` example demonstrates.
-Access types can also enforce much stricter ownership rules than mere
-pointers.
+Access types generalize _((pointers))_ or _((references))_ found in
+other languages, because they can describe a much wider class of
+access patterns. A pointer can only access a single element, whereas
+access types have no such restriction, as the `T[A..B]` example
+demonstrates.  Access types can also enforce much stricter ((ownership))
+rules than mere pointers.
 
 NOTE: The C language worked around the limitation that pointers access
-a single element by abusing so-called "pointer arithmetic", in
+a single element by abusing so-called "((pointer arithmetic))", in
 particular to implement arrays. In C, `A[I]` is merely a shortcut for
 `*(A+I)`. This means that `3[buffer]` is a valid way in C to access the
 third element of `buffer`, and that there are scenarios where `ptr[-1]`
 also makes sense as a way to access the element that precedes `ptr`.
 Unfortunately, this hack, which may have been cute when machines had 32K
 of memory, is now the root cause of a whole class of programming errors
-known as _buffer overflows_, which contribute in no small part to the
-well-deserved reputation of C as being a language that offers no memory
-safety whatsoever.
+known as _((buffer overflow))s_, which contribute in no small part to the
+well-deserved reputation of C as being a language that offers no ((memory
+safety)) whatsoever.
 
 The link:#standard-library[((standard library))] provides a
 number of types intended to access common owner types, including:
 
-* A `slice` can be used to access range of items in contiguous
-sequences, including `array`, `buffer` or `string` (and therefore
-`text`, which is `string of character`).
-* A `reader` or a `writer` can be used to access a `file` either for
-reading or writing.
-* A `lock` takes a `mutex` to prevent multiple threads from executing a
-given piece of code.
-* Several types such as `timing`, `dispatch`, `timeout` or `rendezvous`
-will combine `timer`, `thread`, `task` and `context` values.
 * A `ref` is a reference to a live `own` value.
+* A `slice` can be used to access range of items in contiguous
+  sequences, including `array`, `buffer` or `string` (and therefore
+  `text` considered as a `string of character`).
+* A `reader` or a `writer` can be used to access a `file` either for
+  reading or writing.
+* A `lock` takes a `mutex` to prevent multiple threads from executing a
+  given piece of code.
+* Several types such as `timing`, `dispatch`, `timeout` or `rendezvous`
+  will combine `timer`, `thread`, `task` and `context` values.
 * The `in`, `out` and `inout` type expressions can sometimes be
-equivalent to an access types if that is the most efficient way to pass
-an argument around. However, this is mostly invisible to the programmer.
-* A `memory_address` references a specific address in memory, and is the
-closest there is in XL to a raw C pointer. It is purposely verbose and
-cumbersome to use, so as to discourage its use when not absolutely
-necessary.
+  equivalent to an access types if that is the most efficient way to pass
+  an argument around. However, this is mostly invisible to the programmer.
+* An `XL.SYSTEM.MEMORY.address` references a specific address in
+  memory, and is the closest there is in XL to a raw C pointer. It is
+  purposely verbose and cumbersome to use, so as to discourage its use
+  when not absolutely necessary.
 
 ==== Inheritance
 
