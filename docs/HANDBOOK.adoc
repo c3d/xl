@@ -5432,7 +5432,7 @@ X -= 1                  // Subtract 1 from X, now 42
 Some entities may give link:#access[access] to individual inner values.
 For example, a `text` value is conceptually made of a number of
 individual `character` values that can be accessed individually. This is
-true irrespective of how `text` is represented. In addition, a slice of
+true irrespective of how `text` is represented. In addition, a `slice` of
 a `text` value is itself a `text` value. The mutability of a `text`
 value obviously has an effect on the mutability of accessed elements in
 the `text`.
