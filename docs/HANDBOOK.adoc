@@ -5670,11 +5670,11 @@ link:#interface[interface] for a type.
 
 ==== Subtypes
 
-A type can be given additional constraints, which define a _subtype_. A
-subtype can always be converted to the type it was derived from, and
-therefore derives from that type in the link:#inheritance[inheritance]
-sense. A subtype machine representation may differ from the type it
-derives from.
+A type can be given additional constraints(((type constraints))),
+which define a _((subtype))_. A subtype can always be converted to the
+type it was derived from, and therefore derives from that type in the
+link:#inheritance[inheritance] sense. A subtype ((machine representation))
+may differ from the type it derives from.
 
 For example, from the `integer` type, one can construct a `month` type
 that matches only `integer` values between `1` and `12` using a regular
@@ -5682,14 +5682,14 @@ link:#when[conditional pattern] as follows:
 
 [source]
 ----
-month is type(X:integer when X >= 1 and X <= 12)
+month is type(M:integer when M >= 1 and M <= 12)
 ----
 
 ===== Range subtypes
 
 Subtyping to select a range is common enough that there is a shortcut
 for it. For any type with an order, subtypes can be created with the
-`range` infix operator:
+`range` infix operator, creating a _((range subtype))_:
 
 [source]
 ----
@@ -5705,8 +5705,9 @@ month is integer range 1..12
 
 ===== Size subtypes
 
-The infix `bits` operator creates a subtype with the specified number of
-bits. It applies to `real`, `integer` and `character` types.
+The infix `bits` operator creates a _((size subtype))_ with the
+specified number of bits. It applies to `real`, `integer` and
+`character` types.
 
 For example, the `integer8` type can be defined as:
 

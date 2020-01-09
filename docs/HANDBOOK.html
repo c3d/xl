@@ -8245,11 +8245,11 @@ type, not a value:</p>
 <div class="sect3">
 <h4 id="subtypes"><a class="anchor" href="#subtypes"></a><a class="link" href="#subtypes">4.5.10. Subtypes</a></h4>
 <div class="paragraph">
-<p>A type can be given additional constraints, which define a <em>subtype</em>. A
-subtype can always be converted to the type it was derived from, and
-therefore derives from that type in the <a href="#inheritance">inheritance</a>
-sense. A subtype machine representation may differ from the type it
-derives from.</p>
+<p>A type can be given additional constraints,
+which define a <em>subtype</em>. A subtype can always be converted to the
+type it was derived from, and therefore derives from that type in the
+<a href="#inheritance">inheritance</a> sense. A subtype machine representation
+may differ from the type it derives from.</p>
 </div>
 <div class="paragraph">
 <p>For example, from the <code>integer</code> type, one can construct a <code>month</code> type
@@ -8258,7 +8258,7 @@ that matches only <code>integer</code> values between <code>1</code> and <code>1
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">month is type(X:integer when X &gt;= 1 and X &lt;= 12)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">month is type(M:integer when M &gt;= 1 and M &lt;= 12)</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -8266,7 +8266,7 @@ that matches only <code>integer</code> values between <code>1</code> and <code>1
 <div class="paragraph">
 <p>Subtyping to select a range is common enough that there is a shortcut
 for it. For any type with an order, subtypes can be created with the
-<code>range</code> infix operator:</p>
+<code>range</code> infix operator, creating a <em>range subtype</em>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8285,8 +8285,9 @@ for it. For any type with an order, subtypes can be created with the
 <div class="sect4">
 <h5 id="size-subtypes"><a class="anchor" href="#size-subtypes"></a><a class="link" href="#size-subtypes">4.5.10.2. Size subtypes</a></h5>
 <div class="paragraph">
-<p>The infix <code>bits</code> operator creates a subtype with the specified number of
-bits. It applies to <code>real</code>, <code>integer</code> and <code>character</code> types.</p>
+<p>The infix <code>bits</code> operator creates a <em>size subtype</em> with the
+specified number of bits. It applies to <code>real</code>, <code>integer</code> and
+<code>character</code> types.</p>
 </div>
 <div class="paragraph">
 <p>For example, the <code>integer8</code> type can be defined as:</p>
