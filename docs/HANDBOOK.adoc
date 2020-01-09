@@ -5988,10 +5988,15 @@ While it is reasonable to infer from the interface that `text` and
 this is only an efficient way to provide inheritance, but it is not a
 constraint on the implementation.
 
-A type may also provide entirely different implementations. An
-interesting case is when the type _delegates_(((delegation))) most of
-its implementation to some other type. For example, the `picture` type
-might actually be using a `bitmap` type as its internal
+A type may also provide entirely different implementations. We will
+see a number of examples in the next sections.
+
+
+===== Delegation
+
+An interesting case is when the type _delegates_(((delegation))) most
+of its implementation to some other type. For example, the `picture`
+type might actually be using a `bitmap` type as its internal
 representation:
 
 ....
@@ -6023,6 +6028,9 @@ match the interface. A simple solution would be to modify the
 `picture` interface, for example so that it reads `width as unsigned`.
 With this interface change, the code above will correctly allow us to
 find an implementation for expressions such as `P.width`.
+
+
+===== Attributes
 
 If, however, we still want to be able to _write_ into `width` and
 `height`, the implementation must provide a way to assign to the field.
@@ -6062,8 +6070,10 @@ picture is type picture
 ----
 
 To avoid this issue, there is a general convention that writing to a
-feature is done using a prefix with the feature name. In other words,
-the following code is the correct way to achieve the intended objective:
+feature is done using a prefix with the feature name. A value that is
+read using a given name, and written using a prefix with the same name
+is called an _((attribute))_. The problems above are solved by using
+an attribute for `width` and `height`, as illustrated below:
 
 [source]
 ----
@@ -6077,7 +6087,8 @@ picture is type picture
     height H    is bits.height := H
 ----
 
-As you might guess, it is also possible to write:
+As you might guess, it is also possible to use the attribute syntax to
+update the value of `bits.width` and `bits.height`:
 
 [source]
 ----
@@ -6091,17 +6102,35 @@ picture is type picture
     height H    is bits.height H
 ----
 
-The code as written above will be accepted by the compiler until you
-try to use it. It is accepted because it is not typed, therefore
-generic, so that some errors cannot be detected until you instantiate
-it. Actually, if `P` is a `picture` and `N` is an `unsigned`, `P.width
-300` will work, but `P.width := N` will complain. The reason is that
-the type of `bits.width` is `unsigned16`, and there is no implicit
-conversion from `unsigned` to `unsigned16` to avoid truncations.
+===== Generic implementations
 
-This in turn can be fixed, but if we want to do it correctly, we need
-to range-check the input. One cheap way to do it is to ignore bad
-input and just print some run-time error.
+By providing as little type information as possible, the code as
+written above remains as generic as possible. This enables better
+optimizations. For instance, writing `width 320` might generate only
+code for `unsigned16` without any need for an `unsigned` value to be
+ever created.
+
+Unfortunately, that code will only be accepted by the compiler until
+you try to use it with values that do not fit within an `unsigned16`.
+It is accepted because it is not typed, therefore generic, so that
+some errors cannot be detected until you instantiate it.
+Furthermore, no error will be generated if the values being passed all
+fit within an `unsigned16`.
+
+If `P` is a `picture`, then `P.width 320` will work, but `P.width
+1_000_000` will not, since that value is out of range for
+`unsigned16`. This is problematic because it is quite likely that the
+attribute will receive some unknown `unsigned` value. After all, the
+interface was designed for an `unsigned`, not an `unsigned16`, so it
+makes sense to invoke it with values of this type. There will be an
+error in that case, because nothing in our code accepts an `unsigned`
+value that does not fit in the `unsigned16` subtype.
+
+===== Attribute error checking
+
+This can also be fixed, but if we want to do it correctly, we need to
+range-check the input. One cheap and lazy way to do it is to ignore
+bad input and just print some run-time error.
 
 [source]
 ----
@@ -6111,9 +6140,11 @@ picture is type picture
     width       is bits.width
     height      is bits.height
 
+    // Working case
     width  W:unsigned16 is bits.width W
     height H:unsigned16 is bits.height H
 
+    // Error case: drop input, display message
     width  W:unsigned is
         print error("Invalid picture width %1", W)
         bits.width      // Return previous value
@@ -6122,7 +6153,7 @@ picture is type picture
         bits.height     // Return previous value
 ----
 
-If we instead want to return the error, then we need to _expose_ the
+If we instead want to return the error, then we need to expose the
 error in the interface, for example:
 
 [source]
@@ -6134,34 +6165,71 @@ picture as type with
     area as unsigned
 ----
 
+That, however, suggests that `width` might accept `error` values as
+input. A better interface would be to expose the attribute nature of
+`width` and `height`:
+
+[source]
+----
+picture as type with
+    width  as unsigned
+    height as unsigned
+    width W as mayfail unsigned
+    height H as mayfail unsigned
+    pixels : buffer[area] of unsigned8
+    area as unsigned
+----
+
+But if we are going that way, we may as well expose the simpler
+interface that does not lie about the underlying values:
+
+[source]
+----
+picture as type with
+    width  : unsigned16
+    height : unsigned16
+    pixels : buffer[area] of unsigned8
+    area as unsigned
+----
+
+===== Implementation, exposed
+
 XL provides powerful tools that makes it possible to evolve software
 significantly without having to change the interface, preserving
 compatibility for client code. However, information hiding can never
-be perfect. The XL type system will catch this kind of error and force
-you to deal with them.
+be perfect. The XL type system will catch a large number of errors and force
+you to deal with them, giving you several ways to evolve the code.
 
 A similar, if slightly more complicated problem arises with the
-proposed interface for `buffer`, because `buffer` is a type that may
-require dynamic allocation, and therefore some operations may have to
-return a link:#storage_error[`storage_error`]. This is already present
-in the interface for the `buffer` type, so one might feel a bit safer.
+proposed interface for `buffer` in the `picture` type, because
+`buffer` is a type that may require dynamic allocation, and therefore
+some operations may have to return a `storage_error`. This is already
+present in the interface for the `buffer` type, so one might feel a
+bit safer than for the mismatch between `unsigned` and `unsigned16`.
 
 However, since there is no actual `buffer` present in `bitmap`, a
 buffer may need to be created or at least given storage in the
 implementation of `P.buffer` for `picture` values.
 This may involve the _creation_ of a buffer while simply
 reading a field. In other words, a `storage_error` may now result from
-apparently _reading_ a buffer (`P.buffer`), something that would not
-happen with a direct implementation.
+apparently _reading_ `P.buffer`, something that would not
+happen with a direct implementation of `P.buffer` as a variable.
+
+In other words, in an ideal world, `P.buffer` might be implemented as
+an actual buffer or as a function computing a buffer and returning
+it. In the real world, however, the XL type system will force you to
+distinguish between the two cases, because the place where dynamic
+allocations may fail is different depending on the chosen implementation.
 
 In that case too, the interface may need to be changed to expose an
 implementation detail regarding when the buffer is actually created.
-It is a good thing that the type system will catch such things, even
-if it means that information hiding seems less perfect. The details
+It might seem like an inability of XL to offer sufficient information
+hiding capabilities, but in reality, it's a testament to the power of
+the XL type system that it should catch such subtle errors, even if it
+is at the cost of convenience. XL will accept to hide details as long
+as these details are not critical for safe evaluation. The details
 that will not be hidden in that case are what might cause your program
 to crash or your rocket to explode.
-
-
 
 ==== Copy
 
