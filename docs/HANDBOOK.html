@@ -8499,18 +8499,16 @@ the type <a href="#inheritance">derives from</a>.</p>
 explicitly and intentionally part of the interface. A feature is said
 to be <em>exposed</em> if it is made visible as an
 unintentional or even undesirable side effect of the interface.
-For example, as we shall see shortly, an interface may avertise a
-<code>buffer</code> interface, but may need to expose details of the
-implementation through the presence of <a href="#storage_error"><code>storage_error</code></a>
-in specific locations.</p>
+For example, if an implementation reqauires dynamic values, this may
+force the interface to expose the <code>storage_error</code> values that might be
+generated as a result of out-of-memory conditions.</p>
 </div>
 <div class="paragraph">
 <p>The code below defines a <code>picture</code> type that advertises <code>width</code>, <code>height</code>
 and <code>pixels</code> fields, as well as an <code>area</code> method that is used to compute
 the total number of pixels and is the size for the <code>pixels</code> buffer. In
 this interface, one might argue that the fact that <code>pixels</code> is a
-<code>buffer</code> falls more in the "exposed" category than "advertised", and
-we shall see that this is indeed true.</p>
+<code>buffer</code> falls more in the "exposed" category than "advertised".</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8535,7 +8533,7 @@ character</code> with additional features:</p>
 <div class="paragraph">
 <p>An <em>abstract type</em> is a type for which features or inheritance are not
 provide. The only thing known about such a type is its name. In the
-<a href="#my_file"><code>MY_FILE</code></a> example, <code>file</code> was an abstract type defined
+earlier <code>MY_FILE</code> <a href="#my_file">example</a>, <code>file</code> was an abstract type defined
 as folows:</p>
 </div>
 <div class="literalblock">
@@ -10644,7 +10642,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 23:52:48 +0100
+Last updated 2020-01-09 23:59:51 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

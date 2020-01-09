@@ -5845,17 +5845,15 @@ A feature is said to be _advertised_(((advertised feature))) if it is
 explicitly and intentionally part of the interface. A feature is said
 to be _exposed_(((exposed feature))) if it is made visible as an
 unintentional or even undesirable side effect of the interface.
-For example, as we shall see shortly, an interface may avertise a
-`buffer` interface, but may need to expose details of the
-implementation through the presence of link:#storage_error[`storage_error`]
-in specific locations.
+For example, if an implementation reqauires ((dynamic values)), this may
+force the interface to expose the `storage_error` values that might be
+generated as a result of out-of-memory conditions.
 
 The code below defines a `picture` type that advertises `width`, `height`
 and `pixels` fields, as well as an `area` method that is used to compute
 the total number of pixels and is the size for the `pixels` buffer. In
 this interface, one might argue that the fact that `pixels` is a
-`buffer` falls more in the "exposed" category than "advertised", and
-we shall see that this is indeed true.
+`buffer` falls more in the "exposed" category than "advertised".
 
 [source]
 ----
@@ -5878,7 +5876,7 @@ text as type like string of character with
 
 An _abstract type_ is a type for which features or inheritance are not
 provide. The only thing known about such a type is its name. In the
-link:#my_file[`MY_FILE`] example, `file` was an abstract type defined
+earlier `MY_FILE` link:#my_file[example], `file` was an abstract type defined
 as folows:
 
 ....
