@@ -4136,6 +4136,22 @@ that is just another name for `integer`:
 int is integer
 ....
 
+[[implicit-inheritance]]
+[CAUTION]
+====
+In reality, the above is really equivalent to deriving `int` from
+`integer`. in other words, the definition above is equivalent to the
+following pattern-based definition:
+....
+int is type(base:integer)
+....
+One reason this is important is to maintain some guarantees during
+link:#field-destruction[destruction], specifically make sure that
+destruction of the new type does not bypass the destruction of the
+original type.
+====
+
+
 More interesting types can be defined using the `type` function, which
 takes a pattern as an argument, and returns a type that
 link:#pattern-matching[matches that pattern]. The expression `type(42)`
@@ -4524,7 +4540,7 @@ They include the following:
 * `in_out T` can be used for input-output arguments of type `T`,
   i.e. values that can be modified by the callee but are created and
   owned by the caller. Due to the rules about name lookup in XL, it is
-  also possible to spell this type as `inout T`.
+  also possible to spell this type as `inout T` or `io T`.
 
 * `any T` can hold a value of type `T` or any
   link:#inheritance[derived type], preserving the original type
@@ -5007,7 +5023,7 @@ based on Unix-style file descriptors:
 MY_FILE as module with
     file as type
     open(Name:text) as file
-    close F:file
+    close F:io file
 
 MY_FILE as module is
     file is type file(fd:integer)
@@ -5044,44 +5060,154 @@ _((destructor))_ for type `T`. It often has an link:#inout[inout] parameter
 for the value to destroy, in order to be able to modify its argument,
 i.e. a destructor often has a signature like `delete X:inout T`.
 
-There is a built-in default definition of that statement that has no
-effect and matches any value:
+Symmetrical to link:#field-creation[creation], the body of a `delete V`
+automatically invokes `delete V.X` for any field `X` in `V` at exit of
+the body of the definition.
 
-[source]
-----
+For example, consider the definition below:
+
+....
+delete Z:inout complex is
+    print "Deleting complex ", Z
+....
+
+That definition is actually equivalent to the definition below:
+....
+delete Z:inout complex is
+    print "Deleting complex ", Z
+    (delete Z.Im)
+    (delete Z.Re)
+....
+
+There is a built-in default definition of that statement that has no
+effect and matches any value, and which only deletes the fields:
+
+....
 delete Anything is nil
-----
+....
 
 There may be multiple destructors that match a given expression. When
 this happens, normal lookup rules happen. This means that, unlike
 languages like pass:[C++], a programmer can deliberately override the
 destruction of an object, and remains in control of the destruction
-process.
+process. More importantly, this means that the destruction process
+respects the global type semantics.
 
-[NOTE]
-====
-*RATIONALE* In XL, multiple patterns can match a given value. It might
-seem desirable to call all the patterns that match, but not only would
-it introduce a special-case lookup, it would also be extremely dangerous
-in a number of easily identified cases. As an illustration, consider the
-following code:
+Consider for example the deletion of the `file` type defined in the
+`MY_FILE` module above. Since there is a special case for negative
+values, that might be reflected in the implementation as follows:
 
-[source]
-----
-delete F:inout file when F.fd < 0  is ... // Case 1
-delete F:inout file                is ... // Case 2
-----
+....
+delete F:inout file when F.fd < 0  is ... // Invalid flie
+delete F:inout file                is ... // Valid file
+....
 
-Clearly, the intent of the programmer is to special-case the destruction
-of `file` values that have an invalid file descriptor, for example as a
-result of an error condition from the C `open` call (which returns `-1`
-on error).
-====
+However, this also means that the programmer could create a
+`valid_file` type corresponding to the case where `F.fd<0` is false.
+If you have a `valid_file` value to `delete`, normal type system and
+lookup rules ensure that the second case will be selected.
+
+[[field-destruction]]
+Consider another interesting example, where you have the following
+declarations:
+
+....
+positive is type (N when N > 0)
+integers is string of integer
+N:integers > 0 as boolean is
+    for I in N loop
+        if not (I > 0) then
+            return false
+    return true
+
+delete N:inout positive is
+    print "Deleting positive: ", N
+
+delete N:integer is
+    print "Deleting integer: ", N
+
+delete N:integers is
+    print "Deleting integers with size: ", size N
+
+example is
+   print "Beginning example"
+   A:integers := string(1,8,4)
+   B:integers := string(-1,0,5)
+   print "End of example"
+....
+
+In this example, we create an `integers` type based on `string of integers`,
+for which we implement the `N>0` operator to mean that all elements
+in the `string` are positive. This in turn means that some values that
+have type `integers` also have type `positive`. In the body of
+`example`, `A` is `positive`, but `B` is not.
+
+If one consider link:#implicit-inheritance[implicit inheritance] and
+the implicitly inserted field destruction, the code for the `integers`
+type and `delete` operations above is really equivalent to the following:
+
+....
+integers is type(base:string of integer)
+
+delete P:inout positive is
+    print "Deleting positive: ", P
+    (delete P.N)        // Delete the N bound in `positive`
+
+delete N:integer is
+    print "Deleting integer: ", N
+    (delete N.base)     // For `integer`, this is a no-op
+
+delete S:integers is
+    print "Deleting integers with size: ", size S
+    (delete S.base)     // Delete the underlying 'string of integer'
+....
+
+As a result, the output of this program should be something like:
+
+....
+Beginning example
+End of example
+Deleting integers with size 3 <1>
+Deleting positive: 5 <2>
+Deleting integer: 5 <3>
+Deleting integer: 0 <4>
+Deleting integer: -1
+Deleting positive: string(1,8,4) <5>
+Deleting integers with size 3 <6>
+Deleting positive: 4
+Deleting integer: 4
+Deleting positive: 8
+Deleting integer: 8
+Deleting positive: 1
+Deleting integer: 1
+....
+<1> This is deleting local variable `B` using type `integers`, knowing
+    that it failed to pass the test for `positive` because of value `-1`.
+<2> This is deleting values in the `string of integer` container in
+    local variable `B`, starting with the last one. Containers can
+    destroy their values in any order, but for `string`, an efficient
+    algorithm may start with the end of the container in order to be
+    able to truncate before each element being removed simply by
+    changing a "number of items" in the `string`. The local `delete`
+    definitions are visible to the instantiation of `delete` for the
+    type `string of integer` that is made for the call at the end of
+    `example`. The first matching definition for value `5` is for the
+    `positive` type.
+<3> This is implicitly deleting the `integer` value called `P.N` in
+    the code above.
+<4> For value `0` in the `string of integer` value held in `B`, the
+    `positive` test failed, so that the first destructor that works is
+    for `integer`.
+<5> This is deleting local variable `A`. Since `A` is positive, the
+    destructor for positive is called.
+<6> Unlike what happened for `B`, the destructor for `integers` is not
+    called directly for `B` but implicitly for `P.N`.
 
 It is possible to create ((local destructor)) definitions. When such a local
 definition exists, it is possible for it to override a more general
 definition. The general definition can be accessed using
-link:#super-lookup[super lookup].
+link:#super-lookup[super lookup], and generally, it should in order to
+preserve the language semantics.
 
 [source]
 ----

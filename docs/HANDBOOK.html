@@ -6132,6 +6132,33 @@ that is just another name for <code>integer</code>:</p>
 <pre>int is integer</pre>
 </div>
 </div>
+<div id="implicit-inheritance" class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>In reality, the above is really equivalent to deriving <code>int</code> from
+<code>integer</code>. in other words, the definition above is equivalent to the
+following pattern-based definition:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>int is type(base:integer)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>One reason this is important is to maintain some guarantees during
+<a href="#field-destruction">destruction</a>, specifically make sure that
+destruction of the new type does not bypass the destruction of the
+original type.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>More interesting types can be defined using the <code>type</code> function, which
 takes a pattern as an argument, and returns a type that
@@ -6675,7 +6702,7 @@ that are created by the callee.</p>
 <p><code>in_out T</code> can be used for input-output arguments of type <code>T</code>,
 i.e. values that can be modified by the callee but are created and
 owned by the caller. Due to the rules about name lookup in XL, it is
-also possible to spell this type as <code>inout T</code>.</p>
+also possible to spell this type as <code>inout T</code> or <code>io T</code>.</p>
 </li>
 <li>
 <p><code>any T</code> can hold a value of type <code>T</code> or any
@@ -7372,7 +7399,7 @@ based on Unix-style file descriptors:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">MY_FILE as module with
     file as type
     open(Name:text) as file
-    close F:file
+    close F:io file
 
 MY_FILE as module is
     file is type file(fd:integer)
@@ -7423,12 +7450,37 @@ for the value to destroy, in order to be able to modify its argument,
 i.e. a destructor often has a signature like <code>delete X:inout T</code>.</p>
 </div>
 <div class="paragraph">
-<p>There is a built-in default definition of that statement that has no
-effect and matches any value:</p>
+<p>Symmetrical to <a href="#field-creation">creation</a>, the body of a <code>delete V</code>
+automatically invokes <code>delete V.X</code> for any field <code>X</code> in <code>V</code> at exit of
+the body of the definition.</p>
 </div>
-<div class="listingblock">
+<div class="paragraph">
+<p>For example, consider the definition below:</p>
+</div>
+<div class="literalblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">delete Anything is nil</code></pre>
+<pre>delete Z:inout complex is
+    print "Deleting complex ", Z</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That definition is actually equivalent to the definition below:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>delete Z:inout complex is
+    print "Deleting complex ", Z
+    (delete Z.Im)
+    (delete Z.Re)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There is a built-in default definition of that statement that has no
+effect and matches any value, and which only deletes the fields:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>delete Anything is nil</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7436,35 +7488,147 @@ effect and matches any value:</p>
 this happens, normal lookup rules happen. This means that, unlike
 languages like C++, a programmer can deliberately override the
 destruction of an object, and remains in control of the destruction
-process.</p>
+process. More importantly, this means that the destruction process
+respects the global type semantics.</p>
 </div>
-<div class="admonitionblock note">
+<div class="paragraph">
+<p>Consider for example the deletion of the <code>file</code> type defined in the
+<code>MY_FILE</code> module above. Since there is a special case for negative
+values, that might be reflected in the implementation as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>delete F:inout file when F.fd &lt; 0  is ... // Invalid flie
+delete F:inout file                is ... // Valid file</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However, this also means that the programmer could create a
+<code>valid_file</code> type corresponding to the case where <code>F.fd&lt;0</code> is false.
+If you have a <code>valid_file</code> value to <code>delete</code>, normal type system and
+lookup rules ensure that the second case will be selected.</p>
+</div>
+<div id="field-destruction" class="paragraph">
+<p>Consider another interesting example, where you have the following
+declarations:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>positive is type (N when N &gt; 0)
+integers is string of integer
+N:integers &gt; 0 as boolean is
+    for I in N loop
+        if not (I &gt; 0) then
+            return false
+    return true
+
+delete N:inout positive is
+    print "Deleting positive: ", N
+
+delete N:integer is
+    print "Deleting integer: ", N
+
+delete N:integers is
+    print "Deleting integers with size: ", size N
+
+example is
+   print "Beginning example"
+   A:integers := string(1,8,4)
+   B:integers := string(-1,0,5)
+   print "End of example"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, we create an <code>integers</code> type based on <code>string of integers</code>,
+for which we implement the <code>N&gt;0</code> operator to mean that all elements
+in the <code>string</code> are positive. This in turn means that some values that
+have type <code>integers</code> also have type <code>positive</code>. In the body of
+<code>example</code>, <code>A</code> is <code>positive</code>, but <code>B</code> is not.</p>
+</div>
+<div class="paragraph">
+<p>If one consider <a href="#implicit-inheritance">implicit inheritance</a> and
+the implicitly inserted field destruction, the code for the <code>integers</code>
+type and <code>delete</code> operations above is really equivalent to the following:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>integers is type(base:string of integer)
+
+delete P:inout positive is
+    print "Deleting positive: ", P
+    (delete P.N)        // Delete the N bound in `positive`
+
+delete N:integer is
+    print "Deleting integer: ", N
+    (delete N.base)     // For `integer`, this is a no-op
+
+delete S:integers is
+    print "Deleting integers with size: ", size S
+    (delete S.base)     // Delete the underlying 'string of integer'</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As a result, the output of this program should be something like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Beginning example
+End of example
+Deleting integers with size 3 <i class="conum" data-value="1"></i><b>(1)</b>
+Deleting positive: 5 <i class="conum" data-value="2"></i><b>(2)</b>
+Deleting integer: 5 <i class="conum" data-value="3"></i><b>(3)</b>
+Deleting integer: 0 <i class="conum" data-value="4"></i><b>(4)</b>
+Deleting integer: -1
+Deleting positive: string(1,8,4) <i class="conum" data-value="5"></i><b>(5)</b>
+Deleting integers with size 3 <i class="conum" data-value="6"></i><b>(6)</b>
+Deleting positive: 4
+Deleting integer: 4
+Deleting positive: 8
+Deleting integer: 8
+Deleting positive: 1
+Deleting integer: 1</pre>
+</div>
+</div>
+<div class="colist arabic">
 <table>
 <tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p><strong>RATIONALE</strong> In XL, multiple patterns can match a given value. It might
-seem desirable to call all the patterns that match, but not only would
-it introduce a special-case lookup, it would also be extremely dangerous
-in a number of easily identified cases. As an illustration, consider the
-following code:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">delete F:inout file when F.fd &lt; 0  is ... // Case 1
-delete F:inout file                is ... // Case 2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Clearly, the intent of the programmer is to special-case the destruction
-of <code>file</code> values that have an invalid file descriptor, for example as a
-result of an error condition from the C <code>open</code> call (which returns <code>-1</code>
-on error).</p>
-</div>
-</td>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is deleting local variable <code>B</code> using type <code>integers</code>, knowing
+that it failed to pass the test for <code>positive</code> because of value <code>-1</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This is deleting values in the <code>string of integer</code> container in
+local variable <code>B</code>, starting with the last one. Containers can
+destroy their values in any order, but for <code>string</code>, an efficient
+algorithm may start with the end of the container in order to be
+able to truncate before each element being removed simply by
+changing a "number of items" in the <code>string</code>. The local <code>delete</code>
+definitions are visible to the instantiation of <code>delete</code> for the
+type <code>string of integer</code> that is made for the call at the end of
+<code>example</code>. The first matching definition for value <code>5</code> is for the
+<code>positive</code> type.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>This is implicitly deleting the <code>integer</code> value called <code>P.N</code> in
+the code above.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>For value <code>0</code> in the <code>string of integer</code> value held in <code>B</code>, the
+<code>positive</code> test failed, so that the first destructor that works is
+for <code>integer</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>This is deleting local variable <code>A</code>. Since <code>A</code> is positive, the
+destructor for positive is called.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Unlike what happened for <code>B</code>, the destructor for <code>integers</code> is not
+called directly for <code>B</code> but implicitly for <code>P.N</code>.</td>
 </tr>
 </table>
 </div>
@@ -7472,7 +7636,8 @@ on error).</p>
 <p>It is possible to create local destructor definitions. When such a local
 definition exists, it is possible for it to override a more general
 definition. The general definition can be accessed using
-<a href="#super-lookup">super lookup</a>.</p>
+<a href="#super-lookup">super lookup</a>, and generally, it should in order to
+preserve the language semantics.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -10283,7 +10448,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-08 23:03:00 +0100
+Last updated 2020-01-09 09:42:16 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
