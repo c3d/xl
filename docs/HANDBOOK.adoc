@@ -2670,6 +2670,8 @@ C : circle := circle(0.3, 2.6, 4.0)
 
 ==== Scope pattern matching
 
+[[parameter-scope]]
+[[argument-scope]]
 When a block in a pattern defines a link:#scoping[scope], i.e. a
 link:#sequences[sequence] of declarations or definitions, that scope
 is called a _((parameter scope))_, and it can be matched by any
@@ -2725,6 +2727,7 @@ JohnDoe : person := person
 
 ==== Pattern-matching scope
 
+[[pattern-scope]]
 When matching a pattern, a link:#execution-context[local execution context]
 is created that holds the bindings associated to the patterns being
 matched. This _((pattern-matching scope))_ is used while evaluating
