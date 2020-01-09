@@ -5018,6 +5018,7 @@ interface should also provide some functions to create elements of the
 type. The following example illustrates this for a `file` interface
 based on Unix-style file descriptors:
 
+[[my_file]]
 [source]
 ----
 MY_FILE as module with
