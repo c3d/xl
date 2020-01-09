@@ -5514,20 +5514,21 @@ types typically does a link:#move[move].
 
 ==== Ownership
 
-Computers offer a number of resources: memory, files, locks, network
-connexions, devices, sensors, actuators, and so on. A common problem
-with such resources is to control their _ownership_. In other words, who
-is responsible for a given resource at any given time.
+Computers offer a number of _((resource))s_: memory, files, locks,
+network connexions, devices, sensors, actuators, and so on. A common
+problem with such resources is to control their _((ownership))_. In
+other words, who is responsible for a given resource at any given
+time.
 
 In XL, like in languages like Rust or pass:[C++], ownership is largely
 determined by the type system, and relies heavily on the guarantees it
 provides, in particular with respect to link:#creation[creation] and
 link:#destruction[destruction]. In pass:[C++], the mechanism is called
-https://en.wikipedia.org/wiki/RAII[RAII], which stands for _Resource
-Acquisition is Initialization_. The central idea is that ownership of a
-resource is an invariant during the lifetime of a value. In other words,
-the value gets ownership of the resource during construction, and
-releases this ownership during destruction. This was illustrated in the
+https://en.wikipedia.org/wiki/RAII[((RAII))], which stands for _((Resource
+Acquisition is Initialization))_. The central idea is that ownership of a
+resource is an ((invariant)) during the lifetime of a value. In other words,
+the value gets ownership of the resource during ((construction)), and
+releases this ownership during ((destruction)). This was illustrated in the
 `file` type of the module `MY_FILE` link:#my_file[given earlier].
 
 Types designed to own the associated value are called _owner types_.

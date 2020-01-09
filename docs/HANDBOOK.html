@@ -8015,18 +8015,18 @@ types typically does a <a href="#move">move</a>.</p>
 <div class="sect3">
 <h4 id="ownership"><a class="anchor" href="#ownership"></a><a class="link" href="#ownership">4.5.7. Ownership</a></h4>
 <div class="paragraph">
-<p>Computers offer a number of resources: memory, files, locks, network
-connexions, devices, sensors, actuators, and so on. A common problem
-with such resources is to control their <em>ownership</em>. In other words, who
-is responsible for a given resource at any given time.</p>
+<p>Computers offer a number of <em>resources</em>: memory, files, locks,
+network connexions, devices, sensors, actuators, and so on. A common
+problem with such resources is to control their <em>ownership</em>. In
+other words, who is responsible for a given resource at any given
+time.</p>
 </div>
 <div class="paragraph">
 <p>In XL, like in languages like Rust or C++, ownership is largely
 determined by the type system, and relies heavily on the guarantees it
 provides, in particular with respect to <a href="#creation">creation</a> and
 <a href="#destruction">destruction</a>. In C++, the mechanism is called
-<a href="https://en.wikipedia.org/wiki/RAII">RAII</a>, which stands for <em>Resource
-Acquisition is Initialization</em>. The central idea is that ownership of a
+<a href="https://en.wikipedia.org/wiki/RAII">RAII</a>, which stands for <em>Resource Acquisition is Initialization</em>. The central idea is that ownership of a
 resource is an invariant during the lifetime of a value. In other words,
 the value gets ownership of the resource during construction, and
 releases this ownership during destruction. This was illustrated in the
@@ -10451,7 +10451,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-09 23:47:05 +0100
+Last updated 2020-01-09 23:47:06 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
