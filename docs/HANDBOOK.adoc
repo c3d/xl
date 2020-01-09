@@ -5362,7 +5362,7 @@ else if X < 0 then
 else
     logic_error "Some programmer forgot to consider this case"
 ----
-* A `storage_error`(((storage error))) is returned whenever a
+* [[storage_error]]A `storage_error`(((storage error))) is returned whenever a
   link:#dynamic_value[dynamic value] is created, notably each time an
   `own T` object is created, but also when additional storage is
   needed for containers.
