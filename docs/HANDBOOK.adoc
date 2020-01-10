@@ -3358,7 +3358,7 @@ holds the value that will be given to the caller. For example, an
 iterative version of the factorial function can be written as follows:
 
 ....
-factorial N:unsigned as unsigned is
+factorial N:natural as natural is
     result := 1
     for I in 2..N loop
         result *= I
@@ -3381,7 +3381,7 @@ section, a factorial can be written as follows using a `return`
 statement, although it is not quite idiomatic:
 
 ....
-factorial_return N:unsigned as unsigned is
+factorial_return N:natural as natural is
     if N = 0 then
         return 1
     return N * factorial_return(N-1)
@@ -3389,7 +3389,7 @@ factorial_return N:unsigned as unsigned is
 
 An alternate form would use the last returned value:
 ....
-factorial_last N:unsigned as unsigned is
+factorial_last N:natural as natural is
     if N = 0 then
         1
     else
@@ -4252,28 +4252,28 @@ that all variants of the definition have a consistent type as follows:
 
 ....
 with
-    N  :  unsigned
-    N! as unsigned
+    N  :  natural
+    N! as natural
 0! is 1
 N! is N * (N-1)!
 ....
 
 The first declaration within the `with` block indicates that any
-variable named `N` will have type `unsigned`. This is in particular
+variable named `N` will have type `natural`. This is in particular
 true for the declaration on the next line. In other words, the second
 line in the `with` block is equivalent to:
 
 ....
-N:unsigned! as unsigned
+N:natural! as natural
 ....
 
-The pattern `0!` matches `N:unsigned!`, and the same is true for the
+The pattern `0!` matches `N:natural!`, and the same is true for the
 next declaration. Therefore, the two definitions for the factorial are
 equivalent to the code below:
 
 ....
-0:unsigned! as unsigned is 1
-N:unsigned! as unsigned is N * (N-1)!
+0:natural! as natural is 1
+N:natural! as natural is N * (N-1)!
 ....
 
 === Standard types
@@ -4308,18 +4308,25 @@ _((basic types))_, and include the following:
   literal values below `integer.min`, such as `12`, or the result of
   the prefix negation operator on literal values, such as `-3`.
 
-* `unsigned` is an approximation of unsigned numbers, with a limited
+* `natural` is an approximation of natural numbers, with a limited
   range, typically between 0 and 2^64^-1. Like `integer`, it behaves
   like the underlying hardware in case of overflow. `unsigned` matches
   whole number literal values such as `0`, `16#FF` or `42`.
 
-* `size` is a type similar to `unsigned`, but specifically intended to
+* `size` is a type similar to `natural`, but specifically intended to
   represent a size. In some cases, it may have a different range than
-  `unsigned`.
+  `natural`.
+
+* `count` is a type similar to `natural`, but specifically intended to
+  represent a count. It should be at least as large as `size` and
+  `natural`.
 
 * `offset` is a type that plays for `integer` the role that `size`
-  plays for `unsigned`, i.e. it is intended to indicate offsets for
+  plays for `natural`, i.e. it is intended to indicate offsets for
   example while indexing an array.
+
+* `byte` is the smallest unsigned type that is naturally represented
+  on the machine. On most modern machine, it is an 8-bit value.
 
 * `character` is a representation of the ((native character set)) on the
   target machine. On modern machines, it should generally follow the
@@ -4349,23 +4356,23 @@ a 32-bit machine, and 64-bit values on a 64-bit machine.
 
 This may adversely affect portability, and for that reason, XL also
 offers _((sized types))_, with a precise number of bits specified in the
-name. The size is appended to the type name. For example, `integer64`
+name. The size is appended to the type name. For example, `i64`
 is an `integer` type that is guaranteed to be exactly 64-bit.
 
 Such sized data types exist for the following base types:
 
-* `integer` for at least 8, 16, 32 and 64 bits,
-* `unsigned` for at least 8, 16, 32 and 64 bits,
+* `i` for at least 8, 16, 32 and 64 bits, are signed integer values,
+* `u` for at least 8, 16, 32 and 64 bits, are unsigned integer values,
 * `real` for at least 32 and 64 bits,
 * `character` for at least 8, 16 and 32 bits.
 
 Additional sizes may be provided if they are native to the target
 machine. For example, some DSPs feature 24-bit operations, and
-compilers for such machines should provide types like `unsigned24` to
+compilers for such machines should provide types like `u24` to
 match.
 
 The sized types are guaranteed to wrap around at the boundary for the
-given number of bits. For example, `unsigned8` holds values between
+given number of bits. For example, `u8` holds values between
 `0` and `255`, and will wrap around so that the next value after `255`
 is `0`, and the value preceding `0` is `255`.
 
@@ -4907,8 +4914,8 @@ The `create` operator for link:#basic-types[basic types] is said to
 _((zero initialize))_ them as follows:
 
 * `type` and `nil` values receive `nil`.
-* `integer`, `unsigned`, `size` and `offset` types receive `0`.
-* `character` receive `character 0`.
+* All integer types receive value `0`
+* All character types receive `character 0`.
 * `text` receive `""`.
 * `boolean` receive `false`.
 
@@ -5719,13 +5726,13 @@ integer8 is integer bits 8
 ----
 
 This implicitly implies a `range` that depends on the type being
-subtyped. For example, for `integer` and `unsigned`, the range would be
+subtyped. For example, for `integer` and `natural`, the range would be
 defined as follows:
 
 [source]
 ----
-[[integer]]  bits N:unsigned    is integer  range -2^(N-1)..2^(N-1)-1
-[[unsigned]] bits N:unsigned    is unsigned range  0..2^N-1
+[[integer]] bits N:natural      is integer range -2^(N-1)..2^(N-1)-1
+[[natural]] bits N:natural      is natural range  0..2^N-1
 ----
 
 NOTE: The `bits` subtypes are intended to specify the bit size of the
@@ -5778,7 +5785,7 @@ arithmetic))_] if one of the following conditions is true:
 * A `quantum` is specified and no `exponent` is specified.
 
 For example, the `hundredth` type defined below could be represented
-internally by an `unsigned` values between `0` and `100`, and converted to
+internally by an `natural` values between `0` and `100`, and converted to
 `real` by multiplying this value by the given `quantum` value.
 
 [source]
@@ -5860,10 +5867,10 @@ this interface, one might argue that the fact that `pixels` is a
 [source]
 ----
 picture as type with
-    width  : unsigned
-    height : unsigned
-    pixels : buffer[area] of unsigned8
-    area as unsigned
+    width  : size
+    height : size
+    pixels : buffer[area] of byte
+    area as size
 ----
 
 The code below indicates that the type `text` derives from `string of
@@ -5902,7 +5909,7 @@ function interface:
 
 [source]
 ----
-picture(width:unsigned, height:unsigned) as picture
+picture(width:size, height:size) as picture
 ----
 
 
@@ -5948,9 +5955,9 @@ look like:
 
 ....
 picture is type picture
-    pixels : buffer[area] of unsigned8
-    width  : unsigned
-    height : unsigned
+    pixels : buffer[area] of u8
+    width  : size
+    height : size
 ....
 
 In a scope where the implementation is known, if `P` is a `picture`,
@@ -6004,9 +6011,9 @@ representation:
 
 ....
 bitmap as type with
-    width  : unsigned16
-    height : unsigned16
-    buf    : array[width, height] of unsigned8
+    width  : u16
+    height : u16
+    buf    : array[width, height] of u8
 picture as type picture
     bits:bitmap
 ....
@@ -6028,7 +6035,7 @@ picture is type picture
 This, however, will not work as is, because we have only provided a
 way to _read_ `width` and `height`, not to write it. This does not
 match the interface. A simple solution would be to modify the
-`picture` interface, for example so that it reads `width as unsigned`.
+`picture` interface, for example so that it reads `width as size`.
 With this interface change, the code above will correctly allow us to
 find an implementation for expressions such as `P.width`.
 
@@ -6110,24 +6117,24 @@ picture is type picture
 By providing as little type information as possible, the code as
 written above remains as generic as possible. This enables better
 optimizations. For instance, writing `width 320` might generate only
-code for `unsigned16` without any need for an `unsigned` value to be
+code for `u16` without any need for any `size` value to be
 ever created.
 
 Unfortunately, that code will only be accepted by the compiler until
-you try to use it with values that do not fit within an `unsigned16`.
+you try to use it with values that do not fit within an `u16`.
 It is accepted because it is not typed, therefore generic, so that
 some errors cannot be detected until you instantiate it.
 Furthermore, no error will be generated if the values being passed all
-fit within an `unsigned16`.
+fit within an `u16`.
 
 If `P` is a `picture`, then `P.width 320` will work, but `P.width
 1_000_000` will not, since that value is out of range for
-`unsigned16`. This is problematic because it is quite likely that the
-attribute will receive some unknown `unsigned` value. After all, the
-interface was designed for an `unsigned`, not an `unsigned16`, so it
+`u16`. This is problematic because it is quite likely that the
+attribute will receive some unknown `size` value. After all, the
+interface was designed for an `sie`, not an `u16`, so it
 makes sense to invoke it with values of this type. There will be an
-error in that case, because nothing in our code accepts an `unsigned`
-value that does not fit in the `unsigned16` subtype.
+error in that case, because nothing in our code accepts a `size`
+value that does not fit in the `u16` subtype.
 
 ===== Attribute error checking
 
@@ -6144,14 +6151,14 @@ picture is type picture
     height      is bits.height
 
     // Working case
-    width  W:unsigned16 is bits.width W
-    height H:unsigned16 is bits.height H
+    width  W:u16 is bits.width W
+    height H:u16 is bits.height H
 
     // Error case: drop input, display message
-    width  W:unsigned is
+    width  W:size is
         print error("Invalid picture width %1", W)
         bits.width      // Return previous value
-    height  H:unsigned is
+    height  H:size is
         print error("Invalid picture height %1", H)
         bits.height     // Return previous value
 ----
@@ -6162,10 +6169,10 @@ error in the interface, for example:
 [source]
 ----
 picture as type with
-    width  : mayfail unsigned
-    height : mayfail unsigned
-    pixels : buffer[area] of unsigned8
-    area as unsigned
+    width  : mayfail size
+    height : mayfail size
+    pixels : buffer[area] of byte
+    area as size
 ----
 
 That, however, suggests that `width` might accept `error` values as
@@ -6175,12 +6182,12 @@ input. A better interface would be to expose the attribute nature of
 [source]
 ----
 picture as type with
-    width  as unsigned
-    height as unsigned
-    width W as mayfail unsigned
-    height H as mayfail unsigned
-    pixels : buffer[area] of unsigned8
-    area as unsigned
+    width  as size
+    height as size
+    width W as mayfail size
+    height H as mayfail size
+    pixels : buffer[area] of byte
+    area as size
 ----
 
 But if we are going that way, we may as well expose the simpler
@@ -6189,10 +6196,10 @@ interface that does not lie about the underlying values:
 [source]
 ----
 picture as type with
-    width  : unsigned16
-    height : unsigned16
-    pixels : buffer[area] of unsigned8
-    area as unsigned
+    width  : u16
+    height : u16
+    pixels : buffer[area] of byte
+    area as size is width * height
 ----
 
 These various examples show that XL provides powerful tools that makes
@@ -6209,7 +6216,7 @@ proposed interface for `pixels` in the `picture` type, because
 `buffer` is a type that may require dynamic allocation, and therefore
 some operations may have to return a `storage_error`. This is already
 present in the interface for the `buffer` type, so one might feel a
-bit safer than for the mismatch between `unsigned` and `unsigned16`.
+bit safer than for the mismatch between `size` and `u16`.
 
 However, since there is no actual `buffer` present in `bitmap`, a
 buffer may need to be created or at least given storage in the
@@ -6260,7 +6267,7 @@ For example, the following code implements the core computation of a
 link:https://en.wikipedia.org/wiki/Julia_set[Julia set]:
 
 ....
-julia_depth(Z:complex, Mu:complex, Bound:real, Max:unsigned) as unsigned is
+julia_depth(Z:complex, Mu:complex, Bound:real, Max:count) as count is
     while result < Max and Z.Re^2 + Z.Im^2 < Bound ^2 loop
         result := result + 1
         Z := Z^2 - Mu
@@ -6269,7 +6276,7 @@ julia_depth(Z:complex, Mu:complex, Bound:real, Max:unsigned) as unsigned is
 This code contains two assignments, one to `result`, the
 link:#implicit-result-variable[implicit variable] holding the return
 value, and one to `Z`. The assignment `result := result + 1` updates
-the variable `result` with the next `unsigned` value. This kind of
+the variable `result` with the next `count` value. This kind of
 assignment combined with a simple operation is so frequent that there
 are link:#operator_assignment[shortcut notations] for it, and you
 could write `result += 1` to achieve the same effect.
@@ -6341,7 +6348,7 @@ For example, the shallow copy for a tree could have the following
 interface, where either a depth or a `node_filter` :
 
 ....
-copy(Source:tree, Depth:unsigned) as mayfail T
+copy(Source:tree, Depth:count) as mayfail T
 copy(Source:tree, Keep:node_filter) as mayfail T
 node_filter is type(N:node as boolean)
 ....
