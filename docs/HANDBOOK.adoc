@@ -262,7 +262,7 @@ link:#implementation[((implementation))] on the right. In other words,
 the pattern for the infix `is` is `Pattern is Implementation`, where
 `Pattern` is a program pattern, like `X+Y`, and `Implementation` is an
 implementation for that pattern, for example `Add X, Y`. This ((operator))
-can also be read as _transforms into_, i.e. it transforms the code
+can also be read as _transforms into_, i.e. it transforms the code
 that is on the left into the code that is on the right.
 
 This single ((operator)) can be used to define all kinds of entities.
@@ -361,7 +361,7 @@ takes the shape of the word `cartesian` followed by two numbers, like
 for example `cartesian(1,5)`.
 ====
 
-.Higher-order functions, i.e. functions that return functions (((high-order function)))
+.Higher-order functions, i.e. functions that return functions (((high-order function)))
 [%collapsible]
 ====
 [source]
@@ -813,7 +813,7 @@ compiler to identify where the "line breaks" are in your code.
 Despite being very high-level, XL was designed so that ((efficient
 translation)) to machine code was possible, if sometimes
 challenging. In other words, XL is designed to be able to work as a
-_((system language))_, in the same vein as C, Ada or Rust, i.e. a
+_((system language))_, in the same vein as C, Ada or Rust, i.e. a
 language that can be used to program ((operating system))s, system
 libraries(((library,system))), ((compiler))s or other low-level
 applications.
@@ -882,7 +882,7 @@ instead of a machine call instruction.
 
 Furthermore, the ((reference implementation)) is just that, a
 reference. The compiler is perfectly allowed, even encouraged, to
-"cheat", i.e. to recognize common idioms, and efficiently translate
+"cheat", i.e. to recognize common idioms, and efficiently translate
 them. One name, `builtin`, is reserved for that purpose. For example,
 the definition of integer addition may look like this:
 
@@ -1406,7 +1406,7 @@ syntax itself, since numbers or names in the syntax file have to be
 
 ==== Numbers
 
-Numbers in XL begin with a ((digit)), i.e. one of `0123456789`, possibly
+Numbers in XL begin with a ((digit)), i.e. one of `0123456789`, possibly
 followed by other digits. For example, `0` and `42` are valid XL
 numbers. XL describes two kinds of numbers: _((whole number))s_, which
 have no fractional part, and _((fractional number))s_, which have a
@@ -1438,7 +1438,7 @@ is 15, `Z` is 35. Case does not matter. For example, `16#FF` and
 `16#ff` are two valid ((hexadecimal)) representation of `255`.
 For base 64, https://en.wikipedia.org/wiki/Base64[Base64] encoding is
 used, and case matters. This is mostly indended for use in link:#bits[((binary
-objects))], i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
+objects))], i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
 encoding for the number with the same binary representation as the
 sequence of ASCII characters in `Hello!`.
 
@@ -1710,7 +1710,7 @@ Additional sections of the syntax file define delimiters for comment,
 block and text. Comment and text delimiters come in pairs.
 
 The default syntax file specifies comments that follow the C/pass:[C++]
-convention, i.e. comments either start with `+/*+` and end with `+*/+` or
+convention, i.e. comments either start with `+/*+` and end with `+*/+` or
 start with `//` and end with a new line. The basic text separators
 (simple and double quotes) are not specified in the syntax file
 because they are used to parse the syntax file itself. The default
@@ -1784,7 +1784,7 @@ grouping that humans apparently do. Consider for example the following:
 print sin X, cos Y
 ----
 
-Most human beings parse this as `print (sin(X),cos(Y))`, i.e. we call
+Most human beings parse this as `print (sin(X),cos(Y))`, i.e. we call
 `print` with two values resulting from evaluating `sin X` and `cos Y`.
 
 This is, however, not entirely logical. If `print` takes comma-separated
@@ -2101,9 +2101,9 @@ compiler will most likely assign machine locations to each of the
 declarations. When the program runs, a constant like `pi` or the
 definition of `circumference` may end up being represented as a
 machine address, and a variable such as `Radius` may be represented as
-a "stack location", i.e. a preallocated offset from the current stack
+a "stack location", i.e. a preallocated offset from the current stack
 pointer, the corresponding memory location only containing the value,
-i.e. the right-hand side of `:=`. Most of the
+i.e. the right-hand side of `:=`. Most of the
 link:#types[type analysis] can be performed at compile
 time, meaning that most type information is unnecessary at program run
 time and can be eliminated from the compiled program.
@@ -3202,7 +3202,7 @@ as `{ N is 3 }`. A context with an additional binding for `M is "Hello"`
 could be written something like `{ N is 3; M is "Hello" }`.
 
 The value returned by `adder N` is not simply `{ lambda X is X + N }`,
-but something like `{ N is 3 } { lambda X is X + N }`, i.e. a closure that
+but something like `{ N is 3 } { lambda X is X + N }`, i.e. a closure that
 captures the bindings necessary for evaluation of the body `X + N` at a
 later time.
 
@@ -3215,7 +3215,7 @@ closure(((closure,capture))).
 A closure looks like a prefix `CONTEXT EXPR`, where `CONTEXT` and `EXPR`
 are blocks, and where `CONTEXT` is a sequence of declarations.
 Evaluating such a closure is equivalent to evaluating `EXPR` in the
-current context with `CONTEXT` as a ((local context)), i.e. with the
+current context with `CONTEXT` as a ((local context)), i.e. with the
 declarations in `CONTEXT` possibly shadowing declarations in the current
 context(((declaration,shadowing))).
 
@@ -4677,26 +4677,24 @@ be explained more in details below:
 * link:#mutability[mutability] is the ability for an entity to change
   value over its lifetime.
 * link:#compactness[compactness] is the property of some types to have
-  their values represented in the machine in a compact way, i.e. a
+  their values represented in the machine in a compact way, i.e. a
   fixed-size sequence of consecutive memory storage units (most generally
   bytes).
 * link:#ownership[ownership] is a properties of some types to control
   the lifetime of the associated values or possibly some other resource
   such as a network connection. Non-owning types can be used to
-  link:#access[access] values of an associated owning type.
+  link:#access-types[access] values of an associated owning type.
 * link:#inheritance[inheritance] is the ability for a type to inherit
   all operations from another type, so that its values can safely be
-  implicitly converted to values of that other type.
-* the link:#interface[interface] of a type is an optional scope that
-  exposes _features_ of the type, i.e. individually accessible values. The
+  implicitly converted to values of that other type. Conversely,
+  link:#subtypes[subtypes] are types that add constraints to a type.
+* the link:#type-interface[interface] of a type is an optional scope that
+  exposes _features_ of the type, i.e. individually accessible values. The
   _implementation_ of the type must provide all interfaces exposed in the
   type’s interface.
 * link:#transfers[transfers] are the ways values can be exchanged
   between different parts of the program, and include
   link:#copy[copy], link:#move[move] and link:#binding[binding].
-* link:#atomicity[atomicity] is the ability to perform operations in a
-  way that allows consistent behavior across multiple threads of
-  execution, possibly executing concurrently on different CPUs.
 
 ==== Lifetime
 
@@ -4720,7 +4718,7 @@ will always be live while `X` is live. It is possible for neither
 `lifetime` feature is used to implement
 https://doc.rust-lang.org/1.8.0/book/ownership.html[Rust-like]
 link:#lifetime[restrictions on access types],
-i.e. a way to achieve memory safety at zero runtime cost.
+i.e. a way to achieve memory safety at zero runtime cost.
 
 The lifetime of XL values fall in one of the following categories:
 
@@ -5443,7 +5441,7 @@ X := X or 1             // Binary or, X is now 43
 X -= 1                  // Subtract 1 from X, now 42
 ----
 
-Some entities may give link:#access[access] to individual inner values.
+Some entities may give link:#access-types[access] to individual inner values.
 For example, a `text` value is conceptually made of a number of
 individual `character` values that can be accessed individually. This is
 true irrespective of how `text` is represented. In addition, a `slice` of
@@ -5573,8 +5571,7 @@ number of types intended to own common classes of resources, including:
   and address space.
 * A `context` captures an execution context.
 
-
-==== Access
+==== Access types
 
 Not all types are intended to be owner types. Many types delegate
 ownership to another type. Such types are called _((access type))s_.
@@ -5694,6 +5691,9 @@ link:#when[conditional pattern] as follows:
 month is type(M:integer when M >= 1 and M <= 12)
 ----
 
+The language defines a number of standard subtypes. All these subtypes
+can be implemented using regular language features.
+
 ===== Range subtypes
 
 Subtyping to select a range is common enough that there is a shortcut
@@ -5739,7 +5739,7 @@ NOTE: The `bits` subtypes are intended to specify the bit size of the
 machine representation. The requested size may be rounded up to a more
 convenient or more efficient machine representation. For example, on a
 32-bit machine, `integer bits 22` might be more efficiently represented
-as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
+as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 
 ===== Real subtypes
 
@@ -5747,14 +5747,17 @@ The `real` type can be subtyped with a `range` and a `bits` size, as
 well as with additional constraints more specific to the `real` type:
 
 * a `digits` count specifies the number of accurate decimal digits,
-. For example, `real digits 3` is represents values with at least 3
+  For example, `real digits 3` is represents values with at least 3
   significant digits.
+
 * a `quantum` followed by a literal real value specifies a
   representation that should be representable exactly. For example,
   `real quantum 0.25` that value `0.25` must be represented exactly.
+
 * an `exponent` specifies the maximum decimal exponent. For example,
   `real exponent 100` will ensure that values up to `1.0e100` can be
   represented.
+
 * a `base` specifies the base for the internal representation. Only
   bases `2`, `10` and `16` are allowed. Base `2` requires a ((binary
   floating-point representation)). Base `10` requires a ((decimal
@@ -5835,6 +5838,40 @@ operators:
 
 The `text` type can be subtyped with the `encoding`, `locale` and
 `collation` operators, with the same meaning as for `character`.
+
+===== Memory access subtypes
+
+[[atomic]]
+Many recent machines provide several ways to access memory, for
+example to deal with synchronization between multiple CPUs or between
+CPUs and memory-mapped devices. XL presents this kind of features as
+subtypes.
+
+The following standard subtypes implement memory-related semantics:
+
+* `atomic T` is a type derived from `T` that offers
+  link:https://en.cppreference.com/w/c/language/atomic[atomic operations].
+  This may come at the expense of performance.
+
+* `unaligned T` is a type derived from `T` that may not respcet normal
+  alignment rules, and may require slower mis-aligned accesses.
+
+* `T aligned N` guarantees that values of type `T` use memory
+  aligned on `N` bytes boundaries.
+
+* `volatile T` is a type derived from `T` where the compiler cannot
+  assume that the value does not change externally due to causes
+  external to the current code.
+
+* `uncached T` is a type derived from `T` where the compiler should
+  ensure that data accesses are consistent with external memory, even
+  if this is significantly more expensive.
+
+* `packed T` is a type derived from `T` where data is packed as
+  tightly as possible, even to the detriment of performance.
+
+Additional subtypes may be available to match the features of the
+machine the code runs on.
 
 ==== Type interface
 
@@ -6471,7 +6508,7 @@ considerations with many types such as `vector`.
 Instead, assignment for `text`, and therefore passing `text` values as
 an argument, performs a copy of the `text` value. The binding
 modifiers for `text`, however, use not `text` but `slice of text`, an
-link:#access[access type] that is cheap to copy around, and that
+link:#access-types[access type] that is cheap to copy around, and that
 references the original text. This organization provides the
 convenience of copy semantics for local variables and the speed of
 move semantics for calls.
@@ -6541,8 +6578,6 @@ for N:name in R:[range of discrete] loop Body is <1>
 
 ===== Attributes
 
-==== Atomicity
-
 === Type expressions
 
 A type declaration is like any other XL declaration. It can have
@@ -6589,7 +6624,7 @@ double 3.5    // returns 7.0 as a real
 ....
 * `T1 and T2` is a type for values that belong to both `T1` and `T2`.
 For example, `number and totally_ordered` will match totally ordered
-numbers, i.e. it will not match `"ABC"` (`totally_ordered`, but not a
+numbers, i.e. it will not match `"ABC"` (`totally_ordered`, but not a
 `number`) nor will it match `ieee754(2.5)` (`number`, but not
 `totally_ordered`).
 * `another T` is a new type that is identical to `T`, allowing
@@ -6668,7 +6703,7 @@ These are only some common examples of type expressions. There is
 nothing that prevents you from adding many others.
 
 The case of `in T`, `out T` and `inout T` are examples of what will be
-called _ownership controlling types_, i.e. types that are dedicated to
+called _ownership controlling types_, i.e. types that are dedicated to
 controlling who owns what data. More details are provided in the section
 on link:#ownership[ownership] below.
 
@@ -7015,7 +7050,7 @@ As soon as I joined the CLL, I started talking about my language and the
 ideas within. One CLL engineer who immediately "got it" is Daveed
 Vandevoorde. Daveed immediately understood what I was doing, in large
 part because he was thinkering along the same lines. He pointed out that
-my approach had a name: meta-programming, i.e. programs that deal with
+my approach had a name: meta-programming, i.e. programs that deal with
 programs. I was doing meta-programming without knowing about the word,
 and I felt really stupid at the time, convinced that everybody in the
 compilers community knew about that technique but me.
@@ -7044,7 +7079,7 @@ redesigned.
 === XL moves to the off-side rule
 
 Another major visual change that happened around that time was switching
-to the off-side rule, i.e. using indentation to mark the syntax. Python,
+to the off-side rule, i.e. using indentation to mark the syntax. Python,
 which made this approach popular, was at the time a really young
 language (release 1.0 was in early 1994).
 
@@ -7121,7 +7156,7 @@ that could be used for different language. Like for Xroma, we stayed on
 bad puns and convoluted ideas for naming. In Mozart that representation
 was called `Coda`. It included individual source elements called `Notes`
 and the serialized representation was called a `Tune`. Transformation on
-Notes, i.e. the operations of compiler plug-ins, were done by
+Notes, i.e. the operations of compiler plug-ins, were done by
 `Performer` instances. A couple of years later, I would realize that
 this made the code totally obfuscated for the non-initiated, and I vowed
 to never make that mistake again.
@@ -7175,7 +7210,7 @@ concepts bring a similar kind of validation to pass:[C++] templates.
 * http://mozart-dev.sourceforge.net/xl_style.html#vararg[Type-safe
 variable argument lists] made it possible to write type-safe variadic
 functions. They solved the `WriteLn` problem I referred to earlier,
-i.e. they made it possible to write a function in a library that behaved
+i.e. they made it possible to write a function in a library that behaved
 exactly like the Pascal `WriteLn`. I see them as a distant ancestor of
 variadic templates in pass:[C++]11, although like for concepts, it is hard to
 tell if variadic templates are a later reinvention of the idea, or if
@@ -7200,7 +7235,7 @@ many classes. For example, there was a class for `IfThenElse`
 statements, a `Declaration` class, and so on.
 
 This was all very complicated and fragile, and made it extremely
-difficult to write thin tools (i.e. compiler plug-ins acting on small
+difficult to write thin tools (i.e. compiler plug-ins acting on small
 sections of code), in particular thin tools that respected subtle
 semantic differences between languages. By 2003, I was really hitting a
 wall with XL development, and that was mostly because I was also trying
@@ -7224,7 +7259,7 @@ because I was seeing things as a three-layer construction:
 
 * `XL0` was just a very simple parse tree format with only eight node
 types. I sometimes refer to that level of XL as "__XML without the
-M__", i.e. an extensble language without markup.
+M__", i.e. an extensble language without markup.
 * `XL1` was the core language evaluation rules, not taking any library
 into account.
 * `XL2` was the full language, including its ((standard library)). At the

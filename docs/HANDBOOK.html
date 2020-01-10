@@ -589,7 +589,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#mutability">4.5.5. Mutability</a></li>
 <li><a href="#compactness">4.5.6. Compactness</a></li>
 <li><a href="#ownership">4.5.7. Ownership</a></li>
-<li><a href="#access">4.5.8. Access</a></li>
+<li><a href="#access-types">4.5.8. Access types</a></li>
 <li><a href="#inheritance">4.5.9. Inheritance</a></li>
 <li><a href="#subtypes">4.5.10. Subtypes</a>
 <ul class="sectlevel4">
@@ -599,6 +599,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#saturating-subtypes">4.5.10.4. Saturating subtypes</a></li>
 <li><a href="#character-subtypes">4.5.10.5. Character subtypes</a></li>
 <li><a href="#text-subtypes">4.5.10.6. Text subtypes</a></li>
+<li><a href="#memory-access-subtypes">4.5.10.7. Memory access subtypes</a></li>
 </ul>
 </li>
 <li><a href="#type-interface">4.5.11. Type interface</a>
@@ -623,7 +624,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#attributes">4.5.12.6. Attributes</a></li>
 </ul>
 </li>
-<li><a href="#atomicity">4.5.13. Atomicity</a></li>
 </ul>
 </li>
 <li><a href="#type-expressions">4.6. Type expressions</a></li>
@@ -971,7 +971,7 @@ for code like <code>-3!</code>, because there is no definition that matches.</p>
 the pattern for the infix <code>is</code> is <code>Pattern is Implementation</code>, where
 <code>Pattern</code> is a program pattern, like <code>X+Y</code>, and <code>Implementation</code> is an
 implementation for that pattern, for example <code>Add X, Y</code>. This operator
-can also be read as <em>transforms into</em>, i.e. it transforms the code
+can also be read as <em>transforms into</em>, i.e. it transforms the code
 that is on the left into the code that is on the right.</p>
 </div>
 <div class="paragraph">
@@ -1091,7 +1091,7 @@ for example <code>cartesian(1,5)</code>.
 </div>
 </details>
 <details>
-<summary class="title">Higher-order functions, i.e. functions that return functions </summary>
+<summary class="title">Higher-order functions, i.e. functions that return functions </summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -1617,7 +1617,7 @@ compiler to identify where the "line breaks" are in your code.</p>
 <div class="paragraph">
 <p>Despite being very high-level, XL was designed so that efficient translation to machine code was possible, if sometimes
 challenging. In other words, XL is designed to be able to work as a
-<em>system language</em>, in the same vein as C, Ada or Rust, i.e. a
+<em>system language</em>, in the same vein as C, Ada or Rust, i.e. a
 language that can be used to program operating systems, system
 libraries, compilers or other low-level
 applications.</p>
@@ -1692,7 +1692,7 @@ instead of a machine call instruction.</p>
 <div class="paragraph">
 <p>Furthermore, the reference implementation is just that, a
 reference. The compiler is perfectly allowed, even encouraged, to
-"cheat", i.e. to recognize common idioms, and efficiently translate
+"cheat", i.e. to recognize common idioms, and efficiently translate
 them. One name, <code>builtin</code>, is reserved for that purpose. For example,
 the definition of integer addition may look like this:</p>
 </div>
@@ -2388,7 +2388,7 @@ syntax itself, since numbers or names in the syntax file have to be
 <div class="sect3">
 <h4 id="numbers"><a class="anchor" href="#numbers"></a><a class="link" href="#numbers">2.2.1. Numbers</a></h4>
 <div class="paragraph">
-<p>Numbers in XL begin with a digit, i.e. one of <code>0123456789</code>, possibly
+<p>Numbers in XL begin with a digit, i.e. one of <code>0123456789</code>, possibly
 followed by other digits. For example, <code>0</code> and <code>42</code> are valid XL
 numbers. XL describes two kinds of numbers: <em>whole numbers</em>, which
 have no fractional part, and <em>fractional numbers</em>, which have a
@@ -2430,7 +2430,7 @@ of <code>62</code>. For bases between 11 and 36, letters <code>A</code> through 
 is 15, <code>Z</code> is 35. Case does not matter. For example, <code>16#FF</code> and
 <code>16#ff</code> are two valid hexadecimal representation of <code>255</code>.
 For base 64, <a href="https://en.wikipedia.org/wiki/Base64">Base64</a> encoding is
-used, and case matters. This is mostly indended for use in <a href="#bits">binary objects</a>, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
+used, and case matters. This is mostly indended for use in <a href="#bits">binary objects</a>, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
 encoding for the number with the same binary representation as the
 sequence of ASCII characters in <code>Hello!</code>.</p>
 </div>
@@ -2803,7 +2803,7 @@ block and text. Comment and text delimiters come in pairs.</p>
 </div>
 <div class="paragraph">
 <p>The default syntax file specifies comments that follow the C/C++
-convention, i.e. comments either start with <code>/*</code> and end with <code>*/</code> or
+convention, i.e. comments either start with <code>/*</code> and end with <code>*/</code> or
 start with <code>//</code> and end with a new line. The basic text separators
 (simple and double quotes) are not specified in the syntax file
 because they are used to parse the syntax file itself. The default
@@ -2910,7 +2910,7 @@ grouping that humans apparently do. Consider for example the following:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Most human beings parse this as <code>print (sin(X),cos(Y))</code>, i.e. we call
+<p>Most human beings parse this as <code>print (sin(X),cos(Y))</code>, i.e. we call
 <code>print</code> with two values resulting from evaluating <code>sin X</code> and <code>cos Y</code>.</p>
 </div>
 <div class="paragraph">
@@ -3343,9 +3343,9 @@ compiler will most likely assign machine locations to each of the
 declarations. When the program runs, a constant like <code>pi</code> or the
 definition of <code>circumference</code> may end up being represented as a
 machine address, and a variable such as <code>Radius</code> may be represented as
-a "stack location", i.e. a preallocated offset from the current stack
+a "stack location", i.e. a preallocated offset from the current stack
 pointer, the corresponding memory location only containing the value,
-i.e. the right-hand side of <code>:=</code>. Most of the
+i.e. the right-hand side of <code>:=</code>. Most of the
 <a href="#types">type analysis</a> can be performed at compile
 time, meaning that most type information is unnecessary at program run
 time and can be eliminated from the compiled program.</p>
@@ -4948,7 +4948,7 @@ could be written something like <code>{ N is 3; M is "Hello" }</code>.</p>
 </div>
 <div class="paragraph">
 <p>The value returned by <code>adder N</code> is not simply <code>{ lambda X is X + N }</code>,
-but something like <code>{ N is 3 } { lambda X is X + N }</code>, i.e. a closure that
+but something like <code>{ N is 3 } { lambda X is X + N }</code>, i.e. a closure that
 captures the bindings necessary for evaluation of the body <code>X + N</code> at a
 later time.</p>
 </div>
@@ -4963,7 +4963,7 @@ closure.</p>
 <p>A closure looks like a prefix <code>CONTEXT EXPR</code>, where <code>CONTEXT</code> and <code>EXPR</code>
 are blocks, and where <code>CONTEXT</code> is a sequence of declarations.
 Evaluating such a closure is equivalent to evaluating <code>EXPR</code> in the
-current context with <code>CONTEXT</code> as a local context, i.e. with the
+current context with <code>CONTEXT</code> as a local context, i.e. with the
 declarations in <code>CONTEXT</code> possibly shadowing declarations in the current
 context.</p>
 </div>
@@ -6943,7 +6943,7 @@ value over its lifetime.</p>
 </li>
 <li>
 <p><a href="#compactness">compactness</a> is the property of some types to have
-their values represented in the machine in a compact way, i.e. a
+their values represented in the machine in a compact way, i.e. a
 fixed-size sequence of consecutive memory storage units (most generally
 bytes).</p>
 </li>
@@ -6951,16 +6951,17 @@ bytes).</p>
 <p><a href="#ownership">ownership</a> is a properties of some types to control
 the lifetime of the associated values or possibly some other resource
 such as a network connection. Non-owning types can be used to
-<a href="#access">access</a> values of an associated owning type.</p>
+<a href="#access-types">access</a> values of an associated owning type.</p>
 </li>
 <li>
 <p><a href="#inheritance">inheritance</a> is the ability for a type to inherit
 all operations from another type, so that its values can safely be
-implicitly converted to values of that other type.</p>
+implicitly converted to values of that other type. Conversely,
+<a href="#subtypes">subtypes</a> are types that add constraints to a type.</p>
 </li>
 <li>
-<p>the <a href="#interface">interface</a> of a type is an optional scope that
-exposes <em>features</em> of the type, i.e. individually accessible values. The
+<p>the <a href="#type-interface">interface</a> of a type is an optional scope that
+exposes <em>features</em> of the type, i.e. individually accessible values. The
 <em>implementation</em> of the type must provide all interfaces exposed in the
 type’s interface.</p>
 </li>
@@ -6968,11 +6969,6 @@ type’s interface.</p>
 <p><a href="#transfers">transfers</a> are the ways values can be exchanged
 between different parts of the program, and include
 <a href="#copy">copy</a>, <a href="#move">move</a> and <a href="#binding">binding</a>.</p>
-</li>
-<li>
-<p><a href="#atomicity">atomicity</a> is the ability to perform operations in a
-way that allows consistent behavior across multiple threads of
-execution, possibly executing concurrently on different CPUs.</p>
 </li>
 </ul>
 </div>
@@ -7011,7 +7007,7 @@ will always be live while <code>X</code> is live. It is possible for neither
 <code>lifetime</code> feature is used to implement
 <a href="https://doc.rust-lang.org/1.8.0/book/ownership.html">Rust-like</a>
 <a href="#lifetime">restrictions on access types</a>,
-i.e. a way to achieve memory safety at zero runtime cost.</p>
+i.e. a way to achieve memory safety at zero runtime cost.</p>
 </div>
 <div class="paragraph">
 <p>The lifetime of XL values fall in one of the following categories:</p>
@@ -7920,7 +7916,7 @@ X -= 1                  // Subtract 1 from X, now 42</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Some entities may give <a href="#access">access</a> to individual inner values.
+<p>Some entities may give <a href="#access-types">access</a> to individual inner values.
 For example, a <code>text</code> value is conceptually made of a number of
 individual <code>character</code> values that can be accessed individually. This is
 true irrespective of how <code>text</code> is represented. In addition, a <code>slice</code> of
@@ -8117,7 +8113,7 @@ and address space.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="access"><a class="anchor" href="#access"></a><a class="link" href="#access">4.5.8. Access</a></h4>
+<h4 id="access-types"><a class="anchor" href="#access-types"></a><a class="link" href="#access-types">4.5.8. Access types</a></h4>
 <div class="paragraph">
 <p>Not all types are intended to be owner types. Many types delegate
 ownership to another type. Such types are called <em>access types</em>.
@@ -8276,6 +8272,10 @@ that matches only <code>integer</code> values between <code>1</code> and <code>1
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">month is type(M:integer when M &gt;= 1 and M &lt;= 12)</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>The language defines a number of standard subtypes. All these subtypes
+can be implemented using regular language features.</p>
+</div>
 <div class="sect4">
 <h5 id="range-subtypes"><a class="anchor" href="#range-subtypes"></a><a class="link" href="#range-subtypes">4.5.10.1. Range subtypes</a></h5>
 <div class="paragraph">
@@ -8334,7 +8334,7 @@ The <code>bits</code> subtypes are intended to specify the bit size of the
 machine representation. The requested size may be rounded up to a more
 convenient or more efficient machine representation. For example, on a
 32-bit machine, <code>integer bits 22</code> might be more efficiently represented
-as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
+as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 </td>
 </tr>
 </table>
@@ -8349,15 +8349,9 @@ well as with additional constraints more specific to the <code>real</code> type:
 <div class="ulist">
 <ul>
 <li>
-<p>a <code>digits</code> count specifies the number of accurate decimal digits,</p>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>For example, <code>real digits 3</code> is represents values with at least 3
+<p>a <code>digits</code> count specifies the number of accurate decimal digits,
+For example, <code>real digits 3</code> is represents values with at least 3
 significant digits.</p>
-</li>
-</ol>
-</div>
 </li>
 <li>
 <p>a <code>quantum</code> followed by a literal real value specifies a
@@ -8486,6 +8480,53 @@ have <code>character</code> values that sort following German rules, you would u
 <div class="paragraph">
 <p>The <code>text</code> type can be subtyped with the <code>encoding</code>, <code>locale</code> and
 <code>collation</code> operators, with the same meaning as for <code>character</code>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="memory-access-subtypes"><a class="anchor" href="#memory-access-subtypes"></a><a class="link" href="#memory-access-subtypes">4.5.10.7. Memory access subtypes</a></h5>
+<div id="atomic" class="paragraph">
+<p>Many recent machines provide several ways to access memory, for
+example to deal with synchronization between multiple CPUs or between
+CPUs and memory-mapped devices. XL presents this kind of features as
+subtypes.</p>
+</div>
+<div class="paragraph">
+<p>The following standard subtypes implement memory-related semantics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>atomic T</code> is a type derived from <code>T</code> that offers
+<a href="https://en.cppreference.com/w/c/language/atomic">atomic operations</a>.
+This may come at the expense of performance.</p>
+</li>
+<li>
+<p><code>unaligned T</code> is a type derived from <code>T</code> that may not respcet normal
+alignment rules, and may require slower mis-aligned accesses.</p>
+</li>
+<li>
+<p><code>T aligned N</code> guarantees that values of type <code>T</code> use memory
+aligned on <code>N</code> bytes boundaries.</p>
+</li>
+<li>
+<p><code>volatile T</code> is a type derived from <code>T</code> where the compiler cannot
+assume that the value does not change externally due to causes
+external to the current code.</p>
+</li>
+<li>
+<p><code>uncached T</code> is a type derived from <code>T</code> where the compiler should
+ensure that data accesses are consistent with external memory, even
+if this is significantly more expensive.</p>
+</li>
+<li>
+<p><code>packed T</code> is a type derived from <code>T</code> where data is packed as
+tightly as possible, even to the detriment of performance.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Additional subtypes may be available to match the features of the
+machine the code runs on.</p>
 </div>
 </div>
 </div>
@@ -9230,7 +9271,7 @@ considerations with many types such as <code>vector</code>.</p>
 <p>Instead, assignment for <code>text</code>, and therefore passing <code>text</code> values as
 an argument, performs a copy of the <code>text</code> value. The binding
 modifiers for <code>text</code>, however, use not <code>text</code> but <code>slice of text</code>, an
-<a href="#access">access type</a> that is cheap to copy around, and that
+<a href="#access-types">access type</a> that is cheap to copy around, and that
 references the original text. This organization provides the
 convenience of copy semantics for local variables and the speed of
 move semantics for calls.</p>
@@ -9332,10 +9373,6 @@ evaluating `Body</code>.</td>
 
 </div>
 </div>
-<div class="sect3">
-<h4 id="atomicity"><a class="anchor" href="#atomicity"></a><a class="link" href="#atomicity">4.5.13. Atomicity</a></h4>
-
-</div>
 </div>
 <div class="sect2">
 <h3 id="type-expressions"><a class="anchor" href="#type-expressions"></a><a class="link" href="#type-expressions">4.6. Type expressions</a></h3>
@@ -9405,7 +9442,7 @@ double 3.5    // returns 7.0 as a real</pre>
 <li>
 <p><code>T1 and T2</code> is a type for values that belong to both <code>T1</code> and <code>T2</code>.
 For example, <code>number and totally_ordered</code> will match totally ordered
-numbers, i.e. it will not match <code>"ABC"</code> (<code>totally_ordered</code>, but not a
+numbers, i.e. it will not match <code>"ABC"</code> (<code>totally_ordered</code>, but not a
 <code>number</code>) nor will it match <code>ieee754(2.5)</code> (<code>number</code>, but not
 <code>totally_ordered</code>).</p>
 </li>
@@ -9518,7 +9555,7 @@ nothing that prevents you from adding many others.</p>
 </div>
 <div class="paragraph">
 <p>The case of <code>in T</code>, <code>out T</code> and <code>inout T</code> are examples of what will be
-called <em>ownership controlling types</em>, i.e. types that are dedicated to
+called <em>ownership controlling types</em>, i.e. types that are dedicated to
 controlling who owns what data. More details are provided in the section
 on <a href="#ownership">ownership</a> below.</p>
 </div>
@@ -9992,7 +10029,7 @@ massive rename in my source code, but everything else remained the same.</p>
 ideas within. One CLL engineer who immediately "got it" is Daveed
 Vandevoorde. Daveed immediately understood what I was doing, in large
 part because he was thinkering along the same lines. He pointed out that
-my approach had a name: meta-programming, i.e. programs that deal with
+my approach had a name: meta-programming, i.e. programs that deal with
 programs. I was doing meta-programming without knowing about the word,
 and I felt really stupid at the time, convinced that everybody in the
 compilers community knew about that technique but me.</p>
@@ -10026,7 +10063,7 @@ redesigned.</p>
 <h3 id="xl-moves-to-the-off-side-rule"><a class="anchor" href="#xl-moves-to-the-off-side-rule"></a><a class="link" href="#xl-moves-to-the-off-side-rule">9.4. XL moves to the off-side rule</a></h3>
 <div class="paragraph">
 <p>Another major visual change that happened around that time was switching
-to the off-side rule, i.e. using indentation to mark the syntax. Python,
+to the off-side rule, i.e. using indentation to mark the syntax. Python,
 which made this approach popular, was at the time a really young
 language (release 1.0 was in early 1994).</p>
 </div>
@@ -10115,7 +10152,7 @@ that could be used for different language. Like for Xroma, we stayed on
 bad puns and convoluted ideas for naming. In Mozart that representation
 was called <code>Coda</code>. It included individual source elements called <code>Notes</code>
 and the serialized representation was called a <code>Tune</code>. Transformation on
-Notes, i.e. the operations of compiler plug-ins, were done by
+Notes, i.e. the operations of compiler plug-ins, were done by
 <code>Performer</code> instances. A couple of years later, I would realize that
 this made the code totally obfuscated for the non-initiated, and I vowed
 to never make that mistake again.</p>
@@ -10184,7 +10221,7 @@ concepts bring a similar kind of validation to C++ templates.</p>
 <p><a href="http://mozart-dev.sourceforge.net/xl_style.html#vararg">Type-safe
 variable argument lists</a> made it possible to write type-safe variadic
 functions. They solved the <code>WriteLn</code> problem I referred to earlier,
-i.e. they made it possible to write a function in a library that behaved
+i.e. they made it possible to write a function in a library that behaved
 exactly like the Pascal <code>WriteLn</code>. I see them as a distant ancestor of
 variadic templates in C++11, although like for concepts, it is hard to
 tell if variadic templates are a later reinvention of the idea, or if
@@ -10216,7 +10253,7 @@ statements, a <code>Declaration</code> class, and so on.</p>
 </div>
 <div class="paragraph">
 <p>This was all very complicated and fragile, and made it extremely
-difficult to write thin tools (i.e. compiler plug-ins acting on small
+difficult to write thin tools (i.e. compiler plug-ins acting on small
 sections of code), in particular thin tools that respected subtle
 semantic differences between languages. By 2003, I was really hitting a
 wall with XL development, and that was mostly because I was also trying
@@ -10246,7 +10283,7 @@ because I was seeing things as a three-layer construction:</p>
 <li>
 <p><code>XL0</code> was just a very simple parse tree format with only eight node
 types. I sometimes refer to that level of XL as "<em>XML without the
-M</em>", i.e. an extensble language without markup.</p>
+M</em>", i.e. an extensble language without markup.</p>
 </li>
 <li>
 <p><code>XL1</code> was the core language evaluation rules, not taking any library
@@ -11090,7 +11127,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 21:23:52 +0100
+Last updated 2020-01-10 22:48:32 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
