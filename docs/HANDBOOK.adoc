@@ -6389,9 +6389,123 @@ use a value that was moved or deleted.
 
 ===== Binding
 
+The transfer of an argument to a formal parameter during a call is
+called _binding_, and like an assignment, it may involve either
+copying or moving the value. Argument binding uses the assignment
+operator to assign the argument to the formal paramerer, ensuring that
+the same copy or move semantics applies to assignment and to binding.
 
+However, the precise transfer operations associated to binding
+may be modified depending on the direction of the transfer between the
+caller and the callee. The following type modifiers are provided to
+indicate this direction and optimize argument passing accordingly:
 
-===== Argument passing
+* `in T` indicates that the corresponding value is passed from the
+  caller to the callee. An `in T` value is read-only in the callee,
+  since it is possible that it may be passed by reference. In other
+  words, `in T` derives from `constant T`. A parameter with the `in`
+  type modifier is called an _((input parameter))_ and the
+  corresponding argument is called an _((input argument))_. The
+  link:#lifetime[lifetime] of an input argument must be larger than
+  that of the call, and ownership remains in the caller.
+
+* `out T` indicates that the corresponding value is passed from the
+  callee to the caller. In that case, the value is created in the
+  callee, and moved to the caller on exit, destroying the previous
+  value that may have existed for that argument in the caller.
+  An `out T` inherits from `T`. A parameter with the `out` type
+  modifier is called an _((output parameter))_ and the corresponding
+  argument is called an _((output argument))_.
+
+* `inout T`, which can also be spelled `in_out T`, `in out T` or `io T`,
+  indicates that the corresponding value is tranferred to the callee
+  for the duration of the call, and then transferred back to the caller.
+  Its lifetime is interrupted in the caller for the duration of the call,
+  and ownership is temporarily transferred to the callee.  The `inout
+  T` type also inherits from `T`. A parameter with the `inout`
+  modifier is called a _((bidirectional parameter))_ and the
+  corresponding argument is called a _((bidirectional argument))_.
+
+All these types are intended to provide access to a value of type `T`
+within the caller in a way that is possibly less expensive than
+directly using the assignment for `T`. Common optimization strategies
+include:
+
+* Passing a pointer to large values rather than copying them, a
+  technique often called passing the value _((by reference))_.
+
+* Copying or moving the value only in the required direction.
+
+* Passing a smart reference that precisely tracks ownership.
+
+An interesting example that illustrates the use of these type
+modifiers is the `text` type. This is an example of owning type, since
+it owns the `character` values in it. Since there is a possibly large
+number of characters, it may be quite expensive to copy.
+
+It would be inconveient to have pure move semantics for `text`, since
+it would mean that an assignment would destroy the source value.
+Consider the following code to see how this would be uncomfortable:
+
+....
+window_name  : text := "Untitled"
+if file_name <> "" then
+    window_name := file_name
+path_is_absolute : boolean := file_name.begins_with("/")
+....
+
+Under a pure move semantics, in the above code, the second use of
+`file_name` to compute `path_is_absolute` would be incorrect, since
+the value in `file_name` might have been moved to `window_name` in
+just the previous line. That would make using `text` quite complicated.
+Indeed, Rust developers have to pay attention to this kind of
+considerations with many types such as `vector`.
+
+Instead, assignment for `text`, and therefore passing `text` values as
+an argument, performs a copy of the `text` value. The binding
+modifiers for `text`, however, use not `text` but `slice of text`, an
+link:#access[access type] that is cheap to copy around, and that
+references the original text. This organization provides the
+convenience of copy semantics for local variables and the speed of
+move semantics for calls.
+
+===== Name parameters
+
+In some cases, it is interesting for a form to create new variables
+based on a name given as an argument. The corresponding parameter is
+called a _((name parameter))_. An archetypcal example for this
+is the `for` loop.
+
+Consider the following simple example:
+
+....
+for I in 1..5 loop
+    print "I=", I
+....
+
+The variable `I` in this example does not exist outside of the `for`
+loop. This is accomplished by taking a `name` as a parameter.
+The link:#metabox[metabox] notation can then be used to refer to the
+actual name.
+
+For example, a `for` loop on a range of discrete values can be written
+as follows:
+
+....
+for N:name in R:[range of discrete] loop Body is
+    loop_context is
+        [[N]] : R.type := R.first
+    Var is loop_context.[[N]]
+    while Var <= R.last loop
+        (loop_context) (Body)
+        Var := next_after Var
+....
+
+We need to create a `loop_context` scope that holds the variable
+created from the input argument to make sure that it does not pollute
+the current context of the function. For example, if the argument for
+`N` was `R`, we would not want to hide the `R` formal parameter with a
+local definition that has the same name.
 
 ===== Attributes
 

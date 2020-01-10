@@ -619,7 +619,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#copy">4.5.12.2. Copy</a></li>
 <li><a href="#move">4.5.12.3. Move</a></li>
 <li><a href="#binding-2">4.5.12.4. Binding</a></li>
-<li><a href="#argument-passing">4.5.12.5. Argument passing</a></li>
+<li><a href="#name-parameters">4.5.12.5. Name parameters</a></li>
 <li><a href="#attributes">4.5.12.6. Attributes</a></li>
 </ul>
 </li>
@@ -9124,11 +9124,154 @@ use a value that was moved or deleted.</p>
 </div>
 <div class="sect4">
 <h5 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.5.12.4. Binding</a></h5>
-
+<div class="paragraph">
+<p>The transfer of an argument to a formal parameter during a call is
+called <em>binding</em>, and like an assignment, it may involve either
+copying or moving the value. Argument binding uses the assignment
+operator to assign the argument to the formal paramerer, ensuring that
+the same copy or move semantics applies to assignment and to binding.</p>
+</div>
+<div class="paragraph">
+<p>However, the precise transfer operations associated to binding
+may be modified depending on the direction of the transfer between the
+caller and the callee. The following type modifiers are provided to
+indicate this direction and optimize argument passing accordingly:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>in T</code> indicates that the corresponding value is passed from the
+caller to the callee. An <code>in T</code> value is read-only in the callee,
+since it is possible that it may be passed by reference. In other
+words, <code>in T</code> derives from <code>constant T</code>. A parameter with the <code>in</code>
+type modifier is called an <em>input parameter</em> and the
+corresponding argument is called an <em>input argument</em>. The
+<a href="#lifetime">lifetime</a> of an input argument must be larger than
+that of the call, and ownership remains in the caller.</p>
+</li>
+<li>
+<p><code>out T</code> indicates that the corresponding value is passed from the
+callee to the caller. In that case, the value is created in the
+callee, and moved to the caller on exit, destroying the previous
+value that may have existed for that argument in the caller.
+An <code>out T</code> inherits from <code>T</code>. A parameter with the <code>out</code> type
+modifier is called an <em>output parameter</em> and the corresponding
+argument is called an <em>output argument</em>.</p>
+</li>
+<li>
+<p><code>inout T</code>, which can also be spelled <code>in_out T</code>, <code>in out T</code> or <code>io T</code>,
+indicates that the corresponding value is tranferred to the callee
+for the duration of the call, and then transferred back to the caller.
+Its lifetime is interrupted in the caller for the duration of the call,
+and ownership is temporarily transferred to the callee.  The <code>inout
+T</code> type also inherits from <code>T</code>. A parameter with the <code>inout</code>
+modifier is called a <em>bidirectional parameter</em> and the
+corresponding argument is called a <em>bidirectional argument</em>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>All these types are intended to provide access to a value of type <code>T</code>
+within the caller in a way that is possibly less expensive than
+directly using the assignment for <code>T</code>. Common optimization strategies
+include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Passing a pointer to large values rather than copying them, a
+technique often called passing the value <em>by reference</em>.</p>
+</li>
+<li>
+<p>Copying or moving the value only in the required direction.</p>
+</li>
+<li>
+<p>Passing a smart reference that precisely tracks ownership.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>An interesting example that illustrates the use of these type
+modifiers is the <code>text</code> type. This is an example of owning type, since
+it owns the <code>character</code> values in it. Since there is a possibly large
+number of characters, it may be quite expensive to copy.</p>
+</div>
+<div class="paragraph">
+<p>It would be inconveient to have pure move semantics for <code>text</code>, since
+it would mean that an assignment would destroy the source value.
+Consider the following code to see how this would be uncomfortable:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>window_name  : text := "Untitled"
+if file_name &lt;&gt; "" then
+    window_name := file_name
+path_is_absolute : boolean := file_name.begins_with("/")</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Under a pure move semantics, in the above code, the second use of
+<code>file_name</code> to compute <code>path_is_absolute</code> would be incorrect, since
+the value in <code>file_name</code> might have been moved to <code>window_name</code> in
+just the previous line. That would make using <code>text</code> quite complicated.
+Indeed, Rust developers have to pay attention to this kind of
+considerations with many types such as <code>vector</code>.</p>
+</div>
+<div class="paragraph">
+<p>Instead, assignment for <code>text</code>, and therefore passing <code>text</code> values as
+an argument, performs a copy of the <code>text</code> value. The binding
+modifiers for <code>text</code>, however, use not <code>text</code> but <code>slice of text</code>, an
+<a href="#access">access type</a> that is cheap to copy around, and that
+references the original text. This organization provides the
+convenience of copy semantics for local variables and the speed of
+move semantics for calls.</p>
+</div>
 </div>
 <div class="sect4">
-<h5 id="argument-passing"><a class="anchor" href="#argument-passing"></a><a class="link" href="#argument-passing">4.5.12.5. Argument passing</a></h5>
-
+<h5 id="name-parameters"><a class="anchor" href="#name-parameters"></a><a class="link" href="#name-parameters">4.5.12.5. Name parameters</a></h5>
+<div class="paragraph">
+<p>In some cases, it is interesting for a form to create new variables
+based on a name given as an argument. The corresponding parameter is
+called a <em>name parameter</em>. An archetypcal example for this
+is the <code>for</code> loop.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following simple example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>for I in 1..5 loop
+    print "I=", I</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The variable <code>I</code> in this example does not exist outside of the <code>for</code>
+loop. This is accomplished by taking a <code>name</code> as a parameter.
+The <a href="#metabox">metabox</a> notation can then be used to refer to the
+actual name.</p>
+</div>
+<div class="paragraph">
+<p>For example, a <code>for</code> loop on a range of discrete values can be written
+as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>for N:name in R:[range of discrete] loop Body is
+    loop_context is
+        [[N]] : R.type := R.first
+    Var is loop_context.[[N]]
+    while Var &lt;= R.last loop
+        (loop_context) (Body)
+        Var := next_after Var</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We need to create a <code>loop_context</code> scope that holds the variable
+created from the input argument to make sure that it does not pollute
+the current context of the function. For example, if the argument for
+<code>N</code> was <code>R</code>, we would not want to hide the <code>R</code> formal parameter with a
+local definition that has the same name.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.5.12.6. Attributes</a></h5>
@@ -10893,7 +11036,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 09:29:57 +0100
+Last updated 2020-01-10 13:52:56 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
