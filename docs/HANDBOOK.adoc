@@ -6295,11 +6295,11 @@ Target:out picture := Source:picture    is Target :< Source     // Move
 A _((copy))_ is a kind of transfer which creates a new, "identical",
 yet independent value. The new value can then be modified
 independently from the original, and has a different lifetime.
-XL uses either the prefix `copy` function o rthe infix `Target :+
+XL uses either the prefix `copy` function or the infix `Target :+
 Source` as a notation for a copy, the `+` in that operator being a
 reminder that a new copy is created.
 
-The `:+` operator has the following mandatory interface for all types:
+The copy operation has the following mandatory interface for all types:
 
 ....
 Target:out T :+ Source:T as mayfail T
@@ -6307,7 +6307,9 @@ copy Source:T as mayfail T is result :+ Source
 ....
 
 The copy returns the `Target` after it has been copied into, or an
-`error` value if there was some failure.
+`error` value if there was some failure. When it returns a failure,
+any value that may have been created as part of the copy must
+have been link:#destruction[deleted] by the copy operation.
 
 The new copied value is link:#creation[created] by the operator, and
 should be identical in its behavior to the source. It needs not be
@@ -6346,7 +6348,48 @@ node_filter is type(N:node as boolean)
 
 ===== Move
 
+A _((move))_ is a kind of destructive transfer which gives a value to
+a new location, and link:#destruction[destroys] the original value.
+The intent is that a move is generally cheaper to perform than a copy.
+XL uses the prefix `move` function or the infix `Target :< Source` as
+a notation for the move, where the `:<` is designed to look like a
+scissor and is pronounced as _((cuts))_.
+
+The performance benefit of using a move rather than a copy can be
+significant. For example, even for a complex, deep data structure, a
+move may involve simply copying a pointer to some new location and
+making sure that the original pointer is no longer used, whereas a
+copy may require a number of memory allocations and memory copies.
+The downside, obviously, is that the source of the move may no longer
+be used after the move.
+
+The move operation has the following mandatory interface for all types:
+
+....
+Target:out T :< Source:in_out T as mayfail T
+move Source:T as mayfail T is result :< Source
+....
+
+The move returns the `Target` after it has been moved into, or an
+`error` value if there was some failure. When there is a failure,
+the move should essentially have had no effect, i.e. it should not
+cause partially moved, partially created or partially destroyed values.
+
+The new moved value is link:#creation[created] by the operator, and
+should be identical in its behavior to the source. Like for copy, it
+needs not be identical in its internal representation. For example, if
+you move a value with internal pointers, it may need to adjust the
+pointers. Such cases should be infrequent, and are undesirable since
+the main reason for `move` to exist is performance.
+
+The source of a move may no longer be used after a move operation, and
+should be in the same state as right after a `delete` operation. The
+compiler should normally issue a diagnostic when an attempt is made to
+use a value that was moved or deleted.
+
 ===== Binding
+
+
 
 ===== Argument passing
 

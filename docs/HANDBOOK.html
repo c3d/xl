@@ -9012,12 +9012,12 @@ Target:out picture := Source:picture    is Target :&lt; Source     // Move</pre>
 <p>A <em>copy</em> is a kind of transfer which creates a new, "identical",
 yet independent value. The new value can then be modified
 independently from the original, and has a different lifetime.
-XL uses either the prefix <code>copy</code> function o rthe infix <code>Target :+
+XL uses either the prefix <code>copy</code> function or the infix <code>Target :+
 Source</code> as a notation for a copy, the <code>+</code> in that operator being a
 reminder that a new copy is created.</p>
 </div>
 <div class="paragraph">
-<p>The <code>:+</code> operator has the following mandatory interface for all types:</p>
+<p>The copy operation has the following mandatory interface for all types:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -9027,7 +9027,9 @@ copy Source:T as mayfail T is result :+ Source</pre>
 </div>
 <div class="paragraph">
 <p>The copy returns the <code>Target</code> after it has been copied into, or an
-<code>error</code> value if there was some failure.</p>
+<code>error</code> value if there was some failure. When it returns a failure,
+any value that may have been created as part of the copy must
+have been <a href="#destruction">deleted</a> by the copy operation.</p>
 </div>
 <div class="paragraph">
 <p>The new copied value is <a href="#creation">created</a> by the operator, and
@@ -9073,7 +9075,52 @@ node_filter is type(N:node as boolean)</pre>
 </div>
 <div class="sect4">
 <h5 id="move"><a class="anchor" href="#move"></a><a class="link" href="#move">4.5.12.3. Move</a></h5>
-
+<div class="paragraph">
+<p>A <em>move</em> is a kind of destructive transfer which gives a value to
+a new location, and <a href="#destruction">destroys</a> the original value.
+The intent is that a move is generally cheaper to perform than a copy.
+XL uses the prefix <code>move</code> function or the infix <code>Target :&lt; Source</code> as
+a notation for the move, where the <code>:&lt;</code> is designed to look like a
+scissor and is pronounced as <em>cuts</em>.</p>
+</div>
+<div class="paragraph">
+<p>The performance benefit of using a move rather than a copy can be
+significant. For example, even for a complex, deep data structure, a
+move may involve simply copying a pointer to some new location and
+making sure that the original pointer is no longer used, whereas a
+copy may require a number of memory allocations and memory copies.
+The downside, obviously, is that the source of the move may no longer
+be used after the move.</p>
+</div>
+<div class="paragraph">
+<p>The move operation has the following mandatory interface for all types:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Target:out T :&lt; Source:in_out T as mayfail T
+move Source:T as mayfail T is result :&lt; Source</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The move returns the <code>Target</code> after it has been moved into, or an
+<code>error</code> value if there was some failure. When there is a failure,
+the move should essentially have had no effect, i.e. it should not
+cause partially moved, partially created or partially destroyed values.</p>
+</div>
+<div class="paragraph">
+<p>The new moved value is <a href="#creation">created</a> by the operator, and
+should be identical in its behavior to the source. Like for copy, it
+needs not be identical in its internal representation. For example, if
+you move a value with internal pointers, it may need to adjust the
+pointers. Such cases should be infrequent, and are undesirable since
+the main reason for <code>move</code> to exist is performance.</p>
+</div>
+<div class="paragraph">
+<p>The source of a move may no longer be used after a move operation, and
+should be in the same state as right after a <code>delete</code> operation. The
+compiler should normally issue a diagnostic when an attempt is made to
+use a value that was moved or deleted.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.5.12.4. Binding</a></h5>
@@ -10846,7 +10893,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 09:29:48 +0100
+Last updated 2020-01-10 09:29:57 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
