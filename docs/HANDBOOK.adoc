@@ -4425,7 +4425,9 @@ _((category types))_. Examples include:
   `integer`, `real` or `complex`.
 * `positive`, a type that accepts only positive values.
 * `ordered`, a type that only matches values that can be compared
-   using `<`.
+   using `<`. A variant, `totally_ordered`, ensures that the type is
+  totally ordered. This is unfortunately not the case of common types
+  such as `real`.
 * `discrete`, a type that only matches discrete types, such as
   `integer` or `character`. Discrete types feature an `index` function
   that returns the index of the value in the type.

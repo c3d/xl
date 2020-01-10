@@ -6512,7 +6512,9 @@ value. It is typically used to create
 </li>
 <li>
 <p><code>ordered</code>, a type that only matches values that can be compared
-using <code>&lt;</code>.</p>
+ using <code>&lt;</code>. A variant, <code>totally_ordered</code>, ensures that the type is
+totally ordered. This is unfortunately not the case of common types
+such as <code>real</code>.</p>
 </li>
 <li>
 <p><code>discrete</code>, a type that only matches discrete types, such as
@@ -11237,7 +11239,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 23:54:29 +0100
+Last updated 2020-01-10 23:56:59 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
