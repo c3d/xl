@@ -6706,12 +6706,12 @@ A number of type expressions are provided by the ((standard library)). The
 most common and useful ones are:
 
 * `nil` is a type that contains a single value, `nil`, which evaluates
-to itself. That is generally used to represent an absence of value.
+  to itself. That is generally used to represent an absence of value.
 * `T1 or T2` is a type for values that belong to `T1` or to `T2`. It is
-similar to what other languages may call union types. For example,
-`integer or real` will match both `integer` and `real` values.
-Operations on `T1 or T2` will cause dynamic dispatch depending on the
-actual value being considered. For example, consider:
+  similar to what other languages may call union types. For example,
+  `integer or real` will match both `integer` and `real` values.
+  Operations on `T1 or T2` will cause dynamic dispatch depending on the
+  actual value being considered. For example, consider:
 +
 ....
 double X:[integer or real] is X + X
@@ -6719,14 +6719,15 @@ double 1      // returns 2 as an integer
 double 3.5    // returns 7.0 as a real
 ....
 * `T1 and T2` is a type for values that belong to both `T1` and `T2`.
-For example, `number and totally_ordered` will match totally ordered
-numbers, i.e. it will not match `"ABC"` (`totally_ordered`, but not a
-`number`) nor will it match `ieee754(2.5)` (`number`, but not
-`totally_ordered`).
+  For example, `number and totally_ordered` will match totally ordered
+  numbers, i.e. it will not match `"ABC"` (`totally_ordered`, but not a
+  `number`) nor will it match `ieee754(2.5)` (`number`, but not
+  `totally_ordered`).
+* `not T` is a type for values that do not belong to `T`.
 * `another T` is a new type that is identical to `T`, allowing
-overloading. For example, `type distance is another real` will create
-another `real` type, allowing you to forbid multiplication, and
-preventing errors such as adding a `distance` to a `real`.
+   overloading. For example, `type distance is another real` will create
+   another `real` type, allowing you to forbid multiplication, and
+   preventing errors such as adding a `distance` to a `real`.
 +
 ....
 type distance is another real
@@ -6747,29 +6748,33 @@ D * D     // Error: Cannot multiply distances
 NOTE: The code above is incomplete, since `distance` would inherit
 `X:integer as real`, so that `D+1` would be accepted.
 * `optional T` is a shortcut for `T or nil`. This is useful for
-functions like `find` that return an optional value, and where not
-finding something is not an error but an expected result. > NOTE:
+  functions like `find` that return an optional value, and where not
+  finding something is not an error but an expected result.
++
+[NOTE]
+=====
 Compilers should perform specific optimizations such as > representing
 the value with a pointer and reserving the null > pointer for value
 `nil`.
+=====
 * `mayfail T` is a shortcut for `T or error`, and should be used for
-link:#error-handling[functions that may fail]. Unlike `nil`, an `error`
-carries a payload that gives information about the error, and can be
-used to generate an error message.
+  link:#error-handling[functions that may fail]. Unlike `nil`, an `error`
+  carries a payload that gives information about the error, and can be
+  used to generate an error message.
 * `array[N] of T` defines a 0-based array containing `N` elements of
-type `T`. The value of `N` need not be a constant. Another variant,
-`array[A..B] of T`, allows arrays where the index is between values `A`
-and `B`, which can be any enumerated type. For example,
-`array['A'..'Z'] of boolean` provides 26 `boolean` values, indexed by an
-alphabetic letter.
+  type `T`. The value of `N` need not be a constant. Another variant,
+  `array[A..B] of T`, allows arrays where the index is between values `A`
+  and `B`, which can be any enumerated type. For example,
+  `array['A'..'Z'] of boolean` provides 26 `boolean` values, indexed by an
+  alphabetic letter.
 * `string of T` is a variable size sequence of values with the same type
-`T`. The size of a `string` can change over its lifetime. A `text` may
-be represented as a `string of character`.
-* `either Patterns` is a type that matches one of the patterns given. It
-can be used in particular for what would be called "enumerations" in a
-language like C, but is richer, much like
-https://doc.rust-lang.org/reference/items/enumerations.html[Rust
-enumerations]
+  `T`. The size of a `string` can change over its lifetime. A `text` may
+  be represented as a `string of character`.
+  * `either Patterns` is a type that matches one of the patterns given. It
+  can be used in particular for what would be called "enumerations" in a
+  language like C, but is richer, much like
+  https://doc.rust-lang.org/reference/items/enumerations.html[Rust
+  enumerations]
 +
 ....
 type complex is either
@@ -6778,11 +6783,15 @@ type complex is either
 ....
 * `variable T` or `var T` is a mutable version of type `T`, whereas
 `constant T` is a non-mutable version of type `T`. Only mutable values
-can be changed using the `:=` operator or their variants. > NOTE: By
-default, formal parameters are mutable, since > they are generally
-specified with something like `X:integer`, but > modifications apply to
-the binding in the current evaluation > context, therefore not modifying
-the corresponding argument.
+can be changed using the `:=` operator or their variants.
++
+[NOTE]
+=====
+By default, formal parameters are mutable, since > they are generally
+specified with something like `X:integer`, but > modifications apply
+to the binding in the current evaluation > context, therefore not
+modifying the corresponding argument.
+=====
 * `in T`, `out T` and `inout T` are types design to optimize parameter
 passing in a safe way. They indicate how you intend data to flow between
 the caller and the callee. These types also may have uses in data

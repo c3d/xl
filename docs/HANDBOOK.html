@@ -9559,6 +9559,9 @@ numbers, i.e. it will not match <code>"ABC"</code> (<code>totally_ordered</code>
 <code>totally_ordered</code>).</p>
 </li>
 <li>
+<p><code>not T</code> is a type for values that do not belong to <code>T</code>.</p>
+</li>
+<li>
 <p><code>another T</code> is a new type that is identical to <code>T</code>, allowing
 overloading. For example, <code>type distance is another real</code> will create
 another <code>real</code> type, allowing you to forbid multiplication, and
@@ -9597,10 +9600,23 @@ The code above is incomplete, since <code>distance</code> would inherit
 <li>
 <p><code>optional T</code> is a shortcut for <code>T or nil</code>. This is useful for
 functions like <code>find</code> that return an optional value, and where not
-finding something is not an error but an expected result. &gt; NOTE:
-Compilers should perform specific optimizations such as &gt; representing
+finding something is not an error but an expected result.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Compilers should perform specific optimizations such as &gt; representing
 the value with a pointer and reserving the null &gt; pointer for value
 <code>nil</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </li>
 <li>
 <p><code>mayfail T</code> is a shortcut for <code>T or error</code>, and should be used for
@@ -9638,11 +9654,24 @@ enumerations</a></p>
 <li>
 <p><code>variable T</code> or <code>var T</code> is a mutable version of type <code>T</code>, whereas
 <code>constant T</code> is a non-mutable version of type <code>T</code>. Only mutable values
-can be changed using the <code>:=</code> operator or their variants. &gt; NOTE: By
-default, formal parameters are mutable, since &gt; they are generally
-specified with something like <code>X:integer</code>, but &gt; modifications apply to
-the binding in the current evaluation &gt; context, therefore not modifying
-the corresponding argument.</p>
+can be changed using the <code>:=</code> operator or their variants.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>By default, formal parameters are mutable, since &gt; they are generally
+specified with something like <code>X:integer</code>, but &gt; modifications apply
+to the binding in the current evaluation &gt; context, therefore not
+modifying the corresponding argument.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </li>
 <li>
 <p><code>in T</code>, <code>out T</code> and <code>inout T</code> are types design to optimize parameter
@@ -11239,7 +11268,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 23:56:59 +0100
+Last updated 2020-01-11 00:02:13 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
