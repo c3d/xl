@@ -3659,6 +3659,7 @@ declaration_ when its left operand is an infix `:`. This was discussed
 link:#sequences[earlier], and corresponds to the first line in the
 example above. A variable declaration is _not_ an assignment.
 
+[[operator_assignment]]
 Seven combined operators are defined independently of the type as
 follows:
 
@@ -4683,8 +4684,9 @@ be explained more in details below:
   exposes _features_ of the type, i.e. individually accessible values. The
   _implementation_ of the type must provide all interfaces exposed in the
   type’s interface.
-* link:#copy[copy], link:#move[move] and link:#binding[binding] are
-  operations used to transfer values across parts of a program.
+* link:#transfers[transfers] are the ways values can be exchanged
+  between different parts of the program, and include
+  link:#copy[copy], link:#move[move] and link:#binding[binding].
 * link:#atomicity[atomicity] is the ability to perform operations in a
   way that allows consistent behavior across multiple threads of
   execution, possibly executing concurrently on different CPUs.
@@ -6030,8 +6032,7 @@ match the interface. A simple solution would be to modify the
 With this interface change, the code above will correctly allow us to
 find an implementation for expressions such as `P.width`.
 
-
-===== Attributes
+===== Attributes implementation
 
 If, however, we still want to be able to _write_ into `width` and
 `height`, the implementation must provide a way to assign to the field.
@@ -6073,8 +6074,9 @@ picture is type picture
 To avoid this issue, there is a general convention that writing to a
 feature is done using a prefix with the feature name. A value that is
 read using a given name, and written using a prefix with the same name
-is called an _((attribute))_. The problems above are solved by using
-an attribute for `width` and `height`, as illustrated below:
+is called an _((attribute))_, and is link:#attributes[discussed later].
+The problems above are solved by using an attribute for `width` and
+`height`, as illustrated below:
 
 [source]
 ----
@@ -6200,10 +6202,10 @@ information hiding can never be perfect. The XL type system will catch
 a large number of errors and force you to deal with them, giving you
 several ways to safely evolve the code.
 
-===== Implementation, exposed
+===== Exposed details
 
 A similar, if slightly more complicated problem arises with the
-proposed interface for `buffer` in the `picture` type, because
+proposed interface for `pixels` in the `picture` type, because
 `buffer` is a type that may require dynamic allocation, and therefore
 some operations may have to return a `storage_error`. This is already
 present in the interface for the `buffer` type, so one might feel a
@@ -6211,13 +6213,13 @@ bit safer than for the mismatch between `unsigned` and `unsigned16`.
 
 However, since there is no actual `buffer` present in `bitmap`, a
 buffer may need to be created or at least given storage in the
-implementation of `P.buffer` for `picture` values.
+implementation of `P.pixels` for `picture` values.
 This may involve the _creation_ of a buffer while simply
 reading a field. In other words, a `storage_error` may now result from
-apparently _reading_ `P.buffer`, something that would not
-happen with a direct implementation of `P.buffer` as a variable.
+apparently _reading_ `P.pixels`, something that would not
+happen with a direct implementation of `P.pixels` as a field.
 
-In other words, in an ideal world, `P.buffer` might be implemented as
+In other words, in an ideal world, `P.pixels` might be implemented as
 an actual buffer or as a function computing a buffer and returning
 it. In the real world, however, the XL type system will force you to
 distinguish between the two cases, because the place where dynamic
@@ -6233,21 +6235,119 @@ as these details are not critical for safe evaluation. The details
 that will not be hidden in that case are what might cause your program
 to crash or your rocket to explode.
 
-==== Copy
+==== Transfers
 
-The link:#assignments-and-moves[assignment operator] is written `A :=
-B` in XL. For compact types, this is normally equivalent to `A :+ B`,
-which is guaranteed to be a _copy_.
+One of the most important operation that can happen to values of any
+type is to _((transfer))_ them around in the program. These operations
+are so crucial to the behavior of the program that XL provides a
+number of ways to define and optimize them.
+In particular, transfers interact with the link:#ownership[ownership]
+guarantees that the language may provide, in combination with the rules
+about link:#lifetime[lifetime], link:#creation[creation] and
+link:#destruction[destruction]. Additionally, they are so frequent
+that it is necessary to consider performance of transfers, which is
+one reason why there are two flavors, link:#copy[copy] and
+link:#move[move].
 
-==== Move
+===== Assignments
 
-==== Binding
+As was link:#assignment[already discussed], an _((assignment))_ is the
+primary way for a programmer to explicitly transfer values from one
+context to another. The `:=` operator is used in XL to represent
+assignments.
 
-===== `in` arguments
+For example, the following code implements the core computation of a
+link:https://en.wikipedia.org/wiki/Julia_set[Julia set]:
 
-===== `out` arguments
+....
+julia_depth(Z:complex, Mu:complex, Bound:real, Max:unsigned) as unsigned is
+    while result < Max and Z.Re^2 + Z.Im^2 < Bound ^2 loop
+        result := result + 1
+        Z := Z^2 - Mu
+....
 
-===== `inout` arguments
+This code contains two assignments, one to `result`, the
+link:#implicit-result-variable[implicit variable] holding the return
+value, and one to `Z`. The assignment `result := result + 1` updates
+the variable `result` with the next `unsigned` value. This kind of
+assignment combined with a simple operation is so frequent that there
+are link:#operator_assignment[shortcut notations] for it, and you
+could write `result += 1` to achieve the same effect.
+
+An assignment is a shortcut for either a link:#copy[copy] of the
+value, which is the case in the code above, or a link:#move[move] when
+a copy would be unreasonably expensive. In general, using the
+assignment operator is the safe choice, since it will automatically
+select the most efficient operation for you based on the type.
+
+When you create a new type, you get to choose if the assignment
+operator for that type gets to perform a copy or a move. For example,
+for `complex` we may want a copy, and for `picture` we may want a move
+because there is a lot of data. This would be implemented as follows:
+
+....
+Target:out complex := Source:complex    is Target :+ Source     // Copy
+Target:out picture := Source:picture    is Target :< Source     // Move
+....
+
+===== Copy
+
+A _((copy))_ is a kind of transfer which creates a new, "identical",
+yet independent value. The new value can then be modified
+independently from the original, and has a different lifetime.
+XL uses the `Target :+ Source` as a notation for a copy, the `+` in
+that operator being a reminder that a new copy is created.
+
+The `:+` operator has the following mandatory interface for all types:
+
+....
+Target:out T :+ Source:T as mayfail T
+....
+
+The copy returns the `Target` after it has been copied into, or an
+`error` value if there was some failure.
+
+The new copied value is link:#creation[created] by the operator, and
+should be identical in its behavior to the source. It needs not be
+identical in its internal representation. For example, if you copy a
+`picture` type, the content of the `pixels` buffer, i.e. the values
+that it contains, should be identical to the original, but the binary
+representation for the `pixels` field itself will be different, since
+it will refer to a new buffer in memory.
+
+Some types may have a complex hierarchical structure, with several
+layers of values referencing one another. For example, a `tree`
+structure may have some arbitrarily nested branches. In such a case,
+the copy operator should perform what is known as a _((deep copy))_,
+in other words make sure that the new value has ownership of all the
+elements it refers to, independently from the source value.
+
+In some cases, it is important to also feature a _((shallow copy))_
+operation, which only copies up to a certain point. Since the
+condition for stopping the copy are highly dependent on the type, it
+is not possible to provide a single unified interface that would work
+for all types. However, as far as possible, such operation should have
+an interface that looks like the following:
+
+....
+copy Target:out T from Source:T where Condition as mayfail T
+....
+
+For example, the shallow copy for a tree could have the following
+interface:
+
+....
+copy Target:out tree from Source:tree where Condition:node_condition as mayfail T
+node_condition is type(N:node as boolean)
+....
+
+===== Move
+
+===== Binding
+
+===== Argument passing
+
+===== Attributes
 
 ==== Atomicity
 

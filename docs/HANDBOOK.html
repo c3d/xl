@@ -607,22 +607,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#direct-implementation">4.5.11.2. Direct implementation</a></li>
 <li><a href="#indirect-implementation">4.5.11.3. Indirect implementation</a></li>
 <li><a href="#delegation">4.5.11.4. Delegation</a></li>
-<li><a href="#attributes">4.5.11.5. Attributes</a></li>
+<li><a href="#attributes-implementation">4.5.11.5. Attributes implementation</a></li>
 <li><a href="#generic-implementations">4.5.11.6. Generic implementations</a></li>
 <li><a href="#attribute-error-checking">4.5.11.7. Attribute error checking</a></li>
-<li><a href="#implementation-exposed">4.5.11.8. Implementation, exposed</a></li>
+<li><a href="#exposed-details">4.5.11.8. Exposed details</a></li>
 </ul>
 </li>
-<li><a href="#copy">4.5.12. Copy</a></li>
-<li><a href="#move">4.5.13. Move</a></li>
-<li><a href="#binding-2">4.5.14. Binding</a>
+<li><a href="#transfers">4.5.12. Transfers</a>
 <ul class="sectlevel4">
-<li><a href="#in-arguments">4.5.14.1. <code>in</code> arguments</a></li>
-<li><a href="#out-arguments">4.5.14.2. <code>out</code> arguments</a></li>
-<li><a href="#inout-arguments">4.5.14.3. <code>inout</code> arguments</a></li>
+<li><a href="#assignments">4.5.12.1. Assignments</a></li>
+<li><a href="#copy">4.5.12.2. Copy</a></li>
+<li><a href="#move">4.5.12.3. Move</a></li>
+<li><a href="#binding-2">4.5.12.4. Binding</a></li>
+<li><a href="#argument-passing">4.5.12.5. Argument passing</a></li>
+<li><a href="#attributes">4.5.12.6. Attributes</a></li>
 </ul>
 </li>
-<li><a href="#atomicity">4.5.15. Atomicity</a></li>
+<li><a href="#atomicity">4.5.13. Atomicity</a></li>
 </ul>
 </li>
 <li><a href="#type-expressions">4.6. Type expressions</a></li>
@@ -5510,7 +5511,7 @@ example above. A variable declaration is <em>not</em> an assignment.
 </tr>
 </table>
 </div>
-<div class="paragraph">
+<div id="operator_assignment" class="paragraph">
 <p>Seven combined operators are defined independently of the type as
 follows:</p>
 </div>
@@ -6955,8 +6956,9 @@ exposes <em>features</em> of the type, i.e. individually accessible values. The
 type’s interface.</p>
 </li>
 <li>
-<p><a href="#copy">copy</a>, <a href="#move">move</a> and <a href="#binding">binding</a> are
-operations used to transfer values across parts of a program.</p>
+<p><a href="#transfers">transfers</a> are the ways values can be exchanged
+between different parts of the program, and include
+<a href="#copy">copy</a>, <a href="#move">move</a> and <a href="#binding">binding</a>.</p>
 </li>
 <li>
 <p><a href="#atomicity">atomicity</a> is the ability to perform operations in a
@@ -8717,7 +8719,7 @@ find an implementation for expressions such as <code>P.width</code>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.5.11.5. Attributes</a></h5>
+<h5 id="attributes-implementation"><a class="anchor" href="#attributes-implementation"></a><a class="link" href="#attributes-implementation">4.5.11.5. Attributes implementation</a></h5>
 <div class="paragraph">
 <p>If, however, we still want to be able to <em>write</em> into <code>width</code> and
 <code>height</code>, the implementation must provide a way to assign to the field.
@@ -8761,8 +8763,9 @@ which leads to somewhat inelegant and unreadable code like:</p>
 <p>To avoid this issue, there is a general convention that writing to a
 feature is done using a prefix with the feature name. A value that is
 read using a given name, and written using a prefix with the same name
-is called an <em>attribute</em>. The problems above are solved by using
-an attribute for <code>width</code> and <code>height</code>, as illustrated below:</p>
+is called an <em>attribute</em>, and is <a href="#attributes">discussed later</a>.
+The problems above are solved by using an attribute for <code>width</code> and
+<code>height</code>, as illustrated below:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8901,10 +8904,10 @@ several ways to safely evolve the code.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="implementation-exposed"><a class="anchor" href="#implementation-exposed"></a><a class="link" href="#implementation-exposed">4.5.11.8. Implementation, exposed</a></h5>
+<h5 id="exposed-details"><a class="anchor" href="#exposed-details"></a><a class="link" href="#exposed-details">4.5.11.8. Exposed details</a></h5>
 <div class="paragraph">
 <p>A similar, if slightly more complicated problem arises with the
-proposed interface for <code>buffer</code> in the <code>picture</code> type, because
+proposed interface for <code>pixels</code> in the <code>picture</code> type, because
 <code>buffer</code> is a type that may require dynamic allocation, and therefore
 some operations may have to return a <code>storage_error</code>. This is already
 present in the interface for the <code>buffer</code> type, so one might feel a
@@ -8913,14 +8916,14 @@ bit safer than for the mismatch between <code>unsigned</code> and <code>unsigned
 <div class="paragraph">
 <p>However, since there is no actual <code>buffer</code> present in <code>bitmap</code>, a
 buffer may need to be created or at least given storage in the
-implementation of <code>P.buffer</code> for <code>picture</code> values.
+implementation of <code>P.pixels</code> for <code>picture</code> values.
 This may involve the <em>creation</em> of a buffer while simply
 reading a field. In other words, a <code>storage_error</code> may now result from
-apparently <em>reading</em> <code>P.buffer</code>, something that would not
-happen with a direct implementation of <code>P.buffer</code> as a variable.</p>
+apparently <em>reading</em> <code>P.pixels</code>, something that would not
+happen with a direct implementation of <code>P.pixels</code> as a field.</p>
 </div>
 <div class="paragraph">
-<p>In other words, in an ideal world, <code>P.buffer</code> might be implemented as
+<p>In other words, in an ideal world, <code>P.pixels</code> might be implemented as
 an actual buffer or as a function computing a buffer and returning
 it. In the real world, however, the XL type system will force you to
 distinguish between the two cases, because the place where dynamic
@@ -8940,34 +8943,150 @@ to crash or your rocket to explode.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="copy"><a class="anchor" href="#copy"></a><a class="link" href="#copy">4.5.12. Copy</a></h4>
+<h4 id="transfers"><a class="anchor" href="#transfers"></a><a class="link" href="#transfers">4.5.12. Transfers</a></h4>
 <div class="paragraph">
-<p>The <a href="#assignments-and-moves">assignment operator</a> is written <code>A :=
-B</code> in XL. For compact types, this is normally equivalent to <code>A :+ B</code>,
-which is guaranteed to be a <em>copy</em>.</p>
+<p>One of the most important operation that can happen to values of any
+type is to <em>transfer</em> them around in the program. These operations
+are so crucial to the behavior of the program that XL provides a
+number of ways to define and optimize them.
+In particular, transfers interact with the <a href="#ownership">ownership</a>
+guarantees that the language may provide, in combination with the rules
+about <a href="#lifetime">lifetime</a>, <a href="#creation">creation</a> and
+<a href="#destruction">destruction</a>. Additionally, they are so frequent
+that it is necessary to consider performance of transfers, which is
+one reason why there are two flavors, <a href="#copy">copy</a> and
+<a href="#move">move</a>.</p>
+</div>
+<div class="sect4">
+<h5 id="assignments"><a class="anchor" href="#assignments"></a><a class="link" href="#assignments">4.5.12.1. Assignments</a></h5>
+<div class="paragraph">
+<p>As was <a href="#assignment">already discussed</a>, an <em>assignment</em> is the
+primary way for a programmer to explicitly transfer values from one
+context to another. The <code>:=</code> operator is used in XL to represent
+assignments.</p>
+</div>
+<div class="paragraph">
+<p>For example, the following code implements the core computation of a
+<a href="https://en.wikipedia.org/wiki/Julia_set">Julia set</a>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>julia_depth(Z:complex, Mu:complex, Bound:real, Max:unsigned) as unsigned is
+    while result &lt; Max and Z.Re^2 + Z.Im^2 &lt; Bound ^2 loop
+        result := result + 1
+        Z := Z^2 - Mu</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This code contains two assignments, one to <code>result</code>, the
+<a href="#implicit-result-variable">implicit variable</a> holding the return
+value, and one to <code>Z</code>. The assignment <code>result := result + 1</code> updates
+the variable <code>result</code> with the next <code>unsigned</code> value. This kind of
+assignment combined with a simple operation is so frequent that there
+are <a href="#operator_assignment">shortcut notations</a> for it, and you
+could write <code>result += 1</code> to achieve the same effect.</p>
+</div>
+<div class="paragraph">
+<p>An assignment is a shortcut for either a <a href="#copy">copy</a> of the
+value, which is the case in the code above, or a <a href="#move">move</a> when
+a copy would be unreasonably expensive. In general, using the
+assignment operator is the safe choice, since it will automatically
+select the most efficient operation for you based on the type.</p>
+</div>
+<div class="paragraph">
+<p>When you create a new type, you get to choose if the assignment
+operator for that type gets to perform a copy or a move. For example,
+for <code>complex</code> we may want a copy, and for <code>picture</code> we may want a move
+because there is a lot of data. This would be implemented as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Target:out complex := Source:complex    is Target :+ Source     // Copy
+Target:out picture := Source:picture    is Target :&lt; Source     // Move</pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="copy"><a class="anchor" href="#copy"></a><a class="link" href="#copy">4.5.12.2. Copy</a></h5>
+<div class="paragraph">
+<p>A <em>copy</em> is a kind of transfer which creates a new, "identical",
+yet independent value. The new value can then be modified
+independently from the original, and has a different lifetime.
+XL uses the <code>Target :+ Source</code> as a notation for a copy, the <code>+</code> in
+that operator being a reminder that a new copy is created.</p>
+</div>
+<div class="paragraph">
+<p>The <code>:+</code> operator has the following mandatory interface for all types:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Target:out T :+ Source:T as mayfail T</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The copy returns the <code>Target</code> after it has been copied into, or an
+<code>error</code> value if there was some failure.</p>
+</div>
+<div class="paragraph">
+<p>The new copied value is <a href="#creation">created</a> by the operator, and
+should be identical in its behavior to the source. It needs not be
+identical in its internal representation. For example, if you copy a
+<code>picture</code> type, the content of the <code>pixels</code> buffer, i.e. the values
+that it contains, should be identical to the original, but the binary
+representation for the <code>pixels</code> field itself will be different, since
+it will refer to a new buffer in memory.</p>
+</div>
+<div class="paragraph">
+<p>Some types may have a complex hierarchical structure, with several
+layers of values referencing one another. For example, a <code>tree</code>
+structure may have some arbitrarily nested branches. In such a case,
+the copy operator should perform what is known as a <em>deep copy</em>,
+in other words make sure that the new value has ownership of all the
+elements it refers to, independently from the source value.</p>
+</div>
+<div class="paragraph">
+<p>In some cases, it is important to also feature a <em>shallow copy</em>
+operation, which only copies up to a certain point. Since the
+condition for stopping the copy are highly dependent on the type, it
+is not possible to provide a single unified interface that would work
+for all types. However, as far as possible, such operation should have
+an interface that looks like the following:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>copy Target:out T from Source:T where Condition as mayfail T</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For example, the shallow copy for a tree could have the following
+interface:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>copy Target:out tree from Source:tree where Condition:node_condition as mayfail T
+node_condition is type(N:node as boolean)</pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="move"><a class="anchor" href="#move"></a><a class="link" href="#move">4.5.12.3. Move</a></h5>
+
+</div>
+<div class="sect4">
+<h5 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.5.12.4. Binding</a></h5>
+
+</div>
+<div class="sect4">
+<h5 id="argument-passing"><a class="anchor" href="#argument-passing"></a><a class="link" href="#argument-passing">4.5.12.5. Argument passing</a></h5>
+
+</div>
+<div class="sect4">
+<h5 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.5.12.6. Attributes</a></h5>
+
 </div>
 </div>
 <div class="sect3">
-<h4 id="move"><a class="anchor" href="#move"></a><a class="link" href="#move">4.5.13. Move</a></h4>
-
-</div>
-<div class="sect3">
-<h4 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.5.14. Binding</a></h4>
-<div class="sect4">
-<h5 id="in-arguments"><a class="anchor" href="#in-arguments"></a><a class="link" href="#in-arguments">4.5.14.1. <code>in</code> arguments</a></h5>
-
-</div>
-<div class="sect4">
-<h5 id="out-arguments"><a class="anchor" href="#out-arguments"></a><a class="link" href="#out-arguments">4.5.14.2. <code>out</code> arguments</a></h5>
-
-</div>
-<div class="sect4">
-<h5 id="inout-arguments"><a class="anchor" href="#inout-arguments"></a><a class="link" href="#inout-arguments">4.5.14.3. <code>inout</code> arguments</a></h5>
-
-</div>
-</div>
-<div class="sect3">
-<h4 id="atomicity"><a class="anchor" href="#atomicity"></a><a class="link" href="#atomicity">4.5.15. Atomicity</a></h4>
+<h4 id="atomicity"><a class="anchor" href="#atomicity"></a><a class="link" href="#atomicity">4.5.13. Atomicity</a></h4>
 
 </div>
 </div>
@@ -10724,7 +10843,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 07:46:30 +0100
+Last updated 2020-01-10 09:23:03 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
