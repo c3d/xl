@@ -6499,20 +6499,45 @@ For example, a `for` loop on a range of discrete values can be written
 as follows:
 
 ....
-for N:name in R:[range of discrete] loop Body is
-    loop_context is
-        [[N]] : R.type := R.first
-    Var is loop_context.[[N]]
-    while Var <= R.last loop
-        (loop_context) (Body)
-        Var := next_after Var
+for N:name in R:[range of discrete] loop Body is <1>
+    loop_context is <2>
+        [[N]] : R.type := R.first <3>
+    LoopVar is loop_context.[[N]] <4>
+    while LoopVar <= R.last loop
+        (loop_context) (Body) <5>
+        ++LoopVar <6>
 ....
+<1> `N` is declared as a `name`. This type is defined in `XL.PARSER`.
+    The programmer can control what kind of input is acceptable to a
+    new programming construct like the `for` loop defined here. The
+    fact that the XL type system is based on the shape of parse trees
+    gives a powerful way to achieve that objective.
+<2> We need to create a `loop_context` scope that holds the variable
+    created from the input argument to make sure that it does not pollute
+   the current context of the function. For example, if the argument for
+   `N` was `R`, we would not want to hide the `R` formal parameter with a
+   local definition that has the same name.
+<3> The link:#metabox[metabox] evaluates `N`, which gives us access to
+    the name referenced by `N`. In the declaration, simply writing `N`
+    would create a local variable named `N`.
+<4> The `LoopVar` declaration is a shortcut to facilitate access to
+    `[[N]]` within `loop_context`. The reference to `N` also needs to
+    go through a metabox in order to lookup what `N` contains, and not
+    the variable `N` within `loop_context`, which in general does not
+    exist.
+<5> The parentheses are not strictly necessary, but a good reminder
+    that what we are doing here is evaluate `Body` after
+    link:#scoping[injecting] the `loop_context` context. This is what
+    makes the variable name referenced by `[[N]]` visible in
+    `Body`. This approach lets the programmer precisely control what
+    is being injected while evaluating `Body`. In particular, all the
+    local variables in the implementation of the `for` loop, like `N`,
+    `R`, `Body`, `LoopVar` or `loop_context`are not visible while
+    evaluating `Body`.
+<6> The `++LoopVar` notation is a generic way to increment any
+    `discrete` value. In that case, `LoopVar += 1` would not work if
+    `R` was for example a `range of character` like `'A'..'Z'`.
 
-We need to create a `loop_context` scope that holds the variable
-created from the input argument to make sure that it does not pollute
-the current context of the function. For example, if the argument for
-`N` was `R`, we would not want to hide the `R` formal parameter with a
-local definition that has the same name.
 
 ===== Attributes
 

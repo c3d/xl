@@ -5141,7 +5141,7 @@ iterative version of the factorial function can be written as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>factorial N:unsigned as unsigned is
+<pre>factorial N:natural as natural is
     result := 1
     for I in 2..N loop
         result *= I</pre>
@@ -5178,7 +5178,7 @@ statement, although it is not quite idiomatic:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>factorial_return N:unsigned as unsigned is
+<pre>factorial_return N:natural as natural is
     if N = 0 then
         return 1
     return N * factorial_return(N-1)</pre>
@@ -5189,7 +5189,7 @@ statement, although it is not quite idiomatic:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>factorial_last N:unsigned as unsigned is
+<pre>factorial_last N:natural as natural is
     if N = 0 then
         1
     else
@@ -6285,32 +6285,32 @@ that all variants of the definition have a consistent type as follows:</p>
 <div class="literalblock">
 <div class="content">
 <pre>with
-    N  :  unsigned
-    N! as unsigned
+    N  :  natural
+    N! as natural
 0! is 1
 N! is N * (N-1)!</pre>
 </div>
 </div>
 <div class="paragraph">
 <p>The first declaration within the <code>with</code> block indicates that any
-variable named <code>N</code> will have type <code>unsigned</code>. This is in particular
+variable named <code>N</code> will have type <code>natural</code>. This is in particular
 true for the declaration on the next line. In other words, the second
 line in the <code>with</code> block is equivalent to:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>N:unsigned! as unsigned</pre>
+<pre>N:natural! as natural</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The pattern <code>0!</code> matches <code>N:unsigned!</code>, and the same is true for the
+<p>The pattern <code>0!</code> matches <code>N:natural!</code>, and the same is true for the
 next declaration. Therefore, the two definitions for the factorial are
 equivalent to the code below:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>0:unsigned! as unsigned is 1
-N:unsigned! as unsigned is N * (N-1)!</pre>
+<pre>0:natural! as natural is 1
+N:natural! as natural is N * (N-1)!</pre>
 </div>
 </div>
 </div>
@@ -6354,20 +6354,29 @@ literal values below <code>integer.min</code>, such as <code>12</code>, or the r
 the prefix negation operator on literal values, such as <code>-3</code>.</p>
 </li>
 <li>
-<p><code>unsigned</code> is an approximation of unsigned numbers, with a limited
+<p><code>natural</code> is an approximation of natural numbers, with a limited
 range, typically between 0 and 2<sup>64</sup>-1. Like <code>integer</code>, it behaves
 like the underlying hardware in case of overflow. <code>unsigned</code> matches
 whole number literal values such as <code>0</code>, <code>16#FF</code> or <code>42</code>.</p>
 </li>
 <li>
-<p><code>size</code> is a type similar to <code>unsigned</code>, but specifically intended to
+<p><code>size</code> is a type similar to <code>natural</code>, but specifically intended to
 represent a size. In some cases, it may have a different range than
-<code>unsigned</code>.</p>
+<code>natural</code>.</p>
+</li>
+<li>
+<p><code>count</code> is a type similar to <code>natural</code>, but specifically intended to
+represent a count. It should be at least as large as <code>size</code> and
+<code>natural</code>.</p>
 </li>
 <li>
 <p><code>offset</code> is a type that plays for <code>integer</code> the role that <code>size</code>
-plays for <code>unsigned</code>, i.e. it is intended to indicate offsets for
+plays for <code>natural</code>, i.e. it is intended to indicate offsets for
 example while indexing an array.</p>
+</li>
+<li>
+<p><code>byte</code> is the smallest unsigned type that is naturally represented
+on the machine. On most modern machine, it is an 8-bit value.</p>
 </li>
 <li>
 <p><code>character</code> is a representation of the native character set on the
@@ -6404,7 +6413,7 @@ a 32-bit machine, and 64-bit values on a 64-bit machine.</p>
 <div class="paragraph">
 <p>This may adversely affect portability, and for that reason, XL also
 offers <em>sized types</em>, with a precise number of bits specified in the
-name. The size is appended to the type name. For example, <code>integer64</code>
+name. The size is appended to the type name. For example, <code>i64</code>
 is an <code>integer</code> type that is guaranteed to be exactly 64-bit.</p>
 </div>
 <div class="paragraph">
@@ -6413,10 +6422,10 @@ is an <code>integer</code> type that is guaranteed to be exactly 64-bit.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>integer</code> for at least 8, 16, 32 and 64 bits,</p>
+<p><code>i</code> for at least 8, 16, 32 and 64 bits, are signed integer values,</p>
 </li>
 <li>
-<p><code>unsigned</code> for at least 8, 16, 32 and 64 bits,</p>
+<p><code>u</code> for at least 8, 16, 32 and 64 bits, are unsigned integer values,</p>
 </li>
 <li>
 <p><code>real</code> for at least 32 and 64 bits,</p>
@@ -6429,12 +6438,12 @@ is an <code>integer</code> type that is guaranteed to be exactly 64-bit.</p>
 <div class="paragraph">
 <p>Additional sizes may be provided if they are native to the target
 machine. For example, some DSPs feature 24-bit operations, and
-compilers for such machines should provide types like <code>unsigned24</code> to
+compilers for such machines should provide types like <code>u24</code> to
 match.</p>
 </div>
 <div class="paragraph">
 <p>The sized types are guaranteed to wrap around at the boundary for the
-given number of bits. For example, <code>unsigned8</code> holds values between
+given number of bits. For example, <code>u8</code> holds values between
 <code>0</code> and <code>255</code>, and will wrap around so that the next value after <code>255</code>
 is <code>0</code>, and the value preceding <code>0</code> is <code>255</code>.</p>
 </div>
@@ -7259,10 +7268,10 @@ equivalent to the following:</p>
 <p><code>type</code> and <code>nil</code> values receive <code>nil</code>.</p>
 </li>
 <li>
-<p><code>integer</code>, <code>unsigned</code>, <code>size</code> and <code>offset</code> types receive <code>0</code>.</p>
+<p>All integer types receive value <code>0</code></p>
 </li>
 <li>
-<p><code>character</code> receive <code>character 0</code>.</p>
+<p>All character types receive <code>character 0</code>.</p>
 </li>
 <li>
 <p><code>text</code> receive <code>""</code>.</p>
@@ -8305,13 +8314,13 @@ specified number of bits. It applies to <code>real</code>, <code>integer</code> 
 </div>
 <div class="paragraph">
 <p>This implicitly implies a <code>range</code> that depends on the type being
-subtyped. For example, for <code>integer</code> and <code>unsigned</code>, the range would be
+subtyped. For example, for <code>integer</code> and <code>natural</code>, the range would be
 defined as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">[[integer]]  bits N:unsigned    is integer  range -2^(N-1)..2^(N-1)-1
-[[unsigned]] bits N:unsigned    is unsigned range  0..2^N-1</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">[[integer]] bits N:natural      is integer range -2^(N-1)..2^(N-1)-1
+[[natural]] bits N:natural      is natural range  0..2^N-1</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -8409,7 +8418,7 @@ exponent and the available number of bits.</p>
 </div>
 <div class="paragraph">
 <p>For example, the <code>hundredth</code> type defined below could be represented
-internally by an <code>unsigned</code> values between <code>0</code> and <code>100</code>, and converted to
+internally by an <code>natural</code> values between <code>0</code> and <code>100</code>, and converted to
 <code>real</code> by multiplying this value by the given <code>quantum</code> value.</p>
 </div>
 <div class="listingblock">
@@ -8520,10 +8529,10 @@ this interface, one might argue that the fact that <code>pixels</code> is a
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
-    width  : unsigned
-    height : unsigned
-    pixels : buffer[area] of unsigned8
-    area as unsigned</code></pre>
+    width  : size
+    height : size
+    pixels : buffer[area] of byte
+    area as size</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8567,7 +8576,7 @@ function interface:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture(width:unsigned, height:unsigned) as picture</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture(width:size, height:size) as picture</code></pre>
 </div>
 </div>
 <div class="sect4">
@@ -8620,9 +8629,9 @@ look like:</p>
 <div class="literalblock">
 <div class="content">
 <pre>picture is type picture
-    pixels : buffer[area] of unsigned8
-    width  : unsigned
-    height : unsigned</pre>
+    pixels : buffer[area] of u8
+    width  : size
+    height : size</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8687,9 +8696,9 @@ representation:</p>
 <div class="literalblock">
 <div class="content">
 <pre>bitmap as type with
-    width  : unsigned16
-    height : unsigned16
-    buf    : array[width, height] of unsigned8
+    width  : u16
+    height : u16
+    buf    : array[width, height] of u8
 picture as type picture
     bits:bitmap</pre>
 </div>
@@ -8713,7 +8722,7 @@ and <code>height</code> fields seems relatively straightforward:</p>
 <p>This, however, will not work as is, because we have only provided a
 way to <em>read</em> <code>width</code> and <code>height</code>, not to write it. This does not
 match the interface. A simple solution would be to modify the
-<code>picture</code> interface, for example so that it reads <code>width as unsigned</code>.
+<code>picture</code> interface, for example so that it reads <code>width as size</code>.
 With this interface change, the code above will correctly allow us to
 find an implementation for expressions such as <code>P.width</code>.</p>
 </div>
@@ -8802,26 +8811,26 @@ update the value of <code>bits.width</code> and <code>bits.height</code>:</p>
 <p>By providing as little type information as possible, the code as
 written above remains as generic as possible. This enables better
 optimizations. For instance, writing <code>width 320</code> might generate only
-code for <code>unsigned16</code> without any need for an <code>unsigned</code> value to be
+code for <code>u16</code> without any need for any <code>size</code> value to be
 ever created.</p>
 </div>
 <div class="paragraph">
 <p>Unfortunately, that code will only be accepted by the compiler until
-you try to use it with values that do not fit within an <code>unsigned16</code>.
+you try to use it with values that do not fit within an <code>u16</code>.
 It is accepted because it is not typed, therefore generic, so that
 some errors cannot be detected until you instantiate it.
 Furthermore, no error will be generated if the values being passed all
-fit within an <code>unsigned16</code>.</p>
+fit within an <code>u16</code>.</p>
 </div>
 <div class="paragraph">
 <p>If <code>P</code> is a <code>picture</code>, then <code>P.width 320</code> will work, but <code>P.width
 1_000_000</code> will not, since that value is out of range for
-<code>unsigned16</code>. This is problematic because it is quite likely that the
-attribute will receive some unknown <code>unsigned</code> value. After all, the
-interface was designed for an <code>unsigned</code>, not an <code>unsigned16</code>, so it
+<code>u16</code>. This is problematic because it is quite likely that the
+attribute will receive some unknown <code>size</code> value. After all, the
+interface was designed for an <code>sie</code>, not an <code>u16</code>, so it
 makes sense to invoke it with values of this type. There will be an
-error in that case, because nothing in our code accepts an <code>unsigned</code>
-value that does not fit in the <code>unsigned16</code> subtype.</p>
+error in that case, because nothing in our code accepts a <code>size</code>
+value that does not fit in the <code>u16</code> subtype.</p>
 </div>
 </div>
 <div class="sect4">
@@ -8840,14 +8849,14 @@ bad input and just print some run-time error.</p>
     height      is bits.height
 
     // Working case
-    width  W:unsigned16 is bits.width W
-    height H:unsigned16 is bits.height H
+    width  W:u16 is bits.width W
+    height H:u16 is bits.height H
 
     // Error case: drop input, display message
-    width  W:unsigned is
+    width  W:size is
         print error("Invalid picture width %1", W)
         bits.width      // Return previous value
-    height  H:unsigned is
+    height  H:size is
         print error("Invalid picture height %1", H)
         bits.height     // Return previous value</code></pre>
 </div>
@@ -8859,10 +8868,10 @@ error in the interface, for example:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
-    width  : mayfail unsigned
-    height : mayfail unsigned
-    pixels : buffer[area] of unsigned8
-    area as unsigned</code></pre>
+    width  : mayfail size
+    height : mayfail size
+    pixels : buffer[area] of byte
+    area as size</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8873,12 +8882,12 @@ input. A better interface would be to expose the attribute nature of
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
-    width  as unsigned
-    height as unsigned
-    width W as mayfail unsigned
-    height H as mayfail unsigned
-    pixels : buffer[area] of unsigned8
-    area as unsigned</code></pre>
+    width  as size
+    height as size
+    width W as mayfail size
+    height H as mayfail size
+    pixels : buffer[area] of byte
+    area as size</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8888,10 +8897,10 @@ interface that does not lie about the underlying values:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
-    width  : unsigned16
-    height : unsigned16
-    pixels : buffer[area] of unsigned8
-    area as unsigned</code></pre>
+    width  : u16
+    height : u16
+    pixels : buffer[area] of byte
+    area as size is width * height</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8911,7 +8920,7 @@ proposed interface for <code>pixels</code> in the <code>picture</code> type, bec
 <code>buffer</code> is a type that may require dynamic allocation, and therefore
 some operations may have to return a <code>storage_error</code>. This is already
 present in the interface for the <code>buffer</code> type, so one might feel a
-bit safer than for the mismatch between <code>unsigned</code> and <code>unsigned16</code>.</p>
+bit safer than for the mismatch between <code>size</code> and <code>u16</code>.</p>
 </div>
 <div class="paragraph">
 <p>However, since there is no actual <code>buffer</code> present in <code>bitmap</code>, a
@@ -8971,7 +8980,7 @@ assignments.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>julia_depth(Z:complex, Mu:complex, Bound:real, Max:unsigned) as unsigned is
+<pre>julia_depth(Z:complex, Mu:complex, Bound:real, Max:count) as count is
     while result &lt; Max and Z.Re^2 + Z.Im^2 &lt; Bound ^2 loop
         result := result + 1
         Z := Z^2 - Mu</pre>
@@ -8981,7 +8990,7 @@ assignments.</p>
 <p>This code contains two assignments, one to <code>result</code>, the
 <a href="#implicit-result-variable">implicit variable</a> holding the return
 value, and one to <code>Z</code>. The assignment <code>result := result + 1</code> updates
-the variable <code>result</code> with the next <code>unsigned</code> value. This kind of
+the variable <code>result</code> with the next <code>count</code> value. This kind of
 assignment combined with a simple operation is so frequent that there
 are <a href="#operator_assignment">shortcut notations</a> for it, and you
 could write <code>result += 1</code> to achieve the same effect.</p>
@@ -9067,7 +9076,7 @@ interface, where either a depth or a <code>node_filter</code> :</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy(Source:tree, Depth:unsigned) as mayfail T
+<pre>copy(Source:tree, Depth:count) as mayfail T
 copy(Source:tree, Keep:node_filter) as mayfail T
 node_filter is type(N:node as boolean)</pre>
 </div>
@@ -9256,21 +9265,66 @@ as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>for N:name in R:[range of discrete] loop Body is
-    loop_context is
-        [[N]] : R.type := R.first
-    Var is loop_context.[[N]]
-    while Var &lt;= R.last loop
-        (loop_context) (Body)
-        Var := next_after Var</pre>
+<pre>for N:name in R:[range of discrete] loop Body is <i class="conum" data-value="1"></i><b>(1)</b>
+    loop_context is <i class="conum" data-value="2"></i><b>(2)</b>
+        [[N]] : R.type := R.first <i class="conum" data-value="3"></i><b>(3)</b>
+    LoopVar is loop_context.[[N]] <i class="conum" data-value="4"></i><b>(4)</b>
+    while LoopVar &lt;= R.last loop
+        (loop_context) (Body) <i class="conum" data-value="5"></i><b>(5)</b>
+        ++LoopVar <i class="conum" data-value="6"></i><b>(6)</b></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>We need to create a <code>loop_context</code> scope that holds the variable
-created from the input argument to make sure that it does not pollute
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>N</code> is declared as a <code>name</code>. This type is defined in <code>XL.PARSER</code>.
+The programmer can control what kind of input is acceptable to a
+new programming construct like the <code>for</code> loop defined here. The
+fact that the XL type system is based on the shape of parse trees
+gives a powerful way to achieve that objective.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We need to create a <code>loop_context</code> scope that holds the variable
+ created from the input argument to make sure that it does not pollute
 the current context of the function. For example, if the argument for
 <code>N</code> was <code>R</code>, we would not want to hide the <code>R</code> formal parameter with a
-local definition that has the same name.</p>
+local definition that has the same name.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The <a href="#metabox">metabox</a> evaluates <code>N</code>, which gives us access to
+the name referenced by <code>N</code>. In the declaration, simply writing <code>N</code>
+would create a local variable named <code>N</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The <code>LoopVar</code> declaration is a shortcut to facilitate access to
+<code><a id="N"></a></code> within <code>loop_context</code>. The reference to <code>N</code> also needs to
+go through a metabox in order to lookup what <code>N</code> contains, and not
+the variable <code>N</code> within <code>loop_context</code>, which in general does not
+exist.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The parentheses are not strictly necessary, but a good reminder
+that what we are doing here is evaluate <code>Body</code> after
+<a href="#scoping">injecting</a> the <code>loop_context</code> context. This is what
+makes the variable name referenced by <code><a id="N"></a></code> visible in
+<code>Body</code>. This approach lets the programmer precisely control what
+is being injected while evaluating <code>Body</code>. In particular, all the
+local variables in the implementation of the <code>for</code> loop, like <code>N</code>,
+<code>R</code>, <code>Body</code>, <code>LoopVar</code> or <code>loop_context`are not visible while
+evaluating `Body</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>The <code>++LoopVar</code> notation is a generic way to increment any
+<code>discrete</code> value. In that case, <code>LoopVar += 1</code> would not work if
+<code>R</code> was for example a <code>range of character</code> like <code>'A'..'Z'</code>.</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect4">
@@ -11036,7 +11090,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 13:52:56 +0100
+Last updated 2020-01-10 20:10:29 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
