@@ -5988,9 +5988,10 @@ While it is reasonable to infer from the interface that `text` and
 this is only an efficient way to provide inheritance, but it is not a
 constraint on the implementation.
 
-A type may also provide entirely different implementations. We will
+A type may also provide entirely different implementations of its
+features, while still allowing individual features to be accessed
+almost as if they were provided by a direct implementation. We will
 see a number of examples in the next sections.
-
 
 ===== Delegation
 
