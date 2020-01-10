@@ -4276,6 +4276,35 @@ equivalent to the code below:
 N:natural! as natural is N * (N-1)!
 ....
 
+A shared type annotation can take another form, `with Types in Body`,
+which makes it possible to restrict the type annotations to a specific
+subset of declarations. The declatations in `Body` really belong to
+the scope containing the `with Types in Body` form.
+
+....
+with
+    Z1 : complex
+    Z2 : complex
+in
+    Z1 + Z2 as complex is ...
+    Z1 - Z2 as complex is ...
+    Z1 * Z2 as complex is ...
+    Z1 / Z2 as complex is ...
+....
+
+This is particularly useful to provide complex type parameters in
+generic declarations. The following example illustrates this syntax to
+declare a notation `find Item in List` where the `Item` must have the
+type of the elements of the List`.
+
+....
+with
+    T:type
+    L:type list of T
+in
+    find Item:T in List:L as mayfail T
+....
+
 === Standard types
 
 The XL library provides a number of standard types representing

@@ -6313,6 +6313,39 @@ equivalent to the code below:</p>
 N:natural! as natural is N * (N-1)!</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>A shared type annotation can take another form, <code>with Types in Body</code>,
+which makes it possible to restrict the type annotations to a specific
+subset of declarations. The declatations in <code>Body</code> really belong to
+the scope containing the <code>with Types in Body</code> form.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>with
+    Z1 : complex
+    Z2 : complex
+in
+    Z1 + Z2 as complex is ...
+    Z1 - Z2 as complex is ...
+    Z1 * Z2 as complex is ...
+    Z1 / Z2 as complex is ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is particularly useful to provide complex type parameters in
+generic declarations. The following example illustrates this syntax to
+declare a notation <code>find Item in List</code> where the <code>Item</code> must have the
+type of the elements of the List`.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>with
+    T:type
+    L:type list of T
+in
+    find Item:T in List:L as mayfail T</pre>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="standard-types"><a class="anchor" href="#standard-types"></a><a class="link" href="#standard-types">4.4. Standard types</a></h3>
@@ -11202,7 +11235,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 23:28:55 +0100
+Last updated 2020-01-10 23:36:29 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
