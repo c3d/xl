@@ -4603,9 +4603,9 @@ features several mathematical types designed for that purpose:
   type. It features matrix algebra and matrix-specific operations,
   as well as operations combining matrix` and `vector` for the same
   underlying numerical type. Operations on the `matrix` type are often
-  highly parallelizable.  The `matrix[4,3] of integer32` will create a
-  4x3 matrix with `integer32` as the underlying numerical type,
-  whereas `matrix[2,2]` will create a 2x2 matrix of `real` values.
+  highly parallelizable.  The `matrix[4,3] of i32` will create a 4x3
+  matrix with `i32` as the underlying numerical type, whereas
+  `matrix[2,2]` will create a 2x2 matrix of `real` values.
 
 ==== Parse tree types
 
@@ -5650,9 +5650,9 @@ other types, a feature sometimes called _((multiple inheritance))_. There is
 also no need for the base(((base type))) and ((derived type)) to share
 any specific ((data representation)), although this is
 link:#data-inheritance[often done in practice]. For example, there is
-an implicit conversion from `integer16` to `integer32`, altough the
+an implicit conversion from `i16` to `i32`, altough the
 machine representation is different, so in XL, one can say that
-`integer16` derives from `integer32`.
+`i16` derives from `i32`.
 
 Sometimes, it is necessary to denote a type that inherits from a
 specific type. For example, if you want to create a ((constrained
@@ -5718,11 +5718,11 @@ The infix `bits` operator creates a _((size subtype))_ with the
 specified number of bits. It applies to `real`, `integer` and
 `character` types.
 
-For example, the `integer8` type can be defined as:
+For example, the `i8` type can be defined as:
 
 [source]
 ----
-integer8 is integer bits 8
+i8 is integer bits 8
 ----
 
 This implicitly implies a `range` that depends on the type being

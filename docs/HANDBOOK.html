@@ -6781,9 +6781,9 @@ with two underlying representations, <code>sparse</code> and <code>dense</code>.
 type. It features matrix algebra and matrix-specific operations,
 as well as operations combining matrix` and <code>vector</code> for the same
 underlying numerical type. Operations on the <code>matrix</code> type are often
-highly parallelizable.  The <code>matrix[4,3] of integer32</code> will create a
-4x3 matrix with <code>integer32</code> as the underlying numerical type,
-whereas <code>matrix[2,2]</code> will create a 2x2 matrix of <code>real</code> values.</p>
+highly parallelizable.  The <code>matrix[4,3] of i32</code> will create a 4x3
+matrix with <code>i32</code> as the underlying numerical type, whereas
+<code>matrix[2,2]</code> will create a 2x2 matrix of <code>real</code> values.</p>
 </li>
 </ul>
 </div>
@@ -8225,9 +8225,9 @@ other types, a feature sometimes called <em>multiple inheritance</em>. There is
 also no need for the base and derived type to share
 any specific data representation, although this is
 <a href="#data-inheritance">often done in practice</a>. For example, there is
-an implicit conversion from <code>integer16</code> to <code>integer32</code>, altough the
+an implicit conversion from <code>i16</code> to <code>i32</code>, altough the
 machine representation is different, so in XL, one can say that
-<code>integer16</code> derives from <code>integer32</code>.</p>
+<code>i16</code> derives from <code>i32</code>.</p>
 </div>
 <div class="paragraph">
 <p>Sometimes, it is necessary to denote a type that inherits from a
@@ -8305,11 +8305,11 @@ specified number of bits. It applies to <code>real</code>, <code>integer</code> 
 <code>character</code> types.</p>
 </div>
 <div class="paragraph">
-<p>For example, the <code>integer8</code> type can be defined as:</p>
+<p>For example, the <code>i8</code> type can be defined as:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">integer8 is integer bits 8</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">i8 is integer bits 8</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -11090,7 +11090,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 20:10:29 +0100
+Last updated 2020-01-10 21:23:52 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
