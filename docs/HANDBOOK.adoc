@@ -6098,10 +6098,14 @@ picture is type picture
 The reason it does not work is that `width` in the `width := W`
 pattern is a formal parameter. The link:#metabox[metabox] solution
 does not work in that context, since writing `+[[width]] := W+` would
-match the _value_ of `width`, not its shape. It is possible to resort
-to a more convoluted solution that intercepts assignments to `width`
-and height by using `type(width)` as a way to only match `width`,
-which leads to somewhat inelegant and unreadable code like:
+match the _value_ of `width`, not its shape, and unless `width` is
+defined as `self` like `true` or `false` can be, attempting to
+evaluate `width` will not achieve the desired effect.
+
+It is possible to resort to a more convoluted solution that intercepts
+assignments to `width` and height by using `type(width)` as a way to
+only match `width`, which leads to somewhat inelegant and unreadable
+code like:
 
 [source]
 ----
@@ -6148,6 +6152,15 @@ picture is type picture
     width W     is bits.width W
     height H    is bits.height H
 ----
+
+Selecting between the attribute notation or the assignment notation
+for individual fields is largely a matter of taste. It is even
+possible to provide both.
+
+That choice is largely hidden from the interface, however, because
+when attempting to find the implementation for an interface, the
+compiler will transparently look for an attribute pair as a possible
+implementation.
 
 ===== Generic implementations
 
@@ -6560,8 +6573,8 @@ for N:name in R:[range of discrete] loop Body is <1>
 <4> The `LoopVar` declaration is a shortcut to facilitate access to
     `[[N]]` within `loop_context`. The reference to `N` also needs to
     go through a metabox in order to lookup what `N` contains, and not
-    the variable `N` within `loop_context`, which in general does not
-    exist.
+    the variable `N` within `loop_context`, does not exist except in
+    cases where parameter `N` receives name `N` as an argument.
 <5> The parentheses are not strictly necessary, but a good reminder
     that what we are doing here is evaluate `Body` after
     link:#scoping[injecting] the `loop_context` context. This is what
@@ -6577,6 +6590,49 @@ for N:name in R:[range of discrete] loop Body is <1>
 
 
 ===== Attributes
+
+Attributes are a convention to special-case the transfer of values to
+a specific named entity, notably when it is important to control how
+that value is written to or read from.
+
+For example, a `background` feature with the `color` type can be
+implemented as a variable:
+
+....
+background : color              // Variable holding the color
+if background = blue then
+    background := red           // Assigment style
+....
+
+Alternatively, the same feature can be provided as an attribute, which
+may sometimes be more readable:
+
+....
+background as color             // Get the background color
+background C:color as color     // Set the background color
+if background = blue then
+    background red              // Attribute-setting style
+....
+
+This is largely a matter of taste, and the preferred form depends on
+the context. In addition, if a type interface exposes a feature `F`
+and if there is an attribute named `F` in the implementation, then the
+attribute will automatically be used to implement the feature, which
+means that an operation like `X.F := V` may silently be transformed
+into `X.F V` if necessary.
+
+[NOTE]
+=====
+It is considered extremely bad taste in XL to use `get`
+or `set` in the name of attributes. For example, the following code
+is roughly 16 characters too long:
+....
+get_background as color
+set_background C:color as color
+if get_background = blue then
+   set_background red
+....
+=====
 
 === Type expressions
 

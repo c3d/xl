@@ -8792,10 +8792,15 @@ this operation. The following for example does not work:</p>
 <p>The reason it does not work is that <code>width</code> in the <code>width := W</code>
 pattern is a formal parameter. The <a href="#metabox">metabox</a> solution
 does not work in that context, since writing <code>[[width]] := W</code> would
-match the <em>value</em> of <code>width</code>, not its shape. It is possible to resort
-to a more convoluted solution that intercepts assignments to <code>width</code>
-and height by using <code>type(width)</code> as a way to only match <code>width</code>,
-which leads to somewhat inelegant and unreadable code like:</p>
+match the <em>value</em> of <code>width</code>, not its shape, and unless <code>width</code> is
+defined as <code>self</code> like <code>true</code> or <code>false</code> can be, attempting to
+evaluate <code>width</code> will not achieve the desired effect.</p>
+</div>
+<div class="paragraph">
+<p>It is possible to resort to a more convoluted solution that intercepts
+assignments to <code>width</code> and height by using <code>type(width)</code> as a way to
+only match <code>width</code>, which leads to somewhat inelegant and unreadable
+code like:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -8844,6 +8849,17 @@ update the value of <code>bits.width</code> and <code>bits.height</code>:</p>
     width W     is bits.width W
     height H    is bits.height H</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Selecting between the attribute notation or the assignment notation
+for individual fields is largely a matter of taste. It is even
+possible to provide both.</p>
+</div>
+<div class="paragraph">
+<p>That choice is largely hidden from the interface, however, because
+when attempting to find the implementation for an interface, the
+compiler will transparently look for an attribute pair as a possible
+implementation.</p>
 </div>
 </div>
 <div class="sect4">
@@ -9344,8 +9360,8 @@ would create a local variable named <code>N</code>.</td>
 <td>The <code>LoopVar</code> declaration is a shortcut to facilitate access to
 <code><a id="N"></a></code> within <code>loop_context</code>. The reference to <code>N</code> also needs to
 go through a metabox in order to lookup what <code>N</code> contains, and not
-the variable <code>N</code> within <code>loop_context</code>, which in general does not
-exist.</td>
+the variable <code>N</code> within <code>loop_context</code>, does not exist except in
+cases where parameter <code>N</code> receives name <code>N</code> as an argument.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
@@ -9370,7 +9386,66 @@ evaluating `Body</code>.</td>
 </div>
 <div class="sect4">
 <h5 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.5.12.6. Attributes</a></h5>
-
+<div class="paragraph">
+<p>Attributes are a convention to special-case the transfer of values to
+a specific named entity, notably when it is important to control how
+that value is written to or read from.</p>
+</div>
+<div class="paragraph">
+<p>For example, a <code>background</code> feature with the <code>color</code> type can be
+implemented as a variable:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>background : color              // Variable holding the color
+if background = blue then
+    background := red           // Assigment style</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Alternatively, the same feature can be provided as an attribute, which
+may sometimes be more readable:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>background as color             // Get the background color
+background C:color as color     // Set the background color
+if background = blue then
+    background red              // Attribute-setting style</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is largely a matter of taste, and the preferred form depends on
+the context. In addition, if a type interface exposes a feature <code>F</code>
+and if there is an attribute named <code>F</code> in the implementation, then the
+attribute will automatically be used to implement the feature, which
+means that an operation like <code>X.F := V</code> may silently be transformed
+into <code>X.F V</code> if necessary.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>It is considered extremely bad taste in XL to use <code>get</code>
+or <code>set</code> in the name of attributes. For example, the following code
+is roughly 16 characters too long:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>get_background as color
+set_background C:color as color
+if get_background = blue then
+   set_background red</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -11127,7 +11202,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 22:48:32 +0100
+Last updated 2020-01-10 23:28:55 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
