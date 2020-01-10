@@ -6295,13 +6295,15 @@ Target:out picture := Source:picture    is Target :< Source     // Move
 A _((copy))_ is a kind of transfer which creates a new, "identical",
 yet independent value. The new value can then be modified
 independently from the original, and has a different lifetime.
-XL uses the `Target :+ Source` as a notation for a copy, the `+` in
-that operator being a reminder that a new copy is created.
+XL uses either the prefix `copy` function o rthe infix `Target :+
+Source` as a notation for a copy, the `+` in that operator being a
+reminder that a new copy is created.
 
 The `:+` operator has the following mandatory interface for all types:
 
 ....
 Target:out T :+ Source:T as mayfail T
+copy Source:T as mayfail T is result :+ Source
 ....
 
 The copy returns the `Target` after it has been copied into, or an
@@ -6330,15 +6332,16 @@ for all types. However, as far as possible, such operation should have
 an interface that looks like the following:
 
 ....
-copy Target:out T from Source:T where Condition as mayfail T
+copy (Source:T, StopConditions) as mayfail T
 ....
 
 For example, the shallow copy for a tree could have the following
-interface:
+interface, where either a depth or a `node_filter` :
 
 ....
-copy Target:out tree from Source:tree where Condition:node_condition as mayfail T
-node_condition is type(N:node as boolean)
+copy(Source:tree, Depth:unsigned) as mayfail T
+copy(Source:tree, Keep:node_filter) as mayfail T
+node_filter is type(N:node as boolean)
 ....
 
 ===== Move

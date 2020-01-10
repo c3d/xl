@@ -9012,15 +9012,17 @@ Target:out picture := Source:picture    is Target :&lt; Source     // Move</pre>
 <p>A <em>copy</em> is a kind of transfer which creates a new, "identical",
 yet independent value. The new value can then be modified
 independently from the original, and has a different lifetime.
-XL uses the <code>Target :+ Source</code> as a notation for a copy, the <code>+</code> in
-that operator being a reminder that a new copy is created.</p>
+XL uses either the prefix <code>copy</code> function o rthe infix <code>Target :+
+Source</code> as a notation for a copy, the <code>+</code> in that operator being a
+reminder that a new copy is created.</p>
 </div>
 <div class="paragraph">
 <p>The <code>:+</code> operator has the following mandatory interface for all types:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Target:out T :+ Source:T as mayfail T</pre>
+<pre>Target:out T :+ Source:T as mayfail T
+copy Source:T as mayfail T is result :+ Source</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9054,17 +9056,18 @@ an interface that looks like the following:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy Target:out T from Source:T where Condition as mayfail T</pre>
+<pre>copy (Source:T, StopConditions) as mayfail T</pre>
 </div>
 </div>
 <div class="paragraph">
 <p>For example, the shallow copy for a tree could have the following
-interface:</p>
+interface, where either a depth or a <code>node_filter</code> :</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy Target:out tree from Source:tree where Condition:node_condition as mayfail T
-node_condition is type(N:node as boolean)</pre>
+<pre>copy(Source:tree, Depth:unsigned) as mayfail T
+copy(Source:tree, Keep:node_filter) as mayfail T
+node_filter is type(N:node as boolean)</pre>
 </div>
 </div>
 </div>
@@ -10843,7 +10846,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 09:23:03 +0100
+Last updated 2020-01-10 09:29:48 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
