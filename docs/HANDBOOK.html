@@ -9491,7 +9491,7 @@ parameters, including parameters with the <code>type</code> type, and such
 declarations can then be used to build <em>type expressions</em>.</p>
 </div>
 <div class="paragraph">
-<p>For example, the following code extends our previous <code>complex</code> type to
+<p>For example, the following code defines a generic <code>complex</code> type to
 take an argument that indicates the representation for <code>real</code> numbers,
 and uses that first declaration to declare two types, <code>complex</code> and
 <code>complex32</code>, the latter using <code>real32</code> as a representation type for real
@@ -9504,22 +9504,23 @@ type complex is complex[real]
 type complex32 is complex[real32]</code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Type expressions play for XL the role that "class templates"
-play in C++, or "generic types" in Ada. By convention, the formal
-parameters or arguments of type expressions are placed between square
-brackets, as in <code>complex[real]</code>, although there is no requirement for
-this. In practice, exceptions are frequent, notably for types using
-operator-like notations, like <code>pointer to T</code>.
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>Type expressions play for XL the role that "class templates" play in
+C++, or "generic types" in Ada, although the implementation may
+in some cases need to fallback to more dynamically typed ways to
+evaluate the code.</p>
+</div>
+<div class="paragraph">
+<p>By convention, type expressions use square brackets, as in
+<code>complex[real]</code>, reserving parentheses for normal expressions, as in
+<code>complex(1.2,3.4)</code>. There is no language requirement enforcing this,
+however. It is perfectly legal, if unusual, to write <code>complex real</code> and
+<code>complex[1.2,3.4]</code>.</p>
+</div>
+<div class="paragraph">
+<p>In practice, type expression are extremely frequent, notably being
+used to define a plethora of generic types using operator-like
+notations, like <code>pointer to T</code>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -9542,7 +9543,7 @@ Operations on <code>T1 or T2</code> will cause dynamic dispatch depending on the
 actual value being considered. For example, consider:</p>
 <div class="literalblock">
 <div class="content">
-<pre>double X:(integer or real) is X + X
+<pre>double X:[integer or real] is X + X
 double 1      // returns 2 as an integer
 double 3.5    // returns 7.0 as a real</pre>
 </div>
@@ -11236,7 +11237,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 23:44:54 +0100
+Last updated 2020-01-10 23:54:29 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

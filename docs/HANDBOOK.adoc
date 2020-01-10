@@ -6666,11 +6666,11 @@ if get_background = blue then
 
 === Type expressions
 
-A type declaration is like any other XL declaration. It can have
+A ((type declaration)) is like any other XL declaration. It can have
 parameters, including parameters with the `type` type, and such
-declarations can then be used to build _type expressions_.
+declarations can then be used to build _((type expressions))_.
 
-For example, the following code extends our previous `complex` type to
+For example, the following code defines a generic `complex` type to
 take an argument that indicates the representation for `real` numbers,
 and uses that first declaration to declare two types, `complex` and
 `complex32`, the latter using `real32` as a representation type for real
@@ -6683,12 +6683,20 @@ type complex is complex[real]
 type complex32 is complex[real32]
 ----
 
-NOTE: Type expressions play for XL the role that "class templates"
-play in pass:[C++], or "generic types" in Ada. By convention, the formal
-parameters or arguments of type expressions are placed between square
-brackets, as in `complex[real]`, although there is no requirement for
-this. In practice, exceptions are frequent, notably for types using
-operator-like notations, like `pointer to T`.
+Type expressions play for XL the role that "class templates" play in
+pass:[C++], or "generic types" in Ada, although the implementation may
+in some cases need to fallback to more dynamically typed ways to
+evaluate the code.
+
+By convention, type expressions use square brackets, as in
+`complex[real]`, reserving parentheses for normal expressions, as in
+`complex(1.2,3.4)`. There is no language requirement enforcing this,
+however. It is perfectly legal, if unusual, to write `complex real` and
+`complex[1.2,3.4]`.
+
+In practice, type expression are extremely frequent, notably being
+used to define a plethora of ((generic type))s using operator-like
+notations, like `pointer to T`.
 
 === Standard type expressions
 
@@ -6704,7 +6712,7 @@ Operations on `T1 or T2` will cause dynamic dispatch depending on the
 actual value being considered. For example, consider:
 +
 ....
-double X:(integer or real) is X + X
+double X:[integer or real] is X + X
 double 1      // returns 2 as an integer
 double 3.5    // returns 7.0 as a real
 ....
