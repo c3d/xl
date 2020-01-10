@@ -8414,12 +8414,13 @@ bases <code>2</code>, <code>10</code> and <code>16</code> are allowed. Base <cod
 be subtypes of <code>real</code>. For example, on any machine using machine using
 the most common floating-point representation available in hardware,
 <a href="https://en.wikipedia.org/wiki/IEEE-754">IEEE-754</a>, the value <code>0.01</code> cannot be
-<a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,<em>conversion_and_rounding">represented accurately</a>.
+<a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding">represented accurately</a>.
 This means that an implicit conversion from <code>real quantum 0.01</code> to
-<code>real</code> would implicitly destroy accuracy. As a result, <code>real quantum
-0.01</code> must be _explicitly</em> converted to <code>real</code>. In some other cases,
-implementation limitations may cause errors. For example, an
-implementation is not required to accept <code>real digits 100</code>.</p>
+<code>real</code> would implicitly destroy accuracy. As a result, <code>real quantum 0.01</code>
+must be converted to <code>real</code> <em>explicitly</em>.
+In some other cases, implementation limitations may cause errors. For
+example, an implementation is not required to accept <code>real digits
+100</code>.</p>
 </div>
 </td>
 </tr>
@@ -11235,7 +11236,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-10 23:36:29 +0100
+Last updated 2020-01-10 23:44:54 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

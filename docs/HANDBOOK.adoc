@@ -5801,10 +5801,11 @@ the most common floating-point representation available in hardware,
 link:https://en.wikipedia.org/wiki/IEEE-754[IEEE-754], the value `0.01` cannot be
 link:https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding[represented accurately].
 This means that an implicit conversion from `real quantum 0.01` to
-`real` would implicitly destroy accuracy. As a result, `real quantum
-0.01` must be _explicitly_ converted to `real`. In some other cases,
-implementation limitations may cause errors. For example, an
-implementation is not required to accept `real digits 100`.
+`real` would implicitly destroy accuracy. As a result, `real quantum 0.01`
+must be converted to `real` __explicitly__(((explicit conversion))).
+In some other cases, ((implementation limitations)) may cause errors. For
+example, an implementation is not required to accept `real digits
+100`.
 ====
 
 A `real` subtype should be represented using
