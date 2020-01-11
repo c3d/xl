@@ -4290,9 +4290,8 @@ resize (P:inout packet, S:size) when S > P.header.byte_count is
     P := packet(new_header, new_payload)
 ....
 
-
 In addition, a large number of link:#standard-types[standard types],
-including link:#gneneric-containers[generic container types],
+including link:#genneric-containers[generic container types],
 can be used to quickly build useful data types.
 
 === Shared type annotations
