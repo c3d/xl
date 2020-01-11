@@ -2910,7 +2910,7 @@ In the case of `fib`, the selection of the correct definition is a
 function of an `integer` argument. This is not the only kind of test
 that can be made. In particular, dynamic dispatch based on the _type_ of
 the argument is an important feature to support well-known techniques
-such as object-oriented programming.
+such as link:#object-oriented-programming[object-oriented programming].
 
 Let’s consider an archetypal example for object-oriented programming,
 the `shape` class, with derived classes such as `rectangle`, `circle`,
