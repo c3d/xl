@@ -4269,7 +4269,8 @@ resize (P:inout packet, S:size) is
 ....
 <1> This is a type error on the `packet` type, because the existing
     `payload` field no longer has the correct size, therefore the
-    result does not belong to the `packet` type.
+    result does not belong to the `packet` type, unless `S` is the
+    existing size.
 
 The correct way to write the code above will hightlight the need to
 possibly reallocate memory for the new packet, and deal with three
