@@ -4243,11 +4243,39 @@ Standard type expressions include:
 * `mayfail T` is a shortcut for `T or error` and is used when a
   function may fail.
 * `one_of Patterns` is a type that accept one of the following
-  patterns. It can be used to implement enumerations, but also more
-  complex variant types.
+  patterns. It can be used to implement enumerations, such as
+  `one_of(RED,GREEN,BLUE)`, but also more complex variant types with
+  more complex patterns, like for the definition of `color` below
+  which describes various ways to describe a color:
++
+....
+component is real range 0.0..1.0 bits 16
+angle     is real range 0.0..360.0 bits 16
+color is one_of
+    rgb   Red:component, Green:component, Blue:component
+    rgba  Red:component, Green:component, Blue:component, Alpha:component
+    hsv   Hue:angle, Saturation:component, Value:component
+    hsva  Hue:angle, Saturation:component, Value:component, Alpha:component
+    cymk  Cyan:component, Yellow:component, Magenta:component, Black:component
+    named Name:text
+    named Name:text, Alpha:component
+....
 * `any_of Patterns` is a type that accept any combination of the
-  following pattersn. It can be used to implement flags, but also more
-  complex variant types.
+  following patterns. It can be used to implement flags, like the
+  representation of Unix-style permissions as `any_of(READ,WRITE,EXECUTE)`,
+  but also more complex variant types that may combine multiple
+  patterns, as in the `text_style` type defined below, where a text
+  style can contain at most a family, a weight, a slant, a fill color
+  and a line color:
++
+....
+text_style is any_of
+    family F:font_family
+    weigth W:font_weight
+    slant S:font_slant
+    fill_color C:color
+    line_color C:color
+....
 
 Below is code for a `complex` type that uses some of these features,
 and is somewhat closer to the actual implementation in
@@ -4260,10 +4288,8 @@ polar[real:type]        is type polar(Mod:real, Arg:real)
 
 with
     real : type like number
-    C    : cartesian[real]
     C1   : cartesian[real]
     C2   : cartesian[real]
-    P    : polar[real]
     P1   : polar[real]
     P2   : polar[real]
 
@@ -6024,6 +6050,7 @@ machine the code runs on.
 
 === Type interface
 
+[[field]][[method]]
 The link:#interface-and-implementation[interface] of a type specifies
 how the type can be used, and what operations can be performed with
 it. Specifically, the interface defines:
@@ -6300,8 +6327,8 @@ picture is type picture
     width  is bits.width
     height is bits.height
 
-    width:type(width)   := W is bits.width := W
-    height:type(height) := H is bits.width := H
+    width:type(width)   := W    is      bits.width := W
+    height:type(height) := H    is      bits.width := H
 ----
 
 To avoid this issue, there is a general convention that writing to a
@@ -6848,6 +6875,37 @@ paradigms _together_ is a testimony to the extensible nature of the
 language.(((extensible,language)))
 
 === Object-oriented programming
+
+link:https://en.wikipedia.org/wiki/Object-oriented_programming[Object-oriented programming]
+is a programming paradigm based on the concept of _((object))s_,
+which are self-contained units acting as black boxes, providing a
+controlled interface to their internal _((data))_ through
+_((method))s_. This provides a form of _((information hiding))_ that
+helps with the long-term maintenance of the software by enforcing
+rules about how to access the object.
+Object-oriented programming relies on a number of features such as
+link:https://en.wikipedia.org/wiki/Encapsulation_(computer_programming)[_((encapsulation))_]
+link:https://en.wikipedia.org/wiki/Dynamic_dispatch[_((dynamic dispatch))_],
+(sometimes called _((message passing))_),
+link:https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)[_((inheritance))_],
+and link:https://en.wikipedia.org/wiki/Polymorphism_(computer_science)[_((polymorphism))_].
+
+A common way to introduce object-oriented programming is with a
+program that deals with various shapes. This is a good way to
+illustrate the use of the fundamental object-oriented techniques. In
+the following example, we will write such a program, which will both
+illustrate the similarities of XL with a language like C++, as well as
+the differences and how they can matter even on such a simple example.
+
+The first part of the program is to define the type `shape`, which
+will act as the
+link:https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)[_((base class))_]
+of our class hierarchy.
+
+....
+type shape with
+....
+
 
 === Functional programming
 
