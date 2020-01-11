@@ -6329,12 +6329,12 @@ distinct cases for resizing:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>resize (P:inout packet, S:size) when S=P.header.byte_count is nil
-resize (P:inout packet, S:size) when S&lt;P.header.byte_count is
+<pre>resize (P:inout packet, S:size) when S = P.header.byte_count is nil
+resize (P:inout packet, S:size) when S &lt; P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := P.payload[0..S-1]
     P := packet(new_header, new_payload)
-resize (P:inout packet, S:size) when S&gt;P.header.byte_count is
+resize (P:inout packet, S:size) when S &gt; P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
         \I when I &lt; P.byte_count   is P.payload[I]
@@ -11197,7 +11197,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-11 13:33:13 +0100
+Last updated 2020-01-11 13:35:23 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

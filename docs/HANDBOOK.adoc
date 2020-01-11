@@ -4277,12 +4277,12 @@ possibly reallocate memory for the new packet, and deal with three
 distinct cases for resizing:
 
 ....
-resize (P:inout packet, S:size) when S=P.header.byte_count is nil
-resize (P:inout packet, S:size) when S<P.header.byte_count is
+resize (P:inout packet, S:size) when S = P.header.byte_count is nil
+resize (P:inout packet, S:size) when S < P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := P.payload[0..S-1]
     P := packet(new_header, new_payload)
-resize (P:inout packet, S:size) when S>P.header.byte_count is
+resize (P:inout packet, S:size) when S > P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
         \I when I < P.byte_count   is P.payload[I]
