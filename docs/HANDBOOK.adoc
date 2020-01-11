@@ -6749,6 +6749,54 @@ if get_background = blue then
 ....
 =====
 
+== Programming paradigms
+
+The XL language features make it quite easy to follow and even enforce
+the rules necessary to apply various common and less common
+_((programming paradigm))s_.
+
+In the following sections, we will consider the following major paradigms:
+
+* <<Object-oriented programming>>
+* <<Functional programming>>
+* <<Generic programming>>
+* <<Design by contract>>
+* <<Distributed programming>>
+
+We will also take a look at a few less common, if highly esteemed,
+programming paradigms, which all carved a niche through
+somewhat special-purpose programming languages:
+
+* <<Aspect-oriented programming>>
+* <<Logic programming>>
+* <<Declarative programming>>
+* <<Reactive programming>>
+* <<Synchronous programming>>
+
+The fact that XL seamlessly supports so many different programming
+paradigms _together_ is a testimony to the extensible nature of the
+language.(((extensible,language)))
+
+=== Object-oriented programming
+
+=== Functional programming
+
+=== Generic programming
+
+=== Design by contract
+
+=== Distributed programming
+
+=== Aspect-oriented programming
+
+=== Logic programming
+
+=== Declarative programming
+
+=== Reactive programming
+
+=== Synchronous programming
+
 == Compiling XL
 
 
