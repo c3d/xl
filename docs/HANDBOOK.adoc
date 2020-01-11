@@ -4242,6 +4242,35 @@ Standard type expressions include:
   can be used to exclude specific types from a definition.
 * `mayfail T` is a shortcut for `T or error` and is used when a
   function may fail.
+* `one_of Patterns` is a type that accept one of the following
+  patterns. It can be used to implement enumerations, but also more
+  complex variant types.
+* `any_of Patterns` is a type that accept any combination of the
+  following pattersn. It can be used to implement flags, but also more
+  complex variant types.
+
+Below is code for a `complex` type that uses some of these features,
+and is somewhat closer to the actual implementation in
+`XL.MATH.COMPLEX` than what we have shown so far:
+
+....
+complex[real:type]      is real or polar[real] or cartesian[real]
+cartesian[real:type]    is type cartesian(Re:real, Im:real)
+polar[real:type]        is type polar(Mod:real, Arg:real)
+
+with
+    real : type like number
+    C    : cartesian[real]
+    C1   : cartesian[real]
+    C2   : cartesian[real]
+    P    : polar[real]
+    P1   : polar[real]
+    P2   : polar[real]
+
+C1 + C2         is cartesian(C1.Re + C2.Re, C1.Im + C2.Im)
+C1 - C2         is cartesian(C1.Re - C2.Re, C1.Im - C2.Im)
+P1 * P2         is polar(P1.Mod * P2.Mod, P1.Arg + P2.Arg)
+....
 
 Type expressions evaluate following the regular rules of evaluation
 for XL. This makes it possible to build types that would be impossible
@@ -4259,9 +4288,9 @@ packet is type packet
     payload : payload[header.byte_count]
 ....
 
-It is fundamental to realize that the XL type system provides very
-strong guarantees even for data types as complicated as this one.
-For example, the following code will fail type system checks:
+The XL type system provides very strong guarantees even for data types
+as complicated as this one.  For example, the following code will fail
+type system checks:
 
 ....
 resize (P:inout packet, S:size) is
@@ -5392,7 +5421,7 @@ message, or a simple message and a payload.:
 
 [source]
 ----
-error as type is either
+error as type is one_of
     error Message:text
     error Message:text, Payload
 ----
@@ -5785,7 +5814,13 @@ some_complex is type complex[real:type like number]
 ....
 
 The notation `type like base` can also be used in the
-link:#interface[interface] for a type.
+link:#interface[interface] for a type. In both cases, the notation is
+a promise that the type in question can be implicitly converted to the
+base class. It does not specify how this is done. One way, indicated
+above, is to provide an implicit conversion function. Another way is
+by adopting a similar data structure, an approach called
+link:#data-inheritance[data inheritance].
+
 
 === Subtypes
 
@@ -6123,6 +6158,43 @@ implementation for `P.width`, we must look this expression up in a
 context where the implementation of `picture` is known. Finding an
 implementation definition that matches the interface definition is the
 mechanism underlying direct implementation of the feature.
+
+==== Data inheritance
+
+To implement inheritance, a direct implementation is to simply reuse
+the existing data in the original type, possibly adding more to
+it. This is called _((data inheritance))_, and is implemented by using
+the `T with Fields` notation.
+
+For example, using data inheritance to implement a `colored_text` that
+derives from the `text` type and adds a color, the interface might be:
+
+....
+colored_text as type like text with
+    foreground : color
+    background : color
+....
+
+An implementation using data inheritance would look like this:
+
+....
+colored_text is text with
+   background : color
+   foreground : color
+....
+
+As shown in the example, the fields need not be in the same order in
+the implementation as in the interface. In the resulting
+implementation type, a field named `base` refers to the base type on
+the left of `with`. For values of that derived type, the field `base`
+refers to the base value. Using data inheritance lets the translator
+automatically generate implicit conversion code that takes a derived
+value and returns its base. In our case, that implicit conversion
+would look like this:
+
+....
+derived:colored_text as text is derived.base
+....
 
 ==== Indirect implementation
 
