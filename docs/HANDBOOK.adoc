@@ -1681,28 +1681,28 @@ right-associative, which would cause parsing ambiguities.
 The syntax file uses a few special names:
 
 * `INFIX`, `PREFIX`, `POSTFIX` and `BLOCK` introduce sections that
-declare the operators of the respective types.
+  declare the operators of the respective types.
 * `COMMENT` and `TEXT` specify delimiters for comments and long text
-respectively.
+  respectively.
 * `SYNTAX` introduces a child syntax. It is followed by the name of a
-syntax file, and then by an opening and closing symbol for that syntax.
+  syntax file, and then by an opening and closing symbol for that syntax.
 * `BINARY` specifies the names that introduce binary data. The default
-syntax file uses `bits`. The syntax for binary data can take one of two
-forms: either a very large integer constant in big-endian format, as in
-`bits 16#000102030405060708090A0B0C0D0E0F`, or the name of a file, as in
-`bits "image.png"`.
+  syntax file uses `bits`. The syntax for binary data can take one of two
+  forms: either a very large integer constant in big-endian format, as in
+  `bits 16#000102030405060708090A0B0C0D0E0F`, or the name of a file, as in
+  `bits "image.png"`.
 * `NEWLINE` is used to represent the infix operators that separates
-individual source code lines.
+  individual source code lines.
 * `STATEMENT` is the precedence that delimits
-link:#expression-vs-statement[expressions from statements]. Any
-operator with a lower precedence belongs to a statement, like `if` or
-`loop`. Any operator with a higher precedence belongs to an expression,
-like `+` or `*`.
+  link:#expression-vs-statement[expressions from statements]. Any
+  operator with a lower precedence belongs to a statement, like `if` or
+  `loop`. Any operator with a higher precedence belongs to an expression,
+  like `+` or `*`.
 * `DEFAULT` is the default precedence for names and symbols. It is not
-very important in practice.
+  very important in practice.
 * `FUNCTION` is the precedence for names and symbols used as a prefix
-when they are not explicitly listed in the file. If you write `sin X`
-for example, the associated precedence will be that of `FUNCTION`.
+  when they are not explicitly listed in the file. If you write `sin X`
+  for example, the associated precedence will be that of `FUNCTION`.
 
 ==== Delimiters
 
@@ -6063,7 +6063,6 @@ function interface:
 ----
 picture(width:size, height:size) as picture
 ----
-
 
 ==== Information hiding
 
