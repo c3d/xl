@@ -592,49 +592,40 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#ownership">4.6.7. Ownership</a></li>
 <li><a href="#access-types">4.6.8. Access types</a></li>
 <li><a href="#inheritance">4.6.9. Inheritance</a></li>
-<li><a href="#subtypes">4.6.10. Subtypes</a>
-<ul class="sectlevel4">
-<li><a href="#range-subtypes">4.6.10.1. Range subtypes</a></li>
-<li><a href="#size-subtypes">4.6.10.2. Size subtypes</a></li>
-<li><a href="#real-subtypes">4.6.10.3. Real subtypes</a></li>
-<li><a href="#saturating-subtypes">4.6.10.4. Saturating subtypes</a></li>
-<li><a href="#character-subtypes">4.6.10.5. Character subtypes</a></li>
-<li><a href="#text-subtypes">4.6.10.6. Text subtypes</a></li>
-<li><a href="#memory-access-subtypes">4.6.10.7. Memory access subtypes</a></li>
 </ul>
 </li>
-<li><a href="#type-interface">4.6.11. Type interface</a>
-<ul class="sectlevel4">
-<li><a href="#information-hiding">4.6.11.1. Information hiding</a></li>
-<li><a href="#direct-implementation">4.6.11.2. Direct implementation</a></li>
-<li><a href="#indirect-implementation">4.6.11.3. Indirect implementation</a></li>
-<li><a href="#delegation">4.6.11.4. Delegation</a></li>
-<li><a href="#attributes-implementation">4.6.11.5. Attributes implementation</a></li>
-<li><a href="#generic-implementations">4.6.11.6. Generic implementations</a></li>
-<li><a href="#attribute-error-checking">4.6.11.7. Attribute error checking</a></li>
-<li><a href="#exposed-details">4.6.11.8. Exposed details</a></li>
-</ul>
-</li>
-<li><a href="#transfers">4.6.12. Transfers</a>
-<ul class="sectlevel4">
-<li><a href="#assignments">4.6.12.1. Assignments</a></li>
-<li><a href="#copy">4.6.12.2. Copy</a></li>
-<li><a href="#move">4.6.12.3. Move</a></li>
-<li><a href="#binding-2">4.6.12.4. Binding</a></li>
-<li><a href="#name-parameters">4.6.12.5. Name parameters</a></li>
-<li><a href="#attributes">4.6.12.6. Attributes</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#type-expressions-2">4.7. Type expressions</a>
+<li><a href="#subtypes">4.7. Subtypes</a>
 <ul class="sectlevel3">
-<li><a href="#variant-types">4.7.1. Variant types</a></li>
+<li><a href="#range-subtypes">4.7.1. Range subtypes</a></li>
+<li><a href="#size-subtypes">4.7.2. Size subtypes</a></li>
+<li><a href="#real-subtypes">4.7.3. Real subtypes</a></li>
+<li><a href="#saturating-subtypes">4.7.4. Saturating subtypes</a></li>
+<li><a href="#character-subtypes">4.7.5. Character subtypes</a></li>
+<li><a href="#text-subtypes">4.7.6. Text subtypes</a></li>
+<li><a href="#memory-access-subtypes">4.7.7. Memory access subtypes</a></li>
 </ul>
 </li>
-<li><a href="#type-hierarchy">4.8. Type hierarchy</a>
+<li><a href="#type-interface">4.8. Type interface</a>
 <ul class="sectlevel3">
-<li><a href="#mostly-junk-below-ignore-ideas-scratchpad">4.8.1. MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)</a></li>
+<li><a href="#information-hiding">4.8.1. Information hiding</a></li>
+<li><a href="#direct-implementation">4.8.2. Direct implementation</a></li>
+<li><a href="#indirect-implementation">4.8.3. Indirect implementation</a></li>
+<li><a href="#delegation">4.8.4. Delegation</a></li>
+<li><a href="#attributes-implementation">4.8.5. Attributes implementation</a></li>
+<li><a href="#generic-implementations">4.8.6. Generic implementations</a></li>
+<li><a href="#attribute-error-checking">4.8.7. Attribute error checking</a></li>
+<li><a href="#exposed-details">4.8.8. Exposed details</a></li>
+</ul>
+</li>
+<li><a href="#transfers">4.9. Transfers</a>
+<ul class="sectlevel3">
+<li><a href="#assignments">4.9.1. Assignments</a></li>
+<li><a href="#copy">4.9.2. Copy</a></li>
+<li><a href="#move">4.9.3. Move</a></li>
+<li><a href="#binding-2">4.9.4. Binding</a></li>
+<li><a href="#name-parameters">4.9.5. Name parameters</a></li>
+<li><a href="#attributes">4.9.6. Attributes</a></li>
+<li><a href="#mostly-junk-below-ignore-ideas-scratchpad">4.9.7. MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)</a></li>
 </ul>
 </li>
 </ul>
@@ -8397,8 +8388,9 @@ type, not a value:</p>
 <a href="#interface">interface</a> for a type.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="subtypes"><a class="anchor" href="#subtypes"></a><a class="link" href="#subtypes">4.6.10. Subtypes</a></h4>
+</div>
+<div class="sect2">
+<h3 id="subtypes"><a class="anchor" href="#subtypes"></a><a class="link" href="#subtypes">4.7. Subtypes</a></h3>
 <div class="paragraph">
 <p>A type can be given additional constraints,
 which define a <em>subtype</em>. A subtype can always be converted to the
@@ -8420,8 +8412,8 @@ that matches only <code>integer</code> values between <code>1</code> and <code>1
 <p>The language defines a number of standard subtypes. All these subtypes
 can be implemented using regular language features.</p>
 </div>
-<div class="sect4">
-<h5 id="range-subtypes"><a class="anchor" href="#range-subtypes"></a><a class="link" href="#range-subtypes">4.6.10.1. Range subtypes</a></h5>
+<div class="sect3">
+<h4 id="range-subtypes"><a class="anchor" href="#range-subtypes"></a><a class="link" href="#range-subtypes">4.7.1. Range subtypes</a></h4>
 <div class="paragraph">
 <p>Subtyping to select a range is common enough that there is a shortcut
 for it. For any type with an order, subtypes can be created with the
@@ -8441,8 +8433,8 @@ for it. For any type with an order, subtypes can be created with the
 </div>
 </div>
 </div>
-<div class="sect4">
-<h5 id="size-subtypes"><a class="anchor" href="#size-subtypes"></a><a class="link" href="#size-subtypes">4.6.10.2. Size subtypes</a></h5>
+<div class="sect3">
+<h4 id="size-subtypes"><a class="anchor" href="#size-subtypes"></a><a class="link" href="#size-subtypes">4.7.2. Size subtypes</a></h4>
 <div class="paragraph">
 <p>The infix <code>bits</code> operator creates a <em>size subtype</em> with the
 specified number of bits. It applies to <code>real</code>, <code>integer</code> and
@@ -8484,8 +8476,8 @@ as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 </table>
 </div>
 </div>
-<div class="sect4">
-<h5 id="real-subtypes"><a class="anchor" href="#real-subtypes"></a><a class="link" href="#real-subtypes">4.6.10.3. Real subtypes</a></h5>
+<div class="sect3">
+<h4 id="real-subtypes"><a class="anchor" href="#real-subtypes"></a><a class="link" href="#real-subtypes">4.7.3. Real subtypes</a></h4>
 <div class="paragraph">
 <p>The <code>real</code> type can be subtyped with a <code>range</code> and a <code>bits</code> size, as
 well as with additional constraints more specific to the <code>real</code> type:</p>
@@ -8566,8 +8558,8 @@ internally by an <code>natural</code> values between <code>0</code> and <code>10
 </div>
 </div>
 </div>
-<div class="sect4">
-<h5 id="saturating-subtypes"><a class="anchor" href="#saturating-subtypes"></a><a class="link" href="#saturating-subtypes">4.6.10.4. Saturating subtypes</a></h5>
+<div class="sect3">
+<h4 id="saturating-subtypes"><a class="anchor" href="#saturating-subtypes"></a><a class="link" href="#saturating-subtypes">4.7.4. Saturating subtypes</a></h4>
 <div class="paragraph">
 <p>The <code>saturating</code> prefix operator can be used on <code>integer</code> and <code>real</code>
 types (primarily intended for use with fixed-point subtypes) to select
@@ -8586,8 +8578,8 @@ Red += 0.75             // Red is now 1.0</pre>
 </div>
 </div>
 </div>
-<div class="sect4">
-<h5 id="character-subtypes"><a class="anchor" href="#character-subtypes"></a><a class="link" href="#character-subtypes">4.6.10.5. Character subtypes</a></h5>
+<div class="sect3">
+<h4 id="character-subtypes"><a class="anchor" href="#character-subtypes"></a><a class="link" href="#character-subtypes">4.7.5. Character subtypes</a></h4>
 <div class="paragraph">
 <p>The <code>character</code> types can be subtyped with the <code>range</code> and <code>bits</code>
 operators:</p>
@@ -8620,15 +8612,15 @@ have <code>character</code> values that sort following German rules, you would u
 </ul>
 </div>
 </div>
-<div class="sect4">
-<h5 id="text-subtypes"><a class="anchor" href="#text-subtypes"></a><a class="link" href="#text-subtypes">4.6.10.6. Text subtypes</a></h5>
+<div class="sect3">
+<h4 id="text-subtypes"><a class="anchor" href="#text-subtypes"></a><a class="link" href="#text-subtypes">4.7.6. Text subtypes</a></h4>
 <div class="paragraph">
 <p>The <code>text</code> type can be subtyped with the <code>encoding</code>, <code>locale</code> and
 <code>collation</code> operators, with the same meaning as for <code>character</code>.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="memory-access-subtypes"><a class="anchor" href="#memory-access-subtypes"></a><a class="link" href="#memory-access-subtypes">4.6.10.7. Memory access subtypes</a></h5>
+<div class="sect3">
+<h4 id="memory-access-subtypes"><a class="anchor" href="#memory-access-subtypes"></a><a class="link" href="#memory-access-subtypes">4.7.7. Memory access subtypes</a></h4>
 <div id="atomic" class="paragraph">
 <p>Many recent machines provide several ways to access memory, for
 example to deal with synchronization between multiple CPUs or between
@@ -8675,8 +8667,8 @@ machine the code runs on.</p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="type-interface"><a class="anchor" href="#type-interface"></a><a class="link" href="#type-interface">4.6.11. Type interface</a></h4>
+<div class="sect2">
+<h3 id="type-interface"><a class="anchor" href="#type-interface"></a><a class="link" href="#type-interface">4.8. Type interface</a></h3>
 <div class="paragraph">
 <p>The <a href="#interface-and-implementation">interface</a> of a type specifies
 how the type can be used, and what operations can be performed with
@@ -8765,8 +8757,8 @@ function interface:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture(width:size, height:size) as picture</code></pre>
 </div>
 </div>
-<div class="sect4">
-<h5 id="information-hiding"><a class="anchor" href="#information-hiding"></a><a class="link" href="#information-hiding">4.6.11.1. Information hiding</a></h5>
+<div class="sect3">
+<h4 id="information-hiding"><a class="anchor" href="#information-hiding"></a><a class="link" href="#information-hiding">4.8.1. Information hiding</a></h4>
 <div class="paragraph">
 <p>The interface of a type does not reveal any information on the actual
 implementation of the type, e.g. on the shape of the parse tree
@@ -8797,8 +8789,8 @@ interface alone.</p>
 typically reside in different source files.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="direct-implementation"><a class="anchor" href="#direct-implementation"></a><a class="link" href="#direct-implementation">4.6.11.2. Direct implementation</a></h5>
+<div class="sect3">
+<h4 id="direct-implementation"><a class="anchor" href="#direct-implementation"></a><a class="link" href="#direct-implementation">4.8.2. Direct implementation</a></h4>
 <div class="paragraph">
 <p>The simplest way to implement any feature of a type is to ensure that
 the implementation of the type has a matching feature. This is called
@@ -8837,8 +8829,8 @@ implementation definition that matches the interface definition is the
 mechanism underlying direct implementation of the feature.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="indirect-implementation"><a class="anchor" href="#indirect-implementation"></a><a class="link" href="#indirect-implementation">4.6.11.3. Indirect implementation</a></h5>
+<div class="sect3">
+<h4 id="indirect-implementation"><a class="anchor" href="#indirect-implementation"></a><a class="link" href="#indirect-implementation">4.8.3. Indirect implementation</a></h4>
 <div class="paragraph">
 <p>However, the implementation may be entirely different from the
 interface, as long as any expression that is valid knowing the
@@ -8871,8 +8863,8 @@ almost as if they were provided by a direct implementation. We will
 see a number of examples in the next sections.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="delegation"><a class="anchor" href="#delegation"></a><a class="link" href="#delegation">4.6.11.4. Delegation</a></h5>
+<div class="sect3">
+<h4 id="delegation"><a class="anchor" href="#delegation"></a><a class="link" href="#delegation">4.8.4. Delegation</a></h4>
 <div class="paragraph">
 <p>An interesting case is when the type <em>delegates</em> most
 of its implementation to some other type. For example, the <code>picture</code>
@@ -8913,8 +8905,8 @@ With this interface change, the code above will correctly allow us to
 find an implementation for expressions such as <code>P.width</code>.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="attributes-implementation"><a class="anchor" href="#attributes-implementation"></a><a class="link" href="#attributes-implementation">4.6.11.5. Attributes implementation</a></h5>
+<div class="sect3">
+<h4 id="attributes-implementation"><a class="anchor" href="#attributes-implementation"></a><a class="link" href="#attributes-implementation">4.8.5. Attributes implementation</a></h4>
 <div class="paragraph">
 <p>If, however, we still want to be able to <em>write</em> into <code>width</code> and
 <code>height</code>, the implementation must provide a way to assign to the field.
@@ -9007,8 +8999,8 @@ compiler will transparently look for an attribute pair as a possible
 implementation.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="generic-implementations"><a class="anchor" href="#generic-implementations"></a><a class="link" href="#generic-implementations">4.6.11.6. Generic implementations</a></h5>
+<div class="sect3">
+<h4 id="generic-implementations"><a class="anchor" href="#generic-implementations"></a><a class="link" href="#generic-implementations">4.8.6. Generic implementations</a></h4>
 <div class="paragraph">
 <p>By providing as little type information as possible, the code as
 written above remains as generic as possible. This enables better
@@ -9035,8 +9027,8 @@ error in that case, because nothing in our code accepts a <code>size</code>
 value that does not fit in the <code>u16</code> subtype.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="attribute-error-checking"><a class="anchor" href="#attribute-error-checking"></a><a class="link" href="#attribute-error-checking">4.6.11.7. Attribute error checking</a></h5>
+<div class="sect3">
+<h4 id="attribute-error-checking"><a class="anchor" href="#attribute-error-checking"></a><a class="link" href="#attribute-error-checking">4.8.7. Attribute error checking</a></h4>
 <div class="paragraph">
 <p>This can also be fixed, but if we want to do it correctly, we need to
 range-check the input. One cheap and lazy way to do it is to ignore
@@ -9114,8 +9106,8 @@ a large number of errors and force you to deal with them, giving you
 several ways to safely evolve the code.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="exposed-details"><a class="anchor" href="#exposed-details"></a><a class="link" href="#exposed-details">4.6.11.8. Exposed details</a></h5>
+<div class="sect3">
+<h4 id="exposed-details"><a class="anchor" href="#exposed-details"></a><a class="link" href="#exposed-details">4.8.8. Exposed details</a></h4>
 <div class="paragraph">
 <p>A similar, if slightly more complicated problem arises with the
 proposed interface for <code>pixels</code> in the <code>picture</code> type, because
@@ -9153,8 +9145,8 @@ to crash or your rocket to explode.</p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="transfers"><a class="anchor" href="#transfers"></a><a class="link" href="#transfers">4.6.12. Transfers</a></h4>
+<div class="sect2">
+<h3 id="transfers"><a class="anchor" href="#transfers"></a><a class="link" href="#transfers">4.9. Transfers</a></h3>
 <div class="paragraph">
 <p>One of the most important operation that can happen to values of any
 type is to <em>transfer</em> them around in the program. These operations
@@ -9168,8 +9160,8 @@ that it is necessary to consider performance of transfers, which is
 one reason why there are two flavors, <a href="#copy">copy</a> and
 <a href="#move">move</a>.</p>
 </div>
-<div class="sect4">
-<h5 id="assignments"><a class="anchor" href="#assignments"></a><a class="link" href="#assignments">4.6.12.1. Assignments</a></h5>
+<div class="sect3">
+<h4 id="assignments"><a class="anchor" href="#assignments"></a><a class="link" href="#assignments">4.9.1. Assignments</a></h4>
 <div class="paragraph">
 <p>As was <a href="#assignment">already discussed</a>, an <em>assignment</em> is the
 primary way for a programmer to explicitly transfer values from one
@@ -9217,8 +9209,8 @@ Target:out picture := Source:picture    is Target :&lt; Source     // Move</pre>
 </div>
 </div>
 </div>
-<div class="sect4">
-<h5 id="copy"><a class="anchor" href="#copy"></a><a class="link" href="#copy">4.6.12.2. Copy</a></h5>
+<div class="sect3">
+<h4 id="copy"><a class="anchor" href="#copy"></a><a class="link" href="#copy">4.9.2. Copy</a></h4>
 <div class="paragraph">
 <p>A <em>copy</em> is a kind of transfer which creates a new, "identical",
 yet independent value. The new value can then be modified
@@ -9284,8 +9276,8 @@ node_filter is type(N:node as boolean)</pre>
 </div>
 </div>
 </div>
-<div class="sect4">
-<h5 id="move"><a class="anchor" href="#move"></a><a class="link" href="#move">4.6.12.3. Move</a></h5>
+<div class="sect3">
+<h4 id="move"><a class="anchor" href="#move"></a><a class="link" href="#move">4.9.3. Move</a></h4>
 <div class="paragraph">
 <p>A <em>move</em> is a kind of destructive transfer which gives a value to
 a new location, and <a href="#destruction">destroys</a> the original value.
@@ -9333,8 +9325,8 @@ compiler should normally issue a diagnostic when an attempt is made to
 use a value that was moved or deleted.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.6.12.4. Binding</a></h5>
+<div class="sect3">
+<h4 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.9.4. Binding</a></h4>
 <div class="paragraph">
 <p>The transfer of an argument to a formal parameter during a call is
 called <em>binding</em>, and like an assignment, it may involve either
@@ -9438,8 +9430,8 @@ convenience of copy semantics for local variables and the speed of
 move semantics for calls.</p>
 </div>
 </div>
-<div class="sect4">
-<h5 id="name-parameters"><a class="anchor" href="#name-parameters"></a><a class="link" href="#name-parameters">4.6.12.5. Name parameters</a></h5>
+<div class="sect3">
+<h4 id="name-parameters"><a class="anchor" href="#name-parameters"></a><a class="link" href="#name-parameters">4.9.5. Name parameters</a></h4>
 <div class="paragraph">
 <p>In some cases, it is interesting for a form to create new variables
 based on a name given as an argument. The corresponding parameter is
@@ -9529,8 +9521,8 @@ evaluating `Body</code>.</td>
 </table>
 </div>
 </div>
-<div class="sect4">
-<h5 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.6.12.6. Attributes</a></h5>
+<div class="sect3">
+<h4 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.9.6. Attributes</a></h4>
 <div class="paragraph">
 <p>Attributes are a convention to special-case the transfer of values to
 a specific named entity, notably when it is important to control how
@@ -9591,111 +9583,10 @@ if get_background = blue then
 </tr>
 </table>
 </div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="type-expressions-2"><a class="anchor" href="#type-expressions-2"></a><a class="link" href="#type-expressions-2">4.7. Type expressions</a></h3>
-<div class="paragraph">
-<p>A type declaration is like any other XL declaration. It can have
-parameters, including parameters with the <code>type</code> type, and such
-declarations can then be used to build <em>type expressions</em>.</p>
-</div>
-<div class="paragraph">
-<p>For example, the following code defines a generic <code>complex</code> type to
-take an argument that indicates the representation for <code>real</code> numbers,
-and uses that first declaration to declare two types, <code>complex</code> and
-<code>complex32</code>, the latter using <code>real32</code> as a representation type for real
-numbers:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type complex[real:type] is complex(Re:real, Im:real)
-type complex is complex[real]
-type complex32 is complex[real32]</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Type expressions play for XL the role that "class templates" play in
-C++, or "generic types" in Ada, although the implementation may
-in some cases need to fallback to more dynamically typed ways to
-evaluate the code.</p>
-</div>
-<div class="paragraph">
-<p>By convention, type expressions use square brackets, as in
-<code>complex[real]</code>, reserving parentheses for normal expressions, as in
-<code>complex(1.2,3.4)</code>. There is no language requirement enforcing this,
-however. It is perfectly legal, if unusual, to write <code>complex real</code> and
-<code>complex[1.2,3.4]</code>.</p>
-</div>
-<div class="paragraph">
-<p>In practice, type expression are extremely frequent, notably being
-used to define a plethora of generic types using operator-like
-notations, like <code>pointer to T</code>.</p>
-</div>
-<div class="sect3">
-<h4 id="variant-types"><a class="anchor" href="#variant-types"></a><a class="link" href="#variant-types">4.7.1. Variant types</a></h4>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture with
-    width  : unsigned
-    height : unsigned
-    format : either { RGB; GRAY }
-    buffer : buffer
-    size is width * height
-    type grayscale is fixed_point range 0.0..1.0 bits 8
-    type buffer is buffer[1..size] of pixel
-
-    type pixel is pixel[format]
-    type pixel[RGB] is rgb(red   : grayscale,
-                           green : grayscale,
-                           blue  : grayscale)
-    type pixel[GRAY] is gray(gray: grayscale)</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>copy-controlling types, which cause a copy when the value is
-initialized, when it goes out of scope, or in both cases. They are
-mostly used for function parameters, although they can also be used in
-data structures.
-<code>increment X:inout integer is X := X+1; print_A   print_A is print "A=", A   A:integer := 45   increment A   // Can print either "A=45" or "A=46" depending on copy or ref</code>
-&gt; NOTE: The language makes no guarantee that the copies happen &gt; <em>only</em>
-when the value is created or destroyed. Typically, <code>inout T</code> &gt; will
-perform copies only for small objects, and use references for &gt; larger
-ones if the lifetime of the bound value allows it. The &gt; compilers
-determines which approach is more efficient in an &gt;
-architecture-dependent way.</p>
-</div>
-<div class="paragraph">
-<p>The <code>copy_in T</code>, <code>copy_out T</code> and <code>copy_inout T</code> are types that
-guarantee that copy will occur.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>ref T</code> is a reference to the entity being bound, meaning that any
-change to the <code>ref T</code> value will actually modify the bound value. The
-lifetime of the bound value must dominate the lifetime of the <code>ref T</code>
-value. Mutability for the reference is the same as mutability for the</p>
-<div class="literalblock">
-<div class="content">
-<pre>// Increment in place
-increment X:ref integer is X := X+1; print_A
-print_A is print "A=", A
-A:integer := 45
-increment A   // Guaranteed to print "A=46", X is the same as A</pre>
-</div>
-</div>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="type-hierarchy"><a class="anchor" href="#type-hierarchy"></a><a class="link" href="#type-hierarchy">4.8. Type hierarchy</a></h3>
 <hr>
+</div>
 <div class="sect3">
-<h4 id="mostly-junk-below-ignore-ideas-scratchpad"><a class="anchor" href="#mostly-junk-below-ignore-ideas-scratchpad"></a><a class="link" href="#mostly-junk-below-ignore-ideas-scratchpad">4.8.1. MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)</a></h4>
+<h4 id="mostly-junk-below-ignore-ideas-scratchpad"><a class="anchor" href="#mostly-junk-below-ignore-ideas-scratchpad"></a><a class="link" href="#mostly-junk-below-ignore-ideas-scratchpad">4.9.7. MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)</a></h4>
 <div class="paragraph">
 <p>The difference matters in particular in the interface of a type, as
 declared by <code>with</code>. The non-mutable declarations using <code>as</code> are
@@ -11197,7 +11088,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-11 13:44:44 +0100
+Last updated 2020-01-11 13:53:52 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

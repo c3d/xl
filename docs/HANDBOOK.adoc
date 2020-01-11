@@ -5788,7 +5788,7 @@ some_complex is type complex[real:type like number]
 The notation `type like base` can also be used in the
 link:#interface[interface] for a type.
 
-==== Subtypes
+=== Subtypes
 
 A type can be given additional constraints(((type constraints))),
 which define a _((subtype))_. A subtype can always be converted to the
@@ -5808,7 +5808,7 @@ month is type(M:integer when M >= 1 and M <= 12)
 The language defines a number of standard subtypes. All these subtypes
 can be implemented using regular language features.
 
-===== Range subtypes
+==== Range subtypes
 
 Subtyping to select a range is common enough that there is a shortcut
 for it. For any type with an order, subtypes can be created with the
@@ -5826,7 +5826,7 @@ With this definition, the `month` type can be defines simply as follows:
 month is integer range 1..12
 ----
 
-===== Size subtypes
+==== Size subtypes
 
 The infix `bits` operator creates a _((size subtype))_ with the
 specified number of bits. It applies to `real`, `integer` and
@@ -5855,7 +5855,7 @@ convenient or more efficient machine representation. For example, on a
 32-bit machine, `integer bits 22` might be more efficiently represented
 as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
 
-===== Real subtypes
+==== Real subtypes
 
 The `real` type can be subtyped with a `range` and a `bits` size, as
 well as with additional constraints more specific to the `real` type:
@@ -5911,7 +5911,7 @@ internally by an `natural` values between `0` and `100`, and converted to
 hundredth is real range 0.0..1.0 quantum 0.01
 ----
 
-===== Saturating subtypes
+==== Saturating subtypes
 
 The `saturating` prefix operator can be used on `integer` and `real`
 types (primarily intended for use with fixed-point subtypes) to select
@@ -5927,7 +5927,7 @@ Red : color_component := 0.5
 Red += 0.75             // Red is now 1.0
 ....
 
-===== Character subtypes
+==== Character subtypes
 
 The `character` types can be subtyped with the `range` and `bits`
 operators:
@@ -5949,12 +5949,12 @@ operators:
   `character collation "de_DE"`
 
 
-===== Text subtypes
+==== Text subtypes
 
 The `text` type can be subtyped with the `encoding`, `locale` and
 `collation` operators, with the same meaning as for `character`.
 
-===== Memory access subtypes
+==== Memory access subtypes
 
 [[atomic]]
 Many recent machines provide several ways to access memory, for
@@ -5988,7 +5988,7 @@ The following standard subtypes implement memory-related semantics:
 Additional subtypes may be available to match the features of the
 machine the code runs on.
 
-==== Type interface
+=== Type interface
 
 The link:#interface-and-implementation[interface] of a type specifies
 how the type can be used, and what operations can be performed with
@@ -6065,7 +6065,7 @@ picture(width:size, height:size) as picture
 ----
 
 
-===== Information hiding
+==== Information hiding
 
 The interface of a type does not reveal any information on the actual
 implementation of the type, e.g. on the shape of the parse tree
@@ -6092,7 +6092,7 @@ Information hiding is specially useful in the context of
 link:#modules[modules], where the interface and implementation
 typically reside in different source files.
 
-===== Direct implementation
+==== Direct implementation
 
 The simplest way to implement any feature of a type is to ensure that
 the implementation of the type has a matching feature. This is called
@@ -6126,7 +6126,7 @@ context where the implementation of `picture` is known. Finding an
 implementation definition that matches the interface definition is the
 mechanism underlying direct implementation of the feature.
 
-===== Indirect implementation
+==== Indirect implementation
 
 However, the implementation may be entirely different from the
 interface, as long as any expression that is valid knowing the
@@ -6154,7 +6154,7 @@ features, while still allowing individual features to be accessed
 almost as if they were provided by a direct implementation. We will
 see a number of examples in the next sections.
 
-===== Delegation
+==== Delegation
 
 An interesting case is when the type _delegates_(((delegation))) most
 of its implementation to some other type. For example, the `picture`
@@ -6191,7 +6191,7 @@ match the interface. A simple solution would be to modify the
 With this interface change, the code above will correctly allow us to
 find an implementation for expressions such as `P.width`.
 
-===== Attributes implementation
+==== Attributes implementation
 
 If, however, we still want to be able to _write_ into `width` and
 `height`, the implementation must provide a way to assign to the field.
@@ -6277,7 +6277,7 @@ when attempting to find the implementation for an interface, the
 compiler will transparently look for an attribute pair as a possible
 implementation.
 
-===== Generic implementations
+==== Generic implementations
 
 By providing as little type information as possible, the code as
 written above remains as generic as possible. This enables better
@@ -6301,7 +6301,7 @@ makes sense to invoke it with values of this type. There will be an
 error in that case, because nothing in our code accepts a `size`
 value that does not fit in the `u16` subtype.
 
-===== Attribute error checking
+==== Attribute error checking
 
 This can also be fixed, but if we want to do it correctly, we need to
 range-check the input. One cheap and lazy way to do it is to ignore
@@ -6374,7 +6374,7 @@ information hiding can never be perfect. The XL type system will catch
 a large number of errors and force you to deal with them, giving you
 several ways to safely evolve the code.
 
-===== Exposed details
+==== Exposed details
 
 A similar, if slightly more complicated problem arises with the
 proposed interface for `pixels` in the `picture` type, because
@@ -6407,7 +6407,7 @@ as these details are not critical for safe evaluation. The details
 that will not be hidden in that case are what might cause your program
 to crash or your rocket to explode.
 
-==== Transfers
+=== Transfers
 
 One of the most important operation that can happen to values of any
 type is to _((transfer))_ them around in the program. These operations
@@ -6421,7 +6421,7 @@ that it is necessary to consider performance of transfers, which is
 one reason why there are two flavors, link:#copy[copy] and
 link:#move[move].
 
-===== Assignments
+==== Assignments
 
 As was link:#assignment[already discussed], an _((assignment))_ is the
 primary way for a programmer to explicitly transfer values from one
@@ -6462,7 +6462,7 @@ Target:out complex := Source:complex    is Target :+ Source     // Copy
 Target:out picture := Source:picture    is Target :< Source     // Move
 ....
 
-===== Copy
+==== Copy
 
 A _((copy))_ is a kind of transfer which creates a new, "identical",
 yet independent value. The new value can then be modified
@@ -6518,7 +6518,7 @@ copy(Source:tree, Keep:node_filter) as mayfail T
 node_filter is type(N:node as boolean)
 ....
 
-===== Move
+==== Move
 
 A _((move))_ is a kind of destructive transfer which gives a value to
 a new location, and link:#destruction[destroys] the original value.
@@ -6559,7 +6559,7 @@ should be in the same state as right after a `delete` operation. The
 compiler should normally issue a diagnostic when an attempt is made to
 use a value that was moved or deleted.
 
-===== Binding
+==== Binding
 
 The transfer of an argument to a formal parameter during a call is
 called _binding_, and like an assignment, it may involve either
@@ -6641,7 +6641,7 @@ references the original text. This organization provides the
 convenience of copy semantics for local variables and the speed of
 move semantics for calls.
 
-===== Name parameters
+==== Name parameters
 
 In some cases, it is interesting for a form to create new variables
 based on a name given as an argument. The corresponding parameter is
@@ -6704,7 +6704,7 @@ for N:name in R:[range of discrete] loop Body is <1>
     `R` was for example a `range of character` like `'A'..'Z'`.
 
 
-===== Attributes
+==== Attributes
 
 Attributes are a convention to special-case the transfer of values to
 a specific named entity, notably when it is important to control how
@@ -6748,91 +6748,6 @@ if get_background = blue then
    set_background red
 ....
 =====
-
-=== Type expressions
-
-A ((type declaration)) is like any other XL declaration. It can have
-parameters, including parameters with the `type` type, and such
-declarations can then be used to build _((type expressions))_.
-
-For example, the following code defines a generic `complex` type to
-take an argument that indicates the representation for `real` numbers,
-and uses that first declaration to declare two types, `complex` and
-`complex32`, the latter using `real32` as a representation type for real
-numbers:
-
-[source]
-----
-type complex[real:type] is complex(Re:real, Im:real)
-type complex is complex[real]
-type complex32 is complex[real32]
-----
-
-Type expressions play for XL the role that "class templates" play in
-pass:[C++], or "generic types" in Ada, although the implementation may
-in some cases need to fallback to more dynamically typed ways to
-evaluate the code.
-
-By convention, type expressions use square brackets, as in
-`complex[real]`, reserving parentheses for normal expressions, as in
-`complex(1.2,3.4)`. There is no language requirement enforcing this,
-however. It is perfectly legal, if unusual, to write `complex real` and
-`complex[1.2,3.4]`.
-
-In practice, type expression are extremely frequent, notably being
-used to define a plethora of ((generic type))s using operator-like
-notations, like `pointer to T`.
-
-
-==== Variant types
-
-[source]
-----
-type picture with
-    width  : unsigned
-    height : unsigned
-    format : either { RGB; GRAY }
-    buffer : buffer
-    size is width * height
-    type grayscale is fixed_point range 0.0..1.0 bits 8
-    type buffer is buffer[1..size] of pixel
-
-    type pixel is pixel[format]
-    type pixel[RGB] is rgb(red   : grayscale,
-                           green : grayscale,
-                           blue  : grayscale)
-    type pixel[GRAY] is gray(gray: grayscale)
-----
-
-copy-controlling types, which cause a copy when the value is
-initialized, when it goes out of scope, or in both cases. They are
-mostly used for function parameters, although they can also be used in
-data structures.
-`increment X:inout integer is X := X+1; print_A   print_A is print "A=", A   A:integer := 45   increment A   // Can print either "A=45" or "A=46" depending on copy or ref`
-> NOTE: The language makes no guarantee that the copies happen > _only_
-when the value is created or destroyed. Typically, `inout T` > will
-perform copies only for small objects, and use references for > larger
-ones if the lifetime of the bound value allows it. The > compilers
-determines which approach is more efficient in an >
-architecture-dependent way.
-
-The `copy_in T`, `copy_out T` and `copy_inout T` are types that
-guarantee that copy will occur.
-
-* `ref T` is a reference to the entity being bound, meaning that any
-change to the `ref T` value will actually modify the bound value. The
-lifetime of the bound value must dominate the lifetime of the `ref T`
-value. Mutability for the reference is the same as mutability for the
-+
-....
-// Increment in place
-increment X:ref integer is X := X+1; print_A
-print_A is print "A=", A
-A:integer := 45
-increment A   // Guaranteed to print "A=46", X is the same as A
-....
-
-=== Type hierarchy
 
 '''''
 
