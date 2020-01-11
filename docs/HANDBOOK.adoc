@@ -6350,8 +6350,9 @@ picture is type picture
     height H    is bits.height := H
 ----
 
-As you might guess, it is also possible to use the attribute syntax to
-update the value of `bits.width` and `bits.height`:
+As you might guess, it is also possible to use the attribute syntax
+for the value of `bits.width` and `bits.height`, as long as this is
+how this was implemented in the `bitmap` type:
 
 [source]
 ----
@@ -6368,11 +6369,6 @@ picture is type picture
 Selecting between the attribute notation or the assignment notation
 for individual fields is largely a matter of taste. It is even
 possible to provide both.
-
-That choice is largely hidden from the interface, however, because
-when attempting to find the implementation for an interface, the
-compiler will transparently look for an attribute pair as a possible
-implementation.
 
 ==== Generic implementations
 
@@ -6826,12 +6822,6 @@ if background = blue then
     background red              // Attribute-setting style
 ....
 
-This is largely a matter of taste, and the preferred form depends on
-the context. In addition, if a type interface exposes a feature `F`
-and if there is an attribute named `F` in the implementation, then the
-attribute will automatically be used to implement the feature, which
-means that an operation like `X.F := V` may silently be transformed
-into `X.F V` if necessary.
 
 [NOTE]
 =====
