@@ -625,12 +625,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#binding-2">4.9.4. Binding</a></li>
 <li><a href="#name-parameters">4.9.5. Name parameters</a></li>
 <li><a href="#attributes">4.9.6. Attributes</a></li>
-<li><a href="#mostly-junk-below-ignore-ideas-scratchpad">4.9.7. MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#compiled-xl">5. Compiled XL</a>
+<li><a href="#compiling-xl">5. Compiling XL</a>
 <ul class="sectlevel2">
 <li><a href="#compiled-representations">5.1. Compiled representations</a></li>
 <li><a href="#data-2">5.2. Data</a></li>
@@ -3328,7 +3327,7 @@ of declarations, since correct behavior during the evaluation phase
 depends on it.</p>
 </div>
 <div class="paragraph">
-<p>In the case of a <a href="#compiled-xl">compiled implementation</a>, the
+<p>In the case of a <a href="#compiling-xl">compiled implementation</a>, the
 compiler will most likely assign machine locations to each of the
 declarations. When the program runs, a constant like <code>pi</code> or the
 definition of <code>circumference</code> may end up being represented as a
@@ -9567,9 +9566,9 @@ into <code>X.F V</code> if necessary.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>It is considered extremely bad taste in XL to use <code>get</code>
-or <code>set</code> in the name of attributes. For example, the following code
-is roughly 16 characters too long:</p>
+<p>It is considered bad taste in XL to use <code>get</code> or <code>set</code> in the name of
+attributes. For example, the following code is generally seen as being
+a full 16 characters too long:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -9583,149 +9582,12 @@ if get_background = blue then
 </tr>
 </table>
 </div>
-<hr>
-</div>
-<div class="sect3">
-<h4 id="mostly-junk-below-ignore-ideas-scratchpad"><a class="anchor" href="#mostly-junk-below-ignore-ideas-scratchpad"></a><a class="link" href="#mostly-junk-below-ignore-ideas-scratchpad">4.9.7. MOSTLY JUNK BELOW, IGNORE (IDEAS SCRATCHPAD)</a></h4>
-<div class="paragraph">
-<p>The difference matters in particular in the interface of a type, as
-declared by <code>with</code>. The non-mutable declarations using <code>as</code> are
-considered as belonging only to the type, whereas mutable declarations
-using <code>:</code> are considered as belonging to values of the type. As a
-result, much like C++ class member declarations, "functions" or
-"methods" are interpreted as belonging to the type, whereas "values"
-or "members" belong to type instances.</p>
-</div>
-<div class="paragraph">
-<p>For example, consider a <code>person</code> type declaration like the following:</p>
-</div>
-<div class="paragraph">
-<p>type person with Name : text Greeting as text</p>
-</div>
-<div class="paragraph">
-<p>This means that the <code>Name</code> belongs to each value of the <code>person</code> type,
-but that the <code>Greeting</code> belongs to the <code>person</code> type, not to individual
-<code>person</code> instances. If <code>P</code> is a <code>person</code>, then <code>P.Name</code> depends on the
-individual person, but <code>P.Greeting</code> is the same as <code>person.Citizenship</code>.</p>
-</div>
-<div class="paragraph">
-<p>Inversely, if a declaration takes a value of the type as its first
-argument (usually called <code>Self</code>), then the value can be passed using the
-dot field notation. For example, consider:</p>
-</div>
-<div class="paragraph">
-<p>type person with FirstName : text LastName : text FullName Self:person
-as text</p>
-</div>
-<div class="paragraph">
-<p>In that case, it is possible to write <code>P.FullName</code> which will be a
-shortcut for <code>person.FullName P</code>.</p>
-</div>
-<div class="paragraph">
-<p>A given piece of code can belong to multiple types. For example, code
-like <code>2 + 3</code> could belong to an <code>addition</code> type defined as
-<code>addition is type A+B</code>, but also be considered an <code>infix</code> type before
-evaluation, or an <code>integer</code> after evaluation using the declarations in
-the <code>ARITHMETIC</code> module.</p>
-</div>
-<div class="paragraph">
-<p>A subtype is a type whose values all belong to its supertype. A subtype
-can therefore be used wherever the supertype can. Several type
-constructors create subtypes with various restrictions. For example,
-<code>constant integer</code> is a subtype of <code>integer</code> where values cannot be
-mutated, whereas <code>integer range 1..5</code> is a subtype of integer where
-values have to be between 1 and 5.</p>
-</div>
-<div class="paragraph">
-<p>A derived type is a type built by adding more capabilities to a base
-type. Therefore, the derived type is a subtype of the base type. For
-example, <code>integer</code> is a derived type of <code>number</code>, adding a specific
-representation of values, which implies that <code>integer</code> values can be
-used for any operation that accepts the <code>number</code> type.</p>
-</div>
-<div class="paragraph">
-<p>The TYPE module offers a number of type constructors, notably the most
-basic one, <code>type Pattern</code>, which returns a type matching the pattern.
-For example, <code>type complex(Re:real, Im:real)</code> would match the vaue
-<code>complex(2.0, 3.5)</code>. This is XL’s equivalent of struct in C.</p>
-</div>
-<div class="paragraph">
-<p>Types are first-class citizen in XL: they can be stored in variables,
-passed around, and so on. The compiler will determine if a specific use
-of a type variable should be treated like "template code" to use C++
-terminology, or if there is a better way to implement it.</p>
-</div>
-<div class="paragraph">
-<p>For example, consider an allocation of memory for type <code>T</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Allocate[T:type] as pointer[T]</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The compiler is free to implement this as a generic function, similar to
-a C++ template, or as a function taking some pointer to type data, using
-for example <code>T.ByteSize</code> to allocate memory.</p>
-</div>
-<div class="paragraph">
-<p>A type has an <em>interface</em> and an <em>implementation</em>. An interface is
-described using the <code>with</code> operator, whereas an implementation is given
-using the <code>is</code> operator. The compiler checks that the implementation
-matches the interface, but there are many ways to implement the
-interface.</p>
-</div>
-<div class="paragraph">
-<p>Consider for example the following interface: type complex with Re :
-real Im : real Modulus : real Argument : real</p>
-</div>
-<div class="paragraph">
-<p>This does not imply anything about the actual representation of complex
-numbers. It only implies that if <code>Z</code> is a complex number, it is possible
-to read and write all four fields.</p>
-</div>
-<div class="paragraph">
-<p>A valid implementation of this type could be storing data in cartesian
-form and performing computation when reading or writing Modulus and
-Arguments. It could also switch back and forth between polar and
-cartesian form based on actual field accesses, and have an
-implementation that looks like: type complex is either cartesian
-Re:real, Im:real polar Modulus:real, Argument:real The latter is closer
-to how the type is actually implemented in the standard library */</p>
-</div>
-<div class="paragraph">
-<p>use BITWISE, MEMORY, TEXT, BOOLEAN</p>
-</div>
-<div class="paragraph">
-<p>type type with // —————————————————————————- // A <code>type</code> is used to
-identify a set of values // —————————————————————————- // Simple types
-like <code>integer</code> or <code>array[1..5] of real</code> occupy a known // amount of
-space in memory. They are defined by consecutive bits and bytes. // //
-Reference and pointer types are represented by a machine pointer. // For
-example, an <code>access integer</code> will be a simple pointer to an integer. //
-In that case, the pointer type’s <code>Indirect</code> field points to the type //
-being pointed to, <code>integer</code> in the above example. // // If the actual
-type of the object is only known at runtime, as would // be the case for
-<code>any integer</code>, then the value pointer is followed // by a type pointer,
-and <code>DynamicType</code> is a pointer to that dynamic type. // For example, if
-you pass a <code>M:mammal</code> value as <code>A:any animal</code>, then //
-<code>(any animal).Indirect = animal</code> and <code>(any animal).DynamicType</code> is //
-<code>any animal</code>. The value <code>A</code> is made of two pointers, the first one //
-being a pointer to <code>M</code>, the second one being a pointer to <code>mammal</code> // //
-If the actual size of the object is only known at runtime, as would be
-would point to a type where <code>DynamicSize</code> is itself the size type. // In
-that case, the size type is what the base pointer points to, // For
-example, a small string with less than 255 byte-sized elements // could
-be represented with <code>DynamicSize</code> pointing to <code>unsigned8</code>. // // The
-fields <code>Mutable</code> and <code>Constant</code> indicate if the type was explicitly //
-made mutable or constant.</p>
-</div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="compiled-xl"><a class="anchor" href="#compiled-xl"></a><a class="link" href="#compiled-xl">5. Compiled XL</a></h2>
+<h2 id="compiling-xl"><a class="anchor" href="#compiling-xl"></a><a class="link" href="#compiling-xl">5. Compiling XL</a></h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">5.1. Compiled representations</a></h3>
@@ -11088,7 +10950,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-11 13:53:52 +0100
+Last updated 2020-01-11 15:07:15 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
