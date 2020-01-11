@@ -4196,9 +4196,12 @@ This definition of `complex` states that a value matches the type
 In particular, it matches the value `complex(4.3, 2.1)`, which makes
 the assignment on the second line of code possible.
 
-Type definitions are not restricted to names. For example, the
-`complex` type might take the `real` type as an argument, instead of
-assuming the standard `real` type:
+=== Type expressions
+
+Type definitions are not restricted to names. XL offers extensive
+support for _((type expressions))_, i.e. expressions that return a type.
+For example, the `complex` type might take the `real` type as an
+argument, instead of assuming the standard `real` type:
 
 ....
 complex[real:type] is type complex(Re:real, Im:real)
@@ -4207,10 +4210,89 @@ Z:complex := complex(4.3, 2.1)
 K:complex[real32] := complex(1.2, 3.4)
 ....
 
-This creates what is called a _((generic type))_ in languages like Ada,
-or a _((template))_ in languages like pass:[C++]. However, as far as
-syntax is concerned, it is indistinguishable from a function taking a
-type argument and returning a type.
+Type expressions can be used to create what is called a _((generic
+type))_ in languages like Ada, or a _((template))_ in languages like
+pass:[C++]. However, as far as syntax is concerned, it is
+indistinguishable from a function taking a type argument and returning
+a type. This extends the range of capabilities for the feature,
+meaning that the implementation may sometime have fo fall-back to more
+dynamically typed ways to evaluate the code.
+
+*STYLE* A stylistic convention is to use square brackets in type
+expressions and parentheses in regular expressions. Thus, this
+documentation will typically write `complex[real]` for the type
+expression, and `complex(1.2,3.4)` for the numerical expression,
+although it would be perfectly legal to write `complex real` and
+`complex[1.2,3.4]` respectively, since XL does not differentiate
+blocks except for precedence.
+
+In practice, type expression are extremely frequent, notably being
+used to define a plethora of ((generic type))s using operator-like
+notations, like `pointer to T`.
+
+Standard type expressions include:
+
+* `T1 or T2` is a type that contains values belonging to `T1` or `T2`.
+  It is similar to what other languages call union types, and is used
+  in particular for error reporting through types like `real or error`.
+* `T1 and T2` is a type that contains values belonging both to `T1`
+  and `T2`. It is primarily  used to constrain types in generic code,
+  for example `integer and positive`.
+* `not T` is a type that contains vlaues that do not belong to `T`. It
+  can be used to exclude specific types from a definition.
+* `mayfail T` is a shortcut for `T or error` and is used when a
+  function may fail.
+
+Type expressions evaluate following the regular rules of evaluation
+for XL. This makes it possible to build types that would be impossible
+to build in many mainstream languages. For example, it is frequent,
+for example in networking, to have a `packet` that has a _((header))_
+followed by a _((payload))_, the payload having a size that depends on
+information in the header. In XL, you can describe a type like this as
+follows:
+
+....
+header  is type header (byte_count:size)
+payload[byte_count:size] is array[byte_count] of byte
+packet is type packet
+    header  : header
+    payload : payload[header.byte_count]
+....
+
+It is fundamental to realize that the XL type system provides very
+strong guarantees even for data types as complicated as this one.
+For example, the following code will fail type system checks:
+
+....
+resize (P:inout packet, S:size) is
+    P.header.byte_count := S <1>
+....
+<1> This is a type error on the `packet` type, because the existing
+    `payload` field no longer has the correct size, therefore the
+    result does not belong to the `packet` type.
+
+The correct way to write the code above will hightlight the need to
+possibly reallocate memory for the new packet, and deal with three
+distinct cases for resizing:
+
+....
+resize (P:inout packet, S:size) when S=P.header.byte_count is nil
+resize (P:inout packet, S:size) when S<P.header.byte_count is
+    new_header  : header := header(S)
+    new_payload : payload(S) := P.payload[0..S-1]
+    P := packet(new_header, new_payload)
+resize (P:inout packet, S:size) when S>P.header.byte_count is
+    new_header  : header := header(S)
+    new_payload : payload(S) := array
+        \I when I < P.byte_count   is P.payload[I]
+        \I                         is byte(0)
+    P := packet(new_header, new_payload)
+....
+
+
+In addition, a large number of link:#standard-types[standard types],
+including link:#gneneric-containers[generic container types],
+can be used to quickly build useful data types.
 
 === Shared type annotations
 
@@ -6700,119 +6782,6 @@ In practice, type expression are extremely frequent, notably being
 used to define a plethora of ((generic type))s using operator-like
 notations, like `pointer to T`.
 
-=== Standard type expressions
-
-A number of type expressions are provided by the ((standard library)). The
-most common and useful ones are:
-
-* `nil` is a type that contains a single value, `nil`, which evaluates
-  to itself. That is generally used to represent an absence of value.
-* `T1 or T2` is a type for values that belong to `T1` or to `T2`. It is
-  similar to what other languages may call union types. For example,
-  `integer or real` will match both `integer` and `real` values.
-  Operations on `T1 or T2` will cause dynamic dispatch depending on the
-  actual value being considered. For example, consider:
-+
-....
-double X:[integer or real] is X + X
-double 1      // returns 2 as an integer
-double 3.5    // returns 7.0 as a real
-....
-* `T1 and T2` is a type for values that belong to both `T1` and `T2`.
-  For example, `number and totally_ordered` will match totally ordered
-  numbers, i.e. it will not match `"ABC"` (`totally_ordered`, but not a
-  `number`) nor will it match `ieee754(2.5)` (`number`, but not
-  `totally_ordered`).
-* `not T` is a type for values that do not belong to `T`.
-* `another T` is a new type that is identical to `T`, allowing
-   overloading. For example, `type distance is another real` will create
-   another `real` type, allowing you to forbid multiplication, and
-   preventing errors such as adding a `distance` to a `real`.
-+
-....
-type distance is another real
-X:distance * Y:distance is compile_error "Cannot multiply distances"
-X:real as distance is compile_error "Implicit distance from real"
-syntax { POSTFIX 400 m cm mm km }
-X:real m  is distance(X)
-X:real cm is distance(X * 0.01)
-X:real mm is distance(X * 0.001)
-X:real km is distance(X * 1000.0)
-
-D:distance is 3.2km
-D + D     // OK: inherit X:distance+Y:distance from X:real+Y:real
-D + 1.0   // Error: Implicit distance from real
-D * D     // Error: Cannot multiply distances
-....
-+
-NOTE: The code above is incomplete, since `distance` would inherit
-`X:integer as real`, so that `D+1` would be accepted.
-* `optional T` is a shortcut for `T or nil`. This is useful for
-  functions like `find` that return an optional value, and where not
-  finding something is not an error but an expected result.
-+
-[NOTE]
-=====
-Compilers should perform specific optimizations such as > representing
-the value with a pointer and reserving the null > pointer for value
-`nil`.
-=====
-* `mayfail T` is a shortcut for `T or error`, and should be used for
-  link:#error-handling[functions that may fail]. Unlike `nil`, an `error`
-  carries a payload that gives information about the error, and can be
-  used to generate an error message.
-* `array[N] of T` defines a 0-based array containing `N` elements of
-  type `T`. The value of `N` need not be a constant. Another variant,
-  `array[A..B] of T`, allows arrays where the index is between values `A`
-  and `B`, which can be any enumerated type. For example,
-  `array['A'..'Z'] of boolean` provides 26 `boolean` values, indexed by an
-  alphabetic letter.
-* `string of T` is a variable size sequence of values with the same type
-  `T`. The size of a `string` can change over its lifetime. A `text` may
-  be represented as a `string of character`.
-  * `either Patterns` is a type that matches one of the patterns given. It
-  can be used in particular for what would be called "enumerations" in a
-  language like C, but is richer, much like
-  https://doc.rust-lang.org/reference/items/enumerations.html[Rust
-  enumerations]
-+
-....
-type complex is either
-    cartesian(Re:real, Im:real)
-    polar(Mod:real, Arg:real)
-....
-* `variable T` or `var T` is a mutable version of type `T`, whereas
-`constant T` is a non-mutable version of type `T`. Only mutable values
-can be changed using the `:=` operator or their variants.
-+
-[NOTE]
-=====
-By default, formal parameters are mutable, since > they are generally
-specified with something like `X:integer`, but > modifications apply
-to the binding in the current evaluation > context, therefore not
-modifying the corresponding argument.
-=====
-* `in T`, `out T` and `inout T` are types design to optimize parameter
-passing in a safe way. They indicate how you intend data to flow between
-the caller and the callee. These types also may have uses in data
-structures.
-* `T in ValueList` is a subtype of `T` that only accepts values in the
-given comma-separated `ValueList`. For types that have a total order,
-`ValueList` elements can also include ranges written as `A..B`. For
-example, `integer in 1..5,9,12..20` is a type that only accept integer
-values 1 through 5, or 9, or 12 through 20. Similarly,
-`text in "One", "Two", "Three", "Four"` is a type that only accepts the
-given text strings.
-
-These are only some common examples of type expressions. There is
-nothing that prevents you from adding many others.
-
-The case of `in T`, `out T` and `inout T` are examples of what will be
-called _ownership controlling types_, i.e. types that are dedicated to
-controlling who owns what data. More details are provided in the section
-on link:#ownership[ownership] below.
-
-==== Copy or Move
 
 ==== Variant types
 
