@@ -687,7 +687,7 @@ link:#binding[((binding))] for the variable `Items`:
 
 [source]
 ----
-Items   is "The value of X is ", X, " and the value of Y is ", Y`
+Items   is "The value of X is ", X, " and the value of Y is ", Y
 ----
 
 This in turn is passed to `write`, and the definition that matches is
@@ -1283,7 +1283,7 @@ Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
   like `1234`, `2#1001` or `16#FFFE_FFFF`.
 . [[real]]`real` nodes represent a floating-point approximation of
   real numbers like `1.234`, `1.5e-10` or `2#1.0001_0001#e24`.
-. [[character]]`character` nodes represent individual characters, like`'A'`.
+. [[character]]`character` nodes represent individual characters, like `'A'`.
 . [[text]]`text` nodes represent text values like `"Hello world"`
 . [[name]]`name` nodes represent names like `JOHN_DOE`
 . [[operator]]`operator` nodes represent non-alphabetical operators
@@ -1368,7 +1368,7 @@ of XL offer. Some changes may happen in the future, notably:
 [source]
 ----
 bits 16#FF_00_FF_00_FF_FF_00_FF_00
-bits "image.png"`
+bits "image.png"
 ----
 * Finding a better representation for empty blocks such as `+()+`.
   In the current implementation, they are represented as a block with
@@ -1444,7 +1444,7 @@ sequence of ASCII characters in `Hello!`.
 
 For ((fractional number))s, a dot `.` is used as ((decimal separator)),
 and must separate digits. For example, `0.2` and `2.0` are valid but,
-unlike in C, `.2` and`2.` are not numbers but a prefix and
+unlike in C, `.2` and `2.` are not numbers but a prefix and
 postifix `.` respectively. This is necessary to avoid ambiguities.
 Also, the ((standard library)) denotes link:#range[((range))s] using
 an infix `..`, so `2..3` is an infix `..` with `2` and `3` as
@@ -2061,7 +2061,7 @@ In that specific case, that type annotation is a declaration of a
 _parameter_ called `Radius`, which only accepts `real` values.
 Sometimes, such parameters are called _formal parameters_. A parameter
 will receive its value from an _argument_ during the evaluation. For
-example the `Radius` parameter will be _bound_ to argument`5.3` while
+example the `Radius` parameter will be _bound_ to argument `5.3` while
 evaluating the statement on the second line.
 
 The _result_ of a sequence is the value of its last statement. In our
@@ -2831,7 +2831,7 @@ X * Y
 Knowing which candidate matches may be possible statically, e.g. at
 ((compile-time)), for example if the selection of the declaration can
 be done solely based on the type of the arguments and parameters. This
-would be the case if matching an`integer` argument against an
+would be the case if matching an `integer` argument against an
 `integer` parameter, since any value of that argument would match. In
 other cases, it may require run-time tests against the values in the
 declaration. This would be the case if matching an `integer` argument
@@ -3971,7 +3971,7 @@ read_thing_from_file FileName:text as mayfail own thing is
     storage error if there isn't enough heap space to allocate the
     `thing_header`.
 <3> This is a case where you explicit error out. Since `error` builds
-    an `error value, it also implicitly returns from the function.
+    an `error` value, it also implicitly returns from the function.
 <4> This might error out if making a `thing` out of `H` fails, but
     also if a `storage_error` is raised trying to find some heap space
     for a `thing`.
@@ -4406,7 +4406,7 @@ in
 This is particularly useful to provide complex type parameters in
 generic declarations. The following example illustrates this syntax to
 declare a notation `find Item in List` where the `Item` must have the
-type of the elements of the List`.
+type of the elements of the `List`.
 
 ....
 with
@@ -4743,7 +4743,7 @@ features several mathematical types designed for that purpose:
   with two underlying representations, `sparse` and `dense`. The
   `matrix` type exposes an interface for a two-dimensional `array`
   type. It features matrix algebra and matrix-specific operations,
-  as well as operations combining matrix` and `vector` for the same
+  as well as operations combining `matrix` and `vector` for the same
   underlying numerical type. Operations on the `matrix` type are often
   highly parallelizable.  The `matrix[4,3] of i32` will create a 4x3
   matrix with `i32` as the underlying numerical type, whereas
@@ -5077,7 +5077,7 @@ are between parentheses:
 ....
 Z:complex
 (create Z)      // because of the declaration above
-(delete Z)      // because Z is passed as out argument to `create`
+(delete Z)      // because Z is passed as out argument to 'create'
 create Z
 ....
 
@@ -5305,11 +5305,11 @@ integers is type(base:string of integer)
 
 delete P:inout positive is
     print "Deleting positive: ", P
-    (delete P.N)        // Delete the N bound in `positive`
+    (delete P.N)        // Delete the N bound in 'positive'
 
 delete N:integer is
     print "Deleting integer: ", N
-    (delete N.base)     // For `integer`, this is a no-op
+    (delete N.base)     // For 'integer', this is a no-op
 
 delete S:integers is
     print "Deleting integers with size: ", size S
@@ -6767,7 +6767,7 @@ for N:name in R:[range of discrete] loop Body is <1>
     `Body`. This approach lets the programmer precisely control what
     is being injected while evaluating `Body`. In particular, all the
     local variables in the implementation of the `for` loop, like `N`,
-    `R`, `Body`, `LoopVar` or `loop_context`are not visible while
+    `R`, `Body`, `LoopVar` or `loop_context` are not visible while
     evaluating `Body`.
 <6> The `++LoopVar` notation is a generic way to increment any
     `discrete` value. In that case, `LoopVar += 1` would not work if

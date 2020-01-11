@@ -1482,7 +1482,7 @@ like <code>printf</code> in C. You can write multiple comma-separated items in a
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Items   is "The value of X is ", X, " and the value of Y is ", Y`</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Items   is "The value of X is ", X, " and the value of Y is ", Y</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2200,7 +2200,7 @@ like <code>1234</code>, <code>2#1001</code> or <code>16#FFFE_FFFF</code>.</p>
 real numbers like <code>1.234</code>, <code>1.5e-10</code> or <code>2#1.0001_0001#e24</code>.</p>
 </li>
 <li>
-<p><a id="character"></a><code>character</code> nodes represent individual characters, like&#8217;A'`.</p>
+<p><a id="character"></a><code>character</code> nodes represent individual characters, like <code>'A'</code>.</p>
 </li>
 <li>
 <p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code></p>
@@ -2330,7 +2330,7 @@ binary data in the program. A possible syntax would be to prefix
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">bits 16#FF_00_FF_00_FF_FF_00_FF_00
-bits "image.png"`</code></pre>
+bits "image.png"</code></pre>
 </div>
 </div>
 <div class="ulist">
@@ -2441,7 +2441,7 @@ sequence of ASCII characters in <code>Hello!</code>.</p>
 <div class="paragraph">
 <p>For fractional numbers, a dot <code>.</code> is used as decimal separator,
 and must separate digits. For example, <code>0.2</code> and <code>2.0</code> are valid but,
-unlike in C, <code>.2</code> and`2.` are not numbers but a prefix and
+unlike in C, <code>.2</code> and <code>2.</code> are not numbers but a prefix and
 postifix <code>.</code> respectively. This is necessary to avoid ambiguities.
 Also, the standard library denotes <a href="#range">ranges</a> using
 an infix <code>..</code>, so <code>2..3</code> is an infix <code>..</code> with <code>2</code> and <code>3</code> as
@@ -3300,7 +3300,7 @@ consequently not part of the declarations in the top-level sequence.</p>
 <em>parameter</em> called <code>Radius</code>, which only accepts <code>real</code> values.
 Sometimes, such parameters are called <em>formal parameters</em>. A parameter
 will receive its value from an <em>argument</em> during the evaluation. For
-example the <code>Radius</code> parameter will be <em>bound</em> to argument`5.3` while
+example the <code>Radius</code> parameter will be <em>bound</em> to argument <code>5.3</code> while
 evaluating the statement on the second line.</p>
 </div>
 <div class="paragraph">
@@ -4513,7 +4513,7 @@ X * Y</code></pre>
 <p>Knowing which candidate matches may be possible statically, e.g. at
 compile-time, for example if the selection of the declaration can
 be done solely based on the type of the arguments and parameters. This
-would be the case if matching an`integer` argument against an
+would be the case if matching an <code>integer</code> argument against an
 <code>integer</code> parameter, since any value of that argument would match. In
 other cases, it may require run-time tests against the values in the
 declaration. This would be the case if matching an <code>integer</code> argument
@@ -5928,7 +5928,7 @@ storage error if there isn&#8217;t enough heap space to allocate the
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>This is a case where you explicit error out. Since <code>error</code> builds
-an `error value, it also implicitly returns from the function.</td>
+an <code>error</code> value, it also implicitly returns from the function.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
@@ -6484,7 +6484,7 @@ in
 <p>This is particularly useful to provide complex type parameters in
 generic declarations. The following example illustrates this syntax to
 declare a notation <code>find Item in List</code> where the <code>Item</code> must have the
-type of the elements of the List`.</p>
+type of the elements of the <code>List</code>.</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -6963,7 +6963,7 @@ operations on the processor if available.</p>
 with two underlying representations, <code>sparse</code> and <code>dense</code>. The
 <code>matrix</code> type exposes an interface for a two-dimensional <code>array</code>
 type. It features matrix algebra and matrix-specific operations,
-as well as operations combining matrix` and <code>vector</code> for the same
+as well as operations combining <code>matrix</code> and <code>vector</code> for the same
 underlying numerical type. Operations on the <code>matrix</code> type are often
 highly parallelizable.  The <code>matrix[4,3] of i32</code> will create a 4x3
 matrix with <code>i32</code> as the underlying numerical type, whereas
@@ -7484,7 +7484,7 @@ are between parentheses:</p>
 <div class="content">
 <pre>Z:complex
 (create Z)      // because of the declaration above
-(delete Z)      // because Z is passed as out argument to `create`
+(delete Z)      // because Z is passed as out argument to 'create'
 create Z</pre>
 </div>
 </div>
@@ -7751,11 +7751,11 @@ type and <code>delete</code> operations above is really equivalent to the follow
 
 delete P:inout positive is
     print "Deleting positive: ", P
-    (delete P.N)        // Delete the N bound in `positive`
+    (delete P.N)        // Delete the N bound in 'positive'
 
 delete N:integer is
     print "Deleting integer: ", N
-    (delete N.base)     // For `integer`, this is a no-op
+    (delete N.base)     // For 'integer', this is a no-op
 
 delete S:integers is
     print "Deleting integers with size: ", size S
@@ -9608,8 +9608,8 @@ makes the variable name referenced by <code><a id="N"></a></code> visible in
 <code>Body</code>. This approach lets the programmer precisely control what
 is being injected while evaluating <code>Body</code>. In particular, all the
 local variables in the implementation of the <code>for</code> loop, like <code>N</code>,
-<code>R</code>, <code>Body</code>, <code>LoopVar</code> or <code>loop_context`are not visible while
-evaluating `Body</code>.</td>
+<code>R</code>, <code>Body</code>, <code>LoopVar</code> or <code>loop_context</code> are not visible while
+evaluating <code>Body</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
@@ -11151,7 +11151,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-11 23:40:47 +0100
+Last updated 2020-01-11 23:51:04 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
