@@ -4285,8 +4285,8 @@ resize (P:inout packet, S:size) when S < P.header.byte_count is
 resize (P:inout packet, S:size) when S > P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
-        \I when I < P.byte_count   is P.payload[I]
-        \I                         is byte(0)
+        lambda I when I < P.byte_count   is P.payload[I]
+        lambda I                         is byte(0)
     P := packet(new_header, new_payload)
 ....
 

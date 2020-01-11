@@ -6337,8 +6337,8 @@ resize (P:inout packet, S:size) when S &lt; P.header.byte_count is
 resize (P:inout packet, S:size) when S &gt; P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
-        \I when I &lt; P.byte_count   is P.payload[I]
-        \I                         is byte(0)
+        lambda I when I &lt; P.byte_count   is P.payload[I]
+        lambda I                         is byte(0)
     P := packet(new_header, new_payload)</pre>
 </div>
 </div>
@@ -11197,7 +11197,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-11 13:35:23 +0100
+Last updated 2020-01-11 13:44:44 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
