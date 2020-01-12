@@ -10025,6 +10025,24 @@ broken by a change in the base class. This category of issue is known
 as the <a href="https://en.wikipedia.org/wiki/Fragile_base_class">fragile base class</a>
 problem.</p>
 </div>
+<div class="paragraph">
+<p>We can also take advantage of this feature to have a different
+hierarchy for data inheritance than for the interface. For example, we
+can implement the <code>ellipse</code> and <code>circle</code> classes as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class ellipse is rectangle with
+    draw is
+        draw_ellipse fill_color, stroke_color, stroke_width, x, y, width, height
+
+class circle is square with
+    draw is ellipse.draw</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This flexibility gives the maximum potential for code reuse.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -11429,7 +11447,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 18:16:50 +0100
+Last updated 2020-01-12 18:25:04 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

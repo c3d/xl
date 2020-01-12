@@ -7094,6 +7094,21 @@ broken by a change in the base class. This category of issue is known
 as the link:https://en.wikipedia.org/wiki/Fragile_base_class[fragile base class]
 problem.
 
+We can also take advantage of this feature to have a different
+hierarchy for data inheritance than for the interface. For example, we
+can implement the `ellipse` and `circle` classes as follows:
+
+....
+class ellipse is rectangle with
+    draw is
+        draw_ellipse fill_color, stroke_color, stroke_width, x, y, width, height
+
+class circle is square with
+    draw is ellipse.draw
+....
+
+This flexibility gives the maximum potential for code reuse.
+
 === Functional programming
 
 === Generic programming
