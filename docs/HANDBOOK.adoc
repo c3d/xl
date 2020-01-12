@@ -7130,50 +7130,60 @@ class group like shape with
     children : string of any shape
 ....
 
-The implementation for that class does not need to store its own
-coordinate or color information, since that can be obtained from the
-various shapes in the group. It does need to provide a way to compute
-these attributes from the children shapes, and it should also provide
-a way to draw the children shapes. To make the code shorter and
-simpler to maintain, we build a small helper, `all`, that applies some
-piece of code to all children.
+The implementation can then invoke `draw` for each shape in
+`children`, and since `any shape` retains the type of the associated
+shape, this will call the appropriate `draw` feature for each of the
+individual shapes. This technique is called _((dynamic dispatch))_.
+
+The implementation of class `group` does not need the `shape` fields,
+since it can compute features from the shapes in `children`. The
+example below only shows the case of `draw`, `fill_color`, `top` and
+`width`, but other features can be implemented in a similar way. The
+`fill_color` attribute uses a local variable to hold the color value
+for the whole group. These three examples show the respective benefits
+of the various ways to set an attribute.
 
 ....
 class group is
-    all Body is                 // Helper to apply Body to all shapes
+    // Draw a group by drawing all shapes in it
+    draw is
         for S in children loop
-            local_context is { shape is S }
-            (local_context) (Body)
-    draw is { all shape.draw }
+            S.draw
 
+    // The fill color is the last one set for the group
     fill_color as attribute color is
         value : color := black
-        set C is { value := C; all { shape.fill_color C } }
         get   is value
-    stroke_color as attribute color is
-        value : color := black
-        set C is { value := C; all { shape.stroke_color C } }
-        get   is value
-    stroke_width as attribute dimension is
-        value : dimension := 0
-        set W is { value := W; all { shape.stroke_width W } }
-        get   is value
+        set C is
+            value := C
+            for S in children loop
+                S.fill_color C
 
+    // The top is the maximum of the top of all shapes
     top as attribute coordinate is
-        get   is max((S.top for S in children) else 0)
-        set T is { delta is T - top; all { shape.top += delta } }
-    bottom as attribute coordinate is
-        get   is min((S.bottom for S in children) else 0)
-        set B is { delta is T - bottom; all { shape.top += delta } }
+        get is
+            result := coordinate.min
+            for S in children loop
+                if result < S.top then
+                   result := S.top
+        set T is
+            delta is T - top
+            for S in children loop
+                S.top += delta
 
-    // Other attributes are similar
+    // The width is still right - left, and adjusted by scaling
+    width as attribute coordinate is
+        get   is right - left
+        set W is
+            old is width
+            for S in children loop
+                S.width := S.width * W / old
 ....
 
-In this code, `shape.draw` will refer to an `any shape` value in
-`children`, and will dynamically dispatch to the correct `draw`
-appropriate for the dynamic type. For example, if `children[1]` is
-actually a `rectangle`, the `draw` implementation that will be invoked
-will be that of a `rectangle`.
+In this code, all references to `S` have the type `any shape`, and
+therefore, `S.width` or `S.draw` will be dynamically dispatched. This
+plays the role to _((virtual functions))_ in pass:[C++].
+
 
 === Functional programming
 

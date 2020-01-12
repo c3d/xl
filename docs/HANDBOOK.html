@@ -10071,52 +10071,62 @@ The correct class interface for <code>group</code> is:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The implementation for that class does not need to store its own
-coordinate or color information, since that can be obtained from the
-various shapes in the group. It does need to provide a way to compute
-these attributes from the children shapes, and it should also provide
-a way to draw the children shapes. To make the code shorter and
-simpler to maintain, we build a small helper, <code>all</code>, that applies some
-piece of code to all children.</p>
+<p>The implementation can then invoke <code>draw</code> for each shape in
+<code>children</code>, and since <code>any shape</code> retains the type of the associated
+shape, this will call the appropriate <code>draw</code> feature for each of the
+individual shapes. This technique is called <em>dynamic dispatch</em>.</p>
+</div>
+<div class="paragraph">
+<p>The implementation of class <code>group</code> does not need the <code>shape</code> fields,
+since it can compute features from the shapes in <code>children</code>. The
+example below only shows the case of <code>draw</code>, <code>fill_color</code>, <code>top</code> and
+<code>width</code>, but other features can be implemented in a similar way. The
+<code>fill_color</code> attribute uses a local variable to hold the color value
+for the whole group. These three examples show the respective benefits
+of the various ways to set an attribute.</p>
 </div>
 <div class="literalblock">
 <div class="content">
 <pre>class group is
-    all Body is                 // Helper to apply Body to all shapes
+    // Draw a group by drawing all shapes in it
+    draw is
         for S in children loop
-            local_context is { shape is S }
-            (local_context) (Body)
-    draw is { all shape.draw }
+            S.draw
 
+    // The fill color is the last one set for the group
     fill_color as attribute color is
         value : color := black
-        set C is { value := C; all { shape.fill_color C } }
         get   is value
-    stroke_color as attribute color is
-        value : color := black
-        set C is { value := C; all { shape.stroke_color C } }
-        get   is value
-    stroke_width as attribute dimension is
-        value : dimension := 0
-        set W is { value := W; all { shape.stroke_width W } }
-        get   is value
+        set C is
+            value := C
+            for S in children loop
+                S.fill_color C
 
+    // The top is the maximum of the top of all shapes
     top as attribute coordinate is
-        get   is max((S.top for S in children) else 0)
-        set T is { delta is T - top; all { shape.top += delta } }
-    bottom as attribute coordinate is
-        get   is min((S.bottom for S in children) else 0)
-        set B is { delta is T - bottom; all { shape.top += delta } }
+        get is
+            result := coordinate.min
+            for S in children loop
+                if result &lt; S.top then
+                   result := S.top
+        set T is
+            delta is T - top
+            for S in children loop
+                S.top += delta
 
-    // Other attributes are similar</pre>
+    // The width is still right - left, and adjusted by scaling
+    width as attribute coordinate is
+        get   is right - left
+        set W is
+            old is width
+            for S in children loop
+                S.width := S.width * W / old</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In this code, <code>shape.draw</code> will refer to an <code>any shape</code> value in
-<code>children</code>, and will dynamically dispatch to the correct <code>draw</code>
-appropriate for the dynamic type. For example, if <code>children[1]</code> is
-actually a <code>rectangle</code>, the <code>draw</code> implementation that will be invoked
-will be that of a <code>rectangle</code>.</p>
+<p>In this code, all references to <code>S</code> have the type <code>any shape</code>, and
+therefore, <code>S.width</code> or <code>S.draw</code> will be dynamically dispatched. This
+plays the role to <em>virtual functions</em> in C++.</p>
 </div>
 </div>
 </div>
@@ -11522,7 +11532,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 19:14:59 +0100
+Last updated 2020-01-12 22:27:55 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
