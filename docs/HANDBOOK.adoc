@@ -6866,14 +6866,100 @@ the following example, we will write such a program, which will both
 illustrate the similarities of XL with a language like C++, as well as
 the differences and how they can matter even on such a simple example.
 
-The first part of the program is to define the type `shape`, which
-will act as the
+The first part of the program is to define the interface for the type
+`shape`, which will act as the
 link:https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)[_((base class))_]
-of our class hierarchy.
+of our class hierarchy, and for the derived types that we will use in
+our code. We will assume that we have an existing `coordinate` type
+for shape coordinates, `dimension` for shape dimensions, and `color` for
+shape colors.
+
+A first attempt at building a type interface for `shape` and a couple
+of derived types would be:
 
 ....
-type shape with
+// Base class
+shape as type with
+    draw         as nil                         // Draw the shape
+    fill_color   as attribute color             // Color of the fill
+    stroke_color as attribute color             // Color of the stroke
+    stroke_width as attribute dimension         // Width of the stroke
+    top          as attribute coordinate        // Top coordinate
+    left         as attribute coordinate        // Left coordinate
+    bottom       as attribute coordinate        // Bottom coordinate
+    right        as attribute coordinate        // Right coordinate
+    x            as attribute coordinate        // Center horizontal coordinate
+    y            as attribute coordinate        // Center vertical coordinate
+    width        as attribute dimension         // Width of the shape
+    height       as attribute dimension         // Height of the shape
+
+// A few derived classes
+rectangle as type like shape
+
+square as type like rectangle with
+    side        as attribute dimension
+
+ellipse as type like shape
+
+circle as type like shape with
+    radius      as attribute dimension
+    diameter    as attribute dimension
 ....
+
+This interface already shows interesting properties that XL brings to
+the table. From the interface, we see that we have multiple ways to
+access the same data, namely the dimensions and position of the
+shape, which are obviously related. The width of the shape is related
+to the left and right coordinates, for example. However, the interface
+does not tell us how the implementation choses to store the data. This
+provides stronger information hiding than languages like pass:[C++],
+where some "private" data fields for the class would probably be exposed.
+
+This means that client code can access all these features in a very
+consistent and flexible manner, without bothering about how the data
+is stored internally:
+
+....
+S : shape
+S.top := 42                     // Assignment form
+S.bottom 640                    // Attribute setting form
+if S.height <> 598 then         // Reading the value
+    logic_error "Somethign is wrong with your implementation, height is %1", S.height
+....
+
+However, our first interface remains somewhat verbose and cumbersome to
+write. In order to support object-oriented programming better, there
+is a `class` declaration helper that will generate the above code based on the
+following input, transforming all fields into attributes and keeping
+methods as is:
+
+....
+class shape with
+    draw        as nil
+    fill_color   : color
+    stroke_color : color
+    stroke_width : dimension
+    top          : coordinate
+    left         : coordinate
+    bottom       : coordinate
+    right        : coordinate
+    center_x     : coordinate
+    center_y     : coordinate
+    width        : dimension
+    height       : dimension
+
+class rectangle like shape
+
+class square like rectangle with
+    side         : dimension
+
+class ellipse like shape
+
+class circle like shape with
+    radius       : dimension
+    diameter     : dimension
+....
+
 
 
 === Functional programming
