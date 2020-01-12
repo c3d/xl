@@ -7184,6 +7184,55 @@ In this code, all references to `S` have the type `any shape`, and
 therefore, `S.width` or `S.draw` will be dynamically dispatched. This
 plays the role to _((virtual functions))_ in pass:[C++].
 
+==== Multiple dispatch
+
+An operation like `draw` really depends on a single `shape` value.
+Many operations, however, require more than one value to operate. A
+simple example would be an operation to intersect two shapes, which we
+could write as `S1 and S2`, or merge two shapes, which we could write
+as `A or B`. There are various special cases, followed by a more
+general case:
+
+....
+A:rectangle and B:rectangle as rectangle
+A:ellipse   and B:ellipse   as ellipse or path
+A:rectangle and B:ellipse   as rectangle or ellipse or path
+A:ellipse   and B:rectangle as rectangle or ellipse or path
+A:group     and B:group     as group
+A:any shape and B:any shape as any shape
+....
+
+The implementation for groups, for example, could look someting like
+the following code, which intersects all pairs of shapes and adds the
+result when it is not empty:
+
+....
+A:group and B:group as group is
+    for SA in A.children loop
+        for SB in B.children loop
+            child is SA and SB
+            if child.width > 0 and child.height > 0 then
+                result.children &= child
+....
+
+The operation that computes `child` in the code above is `SA and
+SB`. Since both `SA` and `SB` are dynamically typed, that operation
+must perform a dynamic dispatch on both `SA` and `SB`. A feature like
+tihs is sometimes called _((multiple dispatch))_ or
+_((multi-methods))_ in link:https://en.wikipedia.org/wiki/Multiple_dispatch[other languages].
+For example, if both shapes have the `rectangle` type, then the first
+declaration would be called; if both shapes have the `ellipse` type,
+then the second one would be invoked; and so on.
+
+With code like this, it is possible to write a function that performs
+clipping within a rectangle, where dynamic dispatch will occur only
+for the second argument, and where the returned value will itself be
+dynamically typed:
+
+....
+clip(Bounds:rectangle, Shape:any shape) as any shape is
+    result := Bounds and Shape
+....
 
 === Functional programming
 

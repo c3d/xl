@@ -640,6 +640,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#direct-derivation">5.1.4. Direct derivation</a></li>
 <li><a href="#indirect-derivation">5.1.5. Indirect derivation</a></li>
 <li><a href="#dynamic-dispatch-2">5.1.6. Dynamic dispatch</a></li>
+<li><a href="#multiple-dispatch">5.1.7. Multiple dispatch</a></li>
 </ul>
 </li>
 <li><a href="#functional-programming">5.2. Functional programming</a></li>
@@ -10129,6 +10130,64 @@ therefore, <code>S.width</code> or <code>S.draw</code> will be dynamically dispa
 plays the role to <em>virtual functions</em> in C++.</p>
 </div>
 </div>
+<div class="sect3">
+<h4 id="multiple-dispatch"><a class="anchor" href="#multiple-dispatch"></a><a class="link" href="#multiple-dispatch">5.1.7. Multiple dispatch</a></h4>
+<div class="paragraph">
+<p>An operation like <code>draw</code> really depends on a single <code>shape</code> value.
+Many operations, however, require more than one value to operate. A
+simple example would be an operation to intersect two shapes, which we
+could write as <code>S1 and S2</code>, or merge two shapes, which we could write
+as <code>A or B</code>. There are various special cases, followed by a more
+general case:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>A:rectangle and B:rectangle as rectangle
+A:ellipse   and B:ellipse   as ellipse or path
+A:rectangle and B:ellipse   as rectangle or ellipse or path
+A:ellipse   and B:rectangle as rectangle or ellipse or path
+A:group     and B:group     as group
+A:any shape and B:any shape as any shape</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The implementation for groups, for example, could look someting like
+the following code, which intersects all pairs of shapes and adds the
+result when it is not empty:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>A:group and B:group as group is
+    for SA in A.children loop
+        for SB in B.children loop
+            child is SA and SB
+            if child.width &gt; 0 and child.height &gt; 0 then
+                result.children &amp;= child</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The operation that computes <code>child</code> in the code above is <code>SA and
+SB</code>. Since both <code>SA</code> and <code>SB</code> are dynamically typed, that operation
+must perform a dynamic dispatch on both <code>SA</code> and <code>SB</code>. A feature like
+tihs is sometimes called <em>multiple dispatch</em> or
+<em>multi-methods</em> in <a href="https://en.wikipedia.org/wiki/Multiple_dispatch">other languages</a>.
+For example, if both shapes have the <code>rectangle</code> type, then the first
+declaration would be called; if both shapes have the <code>ellipse</code> type,
+then the second one would be invoked; and so on.</p>
+</div>
+<div class="paragraph">
+<p>With code like this, it is possible to write a function that performs
+clipping within a rectangle, where dynamic dispatch will occur only
+for the second argument, and where the returned value will itself be
+dynamically typed:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>clip(Bounds:rectangle, Shape:any shape) as any shape is
+    result := Bounds and Shape</pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="functional-programming"><a class="anchor" href="#functional-programming"></a><a class="link" href="#functional-programming">5.2. Functional programming</a></h3>
@@ -11532,7 +11591,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 22:27:55 +0100
+Last updated 2020-01-12 23:01:58 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
