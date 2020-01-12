@@ -7109,6 +7109,72 @@ class circle is square with
 
 This flexibility gives the maximum potential for code reuse.
 
+==== Dynamic dispatch
+
+If we want to add a `group` shape, we need to be able to draw each
+shape individually, according to its class.
+
+....
+class group like shape with
+    children : string of shape
+....
+
+There is a problem with this interface, however. Each time you add a
+`shape` to `children`, you really add a value that has the `shape`
+type, not the `rectangle` or `circle` type. In order to preserve the
+original type information, we need to use the `any shape` notation.
+The correct class interface for `group` is:
+
+....
+class group like shape with
+    children : string of any shape
+....
+
+The implementation for that class does not need to store its own
+coordinate or color information, since that can be obtained from the
+various shapes in the group. It does need to provide a way to compute
+these attributes from the children shapes, and it should also provide
+a way to draw the children shapes. To make the code shorter and
+simpler to maintain, we build a small helper, `all`, that applies some
+piece of code to all children.
+
+....
+class group is
+    all Body is                 // Helper to apply Body to all shapes
+        for S in children loop
+            local_context is { shape is S }
+            (local_context) (Body)
+    draw is { all shape.draw }
+
+    fill_color as attribute color is
+        value : color := black
+        set C is { value := C; all { shape.fill_color C } }
+        get   is value
+    stroke_color as attribute color is
+        value : color := black
+        set C is { value := C; all { shape.stroke_color C } }
+        get   is value
+    stroke_width as attribute dimension is
+        value : dimension := 0
+        set W is { value := W; all { shape.stroke_width W } }
+        get   is value
+
+    top as attribute coordinate is
+        get   is max((S.top for S in children) else 0)
+        set T is { delta is T - top; all { shape.top += delta } }
+    bottom as attribute coordinate is
+        get   is min((S.bottom for S in children) else 0)
+        set B is { delta is T - bottom; all { shape.top += delta } }
+
+    // Other attributes are similar
+....
+
+In this code, `shape.draw` will refer to an `any shape` value in
+`children`, and will dynamically dispatch to the correct `draw`
+appropriate for the dynamic type. For example, if `children[1]` is
+actually a `rectangle`, the `draw` implementation that will be invoked
+will be that of a `rectangle`.
+
 === Functional programming
 
 === Generic programming

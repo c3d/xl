@@ -639,6 +639,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#class-implementation">5.1.3. Class implementation</a></li>
 <li><a href="#direct-derivation">5.1.4. Direct derivation</a></li>
 <li><a href="#indirect-derivation">5.1.5. Indirect derivation</a></li>
+<li><a href="#dynamic-dispatch-2">5.1.6. Dynamic dispatch</a></li>
 </ul>
 </li>
 <li><a href="#functional-programming">5.2. Functional programming</a></li>
@@ -10044,6 +10045,80 @@ class circle is square with
 <p>This flexibility gives the maximum potential for code reuse.</p>
 </div>
 </div>
+<div class="sect3">
+<h4 id="dynamic-dispatch-2"><a class="anchor" href="#dynamic-dispatch-2"></a><a class="link" href="#dynamic-dispatch-2">5.1.6. Dynamic dispatch</a></h4>
+<div class="paragraph">
+<p>If we want to add a <code>group</code> shape, we need to be able to draw each
+shape individually, according to its class.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class group like shape with
+    children : string of shape</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There is a problem with this interface, however. Each time you add a
+<code>shape</code> to <code>children</code>, you really add a value that has the <code>shape</code>
+type, not the <code>rectangle</code> or <code>circle</code> type. In order to preserve the
+original type information, we need to use the <code>any shape</code> notation.
+The correct class interface for <code>group</code> is:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class group like shape with
+    children : string of any shape</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The implementation for that class does not need to store its own
+coordinate or color information, since that can be obtained from the
+various shapes in the group. It does need to provide a way to compute
+these attributes from the children shapes, and it should also provide
+a way to draw the children shapes. To make the code shorter and
+simpler to maintain, we build a small helper, <code>all</code>, that applies some
+piece of code to all children.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class group is
+    all Body is                 // Helper to apply Body to all shapes
+        for S in children loop
+            local_context is { shape is S }
+            (local_context) (Body)
+    draw is { all shape.draw }
+
+    fill_color as attribute color is
+        value : color := black
+        set C is { value := C; all { shape.fill_color C } }
+        get   is value
+    stroke_color as attribute color is
+        value : color := black
+        set C is { value := C; all { shape.stroke_color C } }
+        get   is value
+    stroke_width as attribute dimension is
+        value : dimension := 0
+        set W is { value := W; all { shape.stroke_width W } }
+        get   is value
+
+    top as attribute coordinate is
+        get   is max((S.top for S in children) else 0)
+        set T is { delta is T - top; all { shape.top += delta } }
+    bottom as attribute coordinate is
+        get   is min((S.bottom for S in children) else 0)
+        set B is { delta is T - bottom; all { shape.top += delta } }
+
+    // Other attributes are similar</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this code, <code>shape.draw</code> will refer to an <code>any shape</code> value in
+<code>children</code>, and will dynamically dispatch to the correct <code>draw</code>
+appropriate for the dynamic type. For example, if <code>children[1]</code> is
+actually a <code>rectangle</code>, the <code>draw</code> implementation that will be invoked
+will be that of a <code>rectangle</code>.</p>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="functional-programming"><a class="anchor" href="#functional-programming"></a><a class="link" href="#functional-programming">5.2. Functional programming</a></h3>
@@ -11447,7 +11522,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 18:25:04 +0100
+Last updated 2020-01-12 19:14:59 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
