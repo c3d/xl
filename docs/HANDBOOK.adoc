@@ -6866,6 +6866,8 @@ the following example, we will write such a program, which will both
 illustrate the similarities of XL with a language like C++, as well as
 the differences and how they can matter even on such a simple example.
 
+==== Type interface
+
 The first part of the program is to define the interface for the type
 `shape`, which will act as the
 link:https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)[_((base class))_]
@@ -6875,7 +6877,7 @@ for shape coordinates, `dimension` for shape dimensions, and `color` for
 shape colors.
 
 A first attempt at building a type interface for `shape` and a couple
-of derived types would be:
+of derived types using the syntax for types we already saw would be:
 
 ....
 // Base class
@@ -6906,14 +6908,15 @@ circle as type like shape with
     diameter    as attribute dimension
 ....
 
-This interface already shows interesting properties that XL brings to
-the table. From the interface, we see that we have multiple ways to
-access the same data, namely the dimensions and position of the
-shape, which are obviously related. The width of the shape is related
-to the left and right coordinates, for example. However, the interface
-does not tell us how the implementation choses to store the data. This
-provides stronger information hiding than languages like pass:[C++],
-where some "private" data fields for the class would probably be exposed.
+This style of code is called a _((type interface))_. It already shows
+interesting properties that XL brings to the table. From the
+interface, we see that we have multiple ways to access the same data,
+namely the dimensions and position of the shape, which are obviously
+related. The width of the shape is related to the left and right
+coordinates, for example. However, the interface does not tell us how
+the implementation choses to store the data. This provides stronger
+information hiding than languages like pass:[C++], where some
+"private" data fields for the class would probably be exposed.
 
 This means that client code can access all these features in a very
 consistent and flexible manner, without bothering about how the data
@@ -6927,11 +6930,19 @@ if S.height <> 598 then         // Reading the value
     logic_error "Somethign is wrong with your implementation, height is %1", S.height
 ....
 
+As part of information hiding, the interface also purposefully does
+not expose how `draw` is actually implemented. The `draw` method,
+obviously, needs a different implementation for a `rectangle` and a
+`circle`, but the interface does not expose that information, only the
+fact that there is a `draw` method in `shape` and all derived types.
+
+==== Class interface
+
 However, our first interface remains somewhat verbose and cumbersome to
 write. In order to support object-oriented programming better, there
 is a `class` declaration helper that will generate the above code based on the
 following input, transforming all fields into attributes and keeping
-methods as is:
+methods as is. This coding style is called a _((class interface))_:
 
 ....
 class shape with
@@ -6943,8 +6954,8 @@ class shape with
     left         : coordinate
     bottom       : coordinate
     right        : coordinate
-    center_x     : coordinate
-    center_y     : coordinate
+    x            : coordinate
+    y            : coordinate
     width        : dimension
     height       : dimension
 
@@ -6960,7 +6971,116 @@ class circle like shape with
     diameter     : dimension
 ....
 
+==== Class implementation
 
+In XL, the implementation of a type can be
+link:#direct-implementation[directly related] to the interface, but
+every field may also be implemented
+link:#indirect-implementation[indirectly] using
+link:#attributes[attributes].
+
+For the shape class, let's make the choice that we will store the
+center of the shape, its width and its height, and compute the
+rest. We need a convention on what happens when we set `top`, for
+example. A convention will be that it moves the whole shape without
+changing its size, but we could also decide to not move the bottom for
+example. We will also assume that `y` increases towards the top.
+This particular choice leads to a class implementation that looks like:
+
+....
+class shape is
+    draw is logic_error "Drawing a base shape"
+    fill_color   : color
+    stroke_color : color
+    stroke_width : dimension
+    x            : coordinate
+    y            : coordinate
+    width        : dimension
+    height       : dimension
+
+    left as attribute coordinate is
+        get     is x - width / 2
+        set L   is x += L - left
+    right as attribute coordinate is
+        get     is x + width / 2
+        set R   is x += R - right
+    top as attribute coordinate is
+        get     is y + height / 2
+        set T   is y += T - top
+    bottom as attribute coordinate is
+        get     is y - height / 2
+        set B   is y += B - bottom
+....
+
+This kind implementations demonstrates how much freedom there is in
+implementing a class interface.
+
+==== Direct derivation
+
+A derived class like `rectangle` can leverage the base class using
+link:#data-inheritance[data inheritance], and then add a `draw`
+method. This kind of derivation is called _((direct derivation))_.
+
+....
+class rectangle is shape with
+    draw is
+        draw_polygon fill_color, stroke_color, stroke_width,
+            move_to top, left
+            line_to top, right
+            line_to bottom, right
+            line_to bottom, left
+            line_to top, left
+....
+
+Since the purpose of this document is not to focus on shape drawing
+algorithms, but on object-oriented programming, we simply assumed that
+there is some general `draw_polygon` utility that we can use.
+
+Unlike languages like pass:[C++], XL does not require the
+interface of a derived class like `rectangle` to indicate that it will
+override the `draw` feature from the base class.
+
+
+==== Indirect derivation
+
+Implementing the `square` type allows us to demonstrate an interesting
+possibility of XL that does not exist in C++, which is to make a
+derived class that does not inherit its data members from its base
+class. A square does not need a separate width and height, so we could
+make the data storage requirements for a `square` smaller by only
+having it store a single `side` data value. The implementation of `square` can
+however still inherit a lot of the implementation from `rectangle`,
+but needs to rewrite `width` and `height` as attributes related to `side`:
+
+....
+class square is
+    draw is rectangle.draw
+    fill_color   : color
+    stroke_color : color
+    stroke_width : dimension
+    x            : coordinate
+    y            : coordinate
+    side         : dimension
+
+    width as attribute dimension is
+        get     is side
+        set W   is side := W
+    height as attribute dimension is
+        get     is side
+        set H   is side := H
+
+    left        is rectangle.left
+    right       is rectangle.right
+    top         is rectangle.top
+    bottom      is rectangle.left
+....
+
+Obviously, the savings in the case of something as simple as a
+`square` are quite limited. However, having the possibility is
+important, if only because it makes it possible to enforce stricter
+rules for the derived types. With an implementation like the one shown
+above, it is absolutely impossible to end up with a `square` that has
+a different value for `width` and `height`, even by mistake.
 
 === Functional programming
 

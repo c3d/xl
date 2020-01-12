@@ -632,7 +632,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#programming-paradigms">5. Programming paradigms</a>
 <ul class="sectlevel2">
-<li><a href="#object-oriented-programming">5.1. Object-oriented programming</a></li>
+<li><a href="#object-oriented-programming">5.1. Object-oriented programming</a>
+<ul class="sectlevel3">
+<li><a href="#type-interface-2">5.1.1. Type interface</a></li>
+<li><a href="#class-interface">5.1.2. Class interface</a></li>
+<li><a href="#class-implementation">5.1.3. Class implementation</a></li>
+<li><a href="#direct-derivation">5.1.4. Direct derivation</a></li>
+<li><a href="#indirect-derivation">5.1.5. Indirect derivation</a></li>
+</ul>
+</li>
 <li><a href="#functional-programming">5.2. Functional programming</a></li>
 <li><a href="#generic-programming">5.3. Generic programming</a></li>
 <li><a href="#design-by-contract">5.4. Design by contract</a></li>
@@ -9764,15 +9772,244 @@ the following example, we will write such a program, which will both
 illustrate the similarities of XL with a language like C++, as well as
 the differences and how they can matter even on such a simple example.</p>
 </div>
+<div class="sect3">
+<h4 id="type-interface-2"><a class="anchor" href="#type-interface-2"></a><a class="link" href="#type-interface-2">5.1.1. Type interface</a></h4>
 <div class="paragraph">
-<p>The first part of the program is to define the type <code>shape</code>, which
-will act as the
+<p>The first part of the program is to define the interface for the type
+<code>shape</code>, which will act as the
 <a href="https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)"><em>base class</em></a>
-of our class hierarchy.</p>
+of our class hierarchy, and for the derived types that we will use in
+our code. We will assume that we have an existing <code>coordinate</code> type
+for shape coordinates, <code>dimension</code> for shape dimensions, and <code>color</code> for
+shape colors.</p>
+</div>
+<div class="paragraph">
+<p>A first attempt at building a type interface for <code>shape</code> and a couple
+of derived types using the syntax for types we already saw would be:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>type shape with</pre>
+<pre>// Base class
+shape as type with
+    draw         as nil                         // Draw the shape
+    fill_color   as attribute color             // Color of the fill
+    stroke_color as attribute color             // Color of the stroke
+    stroke_width as attribute dimension         // Width of the stroke
+    top          as attribute coordinate        // Top coordinate
+    left         as attribute coordinate        // Left coordinate
+    bottom       as attribute coordinate        // Bottom coordinate
+    right        as attribute coordinate        // Right coordinate
+    x            as attribute coordinate        // Center horizontal coordinate
+    y            as attribute coordinate        // Center vertical coordinate
+    width        as attribute dimension         // Width of the shape
+    height       as attribute dimension         // Height of the shape
+
+// A few derived classes
+rectangle as type like shape
+
+square as type like rectangle with
+    side        as attribute dimension
+
+ellipse as type like shape
+
+circle as type like shape with
+    radius      as attribute dimension
+    diameter    as attribute dimension</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This style of code is called a <em>type interface</em>. It already shows
+interesting properties that XL brings to the table. From the
+interface, we see that we have multiple ways to access the same data,
+namely the dimensions and position of the shape, which are obviously
+related. The width of the shape is related to the left and right
+coordinates, for example. However, the interface does not tell us how
+the implementation choses to store the data. This provides stronger
+information hiding than languages like C++, where some
+"private" data fields for the class would probably be exposed.</p>
+</div>
+<div class="paragraph">
+<p>This means that client code can access all these features in a very
+consistent and flexible manner, without bothering about how the data
+is stored internally:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>S : shape
+S.top := 42                     // Assignment form
+S.bottom 640                    // Attribute setting form
+if S.height &lt;&gt; 598 then         // Reading the value
+    logic_error "Somethign is wrong with your implementation, height is %1", S.height</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As part of information hiding, the interface also purposefully does
+not expose how <code>draw</code> is actually implemented. The <code>draw</code> method,
+obviously, needs a different implementation for a <code>rectangle</code> and a
+<code>circle</code>, but the interface does not expose that information, only the
+fact that there is a <code>draw</code> method in <code>shape</code> and all derived types.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="class-interface"><a class="anchor" href="#class-interface"></a><a class="link" href="#class-interface">5.1.2. Class interface</a></h4>
+<div class="paragraph">
+<p>However, our first interface remains somewhat verbose and cumbersome to
+write. In order to support object-oriented programming better, there
+is a <code>class</code> declaration helper that will generate the above code based on the
+following input, transforming all fields into attributes and keeping
+methods as is. This coding style is called a <em>class interface</em>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class shape with
+    draw        as nil
+    fill_color   : color
+    stroke_color : color
+    stroke_width : dimension
+    top          : coordinate
+    left         : coordinate
+    bottom       : coordinate
+    right        : coordinate
+    x            : coordinate
+    y            : coordinate
+    width        : dimension
+    height       : dimension
+
+class rectangle like shape
+
+class square like rectangle with
+    side         : dimension
+
+class ellipse like shape
+
+class circle like shape with
+    radius       : dimension
+    diameter     : dimension</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="class-implementation"><a class="anchor" href="#class-implementation"></a><a class="link" href="#class-implementation">5.1.3. Class implementation</a></h4>
+<div class="paragraph">
+<p>In XL, the implementation of a type can be
+<a href="#direct-implementation">directly related</a> to the interface, but
+every field may also be implemented
+<a href="#indirect-implementation">indirectly</a> using
+<a href="#attributes">attributes</a>.</p>
+</div>
+<div class="paragraph">
+<p>For the shape class, let&#8217;s make the choice that we will store the
+center of the shape, its width and its height, and compute the
+rest. We need a convention on what happens when we set <code>top</code>, for
+example. A convention will be that it moves the whole shape without
+changing its size, but we could also decide to not move the bottom for
+example. We will also assume that <code>y</code> increases towards the top.
+This particular choice leads to a class implementation that looks like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class shape is
+    draw is logic_error "Drawing a base shape"
+    fill_color   : color
+    stroke_color : color
+    stroke_width : dimension
+    x            : coordinate
+    y            : coordinate
+    width        : dimension
+    height       : dimension
+
+    left as attribute coordinate is
+        get     is x - width / 2
+        set L   is x += L - left
+    right as attribute coordinate is
+        get     is x + width / 2
+        set R   is x += R - right
+    top as attribute coordinate is
+        get     is y + height / 2
+        set T   is y += T - top
+    bottom as attribute coordinate is
+        get     is y - height / 2
+        set B   is y += B - bottom</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This kind implementations demonstrates how much freedom there is in
+implementing a class interface.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="direct-derivation"><a class="anchor" href="#direct-derivation"></a><a class="link" href="#direct-derivation">5.1.4. Direct derivation</a></h4>
+<div class="paragraph">
+<p>A derived class like <code>rectangle</code> can leverage the base class using
+<a href="#data-inheritance">data inheritance</a>, and then add a <code>draw</code>
+method. This kind of derivation is called <em>direct derivation</em>.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class rectangle is shape with
+    draw is
+        draw_polygon fill_color, stroke_color, stroke_width,
+            move_to top, left
+            line_to top, right
+            line_to bottom, right
+            line_to bottom, left
+            line_to top, left</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since the purpose of this document is not to focus on shape drawing
+algorithms, but on object-oriented programming, we simply assumed that
+there is some general <code>draw_polygon</code> utility that we can use.</p>
+</div>
+<div class="paragraph">
+<p>Unlike languages like C++, XL does not require the
+interface of a derived class like <code>rectangle</code> to indicate that it will
+override the <code>draw</code> feature from the base class.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="indirect-derivation"><a class="anchor" href="#indirect-derivation"></a><a class="link" href="#indirect-derivation">5.1.5. Indirect derivation</a></h4>
+<div class="paragraph">
+<p>Implementing the <code>square</code> type allows us to demonstrate an interesting
+possibility of XL that does not exist in C++, which is to make a
+derived class that does not inherit its data members from its base
+class. A square does not need a separate width and height, so we could
+make the data storage requirements for a <code>square</code> smaller by only
+having it store a single <code>side</code> data value. The implementation of <code>square</code> can
+however still inherit a lot of the implementation from <code>rectangle</code>,
+but needs to rewrite <code>width</code> and <code>height</code> as attributes related to <code>side</code>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>class square is
+    draw is rectangle.draw
+    fill_color   : color
+    stroke_color : color
+    stroke_width : dimension
+    x            : coordinate
+    y            : coordinate
+    side         : dimension
+
+    width as attribute dimension is
+        get     is side
+        set W   is side := W
+    height as attribute dimension is
+        get     is side
+        set H   is side := H
+
+    left        is rectangle.left
+    right       is rectangle.right
+    top         is rectangle.top
+    bottom      is rectangle.left</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Obviously, the savings in the case of something as simple as a
+<code>square</code> are quite limited. However, having the possibility is
+important, if only because it makes it possible to enforce stricter
+rules for the derived types. With an implementation like the one shown
+above, it is absolutely impossible to end up with a <code>square</code> that has
+a different value for <code>width</code> and <code>height</code>, even by mistake.</p>
 </div>
 </div>
 </div>
@@ -11178,7 +11415,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 01:18:35 +0100
+Last updated 2020-01-12 17:58:51 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
