@@ -3187,6 +3187,7 @@ A closure may be returned as a result of evaluation, in which case all
 or part of a context may need to be captured in the returned value, even
 after that context would otherwise normally be discarded.
 
+[[lambda_function]]
 For example, consider the following code defining an ((anonymous function)):
 
 [source]
@@ -7236,21 +7237,90 @@ clip(Bounds:rectangle, Shape:any shape) as any shape is
 
 === Functional programming
 
+This section will soon cover techniques that are familiar to
+programmers using languages derived from Lisp and similar languages:
+
+* Functions as first-order values
+* Anonymous functions, already quickly link:#lambda_function[covered earlier]
+* Currying
+* Purely-functional code
+* Immutable values
+
 === Generic programming
+
+This section will soon cover techniques that are familar primarily to
+pass:[C++] programmers:
+
+* Generic containers
+* Generic algorithms
+* Traits
+* Concepts
 
 === Design by contract
 
+This section will soon cover techniques that are familiar primarily to
+Eiffel developers:
+
+* Invariants
+* Preconditions
+* Postconditions
+
 === Distributed programming
+
+This section will cover techniques used for distributed programming,
+that come from a variety of sources, and includes some innovations
+that I believe are specific to the XL family of languages:
+
+* Processes
+* Threads
+* Tasks
+* Thread pools
+* Erlang-style message passing
+* Ada-style rendez-vous
+* ELFE-style distributed programs
 
 === Aspect-oriented programming
 
+This section will cover techniques to address cross-cutting concerns
+that were studied in languages such as AspectJ, as well as other
+aspects that were explored in XL2:
+
+* AspectJ-style code injection
+* Automated trace / logging injection
+* Translation statemnts in XL2
+
 === Logic programming
+
+This section will cover techniques developed in particular by the
+Prolog programming language.
 
 === Declarative programming
 
+This section will cover techniques that make programs look or behave more
+declarative in a declarative than imperative way. It will in
+particular cover more extensively some declarative aspects of Tao3D,
+and how to use XL as a document description language.
+
+* Non-imperative evaluation
+* Documentation generation
+
 === Reactive programming
 
+This section will cover techniques that were in particular developed
+for Tao3D:
+
+* Partial re-evaluation
+* Value dependency tracking
+* Data flow programming
+
 === Synchronous programming
+
+This section will cover concepts and techniques that were particular
+notably by the Esterel family of languages:
+
+* Signals
+* Model of time
+* Determinism
 
 == Compiling XL
 

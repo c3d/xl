@@ -4944,7 +4944,7 @@ will later be used to evaluate <code>N &gt; 1</code> while evaluating <code>Cond
 or part of a context may need to be captured in the returned value, even
 after that context would otherwise normally be discarded.</p>
 </div>
-<div class="paragraph">
+<div id="lambda_function" class="paragraph">
 <p>For example, consider the following code defining an anonymous function:</p>
 </div>
 <div class="listingblock">
@@ -10191,39 +10191,192 @@ dynamically typed:</p>
 </div>
 <div class="sect2">
 <h3 id="functional-programming"><a class="anchor" href="#functional-programming"></a><a class="link" href="#functional-programming">5.2. Functional programming</a></h3>
-
+<div class="paragraph">
+<p>This section will soon cover techniques that are familiar to
+programmers using languages derived from Lisp and similar languages:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Functions as first-order values</p>
+</li>
+<li>
+<p>Anonymous functions, already quickly <a href="#lambda_function">covered earlier</a></p>
+</li>
+<li>
+<p>Currying</p>
+</li>
+<li>
+<p>Purely-functional code</p>
+</li>
+<li>
+<p>Immutable values</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="generic-programming"><a class="anchor" href="#generic-programming"></a><a class="link" href="#generic-programming">5.3. Generic programming</a></h3>
-
+<div class="paragraph">
+<p>This section will soon cover techniques that are familar primarily to
+C++ programmers:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Generic containers</p>
+</li>
+<li>
+<p>Generic algorithms</p>
+</li>
+<li>
+<p>Traits</p>
+</li>
+<li>
+<p>Concepts</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="design-by-contract"><a class="anchor" href="#design-by-contract"></a><a class="link" href="#design-by-contract">5.4. Design by contract</a></h3>
-
+<div class="paragraph">
+<p>This section will soon cover techniques that are familiar primarily to
+Eiffel developers:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Invariants</p>
+</li>
+<li>
+<p>Preconditions</p>
+</li>
+<li>
+<p>Postconditions</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="distributed-programming"><a class="anchor" href="#distributed-programming"></a><a class="link" href="#distributed-programming">5.5. Distributed programming</a></h3>
-
+<div class="paragraph">
+<p>This section will cover techniques used for distributed programming,
+that come from a variety of sources, and includes some innovations
+that I believe are specific to the XL family of languages:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Processes</p>
+</li>
+<li>
+<p>Threads</p>
+</li>
+<li>
+<p>Tasks</p>
+</li>
+<li>
+<p>Thread pools</p>
+</li>
+<li>
+<p>Erlang-style message passing</p>
+</li>
+<li>
+<p>Ada-style rendez-vous</p>
+</li>
+<li>
+<p>ELFE-style distributed programs</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="aspect-oriented-programming"><a class="anchor" href="#aspect-oriented-programming"></a><a class="link" href="#aspect-oriented-programming">5.6. Aspect-oriented programming</a></h3>
-
+<div class="paragraph">
+<p>This section will cover techniques to address cross-cutting concerns
+that were studied in languages such as AspectJ, as well as other
+aspects that were explored in XL2:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>AspectJ-style code injection</p>
+</li>
+<li>
+<p>Automated trace / logging injection</p>
+</li>
+<li>
+<p>Translation statemnts in XL2</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="logic-programming"><a class="anchor" href="#logic-programming"></a><a class="link" href="#logic-programming">5.7. Logic programming</a></h3>
-
+<div class="paragraph">
+<p>This section will cover techniques developed in particular by the
+Prolog programming language.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="declarative-programming"><a class="anchor" href="#declarative-programming"></a><a class="link" href="#declarative-programming">5.8. Declarative programming</a></h3>
-
+<div class="paragraph">
+<p>This section will cover techniques that make programs look or behave more
+declarative in a declarative than imperative way. It will in
+particular cover more extensively some declarative aspects of Tao3D,
+and how to use XL as a document description language.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Non-imperative evaluation</p>
+</li>
+<li>
+<p>Documentation generation</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="reactive-programming"><a class="anchor" href="#reactive-programming"></a><a class="link" href="#reactive-programming">5.9. Reactive programming</a></h3>
-
+<div class="paragraph">
+<p>This section will cover techniques that were in particular developed
+for Tao3D:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Partial re-evaluation</p>
+</li>
+<li>
+<p>Value dependency tracking</p>
+</li>
+<li>
+<p>Data flow programming</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="synchronous-programming"><a class="anchor" href="#synchronous-programming"></a><a class="link" href="#synchronous-programming">5.10. Synchronous programming</a></h3>
-
+<div class="paragraph">
+<p>This section will cover concepts and techniques that were particular
+notably by the Esterel family of languages:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Signals</p>
+</li>
+<li>
+<p>Model of time</p>
+</li>
+<li>
+<p>Determinism</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -11591,7 +11744,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 23:01:58 +0100
+Last updated 2020-01-12 23:59:20 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
