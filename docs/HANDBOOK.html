@@ -4610,7 +4610,7 @@ selection of declarations based on the value of arguments is called
 function of an <code>integer</code> argument. This is not the only kind of test
 that can be made. In particular, dynamic dispatch based on the <em>type</em> of
 the argument is an important feature to support well-known techniques
-such as object-oriented programming.</p>
+such as <a href="#object-oriented-programming">object-oriented programming</a>.</p>
 </div>
 <div class="paragraph">
 <p>Let’s consider an archetypal example for object-oriented programming,
@@ -6287,13 +6287,43 @@ function may fail.</p>
 </li>
 <li>
 <p><code>one_of Patterns</code> is a type that accept one of the following
-patterns. It can be used to implement enumerations, but also more
-complex variant types.</p>
+patterns. It can be used to implement enumerations, such as
+<code>one_of(RED,GREEN,BLUE)</code>, but also more complex variant types with
+more complex patterns, like for the definition of <code>color</code> below
+which describes various ways to describe a color:</p>
+<div class="literalblock">
+<div class="content">
+<pre>component is real range 0.0..1.0 bits 16
+angle     is real range 0.0..360.0 bits 16
+color is one_of
+    rgb   Red:component, Green:component, Blue:component
+    rgba  Red:component, Green:component, Blue:component, Alpha:component
+    hsv   Hue:angle, Saturation:component, Value:component
+    hsva  Hue:angle, Saturation:component, Value:component, Alpha:component
+    cymk  Cyan:component, Yellow:component, Magenta:component, Black:component
+    named Name:text
+    named Name:text, Alpha:component</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>any_of Patterns</code> is a type that accept any combination of the
-following pattersn. It can be used to implement flags, but also more
-complex variant types.</p>
+following patterns. It can be used to implement flags, like the
+representation of Unix-style permissions as <code>any_of(READ,WRITE,EXECUTE)</code>,
+but also more complex variant types that may combine multiple
+patterns, as in the <code>text_style</code> type defined below, where a text
+style can contain at most a family, a weight, a slant, a fill color
+and a line color:</p>
+<div class="literalblock">
+<div class="content">
+<pre>text_style is any_of
+    family F:font_family
+    weigth W:font_weight
+    slant S:font_slant
+    fill_color C:color
+    line_color C:color</pre>
+</div>
+</div>
 </li>
 </ul>
 </div>
@@ -6310,10 +6340,8 @@ polar[real:type]        is type polar(Mod:real, Arg:real)
 
 with
     real : type like number
-    C    : cartesian[real]
     C1   : cartesian[real]
     C2   : cartesian[real]
-    P    : polar[real]
     P1   : polar[real]
     P2   : polar[real]
 
@@ -6916,6 +6944,10 @@ container. This is also useful with <code>text</code>.</p>
 <li>
 <p><code>access T</code> matches any type that can be used to access values of
 type <code>T</code>, such as <code>own T</code>, <code>ref T</code> or <code>slice of T</code>.</p>
+</li>
+<li>
+<p><code>attribute T</code> is an <a href="#attribute">attribute</a> with type <code>T</code>, i.e. a
+value that can be read or written to in a controlled fashion.</p>
 </li>
 </ul>
 </div>
@@ -9047,56 +9079,37 @@ code like:</p>
     width  is bits.width
     height is bits.height
 
-    width:type(width)   := W is bits.width := W
-    height:type(height) := H is bits.width := H</code></pre>
+    width:type(width)   := W    is      bits.width := W
+    height:type(height) := H    is      bits.width := H</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To avoid this issue, there is a general convention that writing to a
-feature is done using a prefix with the feature name. A value that is
-read using a given name, and written using a prefix with the same name
-is called an <em>attribute</em>, and is <a href="#attributes">discussed later</a>.
-The problems above are solved by using an attribute for <code>width</code> and
-<code>height</code>, as illustrated below:</p>
+<p>To avoid this issue, XL provides a helper generic type called
+<code>attribute T</code>, which helps implementing an
+<a href="#attributes"><em>attribute</em></a> of the desired type. An <code>attribute T</code>
+behaves like a <code>T</code> that provides <code>get</code> and <code>set</code> features, as well as
+support for assignments. The implementation for the <code>picture</code> type
+type can be correctly written as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
     bits:bitmap
 
-    width       is bits.width
-    height      is bits.height
-
-    width W     is bits.width := W
-    height H    is bits.height := H</code></pre>
+    width as attribute[size] is attribute
+        get     is bits.width
+        set W   is bits.width := W
+    height as attribute[size] is attribute
+        get     is bits.height
+        set H   is bits.height := H</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>As you might guess, it is also possible to use the attribute syntax to
-update the value of <code>bits.width</code> and <code>bits.height</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
-    bits:bitmap
-
-    width       is bits.width
-    height      is bits.height
-
-    width W     is bits.width W
-    height H    is bits.height H</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Selecting between the attribute notation or the assignment notation
-for individual fields is largely a matter of taste. It is even
-possible to provide both.</p>
-</div>
-<div class="paragraph">
-<p>That choice is largely hidden from the interface, however, because
-when attempting to find the implementation for an interface, the
-compiler will transparently look for an attribute pair as a possible
-implementation.</p>
+<p>If <code>P</code> is a <code>picture</code>, then the <code>width</code> value can be read using
+<code>P.width</code> or <code>P.width.get</code>, and written to using <code>P.width := W</code>,
+<code>P.width.set W</code> or <code>P.width W</code>. The best method will depend on the use
+case. In any case, an <code>attribute T</code> can be used to implement a field
+of type <code>T</code> declared in the interface.</p>
 </div>
 </div>
 <div class="sect3">
@@ -9139,20 +9152,18 @@ bad input and just print some run-time error.</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
     bits:bitmap
 
-    width       is bits.width
-    height      is bits.height
-
-    // Working case
-    width  W:u16 is bits.width W
-    height H:u16 is bits.height H
-
-    // Error case: drop input, display message
-    width  W:size is
-        print error("Invalid picture width %1", W)
-        bits.width      // Return previous value
-    height  H:size is
-        print error("Invalid picture height %1", H)
-        bits.height     // Return previous value</code></pre>
+    width as attribute[size] is
+        get             is bits.width
+        set W:u16       is bits.width := W
+        set W           is
+             print error("Invalid picture width %1", W
+             bits.width
+    height as attribute[size] is
+        get             is bits.height
+        set H:u16       is bits.height := H
+        set H           is
+            print error("Invalid picture height %1", H)
+            bits.height</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9176,10 +9187,8 @@ input. A better interface would be to expose the attribute nature of
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
-    width  as size
-    height as size
-    width W as mayfail size
-    height H as mayfail size
+    width  as attribute[size]
+    height as attribute[size]
     pixels : buffer[area] of byte
     area as size</code></pre>
 </div>
@@ -9624,40 +9633,24 @@ evaluating <code>Body</code>.</td>
 <div class="sect3">
 <h4 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.9.6. Attributes</a></h4>
 <div class="paragraph">
-<p>Attributes are a convention to special-case the transfer of values to
-a specific named entity, notably when it is important to control how
-that value is written to or read from.</p>
+<p>Attributes are a types that behave like a value of a given type, but
+with controlled access when reading or writing values. Attributes also
+offer the convention that they can be written to by using them as a
+prefix.</p>
 </div>
 <div class="paragraph">
 <p>For example, a <code>background</code> feature with the <code>color</code> type can be
-implemented as a variable:</p>
+implemented as an attribute, which can then be used in any of the
+following ways:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>background : color              // Variable holding the color
+<pre>background : attribute[color]
 if background = blue then
-    background := red           // Assigment style</pre>
+    background := red           // Assigment style
+if background = green then
+    background blue             // Attribute style</pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Alternatively, the same feature can be provided as an attribute, which
-may sometimes be more readable:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>background as color             // Get the background color
-background C:color as color     // Set the background color
-if background = blue then
-    background red              // Attribute-setting style</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This is largely a matter of taste, and the preferred form depends on
-the context. In addition, if a type interface exposes a feature <code>F</code>
-and if there is an attribute named <code>F</code> in the implementation, then the
-attribute will automatically be used to implement the feature, which
-means that an operation like <code>X.F := V</code> may silently be transformed
-into <code>X.F V</code> if necessary.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -9667,9 +9660,9 @@ into <code>X.F V</code> if necessary.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>It is considered bad taste in XL to use <code>get</code> or <code>set</code> in the name of
-attributes. For example, the following code is generally seen as being
-a full 16 characters too long:</p>
+<p>It is considered bad taste in XL to use explicitly getters or setters
+as is common usage in languages such as Java. For example, the
+following code is a very poor alternative to attributes:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -9751,36 +9744,36 @@ language.</p>
 <div class="paragraph">
 <p><a href="https://en.wikipedia.org/wiki/Object-oriented_programming">Object-oriented programming</a>
 is a programming paradigm based on the concept of <em>objects</em>,
-which are <em>encapsulated</em> units acting as black
-boxes, providing a controlled interface to their internal <em>data</em>
-through <em>methods</em>. This provides a form of <em>information hiding</em>
-that helps with the long-term maintenance of the software by enforcing
+which are self-contained units acting as black boxes, providing a
+controlled interface to their internal <em>data</em> through
+<em>methods</em>. This provides a form of <em>information hiding</em> that
+helps with the long-term maintenance of the software by enforcing
 rules about how to access the object.
 Object-oriented programming relies on a number of features such as
-<a href="https://en.wikipedia.org/wiki/Encapsulation_(computer_programming)">encapsulation</a>
+<a href="https://en.wikipedia.org/wiki/Encapsulation_(computer_programming)"><em>encapsulation</em></a>
 <a href="https://en.wikipedia.org/wiki/Dynamic_dispatch"><em>dynamic dispatch</em></a>,
 (sometimes called <em>message passing</em>),
 <a href="https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)"><em>inheritance</em></a>,
 and <a href="https://en.wikipedia.org/wiki/Polymorphism_(computer_science)"><em>polymorphism</em></a>.</p>
 </div>
 <div class="paragraph">
-<p>A common way to illustrate the object-oriented programming is</p>
+<p>A common way to introduce object-oriented programming is with a
+program that deals with various shapes. This is a good way to
+illustrate the use of the fundamental object-oriented techniques. In
+the following example, we will write such a program, which will both
+illustrate the similarities of XL with a language like C++, as well as
+the differences and how they can matter even on such a simple example.</p>
 </div>
 <div class="paragraph">
-<p>, which can
-contain data, in the form of <a href="#field">fields</a> (often known as
-<a href="#attributes">attributes</a> or properties), and code, in the form of
-procedures (often known as <a href="#method">methods</a>). A feature of objects is an
-object&#8217;s procedures that can access and often modify the data fields
-of the object with which they
-are associated (objects have a notion of "this" or "self"). In OOP,
-computer programs are designed by making them out of objects that
-interact with one another.[1][2] OOP languages are diverse, but the
-most popular ones are class-based, meaning that objects are instances
-of classes, which also determine their types.</p>
+<p>The first part of the program is to define the type <code>shape</code>, which
+will act as the
+<a href="https://en.wikipedia.org/wiki/Inheritance_(object-oriented_programming)"><em>base class</em></a>
+of our class hierarchy.</p>
 </div>
-<div class="paragraph">
-<p>Many of the most widely used programming languages (such as C, Java, Python, etc.) are multi-paradigm and they support object-oriented programming to a greater or lesser degree, typically in combination with imperative, procedural programming. Significant object-oriented languages include Java, C, C#, Python, PHP, JavaScript, Ruby, Perl, Object Pascal, Objective-C, Dart, Swift, Scala, Common Lisp, MATLAB, and Smalltalk.</p>
+<div class="literalblock">
+<div class="content">
+<pre>type shape with</pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -11185,11 +11178,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-<<<<<<< Updated upstream
-Last updated 2020-01-11 23:51:04 +0100
-=======
-Last updated 2020-01-11 20:09:38 +0100
->>>>>>> Stashed changes
+Last updated 2020-01-12 01:18:35 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

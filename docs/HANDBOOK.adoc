@@ -4734,6 +4734,9 @@ They include the following:
 * `access T` matches any type that can be used to access values of
   type `T`, such as `own T`, `ref T` or `slice of T`.
 
+* `attribute T` is an link:#attribute[attribute] with type `T`, i.e. a
+  value that can be read or written to in a controlled fashion.
+
 ==== Mathematical types
 
 Computers are often used to perform mathematical operations. XL
@@ -6331,44 +6334,31 @@ picture is type picture
     height:type(height) := H    is      bits.width := H
 ----
 
-To avoid this issue, there is a general convention that writing to a
-feature is done using a prefix with the feature name. A value that is
-read using a given name, and written using a prefix with the same name
-is called an _((attribute))_, and is link:#attributes[discussed later].
-The problems above are solved by using an attribute for `width` and
-`height`, as illustrated below:
+To avoid this issue, XL provides a helper generic type called
+`attribute T`, which helps implementing an
+link:#attributes[_((attribute))_] of the desired type. An `attribute T`
+behaves like a `T` that provides `get` and `set` features, as well as
+support for assignments. The implementation for the `picture` type
+type can be correctly written as follows:
 
 [source]
 ----
 picture is type picture
     bits:bitmap
 
-    width       is bits.width
-    height      is bits.height
-
-    width W     is bits.width := W
-    height H    is bits.height := H
+    width as attribute[size] is attribute
+        get     is bits.width
+        set W   is bits.width := W
+    height as attribute[size] is attribute
+        get     is bits.height
+        set H   is bits.height := H
 ----
 
-As you might guess, it is also possible to use the attribute syntax
-for the value of `bits.width` and `bits.height`, as long as this is
-how this was implemented in the `bitmap` type:
-
-[source]
-----
-picture is type picture
-    bits:bitmap
-
-    width       is bits.width
-    height      is bits.height
-
-    width W     is bits.width W
-    height H    is bits.height H
-----
-
-Selecting between the attribute notation or the assignment notation
-for individual fields is largely a matter of taste. It is even
-possible to provide both.
+If `P` is a `picture`, then the `width` value can be read using
+`P.width` or `P.width.get`, and written to using `P.width := W`,
+`P.width.set W` or `P.width W`. The best method will depend on the use
+case. In any case, an `attribute T` can be used to implement a field
+of type `T` declared in the interface.
 
 ==== Generic implementations
 
@@ -6405,20 +6395,18 @@ bad input and just print some run-time error.
 picture is type picture
     bits:bitmap
 
-    width       is bits.width
-    height      is bits.height
-
-    // Working case
-    width  W:u16 is bits.width W
-    height H:u16 is bits.height H
-
-    // Error case: drop input, display message
-    width  W:size is
-        print error("Invalid picture width %1", W)
-        bits.width      // Return previous value
-    height  H:size is
-        print error("Invalid picture height %1", H)
-        bits.height     // Return previous value
+    width as attribute[size] is
+        get             is bits.width
+        set W:u16       is bits.width := W
+        set W           is
+             print error("Invalid picture width %1", W
+             bits.width
+    height as attribute[size] is
+        get             is bits.height
+        set H:u16       is bits.height := H
+        set H           is
+            print error("Invalid picture height %1", H)
+            bits.height
 ----
 
 If we instead want to return the error, then we need to expose the
@@ -6440,10 +6428,8 @@ input. A better interface would be to expose the attribute nature of
 [source]
 ----
 picture as type with
-    width  as size
-    height as size
-    width W as mayfail size
-    height H as mayfail size
+    width  as attribute[size]
+    height as attribute[size]
     pixels : buffer[area] of byte
     area as size
 ----
@@ -6799,35 +6785,28 @@ for N:name in R:[range of discrete] loop Body is <1>
 
 ==== Attributes
 
-Attributes are a convention to special-case the transfer of values to
-a specific named entity, notably when it is important to control how
-that value is written to or read from.
+Attributes are a types that behave like a value of a given type, but
+with controlled access when reading or writing values. Attributes also
+offer the convention that they can be written to by using them as a
+prefix.
 
 For example, a `background` feature with the `color` type can be
-implemented as a variable:
+implemented as an attribute, which can then be used in any of the
+following ways:
 
 ....
-background : color              // Variable holding the color
+background : attribute[color]
 if background = blue then
     background := red           // Assigment style
+if background = green then
+    background blue             // Attribute style
 ....
-
-Alternatively, the same feature can be provided as an attribute, which
-may sometimes be more readable:
-
-....
-background as color             // Get the background color
-background C:color as color     // Set the background color
-if background = blue then
-    background red              // Attribute-setting style
-....
-
 
 [NOTE]
 =====
-It is considered bad taste in XL to use `get` or `set` in the name of
-attributes. For example, the following code is generally seen as being
-a full 16 characters too long:
+It is considered bad taste in XL to use explicitly getters or setters
+as is common usage in languages such as Java. For example, the
+following code is a very poor alternative to attributes:
 ....
 get_background as color
 set_background C:color as color
