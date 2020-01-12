@@ -10005,11 +10005,25 @@ but needs to rewrite <code>width</code> and <code>height</code> as attributes re
 </div>
 <div class="paragraph">
 <p>Obviously, the savings in the case of something as simple as a
-<code>square</code> are quite limited. However, having the possibility is
-important, if only because it makes it possible to enforce stricter
-rules for the derived types. With an implementation like the one shown
-above, it is absolutely impossible to end up with a <code>square</code> that has
-a different value for <code>width</code> and <code>height</code>, even by mistake.</p>
+<code>square</code> are quite limited. There are cases where this approach may
+lead to much more significant improvements.</p>
+</div>
+<div class="paragraph">
+<p>More importantly, this approach makes it possible to enforce stricter
+rules for the derived types. In particular, this implementation of
+<code>square</code> makes it absolutely impossible to end up with a <code>square</code> that
+has a different value for <code>width</code> and <code>height</code>, even by mistake.</p>
+</div>
+<div class="paragraph">
+<p>This is not a purely theoretical concern. In C++, if the base
+<code>Rectangle</code> class has different fields for <code>width</code> and <code>height</code>, the
+derived <code>Square</code> class might initially enforce the rules, and be later
+broken for example when the base <code>Shape</code> class adds a <code>scale</code> method
+that scales width and height differently. Unless the <code>Square</code> class
+itself is modified to implement its own version of <code>scale</code>, it will be
+broken by a change in the base class. This category of issue is known
+as the <a href="https://en.wikipedia.org/wiki/Fragile_base_class">fragile base class</a>
+problem.</p>
 </div>
 </div>
 </div>
@@ -11415,7 +11429,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-12 17:58:51 +0100
+Last updated 2020-01-12 18:16:50 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
