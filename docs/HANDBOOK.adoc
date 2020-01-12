@@ -4743,8 +4743,20 @@ They include the following:
 Computers are often used to perform mathematical operations. XL
 features several mathematical types designed for that purpose:
 
+* `number` represent all kinds of numbers
+
+* `natural` represent natural numbers
+
+* `integer` represent integer numbers
+
+* `rational` represent rational numbers
+
 * `real` is the base floating-point type, but it also provides
   fixed-point link:#real-subtypes[subtypes].
+
+* `range of T` is a type that represents a range of numbers, and
+  features range arithmetic when applied to numbers with rounding like
+  floating-point numbers.
 
 * `complex[T]` is a generic representation for complex numbers using
   `T` as the representation for real numbers. Without an argument,
