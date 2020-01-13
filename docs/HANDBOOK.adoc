@@ -7449,7 +7449,7 @@ the normal form, knowing that the passed normal form will generally be
 the normal form for link:#closures[closures]:
 
 ....
-// if_statement is type{if Condition then TrueClause else FalseClause }
+// if_statement is type { if Condition then TrueClause else FalseClause }
 struct XL(if_statement)
 {
     XL(tree) *Condition;
