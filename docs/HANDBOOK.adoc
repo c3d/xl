@@ -7362,12 +7362,23 @@ struct Derived : Base { ... };
 === Normal representation
 
 All XL source code and data can be represented using a homoiconic
-representation that looks something like this, where `P` is a
-shortcut for `XL.PARSER`:
+representation that looks something like the following code, where `P`
+is a shortcut for `XL.PARSER`.
+
+First, there is a tag that can be used at run-time to discriminate
+between the possible values, and a struct that holds the common
+fields, notably a `position` field that can be used to identify a
+precise source code position while printing error messages:
 
 ....
 enum kind { NATURAL, REAL, CHARACTER, ... };
 struct XL(P.tree)                       { enum kind kind; position_t position; ... };
+....
+
+The leaf nodes simpy contain one of the basic values tpyes that can be
+foudn in the source code:
+
+....
 struct XL(P.natural)    : XL(P.tree)    { XL(natural) value; };
 struct XL(P.real)       : XL(P.tree)    { XL(real) value; }
 struct XL(P.character)  : XL(P.tree)    { XL(character) value; };
@@ -7376,7 +7387,14 @@ struct XL(P.bits)       : XL(P.tree)    { size_t size; void *data; }
 struct XL(P.symbol)     : XL(P.tree)    { XL(text) value; }
 struct XL(P.name)       : XL(P.symbol)  { };
 struct XL(P.operator)   : XL(P.symbol)  { };
+....
 
+The inner nodes contain pointers to other nodes. These pointers are
+never `NULL`, and the structure is a tree that is easily allocated or
+deallocated. The previous XL implementations have pools for each type,
+allowing faster fixed-size allocation without memory fragmentation.
+
+....
 struct XL(P.prefix)     : XL(P.tree)    { XL(P.tree) *left, *right; };
 struct XL(P.postfix)    : XL(P.tree)    { XL(P.tree) *left, *right; };
 struct XL(P.infix)      : XL(P.tree)    { XL(P.tree) *left, *right;
@@ -7426,7 +7444,7 @@ complex_t complex_add(complex_t Z1, complex_t Z2)
 }
 ....
 
-In the special case of types that contain only a machine type, that
+In the special case of types that contain only a single value, that
 machine type itsef is used, since the XL compiler takes care of the
 type checking aspects. In other words, there is no additional cost in
 using this kind of type.
@@ -7444,9 +7462,9 @@ inline distance_t distance_add(distance_t D1, distance_t D2)
 ....
 
 At lower levels of optimization, as was the case in Tao3D, the machine
-representation for types with open-ended values will typically contain
-the normal form, knowing that the passed normal form will generally be
-the normal form for link:#closures[closures]:
+representation for types with open-ended or unconstrained values will
+typically contain the normal form, knowing that the passed normal form
+will generally be the normal form for link:#closures[closures]:
 
 ....
 // if_statement is type { if Condition then TrueClause else FalseClause }
@@ -7475,7 +7493,10 @@ struct XL(expression)
 
 For example, consider the `adder` example link:#cosures[given as an
 example] for closures earlier, assuming we know that `N` and `X` are
-`integer` values:
+`integer` values.
+
+A first structure represents a function that takes a single `X`
+argument, again assuming that argument is an `int`:
 
 ....
 // adder N is { lambda X is X + N }
@@ -7483,18 +7504,35 @@ typedef struct XL(lambda X)
 {
     int (*code) (struct XL(lambda X) *closure, int X);
 } lambda;
+....
 
+However, if the code uses a variable like `N`, that variable is said
+to be _captured_(((captured variable))). In order to be able to
+preserve the value of that variable outside of the scope that created
+it, another structure inheriting from `lambda` is needed:
+
+....
 typedef struct XL(lambda X capturing N) : lambda
 {
     int N;
 } lambda_N;
+....
 
+Using this data structure, it is now possible to generate the code for
+the body of the anonymous function:
+
+....
 #define anonymous_function XL(X + N)
 int anonymous_function(lambda_N *closure, int X)
 {
     return X + closure->N;
 }
+....
 
+That body can then be used to generate the code for the `adder`
+function itself:
+
+....
 #define adder_name      XL(adder N)
 lambda_N adder_name(int N)
 {
@@ -7503,11 +7541,20 @@ lambda_N adder_name(int N)
     result.N = N;
     return result;
 }
+....
 
+That code can be used to create values that represent the adder, along
+with the data that it needs:
+
+....
 // add3 is adder 3
 #define add3    XL(add3)
 lambda_N add3 = adder_name(3)
+....
 
+Invoking that code is straightfordward:
+
+....
 // add3 5
 add3.code(&add3, 5);
 ....
@@ -7528,7 +7575,9 @@ struct XL(type)
 };
 ....
 
-Actual data types are
+When a type interface is provided, the actual type implementation may
+be implemented as a structure that derives from `struct XL(type)`.
+
 
 A data type in XL has a dynamic representation that gives access to a
 number of features of the type for

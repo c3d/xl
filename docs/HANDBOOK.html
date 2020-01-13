@@ -10435,23 +10435,46 @@ examples:</p>
 <h3 id="normal-representation"><a class="anchor" href="#normal-representation"></a><a class="link" href="#normal-representation">6.1. Normal representation</a></h3>
 <div class="paragraph">
 <p>All XL source code and data can be represented using a homoiconic
-representation that looks something like this, where <code>P</code> is a
-shortcut for <code>XL.PARSER</code>:</p>
+representation that looks something like the following code, where <code>P</code>
+is a shortcut for <code>XL.PARSER</code>.</p>
+</div>
+<div class="paragraph">
+<p>First, there is a tag that can be used at run-time to discriminate
+between the possible values, and a struct that holds the common
+fields, notably a <code>position</code> field that can be used to identify a
+precise source code position while printing error messages:</p>
 </div>
 <div class="literalblock">
 <div class="content">
 <pre>enum kind { NATURAL, REAL, CHARACTER, ... };
-struct XL(P.tree)                       { enum kind kind; position_t position; ... };
-struct XL(P.natural)    : XL(P.tree)    { XL(natural) value; };
+struct XL(P.tree)                       { enum kind kind; position_t position; ... };</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The leaf nodes simpy contain one of the basic values tpyes that can be
+foudn in the source code:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>struct XL(P.natural)    : XL(P.tree)    { XL(natural) value; };
 struct XL(P.real)       : XL(P.tree)    { XL(real) value; }
 struct XL(P.character)  : XL(P.tree)    { XL(character) value; };
 struct XL(P.text)       : XL(P.tree)    { XL(text) value; }
 struct XL(P.bits)       : XL(P.tree)    { size_t size; void *data; }
 struct XL(P.symbol)     : XL(P.tree)    { XL(text) value; }
 struct XL(P.name)       : XL(P.symbol)  { };
-struct XL(P.operator)   : XL(P.symbol)  { };
-
-struct XL(P.prefix)     : XL(P.tree)    { XL(P.tree) *left, *right; };
+struct XL(P.operator)   : XL(P.symbol)  { };</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The inner nodes contain pointers to other nodes. These pointers are
+never <code>NULL</code>, and the structure is a tree that is easily allocated or
+deallocated. The previous XL implementations have pools for each type,
+allowing faster fixed-size allocation without memory fragmentation.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>struct XL(P.prefix)     : XL(P.tree)    { XL(P.tree) *left, *right; };
 struct XL(P.postfix)    : XL(P.tree)    { XL(P.tree) *left, *right; };
 struct XL(P.infix)      : XL(P.tree)    { XL(P.tree) *left, *right;
                                           XL(text) name; }
@@ -10507,7 +10530,7 @@ complex_t complex_add(complex_t Z1, complex_t Z2)
 </div>
 </div>
 <div class="paragraph">
-<p>In the special case of types that contain only a machine type, that
+<p>In the special case of types that contain only a single value, that
 machine type itsef is used, since the XL compiler takes care of the
 type checking aspects. In other words, there is no additional cost in
 using this kind of type.</p>
@@ -10527,9 +10550,9 @@ inline distance_t distance_add(distance_t D1, distance_t D2)
 </div>
 <div class="paragraph">
 <p>At lower levels of optimization, as was the case in Tao3D, the machine
-representation for types with open-ended values will typically contain
-the normal form, knowing that the passed normal form will generally be
-the normal form for <a href="#closures">closures</a>:</p>
+representation for types with open-ended or unconstrained values will
+typically contain the normal form, knowing that the passed normal form
+will generally be the normal form for <a href="#closures">closures</a>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -10563,7 +10586,11 @@ struct XL(expression)
 <div class="paragraph">
 <p>For example, consider the <code>adder</code> example <a href="#cosures">given as an
 example</a> for closures earlier, assuming we know that <code>N</code> and <code>X</code> are
-<code>integer</code> values:</p>
+<code>integer</code> values.</p>
+</div>
+<div class="paragraph">
+<p>A first structure represents a function that takes a single <code>X</code>
+argument, again assuming that argument is an <code>int</code>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -10571,33 +10598,69 @@ example</a> for closures earlier, assuming we know that <code>N</code> and <code
 typedef struct XL(lambda X)
 {
     int (*code) (struct XL(lambda X) *closure, int X);
-} lambda;
-
-typedef struct XL(lambda X capturing N) : lambda
+} lambda;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However, if the code uses a variable like <code>N</code>, that variable is said
+to be <em>captured</em>. In order to be able to
+preserve the value of that variable outside of the scope that created
+it, another structure inheriting from <code>lambda</code> is needed:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>typedef struct XL(lambda X capturing N) : lambda
 {
     int N;
-} lambda_N;
-
-#define anonymous_function XL(X + N)
+} lambda_N;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Using this data structure, it is now possible to generate the code for
+the body of the anonymous function:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>#define anonymous_function XL(X + N)
 int anonymous_function(lambda_N *closure, int X)
 {
     return X + closure-&gt;N;
-}
-
-#define adder_name      XL(adder N)
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That body can then be used to generate the code for the <code>adder</code>
+function itself:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>#define adder_name      XL(adder N)
 lambda_N adder_name(int N)
 {
     lambda_N result;
     result.code = anonymous_function;
     result.N = N;
     return result;
-}
-
-// add3 is adder 3
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That code can be used to create values that represent the adder, along
+with the data that it needs:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// add3 is adder 3
 #define add3    XL(add3)
-lambda_N add3 = adder_name(3)
-
-// add3 5
+lambda_N add3 = adder_name(3)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Invoking that code is straightfordward:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// add3 5
 add3.code(&amp;add3, 5);</pre>
 </div>
 </div>
@@ -10621,7 +10684,8 @@ features used by the XL runtime to manipulate values of the type:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Actual data types are</p>
+<p>When a type interface is provided, the actual type implementation may
+be implemented as a structure that derives from <code>struct XL(type)</code>.</p>
 </div>
 <div class="paragraph">
 <p>A data type in XL has a dynamic representation that gives access to a
@@ -11989,7 +12053,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-13 09:34:16 +0100
+Last updated 2020-01-13 22:09:16 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
