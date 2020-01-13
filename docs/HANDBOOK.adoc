@@ -7578,9 +7578,26 @@ struct XL(type)
 When a type interface is provided, the actual type implementation may
 be implemented as a structure that derives from `struct XL(type)`.
 
+....
+// shape_t as type with
+//    draw         as nil
+//    width        : coordinate
 
-A data type in XL has a dynamic representation that gives access to a
-number of features of the type for
+struct XL(shape)_interface : XL(type)
+{
+    void                (*XL(draw))(XL(shape) *shape);
+    XL(coordinate)      (*XL(width))(XL(shape) *shape);
+    XL(coordinate)      (*XL(width))(XL(shape) *shape, XL(coordinate) width);
+}
+....
+
+The type interface can then be used by generated code in a way that is
+largely independant of the actual layout for the object. The type
+interface therefore gives a standard way to refer to the features of
+the type. Since all the features are represented by pointer, derived
+types may populate them by alternate values. This mechanism is overall
+very similar to so-called _vtables_ in pass:[C++].
+
 
 === Compiled representations
 
