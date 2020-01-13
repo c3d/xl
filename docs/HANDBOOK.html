@@ -658,12 +658,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#normal-representation">6.1. Normal representation</a></li>
 <li><a href="#machine-representation">6.2. Machine representation</a></li>
-<li><a href="#type-representation">6.3. Type representation</a></li>
-<li><a href="#compiled-representations">6.4. Compiled representations</a></li>
-<li><a href="#data-2">6.5. Data</a></li>
-<li><a href="#lifetime-2">6.6. Lifetime</a></li>
-<li><a href="#closures-2">6.7. Closures</a></li>
-<li><a href="#compact-vs-packed">6.8. Compact vs. Packed</a></li>
+<li><a href="#closures-representation">6.3. Closures representation</a></li>
+<li><a href="#type-representation">6.4. Type representation</a></li>
+<li><a href="#compiled-representations">6.5. Compiled representations</a></li>
+<li><a href="#data-2">6.6. Data</a></li>
+<li><a href="#lifetime-2">6.7. Lifetime</a></li>
+<li><a href="#closures-2">6.8. Closures</a></li>
+<li><a href="#compact-vs-packed">6.9. Compact vs. Packed</a></li>
 </ul>
 </li>
 <li><a href="#basic-operations">7. Basic operations</a></li>
@@ -10535,18 +10536,74 @@ the normal form for <a href="#closures">closures</a>:</p>
 <pre>// if_statement is type { if Condition then TrueClause else FalseClause }
 struct XL(if_statement)
 {
-    XL(tree) *Condition;
-    XL(tree) *TrueClause;
-    XL(tree) *FalseClause;
+    XL(P.tree) *Condition;
+    XL(P.tree) *TrueClause;
+    XL(P.tree) *FalseClause;
+};</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="closures-representation"><a class="anchor" href="#closures-representation"></a><a class="link" href="#closures-representation">6.3. Closures representation</a></h3>
+<div class="paragraph">
+<p>Executable code and closures also have machine forms.
+The machine form for a closure may look something like:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>typedef XL(type of expression) expression_type;
+struct XL(expression)
+{
+    expression_type (*code) (struct XL(expression) *closure, args...);
+    XL(P.tree) *self; // If needed
+    ... // additional data fields for captured data used by 'code'
 };</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>However, executable code and closures also have machine forms.</p>
+<p>For example, consider the <code>adder</code> example <a href="#cosures">given as an
+example</a> for closures earlier, assuming we know that <code>N</code> and <code>X</code> are
+<code>integer</code> values:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// adder N is { lambda X is X + N }
+typedef struct XL(lambda X)
+{
+    int (*code) (struct XL(lambda X) *closure, int X);
+} lambda;
+
+typedef struct XL(lambda X capturing N) : lambda
+{
+    int N;
+} lambda_N;
+
+#define anonymous_function XL(X + N)
+int anonymous_function(lambda_N *closure, int X)
+{
+    return X + closure-&gt;N;
+}
+
+#define adder_name      XL(adder N)
+lambda_N adder_name(int N)
+{
+    lambda_N result;
+    result.code = anonymous_function;
+    result.N = N;
+    return result;
+}
+
+// add3 is adder 3
+#define add3    XL(add3)
+lambda_N add3 = adder_name(3)
+
+// add3 5
+add3.code(&amp;add3, 5);</pre>
+</div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-representation"><a class="anchor" href="#type-representation"></a><a class="link" href="#type-representation">6.3. Type representation</a></h3>
+<h3 id="type-representation"><a class="anchor" href="#type-representation"></a><a class="link" href="#type-representation">6.4. Type representation</a></h3>
 <div class="paragraph">
 <p>The <code>type</code> type is a standard data type, which exposes a number of
 features used by the XL runtime to manipulate values of the type:</p>
@@ -10572,7 +10629,7 @@ number of features of the type for</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">6.4. Compiled representations</a></h3>
+<h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">6.5. Compiled representations</a></h3>
 <div class="paragraph">
 <p>Code and any data can also have one or several <em>compiled forms</em>. The
 compiled forms are generally very implementation-dependent, varying with
@@ -10587,19 +10644,19 @@ the IEEE-754 64-bit representation.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">6.5. Data</a></h3>
+<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">6.6. Data</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="lifetime-2"><a class="anchor" href="#lifetime-2"></a><a class="link" href="#lifetime-2">6.6. Lifetime</a></h3>
+<h3 id="lifetime-2"><a class="anchor" href="#lifetime-2"></a><a class="link" href="#lifetime-2">6.7. Lifetime</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="closures-2"><a class="anchor" href="#closures-2"></a><a class="link" href="#closures-2">6.7. Closures</a></h3>
+<h3 id="closures-2"><a class="anchor" href="#closures-2"></a><a class="link" href="#closures-2">6.8. Closures</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">6.8. Compact vs. Packed</a></h3>
+<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">6.9. Compact vs. Packed</a></h3>
 
 </div>
 </div>
@@ -11932,7 +11989,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-13 09:09:50 +0100
+Last updated 2020-01-13 09:34:16 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -7452,13 +7452,65 @@ the normal form for link:#closures[closures]:
 // if_statement is type { if Condition then TrueClause else FalseClause }
 struct XL(if_statement)
 {
-    XL(tree) *Condition;
-    XL(tree) *TrueClause;
-    XL(tree) *FalseClause;
+    XL(P.tree) *Condition;
+    XL(P.tree) *TrueClause;
+    XL(P.tree) *FalseClause;
 };
 ....
 
-However, executable code and closures also have machine forms.
+=== Closures representation
+
+Executable code and closures also have machine forms.
+The machine form for a closure may look something like:
+
+....
+typedef XL(type of expression) expression_type;
+struct XL(expression)
+{
+    expression_type (*code) (struct XL(expression) *closure, args...);
+    XL(P.tree) *self; // If needed
+    ... // additional data fields for captured data used by 'code'
+};
+....
+
+For example, consider the `adder` example link:#cosures[given as an
+example] for closures earlier, assuming we know that `N` and `X` are
+`integer` values:
+
+....
+// adder N is { lambda X is X + N }
+typedef struct XL(lambda X)
+{
+    int (*code) (struct XL(lambda X) *closure, int X);
+} lambda;
+
+typedef struct XL(lambda X capturing N) : lambda
+{
+    int N;
+} lambda_N;
+
+#define anonymous_function XL(X + N)
+int anonymous_function(lambda_N *closure, int X)
+{
+    return X + closure->N;
+}
+
+#define adder_name      XL(adder N)
+lambda_N adder_name(int N)
+{
+    lambda_N result;
+    result.code = anonymous_function;
+    result.N = N;
+    return result;
+}
+
+// add3 is adder 3
+#define add3    XL(add3)
+lambda_N add3 = adder_name(3)
+
+// add3 5
+add3.code(&add3, 5);
+....
 
 === Type representation
 
