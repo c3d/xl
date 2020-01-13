@@ -6971,16 +6971,18 @@ features several mathematical types designed for that purpose:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>number</code> represent all kinds of numbers</p>
+<p><code>number</code> represent all kinds of numbers and is intended to be used
+in generic code.</p>
 </li>
 <li>
-<p><code>natural</code> represent natural numbers</p>
+<p><code>natural</code> represent natural numbers, i.e. non-negative whole numbers.</p>
 </li>
 <li>
-<p><code>integer</code> represent integer numbers</p>
+<p><code>integer</code> represent integer numbers, i.e. signed whole numbers.</p>
 </li>
 <li>
-<p><code>rational</code> represent rational numbers</p>
+<p><code>rational</code> represent rational numbers, i.e. a rato of two whole
+numbers. They can be used to perform accurate computations on ratios.</p>
 </li>
 <li>
 <p><code>real</code> is the base floating-point type, but it also provides
@@ -6988,8 +6990,9 @@ fixed-point <a href="#real-subtypes">subtypes</a>.</p>
 </li>
 <li>
 <p><code>range of T</code> is a type that represents a range of numbers, and
-features range arithmetic when applied to numbers with rounding like
-floating-point numbers.</p>
+features range arithmetic, which makes it possible to estimate
+the effect of rounding errors in complex calculations involving
+floating-point types.</p>
 </li>
 <li>
 <p><code>complex[T]</code> is a generic representation for complex numbers using
@@ -11761,7 +11764,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-13 00:04:46 +0100
+Last updated 2020-01-13 07:27:10 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
