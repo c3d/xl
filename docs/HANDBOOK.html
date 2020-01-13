@@ -10415,7 +10415,7 @@ will explain how some of the features described previously can be
 implemented, by showing examples using C code.</p>
 </div>
 <div class="paragraph">
-<p>In the C code, the notation <code>XL(expr)</code> will denote a magical macro
+<p>In the C code, the notation <code>`expr`</code> will denote a magical macro
 creating a unique name attributed to the XL expression <code>expr</code>, and
 <code>&#8230;&#8203;</code> will indicate that what is presented is only a partial
 representation, with the expectation that whas surrounds <code>&#8230;&#8203;</code> allows
@@ -10447,7 +10447,7 @@ precise source code position while printing error messages:</p>
 <div class="literalblock">
 <div class="content">
 <pre>enum kind { NATURAL, REAL, CHARACTER, ... };
-struct XL(P.tree)                       { enum kind kind; position_t position; ... };</pre>
+struct `P.tree`                       { enum kind kind; position_t position; ... };</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10456,14 +10456,14 @@ foudn in the source code:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>struct XL(P.natural)    : XL(P.tree)    { XL(natural) value; };
-struct XL(P.real)       : XL(P.tree)    { XL(real) value; }
-struct XL(P.character)  : XL(P.tree)    { XL(character) value; };
-struct XL(P.text)       : XL(P.tree)    { XL(text) value; }
-struct XL(P.bits)       : XL(P.tree)    { size_t size; void *data; }
-struct XL(P.symbol)     : XL(P.tree)    { XL(text) value; }
-struct XL(P.name)       : XL(P.symbol)  { };
-struct XL(P.operator)   : XL(P.symbol)  { };</pre>
+<pre>struct `P.natural`    : `P.tree`    { `natural` value; };
+struct `P.real`       : `P.tree`    { `real` value; }
+struct `P.character`  : `P.tree`    { `character` value; };
+struct `P.text`       : `P.tree`    { `text` value; }
+struct `P.bits`       : `P.tree`    { size_t size; void *data; }
+struct `P.symbol`     : `P.tree`    { `text` value; }
+struct `P.name`       : `P.symbol`  { };
+struct `P.operator`   : `P.symbol`  { };</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10474,12 +10474,10 @@ allowing faster fixed-size allocation without memory fragmentation.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>struct XL(P.prefix)     : XL(P.tree)    { XL(P.tree) *left, *right; };
-struct XL(P.postfix)    : XL(P.tree)    { XL(P.tree) *left, *right; };
-struct XL(P.infix)      : XL(P.tree)    { XL(P.tree) *left, *right;
-                                          XL(text) name; }
-struct XL(P.block)      : XL(P.tree)    { XL(P.tree) *child;
-                                          XL(text) opening, closing; }</pre>
+<pre>struct `P.prefix`     : `P.tree`    { `P.tree` *left, *right; };
+struct `P.postfix`    : `P.tree`    { `P.tree` *left, *right; };
+struct `P.infix`      : `P.tree`    { `P.tree` *left, *right; `text` name; }
+struct `P.block`      : `P.tree`    { `P.tree` *child; `text` opening, closing; }</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10513,13 +10511,13 @@ being considered. For example:</p>
 <div class="literalblock">
 <div class="content">
 <pre>// complex is type complex(Re:real, Im:real)
-typedef struct XL(complex) { XL(real) Re; XL(real) Im; } complex_t;
+typedef struct `complex` { `real` Re; `real` Im; } complex_t;
 
 // Z : complex := complex(1.2, 3.4)
 complex_t Z = { 1.2, 3.4 };
 
 // Z1:complex + Z2.complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im)
-#define complex_add  XL(Z1:complex + Z2.complex)
+#define complex_add  `Z1:complex + Z2.complex`
 complex_t complex_add(complex_t Z1, complex_t Z2)
 {
     complex_t result;
@@ -10538,10 +10536,10 @@ using this kind of type.</p>
 <div class="literalblock">
 <div class="content">
 <pre>// distance is type distance(meters:real)
-typedef XL(real) distance_t;    // Probably a double
+typedef `real` distance_t;    // Probably a double
 
 // D1:distance + D2:distance is distance(D1.meters + D2.meters)
-#define distance_add XL(D1:distance + D2:distance)
+#define distance_add `D1:distance + D2:distance`
 inline distance_t distance_add(distance_t D1, distance_t D2)
 {
     return D1 + D2;
@@ -10557,11 +10555,11 @@ will generally be the normal form for <a href="#closures">closures</a>:</p>
 <div class="literalblock">
 <div class="content">
 <pre>// if_statement is type { if Condition then TrueClause else FalseClause }
-struct XL(if_statement)
+struct `if_statement`
 {
-    XL(P.tree) *Condition;
-    XL(P.tree) *TrueClause;
-    XL(P.tree) *FalseClause;
+    `P.tree` *Condition;
+    `P.tree` *TrueClause;
+    `P.tree` *FalseClause;
 };</pre>
 </div>
 </div>
@@ -10574,11 +10572,11 @@ The machine form for a closure may look something like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>typedef XL(type of expression) expression_type;
-struct XL(expression)
+<pre>typedef `type of expression` expression_type;
+struct `expression`
 {
-    expression_type (*code) (struct XL(expression) *closure, args...);
-    XL(P.tree) *self; // If needed
+    expression_type (*code) (struct `expression` *closure, args...);
+    `P.tree` *self; // If needed
     ... // additional data fields for captured data used by 'code'
 };</pre>
 </div>
@@ -10595,9 +10593,9 @@ argument, again assuming that argument is an <code>int</code>:</p>
 <div class="literalblock">
 <div class="content">
 <pre>// adder N is { lambda X is X + N }
-typedef struct XL(lambda X)
+typedef struct `lambda X`
 {
-    int (*code) (struct XL(lambda X) *closure, int X);
+    int (*code) (struct `lambda X` *closure, int X);
 } lambda;</pre>
 </div>
 </div>
@@ -10609,7 +10607,7 @@ it, another structure inheriting from <code>lambda</code> is needed:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>typedef struct XL(lambda X capturing N) : lambda
+<pre>typedef struct `lambda X capturing N` : lambda
 {
     int N;
 } lambda_N;</pre>
@@ -10621,7 +10619,7 @@ the body of the anonymous function:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>#define anonymous_function XL(X + N)
+<pre>#define anonymous_function `X + N`
 int anonymous_function(lambda_N *closure, int X)
 {
     return X + closure-&gt;N;
@@ -10634,7 +10632,7 @@ function itself:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>#define adder_name      XL(adder N)
+<pre>#define adder_name      `adder N`
 lambda_N adder_name(int N)
 {
     lambda_N result;
@@ -10651,7 +10649,7 @@ with the data that it needs:</p>
 <div class="literalblock">
 <div class="content">
 <pre>// add3 is adder 3
-#define add3    XL(add3)
+#define add3    `add3`
 lambda_N add3 = adder_name(3)</pre>
 </div>
 </div>
@@ -10673,19 +10671,19 @@ features used by the XL runtime to manipulate values of the type:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>struct XL(type)
+<pre>struct `type`
 {
-    size_t (*size)(void *value);        // Compute size of a value
-    void (*create)(void *value);        // Create value of the type
-    void (*delete)(void *value);        // Delete value of the type
-    bool (*contains)(void *value);      // Check if a value belong
+    size_t (*size)    (void *value);    // Compute size of a value
+    void   (*create)  (void *value);    // Create value of the type
+    void   (*delete)  (void *value);    // Delete value of the type
+    bool   (*contains)(void *value);    // Check if a value belong
     ...
 };</pre>
 </div>
 </div>
 <div class="paragraph">
 <p>When a type interface is provided, the actual type implementation may
-be implemented as a structure that derives from <code>struct XL(type)</code>.</p>
+be implemented as a structure that derives from <code>struct `type`</code>.</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -10693,11 +10691,11 @@ be implemented as a structure that derives from <code>struct XL(type)</code>.</p
 //    draw         as nil
 //    width        : coordinate
 
-struct XL(shape)_interface : XL(type)
+struct `shape`_interface : `type`
 {
-    void                (*XL(draw))(XL(shape) *shape);
-    XL(coordinate)      (*XL(width))(XL(shape) *shape);
-    XL(coordinate)      (*XL(width))(XL(shape) *shape, XL(coordinate) width);
+    void                (*`draw`) (`shape` *shape);
+    `coordinate`        (*`width`)(`shape` *shape);
+    `coordinate`        (*`width`)(`shape` *shape, `coordinate` width);
 }</pre>
 </div>
 </div>
@@ -12071,7 +12069,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-13 22:42:19 +0100
+Last updated 2020-01-13 23:12:39 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
