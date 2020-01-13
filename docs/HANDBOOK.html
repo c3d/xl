@@ -656,11 +656,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#compiling-xl">6. Compiling XL</a>
 <ul class="sectlevel2">
-<li><a href="#compiled-representations">6.1. Compiled representations</a></li>
-<li><a href="#data-2">6.2. Data</a></li>
-<li><a href="#lifetime-2">6.3. Lifetime</a></li>
-<li><a href="#closures-2">6.4. Closures</a></li>
-<li><a href="#compact-vs-packed">6.5. Compact vs. Packed</a></li>
+<li><a href="#normal-representation">6.1. Normal representation</a></li>
+<li><a href="#machine-representation">6.2. Machine representation</a></li>
+<li><a href="#type-representation">6.3. Type representation</a></li>
+<li><a href="#compiled-representations">6.4. Compiled representations</a></li>
+<li><a href="#data-2">6.5. Data</a></li>
+<li><a href="#lifetime-2">6.6. Lifetime</a></li>
+<li><a href="#closures-2">6.7. Closures</a></li>
+<li><a href="#compact-vs-packed">6.8. Compact vs. Packed</a></li>
 </ul>
 </li>
 <li><a href="#basic-operations">7. Basic operations</a></li>
@@ -10403,8 +10406,173 @@ notably by the Esterel family of languages:</p>
 <div class="sect1">
 <h2 id="compiling-xl"><a class="anchor" href="#compiling-xl"></a><a class="link" href="#compiling-xl">6. Compiling XL</a></h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>The XL language is quite different from a language like C. Some of the
+language constructs described in this document may seem a little bit
+mysterious to programmers coming from such languages. This section
+will explain how some of the features described previously can be
+implemented, by showing examples using C code.</p>
+</div>
+<div class="paragraph">
+<p>In the C code, the notation <code>XL(expr)</code> will denote a magical macro
+creating a unique name attributed to the XL expression <code>expr</code>, and
+<code>&#8230;&#8203;</code> will indicate that what is presented is only a partial
+representation, with the expectation that whas surrounds <code>&#8230;&#8203;</code> allows
+the reader to infer what can be there.</p>
+</div>
+<div class="paragraph">
+<p>In addition, the example code will borrow one feature from C++,
+inheritance, so that we may write something like the following in the
+examples:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>struct Derived : Base { ... };</pre>
+</div>
+</div>
 <div class="sect2">
-<h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">6.1. Compiled representations</a></h3>
+<h3 id="normal-representation"><a class="anchor" href="#normal-representation"></a><a class="link" href="#normal-representation">6.1. Normal representation</a></h3>
+<div class="paragraph">
+<p>All XL source code and data can be represented using a homoiconic
+representation that looks something like this, where <code>P</code> is a
+shortcut for <code>XL.PARSER</code>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>enum kind { NATURAL, REAL, CHARACTER, ... };
+struct XL(P.tree)                       { enum kind kind; position_t position; ... };
+struct XL(P.natural)    : XL(P.tree)    { XL(natural) value; };
+struct XL(P.real)       : XL(P.tree)    { XL(real) value; }
+struct XL(P.character)  : XL(P.tree)    { XL(character) value; };
+struct XL(P.text)       : XL(P.tree)    { XL(text) value; }
+struct XL(P.bits)       : XL(P.tree)    { size_t size; void *data; }
+struct XL(P.symbol)     : XL(P.tree)    { XL(text) value; }
+struct XL(P.name)       : XL(P.symbol)  { };
+struct XL(P.operator)   : XL(P.symbol)  { };
+
+struct XL(P.prefix)     : XL(P.tree)    { XL(P.tree) *left, *right; };
+struct XL(P.postfix)    : XL(P.tree)    { XL(P.tree) *left, *right; };
+struct XL(P.infix)      : XL(P.tree)    { XL(P.tree) *left, *right;
+                                          XL(text) name; }
+struct XL(P.block)      : XL(P.tree)    { XL(P.tree) *child;
+                                          XL(text) opening, closing; }</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This representation is called the <em>normal representation</em> or
+<em>normal form</em> of the parse tree, and it corresponds almost
+directly to the XL declarations <a href="#parser">given in module</a>
+<code>XL.PARSER</code>. This is in particular the input to the <code>XL.TRANSLATOR</code>
+module, and it can be evaluated directly.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="machine-representation"><a class="anchor" href="#machine-representation"></a><a class="link" href="#machine-representation">6.2. Machine representation</a></h3>
+<div class="paragraph">
+<p>The normal form is not very efficient, and generated machine code will
+normally only use a <em>machine representation</em> or  <em>machine form</em>
+for both data and code.</p>
+</div>
+<div class="paragraph">
+<p>When this is useful for proper evaluation, a normal form can be
+<em>boxed</em> into its equivalent machine representation, and
+conversely, that machine representation can be
+<em>unboxed</em>. This process is called <em>autoboxing</em>, and
+should be entirely transparent to the developer.</p>
+</div>
+<div class="paragraph">
+<p>The machine representation for data is normally a <code>struct</code> that
+contains the definitions in the
+<a href="#pattern-matching-scope">pattern matching scope</a> for the type
+being considered. For example:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// complex is type complex(Re:real, Im:real)
+typedef struct XL(complex) { XL(real) Re; XL(real) Im; } complex_t;
+
+// Z : complex := complex(1.2, 3.4)
+complex_t Z = { 1.2, 3.4 };
+
+// Z1:complex + Z2.complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im)
+#define complex_add  XL(Z1:complex + Z2.complex)
+complex_t complex_add(complex_t Z1, complex_t Z2)
+{
+    complex_t result;
+    result.Re = Z1.Re + Z2.Re;
+    result.Im = Z1.Im + Z2.Im;
+    return result;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the special case of types that contain only a machine type, that
+machine type itsef is used, since the XL compiler takes care of the
+type checking aspects. In other words, there is no additional cost in
+using this kind of type.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// distance is type distance(meters:real)
+typedef XL(real) distance_t;    // Probably a double
+
+// D1:distance + D2:distance is distance(D1.meters + D2.meters)
+#define distance_add XL(D1:distance + D2:distance)
+inline distance_t distance_add(distance_t D1, distance_t D2)
+{
+    return D1 + D2;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At lower levels of optimization, as was the case in Tao3D, the machine
+representation for types with open-ended values will typically contain
+the normal form, knowing that the passed normal form will generally be
+the normal form for <a href="#closures">closures</a>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// if_statement is type{if Condition then TrueClause else FalseClause }
+struct XL(if_statement)
+{
+    XL(tree) *Condition;
+    XL(tree) *TrueClause;
+    XL(tree) *FalseClause;
+};</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However, executable code and closures also have machine forms.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="type-representation"><a class="anchor" href="#type-representation"></a><a class="link" href="#type-representation">6.3. Type representation</a></h3>
+<div class="paragraph">
+<p>The <code>type</code> type is a standard data type, which exposes a number of
+features used by the XL runtime to manipulate values of the type:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>struct XL(type)
+{
+    size_t (*size)(void *value);        // Compute size of a value
+    void (*create)(void *value);        // Create value of the type
+    void (*delete)(void *value);        // Delete value of the type
+    bool (*contains)(void *value);      // Check if a value belong
+    ...
+};</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Actual data types are</p>
+</div>
+<div class="paragraph">
+<p>A data type in XL has a dynamic representation that gives access to a
+number of features of the type for</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="compiled-representations"><a class="anchor" href="#compiled-representations"></a><a class="link" href="#compiled-representations">6.4. Compiled representations</a></h3>
 <div class="paragraph">
 <p>Code and any data can also have one or several <em>compiled forms</em>. The
 compiled forms are generally very implementation-dependent, varying with
@@ -10419,19 +10587,19 @@ the IEEE-754 64-bit representation.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">6.2. Data</a></h3>
+<h3 id="data-2"><a class="anchor" href="#data-2"></a><a class="link" href="#data-2">6.5. Data</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="lifetime-2"><a class="anchor" href="#lifetime-2"></a><a class="link" href="#lifetime-2">6.3. Lifetime</a></h3>
+<h3 id="lifetime-2"><a class="anchor" href="#lifetime-2"></a><a class="link" href="#lifetime-2">6.6. Lifetime</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="closures-2"><a class="anchor" href="#closures-2"></a><a class="link" href="#closures-2">6.4. Closures</a></h3>
+<h3 id="closures-2"><a class="anchor" href="#closures-2"></a><a class="link" href="#closures-2">6.7. Closures</a></h3>
 
 </div>
 <div class="sect2">
-<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">6.5. Compact vs. Packed</a></h3>
+<h3 id="compact-vs-packed"><a class="anchor" href="#compact-vs-packed"></a><a class="link" href="#compact-vs-packed">6.8. Compact vs. Packed</a></h3>
 
 </div>
 </div>
@@ -11764,7 +11932,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-13 07:27:10 +0100
+Last updated 2020-01-13 09:06:33 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
