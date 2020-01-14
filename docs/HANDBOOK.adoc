@@ -7718,25 +7718,79 @@ static `coordinate` `width`_set(struct `shape` *shape, `coordinate` W)
 }
 ....
 
-=== Compiled representations
+=== Discriminated types
 
-Code and any data can also have one or several _compiled forms_. The
-compiled forms are generally very implementation-dependent, varying with
-the machine you run the program on as well as with the compiler
-technology being used.
+For a type expression like `A or B`, a memory space can be occupied
+by either a `A` or a `B`. In that case, the compiler needs to add a
+field that helps identify which type is being represented. Such a
+field is called a _discriminant_.
 
-Types also determine properties such as the size and binary
-representation of values. For example, on most machines, `integer` will
-be represented as a 64-bit 2-complement binary value, and `real` using
-the IEEE-754 64-bit representation.
+When there is a limited number of possible types, then the compiler
+should generate an enumeration, since this makes it relatively easy to
+crate dispatch tables. For example:
 
-=== Data
+....
+// my_type is integer or real
+// triple X:my_type as my_type is X + X + X
+struct `my_type`
+{
+    enum { `integer`_case, `real`_case } kind;
+    union
+    {
+        `integer` a;
+        `real` b;
+    }
+};
 
-=== Lifetime
+static `my_type` `triple`_a(`my_type` X)
+{
+    `my_type` result = { `integer`_case, a: X.a + X.a + X.a }
+    return result;
+}
 
-=== Closures
+static `my_type` `triple`_b(`my_type` X)
+{
+    `my_type` result = { `real`_case, b: X.b + X.b + X.b }
+    return result;
+}
 
-=== Compact vs. Packed
+`my_type` `triple`(`my_type` X)
+{
+    typedef `my_type`(*impl)(`my_type` X);
+    static impl impls[] = { `triple`_a, `triple`_b };
+    return impls[X.kind](X);
+}
+....
+
+The `any T` type can accept a much larger and open-ended set of
+types. In that case, the discriminant must be a type.
+
+....
+// S : any shape_t
+struct `any shape_t`
+{
+    struct `shape_t`_interface *type;
+    struct `shape_t` *value;
+} S;
+
+// S := rectangle(1,2,3,4)
+`rectangle` tmp_r = { 1, 2, 3, 4};
+S.type = `rectangle`;
+S.value = &tmp_r;
+
+// S := circle(0, 0, 100)
+`circle` tmp_c = { 0, 0, 100 };
+S.type =`circle`;
+S.value = &tmp_c;
+};
+....
+
+
+=== Constrained types
+
+
+=== Dynamic dispatch
+
 
 == Basic operations
 
