@@ -77,7 +77,7 @@ really means three things:
 . XL provides link:#efficient-translation[complete control] over the
   ((program translation)) process. This means that libraries(((library)))
   exist or can be written to make XL at least as good as C for
-  low-level ((bit-twiddling)), at least as good as pass:[C++] for ((generic
+  low-level ((bit-twiddling)), at least as good as {cpp} for ((generic
   algorithms)), at least as good as Ada for ((tasking)), at least as
   good as Fortran for ((numerical algorithms)), at least as good as
   Java for ((distributed programming)), and so on.
@@ -125,7 +125,7 @@ What is more interesting, though, is the definition of `print`. That
 definition is link:#the-case-of-text-input-output-operations[discussed
 below], and you will see that it is quite simple, in particular when
 compared with similar input/output operations in languages such
-as pass:[C++].
+as {cpp}.
 
 Another interesting, if slightly more complicated version of "Hello
 World" is one written in the link:https://tao3d.sf.net[Tao3D] dialect
@@ -553,10 +553,10 @@ the compiler. So is the meaning of `x/3`, even if some implementations
 that lack a hardware implementation of division have to make a call to
 a library function to actually implement that code.
 
-pass:[C++] went one step further than C, allowing programmers to
+{cpp} went one step further than C, allowing programmers to
 _((overload))_ operators, i.e. redefine the meaning of an operation
 like `X+1`, but only for ((custom data types)), and only for already
-existing operators. In pass:[C++], a programmer cannot _create_ the
+existing operators. In {cpp}, a programmer cannot _create_ the
 _((spaceship operator))_ `+<=>+` using the standard language mechanisms.
 It has to be implemented in the compiler. The spaceship operator has to be
 http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf[added
@@ -586,11 +586,11 @@ X*1     is X
 X+0     is X
 ----
 
-Finally, pass:[C++] also makes it very difficult to deal with expressions
+Finally, {cpp} also makes it very difficult to deal with expressions
 containing multiple operators. For example, many modern CPUs feature a
 form of
 https://en.wikipedia.org/wiki/Multiply–accumulate_operation#Fused_multiply–add[fused multiply-add], which has benefits that include performance and
-precision. Yet pass:[C++] will not allow you to overload `X*Y+Z` to
+precision. Yet {cpp} will not allow you to overload `X*Y+Z` to
 use this kind of operations. In XL, this is not a problem at all:
 
 [source]
@@ -781,7 +781,7 @@ you need for that type to become "writable" is to add a definition of
 write Z:complex     is write "(", Z.Re, ";", Z.Im, ")"
 ----
 
-Unlike the pass:[C++] `iostream` facility, the XL compiler will naturally emit
+Unlike the {cpp} `iostream` facility, the XL compiler will naturally emit
 less code. In particular, it will need only one function call for every
 call to `print`, calling the generated function for the given
 combination of arguments. That function will in turn call other
@@ -804,7 +804,7 @@ locked_print Items is
 ----
 
 It is extremely difficult, if not impossible, to achieve a similar
-effect with pass:[C++] `iostream` or, more generally, with I/O facilities that
+effect with {cpp} `iostream` or, more generally, with I/O facilities that
 perform one call per I/O item. That’s because there is no way for the
 compiler to identify where the "line breaks" are in your code.
 
@@ -1254,7 +1254,7 @@ with a new fancy and ((programmer-friendly)) syntax.
 The XL ((syntax)) is much _simpler_ than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
 link:{xl}src/parser.cpp[((parser))] for XL is less than 800 lines of
-straightforward pass:[C++] code, and the link:{xl}src/scanner.cpp[((scanner))]
+straightforward {cpp} code, and the link:{xl}src/scanner.cpp[((scanner))]
 barely adds another 900 lines. By contrast, the
 https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c[C parser]
 in GCC needs more than 20000 lines of code, which is about the size of a
@@ -1709,7 +1709,7 @@ The syntax file uses a few special names:
 Additional sections of the syntax file define delimiters for comment,
 block and text. Comment and text delimiters come in pairs.
 
-The default syntax file specifies comments that follow the C/pass:[C++]
+The default syntax file specifies comments that follow the C/{cpp}
 convention, i.e. comments either start with `+/*+` and end with `+*/+` or
 start with `//` and end with a new line. The basic text separators
 (simple and double quotes) are not specified in the syntax file
@@ -2962,13 +2962,13 @@ if shape1 intersects shape2 then    // selects the right combination
 ----
 
 NOTE: Type-based dynamic dispatch is relatively similar to the notion
-of _((virtual function))_ in pass:[C++], although the XL
-implementation is likely to be quite different. The pass:[C++]
+of _((virtual function))_ in {cpp}, although the XL
+implementation is likely to be quite different. The {cpp}
 approach only allows dynamic dispatch along a single axis, based on
-the type of the object argument. pass:[C++] also features a special
+the type of the object argument. {cpp} also features a special
 syntax, `shape.Draw()`, for calls with dynamic dispatch, which differs
 from the C-style syntax for function calls, `Draw(shape)`. The syntax
-alone makes the `intersects` example difficult to write in pass:[C++].
+alone makes the `intersects` example difficult to write in {cpp}.
 
 As another illustration of a complex dynamic dispatch not based on
 types, http://tao3d.sourceforge.net[Tao3D] uses
@@ -3535,7 +3535,7 @@ With this declaration, the expression `digit_spelling 3` evaluates to
 `"three"`. This kind of map application is called _((indexing))_. A
 suggested style choice is to make the intent more explicit using ((square
 brackets)), i.e. `digit_spelling[4]`, as a nod to the syntax of
-programming languages such as C or pass:[C++].
+programming languages such as C or {cpp}.
 
 When the ((index)) is an expression, for example `digit_spelling[A+3]` in a
 context where `A is 2`, we must evaluate `A+3` in the current context
@@ -3892,7 +3892,7 @@ sanitized_sqrt X:real as real is
 
 NOTE: This may look like exception handling, and intentionally so.
 However, `error` values are not exceptions in that they don’t
-automatically propagate across functions like pass:[C++] exceptions do. If an
+automatically propagate across functions like {cpp} exceptions do. If an
 error happens at some level, you must deal with it at that level, if
 only to explicitly pass it along. This is done
 link:#error-statements[automatically] in many cases, so that the end
@@ -4051,7 +4051,7 @@ definitions of the value must be provided at some point that matches the
 declaration and specifies an implementation, but that definition may be
 link:#modules[in a different source file].
 
-NOTE: *RATIONALE* In languages such as pass:[C++], some members of a
+NOTE: *RATIONALE* In languages such as {cpp}, some members of a
 class can be made _private_ or _protected_. This restricts their
 usage, but the compiler (and the programmer) still have knowledge of
 internal details of the implementation. This facilitates some
@@ -4213,7 +4213,7 @@ K:complex[real32] := complex(1.2, 3.4)
 
 Type expressions can be used to create what is called a _((generic
 type))_ in languages like Ada, or a _((template))_ in languages like
-pass:[C++]. However, as far as syntax is concerned, it is
+{cpp}. However, as far as syntax is concerned, it is
 indistinguishable from a function taking a type argument and returning
 a type. This extends the range of capabilities for the feature,
 meaning that the implementation may sometime have fo fall-back to more
@@ -4673,7 +4673,7 @@ A type constructed like this is called a _((constrained generic type))_.
 
 [NOTE]
 =====
-*RATIONALE* In languages such as pass:[C++], the lack of this feature
+*RATIONALE* In languages such as {cpp}, the lack of this feature
 often leads to code that largely repeats the same `template` arguments
 for each individual declaration:
 
@@ -4689,7 +4689,7 @@ T sum(const vector<T> &v)
 }
 ----
 
-The recent standards for pass:[C++] have introduced the notion of
+The recent standards for {cpp} have introduced the notion of
 link:https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)[concepts] to
 address the need to constrain generic types.
 =====
@@ -5243,7 +5243,7 @@ the `file` type is by using the `open` function. This also means that
 you cannot create a variable of type `file` without initializing it.
 
 NOTE: *RATIONALE* This mechanism is similar to _elaboration_ in Ada or to
-_constructors_ in pass:[C++]. It makes it possible for programmers to provide
+_constructors_ in {cpp}. It makes it possible for programmers to provide
 strong guarantees about the internal state of values before they can be
 used. This is a fundamental brick of programming techniques such as
 encapsulation, programming contracts or
@@ -5287,7 +5287,7 @@ delete Anything is nil
 
 There may be multiple destructors that match a given expression. When
 this happens, normal lookup rules happen. This means that, unlike
-languages like pass:[C++], a programmer can deliberately override the
+languages like {cpp}, a programmer can deliberately override the
 destruction of an object, and remains in control of the destruction
 process. More importantly, this means that the destruction process
 respects the global type semantics.
@@ -5522,7 +5522,7 @@ if X > 0.0 then
 NOTE: *RATIONALE* By returning an `error` for ((failure)) conditions,
 XL forces the programmer to deal with errors simply to satisfy the
 ((type system)). They cannot simply be ignored like C return values or
-pass:[C++] ((exception))s can be. Errors that may possibly return from a
+{cpp} ((exception))s can be. Errors that may possibly return from a
 function are a fundamental part of its type, and error handling is not
 optional.
 
@@ -5714,10 +5714,10 @@ problem with such resources is to control their _((ownership))_. In
 other words, who is responsible for a given resource at any given
 time.
 
-In XL, like in languages like Rust or pass:[C++], ownership is largely
+In XL, like in languages like Rust or {cpp}, ownership is largely
 determined by the type system, and relies heavily on the guarantees it
 provides, in particular with respect to link:#creation[creation] and
-link:#destruction[destruction]. In pass:[C++], the mechanism is called
+link:#destruction[destruction]. In {cpp}, the mechanism is called
 https://en.wikipedia.org/wiki/RAII[((RAII))], which stands for _((Resource
 Acquisition is Initialization))_. The central idea is that ownership of a
 resource is an ((invariant)) during the lifetime of a value. In other words,
@@ -6931,7 +6931,7 @@ namely the dimensions and position of the shape, which are obviously
 related. The width of the shape is related to the left and right
 coordinates, for example. However, the interface does not tell us how
 the implementation choses to store the data. This provides stronger
-information hiding than languages like pass:[C++], where some
+information hiding than languages like {cpp}, where some
 "private" data fields for the class would probably be exposed.
 
 This means that client code can access all these features in a very
@@ -7052,7 +7052,7 @@ Since the purpose of this document is not to focus on shape drawing
 algorithms, but on object-oriented programming, we simply assumed that
 there is some general `draw_polygon` utility that we can use.
 
-Unlike languages like pass:[C++], XL does not require the
+Unlike languages like {cpp}, XL does not require the
 interface of a derived class like `rectangle` to indicate that it will
 override the `draw` feature from the base class.
 
@@ -7100,7 +7100,7 @@ rules for the derived types. In particular, this implementation of
 `square` makes it absolutely impossible to end up with a `square` that
 has a different value for `width` and `height`, even by mistake.
 
-This is not a purely theoretical concern. In pass:[C++], if the base
+This is not a purely theoretical concern. In {cpp}, if the base
 `Rectangle` class has different fields for `width` and `height`, the
 derived `Square` class might initially enforce the rules, and be later
 broken for example when the base `Shape` class adds a `scale` method
@@ -7198,7 +7198,7 @@ class group is
 
 In this code, all references to `S` have the type `any shape`, and
 therefore, `S.width` or `S.draw` will be dynamically dispatched. This
-plays the role to _((virtual functions))_ in pass:[C++].
+plays the role to _((virtual functions))_ in {cpp}.
 
 ==== Multiple dispatch
 
@@ -7264,7 +7264,7 @@ programmers using languages derived from Lisp and similar languages:
 === Generic programming
 
 This section will soon cover techniques that are familar primarily to
-pass:[C++] programmers:
+{cpp} programmers:
 
 * Generic containers
 * Generic algorithms
@@ -7594,7 +7594,7 @@ largely independant of the actual layout for the object. The type
 interface therefore gives a standard way to refer to the features of
 the type. Since all the features are represented by pointer, derived
 types may populate them by alternate values. This mechanism is overall
-very similar to so-called _vtables_ in pass:[C++].
+very similar to so-called _vtables_ in {cpp}.
 
 
 === Compiled representations
@@ -7663,7 +7663,7 @@ Ada-style syntax and semantics.
 * Similarly, arrays were defined by the language. I wanted to build them
 (or, at least, describe their interface) using standard language
 features such as generics. Remember that this was years before the STL
-made it to pass:[C++], but I was thinking along similar lines. Use cases I had
+made it to {cpp}, but I was thinking along similar lines. Use cases I had
 in mind included:
 ** interfacing with languages that had different array layouts such as
 Fortran and C,
@@ -7756,7 +7756,7 @@ very similar feature and syntax.
 That initial development period for LX lasted between 1990, the year of
 my training period at Alsys, and 1998, when I jointed the HP California
 Language Lab in Cupertino (CLL). I moved to the United States to work on
-the HP pass:[C++] compiler and, I expected, my own programming language. That
+the HP {cpp} compiler and, I expected, my own programming language. That
 nice plan did not happen exactly as planned, though…
 
 One of the very first things I did after arriving in the US was to
@@ -7841,7 +7841,7 @@ of existing languages and techniques.
 
 Since then, Concept Programming has consistently guided what I am doing
 with XL. Note that Concept Programming in the XL sense has little do do
-with pass:[C++] concepts (although there may be a connection, see blog
+with {cpp} concepts (although there may be a connection, see blog
 referenced above for details).
 
 === Mozart and Moka: Adding Java support to XL
@@ -7856,7 +7856,7 @@ program database", which was basically a way to store and access
 program data independently of the language being used. In other words,
 we were trying to create an API that would make it possible to
 manipulate programs in a portable way, whether the program was written
-in C, pass:[C++] or Java. That proved somewhat complicated in practice.
+in C, {cpp} or Java. That proved somewhat complicated in practice.
 
 Worse, Daveed Vandevoord left the HP CLL to join the Edison Design
 Group, where he’s still working to this date. Xroma instantly lost quite
@@ -7883,7 +7883,7 @@ Java to Java compiler using Mozart as its intermediate representation. I
 published an http://www.drdobbs.com/jvm/what-is-moka/184404696[article
 in Dr Dobb’s journal], a popular developers journal at the time.
 
-But my heart was never with Java anymore than with pass:[C++], as evidenced by
+But my heart was never with Java anymore than with {cpp}, as evidenced by
 the much more extensive documentation about XL on the Mozart web site.
 As a language, Java had very little interest for me. My management at HP
 had no interest in supporting my pet language, and that was one of the
@@ -7904,40 +7904,40 @@ rule I talked about earlier allowed me to get rid of any `begin` or
 blocks.
 * Pragmas extended the language by invoking
 http://mozart-dev.sourceforge.net/tools.html#pragma[arbitrary compiler
-plug-ins]. I suspect that attributes in pass:[C++]11 are distant (and less
+plug-ins]. I suspect that attributes in {cpp}11 are distant (and less
 powerful) descendants of this kind of annotation, if only because their
 syntax matches my recollection of the annotation syntax in Xroma, and
-because Daveed has been a regular and innovative contributor to the pass:[C++]
+because Daveed has been a regular and innovative contributor to the {cpp}
 standard for two decades…
 * http://mozart-dev.sourceforge.net/xl_style.html#expred[Expression
 reduction] was a generalisation of operator overloading that works with
 expressions of any complexity, and could be used to name types. To this
 day, expression reduction still has no real equivalent in any other
 language that I know of, although expression templates can be used in
-pass:[C++] to achieve similar effect in a very convoluted and less powerful
+{cpp} to achieve similar effect in a very convoluted and less powerful
 way. Expression templates will not allow you to add operators, for
 example. In other words, you can redefine what `X+Y*Z` means, but you
-cannot create `X in Y..Z` in pass:[C++].
+cannot create `X in Y..Z` in {cpp}.
 * http://mozart-dev.sourceforge.net/xl_style.html#truegen[True generic
 types] were a way to make generic programming much easier by declaring
 generic types that behaved like regular types. Validated generic types
 extended the idea by adding a validation to the type, and they also have
-no real equivalent in other languages that I am aware of, although pass:[C++]
-concepts bring a similar kind of validation to pass:[C++] templates.
+no real equivalent in other languages that I am aware of, although {cpp}
+concepts bring a similar kind of validation to {cpp} templates.
 * http://mozart-dev.sourceforge.net/xl_style.html#vararg[Type-safe
 variable argument lists] made it possible to write type-safe variadic
 functions. They solved the `WriteLn` problem I referred to earlier,
 i.e. they made it possible to write a function in a library that behaved
 exactly like the Pascal `WriteLn`. I see them as a distant ancestor of
-variadic templates in pass:[C++]11, although like for concepts, it is hard to
+variadic templates in {cpp}11, although like for concepts, it is hard to
 tell if variadic templates are a later reinvention of the idea, or if
-something of my e-mails influenced members of the pass:[C++] committee.
+something of my e-mails influenced members of the {cpp} committee.
 * A powerful ((standard library)) was in the making. Not quite there yet,
 but the key foundations were there, and I felt it was mostly a matter of
 spending the time writing it.
 link:{xl}xl2/native/library/xl.math.complex.xl[My implementation of
 complex numbers], for example, was
-http://mozart-dev.sourceforge.net/news.html#complex[70% faster than pass:[C++]
+http://mozart-dev.sourceforge.net/news.html#complex[70% faster than {cpp}
 on] simple examples, because it allowed everything to be in registers
 instead of memory. There were a few things that I believe also date from
 that era, like getting rid of any trace of a main function, top-level
@@ -7963,7 +7963,7 @@ of Smalltalk fame, during an HP technical conference. Kay was an HP
 Fellow at the time. I tried to show him how my language was solving some
 of the issues he had talked about during his presentation. He did not
 even bother looking. He simply asked: “_Does your language
-self-compile?_“. When I answered that the compiler was written in pass:[C++],
+self-compile?_“. When I answered that the compiler was written in {cpp},
 Alan Kay replied that he was not interested.
 
 That gave me a desire to consider a true bootstrap of XL. That meant
@@ -8024,7 +8024,7 @@ being given dynamically by a syntax file.
 
 === Bootstrapping XL
 
-The initial translator converts a simplified form of XL into pass:[C++] using a
+The initial translator converts a simplified form of XL into {cpp} using a
 very basic transcoding that involves practically no semantic analysis.
 The limited XL2 acceptable as input for this translation phase is only
 used in the bootstrap compiler. It already looks a bit like the final
@@ -8343,17 +8343,17 @@ show_temps T1:real, T2:real ->
 ----
 
 ELFE only adds a very small number of features to the standard XL, which
-are simply regular XL functions implemented in pass:[C++]:
+are simply regular XL functions implemented in {cpp}:
 
 * The `ask` statement sends a program, and returns the result of
-evaluating that program as if it has been evaluated locally. It works
-like a remote function call.
+  evaluating that program as if it has been evaluated locally. It works
+  like a remote function call.
 * An `invoke` statement sends a program to a remote node. It’s a "fire
-and forget" operation, but leaves a reply channel open while it’s
-executing.
+  and forget" operation, but leaves a reply channel open while it’s
+  executing.
 * Finally, the `reply` statement allows a remote node to respond to
-whoever `invoke`‘d it, by evaluating one of the available functions in
-the caller’s context.
+  whoever `invoke`‘d it, by evaluating one of the available functions in
+  the caller’s context.
 
 A few very simple link:{xl}demo[ELFE demos] illustrate these
 remote-control capabilities. For example, it’s easy to
