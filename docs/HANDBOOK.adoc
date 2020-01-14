@@ -4230,6 +4230,9 @@ blocks except for precedence.
 In practice, type expression are extremely frequent, notably being
 used to define a plethora of ((generic type))s using operator-like
 notations, like `pointer to T`.
+In addition, a large number of link:#standard-types[standard types],
+including link:#genneric-containers[generic container types],
+can be used to quickly build useful data types.
 
 Standard type expressions include:
 
@@ -4299,13 +4302,14 @@ C1 - C2         is cartesian(C1.Re - C2.Re, C1.Im - C2.Im)
 P1 * P2         is polar(P1.Mod * P2.Mod, P1.Arg + P2.Arg)
 ....
 
+=== Variable sized types
 Type expressions evaluate following the regular rules of evaluation
 for XL. This makes it possible to build types that would be impossible
-to build in many mainstream languages. For example, it is frequent,
-for example in networking, to have a `packet` that has a _((header))_
-followed by a _((payload))_, the payload having a size that depends on
-information in the header. In XL, you can describe a type like this as
-follows:
+to build in many mainstream languages, like _((variable sized types))_.
+For example, it is frequent, notably in networking, to have a
+`packet` that has a _((header))_ followed by a _((payload))_, the
+payload having a size that depends on information in the header. In
+XL, you can describe a type like this as follows:
 
 ....
 header  is type header (byte_count:size)
@@ -4345,10 +4349,6 @@ resize (P:inout packet, S:size) when S > P.header.byte_count is
         lambda I                         is byte(0)
     P := packet(new_header, new_payload)
 ....
-
-In addition, a large number of link:#standard-types[standard types],
-including link:#genneric-containers[generic container types],
-can be used to quickly build useful data types.
 
 === Shared type annotations
 
@@ -7782,9 +7782,40 @@ S.value = &tmp_r;
 `circle` tmp_c = { 0, 0, 100 };
 S.type =`circle`;
 S.value = &tmp_c;
-};
 ....
 
+=== Compiling variable-sized types
+
+The `size` field in types takes a value of the type. This is intended
+to allow the implementation to work with
+link:#variable-sized-types[variable-sized types].
+
+For example, the `size` for `packet` type can be implemented by adding
+the size of the `header` and `payload` parts, the payload itself
+having a variable size.
+
+....
+// header  is type header (byte_count:size)
+typedef size_t `header`;
+size_t `size` (`header` *value) { return sizeof(`header`); }
+
+// payload[byte_count:size] is array[byte_count] of byte
+typedef
+{
+     size_t byte_count;
+     struct `array` array;
+} `payload`;
+
+size_t `size`(`payload` *value)
+{
+    return sizeof(value->byte_count)
+         + `array`.size(&value->array)
+         + value->byte_count * sizeof(byte);
+}
+....
+
+This also means that all access to individual features may need
+several steps of computation.
 
 === Constrained types
 
