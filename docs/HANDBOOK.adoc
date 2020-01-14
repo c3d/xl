@@ -6898,7 +6898,7 @@ of derived types using the syntax for types we already saw would be:
 ....
 // Base class
 shape as type with
-    draw         as nil                         // Draw the shape
+    draw         as mayfail                     // Draw the shape
     fill_color   as attribute color             // Color of the fill
     stroke_color as attribute color             // Color of the stroke
     stroke_width as attribute dimension         // Width of the stroke
@@ -6962,7 +6962,7 @@ methods as is. This coding style is called a _((class interface))_:
 
 ....
 class shape with
-    draw        as nil
+    draw        as mayfail
     fill_color   : color
     stroke_color : color
     stroke_width : dimension
@@ -7351,12 +7351,14 @@ creating a unique name attributed to the XL expression `expr`, and
 representation, with the expectation that whas surrounds `...` allows
 the reader to infer what can be there.
 
-In addition, the example code will borrow one feature from C++,
-inheritance, so that we may write something like the following in the
-examples:
+In addition, the example code will borrow two features from {cpp},
+inheritance and overloading, so that we may write something like the
+following in the examples:
 
 ....
 struct Derived : Base { ... };
+void foo(int);
+void foo(double);
 ....
 
 === Normal representation
@@ -7578,14 +7580,14 @@ be implemented as a structure that derives from `struct `type``.
 
 ....
 // shape_t as type with
-//    draw         as nil
+//    draw         as mayfail
 //    width        : coordinate
 
-struct `shape`_interface : `type`
+struct `shape_t`_interface : `type`
 {
-    void                (*`draw`) (`shape` *shape);
-    `coordinate`        (*`width`)(`shape` *shape);
-    `coordinate`        (*`width`)(`shape` *shape, `coordinate` width);
+    `mayfail`           (*`draw`) (struct `shape` *shape);
+    `coordinate`        (*`width`)(struct `shape` *shape);
+    `coordinate`        (*`width`)(struct `shape` *shape, `coordinate` width);
 }
 ....
 
@@ -7594,8 +7596,127 @@ largely independant of the actual layout for the object. The type
 interface therefore gives a standard way to refer to the features of
 the type. Since all the features are represented by pointer, derived
 types may populate them by alternate values. This mechanism is overall
-very similar to so-called _vtables_ in {cpp}.
+very similar to so-called _vtables_ in {cpp}, except that
+interface calls for getters and setters are automatically generated.
 
+For a direct implementation, wrappers to access the fields are
+generated automatically, which can be removed by global optimization
+if the implementation is known to be in the same load module as the
+code using it:
+
+....
+// shape_t is type shape
+//    draw is logic_error "Drawing a base shape"
+//    width : coordinate
+struct `shape`
+{
+    `coordinate` width;
+};
+
+static `mayfail` `draw`(`shape` *shape)
+{
+     `mayfail` result;
+     result.kind = `error`
+     result.error = `logic_error`("Drawing a base shape");
+     return result;
+}
+
+static `coordinate` `width`_get(struct `shape` *shape)
+{
+    return shape->width;
+}
+
+static `coordinate` `width`_set(struct `shape` *shape, `coordinate` width)
+{
+    return shape->width = width;
+}
+....
+
+It also needs to define the standard functions for a type:
+
+....
+static size_t size(`shape` *value)
+{
+    return sizeof(shape);
+}
+
+static void create(`shape` *shape)
+{
+    shape->width = 0;
+}
+
+static void delete(`shape` *shape)
+{
+}
+
+static bool contains(`shape` *shape)
+{
+    return true; // No conditions on 'width'
+}
+....
+
+With all these, the actual value for the type implementation can be
+built simply by populating its various fields:
+
+....
+`shape_t`_interface `shape_t` =
+{
+    size,
+    create,
+    delete,
+    contains,
+    `draw`,
+    `width`_get,
+    `width`_set
+}
+....
+
+All the code that views the implementation of `shape` can directly
+access it:
+
+....
+// S.width := 387
+S.width = 387;
+....
+
+This extends to code that is known by the compiler to be in the same
+load module. In other words, the compiler is allowed to do global
+optimizations across multiple files. If the actual type implementation
+is not known, in particular because it resides in a different load
+module (e.g. a shared library) that may change at runtime, then the
+type structure is used instead:
+
+....
+// S.width := 387
+`shape_t`.`width`_set(&S, 387);
+....
+
+Obviously, if we have an `attribute` instead, the `get` and `set`
+functions are replaced with code generated from the attribute's `get`
+and `set`, and the fields in the attribute are inserted in the type in
+place of the attribute:
+
+....
+// shape_t is type shape
+//    width as attribute coordinate is
+//        attribute_width : some_other_integer
+//        get   is attribute_width / 2
+//        set W is attribute_width := W * 2
+struct `shape`
+{
+    `some_other_integer` attribute_width;
+};
+
+static `coordinate` `width`_get(struct `shape` *shape)
+{
+    return shape->attribute_width / 2
+}
+
+static `coordinate` `width`_set(struct `shape` *shape, `coordinate` W)
+{
+    return shape->attribute_width = W * 2;
+}
+....
 
 === Compiled representations
 

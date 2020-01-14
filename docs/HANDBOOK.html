@@ -779,7 +779,7 @@ types, and even extend existing ones.</p>
 <p>XL provides <a href="#efficient-translation">complete control</a> over the
 program translation process. This means that libraries
 exist or can be written to make XL at least as good as C for
-low-level bit-twiddling, at least as good as C++ for generic algorithms, at least as good as Ada for tasking, at least as
+low-level bit-twiddling, at least as good as C&#43;&#43; for generic algorithms, at least as good as Ada for tasking, at least as
 good as Fortran for numerical algorithms, at least as good as
 Java for distributed programming, and so on.</p>
 </li>
@@ -833,7 +833,7 @@ program would properly fail to compile.</p>
 definition is <a href="#the-case-of-text-input-output-operations">discussed
 below</a>, and you will see that it is quite simple, in particular when
 compared with similar input/output operations in languages such
-as C++.</p>
+as C&#43;&#43;.</p>
 </div>
 <div class="paragraph">
 <p>Another interesting, if slightly more complicated version of "Hello
@@ -1332,10 +1332,10 @@ that lack a hardware implementation of division have to make a call to
 a library function to actually implement that code.</p>
 </div>
 <div class="paragraph">
-<p>C++ went one step further than C, allowing programmers to
+<p>C&#43;&#43; went one step further than C, allowing programmers to
 <em>overload</em> operators, i.e. redefine the meaning of an operation
 like <code>X+1</code>, but only for custom data types, and only for already
-existing operators. In C++, a programmer cannot <em>create</em> the
+existing operators. In C&#43;&#43;, a programmer cannot <em>create</em> the
 <em>spaceship operator</em> <code>&lt;=&gt;</code> using the standard language mechanisms.
 It has to be implemented in the compiler. The spaceship operator has to be
 <a href="http://open-std.org/JTC1/SC22/WG21/docs/papers/2017/p0515r0.pdf">added
@@ -1368,11 +1368,11 @@ X+0     is X</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Finally, C++ also makes it very difficult to deal with expressions
+<p>Finally, C&#43;&#43; also makes it very difficult to deal with expressions
 containing multiple operators. For example, many modern CPUs feature a
 form of
 <a href="https://en.wikipedia.org/wiki/Multiply–accumulate_operation#Fused_multiply–add">fused multiply-add</a>, which has benefits that include performance and
-precision. Yet C++ will not allow you to overload <code>X*Y+Z</code> to
+precision. Yet C&#43;&#43; will not allow you to overload <code>X*Y+Z</code> to
 use this kind of operations. In XL, this is not a problem at all:</p>
 </div>
 <div class="listingblock">
@@ -1599,7 +1599,7 @@ you need for that type to become "writable" is to add a definition of
 </div>
 </div>
 <div class="paragraph">
-<p>Unlike the C++ <code>iostream</code> facility, the XL compiler will naturally emit
+<p>Unlike the C&#43;&#43; <code>iostream</code> facility, the XL compiler will naturally emit
 less code. In particular, it will need only one function call for every
 call to <code>print</code>, calling the generated function for the given
 combination of arguments. That function will in turn call other
@@ -1624,7 +1624,7 @@ locked <code>print</code> is nothing more than:</p>
 </div>
 <div class="paragraph">
 <p>It is extremely difficult, if not impossible, to achieve a similar
-effect with C++ <code>iostream</code> or, more generally, with I/O facilities that
+effect with C&#43;&#43; <code>iostream</code> or, more generally, with I/O facilities that
 perform one call per I/O item. That’s because there is no way for the
 compiler to identify where the "line breaks" are in your code.</p>
 </div>
@@ -2176,7 +2176,7 @@ with a new fancy and programmer-friendly syntax.</p>
 <p>The XL syntax is much <em>simpler</em> than that of languages such as C, and
 arguably not really more complicated than the syntax of Lisp. The
 <a href="http://github.com/c3d/xl/blob/master/src/parser.cpp">parser</a> for XL is less than 800 lines of
-straightforward C++ code, and the <a href="http://github.com/c3d/xl/blob/master/src/scanner.cpp">scanner</a>
+straightforward C&#43;&#43; code, and the <a href="http://github.com/c3d/xl/blob/master/src/scanner.cpp">scanner</a>
 barely adds another 900 lines. By contrast, the
 <a href="https://github.com/gcc-mirror/gcc/blob/master/gcc/c/c-parser.c">C parser</a>
 in GCC needs more than 20000 lines of code, which is about the size of a
@@ -2820,7 +2820,7 @@ for example, the associated precedence will be that of <code>FUNCTION</code>.</p
 block and text. Comment and text delimiters come in pairs.</p>
 </div>
 <div class="paragraph">
-<p>The default syntax file specifies comments that follow the C/C++
+<p>The default syntax file specifies comments that follow the C/C&#43;&#43;
 convention, i.e. comments either start with <code>/*</code> and end with <code>*/</code> or
 start with <code>//</code> and end with a new line. The basic text separators
 (simple and double quotes) are not specified in the syntax file
@@ -4687,13 +4687,13 @@ if shape1 intersects shape2 then    // selects the right combination
 </td>
 <td class="content">
 Type-based dynamic dispatch is relatively similar to the notion
-of <em>virtual function</em> in C++, although the XL
-implementation is likely to be quite different. The C++
+of <em>virtual function</em> in C&#43;&#43;, although the XL
+implementation is likely to be quite different. The C&#43;&#43;
 approach only allows dynamic dispatch along a single axis, based on
-the type of the object argument. C++ also features a special
+the type of the object argument. C&#43;&#43; also features a special
 syntax, <code>shape.Draw()</code>, for calls with dynamic dispatch, which differs
 from the C-style syntax for function calls, <code>Draw(shape)</code>. The syntax
-alone makes the <code>intersects</code> example difficult to write in C++.
+alone makes the <code>intersects</code> example difficult to write in C&#43;&#43;.
 </td>
 </tr>
 </table>
@@ -5383,7 +5383,7 @@ English spelling:</p>
 <p>With this declaration, the expression <code>digit_spelling 3</code> evaluates to
 <code>"three"</code>. This kind of map application is called <em>indexing</em>. A
 suggested style choice is to make the intent more explicit using square brackets, i.e. <code>digit_spelling[4]</code>, as a nod to the syntax of
-programming languages such as C or C++.</p>
+programming languages such as C or C&#43;&#43;.</p>
 </div>
 <div class="paragraph">
 <p>When the index is an expression, for example <code>digit_spelling[A+3]</code> in a
@@ -5844,7 +5844,7 @@ shorter and more idiomatic way as follows:</p>
 <td class="content">
 This may look like exception handling, and intentionally so.
 However, <code>error</code> values are not exceptions in that they don’t
-automatically propagate across functions like C++ exceptions do. If an
+automatically propagate across functions like C&#43;&#43; exceptions do. If an
 error happens at some level, you must deal with it at that level, if
 only to explicitly pass it along. This is done
 <a href="#error-statements">automatically</a> in many cases, so that the end
@@ -6045,7 +6045,7 @@ declaration and specifies an implementation, but that definition may be
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<strong>RATIONALE</strong> In languages such as C++, some members of a
+<strong>RATIONALE</strong> In languages such as C&#43;&#43;, some members of a
 class can be made <em>private</em> or <em>protected</em>. This restricts their
 usage, but the compiler (and the programmer) still have knowledge of
 internal details of the implementation. This facilitates some
@@ -6256,7 +6256,7 @@ K:complex[real32] := complex(1.2, 3.4)</pre>
 </div>
 <div class="paragraph">
 <p>Type expressions can be used to create what is called a <em>generic type</em> in languages like Ada, or a <em>template</em> in languages like
-C++. However, as far as syntax is concerned, it is
+C&#43;&#43;. However, as far as syntax is concerned, it is
 indistinguishable from a function taking a type argument and returning
 a type. This extends the range of capabilities for the feature,
 meaning that the implementation may sometime have fo fall-back to more
@@ -6881,7 +6881,7 @@ words something like:</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>RATIONALE</strong> In languages such as C++, the lack of this feature
+<p><strong>RATIONALE</strong> In languages such as C&#43;&#43;, the lack of this feature
 often leads to code that largely repeats the same <code>template</code> arguments
 for each individual declaration:</p>
 </div>
@@ -6898,7 +6898,7 @@ T sum(const vector&lt;T&gt; &amp;v)
 </div>
 </div>
 <div class="paragraph">
-<p>The recent standards for C++ have introduced the notion of
+<p>The recent standards for C&#43;&#43; have introduced the notion of
 <a href="https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)">concepts</a> to
 address the need to constrain generic types.</p>
 </div>
@@ -7689,7 +7689,7 @@ you cannot create a variable of type <code>file</code> without initializing it.<
 </td>
 <td class="content">
 <strong>RATIONALE</strong> This mechanism is similar to <em>elaboration</em> in Ada or to
-<em>constructors</em> in C++. It makes it possible for programmers to provide
+<em>constructors</em> in C&#43;&#43;. It makes it possible for programmers to provide
 strong guarantees about the internal state of values before they can be
 used. This is a fundamental brick of programming techniques such as
 encapsulation, programming contracts or
@@ -7747,7 +7747,7 @@ effect and matches any value, and which only deletes the fields:</p>
 <div class="paragraph">
 <p>There may be multiple destructors that match a given expression. When
 this happens, normal lookup rules happen. This means that, unlike
-languages like C++, a programmer can deliberately override the
+languages like C&#43;&#43;, a programmer can deliberately override the
 destruction of an object, and remains in control of the destruction
 process. More importantly, this means that the destruction process
 respects the global type semantics.</p>
@@ -8035,7 +8035,7 @@ kind of error handling:</p>
 <strong>RATIONALE</strong> By returning an <code>error</code> for failure conditions,
 XL forces the programmer to deal with errors simply to satisfy the
 type system. They cannot simply be ignored like C return values or
-C++ exceptions can be. Errors that may possibly return from a
+C&#43;&#43; exceptions can be. Errors that may possibly return from a
 function are a fundamental part of its type, and error handling is not
 optional.
 </td>
@@ -8283,10 +8283,10 @@ other words, who is responsible for a given resource at any given
 time.</p>
 </div>
 <div class="paragraph">
-<p>In XL, like in languages like Rust or C++, ownership is largely
+<p>In XL, like in languages like Rust or C&#43;&#43;, ownership is largely
 determined by the type system, and relies heavily on the guarantees it
 provides, in particular with respect to <a href="#creation">creation</a> and
-<a href="#destruction">destruction</a>. In C++, the mechanism is called
+<a href="#destruction">destruction</a>. In C&#43;&#43;, the mechanism is called
 <a href="https://en.wikipedia.org/wiki/RAII">RAII</a>, which stands for <em>Resource Acquisition is Initialization</em>. The central idea is that ownership of a
 resource is an invariant during the lifetime of a value. In other words,
 the value gets ownership of the resource during construction, and
@@ -9817,7 +9817,7 @@ of derived types using the syntax for types we already saw would be:</p>
 <div class="content">
 <pre>// Base class
 shape as type with
-    draw         as nil                         // Draw the shape
+    draw         as mayfail                     // Draw the shape
     fill_color   as attribute color             // Color of the fill
     stroke_color as attribute color             // Color of the stroke
     stroke_width as attribute dimension         // Width of the stroke
@@ -9851,7 +9851,7 @@ namely the dimensions and position of the shape, which are obviously
 related. The width of the shape is related to the left and right
 coordinates, for example. However, the interface does not tell us how
 the implementation choses to store the data. This provides stronger
-information hiding than languages like C++, where some
+information hiding than languages like C&#43;&#43;, where some
 "private" data fields for the class would probably be exposed.</p>
 </div>
 <div class="paragraph">
@@ -9888,7 +9888,7 @@ methods as is. This coding style is called a <em>class interface</em>:</p>
 <div class="literalblock">
 <div class="content">
 <pre>class shape with
-    draw        as nil
+    draw        as mayfail
     fill_color   : color
     stroke_color : color
     stroke_width : dimension
@@ -9988,7 +9988,7 @@ algorithms, but on object-oriented programming, we simply assumed that
 there is some general <code>draw_polygon</code> utility that we can use.</p>
 </div>
 <div class="paragraph">
-<p>Unlike languages like C++, XL does not require the
+<p>Unlike languages like C&#43;&#43;, XL does not require the
 interface of a derived class like <code>rectangle</code> to indicate that it will
 override the <code>draw</code> feature from the base class.</p>
 </div>
@@ -10041,7 +10041,7 @@ rules for the derived types. In particular, this implementation of
 has a different value for <code>width</code> and <code>height</code>, even by mistake.</p>
 </div>
 <div class="paragraph">
-<p>This is not a purely theoretical concern. In C++, if the base
+<p>This is not a purely theoretical concern. In C&#43;&#43;, if the base
 <code>Rectangle</code> class has different fields for <code>width</code> and <code>height</code>, the
 derived <code>Square</code> class might initially enforce the rules, and be later
 broken for example when the base <code>Shape</code> class adds a <code>scale</code> method
@@ -10151,7 +10151,7 @@ of the various ways to set an attribute.</p>
 <div class="paragraph">
 <p>In this code, all references to <code>S</code> have the type <code>any shape</code>, and
 therefore, <code>S.width</code> or <code>S.draw</code> will be dynamically dispatched. This
-plays the role to <em>virtual functions</em> in C++.</p>
+plays the role to <em>virtual functions</em> in C&#43;&#43;.</p>
 </div>
 </div>
 <div class="sect3">
@@ -10243,7 +10243,7 @@ programmers using languages derived from Lisp and similar languages:</p>
 <h3 id="generic-programming"><a class="anchor" href="#generic-programming"></a><a class="link" href="#generic-programming">5.3. Generic programming</a></h3>
 <div class="paragraph">
 <p>This section will soon cover techniques that are familar primarily to
-C++ programmers:</p>
+C&#43;&#43; programmers:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -10422,13 +10422,15 @@ representation, with the expectation that whas surrounds <code>&#8230;&#8203;</c
 the reader to infer what can be there.</p>
 </div>
 <div class="paragraph">
-<p>In addition, the example code will borrow one feature from C++,
-inheritance, so that we may write something like the following in the
-examples:</p>
+<p>In addition, the example code will borrow two features from C&#43;&#43;,
+inheritance and overloading, so that we may write something like the
+following in the examples:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>struct Derived : Base { ... };</pre>
+<pre>struct Derived : Base { ... };
+void foo(int);
+void foo(double);</pre>
 </div>
 </div>
 <div class="sect2">
@@ -10688,14 +10690,14 @@ be implemented as a structure that derives from <code>struct `type`</code>.</p>
 <div class="literalblock">
 <div class="content">
 <pre>// shape_t as type with
-//    draw         as nil
+//    draw         as mayfail
 //    width        : coordinate
 
-struct `shape`_interface : `type`
+struct `shape_t`_interface : `type`
 {
-    void                (*`draw`) (`shape` *shape);
-    `coordinate`        (*`width`)(`shape` *shape);
-    `coordinate`        (*`width`)(`shape` *shape, `coordinate` width);
+    `mayfail`           (*`draw`) (struct `shape` *shape);
+    `coordinate`        (*`width`)(struct `shape` *shape);
+    `coordinate`        (*`width`)(struct `shape` *shape, `coordinate` width);
 }</pre>
 </div>
 </div>
@@ -10705,7 +10707,139 @@ largely independant of the actual layout for the object. The type
 interface therefore gives a standard way to refer to the features of
 the type. Since all the features are represented by pointer, derived
 types may populate them by alternate values. This mechanism is overall
-very similar to so-called <em>vtables</em> in C++.</p>
+very similar to so-called <em>vtables</em> in C&#43;&#43;, except that
+interface calls for getters and setters are automatically generated.</p>
+</div>
+<div class="paragraph">
+<p>For a direct implementation, wrappers to access the fields are
+generated automatically, which can be removed by global optimization
+if the implementation is known to be in the same load module as the
+code using it:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// shape_t is type shape
+//    draw is logic_error "Drawing a base shape"
+//    width : coordinate
+struct `shape`
+{
+    `coordinate` width;
+};
+
+static `mayfail` `draw`(`shape` *shape)
+{
+     `mayfail` result;
+     result.kind = `error`
+     result.error = `logic_error`("Drawing a base shape");
+     return result;
+}
+
+static `coordinate` `width`_get(struct `shape` *shape)
+{
+    return shape-&gt;width;
+}
+
+static `coordinate` `width`_set(struct `shape` *shape, `coordinate` width)
+{
+    return shape-&gt;width = width;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It also needs to define the standard functions for a type:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>static size_t size(`shape` *value)
+{
+    return sizeof(shape);
+}
+
+static void create(`shape` *shape)
+{
+    shape-&gt;width = 0;
+}
+
+static void delete(`shape` *shape)
+{
+}
+
+static bool contains(`shape` *shape)
+{
+    return true; // No conditions on 'width'
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With all these, the actual value for the type implementation can be
+built simply by populating its various fields:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>`shape_t`_interface `shape_t` =
+{
+    size,
+    create,
+    delete,
+    contains,
+    `draw`,
+    `width`_get,
+    `width`_set
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All the code that views the implementation of <code>shape</code> can directly
+access it:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// S.width := 387
+S.width = 387;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This extends to code that is known by the compiler to be in the same
+load module. In other words, the compiler is allowed to do global
+optimizations across multiple files. If the actual type implementation
+is not known, in particular because it resides in a different load
+module (e.g. a shared library) that may change at runtime, then the
+type structure is used instead:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// S.width := 387
+`shape_t`.`width`_set(&amp;S, 387);</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Obviously, if we have an <code>attribute</code> instead, the <code>get</code> and <code>set</code>
+functions are replaced with code generated from the attribute&#8217;s <code>get</code>
+and <code>set</code>, and the fields in the attribute are inserted in the type in
+place of the attribute:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// shape_t is type shape
+//    width as attribute coordinate is
+//        attribute_width : some_other_integer
+//        get   is attribute_width / 2
+//        set W is attribute_width := W * 2
+struct `shape`
+{
+    `some_other_integer` attribute_width;
+};
+
+static `coordinate` `width`_get(struct `shape` *shape)
+{
+    return shape-&gt;attribute_width / 2
+}
+
+static `coordinate` `width`_set(struct `shape` *shape, `coordinate` W)
+{
+    return shape-&gt;attribute_width = W * 2;
+}</pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -10812,7 +10946,7 @@ Ada-style syntax and semantics.</p>
 <p>Similarly, arrays were defined by the language. I wanted to build them
 (or, at least, describe their interface) using standard language
 features such as generics. Remember that this was years before the STL
-made it to C++, but I was thinking along similar lines. Use cases I had
+made it to C&#43;&#43;, but I was thinking along similar lines. Use cases I had
 in mind included:</p>
 <div class="ulist">
 <ul>
@@ -10958,7 +11092,7 @@ very similar feature and syntax.</p>
 <p>That initial development period for LX lasted between 1990, the year of
 my training period at Alsys, and 1998, when I jointed the HP California
 Language Lab in Cupertino (CLL). I moved to the United States to work on
-the HP C++ compiler and, I expected, my own programming language. That
+the HP C&#43;&#43; compiler and, I expected, my own programming language. That
 nice plan did not happen exactly as planned, though…</p>
 </div>
 <div class="paragraph">
@@ -11057,7 +11191,7 @@ of existing languages and techniques.</p>
 <div class="paragraph">
 <p>Since then, Concept Programming has consistently guided what I am doing
 with XL. Note that Concept Programming in the XL sense has little do do
-with C++ concepts (although there may be a connection, see blog
+with C&#43;&#43; concepts (although there may be a connection, see blog
 referenced above for details).</p>
 </div>
 </div>
@@ -11075,7 +11209,7 @@ program database", which was basically a way to store and access
 program data independently of the language being used. In other words,
 we were trying to create an API that would make it possible to
 manipulate programs in a portable way, whether the program was written
-in C, C++ or Java. That proved somewhat complicated in practice.</p>
+in C, C&#43;&#43; or Java. That proved somewhat complicated in practice.</p>
 </div>
 <div class="paragraph">
 <p>Worse, Daveed Vandevoord left the HP CLL to join the Edison Design
@@ -11106,7 +11240,7 @@ published an <a href="http://www.drdobbs.com/jvm/what-is-moka/184404696">article
 in Dr Dobb’s journal</a>, a popular developers journal at the time.</p>
 </div>
 <div class="paragraph">
-<p>But my heart was never with Java anymore than with C++, as evidenced by
+<p>But my heart was never with Java anymore than with C&#43;&#43;, as evidenced by
 the much more extensive documentation about XL on the Mozart web site.
 As a language, Java had very little interest for me. My management at HP
 had no interest in supporting my pet language, and that was one of the
@@ -11134,10 +11268,10 @@ blocks.</p>
 <li>
 <p>Pragmas extended the language by invoking
 <a href="http://mozart-dev.sourceforge.net/tools.html#pragma">arbitrary compiler
-plug-ins</a>. I suspect that attributes in C++11 are distant (and less
+plug-ins</a>. I suspect that attributes in C&#43;&#43;11 are distant (and less
 powerful) descendants of this kind of annotation, if only because their
 syntax matches my recollection of the annotation syntax in Xroma, and
-because Daveed has been a regular and innovative contributor to the C++
+because Daveed has been a regular and innovative contributor to the C&#43;&#43;
 standard for two decades…</p>
 </li>
 <li>
@@ -11146,18 +11280,18 @@ reduction</a> was a generalisation of operator overloading that works with
 expressions of any complexity, and could be used to name types. To this
 day, expression reduction still has no real equivalent in any other
 language that I know of, although expression templates can be used in
-C++ to achieve similar effect in a very convoluted and less powerful
+C&#43;&#43; to achieve similar effect in a very convoluted and less powerful
 way. Expression templates will not allow you to add operators, for
 example. In other words, you can redefine what <code>X+Y*Z</code> means, but you
-cannot create <code>X in Y..Z</code> in C++.</p>
+cannot create <code>X in Y..Z</code> in C&#43;&#43;.</p>
 </li>
 <li>
 <p><a href="http://mozart-dev.sourceforge.net/xl_style.html#truegen">True generic
 types</a> were a way to make generic programming much easier by declaring
 generic types that behaved like regular types. Validated generic types
 extended the idea by adding a validation to the type, and they also have
-no real equivalent in other languages that I am aware of, although C++
-concepts bring a similar kind of validation to C++ templates.</p>
+no real equivalent in other languages that I am aware of, although C&#43;&#43;
+concepts bring a similar kind of validation to C&#43;&#43; templates.</p>
 </li>
 <li>
 <p><a href="http://mozart-dev.sourceforge.net/xl_style.html#vararg">Type-safe
@@ -11165,9 +11299,9 @@ variable argument lists</a> made it possible to write type-safe variadic
 functions. They solved the <code>WriteLn</code> problem I referred to earlier,
 i.e. they made it possible to write a function in a library that behaved
 exactly like the Pascal <code>WriteLn</code>. I see them as a distant ancestor of
-variadic templates in C++11, although like for concepts, it is hard to
+variadic templates in C&#43;&#43;11, although like for concepts, it is hard to
 tell if variadic templates are a later reinvention of the idea, or if
-something of my e-mails influenced members of the C++ committee.</p>
+something of my e-mails influenced members of the C&#43;&#43; committee.</p>
 </li>
 <li>
 <p>A powerful standard library was in the making. Not quite there yet,
@@ -11175,7 +11309,7 @@ but the key foundations were there, and I felt it was mostly a matter of
 spending the time writing it.
 <a href="http://github.com/c3d/xl/blob/master/xl2/native/library/xl.math.complex.xl">My implementation of
 complex numbers</a>, for example, was
-<a href="http://mozart-dev.sourceforge.net/news.html#complex">70% faster than C++
+<a href="http://mozart-dev.sourceforge.net/news.html#complex">70% faster than C&#43;&#43;
 on</a> simple examples, because it allowed everything to be in registers
 instead of memory. There were a few things that I believe also date from
 that era, like getting rid of any trace of a main function, top-level
@@ -11207,7 +11341,7 @@ of Smalltalk fame, during an HP technical conference. Kay was an HP
 Fellow at the time. I tried to show him how my language was solving some
 of the issues he had talked about during his presentation. He did not
 even bother looking. He simply asked: “<em>Does your language
-self-compile?</em>“. When I answered that the compiler was written in C++,
+self-compile?</em>“. When I answered that the compiler was written in C&#43;&#43;,
 Alan Kay replied that he was not interested.</p>
 </div>
 <div class="paragraph">
@@ -11304,7 +11438,7 @@ being given dynamically by a syntax file.</p>
 <div class="sect2">
 <h3 id="bootstrapping-xl"><a class="anchor" href="#bootstrapping-xl"></a><a class="link" href="#bootstrapping-xl">10.9. Bootstrapping XL</a></h3>
 <div class="paragraph">
-<p>The initial translator converts a simplified form of XL into C++ using a
+<p>The initial translator converts a simplified form of XL into C&#43;&#43; using a
 very basic transcoding that involves practically no semantic analysis.
 The limited XL2 acceptable as input for this translation phase is only
 used in the bootstrap compiler. It already looks a bit like the final
@@ -11721,7 +11855,7 @@ show_temps T1:real, T2:real -&gt;
 </div>
 <div class="paragraph">
 <p>ELFE only adds a very small number of features to the standard XL, which
-are simply regular XL functions implemented in C++:</p>
+are simply regular XL functions implemented in C&#43;&#43;:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -12069,7 +12203,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-13 23:12:39 +0100
+Last updated 2020-01-14 08:16:52 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
