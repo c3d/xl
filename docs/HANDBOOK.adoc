@@ -6242,6 +6242,40 @@ would look like this:
 derived:colored_text as text is derived.base
 ....
 
+Data inheritance can be used to inherit any scope. A particular idiom
+is to inherit a generic module that implements shared features.
+For example, in order to simplify the definition of a generic
+`complex` type, one can write a generic module in which it is
+called simply  `complex`:
+
+....
+COMPLEX[real:type like number] as module with
+
+    complex as type like number
+    X:complex + Y:complex as complex
+    ...
+....
+
+A non-generic module can then build a generic type with all the
+trimmings simply with:
+
+....
+COMPLEX as module with
+    complex[real:type like number] as type like number is
+        super.COMPLEX[real].complex with super.COMPLEX[real]
+....
+
+What this means in English is: `COMPLEX` is a `module` with a
+`complex[real]` type that inherits `number`, where `real` is itself a
+number, and that type is the `complex` type from the `COMPLEX[real]`
+module in the enclosing scope, inheriting the entire scope of that
+module.
+
+The consequence of that idiom is that any use of `complex` from the
+`COMPLEX` module will automatically inherit operations like the
+addition which have been defined in the generic `COMPLEX[real]` module.
+
+
 ==== Indirect implementation
 
 However, the implementation may be entirely different from the

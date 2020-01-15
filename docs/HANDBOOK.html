@@ -8995,6 +8995,45 @@ would look like this:</p>
 <pre>derived:colored_text as text is derived.base</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Data inheritance can be used to inherit any scope. A particular idiom
+is to inherit a generic module that implements shared features.
+For example, in order to simplify the definition of a generic
+<code>complex</code> type, one can write a generic module in which it is
+called simply  <code>complex</code>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>COMPLEX[real:type like number] as module with
+
+    complex as type like number
+    X:complex + Y:complex as complex
+    ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A non-generic module can then build a generic type with all the
+trimmings simply with:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>COMPLEX as module with
+    complex[real:type like number] as type like number is
+        super.COMPLEX[real].complex with super.COMPLEX[real]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>What this means in English is: <code>COMPLEX</code> is a <code>module</code> with a
+<code>complex[real]</code> type that inherits <code>number</code>, where <code>real</code> is itself a
+number, and that type is the <code>complex</code> type from the <code>COMPLEX[real]</code>
+module in the enclosing scope, inheriting the entire scope of that
+module.</p>
+</div>
+<div class="paragraph">
+<p>The consequence of that idiom is that any use of <code>complex</code> from the
+<code>COMPLEX</code> module will automatically inherit operations like the
+addition which have been defined in the generic <code>COMPLEX[real]</code> module.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="indirect-implementation"><a class="anchor" href="#indirect-implementation"></a><a class="link" href="#indirect-implementation">4.9.4. Indirect implementation</a></h4>
@@ -12291,7 +12330,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-14 09:08:01 +0100
+Last updated 2020-01-15 07:52:54 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
