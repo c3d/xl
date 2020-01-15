@@ -4128,6 +4128,60 @@ where you can store your own seconds values, whereas `seconds as
 integer` declares a _((function))_ named seconds, possibly returning
 the number of seconds in the current time from some real-time clock.
 
+=== Type conversions
+
+In some cases, a value from one type needs to be converted to some
+other type. This is called a _((type conversion))_. There are two
+kinds of type conversion: _((explicit conversion))_, and _((implicit
+conversion))_. In addition, it is also possible to resolve
+type-related ambiguities using _((type hints))_.
+
+Explicit type conversions are usually provided using a
+link:#creation[constructor]. As a result, they look like any other
+expression. For example, if you provide a `distance` type based on
+`real`, you might have a creator for `distance` values, and then use
+that for explicit conversions.
+
+....
+distance is type distance(D:real)
+X:distance + Y:distance as distance     is distance(X.D+Y.D)
+....
+
+All prefix functions that use the name of a type are renamed for
+derived types. For example:
+
+....
+long_distance is distance when distance.D >= 1000.0
+km : long_distance := distance 1000.0
+Mm : long_distance := long_distance 1_000_000.0
+....
+
+....
+long_distance as type like distance is type distance(D:real) when D > 1000.0
+Z := long_distance(3.3)
+....
+
+Implicit type conversions are provided by definitions that have a
+single typed parameter and return a different type. For example, if
+you want to be able to implicitly convert between polar and cartesian
+form for a complex number, you would need:
+
+....
+Z:polar as cartesian
+Z:cartesian as polar
+....
+
+A single implicit type conversion can apply to a single binding, and
+is only applied if there is no direct match with the original type.
+For example:
+
+....
+foo X:complex as complex
+X:real as complex
+foo 1.0                 // OK, implicit conversion from real to complex
+foo 1                   // Error: two implicit conversions required
+....
+
 === Type definitions
 
 In XL, types are values like any other value, which simply match the
