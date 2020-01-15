@@ -4182,6 +4182,17 @@ foo 1.0                 // OK, implicit conversion from real to complex
 foo 1                   // Error: two implicit conversions required
 ....
 
+In a case like the one that causes an error, you can use a _type hint_,
+which is simply a sequence of explicit conversions indicating how to
+get from one type to another.
+
+....
+foo X:complex as complex
+X:real as complex
+foo 1.0                 // OK, implicit conversion from real to complex
+foo real 1              // OK: first convert to real, then implicit complex
+....
+
 === Type definitions
 
 In XL, types are values like any other value, which simply match the

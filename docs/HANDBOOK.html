@@ -6202,6 +6202,19 @@ foo 1.0                 // OK, implicit conversion from real to complex
 foo 1                   // Error: two implicit conversions required</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>In a case like the one that causes an error, you can use a <em>type hint</em>,
+which is simply a sequence of explicit conversions indicating how to
+get from one type to another.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>foo X:complex as complex
+X:real as complex
+foo 1.0                 // OK, implicit conversion from real to complex
+foo real 1              // OK: first convert to real, then implicit complex</pre>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="type-definitions"><a class="anchor" href="#type-definitions"></a><a class="link" href="#type-definitions">4.3. Type definitions</a></h3>
@@ -12395,7 +12408,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-15 10:10:56 +0100
+Last updated 2020-01-15 22:09:38 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
