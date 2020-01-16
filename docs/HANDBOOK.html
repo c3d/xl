@@ -8570,7 +8570,7 @@ argument, i.e. it would accept <code>complex[3.5]</code> but not <code>complex[r
 <p>To denote a type that derives from a base type, one can use the <code>type
 like base</code> notation. The correct way to implement the above
 restriction is as follows, which indicates that the argument is a
-type, not a value:</p>
+type, not a value, and that the type must derive from <code>number</code>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -8578,13 +8578,19 @@ type, not a value:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The notation <code>DerivedType like BaseType</code> can also be used in the
-<a href="#interface">interface</a> for a type. In both cases, the notation is
-a promise that the derived type can be implicitly converted to the
-base type. It does not specify how this is done. One way, indicated
-above, is to provide an implicit conversion function. Another way is
-by adopting a similar data structure, an approach called
-<a href="#data-inheritance">data inheritance</a>.</p>
+<p>The precedence of <code>like</code> is lower than that of <code>:</code>, so that the above
+really parses as <code>(real:type) like number</code>. The <code>like</code> operator can be
+applied to specify inheritance at any place in a declaration, and
+notably in scopes. For example, you can indicate that the <code>complex</code>
+type itself inherits from <code>arithmetic</code> (providing arithmetic
+operations) as well as from <code>compact</code> (using a contiguous memory
+range) as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex         like arithmetic
+complex         like compact</pre>
+</div>
 </div>
 </div>
 </div>
@@ -12408,7 +12414,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-16 21:43:36 +0100
+Last updated 2020-01-16 22:10:35 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

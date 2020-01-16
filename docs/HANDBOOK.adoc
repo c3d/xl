@@ -5917,20 +5917,24 @@ some_complex is type complex[real:number]
 To denote a type that derives from a base type, one can use the `type
 like base` notation. The correct way to implement the above
 restriction is as follows, which indicates that the argument is a
-type, not a value:
+type, not a value, and that the type must derive from `number`:
 
 ....
 some_complex is type complex[real:type like number]
 ....
 
-The notation `DerivedType like BaseType` can also be used in the
-link:#interface[interface] for a type. In both cases, the notation is
-a promise that the derived type can be implicitly converted to the
-base type. It does not specify how this is done. One way, indicated
-above, is to provide an implicit conversion function. Another way is
-by adopting a similar data structure, an approach called
-link:#data-inheritance[data inheritance].
+The precedence of `like` is lower than that of `:`, so that the above
+really parses as `(real:type) like number`. The `like` operator can be
+applied to specify inheritance at any place in a declaration, and
+notably in scopes. For example, you can indicate that the `complex`
+type itself inherits from `arithmetic` (providing arithmetic
+operations) as well as from `compact` (using a contiguous memory
+range) as follows:
 
+....
+complex         like arithmetic
+complex         like compact
+....
 
 === Subtypes
 
