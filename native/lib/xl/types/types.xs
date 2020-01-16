@@ -6,7 +6,7 @@
 //
 //     Interface for the TYPES modules in XL
 //
-//
+//     This defines
 //
 //
 //
@@ -34,24 +34,25 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module TYPE                     // Representation of types
+TYPE            as module       // Representation of types
 
-module COMBINATIONS             // Combinations oftypes
-module LIFETIME                 // Lifetime of entities
+COMBINATIONS    as module       // Combinations of types
+LIFETIME        as module       // Lifetime of entities
 
-module NUMBER                   // Common aspects of numbers
-module ENUMERATED               // Enumerated values
+NUMBER          as module       // Common aspects of numbers
+ENUMERATED      as module       // Enumerated values
 
-module BOOLEAN                  // Boolean type (true / false)
-module INTEGER                  // Signed and unsigned integer types
-module REAL                     // Real numbers (floating-point representation)
-module DECIMAL                  // Decimal floating-point numbers
-module CHARACTER                // Representation of characters
-module TEXT                     // Text (sequence of characters)
+BOOLEAN         as module       // Boolean type (true / false)
+INTEGER         as module       // Signed and unsigned integer types
+REAL            as module       // Real numbers
+DECIMAL         as module       // Decimal floating-point numbers
+FIXED_POINT     as module       // Fixed-point numbers
+CHARACTER       as module       // Representation of characters
+TEXT            as module       // Text (sequence of characters)
 
-module CONVERSIONS              // Standard conversions
+CONVERSIONS     as module       // Standard conversions
 
-module RANGE                    // Range of elements (and range arithmetic)
-module ITERATOR                 // Iterator
+RANGE           as module       // Range of elements (and range arithmetic)
+ITERATOR        as module       // Iterator
 
-module UNSAFE                   // Unsafe data types
+UNSAFE          as module       // Unsafe data types
