@@ -5923,10 +5923,10 @@ type, not a value:
 some_complex is type complex[real:type like number]
 ....
 
-The notation `type like base` can also be used in the
+The notation `DerivedType like BaseType` can also be used in the
 link:#interface[interface] for a type. In both cases, the notation is
-a promise that the type in question can be implicitly converted to the
-base class. It does not specify how this is done. One way, indicated
+a promise that the derived type can be implicitly converted to the
+base type. It does not specify how this is done. One way, indicated
 above, is to provide an implicit conversion function. Another way is
 by adopting a similar data structure, an approach called
 link:#data-inheritance[data inheritance].
