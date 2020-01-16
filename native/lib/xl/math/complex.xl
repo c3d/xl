@@ -34,6 +34,126 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+in XL.MATH
+
+COMPLEX[real  : type like number,
+        angle : type like number] is module with
+// ----------------------------------------------------------------------------
+//    Complex numbers taking the given `real` type
+// ----------------------------------------------------------------------------
+
+    // Imaginary unit
+    i as complex                is cartesian(real 0, real 1)
+
+    //  Multiplication by i (e.g. to accelerate exp(Z*i))
+    Z:cartesian * [[i]]         as cartesian    is cartesian(Z.Im, -Z.Re)
+    Z:polar     * [[i]]         as polar        is polar(Z.Mod, Z.Arg + real(pi/2))
+    [[i]]       * Z:cartesian   as cartesian    is cartesian(Z.Im, -Z.Re)
+    [[i]]       * Z:polar       as polar        is polar(Z.Mod, Z.Arg + real(pi/2))
+
+    // Implicit conversion between the representations
+    Z:cartesian                 as polar        is polar(mod Z, arg Z)
+    Z:polar                     as cartesian    is cartesian(re Z, im Z)
+    X:real                      as cartesian    is cartesian(X, real 0)
+    X:real                      as polar        is polar(X, real 0)
+    X:real                      as complex      is cartesian(X, real 0)
+    X:natural                   as cartesian    is cartesian(real X, real 0)
+    X:natural                   as polar        is polar(real X, real 0)
+    X:natural                   as complex      is cartesian(real X, real 0)
+`
+    // Special operations that can be optimized with one real operand
+    Z:cartesian + X:real        as cartesian    is cartesian(Z.Re + X, Z.Im)
+    Z:cartesian - X:real        as cartesian    is cartesian(Z.Re - X, Z.Im)
+    Z:cartesian * X:real        as cartesian    is cartesian(Z.Re * X, Z.Im * X)
+    Z:cartesian / X:real        as cartesian    when X ≠ 0 is cartesian(Z.Re / X, Z.Im / X)
+    Z:cartesian / X:real        as error        when X =  0 is error "Divide complex by zero"
+    X:real      + Z:cartesian   as cartesian    is cartesian(X + Z.Re, Z.Im)
+    X:real      - Z:cartesian   as cartesian    is cartesian(X - Z.Re, -Z.Im)
+    X:real      * Z:cartesian   as cartesian    is cartesian(X * Z.Re, X * Z.Im)
+    X:real      / Z:cartesian   as cartesian    when Z ≠ 0 is
+        Denominator is Z.Re^2 + Z.Im^2
+        cartesian(X*Z.Re, -X*Z.Im) / Denominator
+    X:real      / Z:cartesian   as cartesian    when Z =  0 is error "Divide by complex zero"
+
+    // In polar form, only multiplication and division are faster
+    Z:polar     * X:real        as polar        is polar(Z.Mod * X, Z.Arg)
+    Z:polar     / X:real        as polar        when X ≠ 0      is polar(Z.Mod / X, Z.Arg)
+    Z:polar     / X:real        as error        when X = 0      is error "Divide complex by zero"
+    X:real      * Z:polar       as polar        is polar(X * Z.Mod, Z.Arg)
+    X:real      / Z:polar       as polar        when X ≠ 0      is polar(X / Z.Mod, -Z.Arg)
+    X:real      / Z:polar       as error        when X = 0      is error "Divide by complex zero"
+
+    // Basic arithmetic in cartesian form
+    X:cartesian + Y:cartesian   as cartesian    is cartesian(X.Re + Y.Re, X.Im + Y.Im)
+    X:cartesian - Y:cartesian   as cartesian    is cartesian(X.Re - Y.Re, X.Im - Y.Im)
+    X:cartesian * Y:cartesian   as cartesian    is cartesian (Z1.Re * Z2.Re - Z1.Im * Z2.Im,
+                                                              Z1.Re * Z2.Im + Z1.Im * Z2.Re)
+    X:cartesian / Y:cartesian   as cartesian    is
+        Numerator   is cartesian(Z1.Re*Z2.Re + Z1.Im*Z2.Im, Z1.Im*Z2.Re - Z1.Re*Z2.Im)
+        Denominator is Z2.Re^2 + Z2.Im^2
+        Numerator / Denominator
+
+    +X:cartesian                as cartesian    is X
+    -X:cartesian                as cartesian    is cartesian(-X.Re, -X.Im)
+    ~X:cartesian                as cartesian    is cartesian(X.Re, -X.Im)
+
+    // Basic arithmetic in polar form
+    X:polar     * Y:polar       as polar        is polar(X.Mod * Y.Mod, Y.Arg + Y.Arg)
+    X:polar     / Y:polar       as polar        when Y.Arg ≠ 0 is polar(X.Mod/Y.Mod, X.Arg-Y.arg)
+    X:polar     / Y:polar       as error        when Y.Arg = 0 is error "Divide by zero, polar form"
+    +X:polar                    as polar        is X
+    -X:polar                    as polar        is polar(X.Mod, (X.Arg + pi) mod (2*pi))
+    ~X:polar                    as polar        is polar(X.Mod, -X.Arg)
+
+    // Prefix form for field access
+    re          Z:cartesian     as real         is Z.Re
+    re          Z:polar         as real         is Z.Mod * cos(Z.Arg)
+    im          Z:cartesian     as real         is Z.Im
+    im          Z:polar         as real         is Z.Mod * sin(Z.Arg)
+    mod         Z:cartesian     as real         is sqrt(Z.Re^2 + Z.Im^2)
+    mod         Z:polar         as real         is Z.Mod
+    arg         Z:cartesian     as real         is arctan(Z.Im, Z.Re)
+    arg         Z:polar         as real         is Z.Arg
+
+    // Comparisons
+    X:cartesian = Y:cartesian   as boolean      is X.Re = Y.Re and X.Im = Y.Im
+    X:cartesian < Y:cartesian   as boolean      is X.Re < Y.Re or (X.Re = Y.Re and X.Im < Y.Im)
+
+    // Some elementaty functions on complex numbers
+    sqrt        Z:polar         as polar        is polar(sqrt(Z.Arg), Z.Im / 2)
+    exp         Z:cartesian     as polar        is polar(exp(Z.Re), Z.Im)
+    ln          Z:polar         as cartesian    is cartesian(ln(Z.Arg), Z.Mod)
+
+    sin         Z:cartesian     as polar        is (exp(i*Z) - exp(-i*Z)) / (2*i)
+    cos         Z:cartesian     as polar        is (exp(i*Z) + exp(-i*Z)) / 2
+    tan         Z:cartesian     as polar        is (sin Z / cos Z)
+    arcsin      Z:polar         as cartesian    is (ln(i * Z + sqrt(1-Z&2)) / i)
+    arccos      Z:polar         as cartesian    is (ln(Z + i * sqrt(1-Z^2)) / i)
+    arctan      Z:polar         as cartesian    is (ln((i-Z)/(i+Z)) / (2*i))
+
+    sinh        Z:cartesian     as polar        is ((exp(Z) - exp(-Z)) / 2)
+    cosh        Z:cartesian     as polar        is ((exp(Z) + exp(-Z)) / 2)
+    tanh        Z:cartesian     as polar        is
+        exp_p is exp Z
+        exp_m is exp(-Z)
+        (exp_p - exp_m) / (exp_p + exp_m)
+    arcsinh     Z:polar         as cartesian    is ln(Z + sqrt(Z^2 + 1))
+    arccosh     Z:polar         as cartesian    is ln(Z + sqrt(Z^2 - 1))
+    arctanh     Z:polar         as cartesian    is ln((Z+1) / (Z-1)) / 2
+
+    in XL.TEXT_IO
+    write       Z:cartesian     as mayfail      is write format("(%1, %2)", Z.Re, Z.Im)
+    write       Z:polar         as mayfail      is write format("(%1∠%2)", Z.Mod, Z.Arg)
+
+COMPLEX as module with
+
+    complex[real:type like number] as type like number is
+        super.COMPLEX[real].complex with super.COMPLEX[real]
+
+    complex as type like number is complex[real]
+
+
+
 type complex[type real is R.real] is either
 // ----------------------------------------------------------------------------
 //    A generic `complex` type
@@ -517,7 +637,6 @@ TanH Z:complex as complex is
     ExpP is Exp(Z)
     ExpM is Exp(-Z)
     (ExpP - ExpM) / (ExpP + ExpM)
-
 
 ArcSinH Z:complex as complex is
 // ----------------------------------------------------------------------------
