@@ -149,7 +149,7 @@
 
 use BITWISE, MEMORY, TEXT, BOOLEAN
 
-type type with
+type as type with
 // ----------------------------------------------------------------------------
 //   A `type` is used to identify a set of values
 // ----------------------------------------------------------------------------
