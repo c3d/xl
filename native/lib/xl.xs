@@ -40,11 +40,11 @@ License         is "GPL v3"
 Creator         is "Christophe de Dinechin <christophe@dinechin.org>"
 BugsEmail       is "xl-devel@lists.sourceforge.net"
 
-module TYPES               // Basic data types (integer, boolean, ...)
-module OPERATIONS          // Elementary operations (arithmetic, ...)
-module DATA                // Data structures (arrays, lists, ...)
-module PROGRAM             // Program structures (loop, tests, ...)
-module ALGORITHMS          // General algorithms (sort, find, ...)
-module MATH                // Mathematics (functions, types, ...)
-module SYSTEM              // System (memory, files, ...)
-module COMPILER            // Compiler (scanner, parser, ...)
+TYPES           as module  // Basic data types (integer, boolean, ...)
+OPERATIONS      as module  // Elementary operations (arithmetic, ...)
+DATA            as module  // Data structures (arrays, lists, ...)
+PROGRAM         as module  // Program structures (loop, tests, ...)
+ALGORITHMS      as module  // General algorithms (sort, find, ...)
+MATH            as module  // Mathematics (functions, types, ...)
+SYSTEM          as module  // System (memory, files, ...)
+COMPILER        as module  // Compiler (scanner, parser, ...)
