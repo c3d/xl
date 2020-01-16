@@ -34,32 +34,21 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use ARITHMETIC
-use BITWISE
-use COPY
-use MOVE
-use CLONE
-use DELETE
-use COMPARISON
-use MEMORY
-
-
-type number with
+NUMBER as module with
 // ----------------------------------------------------------------------------
 //    Type representing some kind of number (from integer to complex)
 // ----------------------------------------------------------------------------
 
-    // The 'number' type is primarily a shortcut for all interfaces below
-    as ARITHMETIC.arithmetic
-    as COPY.copiable
-    as MOVE.movable
-    as CLONE.clonable
-    as DELETE.deletable
-    as COMPARISON.comparable
-    as MEMORY.sized
-    as MEMORY.aligned
+    number as type with
+        min                     as number
+        max                     as number
+        epsilon X:number        as number
 
-    // Range of values for the type
-    MinValue                as number
-    MaxValue                as number
-    Epsilon Value:number    as number
+    number like arithmetic
+    number like copiable
+    number like movable
+    number like clonable
+    number like deletable
+    number like comparable
+    number like sized
+    number like aligned
