@@ -38,3 +38,39 @@ ADDRESS_SIZE            as unsigned //
 DATA_SIZE               as unsigned
 ENDIANNESS              as MEMORY.endianness
 BITS_PER_BYTE           as unsigned
+
+
+use TYPE, UNSIGNED
+use MEMORY
+
+module SYSTEM with
+// ----------------------------------------------------------------------------
+//    Interface for system configuration
+// ----------------------------------------------------------------------------
+
+    // Declaration for builtin and runtime operations
+    builtin Operation           as anything
+    runtime Operation           as anything
+
+    module CONFIGURATION with
+    // ------------------------------------------------------------------------
+    //    System configuration (filled by the compiler)
+    // ------------------------------------------------------------------------
+        ADDRESS_SIZE            as unsigned
+        DATA_SIZE               as unsigned
+        ENDIANNESS              as MEMORY.endianness
+        BITS_PER_BYTE           as unsigned
+
+
+    module TYPES with
+    // ------------------------------------------------------------------------
+    //   Native system types exposed by this module
+    // ------------------------------------------------------------------------
+        unsigned                as type
+        integer                 as type
+        address                 as another unsigned
+        offset                  as another integer
+        size                    as another unsigned
+
+    // Make configuration and types visible directly in `SYSTEM`
+    use CONFIGURATION, TYPES

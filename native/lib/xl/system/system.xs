@@ -4,7 +4,7 @@
 //
 // File description:
 //
-//     Interface for system configuration
+//     Interface for system utilities
 //
 //
 //
@@ -34,37 +34,24 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use TYPE, UNSIGNED
-use MEMORY
-
-module SYSTEM with
-// ----------------------------------------------------------------------------
-//    Interface for system configuration
-// ----------------------------------------------------------------------------
-
-    // Declaration for builtin and runtime operations
-    builtin Operation           as anything
-    runtime Operation           as anything
-
-    module CONFIGURATION with
-    // ------------------------------------------------------------------------
-    //    System configuration (filled by the compiler)
-    // ------------------------------------------------------------------------
-        ADDRESS_SIZE            as unsigned
-        DATA_SIZE               as unsigned
-        ENDIANNESS              as MEMORY.endianness
-        BITS_PER_BYTE           as unsigned
-
-
-    module TYPES with
-    // ------------------------------------------------------------------------
-    //   Native system types exposed by this module
-    // ------------------------------------------------------------------------
-        unsigned                as type
-        integer                 as type
-        address                 as another unsigned
-        offset                  as another integer
-        size                    as another unsigned
-
-    // Make configuration and types visible directly in `SYSTEM`
-    use CONFIGURATION, TYPES
+module CONFIGURATION            // System configuration
+module TYPES                    // System types
+module IO                       // Input/output operations
+module FILE                     // File operations
+module MEMORY                   // Memory allocation, management, mapping
+module GARBAGE                  // General-purpose garbage collector
+module TIME                     // Time-related operations
+module DATE                     // Date-related operations
+module FORMAT                   // Text formatting
+module TEST                     // Unit testing
+module FLIGHT_RECORDER          // Flight-recorder for program operation
+module COMMAND_LINE             // Command-line options
+module ENVIRONMENT              // Environment variables
+module THREAD                   // Multiple threads of execution
+module TASK                     // Operation to execute, possibly in a thread
+module MESSAGE                  // Messages that can be passed around
+module CHANNEL                  // Communication channel between components
+module NETWORK                  // Network access
+module URL                      // Uniform Resource Locator
+module REGULAR_EXPRESSION       // Regular expressions
+module SEMANTIC_VERSIONING      // Semantic versioning
