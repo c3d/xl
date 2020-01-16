@@ -4609,6 +4609,23 @@ splitting <code>Items</code>, causing the context to become:</p>
     HIDDEN1 is CONTEXT1</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>A context may contain multiple identical definitions, in which case
+the later ones are not visible. A slightly more useful case is to have
+multiple definitions that are identical except for their type. In that
+case, a definition that requires no implicit conversion will be
+selected over one that does require one. An example of use would be to
+provide two representations for the <code>i</code> complex constant:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>complex         is cartesian or polar
+cartesian       is type cartesian(Re, Im)
+polar           is type polar(Mod, Arg)
+i as cartesian  is cartesian(0,1)
+i as polar      is polar(1, pi/2)</pre>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="dynamic-dispatch"><a class="anchor" href="#dynamic-dispatch"></a><a class="link" href="#dynamic-dispatch">3.5. Dynamic dispatch</a></h3>
@@ -12414,7 +12431,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-16 22:10:35 +0100
+Last updated 2020-01-16 22:25:28 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

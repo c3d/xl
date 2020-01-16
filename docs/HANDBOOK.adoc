@@ -2897,6 +2897,21 @@ CONTEXT2 is
     HIDDEN1 is CONTEXT1
 ----
 
+A context may contain multiple identical definitions, in which case
+the later ones are not visible. A slightly more useful case is to have
+multiple definitions that are identical except for their type. In that
+case, a definition that requires no ((implicit conversion)) will be
+selected over one that does require one. An example of use would be to
+provide two representations for the `i` complex constant:
+
+....
+complex         is cartesian or polar
+cartesian       is type cartesian(Re, Im)
+polar           is type polar(Mod, Arg)
+i as cartesian  is cartesian(0,1)
+i as polar      is polar(1, pi/2)
+....
+
 === Dynamic dispatch
 
 As shown above, the declaration that is actually selected to evaluate a
