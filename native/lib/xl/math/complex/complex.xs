@@ -35,7 +35,7 @@
 // *****************************************************************************
 
 with
-    num_type is type like number
+    num_type is some number
     real  : num_type
     angle : num_type
 
@@ -182,10 +182,10 @@ COMPLEX as module is
 // ----------------------------------------------------------------------------
 //   This makes it easier to instantiate the generic modules
 
-    complex[real  : type like number,
-            angle : type like number] as type like number is
+    complex[real  : some number,
+            angle : some number] as some number is
         super.COMPLEX[real, angle].complex with super.COMPLEX[real, angle]
 
-    complex[real : type like super.real] as type like number is complex[real, real]
+    complex[real : some super.real] as some number is complex[real, real]
 
-    complex as type like number is complex[real]
+    complex as some number is complex[real]

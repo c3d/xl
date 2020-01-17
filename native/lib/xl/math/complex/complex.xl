@@ -34,7 +34,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-COMPLEX[real, angle : type like number] is module with
+COMPLEX[real  : some number,
+        angle : some number] is module with
 // ----------------------------------------------------------------------------
 //    Complex numbers taking the given `real` and 'angle' types
 // ----------------------------------------------------------------------------
