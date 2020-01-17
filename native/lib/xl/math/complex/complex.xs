@@ -4,7 +4,7 @@
 //
 // File description:
 //
-//      interface for complex numbers
+//      Interface for complex numbers
 //
 //
 //
@@ -34,16 +34,22 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-in XL.MATH
+with
+    num_type is type like number
+    real  : num_type
+    angle : num_type
 
-COMPLEX[real  : type like number,
-        angle : type like number] as module with
+
+COMPLEX[real, angle] as module with
 // ----------------------------------------------------------------------------
-//    A generic module for complex numbers taking a `real` type
+//    A generic module for complex numbers
 // ----------------------------------------------------------------------------
+//    The reason for separating 'real' and 'angle' arguments is to be able
+//    to properly accomodate a non floating-point representation for 'real',
+//    and possibly a natural number representation for angles (e.g. degrees)
 
     // A complex can be represented in either cartesian or polar form
-    complex as type like number is cartesian or polar
+    complex as num_type         is cartesian or polar
     cartesian                   is type cartesian(Re:real, Im:real)
     polar                       is type polar(Mod:real, Arg:angle)
 
@@ -55,6 +61,7 @@ COMPLEX[real  : type like number,
     i                           as polar
     j                           as cartesian    is i
     j                           as polar        is i
+    square_angle                as angle
 
     // Shortcut notation for cartesian notation like `2 + 3i`
     syntax { postfix 400 i j }
@@ -162,12 +169,23 @@ COMPLEX[real  : type like number,
     write       Z:polar         as mayfail
 
 
-COMPLEX as module with
+COMPLEX[real] as module is COMPLEX[real, real]
 // ----------------------------------------------------------------------------
-//   A non-generic module providing generic types
+//   A generic module for the case of floating-point numbers
 // ----------------------------------------------------------------------------
+//   In that case, we can use the same type by default for the angle type
 
-    complex[real:type like number] as type like number is
-        super.COMPLEX[real].complex with super.COMPLEX[real]
+
+COMPLEX as module is
+// ----------------------------------------------------------------------------
+//   A non-generic module offering a generic type
+// ----------------------------------------------------------------------------
+//   This makes it easier to instantiate the generic modules
+
+    complex[real  : type like number,
+            angle : type like number] as type like number is
+        super.COMPLEX[real, angle].complex with super.COMPLEX[real, angle]
+
+    complex[real : type like super.real] as type like number is complex[real, real]
 
     complex as type like number is complex[real]
