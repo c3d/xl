@@ -38,7 +38,7 @@ Version         is 0.0.1
 URL             is "http://github.com/c3d/xl"
 License         is "GPL v3"
 Creator         is "Christophe de Dinechin <christophe@dinechin.org>"
-BugsEmail       is "xl-devel@lists.sourceforge.net"
+Email           is "xl-devel@lists.sourceforge.net"
 
 TYPES           as module  // Basic data types (integer, boolean, ...)
 OPERATIONS      as module  // Elementary operations (arithmetic, ...)
