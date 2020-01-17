@@ -4172,7 +4172,7 @@ Mm : long_distance := long_distance 1_000_000.0
 ....
 
 ....
-long_distance as type like distance is type distance(D:real) when D > 1000.0
+long_distance as some distance is type distance(D:real) when D > 1000.0
 Z := long_distance(3.3)
 ....
 
@@ -4371,7 +4371,7 @@ cartesian[real:type]    is type cartesian(Re:real, Im:real)
 polar[real:type]        is type polar(Mod:real, Arg:real)
 
 with
-    real : type like number
+    real : some number
     C1   : cartesian[real]
     C2   : cartesian[real]
     P1   : polar[real]
@@ -4746,7 +4746,7 @@ create a type that only accepts numbers for the `real` type, in other
 words something like:
 
 ....
-some_complex is type complex[real:type like number]
+some_complex is type complex[real:some number]
 ....
 
 A type constructed like this is called a _((constrained generic type))_.
@@ -5929,13 +5929,13 @@ argument, i.e. it would accept `complex[3.5]` but not `complex[real]`:
 some_complex is type complex[real:number]
 ....
 
-To denote a type that derives from a base type, one can use the `type
-like base` notation. The correct way to implement the above
-restriction is as follows, which indicates that the argument is a
-type, not a value, and that the type must derive from `number`:
+To denote a type that derives from a base type, one can use the `some
+base` notation. The correct way to implement the above restriction is
+as follows, which indicates that the argument is a type, not a value,
+and that the type must derive from `number`:
 
 ....
-some_complex is type complex[real:type like number]
+some_complex is type complex[real:some number]
 ....
 
 The precedence of `like` is lower than that of `:`, so that the above
@@ -6194,9 +6194,9 @@ character` with additional features:
 
 [source]
 ----
-text as type like string of character with
+text as some string of character with
     byte_count as size                  // Number of bytes used by characters
-    as_number[T:type like number] as T  // Numerical conversion
+    as_number[T:some number] as T       // Numerical conversion
 ----
 
 An _abstract type_ is a type for which features or inheritance are not
@@ -6300,7 +6300,7 @@ For example, using data inheritance to implement a `colored_text` that
 derives from the `text` type and adds a color, the interface might be:
 
 ....
-colored_text as type like text with
+colored_text as some text with
     foreground : color
     background : color
 ....
@@ -6333,9 +6333,9 @@ For example, in order to simplify the definition of a generic
 called simply  `complex`:
 
 ....
-COMPLEX[real:type like number] as module with
+COMPLEX[real:some number] as module with
 
-    complex as type like number
+    complex as some number
     X:complex + Y:complex as complex
     ...
 ....
@@ -6345,7 +6345,7 @@ trimmings simply with:
 
 ....
 COMPLEX as module with
-    complex[real:type like number] as type like number is
+    complex[real:some number] as some number is
         super.COMPLEX[real].complex with super.COMPLEX[real]
 ....
 
@@ -7030,14 +7030,14 @@ shape as type with
     height       as attribute dimension         // Height of the shape
 
 // A few derived classes
-rectangle as type like shape
+rectangle as some shape
 
-square as type like rectangle with
+square as some rectangle with
     side        as attribute dimension
 
-ellipse as type like shape
+ellipse as some shape
 
-circle as type like shape with
+circle as some shape with
     radius      as attribute dimension
     diameter    as attribute dimension
 ....

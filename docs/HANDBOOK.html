@@ -6190,7 +6190,7 @@ Mm : long_distance := long_distance 1_000_000.0</pre>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>long_distance as type like distance is type distance(D:real) when D &gt; 1000.0
+<pre>long_distance as some distance is type distance(D:real) when D &gt; 1000.0
 Z := long_distance(3.3)</pre>
 </div>
 </div>
@@ -6451,7 +6451,7 @@ cartesian[real:type]    is type cartesian(Re:real, Im:real)
 polar[real:type]        is type polar(Mod:real, Arg:real)
 
 with
-    real : type like number
+    real : some number
     C1   : cartesian[real]
     C2   : cartesian[real]
     P1   : polar[real]
@@ -6963,7 +6963,7 @@ words something like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>some_complex is type complex[real:type like number]</pre>
+<pre>some_complex is type complex[real:some number]</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8584,14 +8584,14 @@ argument, i.e. it would accept <code>complex[3.5]</code> but not <code>complex[r
 </div>
 </div>
 <div class="paragraph">
-<p>To denote a type that derives from a base type, one can use the <code>type
-like base</code> notation. The correct way to implement the above
-restriction is as follows, which indicates that the argument is a
-type, not a value, and that the type must derive from <code>number</code>:</p>
+<p>To denote a type that derives from a base type, one can use the <code>some
+base</code> notation. The correct way to implement the above restriction is
+as follows, which indicates that the argument is a type, not a value,
+and that the type must derive from <code>number</code>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>some_complex is type complex[real:type like number]</pre>
+<pre>some_complex is type complex[real:some number]</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8942,9 +8942,9 @@ character</code> with additional features:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">text as type like string of character with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">text as some string of character with
     byte_count as size                  // Number of bytes used by characters
-    as_number[T:type like number] as T  // Numerical conversion</code></pre>
+    as_number[T:some number] as T       // Numerical conversion</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9066,7 +9066,7 @@ derives from the <code>text</code> type and adds a color, the interface might be
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>colored_text as type like text with
+<pre>colored_text as some text with
     foreground : color
     background : color</pre>
 </div>
@@ -9105,9 +9105,9 @@ called simply  <code>complex</code>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>COMPLEX[real:type like number] as module with
+<pre>COMPLEX[real:some number] as module with
 
-    complex as type like number
+    complex as some number
     X:complex + Y:complex as complex
     ...</pre>
 </div>
@@ -9119,7 +9119,7 @@ trimmings simply with:</p>
 <div class="literalblock">
 <div class="content">
 <pre>COMPLEX as module with
-    complex[real:type like number] as type like number is
+    complex[real:some number] as some number is
         super.COMPLEX[real].complex with super.COMPLEX[real]</pre>
 </div>
 </div>
@@ -9972,14 +9972,14 @@ shape as type with
     height       as attribute dimension         // Height of the shape
 
 // A few derived classes
-rectangle as type like shape
+rectangle as some shape
 
-square as type like rectangle with
+square as some rectangle with
     side        as attribute dimension
 
-ellipse as type like shape
+ellipse as some shape
 
-circle as type like shape with
+circle as some shape with
     radius      as attribute dimension
     diameter    as attribute dimension</pre>
 </div>
@@ -12431,7 +12431,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-16 22:25:28 +0100
+Last updated 2020-01-17 22:35:12 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
