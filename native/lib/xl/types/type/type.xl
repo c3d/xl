@@ -1,10 +1,10 @@
 // *****************************************************************************
-// type.xs                                                            XL project
+// type.xl                                                            XL project
 // *****************************************************************************
 //
 // File description:
 //
-//     Interface for types
+//     Implementation for types
 //
 //     This module provides
 //     - the `type` type itself, including key type attributes
@@ -41,46 +41,58 @@ use MEM    = XL.SYSTEM.MEMORY
 use LIFE   = XL.TYPES.LIFETIME
 
 
-TYPE as module with
+TYPE is module with
 // ----------------------------------------------------------------------------
 //    A module providing core type operations
 // ----------------------------------------------------------------------------
 
-    type as [[builtin type]] with
+    type is type typeinfo
     // ----------------------------------------------------------------------------
     //   A `type` is used to identify a set of values
     // ----------------------------------------------------------------------------
 
-        // Types
-        bit_count               is MEM.bit_count
-        byte_count              is MEM.byte_count
-        source                  is PARSER.tree
-
         // Attributes of the type
-        Name                    as source       // Compiler-generated name
-        Pattern                 as source       // Pattern for the type
-        Condition               as source       // Condition for the type (when clause)
-        Constant                as boolean      // Value immutable over lifetime
-        Mutable                 as boolean      // Value mutable over lifetime
-        Compact                 as boolean      // Uses contiguous memory
+        Name                    : source        // Compiler-generated name
+        Pattern                 : source        // Pattern for the type
+        Condition               : source        // Condition for the type (when clause)
+        Constant                : boolean       // Not mutable
+        Compact                 : boolean       // Uses contiguous memory
 
-        // Testing of values of the type
-        Contains  Value         as boolean      // Checks if value belongs
-        BitSize   Value:self    as bit_count    // Size in bits
-        BitAlign  Value:self    as bit_count    // Alignment in bits
-        ByteSize  Value:self    as byte_count   // Size in bytes
-        ByteAlign Value:self    as byte_count   // Alignment in bytes
+        Contains                : type(lambda Value as boolean)
+        BitSize                 : type(lambda Value as bit_count)
+        BitAlign                : type(lambda Value as bit_count)
+
+        ByteSize Value          is MEM.byte_count(BitSize Value)
+        ByteAlign Value         is MEM.byte_count(BitAlign Value)
 
 
-    // Type constructor
-    type Pattern                as type         // Build type for Pattern
+    // Used to build a unique name for anonymous types
+    type_index : natural := 1
+
+
+    type Pattern as type is typeinfo
+    // ------------------------------------------------------------------------
+    //    Build a type from a pattern
+    // ------------------------------------------------------------------------
+        Name            is
+            NameText is format(".anonymous_%1", type_index++)
+            PARSER.name(NameText, PARSER.position(Pattern))
+
+        Condition       is true
+        Constant        is true
+        Compact         is pattern_is_compact Pattern
+
+        Contains        is (lambda Value is Value matches Pattern)
+        BitSize Value   is pattern_size Pattern, Value
+        BitSize Value   is pattern_align Pattern, Value
 
     // Elementary types
-    nil                         as type
-    anything                    as type
+    nil                         as type is type(nil)
+    anything                    as type is type(lambda Anything)
 
-    // Combinaison of types
-    T1:type or  T2:type         as type         // Values from one or the other
+    T1:type or  T2:type         as type is
+
+
     T1:type and T2:type         as type         // Values from both types
     not T:type                  as type         // Value not from the type
 
