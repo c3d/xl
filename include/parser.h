@@ -127,7 +127,9 @@ public:
           hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
 
 public:
-    Tree *              Parse(text closing_paren = "");
+    Tree *              Parse(text closing_paren = "",
+                              text opening_paren = "",
+                              ulong opening_pos = 0);
     Scanner *           ParserScanner()         { return &scanner; }
     token_t             NextToken();
     void                AddComment(text c)      { comments.push_back(c); }

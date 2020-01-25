@@ -297,7 +297,7 @@ static inline Tree *CreatePrefix(Tree *left, Tree *right, TreePosition pos)
 }
 
 
-Tree *Parser::Parse(text closing)
+Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
 // ----------------------------------------------------------------------------
 //   Parse input
 // ----------------------------------------------------------------------------
@@ -411,7 +411,7 @@ Tree *Parser::Parse(text closing)
                 record(scanner, "Special syntax %s to %s at position %lu",
                        name.c_str(), blk_closing.c_str(), pos);
                 Parser childParser(scanner, cs);
-                right = childParser.Parse(blk_closing);
+                right = childParser.Parse(blk_closing, name, pos);
                 right = new Prefix(new Name(name), right, pos);
                 pos = childParser.scanner.Position();
                 scanner.SetPosition(pos);
@@ -514,8 +514,11 @@ Tree *Parser::Parse(text closing)
         case tokUNINDENT:
             // Check for mismatched blocks here
             if (closing != Block::unindent)
+            {
                 errors.Log(Error("Mismatched identation, expected $1",
                                  pos).Arg(closing));
+                errors.Log(Error("to match $1", opening_pos).Arg(opening));
+            }
             done = true;
             break;
         case tokINDENT:
@@ -536,7 +539,7 @@ Tree *Parser::Parse(text closing)
             infix_priority = default_priority;
             pendingComments = comments;
             comments.clear();
-            right = Parse(blk_closing);
+            right = Parse(blk_closing, blk_opening, pos);
             if (tok == tokPAROPEN)
                 scanner.CloseParen(old_indent);
             if (!right)
