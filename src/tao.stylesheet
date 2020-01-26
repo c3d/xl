@@ -1,0 +1,48 @@
+// ****************************************************************************
+//  tao.stylesheet                  (C) 1992-2004 Christophe de Dinechin (ddd)
+//                                                               XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Style sheet for rendering colorized XL as HTML
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+// This document is released under the GNU General Public License.
+// See http://www.gnu.org/copyleft/gpl.html for details
+// ****************************************************************************
+// * File       : $RCSFile$
+// * Revision   : $Revision: 70 $
+// * Date       : $Date: 2004-09-09 23:05:57 +0200 (Thu, 09 Sep 2004) $
+// ****************************************************************************
+
+infix  = "tao_infix """ self """," indent newline "tao_left " indent newline left unindent newline "tao_right" indent newline right unindent unindent newline
+
+prefix  = "tao_prefix" indent newline "tao_left " indent newline left unindent newline "tao_right" indent newline right unindent unindent newline
+
+postfix  = "tao_postfix" indent newline "tao_left " indent newline left unindent newline "tao_right" indent newline right unindent unindent newline
+
+indents = "  "
+block  = "tao_block """ opening " " closing """, " indent newline child unindent newline
+"block I+ I-" = "tao_block ""Indent"", " indent newline child unindent newline
+
+"infix cr" = separator "tao_infix ""CR""," indent newline "tao_left" indent newline left unindent newline "tao_right" indent newline right unindent newline
+
+begin         = "// Automatically generated, do not modify" cr
+end           = "// End of automatically generated code" cr
+
+
+// Character remapping
+space           = " "
+
+integer         = "tao_integer " self newline
+real            = "tao_real " self newline
+name            = "tao_name """ self """" newline
+"text "" """    = "tao_text """ quoted_self """" newline
