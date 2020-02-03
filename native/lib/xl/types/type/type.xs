@@ -47,9 +47,9 @@ TYPE as module with
 // ----------------------------------------------------------------------------
 
     type as [[builtin type]] with
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     //   A `type` is used to identify a set of values
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
         // Types
         bit_count               is MEM.bit_count
@@ -87,12 +87,12 @@ TYPE as module with
 
     // Generic type creation
     any base:type               as type         // Polymorphic type
+    some base:type              as type         // Types deriving from 'base'
     optional base:type          as type         // Optional type
     one_of Patterns             as type         // Enumeration type
     any_of Patterns             as type         // Flag type
     base:type with Declarations as type         // Data inheritance
     base:type when Condition    as type         // Type condition
-    some base:type              as type         // Types deriving from 'base'
     variable base:type          as type         // Make type mutable
     constant base:type          as type         // Make type constant
     own base:type               as type         // Owning type
