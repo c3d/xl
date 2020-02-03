@@ -536,29 +536,49 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#pattern-matching-scope">3.3.13. Pattern-matching scope</a></li>
 </ul>
 </li>
-<li><a href="#overloading">3.4. Overloading</a></li>
-<li><a href="#dynamic-dispatch">3.5. Dynamic dispatch</a></li>
-<li><a href="#immediate-evaluation">3.6. Immediate evaluation</a></li>
-<li><a href="#lazy-evaluation">3.7. Lazy evaluation</a></li>
-<li><a href="#closures">3.8. Closures</a></li>
-<li><a href="#memoization">3.9. Memoization</a></li>
-<li><a href="#self">3.10. Self</a></li>
-<li><a href="#implicit-result-variable">3.11. Implicit result variable</a></li>
-<li><a href="#returned-value">3.12. Returned value</a></li>
-<li><a href="#nested-declarations">3.13. Nested declarations</a></li>
-<li><a href="#scoping">3.14. Scoping</a></li>
-<li><a href="#super-lookup">3.15. Super lookup</a></li>
-<li><a href="#assignments-and-moves">3.16. Assignments and moves</a></li>
-<li><a href="#functions-as-values">3.17. Functions as values</a></li>
-<li><a href="#error-handling">3.18. Error handling</a>
+<li><a href="#declaration-selection">3.4. Declaration selection</a>
 <ul class="sectlevel3">
-<li><a href="#taking-error-parameters">3.18.1. Taking error parameters</a></li>
-<li><a href="#fallible-types">3.18.2. Fallible types</a></li>
-<li><a href="#try-catch">3.18.3. Try-Catch</a></li>
-<li><a href="#error-statements">3.18.4. Error statements</a></li>
+<li><a href="#overloading">3.4.1. Overloading</a></li>
+<li><a href="#dynamic-dispatch">3.4.2. Dynamic dispatch</a></li>
+<li><a href="#immediate-evaluation">3.4.3. Immediate evaluation</a></li>
+<li><a href="#lazy-evaluation">3.4.4. Lazy evaluation</a></li>
 </ul>
 </li>
-<li><a href="#interface-and-implementation">3.19. Interface and implementation</a></li>
+<li><a href="#functional-evaluation">3.5. Functional evaluation</a>
+<ul class="sectlevel3">
+<li><a href="#closures">3.5.1. Closures</a></li>
+<li><a href="#memoization">3.5.2. Memoization</a></li>
+<li><a href="#functions-as-values">3.5.3. Functions as values</a></li>
+</ul>
+</li>
+<li><a href="#special-evaluation">3.6. Special evaluation</a>
+<ul class="sectlevel3">
+<li><a href="#self">3.6.1. Self</a></li>
+<li><a href="#implicit-result-variable">3.6.2. Implicit result variable</a></li>
+<li><a href="#returned-value">3.6.3. Returned value</a></li>
+<li><a href="#assignments-and-moves">3.6.4. Assignments and moves</a></li>
+</ul>
+</li>
+<li><a href="#scoping">3.7. Scoping</a>
+<ul class="sectlevel3">
+<li><a href="#nested-declarations">3.7.1. Nested declarations</a></li>
+<li><a href="#scopes-and-maps">3.7.2. Scopes and maps</a></li>
+<li><a href="#current-context">3.7.3. Current context</a></li>
+<li><a href="#enclosing-context">3.7.4. Enclosing context</a></li>
+<li><a href="#static-context">3.7.5. Static context</a></li>
+<li><a href="#global-context">3.7.6. Global context</a></li>
+<li><a href="#thread-context">3.7.7. Thread context</a></li>
+</ul>
+</li>
+<li><a href="#error-handling">3.8. Error handling</a>
+<ul class="sectlevel3">
+<li><a href="#taking-error-parameters">3.8.1. Taking error parameters</a></li>
+<li><a href="#fallible-types">3.8.2. Fallible types</a></li>
+<li><a href="#try-catch">3.8.3. Try-Catch</a></li>
+<li><a href="#error-statements">3.8.4. Error statements</a></li>
+</ul>
+</li>
+<li><a href="#interface-and-implementation">3.9. Interface and implementation</a></li>
 </ul>
 </li>
 <li><a href="#types">4. Types</a>
@@ -4458,7 +4478,36 @@ these constructors, so that <code>Z1.Re</code> is <code>1.3</code> and <code>Z2.
 </div>
 </div>
 <div class="sect2">
-<h3 id="overloading"><a class="anchor" href="#overloading"></a><a class="link" href="#overloading">3.4. Overloading</a></h3>
+<h3 id="declaration-selection"><a class="anchor" href="#declaration-selection"></a><a class="link" href="#declaration-selection">3.4. Declaration selection</a></h3>
+<div class="paragraph">
+<p>An important part in evaluating expressions is to identify which
+particular declarations must be used.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#overloading">Overloading</a> is the ability to discriminate
+between multiple patterns based on the type or value of the
+arguments.</p>
+</li>
+<li>
+<p><a href="#dynamic-dispatch">Dynamic dispatch</a> is the ability to perform
+the selection of the right candidate based on run-time values, as
+opposed to compile-time checks.</p>
+</li>
+<li>
+<p><a href="immediate-evaluation">Immediate evaluation</a> is any evaluation
+that is necessary in order to resolve overloading or dynamic
+dispatch.</p>
+</li>
+<li>
+<p>Conversely, <a href="#lazy-evaluation">lazy evaluation</a> is evaluation
+that is deferred until the callee needs to evaluate the value.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="overloading"><a class="anchor" href="#overloading"></a><a class="link" href="#overloading">3.4.1. Overloading</a></h4>
 <div class="paragraph">
 <p>There may be multiple declarations where the pattern matches a given
 parse tree. This is called <em>overloading</em>. For example, as we
@@ -4627,8 +4676,8 @@ i as polar      is polar(1, pi/2)</pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="dynamic-dispatch"><a class="anchor" href="#dynamic-dispatch"></a><a class="link" href="#dynamic-dispatch">3.5. Dynamic dispatch</a></h3>
+<div class="sect3">
+<h4 id="dynamic-dispatch"><a class="anchor" href="#dynamic-dispatch"></a><a class="link" href="#dynamic-dispatch">3.4.2. Dynamic dispatch</a></h4>
 <div class="paragraph">
 <p>As shown above, the declaration that is actually selected to evaluate a
 given parse tree may depend on the dynamic value of the arguments. In
@@ -4737,8 +4786,8 @@ takes advantage of pattern matching to allow complex combinations of
 argument tests.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="immediate-evaluation"><a class="anchor" href="#immediate-evaluation"></a><a class="link" href="#immediate-evaluation">3.6. Immediate evaluation</a></h3>
+<div class="sect3">
+<h4 id="immediate-evaluation"><a class="anchor" href="#immediate-evaluation"></a><a class="link" href="#immediate-evaluation">3.4.3. Immediate evaluation</a></h4>
 <div class="paragraph">
 <p>In the <code>circumference</code> examples, matching <code>2 * pi * Radius</code> against
 the possible candidates for <code>X * Y</code> expressions required an evaluation
@@ -4825,8 +4874,8 @@ are <a href="#memoization">memoized</a>, meaning that they
 are computed at most once in a given statement.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="lazy-evaluation"><a class="anchor" href="#lazy-evaluation"></a><a class="link" href="#lazy-evaluation">3.7. Lazy evaluation</a></h3>
+<div class="sect3">
+<h4 id="lazy-evaluation"><a class="anchor" href="#lazy-evaluation"></a><a class="link" href="#lazy-evaluation">3.4.4. Lazy evaluation</a></h4>
 <div class="paragraph">
 <p>In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter in such a way that an evaluation of
@@ -4907,12 +4956,42 @@ the one given earlier:</p>
 </div>
 </div>
 </div>
+</div>
 <div class="sect2">
-<h3 id="closures"><a class="anchor" href="#closures"></a><a class="link" href="#closures">3.8. Closures</a></h3>
+<h3 id="functional-evaluation"><a class="anchor" href="#functional-evaluation"></a><a class="link" href="#functional-evaluation">3.5. Functional evaluation</a></h3>
 <div class="paragraph">
-<p>The bindings given above for <code>Condition</code> and <code>Body</code> are somewhat
-simplistic. Consider what would happen if you wrote the following
-<code>while</code> loop:</p>
+<p>The evaluation of XL expressions borrows a number of ideas that are
+somewhat common in functional programming languages, but less common
+in imperative programming languages such as Ada, Pascal, C or C++.
+These ideas include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#closures">Closures</a> are a way to encapsulate declarations in a
+way that makes it safe to pass code fragments as arguments to
+functions.</p>
+</li>
+<li>
+<p><a href="#memoziation">Memoization</a> is a way to remember which
+expressions have already been evaluated, in order to optimize
+evaluation but, more importantly, make it deterministic even in the
+presence of non-pure functions (i.e. functions that return different
+values for the same input), such as <code>random</code> or <code>current_time</code>.</p>
+</li>
+<li>
+<p><a href="#functions-as-values">First order functions</a> are functions
+treated as values. Since XL allows notations that are not obviously
+"functional", this may occasionally require an tiny wrapper in XL.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="closures"><a class="anchor" href="#closures"></a><a class="link" href="#closures">3.5.1. Closures</a></h4>
+<div class="paragraph">
+<p>The bindings given in the <code>while</code> loop definition above for
+<code>Condition</code> and <code>Body</code> are somewhat simplistic. Consider what would
+happen if you wrote the following <code>while</code> loop:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -5044,8 +5123,8 @@ it computes <code>X</code> in a context where the correct value of <code>X</code
 available, and <code>write Tail</code> will correctly write <code>42</code>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="memoization"><a class="anchor" href="#memoization"></a><a class="link" href="#memoization">3.9. Memoization</a></h3>
+<div class="sect3">
+<h4 id="memoization"><a class="anchor" href="#memoization"></a><a class="link" href="#memoization">3.5.2. Memoization</a></h4>
 <div class="paragraph">
 <p>A sub-expression will only be computed once irrespective of the number
 of overload candidates considered or of the number of tests performed on
@@ -5120,8 +5199,103 @@ general case to be called with a value that is <code>0</code> or <code>1</code>.
 </table>
 </div>
 </div>
+<div class="sect3">
+<h4 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.5.3. Functions as values</a></h4>
+<div class="paragraph">
+<p>Unlike in several functional languages, when you declare a "function",
+you do not automatically declare a named entity or value with the
+function’s name.</p>
+</div>
+<div class="paragraph">
+<p>For example, the first definition in the following code does not create
+any declaration for <code>my_function</code> in the context, which means that the
+last statement in that code will cause an error.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">my_function X is X + 1
+apply Function, Value is Function(Value)
+apply my_function, 1        // Error: Nothing called 'my_function'</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<strong>RATIONALE</strong> One reason for that choice is that
+<a href="#overloading">overloading</a> means a multiplicity of declarations
+often need to be considered for a single expression. Another reason is
+that declarations can have arbitrarily complex patterns. It is not
+obvious what name should be given to a declaration of a pattern like
+<code>A in B..C</code>: a "name" like <code>in..</code> does not even "work"
+syntactically.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>It is not clear how such a name would be called as a function either,
+since some of the arguments may themselves contain arbitrary parse
+trees, as we have seen for the definition of <code>print</code>, where the single
+<code>Items</code> parameter may actually be a comma-separated list of arguments
+that will be split when calling <code>write Items</code> and matching it to
+<code>write Head, Tail</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you need to perform the operation above, it is however quite easy to
+create a map that performs the operation. That map may be given a name
+or be anonymous. The following code example shows two correct ways to
+write such an <code>apply</code> call for a factorial definition:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">0!                      is 1
+N!                      is N * (N-1)!
+apply Function, Value   is Function(Value)
+
+// Using an anonymous map to compute 3!
+apply { \N is N! }, 3
+
+// Using a named map to compute 5!
+factorial   is { \N is N! }
+apply factorial, 5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Passing definitions like this might be seen as related to what other
+languages call <em>anonymous functions</em>, or sometimes <em>lambda function</em> in
+reference to Church’s lambda calculus. The way this works, however, is
+markedly different internally, and is detailed in the section on
+<a href="#scoping">scoping</a> above.</p>
+</div>
+</div>
+</div>
 <div class="sect2">
-<h3 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.10. Self</a></h3>
+<h3 id="special-evaluation"><a class="anchor" href="#special-evaluation"></a><a class="link" href="#special-evaluation">3.6. Special evaluation</a></h3>
+<div class="paragraph">
+<p>A few cases require a special form of evaluation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#self">Self</a> is a way to stop the evaluation of a form</p>
+</li>
+<li>
+<p>The <a href="#implicit-result-variable">implicit <code>result</code> variable</a> can be
+used to set the value returned by a declaration.</p>
+</li>
+<li>
+<p>The <a href="#returned-value">returned value</a> for a declaration follows
+rules that take into account the <code>result</code> variable, <code>return</code>
+statements and <code>error</code> values.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.6.1. Self</a></h4>
 <div class="paragraph">
 <p>In a definition body, <code>self</code> refers to the input parse tree. A
 special idiom is a definition where the body is <code>self</code>, called a
@@ -5168,8 +5342,8 @@ particular the contexts captured for
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.11. Implicit result variable</a></h3>
+<div class="sect3">
+<h4 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.6.2. Implicit result variable</a></h4>
 <div class="paragraph">
 <p>Within the body of a definition, an implicit variable called <code>result</code>
 holds the value that will be given to the caller. For example, an
@@ -5184,8 +5358,8 @@ iterative version of the factorial function can be written as follows:</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.12. Returned value</a></h3>
+<div class="sect3">
+<h4 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.6.3. Returned value</a></h4>
 <div class="paragraph">
 <p>The value returned by the body of a definition is, in order:</p>
 </div>
@@ -5233,11 +5407,145 @@ statement, although it is not quite idiomatic:</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="nested-declarations"><a class="anchor" href="#nested-declarations"></a><a class="link" href="#nested-declarations">3.13. Nested declarations</a></h3>
+<div class="sect3">
+<h4 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.6.4. Assignments and moves</a></h4>
+<div id="assignment" class="paragraph">
+<p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
+returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
+<code>/=</code> are equivalent to performing the corresponding operating and
+assigning the result.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X : integer := 0    // Initialize X to 0
+X := 5              // Now X contains value 5
+X += 7              // Now X contains value 12</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>:=</code> operator (and only that operator) is a <em>variable
+declaration</em> when its left operand is an infix <code>:</code>. This was discussed
+<a href="#sequences">earlier</a>, and corresponds to the first line in the
+example above. A variable declaration is <em>not</em> an assignment.
+</td>
+</tr>
+</table>
+</div>
+<div id="operator_assignment" class="paragraph">
+<p>Seven combined operators are defined independently of the type as
+follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X += Y      is      X := X + Y
+X -= Y      is      X := X - Y
+X *= Y      is      X := X * Y
+X /= Y      is      X := X / Y
+X &amp;= Y      is      X := X &amp; Y
+X |= Y      is      X := X | Y
+X ^= Y      is      X := X ^ Y</code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>A definition body may itself contain declarations, which are called
-<em>nested declarations</em>.</p>
+<p>XL offers two additional operators, the <code>:+</code> <em>copy</em> operator and the
+<code>:&lt;</code> <em>move</em> operator (which is also sometimes <em>cut</em> operator because of
+its shape that evokes scissors). The <code>:+</code> operator guarantees that all
+data is being copied, and that the new object is an independent copy of
+the original (hence the <code>+</code> character in it). The <code>:&lt;</code> operator may
+simply move ownership of the value if that is less expensive than
+copying it, and invalidates the right side of the operator, which may no
+longer be used.</p>
+</div>
+<div class="paragraph">
+<p>Depending on the data type, <code>:=</code> may correspond to a copy or a move. The
+precise details of which operator is selected and the associated
+rationale are detailed in <a href="#ownership">the next
+chapter</a>. In all cases, the previous value that was held in the left
+operand is <a href="#destruction">destroyed</a> by the
+assignment.</p>
+</div>
+<div class="paragraph">
+<p>The <code>:=</code> operator is used to transfer arguments to parameters. This
+means that passing an argument in XL, like in Rust, can make the
+argument invalid in the caller if it is moved rather than copied. There
+are, however, multiple ways to pass arguments. This is all discussed in
+more details <a href="#binding">in the next chapter</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<strong>RATIONALE</strong> For simple types such as arithmetic types, an assignment
+performs a copy, which is a relatively inexpensive memmory copy between
+fixed-size locations. For more complicated data types, such as
+<code>spreadsheet</code>, <code>graph</code> or <code>picture</code>, a copy involves copying possibly
+megabytes of data, or complex webs of interconnected objects, which can
+be very expensive, and often leaves an unused copy behind. For such data
+types, moving data is the frequently desirable operations, for example
+to pass objects around as arguments, and copying data is the less
+frequent case. In any case, the programmer remains in charge, always
+having the possibility to explicitly request a copy or a move.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scoping"><a class="anchor" href="#scoping"></a><a class="link" href="#scoping">3.7. Scoping</a></h3>
+<div class="paragraph">
+<p>The term <em>scoping</em> refers to the set of rules that describe the
+hierarchical relationship between declarations.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#nested-declarations">Nested declarations</a> are declarations
+within declarations or blocks, and are not visible outside of the
+enclosing declaration or block.</p>
+</li>
+<li>
+<p><a href="#scopes-and-maps">Scopes</a> describe the set of declarations that
+are visible at any given point. Users can explicitly define scopes
+using <em>maps</em>, which are blocks containing only declarations.</p>
+</li>
+<li>
+<p>The <a href="#context"><code>context</code></a> variable refers to the current context,
+which makes it possible to easily pass a context around.</p>
+</li>
+<li>
+<p>The <a href="#enclosing-context"><code>super</code></a> variable refers to the
+immediately enclosing context.</p>
+</li>
+<li>
+<p>The <a href="#static-context"><code>static</code></a> variables refers to a static
+context which keeps its value from one evaluation of the context to
+the next.</p>
+</li>
+<li>
+<p>The <a href="#global-context"><code>global</code></a> variable refers to a global
+context that is shared by all entities in the program.</p>
+</li>
+<li>
+<p>The <a href="#thread-context"><code>thread</code></a> variable refers to a per-thread
+context that can be used to optimize operations on multiprocessor systems.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="nested-declarations"><a class="anchor" href="#nested-declarations"></a><a class="link" href="#nested-declarations">3.7.1. Nested declarations</a></h4>
+<div class="paragraph">
+<p>A definition body, or any block for that matter, may itself contain
+declarations, which are called <em>nested declarations</em>.</p>
 </div>
 <div class="paragraph">
 <p>When the body is evaluated, a <em>local declaration
@@ -5339,16 +5647,15 @@ way to write it would be:</p>
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="scoping"><a class="anchor" href="#scoping"></a><a class="link" href="#scoping">3.14. Scoping</a></h3>
+<div class="sect3">
+<h4 id="scopes-and-maps"><a class="anchor" href="#scopes-and-maps"></a><a class="link" href="#scopes-and-maps">3.7.2. Scopes and maps</a></h4>
 <div class="paragraph">
 <p>A list of declarations, similar to the kind that is used in
 <a href="#closures">closures</a>, is called a <em>map</em> and evaluates as itself. One
-of the primary uses for maps is <em>scoping</em>, in other words defining a
-common <em>scope</em> for the declarations that it
-contains. Since the <a href="#declaration-phase">declaration phase</a>
-operates on entire blocks, all declarations within a scope are visible
-at the same time.</p>
+of the primary uses for maps is to create a common <em>scopes</em> for
+the declarations that it contains. Since the
+<a href="#declaration-phase">declaration phase</a> operates on entire blocks,
+all declarations within a scope are visible at the same time.</p>
 </div>
 <div class="paragraph">
 <p>There are two primary operations that apply to a map:</p>
@@ -5504,32 +5811,168 @@ current context that contains the declarations in the module. As a
 result, <code>IO.write</code> will refer to the declaration in the module.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="super-lookup"><a class="anchor" href="#super-lookup"></a><a class="link" href="#super-lookup">3.15. Super lookup</a></h3>
+<div class="sect3">
+<h4 id="current-context"><a class="anchor" href="#current-context"></a><a class="link" href="#current-context">3.7.3. Current context</a></h4>
+<div class="paragraph">
+<p>The <code>context</code> variable can be used to access the current scope at any
+point of the program. This can be used in particular to pass the
+current context to some other declaration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X : integer := 42
+
+foo Ctx, Value is
+    Ctx.X := Value
+    Ctx.{ Y is "Hello" }
+
+foo context, 33
+
+print "X=", X, " Y=", Y   // Prints 33 Hello</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The ability to inject something in a context as indicated above
+has some interesting use cases. For example, an object-oriented
+package could inject a "virtual functions table" field in the types
+that are passed to it. Whether this can be implemented in a sane and
+safe way remains to be validated.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="enclosing-context"><a class="anchor" href="#enclosing-context"></a><a class="link" href="#enclosing-context">3.7.4. Enclosing context</a></h4>
 <div class="paragraph">
 <p>In a given context, <code>super</code> is a way to refer to the enclosing scope.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X is 42
-foo X:integer is X + super.X    // super.X refers to X above
+foo X:integer is X + super X    // super X refers to X above
 foo 3                           // Returns 45</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In this specific use-case, the notation <code>super.X</code> would find the
+declaration for <code>X</code>. In general, however, it is more advisable to use
+<code>super X</code> in order to find <code>X</code> even if it&#8217;s defined in some enclosing context.
+</td>
+</tr>
+</table>
 </div>
-<div class="sect2">
-<h3 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.16. Assignments and moves</a></h3>
-<div id="assignment" class="paragraph">
-<p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
-returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
-<code>/=</code> are equivalent to performing the corresponding operating and
-assigning the result.</p>
+</div>
+<div class="sect3">
+<h4 id="static-context"><a class="anchor" href="#static-context"></a><a class="link" href="#static-context">3.7.5. Static context</a></h4>
+<div class="paragraph">
+<p>THe <code>static</code> name can be used to refer to a context that is specific
+to the current scope, but remains from one evaluation of that scope to
+the next.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X : integer := 0    // Initialize X to 0
-X := 5              // Now X contains value 5
-X += 7              // Now X contains value 12</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
+foo is
+   static.{ Counter : natural := 0 }
+   static.Counter := static.Counter + 1
+   X + static.Counter</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>for I in 1..5 loop
+    print "foo = ", foo    // Prints 1, 2, 3, 4, 5
+---</p>
+</div>
+<div class="paragraph">
+<p>The <code>static</code> type modifier creates types that store their values in
+the static context. The above code can be written as:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
+foo is
+   Counter : static natural := 0 }
+   Counter := Counter + 1
+   X + Counter</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>for I in 1..5 loop
+    print "foo = ", foo    // Prints 1, 2, 3, 4, 5
+---</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="global-context"><a class="anchor" href="#global-context"></a><a class="link" href="#global-context">3.7.6. Global context</a></h4>
+<div class="paragraph">
+<p>The <code>global</code> name can be used to refer to the global context, which is
+a special static context shared by all modules and all scopes in the
+system.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
+// Access the C errno variable
+global.{ errno as integer is C.errno }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>if some_C_function() &lt; 0 then
+    print "Function failed with errno=", global.errno
+---</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>global</code> context is <em>not</em> visible by default unlike in
+languages such as C or C++. One reason for this choice is that global
+state is often a source of problems, so XL does not make it overly
+easy to create global variables.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="thread-context"><a class="anchor" href="#thread-context"></a><a class="link" href="#thread-context">3.7.7. Thread context</a></h4>
+<div class="paragraph">
+<p>The <code>thread</code> name can be used to refer to a per-thread global
+context. Like the <code>static</code> context, the <code>thread</code> context is local to
+the current scope.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
+// Process next-item
+thread.{ work_items as list of tasks }
+global.{ work_items as list of tasks;
+next_work_item as [work_item or nil] is
+    if not thread.work_items.empty then
+        pop thread.work_items
+    else
+        single_threaded
+           if not global.work_items.empty then
+               pop global.work_items
+           else
+               nil
+---</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -5539,151 +5982,16 @@ X += 7              // Now X contains value 12</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code>:=</code> operator (and only that operator) is a <em>variable
-declaration</em> when its left operand is an infix <code>:</code>. This was discussed
-<a href="#sequences">earlier</a>, and corresponds to the first line in the
-example above. A variable declaration is <em>not</em> an assignment.
+It&#8217;s unclear if there is a real need for a per-thread global
+scope. If so, it could be called <code>thread.global</code>.
 </td>
 </tr>
 </table>
 </div>
-<div id="operator_assignment" class="paragraph">
-<p>Seven combined operators are defined independently of the type as
-follows:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X += Y      is      X := X + Y
-X -= Y      is      X := X - Y
-X *= Y      is      X := X * Y
-X /= Y      is      X := X / Y
-X &amp;= Y      is      X := X &amp; Y
-X |= Y      is      X := X | Y
-X ^= Y      is      X := X ^ Y</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>XL offers two additional operators, the <code>:+</code> <em>copy</em> operator and the
-<code>:&lt;</code> <em>move</em> operator (which is also sometimes <em>cut</em> operator because of
-its shape that evokes scissors). The <code>:+</code> operator guarantees that all
-data is being copied, and that the new object is an independent copy of
-the original (hence the <code>+</code> character in it). The <code>:&lt;</code> operator may
-simply move ownership of the value if that is less expensive than
-copying it, and invalidates the right side of the operator, which may no
-longer be used.</p>
-</div>
-<div class="paragraph">
-<p>Depending on the data type, <code>:=</code> may correspond to a copy or a move. The
-precise details of which operator is selected and the associated
-rationale are detailed in <a href="#ownership">the next
-chapter</a>. In all cases, the previous value that was held in the left
-operand is <a href="#destruction">destroyed</a> by the
-assignment.</p>
-</div>
-<div class="paragraph">
-<p>The <code>:=</code> operator is used to transfer arguments to parameters. This
-means that passing an argument in XL, like in Rust, can make the
-argument invalid in the caller if it is moved rather than copied. There
-are, however, multiple ways to pass arguments. This is all discussed in
-more details <a href="#binding">in the next chapter</a>.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<strong>RATIONALE</strong> For simple types such as arithmetic types, an assignment
-performs a copy, which is a relatively inexpensive memmory copy between
-fixed-size locations. For more complicated data types, such as
-<code>spreadsheet</code>, <code>graph</code> or <code>picture</code>, a copy involves copying possibly
-megabytes of data, or complex webs of interconnected objects, which can
-be very expensive, and often leaves an unused copy behind. For such data
-types, moving data is the frequently desirable operations, for example
-to pass objects around as arguments, and copying data is the less
-frequent case. In any case, the programmer remains in charge, always
-having the possibility to explicitly request a copy or a move.
-</td>
-</tr>
-</table>
 </div>
 </div>
 <div class="sect2">
-<h3 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.17. Functions as values</a></h3>
-<div class="paragraph">
-<p>Unlike in several functional languages, when you declare a "function",
-you do not automatically declare a named entity or value with the
-function’s name.</p>
-</div>
-<div class="paragraph">
-<p>For example, the first definition in the following code does not create
-any declaration for <code>my_function</code> in the context, which means that the
-last statement in that code will cause an error.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">my_function X is X + 1
-apply Function, Value is Function(Value)
-apply my_function, 1        // Error: Nothing called 'my_function'</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<strong>RATIONALE</strong> One reason for that choice is that
-<a href="#overloading">overloading</a> means a multiplicity of declarations
-often need to be considered for a single expression. Another reason is
-that declarations can have arbitrarily complex patterns. It is not
-obvious what name should be given to a declaration of a pattern like
-<code>A in B..C</code>: a "name" like <code>in..</code> does not even "work"
-syntactically.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>It is not clear how such a name would be called as a function either,
-since some of the arguments may themselves contain arbitrary parse
-trees, as we have seen for the definition of <code>print</code>, where the single
-<code>Items</code> parameter may actually be a comma-separated list of arguments
-that will be split when calling <code>write Items</code> and matching it to
-<code>write Head, Tail</code>.</p>
-</div>
-<div class="paragraph">
-<p>If you need to perform the operation above, it is however quite easy to
-create a map that performs the operation. That map may be given a name
-or be anonymous. The following code example shows two correct ways to
-write such an <code>apply</code> call for a factorial definition:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">0!                      is 1
-N!                      is N * (N-1)!
-apply Function, Value   is Function(Value)
-
-// Using an anonymous map to compute 3!
-apply { \N is N! }, 3
-
-// Using a named map to compute 5!
-factorial   is { \N is N! }
-apply factorial, 5</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Passing definitions like this might be seen as related to what other
-languages call <em>anonymous functions</em>, or sometimes <em>lambda function</em> in
-reference to Church’s lambda calculus. The way this works, however, is
-markedly different internally, and is detailed in the section on
-<a href="#scoping">scoping</a> above.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.18. Error handling</a></h3>
+<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.8. Error handling</a></h3>
 <div class="paragraph">
 <p>Code that fails will generally report it by returning an <code>error</code> value.
 Error values have the <a href="#errors"><code>error</code> type</a>. For
@@ -5748,7 +6056,7 @@ errors without cluttering your code with error checking conditions.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.18.1. Taking error parameters</a></h4>
+<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.8.1. Taking error parameters</a></h4>
 <div class="paragraph">
 <p>The simplest way to handle errors is to have a variant of the function
 that takes an <code>error</code> as an argument. For example, you could extend your
@@ -5787,7 +6095,7 @@ functions will print the associated error message.
 </div>
 </div>
 <div class="sect3">
-<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.18.2. Fallible types</a></h4>
+<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.8.2. Fallible types</a></h4>
 <div class="paragraph">
 <p>Another way to handle errors is to use <code>mayfail T</code> types, which hold
 either a <code>T</code> or an <code>error</code>. The <code>mayfail</code> type (without a type
@@ -5832,7 +6140,7 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.18.3. Try-Catch</a></h4>
+<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.8.3. Try-Catch</a></h4>
 <div class="paragraph">
 <p>A third way to handle errors is to use a <code>try Body catch Handler</code> form,
 which evaluates <code>Body</code>, and if <code>Body</code> returns an <code>error</code>, evaluates
@@ -5874,7 +6182,7 @@ always an <code>error</code> value being returned, not an exception being thrown
 </div>
 </div>
 <div class="sect3">
-<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.18.4. Error statements</a></h4>
+<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.8.4. Error statements</a></h4>
 <div class="paragraph">
 <p>If a statement, assignment or declaration returns an <code>error</code>, then as a
 special evaluation rule, that any <code>error</code> value is immediately returned by
@@ -5977,7 +6285,7 @@ dynamically allocates an object from the heap.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.19. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
+<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.9. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
 <div class="paragraph">
 <p>XL provides strong <em>encapsulation</em> by allowing a programmer to hide
 irrelevant details of an implementation. This is fundamental to provide
@@ -7993,7 +8301,7 @@ called directly for <code>B</code> but implicitly for <code>P.N</code>.</td>
 <p>It is possible to create local destructor definitions. When such a local
 definition exists, it is possible for it to override a more general
 definition. The general definition can be accessed using
-<a href="#super-lookup">super lookup</a>, and generally, it should in order to
+link:#enclosing context[<code>super</code> lookup], and generally, it should in order to
 preserve the language semantics.</p>
 </div>
 <div class="listingblock">
@@ -12431,7 +12739,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-01-17 22:35:12 +0100
+Last updated 2020-02-03 12:27:25 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

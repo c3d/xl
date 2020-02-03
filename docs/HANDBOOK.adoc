@@ -2776,7 +2776,27 @@ Z:complex := complex(1.3, 4.5) + complex(6.3, 2.5) <3>
     these constructors, so that `Z1.Re` is `1.3` and `Z2.Im` is `2.5`.
 
 
-=== Overloading
+=== Declaration selection
+
+An important part in evaluating expressions is to identify which
+particular declarations must be used.
+
+* link:#overloading[Overloading] is the ability to discriminate
+  between multiple patterns based on the type or value of the
+  arguments.
+
+* link:#dynamic-dispatch[Dynamic dispatch] is the ability to perform
+  the selection of the right candidate based on run-time values, as
+  opposed to compile-time checks.
+
+* link:immediate-evaluation[Immediate evaluation] is any evaluation
+  that is necessary in order to resolve overloading or dynamic
+  dispatch.
+
+* Conversely, link:#lazy-evaluation[lazy evaluation] is evaluation
+  that is deferred until the callee needs to evaluate the value.
+
+==== Overloading
 
 There may be multiple declarations where the pattern matches a given
 ((parse tree)). This is called _((overloading))_. For example, as we
@@ -2912,7 +2932,7 @@ i as cartesian  is cartesian(0,1)
 i as polar      is polar(1, pi/2)
 ....
 
-=== Dynamic dispatch
+==== Dynamic dispatch
 
 As shown above, the declaration that is actually selected to evaluate a
 given parse tree may depend on the dynamic value of the arguments. In
@@ -3003,7 +3023,7 @@ As the example above illustrates, the XL approach to dynamic dispatch
 takes advantage of ((pattern matching)) to allow complex combinations of
 argument tests.
 
-=== Immediate evaluation
+==== Immediate evaluation
 
 In the `circumference` examples, matching `2 * pi * Radius` against
 the possible candidates for `X * Y` expressions required an evaluation
@@ -3075,7 +3095,7 @@ tested in the order of declarations. Computed values for sub-expressions
 are link:#memoization[memoized](((memoization))), meaning that they
 are computed at most once in a given statement.
 
-=== Lazy evaluation
+==== Lazy evaluation
 
 In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter in such a way that an evaluation of
@@ -3149,11 +3169,32 @@ the one given earlier:
 [[false]] and Condition is false
 ----
 
-=== Closures
+=== Functional evaluation
 
-The bindings given above for `Condition` and `Body` are somewhat
-simplistic. Consider what would happen if you wrote the following
-`while` loop:
+The evaluation of XL expressions borrows a number of ideas that are
+somewhat common in functional programming languages, but less common
+in imperative programming languages such as Ada, Pascal, C or C++.
+These ideas include:
+
+* link:#closures[Closures] are a way to encapsulate declarations in a
+  way that makes it safe to pass code fragments as arguments to
+  functions.
+
+* link:#memoziation[Memoization] is a way to remember which
+  expressions have already been evaluated, in order to optimize
+  evaluation but, more importantly, make it deterministic even in the
+  presence of non-pure functions (i.e. functions that return different
+  values for the same input), such as `random` or `current_time`.
+
+* link:#functions-as-values[First order functions] are functions
+  treated as values. Since XL allows notations that are not obviously
+  "functional", this may occasionally require an tiny wrapper in XL.
+
+==== Closures
+
+The bindings given in the `while` loop definition above for
+`Condition` and `Body` are somewhat simplistic. Consider what would
+happen if you wrote the following `while` loop:
 
 [source]
 ----
@@ -3271,7 +3312,7 @@ The whole processus ensures that, when `write` evaluates `write Tail`,
 it computes `X` in a context where the correct value of `X` is
 available, and `write Tail` will correctly write `42`.
 
-=== Memoization
+==== Memoization
 
 A ((sub-expression)) will only be computed once irrespective of the number
 of overload candidates considered or of the number of tests performed on
@@ -3330,7 +3371,77 @@ _same_ value will be used when testing against `0`, `1` or as a binding
 with `N`. Witout these rules, it would be possible for the body of the
 general case to be called with a value that is `0` or `1`.
 
-=== Self
+==== Functions as values
+
+Unlike in several functional languages, when you declare a "function",
+you do not automatically declare a named entity or value with the
+function’s name.
+
+For example, the first definition in the following code does not create
+any declaration for `my_function` in the context, which means that the
+last statement in that code will cause an error.
+
+[source]
+----
+my_function X is X + 1
+apply Function, Value is Function(Value)
+apply my_function, 1        // Error: Nothing called 'my_function'
+----
+
+NOTE: *RATIONALE* One reason for that choice is that
+link:#overloading[overloading] means a multiplicity of declarations
+often need to be considered for a single expression. Another reason is
+that declarations can have arbitrarily complex patterns. It is not
+obvious what name should be given to a declaration of a pattern like
+`A in B..C`: a "name" like `in..` does not even "work"
+syntactically.
+
+It is not clear how such a name would be called as a function either,
+since some of the arguments may themselves contain arbitrary parse
+trees, as we have seen for the definition of `print`, where the single
+`Items` parameter may actually be a comma-separated list of arguments
+that will be split when calling `write Items` and matching it to
+`write Head, Tail`.
+
+If you need to perform the operation above, it is however quite easy to
+create a map that performs the operation. That map may be given a name
+or be anonymous. The following code example shows two correct ways to
+write such an `apply` call for a factorial definition:
+
+[source]
+----
+0!                      is 1
+N!                      is N * (N-1)!
+apply Function, Value   is Function(Value)
+
+// Using an anonymous map to compute 3!
+apply { \N is N! }, 3
+
+// Using a named map to compute 5!
+factorial   is { \N is N! }
+apply factorial, 5
+----
+
+Passing definitions like this might be seen as related to what other
+languages call _anonymous functions_, or sometimes _lambda function_ in
+reference to Church’s lambda calculus. The way this works, however, is
+markedly different internally, and is detailed in the section on
+link:#scoping[scoping] above.
+
+=== Special evaluation
+
+A few cases require a special form of evaluation:
+
+* link:#self[Self] is a way to stop the evaluation of a form
+
+* The link:#implicit-result-variable[implicit `result` variable] can be
+  used to set the value returned by a declaration.
+
+* The link:#returned-value[returned value] for a declaration follows
+  rules that take into account the `result` variable, `return`
+  statements and `error` values.
+
+==== Self
 
 In a definition body, `self` refers to the input ((parse tree)). A
 special idiom is a definition where the body is `self`, called a
@@ -3367,7 +3478,7 @@ in the current context matches.
 particular the contexts captured(((closure,capture))) for
 link:#closures[((closure))s].
 
-=== Implicit result variable
+==== Implicit result variable
 
 Within the body of a definition, an implicit variable called `result`
 holds the value that will be given to the caller. For example, an
@@ -3381,7 +3492,7 @@ factorial N:natural as natural is
 ....
 
 
-=== Returned value
+==== Returned value
 
 The value returned by the body of a definition is, in order:
 
@@ -3412,10 +3523,109 @@ factorial_last N:natural as natural is
         N * factorial_last(N-1)
 ....
 
-=== Nested declarations
+==== Assignments and moves
 
-A definition body may itself contain declarations, which are called
-_((nested declarations))_(((declaration,nested))).
+[[assignment]]
+The infix `:=` operator is used to perform _((assignments))_ and
+returns the value being assigned. Variants such as `+=`, `-=`, `*=`,
+`/=` are equivalent to performing the corresponding operating and
+assigning the result.
+
+[source]
+----
+X : integer := 0    // Initialize X to 0
+X := 5              // Now X contains value 5
+X += 7              // Now X contains value 12
+----
+
+NOTE: The `:=` operator (and only that operator) is a _variable
+declaration_ when its left operand is an infix `:`. This was discussed
+link:#sequences[earlier], and corresponds to the first line in the
+example above. A variable declaration is _not_ an assignment.
+
+[[operator_assignment]]
+Seven combined operators are defined independently of the type as
+follows:
+
+[source]
+----
+X += Y      is      X := X + Y
+X -= Y      is      X := X - Y
+X *= Y      is      X := X * Y
+X /= Y      is      X := X / Y
+X &= Y      is      X := X & Y
+X |= Y      is      X := X | Y
+X ^= Y      is      X := X ^ Y
+----
+
+XL offers two additional operators, the `:+` _copy_ operator and the
+`:<` _move_ operator (which is also sometimes _cut_ operator because of
+its shape that evokes scissors). The `:+` operator guarantees that all
+data is being copied, and that the new object is an independent copy of
+the original (hence the `+` character in it). The `:<` operator may
+simply move ownership of the value if that is less expensive than
+copying it, and invalidates the right side of the operator, which may no
+longer be used.
+
+Depending on the data type, `:=` may correspond to a copy or a move. The
+precise details of which operator is selected and the associated
+rationale are detailed in link:#ownership[the next
+chapter]. In all cases, the previous value that was held in the left
+operand is link:#destruction[destroyed] by the
+assignment.
+
+The `:=` operator is used to transfer arguments to parameters. This
+means that passing an argument in XL, like in Rust, can make the
+argument invalid in the caller if it is moved rather than copied. There
+are, however, multiple ways to pass arguments. This is all discussed in
+more details link:#binding[in the next chapter].
+
+NOTE: *RATIONALE* For simple types such as arithmetic types, an assignment
+performs a copy, which is a relatively inexpensive memmory copy between
+fixed-size locations. For more complicated data types, such as
+`spreadsheet`, `graph` or `picture`, a copy involves copying possibly
+megabytes of data, or complex webs of interconnected objects, which can
+be very expensive, and often leaves an unused copy behind. For such data
+types, moving data is the frequently desirable operations, for example
+to pass objects around as arguments, and copying data is the less
+frequent case. In any case, the programmer remains in charge, always
+having the possibility to explicitly request a copy or a move.
+
+
+=== Scoping
+
+The term _scoping_ refers to the set of rules that describe the
+hierarchical relationship between declarations.
+
+* link:#nested-declarations[Nested declarations] are declarations
+  within declarations or blocks, and are not visible outside of the
+  enclosing declaration or block.
+
+* link:#scopes-and-maps[Scopes] describe the set of declarations that
+  are visible at any given point. Users can explicitly define scopes
+  using _((maps))_, which are blocks containing only declarations.
+
+* The link:#context[`context`] variable refers to the current context,
+  which makes it possible to easily pass a context around.
+
+* The link:#enclosing-context[`super`] variable refers to the
+  immediately enclosing context.
+
+* The link:#static-context[`static`] variables refers to a static
+  context which keeps its value from one evaluation of the context to
+  the next.
+
+* The link:#global-context[`global`] variable refers to a global
+  context that is shared by all entities in the program.
+
+* The link:#thread-context[`thread`] variable refers to a per-thread
+  context that can be used to optimize operations on multiprocessor systems.
+
+==== Nested declarations
+
+A definition body, or any block for that matter, may itself contain
+declarations, which are called _((nested
+declarations))_(((declaration,nested))).
 
 When the body is evaluated, a _((local declaration))(((declaration,local)))
 phase_ will run, followed by a _local evaluation phase_. The local
@@ -3498,15 +3708,14 @@ count_vowels InputText is count C in InputText where C in "aeiouyAEIOUY"
 ....
 ====
 
-=== Scoping
+==== Scopes and maps
 
 A list of declarations, similar to the kind that is used in
 link:#closures[((closure))s], is called a _((map))_ and evaluates as itself. One
-of the primary uses for maps is _((scoping))_, in other words defining a
-common _((scope))_ for the declarations(((declaration,scope))) that it
-contains. Since the link:#declaration-phase[declaration phase]
-operates on entire blocks, all declarations within a scope are visible
-at the same time.
+of the primary uses for maps is to create a common _((scope))s_ for
+the declarations(((declaration,scope))) that it contains. Since the
+link:#declaration-phase[declaration phase] operates on entire blocks,
+all declarations within a scope are visible at the same time.
 
 There are two primary operations that apply to a map:
 
@@ -3644,141 +3853,126 @@ current context that contains the declarations in the module. As a
 result, `IO.write` will refer to the declaration in the module.
 
 
-=== Super lookup
+==== Current context
+
+The `context` variable can be used to access the current scope at any
+point of the program. This can be used in particular to pass the
+current context to some other declaration:
+
+[source]
+----
+X : integer := 42
+
+foo Ctx, Value is
+    Ctx.X := Value
+    Ctx.{ Y is "Hello" }
+
+foo context, 33
+
+print "X=", X, " Y=", Y   // Prints 33 Hello
+----
+
+NOTE: The ability to inject something in a context as indicated above
+has some interesting use cases. For example, an object-oriented
+package could inject a "virtual functions table" field in the types
+that are passed to it. Whether this can be implemented in a sane and
+safe way remains to be validated.
+
+
+==== Enclosing context
 
 In a given context, `super` is a way to refer to the enclosing scope.
 
 [source]
 ----
 X is 42
-foo X:integer is X + super.X    // super.X refers to X above
+foo X:integer is X + super X    // super X refers to X above
 foo 3                           // Returns 45
 ----
 
-=== Assignments and moves
+NOTE: In this specific use-case, the notation `super.X` would find the
+declaration for `X`. In general, however, it is more advisable to use
+`super X` in order to find `X` even if it's defined in some enclosing context.
 
-[[assignment]]
-The infix `:=` operator is used to perform _((assignments))_ and
-returns the value being assigned. Variants such as `+=`, `-=`, `*=`,
-`/=` are equivalent to performing the corresponding operating and
-assigning the result.
 
-[source]
-----
-X : integer := 0    // Initialize X to 0
-X := 5              // Now X contains value 5
-X += 7              // Now X contains value 12
-----
+==== Static context
 
-NOTE: The `:=` operator (and only that operator) is a _variable
-declaration_ when its left operand is an infix `:`. This was discussed
-link:#sequences[earlier], and corresponds to the first line in the
-example above. A variable declaration is _not_ an assignment.
-
-[[operator_assignment]]
-Seven combined operators are defined independently of the type as
-follows:
+THe `static` name can be used to refer to a context that is specific
+to the current scope, but remains from one evaluation of that scope to
+the next.
 
 [source]
-----
-X += Y      is      X := X + Y
-X -= Y      is      X := X - Y
-X *= Y      is      X := X * Y
-X /= Y      is      X := X / Y
-X &= Y      is      X := X & Y
-X |= Y      is      X := X | Y
-X ^= Y      is      X := X ^ Y
-----
+---
+foo is
+   static.{ Counter : natural := 0 }
+   static.Counter := static.Counter + 1
+   X + static.Counter
 
-XL offers two additional operators, the `:+` _copy_ operator and the
-`:<` _move_ operator (which is also sometimes _cut_ operator because of
-its shape that evokes scissors). The `:+` operator guarantees that all
-data is being copied, and that the new object is an independent copy of
-the original (hence the `+` character in it). The `:<` operator may
-simply move ownership of the value if that is less expensive than
-copying it, and invalidates the right side of the operator, which may no
-longer be used.
+for I in 1..5 loop
+    print "foo = ", foo    // Prints 1, 2, 3, 4, 5
+---
 
-Depending on the data type, `:=` may correspond to a copy or a move. The
-precise details of which operator is selected and the associated
-rationale are detailed in link:#ownership[the next
-chapter]. In all cases, the previous value that was held in the left
-operand is link:#destruction[destroyed] by the
-assignment.
-
-The `:=` operator is used to transfer arguments to parameters. This
-means that passing an argument in XL, like in Rust, can make the
-argument invalid in the caller if it is moved rather than copied. There
-are, however, multiple ways to pass arguments. This is all discussed in
-more details link:#binding[in the next chapter].
-
-NOTE: *RATIONALE* For simple types such as arithmetic types, an assignment
-performs a copy, which is a relatively inexpensive memmory copy between
-fixed-size locations. For more complicated data types, such as
-`spreadsheet`, `graph` or `picture`, a copy involves copying possibly
-megabytes of data, or complex webs of interconnected objects, which can
-be very expensive, and often leaves an unused copy behind. For such data
-types, moving data is the frequently desirable operations, for example
-to pass objects around as arguments, and copying data is the less
-frequent case. In any case, the programmer remains in charge, always
-having the possibility to explicitly request a copy or a move.
-
-=== Functions as values
-
-Unlike in several functional languages, when you declare a "function",
-you do not automatically declare a named entity or value with the
-function’s name.
-
-For example, the first definition in the following code does not create
-any declaration for `my_function` in the context, which means that the
-last statement in that code will cause an error.
+The `static` type modifier creates types that store their values in
+the static context. The above code can be written as:
 
 [source]
-----
-my_function X is X + 1
-apply Function, Value is Function(Value)
-apply my_function, 1        // Error: Nothing called 'my_function'
-----
+---
+foo is
+   Counter : static natural := 0 }
+   Counter := Counter + 1
+   X + Counter
 
-NOTE: *RATIONALE* One reason for that choice is that
-link:#overloading[overloading] means a multiplicity of declarations
-often need to be considered for a single expression. Another reason is
-that declarations can have arbitrarily complex patterns. It is not
-obvious what name should be given to a declaration of a pattern like
-`A in B..C`: a "name" like `in..` does not even "work"
-syntactically.
+for I in 1..5 loop
+    print "foo = ", foo    // Prints 1, 2, 3, 4, 5
+---
 
-It is not clear how such a name would be called as a function either,
-since some of the arguments may themselves contain arbitrary parse
-trees, as we have seen for the definition of `print`, where the single
-`Items` parameter may actually be a comma-separated list of arguments
-that will be split when calling `write Items` and matching it to
-`write Head, Tail`.
 
-If you need to perform the operation above, it is however quite easy to
-create a map that performs the operation. That map may be given a name
-or be anonymous. The following code example shows two correct ways to
-write such an `apply` call for a factorial definition:
+==== Global context
+
+The `global` name can be used to refer to the global context, which is
+a special static context shared by all modules and all scopes in the
+system.
 
 [source]
-----
-0!                      is 1
-N!                      is N * (N-1)!
-apply Function, Value   is Function(Value)
+---
+// Access the C errno variable
+global.{ errno as integer is C.errno }
 
-// Using an anonymous map to compute 3!
-apply { \N is N! }, 3
+if some_C_function() < 0 then
+    print "Function failed with errno=", global.errno
+---
 
-// Using a named map to compute 5!
-factorial   is { \N is N! }
-apply factorial, 5
-----
+NOTE: The `global` context is _not_ visible by default unlike in
+languages such as C or C++. One reason for this choice is that global
+state is often a source of problems, so XL does not make it overly
+easy to create global variables.
 
-Passing definitions like this might be seen as related to what other
-languages call _anonymous functions_, or sometimes _lambda function_ in
-reference to Church’s lambda calculus. The way this works, however, is
-markedly different internally, and is detailed in the section on
-link:#scoping[scoping] above.
+
+==== Thread context
+
+The `thread` name can be used to refer to a per-thread global
+context. Like the `static` context, the `thread` context is local to
+the current scope.
+
+[source]
+---
+// Process next-item
+thread.{ work_items as list of tasks }
+global.{ work_items as list of tasks;
+next_work_item as [work_item or nil] is
+    if not thread.work_items.empty then
+        pop thread.work_items
+    else
+        single_threaded
+           if not global.work_items.empty then
+               pop global.work_items
+           else
+               nil
+---
+
+NOTE: It's unclear if there is a real need for a per-thread global
+scope. If so, it could be called `thread.global`.
+
 
 === Error handling
 
@@ -5485,7 +5679,7 @@ Deleting integer: 1
 It is possible to create ((local destructor)) definitions. When such a local
 definition exists, it is possible for it to override a more general
 definition. The general definition can be accessed using
-link:#super-lookup[super lookup], and generally, it should in order to
+link:#enclosing context[`super` lookup], and generally, it should in order to
 preserve the language semantics.
 
 [source]
