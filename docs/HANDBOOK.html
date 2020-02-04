@@ -519,66 +519,76 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#expression-evaluation">3.2. Expression evaluation</a></li>
-<li><a href="#pattern-matching">3.3. Pattern matching</a>
+<li><a href="#syntactic-sugar">3.3. Syntactic sugar</a>
 <ul class="sectlevel3">
-<li><a href="#name-definitions">3.3.1. Name definitions</a></li>
-<li><a href="#wildcards">3.3.2. Wildcards</a></li>
-<li><a href="#type-annotations">3.3.3. Type annotations</a></li>
-<li><a href="#function-prefix-definitions">3.3.4. Function (prefix) definitions</a></li>
-<li><a href="#postfix-definitions">3.3.5. Postfix definitions</a></li>
-<li><a href="#infix-definitions">3.3.6. Infix definitions</a></li>
-<li><a href="#argument-splitting">3.3.7. Argument splitting</a></li>
-<li><a href="#conditional-patterns">3.3.8. Conditional patterns</a></li>
-<li><a href="#literal-constants">3.3.9. Literal constants</a></li>
-<li><a href="#metabox-values">3.3.10. Metabox values</a></li>
-<li><a href="#blocks">3.3.11. Blocks</a></li>
-<li><a href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></li>
-<li><a href="#pattern-matching-scope">3.3.13. Pattern-matching scope</a></li>
+<li><a href="#types-sugar">3.3.1. Types sugar</a></li>
+<li><a href="#modules-sugar">3.3.2. Modules sugar</a></li>
+<li><a href="#sugar-for-code-and-data">3.3.3. Sugar for code and data</a></li>
+<li><a href="#implementations-hints">3.3.4. Implementations hints</a></li>
+<li><a href="#storage-hints">3.3.5. Storage hints</a></li>
+<li><a href="#alternate-notations">3.3.6. Alternate notations</a></li>
 </ul>
 </li>
-<li><a href="#declaration-selection">3.4. Declaration selection</a>
+<li><a href="#pattern-matching">3.4. Pattern matching</a>
 <ul class="sectlevel3">
-<li><a href="#overloading">3.4.1. Overloading</a></li>
-<li><a href="#dynamic-dispatch">3.4.2. Dynamic dispatch</a></li>
-<li><a href="#immediate-evaluation">3.4.3. Immediate evaluation</a></li>
-<li><a href="#lazy-evaluation">3.4.4. Lazy evaluation</a></li>
+<li><a href="#name-definitions">3.4.1. Name definitions</a></li>
+<li><a href="#wildcards">3.4.2. Wildcards</a></li>
+<li><a href="#type-annotations">3.4.3. Type annotations</a></li>
+<li><a href="#function-prefix-definitions">3.4.4. Function (prefix) definitions</a></li>
+<li><a href="#postfix-definitions">3.4.5. Postfix definitions</a></li>
+<li><a href="#infix-definitions">3.4.6. Infix definitions</a></li>
+<li><a href="#argument-splitting">3.4.7. Argument splitting</a></li>
+<li><a href="#conditional-patterns">3.4.8. Conditional patterns</a></li>
+<li><a href="#literal-constants">3.4.9. Literal constants</a></li>
+<li><a href="#metabox-values">3.4.10. Metabox values</a></li>
+<li><a href="#blocks">3.4.11. Blocks</a></li>
+<li><a href="#scope-pattern-matching">3.4.12. Scope pattern matching</a></li>
+<li><a href="#pattern-matching-scope">3.4.13. Pattern-matching scope</a></li>
 </ul>
 </li>
-<li><a href="#functional-evaluation">3.5. Functional evaluation</a>
+<li><a href="#declaration-selection">3.5. Declaration selection</a>
 <ul class="sectlevel3">
-<li><a href="#closures">3.5.1. Closures</a></li>
-<li><a href="#memoization">3.5.2. Memoization</a></li>
-<li><a href="#functions-as-values">3.5.3. Functions as values</a></li>
+<li><a href="#overloading">3.5.1. Overloading</a></li>
+<li><a href="#dynamic-dispatch">3.5.2. Dynamic dispatch</a></li>
+<li><a href="#immediate-evaluation">3.5.3. Immediate evaluation</a></li>
+<li><a href="#lazy-evaluation">3.5.4. Lazy evaluation</a></li>
 </ul>
 </li>
-<li><a href="#special-evaluation">3.6. Special evaluation</a>
+<li><a href="#functional-evaluation">3.6. Functional evaluation</a>
 <ul class="sectlevel3">
-<li><a href="#self">3.6.1. Self</a></li>
-<li><a href="#implicit-result-variable">3.6.2. Implicit result variable</a></li>
-<li><a href="#returned-value">3.6.3. Returned value</a></li>
-<li><a href="#assignments-and-moves">3.6.4. Assignments and moves</a></li>
+<li><a href="#closures">3.6.1. Closures</a></li>
+<li><a href="#memoization">3.6.2. Memoization</a></li>
+<li><a href="#functions-as-values">3.6.3. Functions as values</a></li>
 </ul>
 </li>
-<li><a href="#scoping">3.7. Scoping</a>
+<li><a href="#special-evaluation">3.7. Special evaluation</a>
 <ul class="sectlevel3">
-<li><a href="#nested-declarations">3.7.1. Nested declarations</a></li>
-<li><a href="#scopes-and-maps">3.7.2. Scopes and maps</a></li>
-<li><a href="#current-context">3.7.3. Current context</a></li>
-<li><a href="#enclosing-context">3.7.4. Enclosing context</a></li>
-<li><a href="#static-context">3.7.5. Static context</a></li>
-<li><a href="#global-context">3.7.6. Global context</a></li>
-<li><a href="#thread-context">3.7.7. Thread context</a></li>
+<li><a href="#self">3.7.1. Self</a></li>
+<li><a href="#implicit-result-variable">3.7.2. Implicit result variable</a></li>
+<li><a href="#returned-value">3.7.3. Returned value</a></li>
+<li><a href="#assignments-and-moves">3.7.4. Assignments and moves</a></li>
 </ul>
 </li>
-<li><a href="#error-handling">3.8. Error handling</a>
+<li><a href="#scoping">3.8. Scoping</a>
 <ul class="sectlevel3">
-<li><a href="#taking-error-parameters">3.8.1. Taking error parameters</a></li>
-<li><a href="#fallible-types">3.8.2. Fallible types</a></li>
-<li><a href="#try-catch">3.8.3. Try-Catch</a></li>
-<li><a href="#error-statements">3.8.4. Error statements</a></li>
+<li><a href="#nested-declarations">3.8.1. Nested declarations</a></li>
+<li><a href="#scopes-and-maps">3.8.2. Scopes and maps</a></li>
+<li><a href="#current-context">3.8.3. Current context</a></li>
+<li><a href="#enclosing-context">3.8.4. Enclosing context</a></li>
+<li><a href="#static-context">3.8.5. Static context</a></li>
+<li><a href="#global-context">3.8.6. Global context</a></li>
+<li><a href="#thread-context">3.8.7. Thread context</a></li>
 </ul>
 </li>
-<li><a href="#interface-and-implementation">3.9. Interface and implementation</a></li>
+<li><a href="#error-handling">3.9. Error handling</a>
+<ul class="sectlevel3">
+<li><a href="#taking-error-parameters">3.9.1. Taking error parameters</a></li>
+<li><a href="#fallible-types">3.9.2. Fallible types</a></li>
+<li><a href="#try-catch">3.9.3. Try-Catch</a></li>
+<li><a href="#error-statements">3.9.4. Error statements</a></li>
+</ul>
+</li>
+<li><a href="#interface-and-implementation">3.10. Interface and implementation</a></li>
 </ul>
 </li>
 <li><a href="#types">4. Types</a>
@@ -1107,9 +1117,9 @@ X + 0           is      X</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">complex         is      polar or cartesian
-cartesian       is      type cartesian(re:number, im:number)
-polar           is      type polar(mod:number, arg:number)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">complex         is polar or cartesian
+cartesian       is matching cartesian(re:number, im:number)
+polar           is matching polar(mod:number, arg:number)</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1219,10 +1229,10 @@ contiguous integers.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// An (inefficient) implementation of a generic 1-based array type
-array[1] of T is type
+array[1] of T is record
     Value : T
     1 is Value
-array[N] of T when N &gt; 1 is type
+array[N] of T when N &gt; 1 is record
     Head  : array[N-1] of T
     Tail  : T
     lambda I when I&lt;N is Head[I]
@@ -3597,7 +3607,434 @@ the converted value in a platform-dependent way:
 </div>
 </div>
 <div class="sect2">
-<h3 id="pattern-matching"><a class="anchor" href="#pattern-matching"></a><a class="link" href="#pattern-matching">3.3. <a id="pattern"></a>Pattern matching</a></h3>
+<h3 id="syntactic-sugar"><a class="anchor" href="#syntactic-sugar"></a><a class="link" href="#syntactic-sugar">3.3. Syntactic sugar</a></h3>
+<div class="paragraph">
+<p>A number of special forms can be used to make declaration or
+definition easier to read, write or validate. This is called
+<em>syntactic sugar</em>. The primary intent of syntactic sugar is to
+help the programmer understand what the code means. However, syntactic
+sugar also gives additional hints to the compiler, and may suggest one
+implementation over another. Syntactic sugar is specified by reference
+to a functionally equivalent <em>raw</em> version of the same code.</p>
+</div>
+<div class="paragraph">
+<p>A few names are reserved for use as syntactic sugar prefix. These
+names have a very low precedence, and as a result do not significantly
+impact the syntax of the pattern of the declaration they apply to.
+These sugar names are <code>type</code>, <code>class</code>, <code>module</code>, <code>function</code>, <code>method</code>,
+<code>procedure</code>, <code>to</code>, <code>operation</code>, <code>data</code>, <code>constant</code>, <code>variable</code>,
+<code>macro</code>, <code>generic</code>, <code>polymorphic</code>, <code>fast</code>, <code>small</code>, <code>global</code>, <code>thread</code>
+and <code>static</code>. Proper use of these names also makes textual search of
+the declarations or definitions easier.</p>
+</div>
+<div class="paragraph">
+<p>The rest of this document will preferably use the sugared form.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+The evaluation rules are never changed by using syntactic
+sugar. The result of evaluation with or without syntactic sugar should
+be identical. Syntactic sugar may guide the implementation in picking
+the best implementation to achieve that result. It may also allow the
+implementation to emit more precise diagnostics.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="types-sugar"><a class="anchor" href="#types-sugar"></a><a class="link" href="#types-sugar">3.3.1. Types sugar</a></h4>
+<div class="paragraph">
+<p>The <code>type</code> prefix can be used to announce a type, which implicitly
+indicates that the form has the <code>type</code> type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type pair[T:type] is matching pair(First:T, Second:T)           // Sugared
+pair[T:type] as type is matching pair(First:T, Second:T)        // Raw</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There is also a syntactic sugar for the common case where the definition
+of the type is a <code>matching</code> form. In that case, <code>is matching</code> can be
+replaced with <code>matches</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type pair[T:type] matches pair(First:T, Second:T)               // Sugared
+pair[T:type] as type is matching pair(First:T, Second:T)        // Raw</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This syntactic sugar also applies to the <a href="#interface">interface</a>
+of a type, including the definition of its features or of the types it
+inherits from:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type pair[T:type] with                                          // Sugared
+   First  : T
+   Second : T
+pair[T:type] as type with                                       // Raw
+   First  : T
+   Second : T
+
+type rectangle like shape                                       // Sugared
+type rectangle inherits shape                                   // Sugared
+rectangle as type like shape                                    // Raw
+
+type point like shape with (X:coordinate; Y:coordinate)         // Sugared
+point as type like shape with (X:coordinate; Y:coordinate)      // Raw</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Finally, the word <code>class</code> is a syntactic sugar for <code>type</code>, which can
+be used for type hierarchies intended to support
+<a href="#object-oriended-programming">object-oriended programming</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">class circle inherits shape with
+   X       : coordinate
+   Y       : coordinate
+   Radius  : length</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Using syntactic sugar for types gives the compiler additional hints
+that the form is intended to be used as a type in type
+annotations. This can be used by the compiler to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Accelerate type lookup in type annotations, by focusing on types</p>
+</li>
+<li>
+<p>Treat the form as a compile-time constant</p>
+</li>
+<li>
+<p>Use the form at compile-time for type analysis</p>
+</li>
+<li>
+<p>Emit more precise diagnostics</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="modules-sugar"><a class="anchor" href="#modules-sugar"></a><a class="link" href="#modules-sugar">3.3.2. Modules sugar</a></h4>
+<div class="paragraph">
+<p>The syntactic sugar for <a href="#modules">modules</a> is very similar in its
+syntax to that of types:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">module M with Interface                 // Sugared
+M as module with Interface              // Raw
+
+module M is Implementation              // Sugared
+M as module is Implementation           // Raw</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>module</code> syntactic sugar gives hints to the compiler that the
+declaration is used as a module. The compiler can use that information
+to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Accelerate module lookup and build dependencies</p>
+</li>
+<li>
+<p>Validate module version numbers</p>
+</li>
+<li>
+<p>Verify ABI stability and compatibility</p>
+</li>
+<li>
+<p>Optimize the code for use in a shared library</p>
+</li>
+<li>
+<p>Emit better diagnostics</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="sugar-for-code-and-data"><a class="anchor" href="#sugar-for-code-and-data"></a><a class="link" href="#sugar-for-code-and-data">3.3.3. Sugar for code and data</a></h4>
+<div class="paragraph">
+<p>Some syntactic sugar can be used to indicate if a form is a <code>procedure</code>,
+a <code>method</code>, a <code>function</code>, an <code>operation</code> or if it represents
+<code>data</code>, a <code>property</code> or an <code>attribute</code>. Like other kinds of syntactic
+sugar, the primary intent is to make the code easier to read.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Interface
+procedure Initialization
+to Reset(Devices:devices)
+function Sin(X:real) as real
+method Width(S:shape) as length // aka S.width
+type shape with
+    method Height as length
+    property Foreground : color
+    attribute Background : color
+operation Value in Low..High as boolean
+data X, Y as infix
+
+// Implementation
+procedure Initialization is { Zero Memory; Reset AllDevices }
+to Reset(Devices:devices) is { for D in Devices loop Reset D }
+function Sin(X:real) as real is Cos(pi/2 - X)
+method Width(S:shape) as length is S.right - S.left // aka S.Width
+type shape is
+    method Height as length is top - bottom
+    property Foreground : color
+    bg : color
+    attribute Background : color is
+        get   is bg
+        set C is bg := C
+operation Value in Low..High as boolean is Value &gt;= Low and Value &lt;= High
+data X, Y as infix is self</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>While these sugared forms are optional, they may make the code more
+readable, shorter or more precise. In addition, they convey additional
+additional information to the compiler or to a person reading the code:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>procedure</code> is typically used for definitions that do not return a
+value. If no result type is specified for the pattern, then <code>mayfail</code> is
+implied (that is <code>nil or error</code>), and diagnostics will be emitted
+accordingly. A result type can also be explicitly given. In that
+case, using <code>procedure</code> is a hint to the compiler that the
+implementation is expected to have side effects, as opposed to
+<code>function</code>.</p>
+</li>
+<li>
+<p><code>to</code> is a shorter form of <code>procedure</code> that is normally used for
+patterns that look like English verbs. For example, <code>procedure Write</code>
+can be written as <code>to Write</code>.</p>
+</li>
+<li>
+<p><code>function</code> indicates that the operation behaves like a pure
+mathematical function, i.e. it has no side effects and returns the
+same value for identical inputs. This allows the compiler to explore
+additional optimizations, and emit additional diagnostics if the
+implementation has side effects.</p>
+</li>
+<li>
+<p><code>method</code> indicates that the pattern applies to an object, its first
+formal parameter, and for prefix methods, it provides a dot notation
+<code>Object.Method</code> for calling the method.  For example, the <code>Width</code> method
+defined above can also be invoked as <code>S.Width</code>.</p>
+</li>
+<li>
+<p><code>property</code> and <code>attribute</code> are shorthand ways to specify
+<a href="#attribute">attribute</a> features in a type, i.e. features that
+behave like a field, but can be implemented in a different way. The
+language does not make a distinction between attributes and
+properties, but a special project may give them different meaning,
+for example in a drawing program, that attributes have a
+user-visible interface whereas properties are internal values.</p>
+</li>
+<li>
+<p><code>operation</code> is a marker when reading the code for special notations.
+It is intended to draw the attention of the reader on some special
+form that he may not be used to.</p>
+</li>
+<li>
+<p><code>data</code> is a marker indicating that the notation is used primarily
+for data. For example, the notation <code>data X,Y</code> indicates that there
+is no actual operation associated to the <code>,</code> infix operator,
+i.e. that <code>1,3,5,8,4</code> should be representable using only data as
+opposed to code. The implementation of a <code>data</code> normally uses
+<a href="#self"><code>self</code></a>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="implementations-hints"><a class="anchor" href="#implementations-hints"></a><a class="link" href="#implementations-hints">3.3.4. Implementations hints</a></h4>
+<div class="paragraph">
+<p>Prefix names such as <code>constant</code>, <code>variable</code>, <code>macro</code>, <code>generic</code>,
+<code>polymorphic</code>, <code>fast</code> and <code>small</code> tell the compiler what is the intended
+usage for the definition. They may guide the compiler into favoring
+one possible implementation over another.</p>
+</div>
+<div class="paragraph">
+<p>For example, consider a parameter-less name like <code>seconds</code>. This could
+be a variable holding a duration in seconds, a constant indicating the
+number of seconds in an hour, an operation that returns the seconds in
+the current time, or a function that computes the number of seconds
+our universe will last, which is a very lengthy computation that
+always returns the same value. This would best be indicated by
+using different syntactic sugar for the declaration of <code>seconds</code>:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>variable  seconds as natural    // Variable storing a duration in seconds
+constant  seconds as natural    // Number of seconds in an hour
+operation seconds as natural    // Seconds in the current time
+function  seconds as natural    // Estimate number of seconds in the universe</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The meaning of these words is intended as follows, and a compiler is
+free to emit a diagnostic if one of the conditions is not met:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>constant</code> indicates that the declaration should be implementable as a
+compile-time constant that can be stored in a read-only area of memory.</p>
+</li>
+<li>
+<p><code>variable</code> indicates that the declaration should be implementable
+as a variable in a writable area of memory.</p>
+</li>
+<li>
+<p><code>macro</code> indicates that the declaration should be implemented using
+compile-time manipulations of parse tree arguments, and that the
+compiler should not spend too much time trying to analyze the type
+of the parameters while processing the definition.</p>
+</li>
+<li>
+<p><code>generic</code> indicates that the declaration is intended to be
+parameterized at compile-time, in order to generate multiple
+<em>instantiations</em>, and that type analysis on each instantiation
+at compile-time will provide valuable information.</p>
+</li>
+<li>
+<p><code>polymorphic</code> indicates that the declaration is intended to be
+parameterized at run-time, and that a single implementation should
+be generated that can deal with a multiplicity of types using
+dynamic dispatch.</p>
+</li>
+<li>
+<p><code>fast</code> indicates that the declaration should be optimized for speed,
+even at the expense of compilation time or code size. For example, a
+call to that declaration could be inlined.</p>
+</li>
+<li>
+<p><code>small</code> indicates that the declaration should be optimized for size,
+even at the expense of execution time. For example, data could be
+packed and call inlining could be disabled.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In order to see the effect that these modifiers may have, we can
+consider code that simply adds a value to itself, and see what C&#43;&#43;
+feature this may be related to:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// Compile-time constant: constexpr
+constant twice(X) is X + X
+
+// Variable at run-time: function pointer
+variable twice(X) is X + X
+
+// Source code transformation: #define
+macro twice(X) is X + X
+
+// Instantiation based on arguments: template
+generic twice(X) is X + X
+
+// Dynamic dispatch at run-time: virtual functions
+polymorphic twice(X) is X + X
+
+// Optimize for speed: inline
+fast twice(X) is X + X
+
+// Optimize for size: pragmas, command-line options
+small twice(X) is X + X</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="storage-hints"><a class="anchor" href="#storage-hints"></a><a class="link" href="#storage-hints">3.3.5. Storage hints</a></h4>
+<div class="paragraph">
+<p>Three forms of syntactic sugar provide <em>storage hints</em>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>global</code> indicates that a definition belongs to a shared
+<a href="#global-context">global context</a>.</p>
+</li>
+<li>
+<p><code>static</code> indicates that a definition belongs to a
+<a href="#static-context">static context</a> that keeps its content between
+successive evaluations.</p>
+</li>
+<li>
+<p><code>thread</code> indicates that a definition belongs to a
+<a href="#thread-context">thread context</a> that is associated to each
+thread of execution.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In the following example, <code>Counter</code> keeps its value from one
+evaluation of <code>EvaluationCounter</code> to the next, but is not visible to
+any entity outside of <code>EvaluationCounter</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">operation EvaluationCounter as natural is               // Sugared
+    static Counter : natural := 0
+    Counter++
+EvaluationCounter as natural is                         // Raw
+    static.{ Counter : natural := 0 }
+    static.Counter++</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="alternate-notations"><a class="anchor" href="#alternate-notations"></a><a class="link" href="#alternate-notations">3.3.6. Alternate notations</a></h4>
+<div class="paragraph">
+<p>In some cases, it may be useful to provide several notations for the
+same things. The <code>written</code> infix form can be used to specify
+additional patterns for the same implementation. This may increase
+readability, or help deal with properties such as commutativity.</p>
+</div>
+<div class="paragraph">
+<p>For example, the following defines an iterative <code>Factorial</code> function,
+which gives the operation a name, while also providing the familiar
+<code>N!</code> notation for it:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">function Factorial(N:natural) as natural written N! is
+    result := 1
+    for I in 1..N loop
+        result *= I</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following code provides a fused multiply-add operation that is
+recognized whether the multiplication is on the left or on the right:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">function FMA(X:number, Y:number, Z:number) as number written X+Y*Z written Y*Z+X</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="pattern-matching"><a class="anchor" href="#pattern-matching"></a><a class="link" href="#pattern-matching">3.4. <a id="pattern"></a>Pattern matching</a></h3>
 <div class="paragraph">
 <p>As we have seen above, the key to execution in XL is <em>pattern matching</em>,
 which is the process of finding the declarations patterns that match a
@@ -3677,7 +4114,7 @@ passed as argument ina more readable way.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="name-definitions"><a class="anchor" href="#name-definitions"></a><a class="link" href="#name-definitions">3.3.1. Name definitions</a></h4>
+<h4 id="name-definitions"><a class="anchor" href="#name-definitions"></a><a class="link" href="#name-definitions">3.4.1. Name definitions</a></h4>
 <div class="paragraph">
 <p>Top-level name patterns only match the exact same name.</p>
 </div>
@@ -3720,7 +4157,7 @@ define a <code>+</code> operator that way.
 </div>
 </div>
 <div class="sect3">
-<h4 id="wildcards"><a class="anchor" href="#wildcards"></a><a class="link" href="#wildcards">3.3.2. Wildcards</a></h4>
+<h4 id="wildcards"><a class="anchor" href="#wildcards"></a><a class="link" href="#wildcards">3.4.2. Wildcards</a></h4>
 <div class="paragraph">
 <p>Name patterns that are not at the top-level can match any expression,
 and this does not require <a href="#immediate-evaluation">immediate
@@ -3802,7 +4239,7 @@ define a <code>+</code> parameter that way.
 </div>
 </div>
 <div class="sect3">
-<h4 id="type-annotations"><a class="anchor" href="#type-annotations"></a><a class="link" href="#type-annotations">3.3.3. Type annotations</a></h4>
+<h4 id="type-annotations"><a class="anchor" href="#type-annotations"></a><a class="link" href="#type-annotations">3.4.3. Type annotations</a></h4>
 <div class="paragraph">
 <p>When the pattern is an infix <code>:</code> or <code>as</code>, it matches an expression if
 the expression matches the pattern on the left of the infix, and if the
@@ -3905,7 +4342,7 @@ possible to give arguments in a different order in that case.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="function-prefix-definitions"><a class="anchor" href="#function-prefix-definitions"></a><a class="link" href="#function-prefix-definitions">3.3.4. Function (prefix) definitions</a></h4>
+<h4 id="function-prefix-definitions"><a class="anchor" href="#function-prefix-definitions"></a><a class="link" href="#function-prefix-definitions">3.4.4. Function (prefix) definitions</a></h4>
 <div class="paragraph">
 <p>When the pattern is a prefix, like <code>sin X</code>, the expression will match
 only if it is a prefix with the same name, and when the pattern on the
@@ -3945,7 +4382,7 @@ definitions</em>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="postfix-definitions"><a class="anchor" href="#postfix-definitions"></a><a class="link" href="#postfix-definitions">3.3.5. Postfix definitions</a></h4>
+<h4 id="postfix-definitions"><a class="anchor" href="#postfix-definitions"></a><a class="link" href="#postfix-definitions">3.4.5. Postfix definitions</a></h4>
 <div class="paragraph">
 <p>When the pattern is a postfix, like <code>X%</code>, the expression will match only
 if it is a postfix with the same name, and when the pattern on the left
@@ -3984,7 +4421,7 @@ name or operator is sometimes called the <em>suffix</em>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="infix-definitions"><a class="anchor" href="#infix-definitions"></a><a class="link" href="#infix-definitions">3.3.6. Infix definitions</a></h4>
+<h4 id="infix-definitions"><a class="anchor" href="#infix-definitions"></a><a class="link" href="#infix-definitions">3.4.6. Infix definitions</a></h4>
 <div class="paragraph">
 <p>When the pattern is an infix, it matches an infix expression with the
 same infix operator when both the left and right operands of the
@@ -4023,7 +4460,7 @@ corresponding expressions are called <em>infix expressions</em>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="argument-splitting"><a class="anchor" href="#argument-splitting"></a><a class="link" href="#argument-splitting">3.3.7. Argument splitting</a></h4>
+<h4 id="argument-splitting"><a class="anchor" href="#argument-splitting"></a><a class="link" href="#argument-splitting">3.4.7. Argument splitting</a></h4>
 <div class="paragraph">
 <p>When the pattern is an infix, a prefix or a postfix, it also matches a
 name if that name is bound to an infix, prefix or postfix expression
@@ -4097,7 +4534,7 @@ being split, resulting in bindings <code>Head is 2</code> and <code>Tail is 3</c
 </div>
 </div>
 <div class="sect3">
-<h4 id="conditional-patterns"><a class="anchor" href="#conditional-patterns"></a><a class="link" href="#conditional-patterns">3.3.8. Conditional patterns</a></h4>
+<h4 id="conditional-patterns"><a class="anchor" href="#conditional-patterns"></a><a class="link" href="#conditional-patterns">3.4.8. Conditional patterns</a></h4>
 <div class="paragraph">
 <p>When a top-level pattern is an infix like <code>Pattern when Condition</code>, then
 the pattern matches an expression if the pattern on the left of the
@@ -4138,7 +4575,7 @@ log "Logging an error"        // Will not match the definition above</code></pre
 </div>
 </div>
 <div class="sect3">
-<h4 id="literal-constants"><a class="anchor" href="#literal-constants"></a><a class="link" href="#literal-constants">3.3.9. Literal constants</a></h4>
+<h4 id="literal-constants"><a class="anchor" href="#literal-constants"></a><a class="link" href="#literal-constants">3.4.9. Literal constants</a></h4>
 <div class="paragraph">
 <p>When the pattern is an <code>integer</code> like <code>0</code>, a <code>real</code> like <code>3.5</code>, a <code>text</code>
 like <code>"ABC"</code>, it only matches an expression with the same value, as
@@ -4182,7 +4619,7 @@ top-level patterns, which is primarily useful in <a href="#scoping">maps</a>:</p
 </div>
 </div>
 <div class="sect3">
-<h4 id="metabox-values"><a class="anchor" href="#metabox-values"></a><a class="link" href="#metabox-values">3.3.10. Metabox values</a></h4>
+<h4 id="metabox-values"><a class="anchor" href="#metabox-values"></a><a class="link" href="#metabox-values">3.4.10. Metabox values</a></h4>
 <div class="paragraph">
 <p>When the pattern is a an expression between two square brackets, like
 <code>[[true]]</code>, it is called a <em>metabox</em>, and it only matches a value that
@@ -4235,7 +4672,7 @@ false and X       is false</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="blocks"><a class="anchor" href="#blocks"></a><a class="link" href="#blocks">3.3.11. Blocks</a></h4>
+<h4 id="blocks"><a class="anchor" href="#blocks"></a><a class="link" href="#blocks">3.4.11. Blocks</a></h4>
 <div class="paragraph">
 <p>When the pattern is a block, it matches what the block’s child would
 match. In other words, blocks in patterns can be used to change the
@@ -4332,7 +4769,7 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.3.12. Scope pattern matching</a></h4>
+<h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.4.12. Scope pattern matching</a></h4>
 <div id="argument-scope" class="paragraph">
 <p>When a block in a pattern defines a <a href="#scoping">scope</a>, i.e. a
 <a href="#sequences">sequence</a> of declarations or definitions, that scope
@@ -4386,7 +4823,7 @@ parameters:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">person is type person
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type person matches person
     first_name : text
     middle_name: text
     last_name  : text
@@ -4406,7 +4843,7 @@ JohnDoe : person := person
 </div>
 </div>
 <div class="sect3">
-<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.3.13. Pattern-matching scope</a></h4>
+<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.4.13. Pattern-matching scope</a></h4>
 <div id="pattern-scope" class="paragraph">
 <p>When matching a pattern, a <a href="#execution-context">local execution context</a>
 is created that holds the bindings associated to the patterns being
@@ -4478,7 +4915,7 @@ these constructors, so that <code>Z1.Re</code> is <code>1.3</code> and <code>Z2.
 </div>
 </div>
 <div class="sect2">
-<h3 id="declaration-selection"><a class="anchor" href="#declaration-selection"></a><a class="link" href="#declaration-selection">3.4. Declaration selection</a></h3>
+<h3 id="declaration-selection"><a class="anchor" href="#declaration-selection"></a><a class="link" href="#declaration-selection">3.5. Declaration selection</a></h3>
 <div class="paragraph">
 <p>An important part in evaluating expressions is to identify which
 particular declarations must be used.</p>
@@ -4507,7 +4944,7 @@ that is deferred until the callee needs to evaluate the value.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="overloading"><a class="anchor" href="#overloading"></a><a class="link" href="#overloading">3.4.1. Overloading</a></h4>
+<h4 id="overloading"><a class="anchor" href="#overloading"></a><a class="link" href="#overloading">3.5.1. Overloading</a></h4>
 <div class="paragraph">
 <p>There may be multiple declarations where the pattern matches a given
 parse tree. This is called <em>overloading</em>. For example, as we
@@ -4668,16 +5105,16 @@ provide two representations for the <code>i</code> complex constant:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex         is cartesian or polar
-cartesian       is type cartesian(Re, Im)
-polar           is type polar(Mod, Arg)
-i as cartesian  is cartesian(0,1)
-i as polar      is polar(1, pi/2)</pre>
+<pre>type complex            is cartesian or polar
+type cartesian          is matching cartesian(Re, Im)
+type polar              is matching polar(Mod, Arg)
+constant i as cartesian is cartesian(0,1)
+constant i as polar     is polar(1, pi/2)</pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="dynamic-dispatch"><a class="anchor" href="#dynamic-dispatch"></a><a class="link" href="#dynamic-dispatch">3.4.2. Dynamic dispatch</a></h4>
+<h4 id="dynamic-dispatch"><a class="anchor" href="#dynamic-dispatch"></a><a class="link" href="#dynamic-dispatch">3.5.2. Dynamic dispatch</a></h4>
 <div class="paragraph">
 <p>As shown above, the declaration that is actually selected to evaluate a
 given parse tree may depend on the dynamic value of the arguments. In
@@ -4787,7 +5224,7 @@ argument tests.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="immediate-evaluation"><a class="anchor" href="#immediate-evaluation"></a><a class="link" href="#immediate-evaluation">3.4.3. Immediate evaluation</a></h4>
+<h4 id="immediate-evaluation"><a class="anchor" href="#immediate-evaluation"></a><a class="link" href="#immediate-evaluation">3.5.3. Immediate evaluation</a></h4>
 <div class="paragraph">
 <p>In the <code>circumference</code> examples, matching <code>2 * pi * Radius</code> against
 the possible candidates for <code>X * Y</code> expressions required an evaluation
@@ -4875,7 +5312,7 @@ are computed at most once in a given statement.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="lazy-evaluation"><a class="anchor" href="#lazy-evaluation"></a><a class="link" href="#lazy-evaluation">3.4.4. Lazy evaluation</a></h4>
+<h4 id="lazy-evaluation"><a class="anchor" href="#lazy-evaluation"></a><a class="link" href="#lazy-evaluation">3.5.4. Lazy evaluation</a></h4>
 <div class="paragraph">
 <p>In the cases where immediate evaluation is not required, an argument
 will be bound to a formal parameter in such a way that an evaluation of
@@ -4958,7 +5395,7 @@ the one given earlier:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="functional-evaluation"><a class="anchor" href="#functional-evaluation"></a><a class="link" href="#functional-evaluation">3.5. Functional evaluation</a></h3>
+<h3 id="functional-evaluation"><a class="anchor" href="#functional-evaluation"></a><a class="link" href="#functional-evaluation">3.6. Functional evaluation</a></h3>
 <div class="paragraph">
 <p>The evaluation of XL expressions borrows a number of ideas that are
 somewhat common in functional programming languages, but less common
@@ -4987,7 +5424,7 @@ treated as values. Since XL allows notations that are not obviously
 </ul>
 </div>
 <div class="sect3">
-<h4 id="closures"><a class="anchor" href="#closures"></a><a class="link" href="#closures">3.5.1. Closures</a></h4>
+<h4 id="closures"><a class="anchor" href="#closures"></a><a class="link" href="#closures">3.6.1. Closures</a></h4>
 <div class="paragraph">
 <p>The bindings given in the <code>while</code> loop definition above for
 <code>Condition</code> and <code>Body</code> are somewhat simplistic. Consider what would
@@ -5124,7 +5561,7 @@ available, and <code>write Tail</code> will correctly write <code>42</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="memoization"><a class="anchor" href="#memoization"></a><a class="link" href="#memoization">3.5.2. Memoization</a></h4>
+<h4 id="memoization"><a class="anchor" href="#memoization"></a><a class="link" href="#memoization">3.6.2. Memoization</a></h4>
 <div class="paragraph">
 <p>A sub-expression will only be computed once irrespective of the number
 of overload candidates considered or of the number of tests performed on
@@ -5200,7 +5637,7 @@ general case to be called with a value that is <code>0</code> or <code>1</code>.
 </div>
 </div>
 <div class="sect3">
-<h4 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.5.3. Functions as values</a></h4>
+<h4 id="functions-as-values"><a class="anchor" href="#functions-as-values"></a><a class="link" href="#functions-as-values">3.6.3. Functions as values</a></h4>
 <div class="paragraph">
 <p>Unlike in several functional languages, when you declare a "function",
 you do not automatically declare a named entity or value with the
@@ -5274,7 +5711,7 @@ markedly different internally, and is detailed in the section on
 </div>
 </div>
 <div class="sect2">
-<h3 id="special-evaluation"><a class="anchor" href="#special-evaluation"></a><a class="link" href="#special-evaluation">3.6. Special evaluation</a></h3>
+<h3 id="special-evaluation"><a class="anchor" href="#special-evaluation"></a><a class="link" href="#special-evaluation">3.7. Special evaluation</a></h3>
 <div class="paragraph">
 <p>A few cases require a special form of evaluation:</p>
 </div>
@@ -5295,7 +5732,7 @@ statements and <code>error</code> values.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.6.1. Self</a></h4>
+<h4 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.7.1. Self</a></h4>
 <div class="paragraph">
 <p>In a definition body, <code>self</code> refers to the input parse tree. A
 special idiom is a definition where the body is <code>self</code>, called a
@@ -5343,7 +5780,7 @@ particular the contexts captured for
 </div>
 </div>
 <div class="sect3">
-<h4 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.6.2. Implicit result variable</a></h4>
+<h4 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.7.2. Implicit result variable</a></h4>
 <div class="paragraph">
 <p>Within the body of a definition, an implicit variable called <code>result</code>
 holds the value that will be given to the caller. For example, an
@@ -5359,7 +5796,7 @@ iterative version of the factorial function can be written as follows:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.6.3. Returned value</a></h4>
+<h4 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.7.3. Returned value</a></h4>
 <div class="paragraph">
 <p>The value returned by the body of a definition is, in order:</p>
 </div>
@@ -5408,7 +5845,7 @@ statement, although it is not quite idiomatic:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.6.4. Assignments and moves</a></h4>
+<h4 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.7.4. Assignments and moves</a></h4>
 <div id="assignment" class="paragraph">
 <p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
 returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
@@ -5501,7 +5938,7 @@ having the possibility to explicitly request a copy or a move.
 </div>
 </div>
 <div class="sect2">
-<h3 id="scoping"><a class="anchor" href="#scoping"></a><a class="link" href="#scoping">3.7. Scoping</a></h3>
+<h3 id="scoping"><a class="anchor" href="#scoping"></a><a class="link" href="#scoping">3.8. Scoping</a></h3>
 <div class="paragraph">
 <p>The term <em>scoping</em> refers to the set of rules that describe the
 hierarchical relationship between declarations.</p>
@@ -5542,7 +5979,7 @@ context that can be used to optimize operations on multiprocessor systems.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="nested-declarations"><a class="anchor" href="#nested-declarations"></a><a class="link" href="#nested-declarations">3.7.1. Nested declarations</a></h4>
+<h4 id="nested-declarations"><a class="anchor" href="#nested-declarations"></a><a class="link" href="#nested-declarations">3.8.1. Nested declarations</a></h4>
 <div class="paragraph">
 <p>A definition body, or any block for that matter, may itself contain
 declarations, which are called <em>nested declarations</em>.</p>
@@ -5648,7 +6085,7 @@ way to write it would be:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="scopes-and-maps"><a class="anchor" href="#scopes-and-maps"></a><a class="link" href="#scopes-and-maps">3.7.2. Scopes and maps</a></h4>
+<h4 id="scopes-and-maps"><a class="anchor" href="#scopes-and-maps"></a><a class="link" href="#scopes-and-maps">3.8.2. Scopes and maps</a></h4>
 <div class="paragraph">
 <p>A list of declarations, similar to the kind that is used in
 <a href="#closures">closures</a>, is called a <em>map</em> and evaluates as itself. One
@@ -5812,7 +6249,7 @@ result, <code>IO.write</code> will refer to the declaration in the module.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="current-context"><a class="anchor" href="#current-context"></a><a class="link" href="#current-context">3.7.3. Current context</a></h4>
+<h4 id="current-context"><a class="anchor" href="#current-context"></a><a class="link" href="#current-context">3.8.3. Current context</a></h4>
 <div class="paragraph">
 <p>The <code>context</code> variable can be used to access the current scope at any
 point of the program. This can be used in particular to pass the
@@ -5849,7 +6286,7 @@ safe way remains to be validated.
 </div>
 </div>
 <div class="sect3">
-<h4 id="enclosing-context"><a class="anchor" href="#enclosing-context"></a><a class="link" href="#enclosing-context">3.7.4. Enclosing context</a></h4>
+<h4 id="enclosing-context"><a class="anchor" href="#enclosing-context"></a><a class="link" href="#enclosing-context">3.8.4. Enclosing context</a></h4>
 <div class="paragraph">
 <p>In a given context, <code>super</code> is a way to refer to the enclosing scope.</p>
 </div>
@@ -5876,7 +6313,7 @@ declaration for <code>X</code>. In general, however, it is more advisable to use
 </div>
 </div>
 <div class="sect3">
-<h4 id="static-context"><a class="anchor" href="#static-context"></a><a class="link" href="#static-context">3.7.5. Static context</a></h4>
+<h4 id="static-context"><a class="anchor" href="#static-context"></a><a class="link" href="#static-context">3.8.5. Static context</a></h4>
 <div class="paragraph">
 <p>THe <code>static</code> name can be used to refer to a context that is specific
 to the current scope, but remains from one evaluation of that scope to
@@ -5884,39 +6321,33 @@ the next.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
-foo is
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">foo is
    static.{ Counter : natural := 0 }
    static.Counter := static.Counter + 1
-   X + static.Counter</code></pre>
+   X + static.Counter
+
+for I in 1..5 loop
+    print "foo = ", foo    // Prints 1, 2, 3, 4, 5</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>for I in 1..5 loop
-    print "foo = ", foo    // Prints 1, 2, 3, 4, 5
----</p>
-</div>
-<div class="paragraph">
-<p>The <code>static</code> type modifier creates types that store their values in
-the static context. The above code can be written as:</p>
+<p>The <code>static</code> sugar for declarations creates types that store their
+values in the static context. The above code can be written as:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
-foo is
-   Counter : static natural := 0 }
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">foo is
+   static Counter : natural := 0
    Counter := Counter + 1
-   X + Counter</code></pre>
+   X + Counter
+
+for I in 1..5 loop
+    print "foo = ", foo    // Prints 1, 2, 3, 4, 5</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>for I in 1..5 loop
-    print "foo = ", foo    // Prints 1, 2, 3, 4, 5
----</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="global-context"><a class="anchor" href="#global-context"></a><a class="link" href="#global-context">3.7.6. Global context</a></h4>
+<h4 id="global-context"><a class="anchor" href="#global-context"></a><a class="link" href="#global-context">3.8.6. Global context</a></h4>
 <div class="paragraph">
 <p>The <code>global</code> name can be used to refer to the global context, which is
 a special static context shared by all modules and all scopes in the
@@ -5924,15 +6355,12 @@ system.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
-// Access the C errno variable
-global.{ errno as integer is C.errno }</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Access the C errno variable
+global.{ errno as integer is C.errno }
+
+if some_C_function() &lt; 0 then
+    print "Function failed with errno=", global.errno</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>if some_C_function() &lt; 0 then
-    print "Function failed with errno=", global.errno
----</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -5951,7 +6379,7 @@ easy to create global variables.
 </div>
 </div>
 <div class="sect3">
-<h4 id="thread-context"><a class="anchor" href="#thread-context"></a><a class="link" href="#thread-context">3.7.7. Thread context</a></h4>
+<h4 id="thread-context"><a class="anchor" href="#thread-context"></a><a class="link" href="#thread-context">3.8.7. Thread context</a></h4>
 <div class="paragraph">
 <p>The <code>thread</code> name can be used to refer to a per-thread global
 context. Like the <code>static</code> context, the <code>thread</code> context is local to
@@ -5959,8 +6387,7 @@ the current scope.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">---
-// Process next-item
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Process next-item
 thread.{ work_items as list of tasks }
 global.{ work_items as list of tasks;
 next_work_item as [work_item or nil] is
@@ -5971,8 +6398,7 @@ next_work_item as [work_item or nil] is
            if not global.work_items.empty then
                pop global.work_items
            else
-               nil
----</code></pre>
+               nil</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -5991,7 +6417,7 @@ scope. If so, it could be called <code>thread.global</code>.
 </div>
 </div>
 <div class="sect2">
-<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.8. Error handling</a></h3>
+<h3 id="error-handling"><a class="anchor" href="#error-handling"></a><a class="link" href="#error-handling">3.9. Error handling</a></h3>
 <div class="paragraph">
 <p>Code that fails will generally report it by returning an <code>error</code> value.
 Error values have the <a href="#errors"><code>error</code> type</a>. For
@@ -6056,7 +6482,7 @@ errors without cluttering your code with error checking conditions.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.8.1. Taking error parameters</a></h4>
+<h4 id="taking-error-parameters"><a class="anchor" href="#taking-error-parameters"></a><a class="link" href="#taking-error-parameters">3.9.1. Taking error parameters</a></h4>
 <div class="paragraph">
 <p>The simplest way to handle errors is to have a variant of the function
 that takes an <code>error</code> as an argument. For example, you could extend your
@@ -6095,7 +6521,7 @@ functions will print the associated error message.
 </div>
 </div>
 <div class="sect3">
-<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.8.2. Fallible types</a></h4>
+<h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.9.2. Fallible types</a></h4>
 <div class="paragraph">
 <p>Another way to handle errors is to use <code>mayfail T</code> types, which hold
 either a <code>T</code> or an <code>error</code>. The <code>mayfail</code> type (without a type
@@ -6140,7 +6566,7 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.8.3. Try-Catch</a></h4>
+<h4 id="try-catch"><a class="anchor" href="#try-catch"></a><a class="link" href="#try-catch">3.9.3. Try-Catch</a></h4>
 <div class="paragraph">
 <p>A third way to handle errors is to use a <code>try Body catch Handler</code> form,
 which evaluates <code>Body</code>, and if <code>Body</code> returns an <code>error</code>, evaluates
@@ -6182,7 +6608,7 @@ always an <code>error</code> value being returned, not an exception being thrown
 </div>
 </div>
 <div class="sect3">
-<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.8.4. Error statements</a></h4>
+<h4 id="error-statements"><a class="anchor" href="#error-statements"></a><a class="link" href="#error-statements">3.9.4. Error statements</a></h4>
 <div class="paragraph">
 <p>If a statement, assignment or declaration returns an <code>error</code>, then as a
 special evaluation rule, that any <code>error</code> value is immediately returned by
@@ -6285,7 +6711,7 @@ dynamically allocates an object from the heap.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.9. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
+<h3 id="interface-and-implementation"><a class="anchor" href="#interface-and-implementation"></a><a class="link" href="#interface-and-implementation">3.10. <a id="interface"></a><a id="implementation"></a>Interface and implementation</a></h3>
 <div class="paragraph">
 <p>XL provides strong <em>encapsulation</em> by allowing a programmer to hide
 irrelevant details of an implementation. This is fundamental to provide
@@ -6406,22 +6832,22 @@ can be selected during evaluation. For example, knowing that <code>A</code> is a
 <div class="paragraph">
 <p>In XL, types are based on the <em>shape</em> of <a href="#the-xl-parse-tree">parse trees</a>.
 A type identifies the tree patterns that belong to the type. The
-expression <code>type(Pattern)</code> returns the type for the given type
+expression <code>matching Pattern</code> returns a type that matches the given type
 declaration pattern.  For example, the type for all additions where
-the first value is a <code>real</code> is <code>type(A:real+B)</code>.</p>
+the first value is a <code>real</code> is <code>matching(A:real+B)</code>.</p>
 </div>
 <div class="paragraph">
-<p>This approach to typing means in particular that a same value can belong
-to <em>multiple</em> types. For example, the expression <code>2+3*5</code> belongs to
-<code>type(A+B*C)</code>, but also to <code>type(A:integer+B:integer)</code>, or to <code>infix</code>.
-Therefore, for XL, you shouldn’t talk about <em>the</em> type of a value, but
-rather about <em>a</em> type. However, in the presence of a type annotation, it
-is customary to talk about <em>the type</em> to denote the single type
-indicated by the annotation. For example, for <code>X:integer</code>, we will
-ordinarily refer to the type of <code>X</code> as being <code>integer</code>, although the
-value of <code>X</code>, for example <code>2</code>, may also belong to other types such as
-<code>even_integer</code> or <code>positive_integer</code> or <code>type(2)</code>, a type that only
-contains the value <code>2</code>.</p>
+<p>This approach to typing means in particular that a same value can
+belong to <em>multiple</em> types. For example, the expression <code>2+3*5</code>
+belongs to <code>matching(A+B*C)</code>, but also to <code>matching(A:integer+B:integer)</code>,
+or to <code>infix</code>.  Therefore, for XL, you shouldn’t talk about <em>the</em> type
+of a value, but rather about <em>a</em> type. However, in the presence of a
+type annotation, it is customary to talk about <em>the type</em> to denote
+the single type indicated by the annotation. For example, for
+<code>X:integer</code>, we will ordinarily refer to the type of <code>X</code> as being
+<code>integer</code>, although the value of <code>X</code>, for example <code>2</code>, may also belong
+to other types such as <code>even_integer</code> or <code>positive_integer</code> or
+<code>matching(2)</code>, a type that only contains the value <code>2</code>.</p>
 </div>
 <div class="sect2">
 <h3 id="type-annotations-2"><a class="anchor" href="#type-annotations-2"></a><a class="link" href="#type-annotations-2">4.1. Type annotations</a></h3>
@@ -6481,7 +6907,7 @@ that for explicit conversions.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>distance is type distance(D:real)
+<pre>distance is matching distance(D:real)
 X:distance + Y:distance as distance     is distance(X.D+Y.D)</pre>
 </div>
 </div>
@@ -6498,7 +6924,7 @@ Mm : long_distance := long_distance 1_000_000.0</pre>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>long_distance as some distance is type distance(D:real) when D &gt; 1000.0
+<pre>long_distance as some distance is matching distance(D:real) when D &gt; 1000.0
 Z := long_distance(3.3)</pre>
 </div>
 </div>
@@ -6572,7 +6998,7 @@ following pattern-based definition:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>int is type(base:integer)</pre>
+<pre>int is matching(base:integer)</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6586,19 +7012,19 @@ original type.</p>
 </table>
 </div>
 <div class="paragraph">
-<p>More interesting types can be defined using the <code>type</code> function, which
+<p>More interesting types can be defined using the <code>matching</code> function, which
 takes a pattern as an argument, and returns a type that
-<a href="#pattern-matching">matches that pattern</a>. The expression <code>type(42)</code>
+<a href="#pattern-matching">matches that pattern</a>. The expression <code>matching(42)</code>
 returns a type that only matches the value <code>42</code>.</p>
 </div>
 <div class="paragraph">
-<p>The <code>type</code> function can obviously be used to create much more
+<p>The <code>matching</code> function can obviously be used to create much more
 interesting types. In order to create a <code>positive</code> type that only
 matches positive values, one only needs the following code:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>positive is type(X when X &gt; 0)</pre>
+<pre>positive is matching(X when X &gt; 0)</pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -6630,7 +7056,7 @@ created and used as shown in the following code:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex is type complex(Re:real, Im:real)
+<pre>complex is matching complex(Re:real, Im:real)
 Z:complex := complex(4.3, 2.1)</pre>
 </div>
 </div>
@@ -6639,6 +7065,15 @@ Z:complex := complex(4.3, 2.1)</pre>
 <code>complex</code> if and only if it matches the pattern <code>complex(Re:real, Im:real)</code>.
 In particular, it matches the value <code>complex(4.3, 2.1)</code>, which makes
 the assignment on the second line of code possible.</p>
+</div>
+<div class="paragraph">
+<p>Since they are quite frequent, there is a
+<a href="#syntactic-sugar">syntactic sugar</a> for this kind of declarations:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>type complex matches complex(Re:real, Im:real)</pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -6651,8 +7086,8 @@ argument, instead of assuming the standard <code>real</code> type:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex[real:type] is type complex(Re:real, Im:real)
-complex is complex[real]
+<pre>type complex[real:type] is matching complex(Re:real, Im:real)
+type complex is complex[real]
 Z:complex := complex(4.3, 2.1)
 K:complex[real32] := complex(1.2, 3.4)</pre>
 </div>
@@ -6755,8 +7190,8 @@ and is somewhat closer to the actual implementation in
 <div class="literalblock">
 <div class="content">
 <pre>complex[real:type]      is real or polar[real] or cartesian[real]
-cartesian[real:type]    is type cartesian(Re:real, Im:real)
-polar[real:type]        is type polar(Mod:real, Arg:real)
+cartesian[real:type]    is matching cartesian(Re:real, Im:real)
+polar[real:type]        is matching polar(Mod:real, Arg:real)
 
 with
     real : some number
@@ -6784,9 +7219,9 @@ XL, you can describe a type like this as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>header  is type header (byte_count:size)
-payload[byte_count:size] is array[byte_count] of byte
-packet is type packet
+<pre>type header is matching header (byte_count:size)
+type payload[byte_count:size] is array[byte_count] of byte
+type packet is matching packet
     header  : header
     payload : payload[header.byte_count]</pre>
 </div>
@@ -6844,7 +7279,7 @@ arithmetic. This might look something like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex is type complex(Re:real, Im:real)
+<pre>type complex is matching complex(Re:real, Im:real)
 Z1:complex + Z2:complex as complex is ...
 Z1:complex - Z2:complex as complex is ...
 Z1:complex * Z2:complex as complex is ...
@@ -6861,7 +7296,7 @@ being used. The above examples could then be written as:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex is type complex(Re:real, Im:real)
+<pre>type complex is matching complex(Re:real, Im:real)
 with
     Z1 : complex
     Z2 : complex
@@ -7239,16 +7674,16 @@ array. Its body can be written so as to not really depend on the type
 or number of elements.</p>
 </div>
 <div class="paragraph">
-<p>In order to makea it easier to write such generic code, XL programmers
+<p>In order to make it easier to write such generic code, XL programmers
 can take advantage of a feature called <em>true generic type</em>, which
 is a way to define a type that will accept any variant of some
-underlying generic type. It is customary to begin the name of such
-types with <code>some_</code>, in order to indicate the intent. For example, for
-<code>array</code>, one could write the true generic type as follows:</p>
+underlying generic type. It is customary to use a name that easily
+relates to the generic type. For example, one can define a true
+generic type named <code>array</code> that covers all array types as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>some_array is type (array[index:array_index] of value:type)</pre>
+<pre>type array is matching (array[index:array_index] of value:type)</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7257,7 +7692,7 @@ types with <code>some_</code>, in order to indicate the intent. For example, for
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>sum A:some_array as A.value is
+<pre>sum(A:array) as A.value is
     result := 0
     for I in A loop
         result += I</pre>
@@ -7266,16 +7701,18 @@ types with <code>some_</code>, in order to indicate the intent. For example, for
 <div class="paragraph">
 <p>It is possible for the pattern of the true generic type to be somewhat
 more restrictive. For example, for a <code>complex</code> type, one might want to
-create a type that only accepts numbers for the <code>real</code> type, in other
-words something like:</p>
+create a type that only accepts numbers for the <code>real</code> type. The type
+<code>some T</code> describes all types that derive from <code>T</code>, so that the true
+generic type for <code>complex</code> can be defined with something like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>some_complex is type complex[real:some number]</pre>
+<pre>complex is matching complex[real:some number]</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>A type constructed like this is called a <em>constrained generic type</em>.</p>
+<p>A true generic type with constraints like in the above example is
+called a <em>constrained generic type</em>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -7967,7 +8404,7 @@ example, we defined a <code>complex</code> type as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">complex is type complex(Re:real, Im:real)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type complex is matching complex(Re:real, Im:real)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8020,7 +8457,7 @@ constructor is illustrated by the following code:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>large is type (N when N &gt; 42)
+<pre>type large is matching (N when N &gt; 42)
 A:large := 44   // OK
 B:large := 99.1 // OK
 C:large         // Error
@@ -8045,7 +8482,7 @@ the <code>create</code> function:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>large is type (N when N &gt; 42)
+<pre>large is matching (N when N &gt; 42)
 C:large         // OK
 create V:out large is
     print "Creator called"
@@ -8067,7 +8504,7 @@ based on Unix-style file descriptors:</p>
     close F:io file
 
 MY_FILE as module is
-    file is type file(fd:integer)
+    type file is matching file(fd:integer)
     open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
@@ -8179,7 +8616,7 @@ declarations:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>positive is type (N when N &gt; 0)
+<pre>type positive is matching (N when N &gt; 0)
 integers is string of integer
 N:integers &gt; 0 as boolean is
     for I in N loop
@@ -8217,7 +8654,7 @@ type and <code>delete</code> operations above is really equivalent to the follow
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>integers is type(base:string of integer)
+<pre>type integers is matching(base:string of integer)
 
 delete P:inout positive is
     print "Deleting positive: ", P
@@ -8888,33 +9325,34 @@ argument, i.e. it would accept <code>complex[3.5]</code> but not <code>complex[r
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>some_complex is type complex[real:number]</pre>
+<pre>type complex is matching complex[real:number] // WRONG</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To denote a type that derives from a base type, one can use the <code>some
-base</code> notation. The correct way to implement the above restriction is
-as follows, which indicates that the argument is a type, not a value,
-and that the type must derive from <code>number</code>:</p>
+<p>To denote a type that derives from a base type, one can use the
+<code>derived like base</code> notation. The correct way to implement the above
+restriction is as follows, which indicates that the argument is a
+type, not a value, and that the type must derive from <code>number</code>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>some_complex is type complex[real:some number]</pre>
+<pre>type complex is matching complex[real:type like number]</pre>
 </div>
 </div>
 <div class="paragraph">
 <p>The precedence of <code>like</code> is lower than that of <code>:</code>, so that the above
 really parses as <code>(real:type) like number</code>. The <code>like</code> operator can be
 applied to specify inheritance at any place in a declaration, and
-notably in scopes. For example, you can indicate that the <code>complex</code>
-type itself inherits from <code>arithmetic</code> (providing arithmetic
-operations) as well as from <code>compact</code> (using a contiguous memory
-range) as follows:</p>
+notably in scopes. An alternate spelling for <code>like</code> is <code>inherits</code>,
+which is generally more readable in global scope. For example, you can
+indicate that the <code>complex</code> type itself inherits from <code>arithmetic</code>
+(providing arithmetic operations) as well as from <code>compact</code> (using a
+contiguous memory range) as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>complex         like arithmetic
-complex         like compact</pre>
+<pre>type complex inherits arithmetic
+type complex inherits compact</pre>
 </div>
 </div>
 </div>
@@ -8935,7 +9373,7 @@ that matches only <code>integer</code> values between <code>1</code> and <code>1
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">month is type(M:integer when M &gt;= 1 and M &lt;= 12)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type month is matching(M:integer when M &gt;= 1 and M &lt;= 12)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8951,7 +9389,7 @@ for it. For any type with an order, subtypes can be created with the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">T:type range Low:T..High:T      is type(X:T when X in Low..High)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">T:type range Low:T..High:T      is matching(X:T when X in Low..High)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8959,7 +9397,7 @@ for it. For any type with an order, subtypes can be created with the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">month is integer range 1..12</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type month is integer range 1..12</code></pre>
 </div>
 </div>
 </div>
@@ -8975,7 +9413,7 @@ specified number of bits. It applies to <code>real</code>, <code>integer</code> 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">i8 is integer bits 8</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type i8 is integer bits 8</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9084,7 +9522,7 @@ internally by an <code>natural</code> values between <code>0</code> and <code>10
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">hundredth is real range 0.0..1.0 quantum 0.01</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type hundredth is real range 0.0..1.0 quantum 0.01</code></pre>
 </div>
 </div>
 </div>
@@ -9102,7 +9540,7 @@ and <code>1.0</code> and saturates can be defined as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>color_component is saturating real range 0.0..1.0 bits 16
+<pre>type color_component is saturating real range 0.0..1.0 bits 16
 Red : color_component := 0.5
 Red += 0.75             // Red is now 1.0</pre>
 </div>
@@ -9237,7 +9675,7 @@ this interface, one might argue that the fact that <code>pixels</code> is a
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture with
     width  : size
     height : size
     pixels : buffer[area] of byte
@@ -9250,7 +9688,7 @@ character</code> with additional features:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">text as some string of character with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type text like [string of character] with
     byte_count as size                  // Number of bytes used by characters
     as_number[T:some number] as T       // Numerical conversion</code></pre>
 </div>
@@ -9273,7 +9711,7 @@ type, a tag type can only match values that were <em>tagged</em> with the
 same type using some explicit type annotation.</p>
 </div>
 <div class="paragraph">
-<p>In partticular, knowing only the interface of a type does not allow
+<p>In particular, knowing only the interface of a type does not allow
 values of the type to be <a href="#creation">created</a>. It is sometimes
 useful or desirable to preclude the creation of values of the type,
 for example when creating <a href="#true-generic-types">true generic types</a>.
@@ -9337,7 +9775,7 @@ look like:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>picture is type picture
+<pre>type picture is matching picture
     pixels : buffer[area] of u8
     width  : size
     height : size</pre>
@@ -9488,11 +9926,11 @@ representation:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>bitmap as type with
+<pre>type bitmap with
     width  : u16
     height : u16
     buf    : array[width, height] of u8
-picture as type picture
+type picture is matching picture
     bits:bitmap</pre>
 </div>
 </div>
@@ -9504,7 +9942,7 @@ and <code>height</code> fields seems relatively straightforward:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is matching picture
     bits:bitmap
 
     width  is bits.width
@@ -9530,7 +9968,7 @@ this operation. The following for example does not work:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is matching picture
     bits:bitmap
 
     width  is bits.width
@@ -9556,7 +9994,7 @@ code like:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is matching picture
     bits:bitmap
 
     width  is bits.width
@@ -9576,7 +10014,7 @@ type can be correctly written as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is matching picture
     bits:bitmap
 
     width as attribute[size] is attribute
@@ -9632,7 +10070,7 @@ bad input and just print some run-time error.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture is type picture
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture is matching picture
     bits:bitmap
 
     width as attribute[size] is
@@ -9655,7 +10093,7 @@ error in the interface, for example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture with
     width  : mayfail size
     height : mayfail size
     pixels : buffer[area] of byte
@@ -9669,9 +10107,9 @@ input. A better interface would be to expose the attribute nature of
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
-    width  as attribute[size]
-    height as attribute[size]
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture with
+    width  as attribute size
+    height as attribute size
     pixels : buffer[area] of byte
     area as size</code></pre>
 </div>
@@ -9682,7 +10120,7 @@ interface that does not lie about the underlying values:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">picture as type with
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">tyep picture with
     width  : u16
     height : u16
     pixels : buffer[area] of byte
@@ -9864,7 +10302,7 @@ interface, where either a depth or a <code>node_filter</code> :</p>
 <div class="content">
 <pre>copy(Source:tree, Depth:count) as mayfail T
 copy(Source:tree, Keep:node_filter) as mayfail T
-node_filter is type(N:node as boolean)</pre>
+type node_filter is matching(N:node as boolean)</pre>
 </div>
 </div>
 </div>
@@ -10265,7 +10703,7 @@ of derived types using the syntax for types we already saw would be:</p>
 <div class="literalblock">
 <div class="content">
 <pre>// Base class
-shape as type with
+type shape with
     draw         as mayfail                     // Draw the shape
     fill_color   as attribute color             // Color of the fill
     stroke_color as attribute color             // Color of the stroke
@@ -10961,7 +11399,7 @@ being considered. For example:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// complex is type complex(Re:real, Im:real)
+<pre>// type complex is matching complex(Re:real, Im:real)
 typedef struct `complex` { `real` Re; `real` Im; } complex_t;
 
 // Z : complex := complex(1.2, 3.4)
@@ -10986,7 +11424,7 @@ using this kind of type.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// distance is type distance(meters:real)
+<pre>// type distance is matching distance(meters:real)
 typedef `real` distance_t;    // Probably a double
 
 // D1:distance + D2:distance is distance(D1.meters + D2.meters)
@@ -11005,7 +11443,7 @@ will generally be the normal form for <a href="#closures">closures</a>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// if_statement is type { if Condition then TrueClause else FalseClause }
+<pre>// type if_statement is matching { if Condition then TrueClause else FalseClause }
 struct `if_statement`
 {
     `P.tree` *Condition;
@@ -11138,7 +11576,7 @@ be implemented as a structure that derives from <code>struct `type`</code>.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// shape_t as type with
+<pre>// type shape_t with
 //    draw         as mayfail
 //    width        : coordinate
 
@@ -11167,7 +11605,7 @@ code using it:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// shape_t is type shape
+<pre>// type shape_t is matching shape
 //    draw is logic_error "Drawing a base shape"
 //    width : coordinate
 struct `shape`
@@ -11269,7 +11707,7 @@ place of the attribute:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// shape_t is type shape
+<pre>// type shape_t is matching shape
 //    width as attribute coordinate is
 //        attribute_width : some_other_integer
 //        get   is attribute_width / 2
@@ -11377,7 +11815,7 @@ having a variable size.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>// header  is type header (byte_count:size)
+<pre>// type header is matching header (byte_count:size)
 typedef size_t `header`;
 size_t `size` (`header` *value) { return sizeof(`header`); }
 
@@ -12739,7 +13177,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-03 12:27:25 +0100
+Last updated 2020-02-04 09:06:45 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

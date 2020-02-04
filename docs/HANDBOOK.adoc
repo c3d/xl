@@ -350,9 +350,9 @@ loop Body       is      { Body; loop Body }     // Define an infnite loop
 ====
 [source]
 ----
-complex         is      polar or cartesian
-cartesian       is      type cartesian(re:number, im:number)
-polar           is      type polar(mod:number, arg:number)
+complex         is polar or cartesian
+cartesian       is matching cartesian(re:number, im:number)
+polar           is matching polar(mod:number, arg:number)
 ----
 
 NOTE: link:#types[((type))s] in XL indicate the shape of ((parse tree))s. In
@@ -438,10 +438,10 @@ contiguous integers.
 [source]
 ----
 // An (inefficient) implementation of a generic 1-based array type
-array[1] of T is type
+array[1] of T is record
     Value : T
     1 is Value
-array[N] of T when N > 1 is type
+array[N] of T when N > 1 is record
     Head  : array[N-1] of T
     Tail  : T
     lambda I when I<N is Head[I]
@@ -1871,11 +1871,11 @@ Executing an XL program is the result of three phases,
 
 [arabic]
 . A link:#parsing-phase[parsing phase] where program source text is
-converted to a parse tree,
+  converted to a parse tree,
 . A link:#declaration-phase[declaration phase], where all declarations
-are stored in the context,
+  are stored in the context,
 . An link:#evaluation-phase[evaluation phase], where statements other
-than declarations are processed in order.
+  than declarations are processed in order.
 
 The execution phases are designed so that in a very large number of
 cases, it is at least conceptually possible to do both the parsing and
@@ -2284,6 +2284,341 @@ the converted value in a platform-dependent way:
 X:integer as real when X >= -2^53 and X < 2^53 is ...
 ----
 
+=== Syntactic sugar
+
+A number of special forms can be used to make declaration or
+definition easier to read, write or validate. This is called
+_((syntactic sugar))_. The primary intent of syntactic sugar is to
+help the programmer understand what the code means. However, syntactic
+sugar also gives additional hints to the compiler, and may suggest one
+implementation over another. Syntactic sugar is specified by reference
+to a functionally equivalent _raw_ version of the same code.
+
+A few names are reserved for use as syntactic sugar prefix. These
+names have a very low precedence, and as a result do not significantly
+impact the syntax of the pattern of the declaration they apply to.
+These sugar names are `type`, `class`, `module`, `function`, `method`,
+`procedure`, `to`, `operation`, `data`, `constant`, `variable`,
+`macro`, `generic`, `polymorphic`, `fast`, `small`, `global`, `thread`
+and `static`. Proper use of these names also makes textual search of
+the declarations or definitions easier.
+
+The rest of this document will preferably use the sugared form.
+
+CAUTION: The evaluation rules are never changed by using syntactic
+sugar. The result of evaluation with or without syntactic sugar should
+be identical. Syntactic sugar may guide the implementation in picking
+the best implementation to achieve that result. It may also allow the
+implementation to emit more precise diagnostics.
+
+==== Types sugar
+
+The `type` prefix can be used to announce a type, which implicitly
+indicates that the form has the `type` type:
+
+[source]
+----
+type pair[T:type] is matching pair(First:T, Second:T)           // Sugared
+pair[T:type] as type is matching pair(First:T, Second:T)        // Raw
+----
+
+There is also a syntactic sugar for the common case where the definition
+of the type is a `matching` form. In that case, `is matching` can be
+replaced with `matches`:
+
+[source]
+----
+type pair[T:type] matches pair(First:T, Second:T)               // Sugared
+pair[T:type] as type is matching pair(First:T, Second:T)        // Raw
+----
+
+This syntactic sugar also applies to the link:#interface[interface]
+of a type, including the definition of its features or of the types it
+inherits from:
+
+[source]
+----
+type pair[T:type] with                                          // Sugared
+   First  : T
+   Second : T
+pair[T:type] as type with                                       // Raw
+   First  : T
+   Second : T
+
+type rectangle like shape                                       // Sugared
+type rectangle inherits shape                                   // Sugared
+rectangle as type like shape                                    // Raw
+
+type point like shape with (X:coordinate; Y:coordinate)         // Sugared
+point as type like shape with (X:coordinate; Y:coordinate)      // Raw
+----
+
+Finally, the word `class` is a syntactic sugar for `type`, which can
+be used for type hierarchies intended to support
+link:#object-oriended-programming[object-oriended programming]:
+
+[source]
+----
+class circle inherits shape with
+   X       : coordinate
+   Y       : coordinate
+   Radius  : length
+----
+
+Using syntactic sugar for types gives the compiler additional hints
+that the form is intended to be used as a type in type
+annotations. This can be used by the compiler to:
+
+* Accelerate type lookup in type annotations, by focusing on types
+* Treat the form as a compile-time constant
+* Use the form at compile-time for type analysis
+* Emit more precise diagnostics
+
+
+==== Modules sugar
+
+The syntactic sugar for link:#modules[modules] is very similar in its
+syntax to that of types:
+
+[source]
+----
+module M with Interface                 // Sugared
+M as module with Interface              // Raw
+
+module M is Implementation              // Sugared
+M as module is Implementation           // Raw
+----
+
+The `module` syntactic sugar gives hints to the compiler that the
+declaration is used as a module. The compiler can use that information
+to:
+
+* Accelerate module lookup and build dependencies
+* Validate module version numbers
+* Verify ABI stability and compatibility
+* Optimize the code for use in a shared library
+* Emit better diagnostics
+
+
+==== Sugar for code and data
+
+Some syntactic sugar can be used to indicate if a form is a `procedure`,
+a `method`, a `function`, an `operation` or if it represents
+`data`, a `property` or an `attribute`. Like other kinds of syntactic
+sugar, the primary intent is to make the code easier to read.
+
+[source]
+----
+// Interface
+procedure Initialization
+to Reset(Devices:devices)
+function Sin(X:real) as real
+method Width(S:shape) as length // aka S.width
+type shape with
+    method Height as length
+    property Foreground : color
+    attribute Background : color
+operation Value in Low..High as boolean
+data X, Y as infix
+
+// Implementation
+procedure Initialization is { Zero Memory; Reset AllDevices }
+to Reset(Devices:devices) is { for D in Devices loop Reset D }
+function Sin(X:real) as real is Cos(pi/2 - X)
+method Width(S:shape) as length is S.right - S.left // aka S.Width
+type shape is
+    method Height as length is top - bottom
+    property Foreground : color
+    bg : color
+    attribute Background : color is
+        get   is bg
+        set C is bg := C
+operation Value in Low..High as boolean is Value >= Low and Value <= High
+data X, Y as infix is self
+----
+
+While these sugared forms are optional, they may make the code more
+readable, shorter or more precise. In addition, they convey additional
+additional information to the compiler or to a person reading the code:
+
+* `procedure` is typically used for definitions that do not return a
+  value. If no result type is specified for the pattern, then `mayfail` is
+  implied (that is `nil or error`), and diagnostics will be emitted
+  accordingly. A result type can also be explicitly given. In that
+  case, using `procedure` is a hint to the compiler that the
+  implementation is expected to have side effects, as opposed to
+  `function`.
+
+* `to` is a shorter form of `procedure` that is normally used for
+  patterns that look like English verbs. For example, `procedure Write`
+  can be written as `to Write`.
+
+* `function` indicates that the operation behaves like a pure
+  mathematical function, i.e. it has no side effects and returns the
+  same value for identical inputs. This allows the compiler to explore
+  additional optimizations, and emit additional diagnostics if the
+  implementation has side effects.
+
+* `method` indicates that the pattern applies to an object, its first
+  formal parameter, and for prefix methods, it provides a dot notation
+  `Object.Method` for calling the method.  For example, the `Width` method
+  defined above can also be invoked as `S.Width`.
+
+* `property` and `attribute` are shorthand ways to specify
+  link:#attribute[attribute] features in a type, i.e. features that
+  behave like a field, but can be implemented in a different way. The
+  language does not make a distinction between attributes and
+  properties, but a special project may give them different meaning,
+  for example in a drawing program, that attributes have a
+  user-visible interface whereas properties are internal values.
+
+* `operation` is a marker when reading the code for special notations.
+  It is intended to draw the attention of the reader on some special
+  form that he may not be used to.
+
+* `data` is a marker indicating that the notation is used primarily
+  for data. For example, the notation `data X,Y` indicates that there
+  is no actual operation associated to the `,` infix operator,
+  i.e. that `1,3,5,8,4` should be representable using only data as
+  opposed to code. The implementation of a `data` normally uses
+  link:#self[`self`].
+
+==== Implementations hints
+
+Prefix names such as `constant`, `variable`, `macro`, `generic`,
+`polymorphic`, `fast` and `small` tell the compiler what is the intended
+usage for the definition. They may guide the compiler into favoring
+one possible implementation over another.
+
+For example, consider a parameter-less name like `seconds`. This could
+be a variable holding a duration in seconds, a constant indicating the
+number of seconds in an hour, an operation that returns the seconds in
+the current time, or a function that computes the number of seconds
+our universe will last, which is a very lengthy computation that
+always returns the same value. This would best be indicated by
+using different syntactic sugar for the declaration of `seconds`:
+
+....
+variable  seconds as natural    // Variable storing a duration in seconds
+constant  seconds as natural    // Number of seconds in an hour
+operation seconds as natural    // Seconds in the current time
+function  seconds as natural    // Estimate number of seconds in the universe
+....
+
+The meaning of these words is intended as follows, and a compiler is
+free to emit a diagnostic if one of the conditions is not met:
+
+* `constant` indicates that the declaration should be implementable as a
+  compile-time constant that can be stored in a read-only area of memory.
+
+* `variable` indicates that the declaration should be implementable
+  as a variable in a writable area of memory.
+
+* `macro` indicates that the declaration should be implemented using
+  compile-time manipulations of parse tree arguments, and that the
+  compiler should not spend too much time trying to analyze the type
+  of the parameters while processing the definition.
+
+* `generic` indicates that the declaration is intended to be
+  parameterized at compile-time, in order to generate multiple
+  _((instantiation))s_, and that type analysis on each instantiation
+  at compile-time will provide valuable information.
+
+* `polymorphic` indicates that the declaration is intended to be
+  parameterized at run-time, and that a single implementation should
+  be generated that can deal with a multiplicity of types using
+  dynamic dispatch.
+
+* `fast` indicates that the declaration should be optimized for speed,
+  even at the expense of compilation time or code size. For example, a
+  call to that declaration could be inlined.
+
+* `small` indicates that the declaration should be optimized for size,
+  even at the expense of execution time. For example, data could be
+  packed and call inlining could be disabled.
+
+In order to see the effect that these modifiers may have, we can
+consider code that simply adds a value to itself, and see what {cpp}
+feature this may be related to:
+
+....
+// Compile-time constant: constexpr
+constant twice(X) is X + X
+
+// Variable at run-time: function pointer
+variable twice(X) is X + X
+
+// Source code transformation: #define
+macro twice(X) is X + X
+
+// Instantiation based on arguments: template
+generic twice(X) is X + X
+
+// Dynamic dispatch at run-time: virtual functions
+polymorphic twice(X) is X + X
+
+// Optimize for speed: inline
+fast twice(X) is X + X
+
+// Optimize for size: pragmas, command-line options
+small twice(X) is X + X
+....
+
+
+==== Storage hints
+
+Three forms of syntactic sugar provide _((storage hints))_:
+
+* `global` indicates that a definition belongs to a shared
+  link:#global-context[global context].
+* `static` indicates that a definition belongs to a
+  link:#static-context[static context] that keeps its content between
+  successive evaluations.
+* `thread` indicates that a definition belongs to a
+  link:#thread-context[thread context] that is associated to each
+  thread of execution.
+
+In the following example, `Counter` keeps its value from one
+evaluation of `EvaluationCounter` to the next, but is not visible to
+any entity outside of `EvaluationCounter`:
+
+[source]
+----
+operation EvaluationCounter as natural is               // Sugared
+    static Counter : natural := 0
+    Counter++
+EvaluationCounter as natural is                         // Raw
+    static.{ Counter : natural := 0 }
+    static.Counter++
+----
+
+==== Alternate notations
+
+In some cases, it may be useful to provide several notations for the
+same things. The `written` infix form can be used to specify
+additional patterns for the same implementation. This may increase
+readability, or help deal with properties such as commutativity.
+
+For example, the following defines an iterative `Factorial` function,
+which gives the operation a name, while also providing the familiar
+`N!` notation for it:
+
+[source]
+----
+function Factorial(N:natural) as natural written N! is
+    result := 1
+    for I in 1..N loop
+        result *= I
+----
+
+The following code provides a fused multiply-add operation that is
+recognized whether the multiplication is on the left or on the right:
+
+[source]
+----
+function FMA(X:number, Y:number, Z:number) as number written X+Y*Z written Y*Z+X
+----
+
 === [[pattern]]Pattern matching
 
 As we have seen above, the key to execution in XL is _pattern matching_,
@@ -2302,9 +2637,9 @@ This will match an expression like `log 1.25` because:
 
 [arabic]
 . `log 1.25` is a prefix with the name `log` on the left, just like the
-prefix in the pattern.
+  prefix in the pattern.
 . `1.25` matches the formal parameter `X` and has the expected `real`
-type, meaning that `1.25` matches the sub-pattern `X:real`.
+  type, meaning that `1.25` matches the sub-pattern `X:real`.
 . The condition `X > 0.0` is true with binding `X is 1.25`
 
 There are several kinds of patterns that will match different kinds of
@@ -2707,7 +3042,7 @@ parameters:
 
 [source]
 ----
-person is type person
+type person matches person
     first_name : text
     middle_name: text
     last_name  : text
@@ -2925,11 +3260,11 @@ selected over one that does require one. An example of use would be to
 provide two representations for the `i` complex constant:
 
 ....
-complex         is cartesian or polar
-cartesian       is type cartesian(Re, Im)
-polar           is type polar(Mod, Arg)
-i as cartesian  is cartesian(0,1)
-i as polar      is polar(1, pi/2)
+type complex            is cartesian or polar
+type cartesian          is matching cartesian(Re, Im)
+type polar              is matching polar(Mod, Arg)
+constant i as cartesian is cartesian(0,1)
+constant i as polar     is polar(1, pi/2)
 ....
 
 ==== Dynamic dispatch
@@ -3721,11 +4056,11 @@ There are two primary operations that apply to a map:
 
 [arabic]
 . _Applying_ a map(((map,application))) as a prefix to an operand, as
-we saw with closures, evaluates the operand in the context defined by
-overlaying the map definitions on top of the current context.
+  we saw with closures, evaluates the operand in the context defined by
+  overlaying the map definitions on top of the current context.
 . _Scoping_ an expression within a map uses the infix `.` operator,
-where the expression on the right is evaluated in a context that
-consists _exclusively_ of the declarations in the map on the left.
+  where the expression on the right is evaluated in a context that
+  consists _exclusively_ of the declarations in the map on the left.
 
 Evaluating a closure is a prime example of map application. The
 context is captured by the closure(((closure,capture))) in a map, and
@@ -3902,7 +4237,7 @@ to the current scope, but remains from one evaluation of that scope to
 the next.
 
 [source]
----
+----
 foo is
    static.{ Counter : natural := 0 }
    static.Counter := static.Counter + 1
@@ -3910,21 +4245,21 @@ foo is
 
 for I in 1..5 loop
     print "foo = ", foo    // Prints 1, 2, 3, 4, 5
----
+----
 
-The `static` type modifier creates types that store their values in
-the static context. The above code can be written as:
+The `static` sugar for declarations creates types that store their
+values in the static context. The above code can be written as:
 
 [source]
----
+----
 foo is
-   Counter : static natural := 0 }
+   static Counter : natural := 0
    Counter := Counter + 1
    X + Counter
 
 for I in 1..5 loop
     print "foo = ", foo    // Prints 1, 2, 3, 4, 5
----
+----
 
 
 ==== Global context
@@ -3934,13 +4269,13 @@ a special static context shared by all modules and all scopes in the
 system.
 
 [source]
----
+----
 // Access the C errno variable
 global.{ errno as integer is C.errno }
 
 if some_C_function() < 0 then
     print "Function failed with errno=", global.errno
----
+----
 
 NOTE: The `global` context is _not_ visible by default unlike in
 languages such as C or C++. One reason for this choice is that global
@@ -3955,7 +4290,7 @@ context. Like the `static` context, the `thread` context is local to
 the current scope.
 
 [source]
----
+----
 // Process next-item
 thread.{ work_items as list of tasks }
 global.{ work_items as list of tasks;
@@ -3968,7 +4303,7 @@ next_work_item as [work_item or nil] is
                pop global.work_items
            else
                nil
----
+----
 
 NOTE: It's unclear if there is a real need for a per-thread global
 scope. If so, it could be called `thread.global`.
@@ -4016,12 +4351,12 @@ Square root of -1 is Error: Square root of negative real -1.0
 There are multiple ways to handle errors:
 
 * link:#taking-error-parameters[Taking error parameters] lets you
-explicitly deal with errors, for example to show an error message.
+  explicitly deal with errors, for example to show an error message.
 * link:#fallible-types[Fallible types] deal with cases where you expect
-a value or an error.
+  a value or an error.
 * link:#try-catch[Try-Catch] will let you special-case error conditions.
 * link:#error-statements[Error statements] automatically propagate
-errors without cluttering your code with error checking conditions.
+  errors without cluttering your code with error checking conditions.
 
 ==== Taking error parameters
 
@@ -4286,21 +4621,21 @@ can be selected during ((evaluation)). For example, knowing that `A` is a
 
 In XL, types are based on the _shape_ of link:#the-xl-parse-tree[parse trees].
 A type identifies the tree patterns that belong to the type. The
-expression `type(Pattern)` returns the type for the given type
+expression `matching Pattern` returns a type that matches the given type
 declaration pattern.  For example, the type for all additions where
-the first value is a `real` is `type(A:real+B)`.
+the first value is a `real` is `matching(A:real+B)`.
 
-This approach to typing means in particular that a same value can belong
-to _multiple_ types. For example, the expression `2+3*5` belongs to
-`type(A+B*C)`, but also to `type(A:integer+B:integer)`, or to `infix`.
-Therefore, for XL, you shouldn’t talk about _the_ type of a value, but
-rather about _a_ type. However, in the presence of a type annotation, it
-is customary to talk about _the type_ to denote the single type
-indicated by the annotation. For example, for `X:integer`, we will
-ordinarily refer to the type of `X` as being `integer`, although the
-value of `X`, for example `2`, may also belong to other types such as
-`even_integer` or `positive_integer` or `type(2)`, a type that only
-contains the value `2`.
+This approach to typing means in particular that a same value can
+belong to _multiple_ types. For example, the expression `2+3*5`
+belongs to `matching(A+B*C)`, but also to `matching(A:integer+B:integer)`,
+or to `infix`.  Therefore, for XL, you shouldn’t talk about _the_ type
+of a value, but rather about _a_ type. However, in the presence of a
+type annotation, it is customary to talk about _the type_ to denote
+the single type indicated by the annotation. For example, for
+`X:integer`, we will ordinarily refer to the type of `X` as being
+`integer`, although the value of `X`, for example `2`, may also belong
+to other types such as `even_integer` or `positive_integer` or
+`matching(2)`, a type that only contains the value `2`.
 
 === Type annotations
 
@@ -4352,7 +4687,7 @@ expression. For example, if you provide a `distance` type based on
 that for explicit conversions.
 
 ....
-distance is type distance(D:real)
+distance is matching distance(D:real)
 X:distance + Y:distance as distance     is distance(X.D+Y.D)
 ....
 
@@ -4366,7 +4701,7 @@ Mm : long_distance := long_distance 1_000_000.0
 ....
 
 ....
-long_distance as some distance is type distance(D:real) when D > 1000.0
+long_distance as some distance is matching distance(D:real) when D > 1000.0
 Z := long_distance(3.3)
 ....
 
@@ -4423,7 +4758,7 @@ In reality, the above is really equivalent to deriving `int` from
 `integer`. in other words, the definition above is equivalent to the
 following pattern-based definition:
 ....
-int is type(base:integer)
+int is matching(base:integer)
 ....
 One reason this is important is to maintain some guarantees during
 link:#field-destruction[destruction], specifically make sure that
@@ -4432,17 +4767,17 @@ original type.
 ====
 
 
-More interesting types can be defined using the `type` function, which
+More interesting types can be defined using the `matching` function, which
 takes a pattern as an argument, and returns a type that
-link:#pattern-matching[matches that pattern]. The expression `type(42)`
+link:#pattern-matching[matches that pattern]. The expression `matching(42)`
 returns a type that only matches the value `42`.
 
-The `type` function can obviously be used to create much more
+The `matching` function can obviously be used to create much more
 interesting types. In order to create a `positive` type that only
 matches positive values, one only needs the following code:
 
 ....
-positive is type(X when X > 0)
+positive is matching(X when X > 0)
 ....
 
 NOTE: If you come from another language, it is important to realize
@@ -4462,7 +4797,7 @@ plays for C or `record` for Pascal. A `complex` data type can be
 created and used as shown in the following code:
 
 ....
-complex is type complex(Re:real, Im:real)
+complex is matching complex(Re:real, Im:real)
 Z:complex := complex(4.3, 2.1)
 ....
 
@@ -4470,6 +4805,13 @@ This definition of `complex` states that a value matches the type
 `complex` if and only if it matches the pattern `complex(Re:real, Im:real)`.
 In particular, it matches the value `complex(4.3, 2.1)`, which makes
 the assignment on the second line of code possible.
+
+Since they are quite frequent, there is a
+link:#syntactic-sugar[syntactic sugar] for this kind of declarations:
+
+....
+type complex matches complex(Re:real, Im:real)
+....
 
 === Type expressions
 
@@ -4479,8 +4821,8 @@ For example, the `complex` type might take the `real` type as an
 argument, instead of assuming the standard `real` type:
 
 ....
-complex[real:type] is type complex(Re:real, Im:real)
-complex is complex[real]
+type complex[real:type] is matching complex(Re:real, Im:real)
+type complex is complex[real]
 Z:complex := complex(4.3, 2.1)
 K:complex[real32] := complex(1.2, 3.4)
 ....
@@ -4561,8 +4903,8 @@ and is somewhat closer to the actual implementation in
 
 ....
 complex[real:type]      is real or polar[real] or cartesian[real]
-cartesian[real:type]    is type cartesian(Re:real, Im:real)
-polar[real:type]        is type polar(Mod:real, Arg:real)
+cartesian[real:type]    is matching cartesian(Re:real, Im:real)
+polar[real:type]        is matching polar(Mod:real, Arg:real)
 
 with
     real : some number
@@ -4586,9 +4928,9 @@ payload having a size that depends on information in the header. In
 XL, you can describe a type like this as follows:
 
 ....
-header  is type header (byte_count:size)
-payload[byte_count:size] is array[byte_count] of byte
-packet is type packet
+type header is matching header (byte_count:size)
+type payload[byte_count:size] is array[byte_count] of byte
+type packet is matching packet
     header  : header
     payload : payload[header.byte_count]
 ....
@@ -4632,7 +4974,7 @@ example, consider that you are writing code for implementing complex
 arithmetic. This might look something like:
 
 ....
-complex is type complex(Re:real, Im:real)
+type complex is matching complex(Re:real, Im:real)
 Z1:complex + Z2:complex as complex is ...
 Z1:complex - Z2:complex as complex is ...
 Z1:complex * Z2:complex as complex is ...
@@ -4647,7 +4989,7 @@ type annotations that will be valid in the entire scope where they are
 being used. The above examples could then be written as:
 
 ....
-complex is type complex(Re:real, Im:real)
+type complex is matching complex(Re:real, Im:real)
 with
     Z1 : complex
     Z2 : complex
@@ -4913,22 +5255,22 @@ example, consider the operation that sums all the elements in an
 array. Its body can be written so as to not really depend on the type
 or number of elements.
 
-In order to makea it easier to write such generic code, XL programmers
+In order to make it easier to write such generic code, XL programmers
 can take advantage of a feature called _((true generic type))_, which
 is a way to define a type that will accept any variant of some
-underlying generic type. It is customary to begin the name of such
-types with `some_`, in order to indicate the intent. For example, for
-`array`, one could write the true generic type as follows:
+underlying generic type. It is customary to use a name that easily
+relates to the generic type. For example, one can define a true
+generic type named `array` that covers all array types as follows:
 
 ....
-some_array is type (array[index:array_index] of value:type)
+type array is matching (array[index:array_index] of value:type)
 ....
 
 This makes it possible to write true generic code that takes an
 `array` argument, as follows:
 
 ....
-sum A:some_array as A.value is
+sum(A:array) as A.value is
     result := 0
     for I in A loop
         result += I
@@ -4936,14 +5278,16 @@ sum A:some_array as A.value is
 
 It is possible for the pattern of the true generic type to be somewhat
 more restrictive. For example, for a `complex` type, one might want to
-create a type that only accepts numbers for the `real` type, in other
-words something like:
+create a type that only accepts numbers for the `real` type. The type
+`some T` describes all types that derive from `T`, so that the true
+generic type for `complex` can be defined with something like:
 
 ....
-some_complex is type complex[real:some number]
+complex is matching complex[real:some number]
 ....
 
-A type constructed like this is called a _((constrained generic type))_.
+A true generic type with constraints like in the above example is
+called a _((constrained generic type))_.
 
 [NOTE]
 =====
@@ -5408,7 +5752,7 @@ example, we defined a `complex` type as follows:
 
 [source]
 ----
-complex is type complex(Re:real, Im:real)
+type complex is matching complex(Re:real, Im:real)
 ----
 
 This means that a shape like `complex(2.3, 5.6)` is a `complex`. This
@@ -5455,7 +5799,7 @@ The fact that the only elementary way to create a type is through the
 constructor is illustrated by the following code:
 
 ....
-large is type (N when N > 42)
+type large is matching (N when N > 42)
 A:large := 44   // OK
 B:large := 99.1 // OK
 C:large         // Error
@@ -5477,7 +5821,7 @@ matches the type's pattern. The following is an acceptable version of
 the `create` function:
 
 ....
-large is type (N when N > 42)
+large is matching (N when N > 42)
 C:large         // OK
 create V:out large is
     print "Creator called"
@@ -5499,7 +5843,7 @@ MY_FILE as module with
     close F:io file
 
 MY_FILE as module is
-    file is type file(fd:integer)
+    type file is matching file(fd:integer)
     open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
@@ -5585,7 +5929,7 @@ Consider another interesting example, where you have the following
 declarations:
 
 ....
-positive is type (N when N > 0)
+type positive is matching (N when N > 0)
 integers is string of integer
 N:integers > 0 as boolean is
     for I in N loop
@@ -5620,7 +5964,7 @@ the implicitly inserted field destruction, the code for the `integers`
 type and `delete` operations above is really equivalent to the following:
 
 ....
-integers is type(base:string of integer)
+type integers is matching(base:string of integer)
 
 delete P:inout positive is
     print "Deleting positive: ", P
@@ -6120,29 +6464,30 @@ it, since it creates a type that only accept `number` _values_ as an
 argument, i.e. it would accept `complex[3.5]` but not `complex[real]`:
 
 ....
-some_complex is type complex[real:number]
+type complex is matching complex[real:number] // WRONG
 ....
 
-To denote a type that derives from a base type, one can use the `some
-base` notation. The correct way to implement the above restriction is
-as follows, which indicates that the argument is a type, not a value,
-and that the type must derive from `number`:
+To denote a type that derives from a base type, one can use the
+`derived like base` notation. The correct way to implement the above
+restriction is as follows, which indicates that the argument is a
+type, not a value, and that the type must derive from `number`:
 
 ....
-some_complex is type complex[real:some number]
+type complex is matching complex[real:type like number]
 ....
 
 The precedence of `like` is lower than that of `:`, so that the above
 really parses as `(real:type) like number`. The `like` operator can be
 applied to specify inheritance at any place in a declaration, and
-notably in scopes. For example, you can indicate that the `complex`
-type itself inherits from `arithmetic` (providing arithmetic
-operations) as well as from `compact` (using a contiguous memory
-range) as follows:
+notably in scopes. An alternate spelling for `like` is `inherits`,
+which is generally more readable in global scope. For example, you can
+indicate that the `complex` type itself inherits from `arithmetic`
+(providing arithmetic operations) as well as from `compact` (using a
+contiguous memory range) as follows:
 
 ....
-complex         like arithmetic
-complex         like compact
+type complex inherits arithmetic
+type complex inherits compact
 ....
 
 === Subtypes
@@ -6159,7 +6504,7 @@ link:#when[conditional pattern] as follows:
 
 [source]
 ----
-month is type(M:integer when M >= 1 and M <= 12)
+type month is matching(M:integer when M >= 1 and M <= 12)
 ----
 
 The language defines a number of standard subtypes. All these subtypes
@@ -6173,14 +6518,14 @@ for it. For any type with an order, subtypes can be created with the
 
 [source]
 ----
-T:type range Low:T..High:T      is type(X:T when X in Low..High)
+T:type range Low:T..High:T      is matching(X:T when X in Low..High)
 ----
 
 With this definition, the `month` type can be defines simply as follows:
 
 [source]
 ----
-month is integer range 1..12
+type month is integer range 1..12
 ----
 
 ==== Size subtypes
@@ -6193,7 +6538,7 @@ For example, the `i8` type can be defined as:
 
 [source]
 ----
-i8 is integer bits 8
+type i8 is integer bits 8
 ----
 
 This implicitly implies a `range` that depends on the type being
@@ -6265,7 +6610,7 @@ internally by an `natural` values between `0` and `100`, and converted to
 
 [source]
 ----
-hundredth is real range 0.0..1.0 quantum 0.01
+type hundredth is real range 0.0..1.0 quantum 0.01
 ----
 
 ==== Saturating subtypes
@@ -6279,7 +6624,7 @@ For example, a `color_component` type that has values between `0.0`
 and `1.0` and saturates can be defined as follows:
 
 ....
-color_component is saturating real range 0.0..1.0 bits 16
+type color_component is saturating real range 0.0..1.0 bits 16
 Red : color_component := 0.5
 Red += 0.75             // Red is now 1.0
 ....
@@ -6376,7 +6721,7 @@ this interface, one might argue that the fact that `pixels` is a
 
 [source]
 ----
-picture as type with
+type picture with
     width  : size
     height : size
     pixels : buffer[area] of byte
@@ -6388,7 +6733,7 @@ character` with additional features:
 
 [source]
 ----
-text as some string of character with
+type text like [string of character] with
     byte_count as size                  // Number of bytes used by characters
     as_number[T:some number] as T       // Numerical conversion
 ----
@@ -6407,7 +6752,7 @@ Since nothing is known about the parse tree shape associated with the
 type, a tag type can only match values that were _tagged_ with the
 same type using some explicit type annotation.
 
-In partticular, knowing only the interface of a type does not allow
+In particular, knowing only the interface of a type does not allow
 values of the type to be link:#creation[created]. It is sometimes
 useful or desirable to preclude the creation of values of the type,
 for example when creating link:#true-generic-types[true generic types].
@@ -6463,7 +6808,7 @@ for the interface. For example, a constructor for type `picture` might
 look like:
 
 ....
-picture is type picture
+type picture is matching picture
     pixels : buffer[area] of u8
     width  : size
     height : size
@@ -6590,11 +6935,11 @@ type might actually be using a `bitmap` type as its internal
 representation:
 
 ....
-bitmap as type with
+type bitmap with
     width  : u16
     height : u16
     buf    : array[width, height] of u8
-picture as type picture
+type picture is matching picture
     bits:bitmap
 ....
 
@@ -6605,7 +6950,7 @@ and `height` fields seems relatively straightforward:
 
 [source]
 ----
-picture is type picture
+type picture is matching picture
     bits:bitmap
 
     width  is bits.width
@@ -6628,7 +6973,7 @@ this operation. The following for example does not work:
 
 [source]
 ----
-picture is type picture
+type picture is matching picture
     bits:bitmap
 
     width  is bits.width
@@ -6652,7 +6997,7 @@ code like:
 
 [source]
 ----
-picture is type picture
+type picture is matching picture
     bits:bitmap
 
     width  is bits.width
@@ -6671,7 +7016,7 @@ type can be correctly written as follows:
 
 [source]
 ----
-picture is type picture
+type picture is matching picture
     bits:bitmap
 
     width as attribute[size] is attribute
@@ -6720,7 +7065,7 @@ bad input and just print some run-time error.
 
 [source]
 ----
-picture is type picture
+type picture is matching picture
     bits:bitmap
 
     width as attribute[size] is
@@ -6742,7 +7087,7 @@ error in the interface, for example:
 
 [source]
 ----
-picture as type with
+type picture with
     width  : mayfail size
     height : mayfail size
     pixels : buffer[area] of byte
@@ -6755,9 +7100,9 @@ input. A better interface would be to expose the attribute nature of
 
 [source]
 ----
-picture as type with
-    width  as attribute[size]
-    height as attribute[size]
+type picture with
+    width  as attribute size
+    height as attribute size
     pixels : buffer[area] of byte
     area as size
 ----
@@ -6767,7 +7112,7 @@ interface that does not lie about the underlying values:
 
 [source]
 ----
-picture as type with
+tyep picture with
     width  : u16
     height : u16
     pixels : buffer[area] of byte
@@ -6922,7 +7267,7 @@ interface, where either a depth or a `node_filter` :
 ....
 copy(Source:tree, Depth:count) as mayfail T
 copy(Source:tree, Keep:node_filter) as mayfail T
-node_filter is type(N:node as boolean)
+type node_filter is matching(N:node as boolean)
 ....
 
 ==== Move
@@ -7209,7 +7554,7 @@ of derived types using the syntax for types we already saw would be:
 
 ....
 // Base class
-shape as type with
+type shape with
     draw         as mayfail                     // Draw the shape
     fill_color   as attribute color             // Color of the fill
     stroke_color as attribute color             // Color of the stroke
@@ -7739,7 +8084,7 @@ link:#pattern-matching-scope[pattern matching scope] for the type
 being considered. For example:
 
 ....
-// complex is type complex(Re:real, Im:real)
+// type complex is matching complex(Re:real, Im:real)
 typedef struct `complex` { `real` Re; `real` Im; } complex_t;
 
 // Z : complex := complex(1.2, 3.4)
@@ -7762,7 +8107,7 @@ type checking aspects. In other words, there is no additional cost in
 using this kind of type.
 
 ....
-// distance is type distance(meters:real)
+// type distance is matching distance(meters:real)
 typedef `real` distance_t;    // Probably a double
 
 // D1:distance + D2:distance is distance(D1.meters + D2.meters)
@@ -7779,7 +8124,7 @@ typically contain the normal form, knowing that the passed normal form
 will generally be the normal form for link:#closures[closures]:
 
 ....
-// if_statement is type { if Condition then TrueClause else FalseClause }
+// type if_statement is matching { if Condition then TrueClause else FalseClause }
 struct `if_statement`
 {
     `P.tree` *Condition;
@@ -7891,7 +8236,7 @@ When a type interface is provided, the actual type implementation may
 be implemented as a structure that derives from `struct `type``.
 
 ....
-// shape_t as type with
+// type shape_t with
 //    draw         as mayfail
 //    width        : coordinate
 
@@ -7917,7 +8262,7 @@ if the implementation is known to be in the same load module as the
 code using it:
 
 ....
-// shape_t is type shape
+// type shape_t is matching shape
 //    draw is logic_error "Drawing a base shape"
 //    width : coordinate
 struct `shape`
@@ -8009,7 +8354,7 @@ and `set`, and the fields in the attribute are inserted in the type in
 place of the attribute:
 
 ....
-// shape_t is type shape
+// type shape_t is matching shape
 //    width as attribute coordinate is
 //        attribute_width : some_other_integer
 //        get   is attribute_width / 2
@@ -8107,7 +8452,7 @@ the size of the `header` and `payload` parts, the payload itself
 having a variable size.
 
 ....
-// header  is type header (byte_count:size)
+// type header is matching header (byte_count:size)
 typedef size_t `header`;
 size_t `size` (`header` *value) { return sizeof(`header`); }
 
@@ -8493,13 +8838,13 @@ The new implementation was called XL2, not just as a version number, but
 because I was seeing things as a three-layer construction:
 
 * `XL0` was just a very simple parse tree format with only eight node
-types. I sometimes refer to that level of XL as "__XML without the
-M__", i.e. an extensble language without markup.
+  types. I sometimes refer to that level of XL as "__XML without the
+  M__", i.e. an extensble language without markup.
 * `XL1` was the core language evaluation rules, not taking any library
-into account.
+  into account.
 * `XL2` was the full language, including its ((standard library)). At the
-time, the goal was to reconstruct a language that would be as close as
-possible at the version of XL written using the Mozart framework.
+  time, the goal was to reconstruct a language that would be as close as
+  possible at the version of XL written using the Mozart framework.
 
 This language is still available today, and while it’s not been
 maintained in quite a while, it seems to still pass most of its test
