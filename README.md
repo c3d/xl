@@ -602,11 +602,11 @@ Simplistic compiler that does only run-time type analysis
 
 ### CI / Testing
 - [X] Basic QE framework / testing script (`alltest` script, `make check`)
-- [ ] Fix breakage in `make check`
+- [X] Fix breakage in `make check` with macOS Catalina DYLD_LIBRARY_PATH
 - [X] Basic CI in GitLab
 - [X] Repair breakage in GitLab CI
 - [X] Add tests for variants of LLVM in GitLab CI
-- [ ] Basic CI in GitHub
+- [X] Basic CI in GitHub
 
 ### Modules
 - [ ] Reimplement module system
