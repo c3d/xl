@@ -177,6 +177,7 @@ public:
     static bool         VerifyFunction(Function_p function);
     static void         Print(kstring label, Value_p value);
     static void         Print(kstring label, Type_p type);
+    static void         Comment(kstring comment);
 
 public:
     // JIT attributes

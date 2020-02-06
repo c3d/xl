@@ -957,9 +957,7 @@ void JIT::Print(kstring label, Value_p value)
 //   Print the tree on the error output
 // ----------------------------------------------------------------------------
 {
-    if (label)
-        // Emit a ';' so that we can pass that to llvm-mc -assemble
-        llvm::outs() << "; " << label;
+    Comment(label);
     value->print(llvm::outs());
 }
 
@@ -972,6 +970,17 @@ void JIT::Print(kstring label, Type_p type)
     if (label)
         llvm::outs() << label;
     type->print(llvm::outs());
+}
+
+
+void JIT::Comment(kstring comment)
+// ----------------------------------------------------------------------------
+//   Emit a comment on the standard out
+// ----------------------------------------------------------------------------
+{
+    // Emit a ';' so that we can pass that to llvm-mc -assemble
+    if (comment)
+        llvm::outs() << ";" << comment;
 }
 
 

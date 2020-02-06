@@ -239,9 +239,8 @@ Main::Main(int inArgc,
 #ifndef INTERPRETER_ONLY
     if (Opt::emitIR && Opt::optimize.value < 2)
     {
-        llvm::outs() << "; WARNING: -emit_ir or -B option at -O"
-                     << Opt::optimize.value
-                     << ". Using -O3 instead\n";
+        JIT::Comment("WARNING: Using -emit_ir or -B option without LLVM.");
+        JIT::Comment("         Enabled -O3 to get an LLVM output.");
         Opt::optimize.value = 3;
 
     }
