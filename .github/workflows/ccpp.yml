@@ -20,4 +20,4 @@ jobs:
       if: startsWith(matrix.os, 'macOS')
       run: brew install llvm
     - name: make check for ${{ matrix.variant }} on ${{ matrix.os }}
-      run:  make ${{ matrix.variant }}-check
+      run:  PATH=$PATH:/usr/local/opt/llvm/bin make ${{ matrix.variant }}-check
