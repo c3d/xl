@@ -18,6 +18,6 @@ jobs:
       run: sudo apt-get install -y llvm-dev git gcc g++ make findutils gawk
     - name: Setup dependencies for ${{ matrix.variant }} on ${{ matrix.os }}
       if: startsWith(matrix.os, 'macOS')
-      run: brew install -y llvm
+      run: brew install llvm
     - name: make check for ${{ matrix.variant }} on ${{ matrix.os }}
       run:  make ${{ matrix.variant }}-check
