@@ -6,8 +6,9 @@
 > work. Take it as a painful reminder that the work is far from finished,
 > and, who knows, as an idea for a contribution.
 > See [HISTORY](docs/HANDBOOK.adoc#history) for how we came to the present mess, and
-> [Compiler Status](#compiler-status) for information about what is
-> expected to work.
+> [Compiler status](#compiler-status) for information about what is
+> expected to work, and [Compiler overview](#compiler-overview) for a
+> quick overview of the compiler internals.
 
 XL is an extensible programming language designed to accomodate a
 variety of programming needs with ease. Being _extensible_ means that
@@ -495,6 +496,139 @@ integrates the binding `X is 3`.
 
 
 ## Compiler status
+Work items for the XL compiler (will be turned into GitHub issues)
+
+### Language definition
+- [X] Language definition documentation published
+- [X} Quickly-scanned To-Do list (this section)
+- [ ] Finish chapter on compilation
+- [ ] Finish chapter comparing wiht other programming paradigms
+- [ ] Description of the module system
+- [ ] Description of the standard library
+- [ ] Decide whether it's `import`, `use` or both (`import` doing the
+      importing  and `use` bringing the referenced expression in scope).
+
+### Recent language changes
+- [X] Switch from `->` to `is` as the definition operator
+- [ ] Switch type definition from `type Pattern` to `matching Pattern`
+- [ ] Implement syntactic sugar (can it be lib only?), e.g. `type X is Y`
+      and `module X with Y` or `to Copy(...) is blah`
+- [ ] Scope injection and scoping, i.e. meaning of `scope.Foo` and
+      `scope Foo` in the language. Deal with `(scope) foo`, etc.
+      See [scoping](https://c3d.github.io/xl/#scoping).
+- [ ] Safe implementation of `for` loop using scope injection
+      (see [name parameters](https://c3d.github.io/xl/#name-parameters)).
+- [ ] Implement union types (`T1 or T2`), as well as `and` and `not`
+- [ ] Revisit dynamic dispatch based on types
+- [ ] Implement type inheritance checks (`Derived like Base`)
+- [ ] Generate `lifetime` values
+- [ ] Implement `own` and `ref` types
+- [ ] Implement `in`, `out`, `inout` types
+
+### Symbol table
+- [x] Symbol table as an XL parse tree
+- [ ] Symbol table storing actual definitions, using `is` operator.
+      Currently, the symbol table uses a "nonsensical" prefix.
+
+### Scanner
+- [x] Scanner
+- [ ] Scan version numbers correctly, e.g. `1.20.5` not parsed as `(1.2).5`
+- [ ] Better Unicode classification of letters versus
+      punctuation. Currently, only ASCII punctuation is recognized as such.
+- [ ] Option to transparently convert `->` to `is` (for Tao3D importing)
+- [ ] Scanner-time processing of `syntax` statements from imported files
+
+### Parser
+- [x] Parser
+- [ ] "Binary" terminal node holding arbitrary binary data
+- [ ] "Literal" terminal node holding arbitrary text parsed from regexp
+- [ ] Add more error checks for failure cases, better error reporting
+
+### Renderer
+- [x] Renderer (`-show` option)
+- [x] Style renderer with `-style` option and `.stylesheet` files
+- [x] Preserving comments in renderer output
+- [ ] Rendering binary or regexp nodes
+
+### Runtime
+- [x] Foreign function interface (FFI) with easy macro (see `native.h`
+- [ ] Tag all useful runtime functions with FFI
+- [ ] Find a strategy for migrating Tao3D 1500 runtime calls
+- [ ] Cleanup the runtime from obsolete / useless functions
+
+### Interpreter (-O0)
+- [x] Simple interpreter (`-O0` or `-i`)
+- [ ] Explicit FFI for interpreter (`extern` C syntax)
+- [ ] Add "sandboxed" mode (on by default for interpreter) that
+      disables the above
+- [ ] Connect `native.h` FFI to interpreter
+- [ ] Implement modules in interpreter
+- [ ] Implement `error` and `compile_error` evaluation rules in interpreter
+- [ ] Update type system to recognize `matching` prefix instead of `type`
+- [ ] Implement metabox (`[[true]]`) in interpreter
+
+### Bytecode interpreter (-O1) BROKEN, LIKELY NOT TO BE REPAIRED
+- [X] Bytecode interpreter (broken, do not use)
+- [ ] Fix bytecode interpreter or get rid of its remnants (`-O2`)
+- [ ] Redesign bytecode interpreter as emitting LLVM byte code?
+
+### LLVM "fast compiler" (-O2)
+Simplistic compiler that does only run-time type analysis
+- [X] Fast compiler functionally similar to what was used in Tao3D
+- [ ] Find strategy to re-connect it to Tao3D
+
+### LLVM optimized compiler (-O3)
+- [x] LLVM-based compiler
+- [x] LLVM-CRAP (adapting to multiple versions of LLVM)
+- [x] `native.h` for building FFI
+- [x] Option to emit LLVM bitcode (`-B` or `-emit_ir`)
+- [ ] Option to pass bitcode to LLVM bitcode compiler
+      (Automatically do something like `xl -B ... | llc -filetype=asm`)
+- [ ] Option to directly emit disassembly
+- [ ] Pass LLVM options to LLVM (`-llvm-foo`)
+- [ ] Replace algo-W type analysis with forward-only type analysis.
+- [ ] Implement
+      [auto-boxing](https://c3d.github.io/xl/#machine-representation)
+      for
+      [parameter scopes](https://c3d.github.io/xl/#pattern-matching-scope)
+- [ ] Self-compiling compiler
+- [ ] Rebuild Tao3D on top of "new" XL
+
+### Build system
+- [X] Portable auto-configuring makefile (Using `make-it-quick`)
+- [X] Targets for `opt`, `debug`, `release` and `check`
+- [X] Target for `install`
+- [ ] Fix issue with too much stuff being rebuilt for `install`
+
+### CI / Testing
+- [X] Basic QE framework / testing script (`alltest` script, `make check`)
+- [ ] Fix breakage in `make check`
+- [X] Basic CI in GitLab
+- [ ] Repair breakage in GitLab CI
+- [ ] Basic CI in GitHub
+
+### Modules
+- [ ] Reimplement module system
+
+### Standard library
+- [x] Standard library
+- [x] Overall structure (WIP)
+- [ ] Types
+- [ ] Arrays
+- [ ] STL-style containers
+- [ ] Algoriths
+- [ ] I/Os
+- [ ] Threading / synchronization
+- [ ] Math and numerics
+- [ ] Standard math functions
+- [X] Complex module
+- [ ] Vectors
+- [ ] Matrices
+- [ ] Text processing
+- [ ] Time
+- [ ] Graphics (Tao3D based?)
+
+## Compiler overview
 
 The interpreter / compiler recently went through a rather heavy
 merge of several incompatible branches. As a result, it inherited
