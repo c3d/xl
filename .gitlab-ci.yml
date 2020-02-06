@@ -72,13 +72,13 @@ self-compile-xl2:fedora:
   - (cd xl2; make)
 
 llvm-4.0:fedora:
-  image: fedora:latest
+  image: fedora:30
   script:
    - dnf install -y llvm4.0-devel
    - make release-check LLVM_CONFIG=llvm-config-4.0-64
 
 llvm-5.0:fedora:
-  image: fedora:latest
+  image: fedora:31
   script:
    - dnf install -y llvm5.0-devel
    - make release-check LLVM_CONFIG=llvm-config-5.0-64
