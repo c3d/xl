@@ -604,7 +604,8 @@ Simplistic compiler that does only run-time type analysis
 - [X] Basic QE framework / testing script (`alltest` script, `make check`)
 - [ ] Fix breakage in `make check`
 - [X] Basic CI in GitLab
-- [ ] Repair breakage in GitLab CI
+- [X] Repair breakage in GitLab CI
+- [X] Add tests for variants of LLVM in GitLab CI
 - [ ] Basic CI in GitHub
 
 ### Modules
