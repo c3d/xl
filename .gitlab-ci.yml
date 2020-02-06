@@ -66,6 +66,11 @@ build-release:fedora:
   script:
   - make opt-release
 
+self-compile-xl2:fedora:
+  image: fedora:latest
+  script:
+  - (cd xl2; make)
+
 install:ubuntu:
   image: ubuntu:latest
   script:
@@ -129,3 +134,8 @@ build-release:ubuntu:
   image: ubuntu:latest
   script:
   - make opt-release
+
+self-compile-xl2:ubuntu:
+  image: ubuntu:latest
+  script:
+  - (cd xl2; make)
