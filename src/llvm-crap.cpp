@@ -713,7 +713,10 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 
     // Emit LLVM IR if requested
     if (Opt::emitIR)
+    {
+        llvm::outs() << "; LLVM IR for XL program:\n";
         module->print(llvm::outs(), nullptr);
+    }
 
     return module;
 }
