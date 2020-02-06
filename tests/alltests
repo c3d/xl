@@ -169,6 +169,7 @@ do
     # Defaults if not set by the test
     eval $(grep TO_REMOVE alltests_$RUNTIME)
     [ -z "$RT_OPT" ] && { eval $(grep RT_OPT alltests_$RUNTIME); }
+    [ -z "$EXCLUDE" ] && { EXCLUDE=do-not-exclude-anything; }
     if [ -z "$CMD" ]; then
         CMD="$XL $RT_OPT $OPT $TESTNAME";
         [ -z "$RUN" ] && { eval $(grep RUN alltests_$RUNTIME); }
