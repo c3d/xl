@@ -48,6 +48,8 @@ BASELINE=
 NOCACHE=
 INSTALLED=
 RUNTIME=default
+TARGET=debug
+EXCLUDES=nothing-please
 POSITIVE_SUCCESS=0
 NEGATIVE_SUCCESS=0
 POSITIVE_MISMATCHES=0
@@ -73,6 +75,7 @@ do
         -d|-dir)                SUBDIRS="$2"            ; shift;;
         -b|-baseline)           BASELINE="*"            ;;
         -u|-update)             UPDATE='*'"$2"'*'       ; shift;;
+        -x|-exclude)            EXCLUDES="$2"           ; shift;;
         *)                      PATTERN='*'"$1"'*'      ;;
     esac
     shift
@@ -150,7 +153,7 @@ do
     OPT=                                            # XL compiler options
     RT_OPT=                                         # XL options for runtime
     #INC="-I $DIR -I $TESTDIR/library"              # XL include directory
-    EXCLUDE=                                        # Runtimes to exclude
+    EXCLUDE=                                        # Runtimes/tests to exclude
     CACHED=
     OUTLINE=
 
@@ -174,8 +177,16 @@ do
     # Run the XL compiler on the test
     THIS_FAILED=
     TOTAL_TESTS=$(($TOTAL_TESTS+1))
-    if (echo $EXCLUDE | grep -q -e "$RUNTIME" -e "$TARGET") then
-        CACHED="(Excluded)"
+    if (echo $RUNTIME | grep -q -e "$EXCLUDE" -e "$EXCLUDES") then
+        CACHED="(Excluded runtime)"
+        EXCLUDED=$(($EXCLUDED+1))
+        RC=$EXIT
+    elif (echo $TARGET | grep -q -e "$EXCLUDE" -e "$EXCLUDES") then
+        CACHED="(Excluded target)"
+        EXCLUDED=$(($EXCLUDED+1))
+        RC=$EXIT
+    elif (echo $BASE | grep -q -e "$EXCLUDE" -e "$EXCLUDES") then
+        CACHED="(Excluded test)"
         EXCLUDED=$(($EXCLUDED+1))
         RC=$EXIT
     else
@@ -244,7 +255,7 @@ do
     if [ -z "$THIS_FAILED" ]; then
         echo $TEST >> $SUCCESS
         if [ "$RC" -ne "0" ] ; then
-            echo Success - negative test;
+            echo Success - negative test $CACHED;
             NEGATIVE_SUCCESS=$((NEGATIVE_SUCCESS+1))
         else
             echo Success $CACHED;
