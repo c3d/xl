@@ -236,6 +236,16 @@ Main::Main(int inArgc,
     MAIN = this;
     Opt::builtinsPath.value = SearchLibFile(builtinsName);
     ParseOptions();
+#ifndef INTERPRETER_ONLY
+    if (Opt::emitIR && Opt::optimize.value < 2)
+    {
+        llvm::outs() << "; WARNING: -emit_ir or -B option at -O"
+                     << Opt::optimize.value
+                     << ". Using -O3 instead\n";
+        Opt::optimize.value = 3;
+
+    }
+#endif // INTERPRETER_ONLY
     Opcode::Enter(&context);
 
     // Once all options have been read, enter symbols and setup compiler
