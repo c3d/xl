@@ -227,6 +227,12 @@ XL_TESTS_COMPILER_llvm=interactive O3
 XL_TESTS_exe=$(XL_TESTS_COMPILER_$(COMPILER):%=.alltests.%)
 .tests: $(XL_TESTS_$(VARIANT))
 
+# Starting with Catalina, macOS System Integrity Protection means that
+# DYLD_LIBRARY_PATH is no longer acknowledged
+ifeq ($(OS_NAME),macosx)
+TEST_ENV=ln -sf ../lib*.dylib . ;
+endif
+
 # Which kind of arguments are passed to alltests
 ALLTESTS_ARG_interactive=-i
 ALLTESTS_ARG_O1=-O1
