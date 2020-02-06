@@ -1,0 +1,17 @@
+name: Continuous integration for XL
+
+on: [push]
+
+jobs:
+  build:
+    name: Test ${{ matrix.variant }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        variant: [debug, opt, release]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: make check for ${{ matrix.variant }} on ${{ matrix.os }}
+      run: make ${{ matrix.variant }}-check
