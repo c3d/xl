@@ -13,10 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup dependencies for ${{ matrix.variant }} on ${{ matrix.os }}
+    - name: apt-get install for ${{ matrix.variant }} on ${{ matrix.os }}
       if: startsWith(matrix.os, 'ubuntu')
       run: sudo apt-get install -y llvm-dev git gcc g++ make findutils gawk
-    - name: Setup dependencies for ${{ matrix.variant }} on ${{ matrix.os }}
+    - name: Brew install for ${{ matrix.variant }} on ${{ matrix.os }}
       if: startsWith(matrix.os, 'macOS')
       run: brew install llvm
     - name: make check for ${{ matrix.variant }} on ${{ matrix.os }}
