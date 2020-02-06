@@ -38,7 +38,7 @@
   (prefix
    int
    (prefix
-    foo
+    C_foo
     (block( )
      (infix,
       (prefix
@@ -49,44 +49,44 @@
         int
         *)
        y))))))
- (infix CR
-  (infix;
+ (infix;
+  (prefix
+   int
    (prefix
-    int
-    (prefix
-     foo
-     (block( )
-      (infix,
-       (prefix
-        int
-        x)
-       (infix*
-        int
-        y)))))
+    XL_foo
+    (block( )
+     (infix,
+      (prefix
+       int
+       x)
+      (infix*
+       int
+       y)))))
+  (infix CR
    (infix*
     int
     z
 
-   ))
-  (prefix
-   extern
+   )
    (prefix
-    double
+    extern
     (prefix
-     bar
-     (block( )
-      (infix,
-       (prefix
-        (postfix
-         char
-         *)
+     double
+     (prefix
+      C_bar
+      (block( )
+       (infix,
         (prefix
-         ptr
-         (block[ ]
-         )))
-       (prefix
-        long
+         (postfix
+          char
+          *)
+         (prefix
+          ptr
+          (block[ ]
+          )))
         (prefix
          long
-         x)))))))
- ))
+         (prefix
+          long
+          x)))))))
+  )))
