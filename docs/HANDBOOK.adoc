@@ -2298,10 +2298,10 @@ A few names are reserved for use as syntactic sugar prefix. These
 names have a very low precedence, and as a result do not significantly
 impact the syntax of the pattern of the declaration they apply to.
 These sugar names are `type`, `class`, `module`, `function`, `method`,
-`procedure`, `to`, `operation`, `data`, `constant`, `variable`,
-`macro`, `generic`, `polymorphic`, `fast`, `small`, `global`, `thread`
-and `static`. Proper use of these names also makes textual search of
-the declarations or definitions easier.
+`procedure`, `to`, `operation`, `data`, `in`, `out`, `inout`, `io`,
+`constant`, `variable`, `macro`, `generic`, `polymorphic`, `fast`,
+`small`, `global`, `thread` and `static`. Proper use of these names
+also makes textual search of the declarations or definitions easier.
 
 The rest of this document will preferably use the sugared form.
 
@@ -2398,6 +2398,28 @@ to:
 * Verify ABI stability and compatibility
 * Optimize the code for use in a shared library
 * Emit better diagnostics
+
+
+==== Parameter sugar
+
+The `in`, `out` and `inout` have a syntactic sugar, where they can be
+placed before a type annotation or a pattern, instead of just before
+the type in the type annotation.
+
+[source]
+----
+to Copy(out Target:value, in From:value)                // Sugared
+Copy(Target:out value, From:in value) as mayfail        // Raw
+----
+
+This sugar can also be used without a type, in which case the type is
+assumed to be `anything`:
+
+[source]
+----
+to Debug(in Thing) is print "Debug: ", Thing                    // Sugared
+Debug(Thing:in anything) as mayfail is print "Debug: ", Thing   // Raw
+----
 
 
 ==== Sugar for code and data
