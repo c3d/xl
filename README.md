@@ -511,19 +511,22 @@ Work items for the XL compiler (will be turned into GitHub issues)
 ### Recent language changes
 - [X] Switch from `->` to `is` as the definition operator
 - [ ] Switch type definition from `type Pattern` to `matching Pattern`
-      (issue #5)
+      ([issue #5](https://github.com/c3d/xl/issues/5))
 - [ ] Implement syntactic sugar (can it be lib only?), e.g. `type X is Y`
       and `module X with Y` or `to Copy(...) is blah`
-      (issue #6)
-- [ ] Support for nested functions and proper nested scopes. Issue #8.
+      ([issue #6](https://github.com/c3d/xl/issues/6))
+- [ ] Support for nested functions and proper nested scopes.
+      See [issue #8](https://github.com/c3d/xl/issues/8).
 - [ ] Scope injection and scoping, i.e. meaning of `scope.Foo` and
       `scope Foo` in the language. Deal with `(scope) foo`, etc.
-      See [scoping](https://c3d.github.io/xl/#scoping) and issue #9.
+      See [scoping](https://c3d.github.io/xl/#scoping) and
+      [issue #9](https://github.com/c3d/xl/issues/9).
 - [ ] Safe implementation of `for` loop using scope injection
       (see [name parameters](https://c3d.github.io/xl/#name-parameters)).
-      This is issue #7.
-- [ ] Implement metabox (`[[true]]`). This is issue #10.
-- [ ] Write the interface and implementation of the `type` type (issue #11).
+      This is [issue #7](https://github.com/c3d/xl/issues/7).
+- [ ] Implement metabox (`[[true]]`). This is [issue #10](https://github.com/c3d/xl/issues/10).
+- [ ] Write the interface and implementation of the `type` type
+      ([issue #11](https://github.com/c3d/xl/issues/11)).
 - [ ] Implement union types (`T1 or T2`), as well as `and` and `not`.
 - [ ] Revisit dynamic dispatch based on types
 - [ ] Implement type inheritance checks (`Derived like Base`)
