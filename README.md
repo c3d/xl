@@ -500,7 +500,7 @@ Work items for the XL compiler (will be turned into GitHub issues)
 
 ### Language definition
 - [X] Language definition documentation [published](https://c3d.github.com/xl)
-- [X} Quickly-scanned To-Do list (this section)
+- [X] Quickly-scanned To-Do list (this section)
 - [ ] Finish [chapter on compilation](https://c3d.github.io/xl/#compiling-xl)
 - [ ] Finish [chapter on programming paradigms](https://c3d.github.io/xl/#programming-paradigms)
 - [ ] Description of the [module system](https://c3d.github.io/xl/#modules)
