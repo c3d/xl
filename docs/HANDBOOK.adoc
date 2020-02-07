@@ -2132,7 +2132,6 @@ In our example, `circumference 5.3` will not match the declaration of
 `pi`, but it will match the declaration of `circumference Radius:real`
 since the value `5.3` is indeed a real number.
 
-[[binding]]
 When a match happens, a new context is created with definitions that
 _bind_ formal parameters to the corresponding argument. Such
 definitions are, unsurprisingly, called _((bindings))_.
@@ -7336,7 +7335,7 @@ use a value that was moved or deleted.
 ==== Binding
 
 The transfer of an argument to a formal parameter during a call is
-called _binding_, and like an assignment, it may involve either
+called a _((binding))_, and like an assignment, it may involve either
 copying or moving the value. Argument binding uses the assignment
 operator to assign the argument to the formal paramerer, ensuring that
 the same copy or move semantics applies to assignment and to binding.

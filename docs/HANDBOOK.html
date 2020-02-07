@@ -523,10 +523,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel3">
 <li><a href="#types-sugar">3.3.1. Types sugar</a></li>
 <li><a href="#modules-sugar">3.3.2. Modules sugar</a></li>
-<li><a href="#sugar-for-code-and-data">3.3.3. Sugar for code and data</a></li>
-<li><a href="#implementations-hints">3.3.4. Implementations hints</a></li>
-<li><a href="#storage-hints">3.3.5. Storage hints</a></li>
-<li><a href="#alternate-notations">3.3.6. Alternate notations</a></li>
+<li><a href="#parameter-sugar">3.3.3. Parameter sugar</a></li>
+<li><a href="#sugar-for-code-and-data">3.3.4. Sugar for code and data</a></li>
+<li><a href="#implementations-hints">3.3.5. Implementations hints</a></li>
+<li><a href="#storage-hints">3.3.6. Storage hints</a></li>
+<li><a href="#alternate-notations">3.3.7. Alternate notations</a></li>
 </ul>
 </li>
 <li><a href="#pattern-matching">3.4. Pattern matching</a>
@@ -655,7 +656,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#assignments">4.11.1. Assignments</a></li>
 <li><a href="#copy">4.11.2. Copy</a></li>
 <li><a href="#move">4.11.3. Move</a></li>
-<li><a href="#binding-2">4.11.4. Binding</a></li>
+<li><a href="#binding">4.11.4. Binding</a></li>
 <li><a href="#name-parameters">4.11.5. Name parameters</a></li>
 <li><a href="#attributes">4.11.6. Attributes</a></li>
 </ul>
@@ -3427,7 +3428,7 @@ In our example, <code>circumference 5.3</code> will not match the declaration of
 <code>pi</code>, but it will match the declaration of <code>circumference Radius:real</code>
 since the value <code>5.3</code> is indeed a real number.</p>
 </div>
-<div id="binding" class="paragraph">
+<div class="paragraph">
 <p>When a match happens, a new context is created with definitions that
 <em>bind</em> formal parameters to the corresponding argument. Such
 definitions are, unsurprisingly, called <em>bindings</em>.
@@ -3622,10 +3623,10 @@ to a functionally equivalent <em>raw</em> version of the same code.</p>
 names have a very low precedence, and as a result do not significantly
 impact the syntax of the pattern of the declaration they apply to.
 These sugar names are <code>type</code>, <code>class</code>, <code>module</code>, <code>function</code>, <code>method</code>,
-<code>procedure</code>, <code>to</code>, <code>operation</code>, <code>data</code>, <code>constant</code>, <code>variable</code>,
-<code>macro</code>, <code>generic</code>, <code>polymorphic</code>, <code>fast</code>, <code>small</code>, <code>global</code>, <code>thread</code>
-and <code>static</code>. Proper use of these names also makes textual search of
-the declarations or definitions easier.</p>
+<code>procedure</code>, <code>to</code>, <code>operation</code>, <code>data</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>io</code>,
+<code>constant</code>, <code>variable</code>, <code>macro</code>, <code>generic</code>, <code>polymorphic</code>, <code>fast</code>,
+<code>small</code>, <code>global</code>, <code>thread</code> and <code>static</code>. Proper use of these names
+also makes textual search of the declarations or definitions easier.</p>
 </div>
 <div class="paragraph">
 <p>The rest of this document will preferably use the sugared form.</p>
@@ -3767,7 +3768,31 @@ to:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="sugar-for-code-and-data"><a class="anchor" href="#sugar-for-code-and-data"></a><a class="link" href="#sugar-for-code-and-data">3.3.3. Sugar for code and data</a></h4>
+<h4 id="parameter-sugar"><a class="anchor" href="#parameter-sugar"></a><a class="link" href="#parameter-sugar">3.3.3. Parameter sugar</a></h4>
+<div class="paragraph">
+<p>The <code>in</code>, <code>out</code> and <code>inout</code> have a syntactic sugar, where they can be
+placed before a type annotation or a pattern, instead of just before
+the type in the type annotation.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Copy(out Target:value, in From:value)                // Sugared
+Copy(Target:out value, From:in value) as mayfail        // Raw</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This sugar can also be used without a type, in which case the type is
+assumed to be <code>anything</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Debug(in Thing) is print "Debug: ", Thing                    // Sugared
+Debug(Thing:in anything) as mayfail is print "Debug: ", Thing   // Raw</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="sugar-for-code-and-data"><a class="anchor" href="#sugar-for-code-and-data"></a><a class="link" href="#sugar-for-code-and-data">3.3.4. Sugar for code and data</a></h4>
 <div class="paragraph">
 <p>Some syntactic sugar can be used to indicate if a form is a <code>procedure</code>,
 a <code>method</code>, a <code>function</code>, an <code>operation</code> or if it represents
@@ -3864,7 +3889,7 @@ opposed to code. The implementation of a <code>data</code> normally uses
 </div>
 </div>
 <div class="sect3">
-<h4 id="implementations-hints"><a class="anchor" href="#implementations-hints"></a><a class="link" href="#implementations-hints">3.3.4. Implementations hints</a></h4>
+<h4 id="implementations-hints"><a class="anchor" href="#implementations-hints"></a><a class="link" href="#implementations-hints">3.3.5. Implementations hints</a></h4>
 <div class="paragraph">
 <p>Prefix names such as <code>constant</code>, <code>variable</code>, <code>macro</code>, <code>generic</code>,
 <code>polymorphic</code>, <code>fast</code> and <code>small</code> tell the compiler what is the intended
@@ -3963,7 +3988,7 @@ small twice(X) is X + X</pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="storage-hints"><a class="anchor" href="#storage-hints"></a><a class="link" href="#storage-hints">3.3.5. Storage hints</a></h4>
+<h4 id="storage-hints"><a class="anchor" href="#storage-hints"></a><a class="link" href="#storage-hints">3.3.6. Storage hints</a></h4>
 <div class="paragraph">
 <p>Three forms of syntactic sugar provide <em>storage hints</em>:</p>
 </div>
@@ -4002,7 +4027,7 @@ EvaluationCounter as natural is                         // Raw
 </div>
 </div>
 <div class="sect3">
-<h4 id="alternate-notations"><a class="anchor" href="#alternate-notations"></a><a class="link" href="#alternate-notations">3.3.6. Alternate notations</a></h4>
+<h4 id="alternate-notations"><a class="anchor" href="#alternate-notations"></a><a class="link" href="#alternate-notations">3.3.7. Alternate notations</a></h4>
 <div class="paragraph">
 <p>In some cases, it may be useful to provide several notations for the
 same things. The <code>written</code> infix form can be used to specify
@@ -10356,10 +10381,10 @@ use a value that was moved or deleted.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="binding-2"><a class="anchor" href="#binding-2"></a><a class="link" href="#binding-2">4.11.4. Binding</a></h4>
+<h4 id="binding"><a class="anchor" href="#binding"></a><a class="link" href="#binding">4.11.4. Binding</a></h4>
 <div class="paragraph">
 <p>The transfer of an argument to a formal parameter during a call is
-called <em>binding</em>, and like an assignment, it may involve either
+called a <em>binding</em>, and like an assignment, it may involve either
 copying or moving the value. Argument binding uses the assignment
 operator to assign the argument to the formal paramerer, ensuring that
 the same copy or move semantics applies to assignment and to binding.</p>
@@ -13177,7 +13202,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-04 09:06:45 +0100
+Last updated 2020-02-07 20:05:50 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
