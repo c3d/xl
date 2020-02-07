@@ -546,6 +546,7 @@ Work items for the XL compiler (will be turned into GitHub issues)
 - [x] Symbol table as an XL parse tree
 - [ ] Symbol table storing actual definitions, using `is` operator.
       Currently, the symbol table uses a "nonsensical" prefix.
+      See [issue #19](https://github.com/c3d/xl/issues/19)
 
 ### Scanner
 - [x] Scanner
