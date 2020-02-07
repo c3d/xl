@@ -528,11 +528,19 @@ Work items for the XL compiler (will be turned into GitHub issues)
 - [ ] Write the interface and implementation of the `type` type
       ([issue #11](https://github.com/c3d/xl/issues/11)).
 - [ ] Implement union types (`T1 or T2`), as well as `and` and `not`.
-- [ ] Revisit dynamic dispatch based on types
-- [ ] Implement type inheritance checks (`Derived like Base`)
-- [ ] Generate `lifetime` values
-- [ ] Implement `own` and `ref` types
-- [ ] Implement `in`, `out`, `inout` types
+      See [issue #12](https://github.com/c3d/xl/issues/12)
+- [ ] Revisit dynamic dispatch based on types.
+      See [issue #13](https://github.com/c3d/xl/issues/13)
+- [ ] Implement type inheritance checks (`Derived like Base`).
+      See [issue #14](https://github.com/c3d/xl/issues/14)
+- [ ] Generate `lifetime` values.
+      See [issue #15](https://github.com/c3d/xl/issues/15)
+- [ ] Implement `own` and `ref` types.
+      See [issue #16](https://github.com/c3d/xl/issues/16)
+- [ ] Implement `in`, `out`, `inout` types.
+      See [issue #17](https://github.com/c3d/xl/issues/17)
+- [ ] Implement creation and destruction.
+      See [issue #18](https://github.com/c3d/xl/issues/18)
 
 ### Symbol table
 - [x] Symbol table as an XL parse tree
