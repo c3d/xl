@@ -28,15 +28,18 @@ INFIX
         600     :
 
 PREFIX
-        30      data
+        30      type class module function method procedure to operation
+        30      data macro generic polymorphic iterator
+        30      fast small global thread static
+        30      in out inout io
+        30      constant variable const var
         40      loop while until
         50      property
         121     case if return yield transform
-        350     not in out constant variable const var
+        350     not
         360     ! ~
         370     - + * /
         401     FUNCTION
-        410     function procedure to type iterator
         420     ++ --
         430     &
 
