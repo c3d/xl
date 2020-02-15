@@ -2017,7 +2017,7 @@ Tree *CompileAction::CompileRewrite(Scope *scope,
 //   captured variable from the surrounding context
 {
     // Check if there are variables in the environment that we need to capture
-    EnvironmentScan scan(ScopeParent(symbols));
+    EnvironmentScan scan(Enclosing(symbols));
     Tree *envOK = body->Do(scan);
     if (!envOK)
         Ooops("Internal: environment capture error in $1", body);

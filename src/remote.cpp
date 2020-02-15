@@ -161,7 +161,7 @@ static Tree_p xl_attach_context(Context &context, Tree *code)
     // Do a clone of the symbol table up to that point
     StopAtGlobalsClone partialClone;
     if (found)
-        partialClone.cutpoint = ScopeParent(globals);
+        partialClone.cutpoint = Enclosing(globals);
     Scope_p symbols = context.CurrentScope();
     Tree_p symbolsToSend = partialClone.Clone(symbols);
 
@@ -222,7 +222,7 @@ static Tree_p xl_merge_context(Context &context, Tree *code)
             {
                 scope = xl_restore_nil(scope)->As<Scope>();
                 codeCtx = new Context(scope);
-                while (Scope *parent = ScopeParent(scope))
+                while (Scope *parent = Enclosing(scope))
                     scope = parent;
 
                 // Reattach that end to current scope
