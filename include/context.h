@@ -338,7 +338,7 @@ inline Scope *Enclosing(Scope *scope)
 //   Find parent for a given scope
 // ----------------------------------------------------------------------------
 {
-    return scope->left->AsPrefix();
+    return scope->left->As<Scope>();
 }
 
 
@@ -356,7 +356,7 @@ inline Rewrite *ScopeRewrites(Scope *scope)
 //   Find top rewrite for a given scope
 // ----------------------------------------------------------------------------
 {
-    return scope->right->AsInfix();
+    return scope->right->As<Rewrite>();
 }
 
 

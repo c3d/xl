@@ -382,7 +382,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
         }
 
         // This should be a rewrite entry, follow it
-        Rewrite *entry = (*parent)->AsInfix();
+        Rewrite *entry = (*parent)->As<Rewrite>();
 
         // If we are definig a name, signal if we redefine it
         if (name)
@@ -624,7 +624,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
                 break;
 
             // This should be a rewrite entry, follow it
-            Rewrite *entry = (*parent)->AsInfix();
+            Rewrite *entry = (*parent)->As<Rewrite>();
             XL_ASSERT(entry && entry->name == REWRITE_NAME);
             Infix *decl = RewriteDeclaration(entry);
             XL_ASSERT(!decl || decl->name == "is");
@@ -740,9 +740,9 @@ Tree *Context::Bound(Tree *form, bool recurse, Rewrite_p *rewrite, Scope_p *ctx)
     Prefix info(NULL, NULL);
     Tree *result = Lookup(form, findValueX, &info, recurse);
     if (ctx)
-        *ctx = info.left->AsPrefix();
+        *ctx = info.left->As<Scope>();
     if (rewrite)
-        *rewrite = info.right->AsInfix();
+        *rewrite = info.right->As<Rewrite>();
     return result;
 }
 
@@ -792,8 +792,8 @@ static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
             }
         }
         if (where->name == ";" || where->name == "\n")
-            count += listNames(where->left->AsInfix(), begin, list, pfx);
-        where = decl->right->AsInfix();
+            count += listNames(where->left->As<Rewrite>(), begin, list, pfx);
+        where = decl->right->As<Rewrite>();
     }
     return count;
 }
