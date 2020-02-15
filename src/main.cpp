@@ -321,7 +321,7 @@ int Main::LoadAndRun()
 
     if (!rc && Opt::remote)
     {
-        Scope *scope = context.CurrentScope();
+        Scope *scope = context.Symbols();
         return xl_listen(scope, Opt::remoteForks, Opt::remotePort);
     }
 
@@ -539,11 +539,11 @@ int Main::LoadFile(text file, text modname)
     }
 
     // Register the source file we had
-    sf = SourceFile (file, tree, context.CurrentScope());
+    sf = SourceFile (file, tree, context.Symbols());
 
     // Process declarations from the program
     record(fileload, "File loaded as %t", tree);
-    record(fileload, "File loaded in %t", context.CurrentScope());
+    record(fileload, "File loaded in %t", context.Symbols());
 
     // We were OK, done
     return false;

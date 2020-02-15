@@ -162,7 +162,7 @@ static Tree_p xl_attach_context(Context &context, Tree *code)
     StopAtGlobalsClone partialClone;
     if (found)
         partialClone.cutpoint = Enclosing(globals);
-    Scope_p symbols = context.CurrentScope();
+    Scope_p symbols = context.Symbols();
     Tree_p symbolsToSend = partialClone.Clone(symbols);
 
     record(remote, "Sending context %t", symbolsToSend.Pointer());
@@ -226,7 +226,7 @@ static Tree_p xl_merge_context(Context &context, Tree *code)
                     scope = parent;
 
                 // Reattach that end to current scope
-                scope->left = context.CurrentScope();
+                scope->left = context.Symbols();
             }
 
             // And make the resulting code a closure at that location
@@ -368,7 +368,7 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
                host.c_str(), response);
         response = xl_merge_context(context, response);
         record(remote_invoke, "After merge, response was %t", response);
-        result = xl_evaluate(context.CurrentScope(), response);
+        result = xl_evaluate(context.Symbols(), response);
         record(remote_invoke, "After eval, was %t", result);
         if (result == xl_nil)
             break;

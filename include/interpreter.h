@@ -140,7 +140,7 @@ retry:
 
         if (valueKind != PREFIX || !value->GetInfo<ClosureInfo>())
         {
-            Scope *scope = context->CurrentScope();
+            Scope *scope = context->Symbols();
             value = new Prefix(scope, value);
 
             ClosureInfo *closureMarker = new ClosureInfo;

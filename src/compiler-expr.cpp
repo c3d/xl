@@ -139,7 +139,7 @@ Value_p CompilerExpression::Do(Name *what)
     Tree         *existing = context->Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
-    if (where == context->CurrentScope())
+    if (where == context->Symbols())
         if (Value_p result = function.Known(from))
             return result;
 

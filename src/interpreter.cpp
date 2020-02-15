@@ -279,7 +279,7 @@ inline bool Bindings::Do(Name *what)
     }
 
     record(interpreter, "In closure %t: %t = %t",
-           context->CurrentScope(), what, test);
+           context->Symbols(), what, test);
     BindClosure(what, test);
     return true;
 }
@@ -401,7 +401,7 @@ bool Bindings::Do(Infix *what)
         }
 
         // Typed name: evaluate type and check match
-        Scope *scope = context->CurrentScope();
+        Scope *scope = context->Symbols();
         Tree *type = MustEvaluate(context, what->right);
         Tree *checked = xl_typecheck(scope, type, test);
         if (!checked || type == XL::value_type)
@@ -653,7 +653,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         uint offset = args.size();
         std::reverse(args.begin(), args.end());
         args.push_back(decl->right);
-        args.push_back(context->CurrentScope());
+        args.push_back(context->Symbols());
         Data data = &args[offset];
         opcode->Run(data);
         result = DataResult(data);
@@ -669,7 +669,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 
     result = Interpreter::MakeClosure(locals, result);
     record(interpreter_eval, "Eval%u %t in context %t = %t",
-           depth, locals->CurrentScope(), self, result);
+           depth, locals->Symbols(), self, result);
     return result;
 }
 
@@ -679,7 +679,7 @@ inline Tree *encloseResult(Context *context, Scope *old, Tree *what)
 //   Encapsulate result with a closure if context is not evaluation context
 // ----------------------------------------------------------------------------
 {
-    if (context->CurrentScope() != old)
+    if (context->Symbols() != old)
         what = Interpreter::MakeClosure(context, what);
     return what;
 }
@@ -691,7 +691,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
 // ----------------------------------------------------------------------------
 {
     Tree_p      result = what;
-    Scope_p     originalScope = context->CurrentScope();
+    Scope_p     originalScope = context->Symbols();
 
     // Loop to avoid recursion for a few common cases, e.g. sequences, blocks
     while (what)
@@ -861,7 +861,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
             // Check type matching
             if (name == "as")
             {
-                Scope *scope = context->CurrentScope();
+                Scope *scope = context->Symbols();
                 result = xl_typecheck(scope, infix->right, infix->left);
                 if (!result)
                 {

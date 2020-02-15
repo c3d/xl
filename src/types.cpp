@@ -91,7 +91,7 @@ Types::Types(Scope *scope, Types *parent)
       codegen(false)
 {
     context->CreateScope();
-    scope = context->CurrentScope();
+    scope = context->Symbols();
     record(types, "Created child Types %p scope %t", this, scope);
 }
 
@@ -240,7 +240,7 @@ Scope *Types::TypesScope()
 //   Returns the scope where we evaluated the types
 // ----------------------------------------------------------------------------
 {
-    return context->CurrentScope();
+    return context->Symbols();
 }
 
 
@@ -321,7 +321,7 @@ Tree *Types::Do(Name *what)
 
         else if (defined != what)
         {
-            if (scope != context->CurrentScope())
+            if (scope != context->Symbols())
                 captured[what] = defined;
             text label;
             if (RewriteCategory(rw, defined, label) == Types::Decl::NORMAL)

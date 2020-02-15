@@ -251,7 +251,7 @@ struct ArgEvalOp : FailOp
         if (self->IsConstant())
             result = self;
         else
-            result = xl_evaluate(ctx->CurrentScope(), self);
+            result = xl_evaluate(ctx->Symbols(), self);
         if (result)
         {
             result = Interpreter::MakeClosure(ctx, result);
@@ -267,7 +267,7 @@ struct ArgEvalOp : FailOp
     virtual void        Dump(std::ostream &out)
     {
         out << OpID() << "\t" << id << "=" << argId
-            << " @" << (void *) context->CurrentScope();
+            << " @" << (void *) context->Symbols();
     }
 };
 
@@ -485,7 +485,7 @@ struct IndexOp : FailOp
         Context_p context = new Context(scope);
         if (Tree *inside = Interpreter::IsClosure(callee, &context))
         {
-            scope = context->CurrentScope();
+            scope = context->Symbols();
             callee = inside;
             DataScope(data, scope);
         }
@@ -509,7 +509,7 @@ struct IndexOp : FailOp
                     // Bind arg in new context and evaluate body
                     context = new Context(context);
                     context->Define(lfname, arg);
-                    result = xl_evaluate(context->CurrentScope(), lifx->right);
+                    result = xl_evaluate(context->Symbols(), lifx->right);
                 }
                 else
                 {
@@ -517,7 +517,7 @@ struct IndexOp : FailOp
                     // '(X,Y is X+Y) (2,3)' should evaluate as 5
                     context = new Context(context);
                     context->Define(lifx->left, lifx->right);
-                    result = xl_evaluate(context->CurrentScope(), arg);
+                    result = xl_evaluate(context->Symbols(), arg);
                 }
 
                 DataResult(data, result);
@@ -653,7 +653,7 @@ Op *Code::Run(Data data)
 // ----------------------------------------------------------------------------
 {
     // Running in-place in the same context
-    Scope *scope = context->CurrentScope();
+    Scope *scope = context->Symbols();
     data[0] = self;
     data[1] = scope;
 
@@ -776,7 +776,7 @@ Op *Procedure::Run(Data data)
 //   Create a new scope and run all instructions in the sequence
 // ----------------------------------------------------------------------------
 {
-    Scope *scope     = context->CurrentScope();
+    Scope *scope     = context->Symbols();
     uint   frameSize = FrameSize();
     uint   offset    = OffsetSize();
     Data   frame     = new Tree_p[frameSize];
@@ -870,8 +870,8 @@ CodeBuilder::depth CodeBuilder::ScopeDepth(Scope *scope)
 //   Return true if the given scope is local to the current proc
 // ----------------------------------------------------------------------------
 {
-    Scope *parmsScope = parmsCtx->CurrentScope();
-    Scope *globalScope = MAIN->context.CurrentScope();
+    Scope *parmsScope = parmsCtx->Symbols();
+    Scope *globalScope = MAIN->context.Symbols();
     uint count = 0;
 
     // Loop on scope, looking for either current parm scope or global scope
@@ -937,7 +937,7 @@ void CodeBuilder::AddTypeCheck(Context *context, Tree *what, Tree *type)
 
     // Check if we have some static match
     if (what->IsConstant())
-        if (xl_typecheck(context->CurrentScope(), type, what))
+        if (xl_typecheck(context->Symbols(), type, what))
             return;
 
     // Check if types match statically
@@ -1265,7 +1265,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 {
     Save<Op *> saveSuccessOp(successOp, NULL);
     Save<Op *> saveFailOp(failOp, NULL);
-    Scope_p    originalScope = ctx->CurrentScope();
+    Scope_p    originalScope = ctx->Symbols();
     Context_p  gcContext     = ctx;
     TreeIDs    empty;
 
@@ -2022,7 +2022,7 @@ CodeBuilder::strength CodeBuilder::Do(Infix *what)
                 Bind(name, test);
                 return ALWAYS;
             }
-            Scope *scope = context->CurrentScope();
+            Scope *scope = context->Symbols();
             if (Tree *cast = xl_typecheck(scope, namedType, test))
             {
                 test = cast;

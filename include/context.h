@@ -247,8 +247,8 @@ public:
     // Create and delete a local scope
     Scope *             CreateScope(TreePosition pos = Tree::NOWHERE);
     void                PopScope();
-    Scope *             CurrentScope()          { return symbols; }
-    void                SetScope(Scope *s)      { symbols = s; }
+    Scope *             Symbols()               { return symbols; }
+    void                SetSymbols(Scope *s)    { symbols = s; }
     Context *           Parent();
     Context *           Pointer()               { return this; }
     operator Scope *()                          { return symbols; }
@@ -507,7 +507,7 @@ inline std::ostream &operator<< (std::ostream &out, Context *c)
 //   Dump a context
 // ----------------------------------------------------------------------------
 {
-    out << "Context " << (void *) c->CurrentScope() << ":\n";
+    out << "Context " << (void *) c->Symbols() << ":\n";
     Context::Dump(out, ScopeRewrites(c->symbols));
     return out;
 }

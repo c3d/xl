@@ -450,7 +450,7 @@ Tree *Context::Assign(Tree *ref, Tree *value)
         {
             if (typeDecl->name == "as")
             {
-                Scope *scope = CurrentScope();
+                Scope *scope = Symbols();
                 Tree *type = typeDecl->right;
                 Tree *castedValue = xl_typecheck(scope, type, value);
                 if (castedValue)
@@ -1030,7 +1030,7 @@ XL::Scope *xldebug(XL::Context *context)
 {
     if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
-        XL::Scope *scope = context->CurrentScope();
+        XL::Scope *scope = context->Symbols();
         return xldebug(scope);
     }
     else

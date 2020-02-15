@@ -139,7 +139,7 @@ CompilerUnit::~CompilerUnit()
 // ----------------------------------------------------------------------------
 {
     record(compiler_unit, "Deleted unit %p scope %t source %t",
-           this, context->CurrentScope(), source);
+           this, context->Symbols(), source);
 }
 
 
@@ -152,7 +152,7 @@ eval_fn CompilerUnit::Compile()
 //   compilation unit all assume that these steps have been performed.
 //   We return xl_identity on all error cases to avoid error cascades
 {
-    Scope *scope = context->CurrentScope();
+    Scope *scope = context->Symbols();
     record(compiler_unit, "Compile %t in scope %t", source, scope);
     if (!context->ProcessDeclarations(source))
     {

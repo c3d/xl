@@ -1970,7 +1970,7 @@ Tree *CompileAction::Rewrites(Tree *what)
 // ----------------------------------------------------------------------------
 {
     record(rewrites, "Looking up rewrites for %t in scope %t",
-           what, symbols.CurrentScope());
+           what, symbols.Symbols());
     ExpressionReduction reduction(*this, what);
     Context context(symbols);
     Tree *result = context.Lookup(what, lookupRewrite, &reduction, true);
