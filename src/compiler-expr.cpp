@@ -169,7 +169,7 @@ Value_p CompilerExpression::Do(Infix *infix)
 // ----------------------------------------------------------------------------
 {
     // Sequences
-    if (infix->name == "\n" || infix->name == ";")
+    if (IsSequence(infix))
     {
         Value_p left = Evaluate(infix->left, true);
         Value_p right = Evaluate(infix->right, true);
@@ -181,14 +181,14 @@ Value_p CompilerExpression::Do(Infix *infix)
     }
 
     // Type casts - REVISIT: may need to do some actual conversion
-    if (infix->name == ":" || infix->name == "as")
+    if (IsTypeAnnotation(infix))
     {
         return infix->left->Do(this);
     }
 
     // Declarations: it's too early to define a function just yet,
     // because we don't have the actual argument types.
-    if (infix->name == "is")
+    if (IsConstantDeclaration(infix))
         return function.ConstantTree(infix);
 
     // General case: expression

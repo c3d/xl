@@ -441,23 +441,19 @@ Tree *Context::Assign(Tree *ref, Tree *value)
     else
     {
         // Check if the declaration has a type, i.e. it is 'X as integer'
-        if (Infix *typeDecl = decl->left->AsInfix())
+        if (Tree *type = RewriteType(decl->left))
         {
-            if (typeDecl->name == "as")
+            Scope *scope = Symbols();
+            Tree *castedValue = xl_typecheck(scope, type, value);
+            if (castedValue)
             {
-                Scope *scope = Symbols();
-                Tree *type = typeDecl->right;
-                Tree *castedValue = xl_typecheck(scope, type, value);
-                if (castedValue)
-                {
-                    value = castedValue;
-                }
-                else
-                {
-                    Ooops("New value $1 does not match existing type", value);
-                    Ooops("for declaration $1", decl);
-                    value = decl->right; // Preserve existing value
-                }
+                value = castedValue;
+            }
+            else
+            {
+                Ooops("New value $1 does not match existing type", value);
+                Ooops("for declaration $1", decl);
+                value = decl->right; // Preserve existing value
             }
         }
 

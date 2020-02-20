@@ -498,7 +498,7 @@ struct IndexOp : FailOp
         if (Infix *lifx = callee->AsInfix())
         {
             // Check if we have a function definition
-            if (lifx->name == "is")
+            if (IsConstantDeclaration(lifx))
             {
                 // If we have a single name on the left, like (X->X+1)
                 // interpret that as a lambda function
@@ -1366,7 +1366,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // Create a call for forms like (X -> X+1) 31
             if (Infix *lifx = callee->AsInfix())
             {
-                if (lifx->name == "is")
+                if (IsConstantDeclaration(lifx))
                 {
                     TreeIDs   outs;
                     ParmOrder parms;

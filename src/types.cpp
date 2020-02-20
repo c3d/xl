@@ -409,15 +409,15 @@ Tree *Types::Do(Infix *what)
 {
     // For a sequence, both sub-expressions must succeed individually.
     // The type of the sequence is the type of the last statement
-    if (what->name == "\n" || what->name == ";")
+    if (IsSequence(what))
         return Statements(what, what->left, what->right);
 
     // Case of [X : T] : Set type of [X] to [T] and unify [X:T] with [X]
-    if (what->name == ":" || what->name == "as")
+    if (IsTypeAnnotation(what))
         return TypeDeclaration(what);
 
     // Case of [X is Y]: Analysis if any will be done during
-    if (what->name == "is")
+    if (IsConstantDeclaration(what))
         return TypeOfRewrite(what);
 
     // For all other cases, evaluate the infix
@@ -606,14 +606,14 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
     case INFIX:
     {
         Infix *infix = (Infix *) expr;
-        if (infix->name == ":" || infix->name == "as")
+        if (IsTypeAnnotation(infix))
         {
             Tree *right = EvaluateType(infix->right);
             if (right != infix->right)
                 infix = new Infix(infix, infix->left, right);
             return infix;
         }
-        if (infix->name == "when")
+        if (IsCondition(infix))
         {
             Tree *left = MakeTypesExplicit(infix->left);
             if (left != infix->left)

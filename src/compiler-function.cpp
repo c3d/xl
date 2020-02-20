@@ -658,7 +658,7 @@ Value_p CompilerFunction::Unbox(Value_p boxed, Tree *pattern, uint &index)
     case INFIX:
     {
         Infix *infix = (Infix *) pattern;
-        if (infix->name == ":" || infix->name == "as" || infix->name == "when")
+        if (IsTypeAnnotation(infix) || IsCondition(infix))
             return Unbox(boxed, infix->left, index);
         ref = ConstantTree(infix);
         ref = code.BitCast(ref, compiler.infixTreePtrTy);

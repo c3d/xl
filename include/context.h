@@ -476,14 +476,15 @@ inline bool IsTypeAnnotation(Infix *infix)
 }
 
 
-inline bool IsTypeAnnotation(Tree *tree)
+inline Infix *IsTypeAnnotation(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Check if a type is a type annotation
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        return IsTypeAnnotation(infix);
-    return false;
+        if (IsTypeAnnotation(infix))
+            return infix;
+    return nullptr;
 }
 
 
@@ -496,14 +497,15 @@ inline bool IsAssignment(Infix *infix)
 }
 
 
-inline bool IsAssignment(Tree *tree)
+inline Infix *IsAssignment(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree is an assignment
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        return IsAssignment(infix);
-    return false;
+        if (IsAssignment(infix))
+            return infix;
+    return nullptr;
 }
 
 
@@ -516,14 +518,15 @@ inline bool IsConstantDeclaration(Infix *infix)
 }
 
 
-inline bool IsConstantDeclaration(Tree *tree)
+inline Infix *IsConstantDeclaration(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree is an assignment
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        return IsConstantDeclaration(infix);
-    return false;
+        if (IsConstantDeclaration(infix))
+            return infix;
+    return nullptr;
 }
 
 
@@ -537,14 +540,15 @@ inline bool IsDeclaration(Infix *infix)
 }
 
 
-inline bool IsDeclaration(Tree *tree)
+inline Infix *IsDeclaration(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree is a declaration
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        return IsDeclaration(infix);
-    return false;
+        if (IsDeclaration(infix))
+            return infix;
+    return nullptr;
 }
 
 
@@ -557,14 +561,36 @@ inline bool IsSequence(Infix *infix)
 }
 
 
-inline bool IsSequence(Tree *tree)
+inline Infix *IsSequence(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree represents a sequence
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        return IsSequence(infix);
-    return false;
+        if (IsSequence(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsCommaList(Infix *infix)
+// ----------------------------------------------------------------------------
+//    Check if the infix is a comma operator
+// ----------------------------------------------------------------------------
+{
+    return infix->name == ",";
+}
+
+
+inline Infix *IsCommaList(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a comma infix
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsCommaList(infix))
+            return infix;
+    return nullptr;
 }
 
 
@@ -577,14 +603,15 @@ inline bool IsCondition(Infix *infix)
 }
 
 
-inline bool IsCondition(Tree *tree)
+inline Infix *IsCondition(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree marks a condition
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        return IsCondition(infix);
-    return false;
+        if (IsCondition(infix))
+            return infix;
+    return nullptr;
 }
 
 
@@ -626,7 +653,7 @@ inline Tree * RewriteType(Tree *what)
     if (Infix *typeDecl = what->AsInfix())
         if (IsTypeAnnotation(typeDecl))
             return typeDecl->right;
-    return NULL;
+    return nullptr;
 }
 
 

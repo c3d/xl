@@ -1476,7 +1476,7 @@ Tree *DeclarationAction::Do(Infix *what)
 // ----------------------------------------------------------------------------
 {
     // Check if this is an instruction list
-    if (what->name == "\n" || what->name == ";")
+    if (IsSequence(what))
     {
         // For instruction list, string declaration results together
         what->left->Do(this);
@@ -1765,7 +1765,7 @@ Tree *CompileAction::Do(Infix *what)
 // ----------------------------------------------------------------------------
 {
     // Check if this is an instruction list
-    if (what->name == "\n" || what->name == ";")
+    if (IsSequence(what))
     {
         // For instruction list, string compile results together
         // Force evaluation of names on the left of a sequence
@@ -1799,7 +1799,7 @@ Tree *CompileAction::Do(Infix *what)
     }
 
     // Check if this is a rewrite declaration
-    if (what->name == "->" || what->name == "is")
+    if (IsConstantDeclaration(what))
     {
         // If so, skip, this has been done in DeclarationAction
         return what;

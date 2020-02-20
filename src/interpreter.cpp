@@ -421,7 +421,7 @@ bool Bindings::Do(Infix *what)
     }
 
     // Check if we have typed declarations, e.g. X+Y as integer
-    if (what->name == "as")
+    if (IsTypeAnnotation(what))
     {
         if (resultType)
         {
@@ -767,30 +767,26 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
             Tree *arg = pfx->right;
 
             // If we have an infix on the left, check if it's a single rewrite
-            if (Infix *lifx = callee->AsInfix())
+            if (Infix *lifx = IsConstantDeclaration(callee))
             {
-                // Check if we have a function definition
-                if (lifx->name == "is")
+                // If we have a single name on the left, like (X->X+1)
+                // interpret that as a lambda function
+                if (Name *lfname = lifx->left->AsName())
                 {
-                    // If we have a single name on the left, like (X->X+1)
-                    // interpret that as a lambda function
-                    if (Name *lfname = lifx->left->AsName())
-                    {
-                        // Case like '(X->X+1) Arg':
-                        // Bind arg in new context and evaluate body
-                        context = new Context(context);
-                        context->Define(lfname, arg);
-                        what = lifx->right;
-                        continue;
-                    }
-
-                    // Otherwise, enter declaration and retry, e.g.
-                    // '(X,Y->X+Y) (2,3)' should evaluate as 5
+                    // Case like '(X->X+1) Arg':
+                    // Bind arg in new context and evaluate body
                     context = new Context(context);
-                    context->Define(lifx->left, lifx->right);
-                    what = arg;
+                    context->Define(lfname, arg);
+                    what = lifx->right;
                     continue;
                 }
+
+                // Otherwise, enter declaration and retry, e.g.
+                // '(X,Y->X+Y) (2,3)' should evaluate as 5
+                context = new Context(context);
+                context->Define(lifx->left, lifx->right);
+                what = arg;
+                continue;
             }
 
             // Other cases: evaluate the callee, and if it changed, retry
@@ -810,9 +806,8 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
                 {
                     what = arg;
                     // Check if we have a single definition on the left
-                    if (Infix *ifx = inside->AsInfix())
-                        if (ifx->name == "is")
-                            what = new Prefix(newCallee, arg, pfx->Position());
+                    if (Infix *ifx = IsConstantDeclaration(inside))
+                        what = new Prefix(newCallee, arg, pfx->Position());
                 }
                 else
                 {
@@ -960,7 +955,7 @@ struct Expansion
     }
     Tree *  Do(Infix *what)
     {
-        if (what->name == ":" || what->name == "as" || what->name == "when")
+        if (IsTypeAnnotation(what) || IsCondition(what))
             return what->left->Do(this);
         Tree *left  = what->left->Do(this);
         Tree *right = what->right->Do(this);

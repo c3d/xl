@@ -73,7 +73,7 @@ bool RewriteBinding::IsDeferred()
 
     // Defer sequences and function definitions
     if (Infix *infix = val->AsInfix())
-        return infix->name == ";" || infix->name == "\n" || infix->name == "is";
+        return IsSequence(infix) || IsConstantDeclaration(infix);
 
     return false;
 }
@@ -256,7 +256,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         Infix *fi = (Infix *) form;
 
         // Check type declarations
-        if (fi->name == ":" || fi->name == "as")
+        if (IsTypeAnnotation(fi))
         {
             // Assign the given type to the declared expression
             Tree *form = fi->left;

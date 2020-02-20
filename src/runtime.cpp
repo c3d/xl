@@ -432,7 +432,7 @@ static void xl_list_files(Scope *scope, Tree *patterns, Tree_p *&parent)
     }
     if (Infix *infix = patterns->AsInfix())
     {
-        if (infix->name == "," || infix->name == ";" || infix->name == "\n")
+        if (IsCommaList(infix))
         {
             xl_list_files(scope, infix->left, parent);
             xl_list_files(scope, infix->right, parent);
