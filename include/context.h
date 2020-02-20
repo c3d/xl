@@ -503,7 +503,7 @@ inline Tree * RewriteType(Tree *what)
 // ----------------------------------------------------------------------------
 {
     if (Infix *typeDecl = what->AsInfix())
-        if (typeDecl->name == "as")
+        if (typeDecl->name == "as" || typeDecl->name == ":")
             return typeDecl->right;
     return NULL;
 }
