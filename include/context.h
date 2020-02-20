@@ -467,36 +467,6 @@ inline void Context::HasOneRewriteFor(kind k)
 }
 
 
-inline Tree * RewriteDefined(Tree *form)
-// ----------------------------------------------------------------------------
-//   Find what we actually define based on the shape of the left of a 'is'
-// ----------------------------------------------------------------------------
-{
-    Tree *old;
-    do
-    {
-        old = form;
-
-        // Check 'X as integer', we define X
-        if (Infix *typeDecl = form->AsInfix())
-            if (typeDecl->name == "as" || typeDecl->name == ":")
-                form = typeDecl->left;
-
-        // Check 'X when Condition', we define X
-        if (Infix *typeDecl = form->AsInfix())
-            if (typeDecl->name == "when")
-                form = typeDecl->left;
-
-        // Check outermost (X): we define X
-        if (Block *block = form->AsBlock())
-            form = block->child;
-
-    } while (form != old);
-
-    return form;
-}
-
-
 inline bool IsTypeAnnotation(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix is a type annotation
@@ -595,6 +565,56 @@ inline bool IsSequence(Tree *tree)
     if (Infix *infix = tree->AsInfix())
         return IsSequence(infix);
     return false;
+}
+
+
+inline bool IsCondition(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix marks a condition
+// ----------------------------------------------------------------------------
+{
+    return infix->name == "when";
+}
+
+
+inline bool IsCondition(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree marks a condition
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        return IsCondition(infix);
+    return false;
+}
+
+
+inline Tree * RewriteDefined(Tree *form)
+// ----------------------------------------------------------------------------
+//   Find what we actually define based on the shape of the left of a 'is'
+// ----------------------------------------------------------------------------
+{
+    Tree *old;
+    do
+    {
+        old = form;
+
+        // Check 'X as integer', we define X
+        if (Infix *typeDecl = form->AsInfix())
+            if (IsTypeAnnotation(typeDecl))
+                form = typeDecl->left;
+
+        // Check 'X when Condition', we define X
+        if (Infix *typeDecl = form->AsInfix())
+            if (IsCondition(typeDecl))
+                form = typeDecl->left;
+
+        // Check outermost (X): we define X
+        if (Block *block = form->AsBlock())
+            form = block->child;
+
+    } while (form != old);
+
+    return form;
 }
 
 
