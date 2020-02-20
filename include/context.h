@@ -497,13 +497,114 @@ inline Tree * RewriteDefined(Tree *form)
 }
 
 
+inline bool IsTypeAnnotation(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a type annotation
+// ----------------------------------------------------------------------------
+{
+    return infix->name == ":" || infix->name == "as";
+}
+
+
+inline bool IsTypeAnnotation(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Check if a type is a type annotation
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        return IsTypeAnnotation(infix);
+    return false;
+}
+
+
+inline bool IsAssignment(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is an assignment
+// ----------------------------------------------------------------------------
+{
+    return infix->name == ":=";
+}
+
+
+inline bool IsAssignment(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is an assignment
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        return IsAssignment(infix);
+    return false;
+}
+
+
+inline bool IsConstantDeclaration(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a constant declaration
+// ----------------------------------------------------------------------------
+{
+    return infix->name == "is";
+}
+
+
+inline bool IsConstantDeclaration(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is an assignment
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        return IsConstantDeclaration(infix);
+    return false;
+}
+
+
+inline bool IsDeclaration(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a declaration
+// ----------------------------------------------------------------------------
+{
+    return (IsConstantDeclaration(infix) ||
+            (IsAssignment(infix) && IsTypeAnnotation(infix->left)));
+}
+
+
+inline bool IsDeclaration(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a declaration
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        return IsDeclaration(infix);
+    return false;
+}
+
+
+inline bool IsSequence(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix represents a sequence, i.e. "A;B" or newline
+// ----------------------------------------------------------------------------
+{
+    return infix->name == ";" || infix->name == "\n";
+}
+
+
+inline bool IsSequence(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree represents a sequence
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        return IsSequence(infix);
+    return false;
+}
+
+
 inline Tree * RewriteType(Tree *what)
 // ----------------------------------------------------------------------------
 //   If we have a declaration with 'X as Type', return Type
 // ----------------------------------------------------------------------------
 {
     if (Infix *typeDecl = what->AsInfix())
-        if (typeDecl->name == "as" || typeDecl->name == ":")
+        if (IsTypeAnnotation(typeDecl))
             return typeDecl->right;
     return NULL;
 }

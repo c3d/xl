@@ -180,18 +180,18 @@ bool Context::ProcessDeclarations(Tree *what)
         bool isInstruction = true;
         if (Infix *infix = what->AsInfix())
         {
-            if (infix->name == "is")
+            if (IsDeclaration(infix))
             {
                 Enter(infix);
                 isInstruction = false;
             }
-            else if (infix->name == "\n" || infix->name == ";")
+            else if (IsSequence(infix))
             {
                 // Chain of declarations, avoiding recursing if possible.
                 if (Infix *left = infix->left->AsInfix())
                 {
                     isInstruction = false;
-                    if (left->name == "is")
+                    if (IsDeclaration(left))
                         Enter(left);
                     else
                         isInstruction = ProcessDeclarations(left);
@@ -320,7 +320,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 {
     // If the rewrite is not good, just exit
-    if (rewrite->name != "is")
+    if (!IsDeclaration(rewrite))
         return NULL;
 
     // In interpreted mode, just skip any C declaration
@@ -434,11 +434,6 @@ Tree *Context::Assign(Tree *ref, Tree *value)
         // Strip outermost block if there is one
         if (Block *block = ref->AsBlock())
             ref = block->child;
-
-        // If we have 'X:integer := 3', define 'X as integer'
-        if (Infix *typed = ref->AsInfix())
-            if (typed->name == ":")
-                typed->name = "as";
 
         // Enter in the symbol table
         Define(ref, value);
@@ -627,7 +622,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             Rewrite *entry = (*parent)->As<Rewrite>();
             XL_ASSERT(entry && entry->name == REWRITE_NAME);
             Infix *decl = RewriteDeclaration(entry);
-            XL_ASSERT(!decl || decl->name == "is");
+            XL_ASSERT(!decl || IsDeclaration(decl));
             RewriteChildren *children = RewriteNext(entry);
             XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
@@ -775,7 +770,7 @@ static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
     while (where)
     {
         Infix *decl = RewriteDeclaration(where);
-        if (decl && decl->name == "is")
+        if (decl && IsDeclaration(decl))
         {
             Tree *declared = decl->left;
             Name *name = declared->AsName();
@@ -791,7 +786,7 @@ static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
                 count++;
             }
         }
-        if (where->name == ";" || where->name == "\n")
+        if (IsSequence(where))
             count += listNames(where->left->As<Rewrite>(), begin, list, pfx);
         where = decl->right->As<Rewrite>();
     }
@@ -948,8 +943,9 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
 
         if (decl)
         {
-            if (decl->name == "is")
-                out << decl->left << " is "
+            if (IsDeclaration(decl))
+                out << decl->left
+                    << decl->name
                     << ShortTreeForm(decl->right) << "\n";
             else
                 out << "DECL?" << decl << "\n";

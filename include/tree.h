@@ -383,7 +383,6 @@ struct Infix : Tree
         Tree(INFIX, pos), left(l), right(r), name(n) {}
     Infix(Infix *i, Tree *l, Tree *r):
         Tree(INFIX, i), left(l), right(r), name(i->name) {}
-    bool                IsDeclaration() { return name == "is"; }
     Infix *             LastStatement(text sep1 = ";", text sep2 = "\n");
     Tree_p              left;
     Tree_p              right;

@@ -135,7 +135,7 @@ TYPE(infix,Infix,
     );
 TYPE(declaration,Infix,
      if (Infix *infix = AsInfix())
-         if (infix->IsDeclaration())
+         if (IsDeclaration(infix))
              return (declaration_p) infix;
     );
 TYPE(prefix,Prefix,
