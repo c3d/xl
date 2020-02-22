@@ -40,7 +40,7 @@
 // that is transient, i.e. only exists during a given compilation phase
 //
 // In the following, we will consider a rewrite such as:
-//    foo X:integer, Y -> bar X + Y
+//    foo X:integer, Y is bar X + Y
 //
 // Such a rewrite is transformed into a function with a prototype that
 // depends on the arguments, i.e. something like:
