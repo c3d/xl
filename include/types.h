@@ -38,23 +38,16 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 //
-//  The type system in XL is somewhat similar to what is found in Haskell,
-//  except that it's based on the shape of trees.
+//  The type system in XL is based on the shape of trees, for example:
+//     type positive_add is matching X+Y when X > 0 and Y > 0
 //
-//  A type form in XL can be:
-//   - A type name              integer
-//   - A litteral value         0       1.5             "Hello"
-//   - A range of values        0..4    1.3..8.9        "A".."Z"
-//   - A union of types         0|3|5   integer|real
-//   - A rewrite specifier      integer => real
-//   - The type of a pattern    type (X:integer, Y:integer)
+//  A value can belong to multiple types. For example, 3+5 belongs to
+//  the infix type (since 3+5 is an infix form) as well as to positive_add
 
 #include "tree.h"
 #include "context.h"
+#include "llvm-crap.h"
 #include <map>
-
-
-namespace llvm { class Type; class Value; }
 
 
 XL_BEGIN
@@ -67,20 +60,19 @@ XL_BEGIN
 
 struct RewriteCalls;
 struct RewriteCandidate;
-typedef llvm::Type  *Type_p;
-typedef llvm::Value *Value_p;
 typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
-typedef std::map<Tree_p, Type_p>         box_map;
+typedef std::map<Tree_p, JIT::Type_p>    box_map;
 
 extern Name_p tree_type;
 
 
 // ============================================================================
 //
-//   Class used to infer types in a program (hacked Damas-Hindley-Milner)
+//   Class used to record types in a program
 //
 // ============================================================================
+//
 
 class Types
 // ----------------------------------------------------------------------------
@@ -118,8 +110,8 @@ public:
     Context *   TypesContext();
 
     // Machine types management
-    void        AddBoxedType(Tree *treeType, Type_p machineType);
-    Type_p      BoxedType(Tree *type);
+    void        AddBoxedType(Tree *treeType, JIT::Type_p machineType);
+    JIT::Type_p BoxedType(Tree *type);
 
 public:
     // Interface for Tree::Do() to annotate the tree

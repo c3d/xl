@@ -65,17 +65,17 @@ CompilerExpression::CompilerExpression(CompilerFunction &function)
 
 
 
-Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
+JIT::Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
 // ----------------------------------------------------------------------------
 //   For top-level expressions, make sure we evaluate closures
 // ----------------------------------------------------------------------------
 {
-    Value_p result = expr->Do(this);
+    JIT::Value_p result = expr->Do(this);
     if (result)
     {
         CompilerUnit &unit = function.unit;
         JITBlock &code = function.code;
-        Type_p mtype = code.Type(result);
+        JIT::Type_p mtype = code.Type(result);
         function.ValueMachineType(expr, mtype);
         if (force && unit.IsClosureType(mtype))
         {
@@ -88,7 +88,7 @@ Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
 
 
 
-Value_p CompilerExpression::Do(Integer *what)
+JIT::Value_p CompilerExpression::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Compile an integer constant
 // ----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ Value_p CompilerExpression::Do(Integer *what)
 }
 
 
-Value_p CompilerExpression::Do(Real *what)
+JIT::Value_p CompilerExpression::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   Compile a real constant
 // ----------------------------------------------------------------------------
@@ -110,7 +110,7 @@ Value_p CompilerExpression::Do(Real *what)
 }
 
 
-Value_p CompilerExpression::Do(Text *what)
+JIT::Value_p CompilerExpression::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   Compile a text constant
 // ----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ Value_p CompilerExpression::Do(Text *what)
 }
 
 
-Value_p CompilerExpression::Do(Name *what)
+JIT::Value_p CompilerExpression::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   Compile a name
 // ----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ Value_p CompilerExpression::Do(Name *what)
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = RewriteDefined(rewrite->left);
     if (where == context->Symbols())
-        if (Value_p result = function.Known(from))
+        if (JIT::Value_p result = function.Known(from))
             return result;
 
     // Check true and false values
@@ -150,12 +150,12 @@ Value_p CompilerExpression::Do(Name *what)
         return code.BooleanConstant(false);
 
     // Check if it is a global
-    if (Value_p global = unit.Global(existing))
+    if (JIT::Value_p global = unit.Global(existing))
         return global;
-    if (Value_p global = unit.Global(from))
+    if (JIT::Value_p global = unit.Global(from))
         return global;
 
-    Value_p result = DoCall(what, true);
+    JIT::Value_p result = DoCall(what, true);
     if (!result)
         result = Evaluate(existing);
 
@@ -163,7 +163,7 @@ Value_p CompilerExpression::Do(Name *what)
 }
 
 
-Value_p CompilerExpression::Do(Infix *infix)
+JIT::Value_p CompilerExpression::Do(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Compile infix expressions
 // ----------------------------------------------------------------------------
@@ -171,8 +171,8 @@ Value_p CompilerExpression::Do(Infix *infix)
     // Sequences
     if (IsSequence(infix))
     {
-        Value_p left = Evaluate(infix->left, true);
-        Value_p right = Evaluate(infix->right, true);
+        JIT::Value_p left = Evaluate(infix->left, true);
+        JIT::Value_p right = Evaluate(infix->right, true);
         if (right)
             return right;
         if (left)
@@ -196,7 +196,7 @@ Value_p CompilerExpression::Do(Infix *infix)
 }
 
 
-Value_p CompilerExpression::Do(Prefix *what)
+JIT::Value_p CompilerExpression::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Compile prefix expressions
 // ----------------------------------------------------------------------------
@@ -218,19 +218,19 @@ Value_p CompilerExpression::Do(Prefix *what)
             }
 
             // Take args list for current function as input
-            Values args;
-            Function_p fn = function.Function();
+            JIT::Values args;
+            JIT::Function_p fn = function.Function();
             JITArguments inputs(fn);
             for (size_t i = 0; i < inputs.Count(); i++)
             {
-                Value_p input = *inputs++;
+                JIT::Value_p input = *inputs++;
                 args.push_back(input);
             }
 
             // Call the primitive (effectively creating a wrapper for it)
             text op = name->value;
             uint sz = args.size();
-            Value_p *a = &args[0];
+            JIT::Value_p *a = &args[0];
             return function.Primitive(what, op, sz, a);
         }
     }
@@ -238,7 +238,7 @@ Value_p CompilerExpression::Do(Prefix *what)
 }
 
 
-Value_p CompilerExpression::Do(Postfix *what)
+JIT::Value_p CompilerExpression::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Compile postfix expressions
 // ----------------------------------------------------------------------------
@@ -247,7 +247,7 @@ Value_p CompilerExpression::Do(Postfix *what)
 }
 
 
-Value_p CompilerExpression::Do(Block *block)
+JIT::Value_p CompilerExpression::Do(Block *block)
 // ----------------------------------------------------------------------------
 //   Compile blocks
 // ----------------------------------------------------------------------------
@@ -256,12 +256,12 @@ Value_p CompilerExpression::Do(Block *block)
 }
 
 
-Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
+JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 // ----------------------------------------------------------------------------
 //   Compile expressions into calls for the right expression
 // ----------------------------------------------------------------------------
 {
-    Value_p result = nullptr;
+    JIT::Value_p result = nullptr;
 
     record(compiler_expr, "Call %t", call);
     Types *types = function.types;
@@ -299,8 +299,8 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     // More general case: we need to generate expression reduction
     JITBlock &code = function.code;
     JITBlock isDone(code, "done");
-    Type_p storageType = function.ValueMachineType(call);
-    Value_p storage = function.NeedStorage(call, storageType);
+    JIT::Type_p storageType = function.ValueMachineType(call);
+    JIT::Value_p storage = function.NeedStorage(call, storageType);
     Compiler &compiler = function.compiler;
 
     for (i = 0; i < max; i++)
@@ -308,13 +308,13 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         // Now evaluate in that candidate's type system
         RewriteCandidate *cand = calls[i];
         Save<value_map> saveComputed(computed, computed);
-        Value_p condition = nullptr;
+        JIT::Value_p condition = nullptr;
 
         // Perform tree-kind tests to check if this candidate is valid
         for (RewriteKind &k : cand->kinds)
         {
-            Value_p value = Evaluate(k.value);
-            Type_p type = code.Type(value);
+            JIT::Value_p value = Evaluate(k.value);
+            JIT::Type_p type = code.Type(value);
 
             if (type == compiler.treePtrTy        ||
                 type == compiler.integerTreePtrTy ||
@@ -327,13 +327,13 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
                 type == compiler.infixTreePtrTy)
             {
                 // Unboxed value, check the dynamic kind
-                Value_p tagPtr = code.StructGEP(value, TAG_INDEX, "tagp");
-                Value_p tag = code.Load(tagPtr, "tag");
-                Type_p  tagType = code.Type(tag);
-                Value_p mask = code.IntegerConstant(tagType, Tree::KINDMASK);
-                Value_p kindValue = code.And(tag, mask, "kind");
-                Value_p kindCheck = code.IntegerConstant(tagType, k.test);
-                Value_p compare = code.ICmpEQ(kindValue, kindCheck);
+                JIT::Value_p tagPtr = code.StructGEP(value, TAG_INDEX, "tagp");
+                JIT::Value_p tag = code.Load(tagPtr, "tag");
+                JIT::Type_p  tagType = code.Type(tag);
+                JIT::Value_p mask = code.IntegerConstant(tagType, Tree::KINDMASK);
+                JIT::Value_p kindValue = code.And(tag, mask, "kind");
+                JIT::Value_p kindCheck = code.IntegerConstant(tagType, k.test);
+                JIT::Value_p compare = code.ICmpEQ(kindValue, kindCheck);
                 record(compiler_expr, "Kind test for %t candidate %u: %v",
                        call, i, compare);
 
@@ -357,7 +357,7 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         // Perform the tests to check if this candidate is valid
         for (RewriteCondition &t : cand->conditions)
         {
-            Value_p compare = Compare(t.value, t.test);
+            JIT::Value_p compare = Compare(t.value, t.test);
             record(compiler_expr, "Condition test for %t candidate %u: %v",
                    call, i, compare);
             if (condition)
@@ -406,24 +406,24 @@ Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 }
 
 
-Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
+JIT::Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
 // ----------------------------------------------------------------------------
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
 {
     Rewrite *rw = cand->rewrite;
-    Value_p result = nullptr;
+    JIT::Value_p result = nullptr;
     JITBlock &code = function.code;
 
     record(compiler_expr, "Rewrite: %t", rw);
 
     // Evaluate parameters
-    Values args;
+    JIT::Values args;
     RewriteBindings &bnds = cand->bindings;
     for (RewriteBinding &b : bnds)
     {
         Tree *tree = b.value;
-        Value_p value = Value(tree);
+        JIT::Value_p value = Value(tree);
         args.push_back(value);
         record(compiler_expr, "Rewrite %t arg %t value %v", rw, tree, value);
     }
@@ -452,7 +452,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
         {
             text op = name->value;
             uint sz = args.size();
-            Value_p *a = &args[0];
+            JIT::Value_p *a = &args[0];
             result = function.Primitive(builtin, op, sz, a);
             record(compiler_expr, "Rewrite %t is builtin %t: %v",
                    rw, builtin, result);
@@ -460,7 +460,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     }
     else
     {
-        Value_p fn = function.Compile(call, cand, args);
+        JIT::Value_p fn = function.Compile(call, cand, args);
         if (fn)
             result = code.Call(fn, args);
         record(compiler_expr, "Rewrite %t function %v call %v",
@@ -472,7 +472,7 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     {
         Types *vtypes = cand->value_types;
         Tree *base = vtypes->CodegenType(call);
-        Type_p retTy = code.Type(result);
+        JIT::Type_p retTy = code.Type(result);
         function.AddBoxedType(base, retTy);
         record(compiler_expr, "Transporting type %t (%T) of %t into %p",
                base, retTy, call, vtypes);
@@ -482,12 +482,12 @@ Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
 }
 
 
-Value_p CompilerExpression::Value(Tree *expr)
+JIT::Value_p CompilerExpression::Value(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Evaluate an expression once
 // ----------------------------------------------------------------------------
 {
-    Value_p value = computed[expr];
+    JIT::Value_p value = computed[expr];
     if (!value)
     {
         value = Evaluate(expr);
@@ -497,7 +497,7 @@ Value_p CompilerExpression::Value(Tree *expr)
 }
 
 
-Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
+JIT::Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
 // ----------------------------------------------------------------------------
 //   Perform a comparison between the two values and check if this matches
 // ----------------------------------------------------------------------------
@@ -511,10 +511,10 @@ Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
             if (vt->value == tt->value)
                 return code.BooleanConstant(true);
 
-    Value_p       value     = Value(valueTree);
-    Value_p       test      = Value(testTree);
-    Type_p        valueType = code.Type(value);
-    Type_p        testType  = code.Type(test);
+    JIT::Value_p value     = Value(valueTree);
+    JIT::Value_p test      = Value(testTree);
+    JIT::Type_p  valueType = code.Type(value);
+    JIT::Type_p  testType  = code.Type(test);
 
 
     // Comparison of boolean values

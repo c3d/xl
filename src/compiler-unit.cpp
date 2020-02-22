@@ -84,26 +84,26 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
       compiled()
 {
     // Local copy of the types for the macro below
-    IntegerType_p  booleanTy        = compiler.booleanTy;
-    IntegerType_p  integerTy        = compiler.integerTy;
-    IntegerType_p  unsignedTy       = compiler.unsignedTy;
-    IntegerType_p  ulongTy          = compiler.ulongTy;
-    IntegerType_p  ulonglongTy      = compiler.ulonglongTy;
-    Type_p         realTy           = compiler.realTy;
-    IntegerType_p  characterTy      = compiler.characterTy;
-    PointerType_p  charPtrTy        = compiler.charPtrTy;
-    StructType_p   textTy           = compiler.textTy;
-    PointerType_p  textPtrTy        = compiler.textPtrTy;
-    PointerType_p  treePtrTy        = compiler.treePtrTy;
-    PointerType_p  integerTreePtrTy = compiler.integerTreePtrTy;
-    PointerType_p  realTreePtrTy    = compiler.realTreePtrTy;
-    PointerType_p  textTreePtrTy    = compiler.textTreePtrTy;
-    PointerType_p  blockTreePtrTy   = compiler.blockTreePtrTy;
-    PointerType_p  prefixTreePtrTy  = compiler.prefixTreePtrTy;
-    PointerType_p  postfixTreePtrTy = compiler.postfixTreePtrTy;
-    PointerType_p  infixTreePtrTy   = compiler.infixTreePtrTy;
-    PointerType_p  scopePtrTy       = compiler.scopePtrTy;
-    PointerType_p  evalFnTy         = compiler.evalFnTy;
+    JIT::IntegerType_p  booleanTy        = compiler.booleanTy;
+    JIT::IntegerType_p  integerTy        = compiler.integerTy;
+    JIT::IntegerType_p  unsignedTy       = compiler.unsignedTy;
+    JIT::IntegerType_p  ulongTy          = compiler.ulongTy;
+    JIT::IntegerType_p  ulonglongTy      = compiler.ulonglongTy;
+    JIT::Type_p         realTy           = compiler.realTy;
+    JIT::IntegerType_p  characterTy      = compiler.characterTy;
+    JIT::PointerType_p  charPtrTy        = compiler.charPtrTy;
+    JIT::StructType_p   textTy           = compiler.textTy;
+    JIT::PointerType_p  textPtrTy        = compiler.textPtrTy;
+    JIT::PointerType_p  treePtrTy        = compiler.treePtrTy;
+    JIT::PointerType_p  integerTreePtrTy = compiler.integerTreePtrTy;
+    JIT::PointerType_p  realTreePtrTy    = compiler.realTreePtrTy;
+    JIT::PointerType_p  textTreePtrTy    = compiler.textTreePtrTy;
+    JIT::PointerType_p  blockTreePtrTy   = compiler.blockTreePtrTy;
+    JIT::PointerType_p  prefixTreePtrTy  = compiler.prefixTreePtrTy;
+    JIT::PointerType_p  postfixTreePtrTy = compiler.postfixTreePtrTy;
+    JIT::PointerType_p  infixTreePtrTy   = compiler.infixTreePtrTy;
+    JIT::PointerType_p  scopePtrTy       = compiler.scopePtrTy;
+    JIT::PointerType_p  evalFnTy         = compiler.evalFnTy;
 
     // Initialize all the static functions
 #define UNARY(Name)
@@ -113,15 +113,15 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
 #define SPECIAL(Name, Arity, Code)
 #define EXTERNAL(Name, RetTy, ...)                              \
     {                                                           \
-        Signature sig { __VA_ARGS__ };                          \
-        FunctionType_p fty = jit.FunctionType(RetTy, sig);      \
+        JIT::Signature sig { __VA_ARGS__ };                     \
+        JIT::FunctionType_p fty = jit.FunctionType(RetTy, sig); \
         Name = jit.Function(fty, #Name);                        \
     }
-#define VA_EXTERNAL(Name, RetTy, ...)                           \
-    {                                                           \
-        Signature sig { __VA_ARGS__ };                          \
-        FunctionType_p fty = jit.FunctionType(RetTy, sig, true);\
-        Name = jit.Function(fty, #Name);                        \
+#define VA_EXTERNAL(Name, RetTy, ...)                                   \
+    {                                                                   \
+        JIT::Signature sig { __VA_ARGS__ };                             \
+        JIT::FunctionType_p fty = jit.FunctionType(RetTy, sig, true);   \
+        Name = jit.Function(fty, #Name);                                \
     }
 #include "compiler-primitives.tbl"
 
@@ -170,10 +170,10 @@ eval_fn CompilerUnit::Compile()
     }
 
     CompilerEval function(*this, source, types);
-    Value_p global = function.Function();
+    JIT::Value_p global = function.Function();
     Global(source, global);
 
-    Value_p returned = function.Compile(source, true);
+    JIT::Value_p returned = function.Compile(source, true);
     if (!returned)
     {
         Ooops("Compilation for $1 failed", source);
@@ -197,7 +197,7 @@ bool CompilerUnit::TypeAnalysis()
 }
 
 
-Value_p CompilerUnit::Global(Tree *tree)
+JIT::Value_p CompilerUnit::Global(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the LLVM value associated with the tree
 // ----------------------------------------------------------------------------
@@ -209,7 +209,7 @@ Value_p CompilerUnit::Global(Tree *tree)
 }
 
 
-void CompilerUnit::Global(Tree *tree, Value_p value)
+void CompilerUnit::Global(Tree *tree, JIT::Value_p value)
 // ----------------------------------------------------------------------------
 //    Record the global value associated to a tree
 // ----------------------------------------------------------------------------
@@ -218,9 +218,9 @@ void CompilerUnit::Global(Tree *tree, Value_p value)
 }
 
 
-Function_p &CompilerUnit::Compiled(Scope *scope,
-                                   RewriteCandidate *rc,
-                                   const Values &args)
+JIT::Function_p &CompilerUnit::Compiled(Scope *scope,
+                                        RewriteCandidate *rc,
+                                        const JIT::Values &args)
 // ----------------------------------------------------------------------------
 //    Return a unique entry corresponding to this overload
 // ----------------------------------------------------------------------------
@@ -230,7 +230,7 @@ Function_p &CompilerUnit::Compiled(Scope *scope,
     os << (void *) rc->rewrite << "@" << (void *) scope;
     for (auto value : args)
     {
-        Type_p type = JIT::Type(value);
+        JIT::Type_p type = JIT::Type(value);
         os << '|' << (void *) type;
     }
     text key = os.str();
@@ -239,7 +239,7 @@ Function_p &CompilerUnit::Compiled(Scope *scope,
 }
 
 
-Function_p &CompilerUnit::CompiledUnbox(Type_p type)
+JIT::Function_p &CompilerUnit::CompiledUnbox(JIT::Type_p type)
 // ----------------------------------------------------------------------------
 //    Return a unique entry corresponding to this unbox function
 // ----------------------------------------------------------------------------
@@ -252,7 +252,7 @@ Function_p &CompilerUnit::CompiledUnbox(Type_p type)
 }
 
 
-Function_p &CompilerUnit::CompiledClosure(Scope *scope, Tree *expr)
+JIT::Function_p &CompilerUnit::CompiledClosure(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
 //    Return a unique function entry for the closure function
 // ----------------------------------------------------------------------------
@@ -264,7 +264,7 @@ Function_p &CompilerUnit::CompiledClosure(Scope *scope, Tree *expr)
 }
 
 
-bool CompilerUnit::IsClosureType(Type_p type)
+bool CompilerUnit::IsClosureType(JIT::Type_p type)
 // ----------------------------------------------------------------------------
 //    Check if this is a known closure type
 // ----------------------------------------------------------------------------
@@ -273,7 +273,7 @@ bool CompilerUnit::IsClosureType(Type_p type)
 }
 
 
-void CompilerUnit::AddClosureType(Type_p type)
+void CompilerUnit::AddClosureType(JIT::Type_p type)
 // ----------------------------------------------------------------------------
 //   Mark the type as a closure type
 // ----------------------------------------------------------------------------

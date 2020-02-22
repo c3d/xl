@@ -54,25 +54,25 @@ class CompilerExpression
     value_map           computed;       // Values we already computed
 
 public:
-    typedef Value_p value_type;
+    typedef JIT::Value_p value_type;
     CompilerExpression(CompilerFunction &function);
 
 public:
-    Value_p             Evaluate(Tree *tree, bool force = false);
+    value_type  Evaluate(Tree *tree, bool force = false);
 
-    Value_p             Do(Integer *what);
-    Value_p             Do(Real *what);
-    Value_p             Do(Text *what);
-    Value_p             Do(Name *what);
-    Value_p             Do(Prefix *what);
-    Value_p             Do(Postfix *what);
-    Value_p             Do(Infix *what);
-    Value_p             Do(Block *what);
+    value_type  Do(Integer *what);
+    value_type  Do(Real *what);
+    value_type  Do(Text *what);
+    value_type  Do(Name *what);
+    value_type  Do(Prefix *what);
+    value_type  Do(Postfix *what);
+    value_type  Do(Infix *what);
+    value_type  Do(Block *what);
 
-    Value_p             DoCall(Tree *call, bool mayfail = false);
-    Value_p             DoRewrite(Tree *call, RewriteCandidate *candidate);
-    Value_p             Value(Tree *expr);
-    Value_p             Compare(Tree *value, Tree *test);
+    value_type  DoCall(Tree *call, bool mayfail = false);
+    value_type  DoRewrite(Tree *call, RewriteCandidate *candidate);
+    value_type  Value(Tree *expr);
+    value_type  Compare(Tree *value, Tree *test);
 };
 
 XL_END

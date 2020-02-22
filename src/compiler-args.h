@@ -128,12 +128,12 @@ struct RewriteCandidate
     // Code generation
     Tree *              RewriteForm()           { return rewrite->left; }
     Tree *              RewriteBody()           { return rewrite->right; }
-    Function_p          Prototype(JIT &jit);
-    FunctionType_p      FunctionType(JIT &jit);
+    JIT::Function_p     Prototype(JIT &jit);
+    JIT::FunctionType_p FunctionType(JIT &jit);
     text                FunctionName();
-    Signature           RewriteSignature();
-    Type_p              RewriteType();
-    void                RewriteType(Type_p type);
+    JIT::Signature      RewriteSignature();
+    JIT::Type_p         RewriteType();
+    void                RewriteType(JIT::Type_p type);
 
     void                Dump();
 

@@ -48,7 +48,7 @@ XL_BEGIN
 
 struct O1CompileUnit;
 typedef Tree * (*adapter_fn) (eval_fn, Scope *src, Tree *self, Tree **args);
-typedef std::map<Tree *, Value_p>       value_map;
+typedef std::map<Tree *, JIT::Value_p>  value_map;
 typedef std::set<Tree *>                data_set;
 typedef std::map<Name_p, Tree_p>        captures;       // Symbol capture table
 typedef std::map<text, eval_fn>         call_map;       // Pre-compiled calls
@@ -68,39 +68,48 @@ struct FastCompiler : Compiler
     ~FastCompiler();
 
     // Interpreter interface
-    Tree *              Evaluate(Scope *, Tree *source) override;
-    Tree *              TypeCheck(Scope *, Tree *type, Tree *val) override;
-    bool                TypeAnalysis(Scope *, Tree *tree) override;
+    Tree *                      Evaluate(Scope *,
+                                         Tree *source) override;
+    Tree *                      TypeCheck(Scope *,
+                                          Tree *type,
+                                          Tree *val) override;
+    bool                        TypeAnalysis(Scope *,
+                                             Tree *tree) override;
 
     // Interface formerly in struct Symbol
-    Tree *              Compile(Scope *scope,
-                                Tree *s, O1CompileUnit &,
-                                bool nullIfBad = false,
-                                bool keepOtherConstants = false,
-                                bool noDataForms = false);
-    eval_fn             CompileAll(Scope *scope,
-                                   Tree *s,
-                                   bool nullIfBad = false,
-                                   bool keepAlternatives = true,
-                                   bool noDataForms = false);
-    Tree *              CompileCall(Scope *scope,
-                                    text callee, TreeList &args,bool call=true);
-    adapter_fn          ArrayToArgsAdapter(uint numtrees);
-    eval_fn             ClosureAdapter(uint numtrees);
+    Tree *                      Compile(Scope *scope,
+                                        Tree *s, O1CompileUnit &,
+                                        bool nullIfBad = false,
+                                        bool keepOtherConstants = false,
+                                        bool noDataForms = false);
+    eval_fn                     CompileAll(Scope *scope,
+                                           Tree *s,
+                                           bool nullIfBad = false,
+                                           bool keepAlternatives = true,
+                                           bool noDataForms = false);
+    Tree *                      CompileCall(Scope *scope,
+                                            text callee,
+                                            TreeList &args,
+                                            bool call=true);
+    adapter_fn                  ArrayToArgsAdapter(uint numtrees);
+    eval_fn                     ClosureAdapter(uint numtrees);
 
-    static FastCompilerInfo *  Info(Tree *tree, bool create = false);
-    static Function_p   TreeFunction(Tree *tree);
-    static void         SetTreeFunction(Tree *tree, Function_p function);
-    static Function_p   TreeClosure(Tree *tree);
-    static void         SetTreeClosure(Tree *tree, Function_p closure);
-    static eval_fn      TreeCode(Tree *tree);
-    static void         SetTreeCode(Tree *tree, eval_fn code);
+    static FastCompilerInfo *   Info(Tree *tree, bool create = false);
+    static JIT::Function_p      TreeFunction(Tree *tree);
+    static void                 SetTreeFunction(Tree *tree,
+                                                JIT::Function_p function);
+    static JIT::Function_p      TreeClosure(Tree *tree);
+    static void                 SetTreeClosure(Tree *tree,
+                                               JIT::Function_p closure);
+    static eval_fn              TreeCode(Tree *tree);
+    static void                 SetTreeCode(Tree *tree, eval_fn code);
 
 private:
-    call_map            calls;
-    adapter_map         adapters;
-    closure_map         closures;
+    call_map                    calls;
+    adapter_map                 adapters;
+    closure_map                 closures;
 };
+
 
 
 // ============================================================================
@@ -124,59 +133,60 @@ struct O1CompileUnit
 
     enum { knowAll = -1, knowLocals = 1, knowValues = 2 };
 
-    Value_p             NeedStorage(Tree *tree, Tree *source = NULL);
+    JIT::Value_p        NeedStorage(Tree *tree, Tree *source = NULL);
     bool                IsKnown(Tree *tree, uint which = knowAll);
-    Value_p             Known(Tree *tree, uint which = knowAll );
+    JIT::Value_p        Known(Tree *tree, uint which = knowAll );
 
     // Return the address of a pointer to the tree
-    Constant_p          ConstantInteger(Integer *what);
-    Constant_p          ConstantReal(Real *what);
-    Constant_p          ConstantText(Text *what);
-    Constant_p          ConstantTree(Tree *what);
+    JIT::Constant_p     ConstantInteger(Integer *what);
+    JIT::Constant_p     ConstantReal(Real *what);
+    JIT::Constant_p     ConstantText(Text *what);
+    JIT::Constant_p     ConstantTree(Tree *what);
 
-    Value_p             NeedLazy(Tree *subexpr, bool allocate = true);
-    Value_p             MarkComputed(Tree *subexpr, Value_p value);
-    BasicBlock_p        BeginLazy(Tree *subexpr);
-    void                EndLazy(Tree *subexpr, BasicBlock_p skip);
+    JIT::Value_p        NeedLazy(Tree *subexpr, bool allocate = true);
+    JIT::Value_p        MarkComputed(Tree *subexpr, JIT::Value_p value);
+    JIT::BasicBlock_p   BeginLazy(Tree *subexpr);
+    void                EndLazy(Tree *subexpr, JIT::BasicBlock_p skip);
 
-    BasicBlock_p        NeedTest();
-    Value_p             Left(Tree *);
-    Value_p             Right(Tree *);
-    Value_p             Copy(Tree *src, Tree *dst, bool markDone=true);
-    Value_p             Invoke(Tree *subexpr, Tree *callee, TreeList args);
-    Value_p             CallEvaluate(Tree *);
-    Value_p             CallFillBlock(Block *);
-    Value_p             CallFillPrefix(Prefix *);
-    Value_p             CallFillPostfix(Postfix *);
-    Value_p             CallFillInfix(Infix *);
-    Value_p             CallInteger2Real(Tree *cast, Tree *integer);
-    Value_p             CallArrayIndex(Tree *self, Tree *l, Tree *r);
-    Value_p             CreateClosure(Tree *callee,
-                                      TreeList &parms, TreeList &args,
-                                      llvm::Function *);
-    Value_p             CallTypeError(Tree *what);
+    JIT::BasicBlock_p   NeedTest();
+    JIT::Value_p        Left(Tree *);
+    JIT::Value_p        Right(Tree *);
+    JIT::Value_p        Copy(Tree *src, Tree *dst, bool markDone=true);
+    JIT::Value_p        Invoke(Tree *subexpr, Tree *callee, TreeList args);
+    JIT::Value_p        CallEvaluate(Tree *);
+    JIT::Value_p        CallFillBlock(Block *);
+    JIT::Value_p        CallFillPrefix(Prefix *);
+    JIT::Value_p        CallFillPostfix(Postfix *);
+    JIT::Value_p        CallFillInfix(Infix *);
+    JIT::Value_p        CallInteger2Real(Tree *cast, Tree *integer);
+    JIT::Value_p        CallArrayIndex(Tree *self, Tree *l, Tree *r);
+    JIT::Value_p        CreateClosure(Tree *callee,
+                                      TreeList &parms,
+                                      TreeList &args,
+                                      JIT::Function_p);
+    JIT::Value_p         CallTypeError(Tree *what);
 
-    BasicBlock_p        TagTest(Tree *code, unsigned tag);
-    BasicBlock_p        IntegerTest(Tree *code, longlong value);
-    BasicBlock_p        RealTest(Tree *code, double value);
-    BasicBlock_p        TextTest(Tree *code, text value);
-    BasicBlock_p        ShapeTest(Tree *code, Tree *other);
-    BasicBlock_p        InfixMatchTest(Tree *code, Infix *ref);
-    BasicBlock_p        TypeTest(Tree *code, Tree *type);
+    JIT::BasicBlock_p   TagTest(Tree *code, unsigned tag);
+    JIT::BasicBlock_p   IntegerTest(Tree *code, longlong value);
+    JIT::BasicBlock_p   RealTest(Tree *code, double value);
+    JIT::BasicBlock_p   TextTest(Tree *code, text value);
+    JIT::BasicBlock_p   ShapeTest(Tree *code, Tree *other);
+    JIT::BasicBlock_p   InfixMatchTest(Tree *code, Infix *ref);
+    JIT::BasicBlock_p   TypeTest(Tree *code, Tree *type);
 
 public:
     FastCompiler &      compiler;       // The compiler environment we use
     Context             symbols;        // The symbols for this compilation unit
     Tree_p              source;         // The original source we compile
 
-    Function_p          function;       // Function we generate
+    JIT::Function_p     function;       // Function we generate
     JITBlock            code;           // Instruction builder for code
     JITBlock            data;           // Instruction builder for data
 
-    BasicBlock_p        entrybb;        // Entry point for that code
-    BasicBlock_p        exitbb;         // Exit point for that code
-    BasicBlock_p        failbb;         // Where we go if tests fail
-    Value_p             scopePtr;       // Storage for scope pointer
+    JIT::BasicBlock_p   entrybb;        // Entry point for that code
+    JIT::BasicBlock_p   exitbb;         // Exit point for that code
+    JIT::BasicBlock_p   failbb;         // Where we go if tests fail
+    JIT::Value_p        scopePtr;       // Storage for scope pointer
 
     value_map           value;          // Map tree -> LLVM value
     value_map           storage;        // Map tree -> LLVM alloca space
@@ -190,7 +200,7 @@ private:
 #define CAST(Name)
 #define ALIAS(Name, Arity, Original)
 #define SPECIAL(Name, Arity, Code)
-#define EXTERNAL(Name, RetTy, ...)      Function_p  Name;
+#define EXTERNAL(Name, RetTy, ...)      JIT::Function_p  Name;
 #include "compiler-primitives.tbl"
  };
 
@@ -211,14 +221,14 @@ public:
     CompileAction &     compile;         // Compile action for this expression
     Tree *              source;         // Tree we build (mostly for debugging)
 
-    Value_p             storage;        // Storage for expression value
-    Value_p             computed;       // Flag telling if value was computed
+    JIT::Value_p        storage;        // Storage for expression value
+    JIT::Value_p        computed;       // Flag telling if value was computed
 
-    BasicBlock_p        savedfailbb;    // Saved location of failbb
+    JIT::BasicBlock_p   savedfailbb;    // Saved location of failbb
 
-    BasicBlock_p        entrybb;        // Entry point to subcase
-    BasicBlock_p        savedbb;        // Saved position before subcase
-    BasicBlock_p        successbb;      // Successful completion of expression
+    JIT::BasicBlock_p   entrybb;        // Entry point to subcase
+    JIT::BasicBlock_p   savedbb;        // Saved position before subcase
+    JIT::BasicBlock_p   successbb;      // Successful completion of expression
 
     value_map           savedvalue;     // Saved compile unit value map
 
@@ -270,7 +280,7 @@ struct ArgumentMatch
     }
 
     typedef Tree *value_type;
-    Tree       *Do(Tree *what);
+    Tree *      Do(Tree *what);
     Tree *      Do(Integer *what);
     Tree *      Do(Real *what);
     Tree *      Do(Text *what);

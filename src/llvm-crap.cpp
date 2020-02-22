@@ -398,9 +398,9 @@ public:
     ~JITPrivate();
 
 private:
-    Module_p            Module();
-    ModuleID            CreateModule(text name);
-    void                DeleteModule(ModuleID mod);
+    JIT::Module_p       Module();
+    JIT::ModuleID       CreateModule(text name);
+    void                DeleteModule(JIT::ModuleID mod);
     Module_s            OptimizeModule(Module_s module);
     text                Mangle(text name);
     JITSymbol           Symbol(text name);
@@ -574,7 +574,7 @@ JITPrivate::~JITPrivate()
 }
 
 
-Module_p JITPrivate::Module()
+JIT::Module_p JITPrivate::Module()
 // ----------------------------------------------------------------------------
 //   Return the current module if there is any
 // ----------------------------------------------------------------------------
@@ -584,7 +584,7 @@ Module_p JITPrivate::Module()
 }
 
 
-ModuleID JITPrivate::CreateModule(text name)
+JIT::ModuleID JITPrivate::CreateModule(text name)
 // ----------------------------------------------------------------------------
 //   Add a module to the JIT
 // ----------------------------------------------------------------------------
@@ -608,7 +608,7 @@ ModuleID JITPrivate::CreateModule(text name)
 }
 
 
-void JITPrivate::DeleteModule(ModuleID modID)
+void JITPrivate::DeleteModule(JIT::ModuleID modID)
 // ----------------------------------------------------------------------------
 //   Remove the last module from the JIT
 // ----------------------------------------------------------------------------
@@ -642,7 +642,7 @@ void JITPrivate::DeleteModule(ModuleID modID)
 }
 
 
-static void dumpModule(Module_p module, kstring message)
+static void dumpModule(JIT::Module_p module, kstring message)
 // ----------------------------------------------------------------------------
 //   Dump a module for debugging purpose
 // ----------------------------------------------------------------------------
@@ -883,7 +883,7 @@ JIT::~JIT()
 }
 
 
-Type_p JIT::Type(Value_p value)
+JIT::Type_p JIT::Type(Value_p value)
 // ----------------------------------------------------------------------------
 //   The type for the given value
 // ----------------------------------------------------------------------------
@@ -892,7 +892,7 @@ Type_p JIT::Type(Value_p value)
 }
 
 
-Type_p JIT::ReturnType(Function_p fn)
+JIT::Type_p JIT::ReturnType(Function_p fn)
 // ----------------------------------------------------------------------------
 //   The return type for the function
 // ----------------------------------------------------------------------------
@@ -901,7 +901,7 @@ Type_p JIT::ReturnType(Function_p fn)
 }
 
 
-Type_p JIT::PointedType(Type_p type)
+JIT::Type_p JIT::PointedType(Type_p type)
 // ----------------------------------------------------------------------------
 //   The type pointed to by a pointer
 // ----------------------------------------------------------------------------
@@ -1011,7 +1011,7 @@ void JIT::StackTrace()
 }
 
 
-IntegerType_p JIT::IntegerType(unsigned bits)
+JIT::IntegerType_p JIT::IntegerType(unsigned bits)
 // ----------------------------------------------------------------------------
 //   Create an integer type with the given number of bits
 // ----------------------------------------------------------------------------
@@ -1020,7 +1020,7 @@ IntegerType_p JIT::IntegerType(unsigned bits)
 }
 
 
-Type_p JIT::FloatType(unsigned bits)
+JIT::Type_p JIT::FloatType(unsigned bits)
 // ----------------------------------------------------------------------------
 //   Create a floating-type type with the given number of bits
 // ----------------------------------------------------------------------------
@@ -1034,7 +1034,7 @@ Type_p JIT::FloatType(unsigned bits)
 }
 
 
-StructType_p JIT::OpaqueType(kstring name)
+JIT::StructType_p JIT::OpaqueType(kstring name)
 // ----------------------------------------------------------------------------
 //   Create an opaque type (i.e. a struct without a content)
 // ----------------------------------------------------------------------------
@@ -1043,7 +1043,7 @@ StructType_p JIT::OpaqueType(kstring name)
 }
 
 
-StructType_p JIT::StructType(StructType_p base, const Signature &elements)
+JIT::StructType_p JIT::StructType(StructType_p base, const Signature &elements)
 // ----------------------------------------------------------------------------
 //    Refine a forward-declared structure type
 // ----------------------------------------------------------------------------
@@ -1053,7 +1053,7 @@ StructType_p JIT::StructType(StructType_p base, const Signature &elements)
 }
 
 
-StructType_p JIT::StructType(const Signature &items, kstring name)
+JIT::StructType_p JIT::StructType(const Signature &items, kstring name)
 // ----------------------------------------------------------------------------
 //    Define a structure type in one pass
 // ----------------------------------------------------------------------------
@@ -1065,7 +1065,9 @@ StructType_p JIT::StructType(const Signature &items, kstring name)
 }
 
 
-FunctionType_p JIT::FunctionType(Type_p rty, const Signature &parms, bool va)
+JIT::FunctionType_p JIT::FunctionType(Type_p rty,
+                                      const JIT::Signature &parms,
+                                      bool va)
 // ----------------------------------------------------------------------------
 //    Create a function type
 // ----------------------------------------------------------------------------
@@ -1074,7 +1076,7 @@ FunctionType_p JIT::FunctionType(Type_p rty, const Signature &parms, bool va)
 }
 
 
-PointerType_p JIT::PointerType(Type_p rty)
+JIT::PointerType_p JIT::PointerType(Type_p rty)
 // ----------------------------------------------------------------------------
 //    Create a pointer type (always in address space 0)
 // ----------------------------------------------------------------------------
@@ -1083,7 +1085,7 @@ PointerType_p JIT::PointerType(Type_p rty)
 }
 
 
-Type_p JIT::VoidType()
+JIT::Type_p JIT::VoidType()
 // ----------------------------------------------------------------------------
 //   Return the void type
 // ----------------------------------------------------------------------------
@@ -1092,7 +1094,7 @@ Type_p JIT::VoidType()
 }
 
 
-ModuleID JIT::CreateModule(text name)
+JIT::ModuleID JIT::CreateModule(text name)
 // ----------------------------------------------------------------------------
 //   Create a module in the JIT
 // ----------------------------------------------------------------------------
@@ -1101,7 +1103,7 @@ ModuleID JIT::CreateModule(text name)
 }
 
 
-void JIT::DeleteModule(ModuleID modID)
+void JIT::DeleteModule(JIT::ModuleID modID)
 // ----------------------------------------------------------------------------
 //   Delete a module in the JIT
 // ----------------------------------------------------------------------------
@@ -1110,16 +1112,16 @@ void JIT::DeleteModule(ModuleID modID)
 }
 
 
-Function_p JIT::Function(FunctionType_p type, text name)
+JIT::Function_p JIT::Function(JIT::FunctionType_p type, text name)
 // ----------------------------------------------------------------------------
 //    Create a function with the given name and type
 // ----------------------------------------------------------------------------
 {
-    Module_p module = p.Module();
+    JIT::Module_p module = p.Module();
     assert(module && "Creating a function without a module");
-    Function_p f = llvm::Function::Create(type,
-                                          llvm::Function::ExternalLinkage,
-                                          name, module);
+    JIT::Function_p f = llvm::Function::Create(type,
+                                               llvm::Function::ExternalLinkage,
+                                               name, module);
     record(llvm_functions, "Created function %v type %v in module %p",
            f, type, p.Module());
 
@@ -1127,7 +1129,7 @@ Function_p JIT::Function(FunctionType_p type, text name)
 }
 
 
-void JIT::Finalize(Function_p f)
+void JIT::Finalize(JIT::Function_p f)
 // ----------------------------------------------------------------------------
 //   Finalize function code generation
 // ----------------------------------------------------------------------------
@@ -1137,7 +1139,7 @@ void JIT::Finalize(Function_p f)
 }
 
 
-void *JIT::ExecutableCode(Function_p f)
+void *JIT::ExecutableCode(JIT::Function_p f)
 // ----------------------------------------------------------------------------
 //   Return an executable pointer to the function
 // ----------------------------------------------------------------------------
@@ -1148,28 +1150,28 @@ void *JIT::ExecutableCode(Function_p f)
 }
 
 
-Function_p JIT::ExternFunction(FunctionType_p type, text name)
+JIT::Function_p JIT::ExternFunction(JIT::FunctionType_p type, text name)
 // ----------------------------------------------------------------------------
 //    Create an extern function with the given name and type
 // ----------------------------------------------------------------------------
 {
     assert(p.module);
-    Function_p f = llvm::Function::Create(type,
-                                          llvm::Function::ExternalLinkage,
-                                          name, p.Module());
+    JIT::Function_p f = llvm::Function::Create(type,
+                                               llvm::Function::ExternalLinkage,
+                                               name, p.Module());
     record(llvm_externals, "Extern function %s is %v type %T", name, f, type);
     return f;
 }
 
 
-Function_p JIT::Prototype(Function_p function)
+JIT::Function_p JIT::Prototype(JIT::Function_p function)
 // ----------------------------------------------------------------------------
 //   Return a function prototype acceptable for this module
 // ----------------------------------------------------------------------------
 //   If the function is in this module, return it, else return prototype for it
 {
-    Module_p module = p.Module();
-    text     name   = function->getName();
+    JIT::Module_p module = p.Module();
+    text          name   = function->getName();
 
     // First check if we don't already have it in the current module
     if (module)
@@ -1194,7 +1196,7 @@ Function_p JIT::Prototype(Function_p function)
 }
 
 
-Value_p JIT::Prototype(Value_p callee)
+JIT::Value_p JIT::Prototype(Value_p callee)
 // ----------------------------------------------------------------------------
 //   Build a prototype from a callee that may not be a function
 // ----------------------------------------------------------------------------
@@ -1225,11 +1227,11 @@ class JITBlockPrivate
 {
     friend class JITBlock;
     JIT &               jit;
-    BasicBlock_p        block;
+    JIT::BasicBlock_p   block;
     JITBuilder *        builder;
     kstring             name;
 
-    JITBlockPrivate(JIT &jit, Function_p function, kstring name);
+    JITBlockPrivate(JIT &jit, JIT::Function_p function, kstring name);
     JITBlockPrivate(const JITBlockPrivate &other, kstring name);
     JITBlockPrivate(JIT &jit);
     ~JITBlockPrivate();
@@ -1240,7 +1242,9 @@ class JITBlockPrivate
 };
 
 
-JITBlockPrivate::JITBlockPrivate(JIT &jit, Function_p function, kstring name)
+JITBlockPrivate::JITBlockPrivate(JIT &jit,
+                                 JIT::Function_p function,
+                                 kstring name)
 // ----------------------------------------------------------------------------
 //   Create private data for a JIT block
 // ----------------------------------------------------------------------------
@@ -1302,7 +1306,7 @@ JITBlockPrivate &JITBlockPrivate::operator=(const JITBlockPrivate &o)
 }
 
 
-JITBlock::JITBlock(JIT &jit, Function_p function, kstring name)
+JITBlock::JITBlock(JIT &jit, JIT::Function_p function, kstring name)
 // ----------------------------------------------------------------------------
 //   Create a new JIT block
 // ----------------------------------------------------------------------------
@@ -1349,43 +1353,43 @@ JITBlock &JITBlock::operator=(const JITBlock &block)
 }
 
 
-Constant_p JITBlock::BooleanConstant(bool value)
+JIT::Constant_p JITBlock::BooleanConstant(bool value)
 // ----------------------------------------------------------------------------
 //   Build a boolean integer constant
 // ----------------------------------------------------------------------------
 {
-    Type_p ty = llvm::Type::getInt1Ty(p.context);
-    Constant_p result = ConstantInt::get(ty, value);
+    JIT::Type_p ty = llvm::Type::getInt1Ty(p.context);
+    JIT::Constant_p result = ConstantInt::get(ty, value);
     record(llvm_constants, "Unsigned constant %v for %llu", result, value);
     return result;
 }
 
 
-Constant_p JITBlock::IntegerConstant(Type_p ty, uint64_t value)
+JIT::Constant_p JITBlock::IntegerConstant(JIT::Type_p ty, uint64_t value)
 // ----------------------------------------------------------------------------
 //   Build an unsigned integer constant
 // ----------------------------------------------------------------------------
 {
     assert(ty->isIntegerTy());
-    Constant_p result = ConstantInt::get(ty, value);
+    JIT::Constant_p result = ConstantInt::get(ty, value);
     record(llvm_constants, "Unsigned constant %v for %llu", result, value);
     return result;
 }
 
 
-Constant_p JITBlock::IntegerConstant(Type_p ty, int64_t value)
+JIT::Constant_p JITBlock::IntegerConstant(JIT::Type_p ty, int64_t value)
 // ----------------------------------------------------------------------------
 //   Build a signed integer constant
 // ----------------------------------------------------------------------------
 {
     assert(ty->isIntegerTy());
-    Constant_p result = ConstantInt::get(ty, value);
+    JIT::Constant_p result = ConstantInt::get(ty, value);
     record(llvm_constants, "Signed constant %v for %lld", result, value);
     return result;
 }
 
 
-Constant_p JITBlock::IntegerConstant(Type_p ty, unsigned value)
+JIT::Constant_p JITBlock::IntegerConstant(JIT::Type_p ty, unsigned value)
 // ----------------------------------------------------------------------------
 //   Build an unsigned integer constant
 // ----------------------------------------------------------------------------
@@ -1394,7 +1398,7 @@ Constant_p JITBlock::IntegerConstant(Type_p ty, unsigned value)
 }
 
 
-Constant_p JITBlock::IntegerConstant(Type_p ty, int value)
+JIT::Constant_p JITBlock::IntegerConstant(JIT::Type_p ty, int value)
 // ----------------------------------------------------------------------------
 //   Build a signed integer constant
 // ----------------------------------------------------------------------------
@@ -1403,35 +1407,35 @@ Constant_p JITBlock::IntegerConstant(Type_p ty, int value)
 }
 
 
-Constant_p JITBlock::FloatConstant(Type_p ty, double value)
+JIT::Constant_p JITBlock::FloatConstant(JIT::Type_p ty, double value)
 // ----------------------------------------------------------------------------
 //   Build a floating-point constant
 // ----------------------------------------------------------------------------
 {
-    Constant_p result = ConstantFP::get(ty, value);
+    JIT::Constant_p result = ConstantFP::get(ty, value);
     record(llvm_constants, "FP constant %v for %g", result, value);
     return result;
 }
 
 
-Constant_p JITBlock::PointerConstant(Type_p type, void *pointer)
+JIT::Constant_p JITBlock::PointerConstant(JIT::Type_p type, void *pointer)
 // ----------------------------------------------------------------------------
 //    Create a constant pointer
 // ----------------------------------------------------------------------------
 {
     llvm::APInt addr(JIT::BitsPerByte * sizeof(void *), (uintptr_t) pointer);
-    Constant_p result = llvm::Constant::getIntegerValue(type, addr);
+    JIT::Constant_p result = llvm::Constant::getIntegerValue(type, addr);
     record(llvm_constants, "Pointer constant %v for %p", result, pointer);
     return result;
 }
 
 
-Value_p JITBlock::TextConstant(text value)
+JIT::Value_p JITBlock::TextConstant(text value)
 // ----------------------------------------------------------------------------
 //   Return a constant array of characters for the input text
 // ----------------------------------------------------------------------------
 {
-    Value_p result = b->CreateGlobalStringPtr(value);
+    JIT::Value_p result = b->CreateGlobalStringPtr(value);
     record(llvm_constants, "Text constant %v for %s", result, value.c_str());
     return result;
 }
@@ -1448,7 +1452,7 @@ void JITBlock::SwitchTo(JITBlock &block)
 }
 
 
-void JITBlock::SwitchTo(BasicBlock_p block)
+void JITBlock::SwitchTo(JIT::BasicBlock_p block)
 // ----------------------------------------------------------------------------
 //   Switch the insertion point to the given basic block
 // ----------------------------------------------------------------------------
@@ -1459,55 +1463,61 @@ void JITBlock::SwitchTo(BasicBlock_p block)
 }
 
 
-Value_p JITBlock::Call(Value_p callee, Value_p arg1)
+JIT::Value_p JITBlock::Call(JIT::Value_p callee, JIT::Value_p arg1)
 // ----------------------------------------------------------------------------
 //   Create a call with one argument
 // ----------------------------------------------------------------------------
 {
-    Value_p proto = b.jit.Prototype(callee);
-    Value_p result = b->CreateCall(proto, {arg1});
+    JIT::Value_p proto = b.jit.Prototype(callee);
+    JIT::Value_p result = b->CreateCall(proto, {arg1});
     record(llvm_ir, "Call %v(%v) = %v", callee, arg1, result);
     return result;
 }
 
 
-Value_p JITBlock::Call(Value_p callee, Value_p arg1, Value_p arg2)
+JIT::Value_p JITBlock::Call(JIT::Value_p callee,
+                            JIT::Value_p arg1,
+                            JIT::Value_p arg2)
 // ----------------------------------------------------------------------------
 //   Create a call with two arguments
 // ----------------------------------------------------------------------------
 {
-    Value_p proto = b.jit.Prototype(callee);
-    Value_p result = b->CreateCall(proto, {arg1, arg2});
+    JIT::Value_p proto = b.jit.Prototype(callee);
+    JIT::Value_p result = b->CreateCall(proto, {arg1, arg2});
     record(llvm_ir, "Call %v(%v, %v) = %v", callee, arg1, arg2, result);
     return result;
 }
 
 
-Value_p JITBlock::Call(Value_p callee, Value_p arg1, Value_p arg2, Value_p arg3)
+JIT::Value_p JITBlock::Call(JIT::Value_p callee,
+                            JIT::Value_p arg1,
+                            JIT::Value_p arg2,
+                            JIT::Value_p arg3)
 // ----------------------------------------------------------------------------
 //   Create a call with three arguments
 // ----------------------------------------------------------------------------
 {
-    Value_p proto = b.jit.Prototype(callee);
-    Value_p result = b->CreateCall(proto, {arg1, arg2, arg3});
+    JIT::Value_p proto = b.jit.Prototype(callee);
+    JIT::Value_p result = b->CreateCall(proto, {arg1, arg2, arg3});
     record(llvm_ir, "Call %v(%v, %v, %v) = %v", callee, arg1,arg2,arg3, result);
     return result;
 }
 
 
-Value_p JITBlock::Call(Value_p callee, Values &args)
+JIT::Value_p JITBlock::Call(JIT::Value_p callee,
+                            JIT::Values &args)
 // ----------------------------------------------------------------------------
 //   Create a call with an arbitrary list of arguments
 // ----------------------------------------------------------------------------
 {
-    Value_p proto = b.jit.Prototype(callee);
-    Value_p result = b->CreateCall(proto, ArrayRef<Value_p>(args));
+    JIT::Value_p proto = b.jit.Prototype(callee);
+    JIT::Value_p result = b->CreateCall(proto, ArrayRef<JIT::Value_p>(args));
     record(llvm_ir, "Call %v(#%u) = %v", callee, args.size(), result);
     return result;
 }
 
 
-BasicBlock_p JITBlock::Block()
+JIT::BasicBlock_p JITBlock::Block()
 // ----------------------------------------------------------------------------
 //   Return the basic block for this JIT block
 // ----------------------------------------------------------------------------
@@ -1516,7 +1526,7 @@ BasicBlock_p JITBlock::Block()
 }
 
 
-BasicBlock_p JITBlock::NewBlock(kstring name)
+JIT::BasicBlock_p JITBlock::NewBlock(kstring name)
 // ----------------------------------------------------------------------------
 //   Create a new basic block in the same function as current block
 // ----------------------------------------------------------------------------
@@ -1525,7 +1535,7 @@ BasicBlock_p JITBlock::NewBlock(kstring name)
 }
 
 
-Value_p JITBlock::Return(Value_p value)
+JIT::Value_p JITBlock::Return(JIT::Value_p value)
 // ----------------------------------------------------------------------------
 //  Return the given value, or RetVoid if nullptr
 // ----------------------------------------------------------------------------
@@ -1536,7 +1546,7 @@ Value_p JITBlock::Return(Value_p value)
 }
 
 
-Value_p JITBlock::Branch(JITBlock &to)
+JIT::Value_p JITBlock::Branch(JITBlock &to)
 // ----------------------------------------------------------------------------
 //   Create an unconditinal branch
 // ----------------------------------------------------------------------------
@@ -1547,7 +1557,7 @@ Value_p JITBlock::Branch(JITBlock &to)
 }
 
 
-Value_p JITBlock::Branch(BasicBlock_p to)
+JIT::Value_p JITBlock::Branch(JIT::BasicBlock_p to)
 // ----------------------------------------------------------------------------
 //   Create an unconditinal branch
 // ----------------------------------------------------------------------------
@@ -1558,7 +1568,9 @@ Value_p JITBlock::Branch(BasicBlock_p to)
 }
 
 
-Value_p JITBlock::IfBranch(Value_p cond, JITBlock &t, JITBlock &f)
+JIT::Value_p JITBlock::IfBranch(JIT::Value_p cond,
+                                JITBlock &t,
+                                JITBlock &f)
 // ----------------------------------------------------------------------------
 //  Create a conditional branch
 // ----------------------------------------------------------------------------
@@ -1570,7 +1582,9 @@ Value_p JITBlock::IfBranch(Value_p cond, JITBlock &t, JITBlock &f)
 }
 
 
-Value_p JITBlock::IfBranch(Value_p cond, BasicBlock_p t, BasicBlock_p f)
+JIT::Value_p JITBlock::IfBranch(JIT::Value_p cond,
+                                JIT::BasicBlock_p t,
+                                JIT::BasicBlock_p f)
 // ----------------------------------------------------------------------------
 //  Create a conditional branch
 // ----------------------------------------------------------------------------
@@ -1582,7 +1596,9 @@ Value_p JITBlock::IfBranch(Value_p cond, BasicBlock_p t, BasicBlock_p f)
 }
 
 
-Value_p JITBlock::Select(Value_p cond, Value_p t, Value_p f)
+JIT::Value_p JITBlock::Select(JIT::Value_p cond,
+                              JIT::Value_p t,
+                              JIT::Value_p f)
 // ----------------------------------------------------------------------------
 //   Create a select
 // ----------------------------------------------------------------------------
@@ -1595,7 +1611,7 @@ Value_p JITBlock::Select(Value_p cond, Value_p t, Value_p f)
 }
 
 
-Value_p JITBlock::Alloca(Type_p type, kstring name)
+JIT::Value_p JITBlock::Alloca(JIT::Type_p type, kstring name)
 // ----------------------------------------------------------------------------
 //  Do a local allocation
 // ----------------------------------------------------------------------------
@@ -1610,19 +1626,19 @@ Value_p JITBlock::Alloca(Type_p type, kstring name)
 }
 
 
-Value_p JITBlock::AllocateReturnValue(Function_p f, kstring name)
+JIT::Value_p JITBlock::AllocateReturnValue(JIT::Function_p f, kstring name)
 // ----------------------------------------------------------------------------
 //   Do an alloca for the return value
 // ----------------------------------------------------------------------------
 {
-    Type_p ret = f->getReturnType();
+    JIT::Type_p ret = f->getReturnType();
     if (ret->isVoidTy())
         return nullptr;
     return Alloca(ret, name);
 }
 
 
-Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
+JIT::Value_p JITBlock::StructGEP(JIT::Value_p ptr, unsigned idx, kstring name)
 // ----------------------------------------------------------------------------
 //   Accessing a struct element used to be complicated. Now it's incompatible.
 // ----------------------------------------------------------------------------
@@ -1633,7 +1649,7 @@ Value_p JITBlock::StructGEP(Value_p ptr, unsigned idx, kstring name)
 }
 
 
-Value_p JITBlock::ArrayGEP(Value_p ptr, uint32_t idx, kstring name)
+JIT::Value_p JITBlock::ArrayGEP(JIT::Value_p ptr, uint32_t idx, kstring name)
 // ----------------------------------------------------------------------------
 //   Accessing an array element with a fixed index
 // ----------------------------------------------------------------------------
@@ -1648,36 +1664,41 @@ Value_p JITBlock::ArrayGEP(Value_p ptr, uint32_t idx, kstring name)
 /* ------------------------------------------------------------ */      \
 /*  Create a unary operator                                     */      \
 /* ------------------------------------------------------------ */      \
-Value_p JITBlock::Name(Value_p v, kstring name)                         \
-{                                                                       \
-    auto value = b->Create##Name(v, name);                              \
-    record(llvm_ir, #Name " %+s(%v) = %v", name, v, value);             \
-    return value;                                                       \
-}
+    JIT::Value_p JITBlock::Name(JIT::Value_p v, kstring name)           \
+    {                                                                   \
+        auto value = b->Create##Name(v, name);                          \
+        record(llvm_ir, #Name " %+s(%v) = %v", name, v, value);         \
+        return value;                                                   \
+    }
 
 
 #define BINARY(Name)                                                    \
 /* ------------------------------------------------------------ */      \
 /*  Create a binary operator                                    */      \
 /* ------------------------------------------------------------ */      \
-    Value_p JITBlock::Name(Value_p l, Value_p r, kstring name)          \
-{                                                                       \
-    auto value = b->Create##Name(l, r, name);                           \
-    record(llvm_ir, #Name " %+s(%v, %v) = %v", name, l, r, value);      \
-    return value;                                                       \
-}
+    JIT::Value_p JITBlock::Name(JIT::Value_p l,                         \
+                                JIT::Value_p r,                         \
+                                kstring name)                           \
+    {                                                                   \
+        auto value = b->Create##Name(l, r, name);                       \
+        record(llvm_ir, #Name " %+s(%v, %v) = %v", name, l, r, value);  \
+        return value;                                                   \
+    }
 
 
 #define CAST(Name)                                                      \
 /* ------------------------------------------------------------ */      \
 /*  Create a cast operation                                     */      \
 /* ------------------------------------------------------------ */      \
-Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
-{                                                                       \
-    auto value = b->Create##Name(v, t, name);                           \
-    record(llvm_ir, #Name " %+s(%v, type %T) = %v", name, v, t, value); \
-    return value;                                                       \
-}
+    JIT::Value_p JITBlock::Name(JIT::Value_p v,                         \
+                                JIT::Type_p t,                          \
+                                kstring name)                           \
+    {                                                                   \
+        auto value = b->Create##Name(v, t, name);                       \
+        record(llvm_ir, #Name " %+s(%v, type %T) = %v",                 \
+               name, v, t, value);                                      \
+        return value;                                                   \
+    }
 
 #include "llvm-crap.tbl"
 
@@ -1691,7 +1712,7 @@ Value_p JITBlock::Name(Value_p v, Type_p t, kstring name)               \
 //
 // ============================================================================
 
-XL::Value_p xldebug(XL::Value_p v)
+XL::JIT::Value_p xldebug(XL::JIT::Value_p v)
 // ----------------------------------------------------------------------------
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------
@@ -1706,7 +1727,7 @@ XL::Value_p xldebug(XL::Value_p v)
 }
 
 
-XL::Type_p xldebug(XL::Type_p t)
+XL::JIT::Type_p xldebug(XL::JIT::Type_p t)
 // ----------------------------------------------------------------------------
 //   Dump a value for the debugger
 // ----------------------------------------------------------------------------

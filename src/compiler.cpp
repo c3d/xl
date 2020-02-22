@@ -187,7 +187,7 @@ bool Compiler::TypeAnalysis(Scope *scope, Tree *program)
 }
 
 
-PointerType_p Compiler::TreeMachineType(Tree *tree)
+JIT::PointerType_p Compiler::TreeMachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the LLVM tree type associated to a given XL expression
 // ----------------------------------------------------------------------------

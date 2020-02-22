@@ -48,11 +48,11 @@ SPECIAL(TreeKind, 1,
 // ----------------------------------------------------------------------------
 //   Return the kind for the input tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
-        Value_p ptr = code.StructGEP(treeValue, TAG_INDEX, "tagp");
-        Value_p tag = code.Load(ptr, "tag");
-        Value_p mask = code.IntegerConstant(code.Type(tag), Tree::KINDMASK);
-        Value_p kind = code.And(tag, mask, "tagAndMask");
+        JIT::Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        JIT::Value_p ptr = code.StructGEP(treeValue, TAG_INDEX, "tagp");
+        JIT::Value_p tag = code.Load(ptr, "tag");
+        JIT::Value_p mask = code.IntegerConstant(code.Type(tag),Tree::KINDMASK);
+        JIT::Value_p kind = code.And(tag, mask, "tagAndMask");
         kind = code.BitCast(kind, compiler.integerTy);
         return kind;
     )
@@ -62,10 +62,12 @@ SPECIAL(TreeLeft, 1,
 // ----------------------------------------------------------------------------
 //   Return the left for an infix, prefix, or postfix trees
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
-        Value_p prefixValue = code.BitCast(treeValue, compiler.prefixTreePtrTy);
-        Value_p ptr = code.StructGEP(prefixValue, LEFT_VALUE_INDEX, "leftp");
-        Value_p result = code.Load(ptr, "left");
+        JIT::Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        JIT::Value_p prefixValue = code.BitCast(treeValue,
+                                                compiler.prefixTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(prefixValue,
+                                          LEFT_VALUE_INDEX, "leftp");
+        JIT::Value_p result = code.Load(ptr, "left");
         return result;
     )
 
@@ -74,10 +76,12 @@ SPECIAL(TreeRight, 1,
 // ----------------------------------------------------------------------------
 //   Return the right for the infix, prefix or postfix trees
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
-        Value_p prefixValue = code.BitCast(treeValue, compiler.prefixTreePtrTy);
-        Value_p ptr = code.StructGEP(prefixValue, RIGHT_VALUE_INDEX, "rightp");
-        Value_p result = code.Load(ptr, "right");
+        JIT::Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        JIT::Value_p prefixValue = code.BitCast(treeValue,
+                                                compiler.prefixTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(prefixValue,
+                                          RIGHT_VALUE_INDEX, "rightp");
+        JIT::Value_p result = code.Load(ptr, "right");
         return result;
     )
 
@@ -86,9 +90,10 @@ SPECIAL(InfixName, 1,
 // ----------------------------------------------------------------------------
 //   Return the name for an infix tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
-        Value_p infixValue = code.BitCast(treeValue, compiler.infixTreePtrTy);
-        Value_p result = code.Call(unit.xl_infix_name, infixValue);
+        JIT::Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        JIT::Value_p infixValue = code.BitCast(treeValue,
+                                               compiler.infixTreePtrTy);
+        JIT::Value_p result = code.Call(unit.xl_infix_name, infixValue);
         return result;
     )
 
@@ -97,10 +102,12 @@ SPECIAL(TextOpening, 1,
 // ----------------------------------------------------------------------------
 //   Return the text opening for a text tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
-        Value_p textValue = code.BitCast(treeValue, compiler.textTreePtrTy);
-        Value_p ptr = code.StructGEP(textValue, TEXT_OPENING_INDEX, "openingp");
-        Value_p result = code.Load(ptr, "opening");
+        JIT::Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        JIT::Value_p textValue = code.BitCast(treeValue,
+                                              compiler.textTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(textValue,
+                                          TEXT_OPENING_INDEX, "openingp");
+        JIT::Value_p result = code.Load(ptr, "opening");
         return result;
     )
 
@@ -109,10 +116,12 @@ SPECIAL(TextClosing, 1,
 // ----------------------------------------------------------------------------
 //   Return the text closing for a text tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
-        Value_p textValue = code.BitCast(treeValue, compiler.textTreePtrTy);
-        Value_p ptr = code.StructGEP(textValue, TEXT_CLOSING_INDEX, "closingp");
-        Value_p result = code.Load(ptr, "closing");
+        JIT::Value_p treeValue = Autobox(source, args[0], compiler.treePtrTy);
+        JIT::Value_p textValue = code.BitCast(treeValue,
+                                              compiler.textTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(textValue,
+                                          TEXT_CLOSING_INDEX, "closingp");
+        JIT::Value_p result = code.Load(ptr, "closing");
         return result;
     )
 
@@ -121,10 +130,14 @@ SPECIAL(BlockChild, 1,
 // ----------------------------------------------------------------------------
 //   Return the child for a block tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
-        Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
-        Value_p ptr = code.StructGEP(blockValue, BLOCK_CHILD_INDEX, "childp");
-        Value_p result = code.Load(ptr, "child");
+        JIT::Value_p treeValue = Autobox(source,
+                                         args[0],
+                                         compiler.textTreePtrTy);
+        JIT::Value_p blockValue = code.BitCast(treeValue,
+                                               compiler.blockTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(blockValue,
+                                          BLOCK_CHILD_INDEX, "childp");
+        JIT::Value_p result = code.Load(ptr, "child");
         return result;
     )
 
@@ -133,10 +146,14 @@ SPECIAL(BlockOpening, 1,
 // ----------------------------------------------------------------------------
 //   Return the opening text for a block tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
-        Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
-        Value_p ptr = code.StructGEP(blockValue, BLOCK_OPENING_INDEX, "bopenp");
-        Value_p result = code.Load(ptr, "bopen");
+        JIT::Value_p treeValue = Autobox(source,
+                                         args[0],
+                                         compiler.textTreePtrTy);
+        JIT::Value_p blockValue = code.BitCast(treeValue,
+                                               compiler.blockTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(blockValue,
+                                          BLOCK_OPENING_INDEX, "bopenp");
+        JIT::Value_p result = code.Load(ptr, "bopen");
         return result;
     )
 
@@ -145,10 +162,14 @@ SPECIAL(BlockClosing, 1,
 // ----------------------------------------------------------------------------
 //   Return the closing text for a block tree
 // ----------------------------------------------------------------------------
-        Value_p treeValue = Autobox(source, args[0], compiler.textTreePtrTy);
-        Value_p blockValue = code.BitCast(treeValue, compiler.blockTreePtrTy);
-        Value_p ptr = code.StructGEP(blockValue, BLOCK_CLOSING_INDEX, "bclosep");
-        Value_p result = code.Load(ptr, "bclose");
+        JIT::Value_p treeValue = Autobox(source,
+                                         args[0],
+                                         compiler.textTreePtrTy);
+        JIT::Value_p blockValue = code.BitCast(treeValue,
+                                               compiler.blockTreePtrTy);
+        JIT::Value_p ptr = code.StructGEP(blockValue,
+                                          BLOCK_CLOSING_INDEX, "bclosep");
+        JIT::Value_p result = code.Load(ptr, "bclose");
         return result;
     )
 
@@ -220,12 +241,12 @@ SPECIAL(IAbs, 1,
 // ----------------------------------------------------------------------------
 //   Return the absolute value for an integer input
 // ----------------------------------------------------------------------------
-        Value_p value = args[0];
-        Type_p type = code.Type(value);
-        Value_p zero = code.IntegerConstant(type, 0);
-        Value_p cmp = code.ICmpSLT(value, zero);
-        Value_p neg = code.Neg(value);
-        Value_p result = code.Select(cmp, neg, value);
+        JIT::Value_p value = args[0];
+        JIT::Type_p type = code.Type(value);
+        JIT::Value_p zero = code.IntegerConstant(type, 0);
+        JIT::Value_p cmp = code.ICmpSLT(value, zero);
+        JIT::Value_p neg = code.Neg(value);
+        JIT::Value_p result = code.Select(cmp, neg, value);
         return result;
     )
 
@@ -233,12 +254,12 @@ SPECIAL(FAbs, 1,
 // ----------------------------------------------------------------------------
 //   Return the absolute value for a floating-point input
 // ----------------------------------------------------------------------------
-        Value_p value = args[0];
-        Type_p type = code.Type(value);
-        Value_p zero = code.FloatConstant(type, 0.0);
-        Value_p cmp = code.FCmpOLT(value, zero);
-        Value_p neg = code.FNeg(value);
-        Value_p result = code.Select(cmp, neg, value);
+        JIT::Value_p value = args[0];
+        JIT::Type_p type = code.Type(value);
+        JIT::Value_p zero = code.FloatConstant(type, 0.0);
+        JIT::Value_p cmp = code.FCmpOLT(value, zero);
+        JIT::Value_p neg = code.FNeg(value);
+        JIT::Value_p result = code.Select(cmp, neg, value);
         return result;
     )
 
@@ -249,16 +270,16 @@ SPECIAL(SMod, 2,
 // ----------------------------------------------------------------------------
 //   See equivalent code in interpreter's xl_mod support function
 
-        Value_p left = args[0];
-        Value_p right = args[1];
-        Value_p rem = code.SRem(left, right);
-        Value_p xored = code.Xor(left, right);
-        Value_p zero = code.IntegerConstant(code.Type(xored), 0);
-        Value_p cmp1 = code.ICmpSLT(xored, zero);
-        Value_p cmp2 = code.ICmpNE(rem, zero);
-        Value_p cmp = code.And(cmp1, cmp2);
-        Value_p mod = code.Add(rem, right);
-        Value_p result = code.Select(cmp, mod, rem);
+        JIT::Value_p left = args[0];
+        JIT::Value_p right = args[1];
+        JIT::Value_p rem = code.SRem(left, right);
+        JIT::Value_p xored = code.Xor(left, right);
+        JIT::Value_p zero = code.IntegerConstant(code.Type(xored), 0);
+        JIT::Value_p cmp1 = code.ICmpSLT(xored, zero);
+        JIT::Value_p cmp2 = code.ICmpNE(rem, zero);
+        JIT::Value_p cmp = code.And(cmp1, cmp2);
+        JIT::Value_p mod = code.Add(rem, right);
+        JIT::Value_p result = code.Select(cmp, mod, rem);
         return result;
     )
 

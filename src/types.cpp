@@ -1359,7 +1359,7 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
 //
 // ============================================================================
 
-void Types::AddBoxedType(Tree *type, Type_p mtype)
+void Types::AddBoxedType(Tree *type, JIT::Type_p mtype)
 // ----------------------------------------------------------------------------
 //   Associate a tree type to a boxed machine type
 // ----------------------------------------------------------------------------
@@ -1374,7 +1374,7 @@ void Types::AddBoxedType(Tree *type, Type_p mtype)
 }
 
 
-Type_p Types::BoxedType(Tree *type)
+JIT::Type_p Types::BoxedType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Return the boxed type if there is one
 // ----------------------------------------------------------------------------
@@ -1382,7 +1382,7 @@ Type_p Types::BoxedType(Tree *type)
     // Check if we already had this signature
     Tree *base = BaseType(type);
     auto it = boxed.find(base);
-    Type_p mtype = (it != boxed.end()) ? it->second : nullptr;
+    JIT::Type_p mtype = (it != boxed.end()) ? it->second : nullptr;
     record(types_boxing, "In %p type %T is boxing %t (%t)",
            this, mtype, type, base);
     return mtype;
@@ -1433,7 +1433,7 @@ void Types::DumpMachineTypes()
     for (auto &b : boxed)
     {
         Tree *type = b.first;
-        Type_p mtype = b.second;
+        JIT::Type_p mtype = b.second;
         std::cout << "#" << ++i
                   << "\t" << type;
         JIT::Print("\t= ", mtype);

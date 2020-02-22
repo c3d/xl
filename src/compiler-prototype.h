@@ -54,7 +54,7 @@ protected:
     CompilerUnit &      unit;       // The unit we compile from
     Tree_p              form;       // Interface for this function
     Types_p             types;      // Type system for this function
-    Function_p          function;   // The LLVM function we are building
+    JIT::Function_p     function;   // The LLVM function we are building
 
     friend class CompilerExpression;
 
@@ -63,13 +63,13 @@ public:
     CompilerPrototype(CompilerUnit &unit,
                       Tree *form,
                       Types *types,
-                      FunctionType_p ftype,
+                      JIT::FunctionType_p ftype,
                       text name);
     CompilerPrototype(CompilerPrototype &caller, RewriteCandidate *rc);
     ~CompilerPrototype();
 
 public:
-    Function_p          Function();
+    JIT::Function_p     Function();
     virtual bool        IsInterfaceOnly();
     Scope *             FunctionScope();
     Context *           FunctionContext();

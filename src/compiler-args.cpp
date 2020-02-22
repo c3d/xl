@@ -544,25 +544,25 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
 }
 
 
-Function_p RewriteCandidate::Prototype(JIT &jit)
+JIT::Function_p RewriteCandidate::Prototype(JIT &jit)
 // ----------------------------------------------------------------------------
 //   Build the prototype for the rewrite function
 // ----------------------------------------------------------------------------
 {
-    FunctionType_p fty = FunctionType(jit);
+    JIT::FunctionType_p fty = FunctionType(jit);
     text fname = FunctionName();
-    Function_p function = jit.Function(fty, fname);
+    JIT::Function_p function = jit.Function(fty, fname);
     return function;
 }
 
 
-FunctionType_p RewriteCandidate::FunctionType(JIT &jit)
+JIT::FunctionType_p RewriteCandidate::FunctionType(JIT &jit)
 // ----------------------------------------------------------------------------
 //   Build the signature type for the function
 // ----------------------------------------------------------------------------
 {
-    Signature signature = RewriteSignature();
-    Type_p retTy = RewriteType();
+    JIT::Signature signature = RewriteSignature();
+    JIT::Type_p retTy = RewriteType();
     return jit.FunctionType(retTy, signature);
 }
 
@@ -576,17 +576,17 @@ text RewriteCandidate::FunctionName()
 }
 
 
-Signature RewriteCandidate::RewriteSignature()
+JIT::Signature RewriteCandidate::RewriteSignature()
 // ----------------------------------------------------------------------------
 //   Build the signature for the rewrite
 // ----------------------------------------------------------------------------
 {
-    Signature signature;
+    JIT::Signature signature;
     for (RewriteBinding &binding : bindings)
     {
         Tree *valueType = ValueType(binding.value);
         assert(valueType && "Type for bound value is required during codegen");
-        Type_p valueTy = value_types->BoxedType(valueType);
+        JIT::Type_p valueTy = value_types->BoxedType(valueType);
         assert(valueTy && "Machine type for bound value should exist");
         signature.push_back(valueTy);
     }
@@ -594,17 +594,17 @@ Signature RewriteCandidate::RewriteSignature()
 }
 
 
-Type_p RewriteCandidate::RewriteType()
+JIT::Type_p RewriteCandidate::RewriteType()
 // ----------------------------------------------------------------------------
 //   Boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    Type_p ty = binding_types->BoxedType(type);
+    JIT::Type_p ty = binding_types->BoxedType(type);
     return ty;
 }
 
 
-void RewriteCandidate::RewriteType(Type_p ty)
+void RewriteCandidate::RewriteType(JIT::Type_p ty)
 // ----------------------------------------------------------------------------
 //   Set the boxed type for the rewrite
 // ----------------------------------------------------------------------------
