@@ -1,4 +1,4 @@
 // CMD=%x --nonexistent-option %f
 // EXIT=1
-// FILTER=[ "$TARGET" != "release" ] && grep -v "You can get .* -trace help"
+// FILTER=grep -v "You can get .* -trace help" | grep -v "Select a prefix to debug"
 1 + 1

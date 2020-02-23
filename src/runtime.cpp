@@ -46,7 +46,6 @@
 #include "options.h"
 #include "opcodes.h"
 #include "main.h"
-#include "native.h"
 #include "save.h"
 #include "tree-clone.h"
 #include "utf8_fileutils.h"
@@ -56,6 +55,9 @@
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
 #include "types.h"
+#include "native.h"
+#else // !INTERPRETER_ONLY
+#define XL_NATIVE(fn)
 #endif // INTERPRETER_ONLY
 
 #include <iostream>

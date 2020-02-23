@@ -39,6 +39,29 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+#ifdef INTERPRETER_ONLY
+
+// ============================================================================
+//
+//   Interpreter only stub types
+//
+// ============================================================================
+
+namespace XL { namespace JIT {
+typedef struct Interpreter_Type *       Type_p;
+typedef struct Interpreter_Value *      Value_p;
+}}
+
+
+
+#else // !INTERPRETER_ONLY
+
+// ============================================================================
+//
+//    Most basic LLVM headers required for all
+//
+// ============================================================================
+
 #ifndef LLVM_VERSION
 #error "Sorry, no can do anything without knowing the LLVM version"
 #elif LLVM_VERSION < 370
@@ -346,6 +369,8 @@ public:
 };
 
 } // namespace XL
+
+#endif // INTERPRETER_ONLY
 
 extern XL::JIT::Value_p xldebug(XL::JIT::Value_p);
 extern XL::JIT::Type_p  xldebug(XL::JIT::Type_p);

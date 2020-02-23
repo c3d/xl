@@ -71,6 +71,11 @@ self-compile-xl2:fedora:
   script:
   - (cd xl2; make)
 
+interpreter:fedora:
+  image: fedora:latest
+  script:
+  - make release-check COMPILER=none
+
 llvm-4.0:fedora:
   image: fedora:28
   script:
