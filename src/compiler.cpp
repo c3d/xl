@@ -148,7 +148,7 @@ Tree * Compiler::Evaluate(Scope *scope, Tree *source)
 {
     record(compiler, "Compiling program %t in scope %t", source, scope);
     if (!source || !scope)
-        return NULL;
+        return nullptr;
 
     CompilerUnit unit(*this, scope, source);
     eval_fn code = unit.Compile();

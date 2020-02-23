@@ -213,11 +213,11 @@ Tree *  xl_load(Scope *scope, Tree *self);
 Tree *  xl_load_data(Scope *, Tree *self,
                      text name, text prefix,
                      text fieldSeps = ",;", text recordSeps = "\n",
-                     Tree *body = NULL);
+                     Tree *body = nullptr);
 Tree *  xl_load_data(Scope *, Tree *self, text inputName,
                      std::istream &source, bool cached, bool statTime,
                      text prefix, text fieldSeps = ",;", text recordSeps = "\n",
-                     Tree *body = NULL);
+                     Tree *body = nullptr);
 Tree *  xl_add_search_path(Scope *, text prefix, text dir);
 Text *  xl_find_in_search_path(Scope *, text prefix, text file);
 

@@ -151,7 +151,7 @@ struct NullCloneMode : DeepCloneMode
 // ----------------------------------------------------------------------------
 {
     template<typename CloneClass>
-    Tree *Clone(Tree *, CloneClass *) { return NULL; }
+    Tree *Clone(Tree *, CloneClass *) { return nullptr; }
 };
 
 
@@ -205,7 +205,7 @@ template <CopyMode mode> struct TreeCopyTemplate
             it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Real *what)
     {
@@ -215,7 +215,7 @@ template <CopyMode mode> struct TreeCopyTemplate
             rt->tag = ((what->Position()<<Tree::KINDBITS) | rt->Kind());
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Text *what)
     {
@@ -225,7 +225,7 @@ template <CopyMode mode> struct TreeCopyTemplate
             tt->tag = ((what->Position()<<Tree::KINDBITS) | tt->Kind());
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Name *what)
     {
@@ -235,7 +235,7 @@ template <CopyMode mode> struct TreeCopyTemplate
             nt->tag = ((what->Position()<<Tree::KINDBITS) | nt->Kind());
             return what;
         }
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Block *what)
@@ -254,7 +254,7 @@ template <CopyMode mode> struct TreeCopyTemplate
             }
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Infix *what)
     {
@@ -268,16 +268,16 @@ template <CopyMode mode> struct TreeCopyTemplate
                 Tree *lr = what->left->Do(this);
                 dest = it;
                 if (!lr)
-                    return NULL;
+                    return nullptr;
                 dest = it->right;
                 Tree *rr = what->right->Do(this);
                 dest = it;
                 if (!rr)
-                    return NULL;
+                    return nullptr;
             }
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Prefix *what)
     {
@@ -290,16 +290,16 @@ template <CopyMode mode> struct TreeCopyTemplate
                 Tree *lr = what->left->Do(this);
                 dest = pt;
                 if (!lr)
-                    return NULL;
+                    return nullptr;
                 dest = pt->right;
                 Tree *rr = what->right->Do(this);
                 dest = pt;
                 if (!rr)
-                    return NULL;
+                    return nullptr;
             }
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Postfix *what)
     {
@@ -312,16 +312,16 @@ template <CopyMode mode> struct TreeCopyTemplate
                 Tree *lr = what->left->Do(this);
                 dest = pt;
                 if (!lr)
-                    return NULL;
+                    return nullptr;
                 dest = pt->right;
                 Tree *rr = what->right->Do(this);
                 dest = pt;
                 if (!rr)
-                    return NULL;
+                    return nullptr;
             }
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Tree *what)
     {

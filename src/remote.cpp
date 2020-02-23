@@ -361,7 +361,7 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
     while (true)
     {
         Tree_p response = xl_read_tree(sock);
-        if (response == NULL)
+        if (response == nullptr)
             break;
 
         record(remote_invoke, "Response from %s was %t",

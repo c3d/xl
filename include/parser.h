@@ -110,20 +110,20 @@ public:
     Parser(kstring name, Syntax &stx, Positions &pos, Errors &err)
         : scanner(name, stx, pos, err),
           syntax(stx), errors(err), pending(tokNONE),
-          openquote(), closequote(), comments(), commented(NULL),
+          openquote(), closequote(), comments(), commented(nullptr),
           hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
     Parser(std::istream &input, Syntax &stx, Positions &pos, Errors &err,
            kstring name="<stream>")
         : scanner(input, stx, pos, err, name),
           syntax(stx), errors(err), pending(tokNONE),
-          openquote(), closequote(), comments(), commented(NULL),
+          openquote(), closequote(), comments(), commented(nullptr),
           hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
     Parser(Scanner &scanner, Syntax *stx)
         : scanner(scanner),
           syntax(stx ? *stx : scanner.InputSyntax()),
           errors(scanner.InputErrors()),
           pending(tokNONE),
-          openquote(), closequote(), comments(), commented(NULL),
+          openquote(), closequote(), comments(), commented(nullptr),
           hadSpaceBefore(false), hadSpaceAfter(false), beginningLine(true) {}
 
 public:

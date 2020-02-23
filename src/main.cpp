@@ -81,7 +81,7 @@ RECORDER_TWEAK_DEFINE(inject_fault,  false, "Test fault handler "
 
 XL_BEGIN
 
-Main *MAIN = NULL;
+Main *MAIN = nullptr;
 
 
 // ============================================================================
@@ -181,7 +181,7 @@ SourceFile::SourceFile()
 // ----------------------------------------------------------------------------
 //   Default constructor
 // ----------------------------------------------------------------------------
-    : name(""), tree(NULL), scope(NULL),
+    : name(""), tree(nullptr), scope(nullptr),
       modified(0), changed(false), readOnly(false)
 {}
 
@@ -222,9 +222,9 @@ Main::Main(int inArgc,
       options(inArgc, inArgv),
       context(),
       renderer(std::cout, SearchLibFile(styleSheetName), syntax),
-      reader(NULL),
-      writer(NULL),
-      evaluator(NULL)
+      reader(nullptr),
+      writer(nullptr),
+      evaluator(nullptr)
 {
     recorder_dump_on_common_signals(0, 0);
     recorder_trace_set(".*_(error|warning)");
@@ -336,7 +336,7 @@ Errors *Main::InitMAIN()
 // ----------------------------------------------------------------------------
 {
     MAIN = this;
-    return NULL;
+    return nullptr;
 }
 
 
@@ -420,8 +420,8 @@ int Main::LoadFile(text file, text modname)
 {
     // Find which source file we are referencing
     SourceFile         &sf       = files[file];
-    std::istream       *input    = NULL;
-    Tree_p              tree     = NULL;
+    std::istream       *input    = nullptr;
+    Tree_p              tree     = nullptr;
     utf8_ifstream       inputFile(file.c_str(), std::ios::in|std::ios::binary);
     std::stringstream   inputStream;
 

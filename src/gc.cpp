@@ -82,8 +82,8 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
 // ----------------------------------------------------------------------------
 //    Setup an empty allocator
 // ----------------------------------------------------------------------------
-    : gc(NULL), name(tn), locked(0), lowestInUse(~0UL), highestInUse(0),
-      chunks(), freeList(NULL), toDelete(NULL),
+    : gc(nullptr), name(tn), locked(0), lowestInUse(~0UL), highestInUse(0),
+      chunks(), freeList(nullptr), toDelete(nullptr),
       available(0), freedCount(0),
       chunkSize(1022), objectSize(os), alignedSize(os),
       allocatedCount(0), scannedCount(0), collectedCount(0), totalCount(0)
@@ -395,7 +395,7 @@ void *TypeAllocator::operator new(size_t size)
 //   Force 16-byte alignment not guaranteed by regular operator new
 // ----------------------------------------------------------------------------
 {
-    void *result = NULL;
+    void *result = nullptr;
 #if defined(HAVE_POSIX_MEMALIGN)
     // Real operating systems
     if (posix_memalign(&result, PTR_MASK+1, size))
@@ -632,7 +632,7 @@ void GarbageCollector::Statistics(uint &total,
 }
 
 
-GarbageCollector *GarbageCollector::gc = NULL;
+GarbageCollector *GarbageCollector::gc = nullptr;
 
 GarbageCollector *GarbageCollector::CreateSingleton()
 // ----------------------------------------------------------------------------
@@ -653,7 +653,7 @@ void GarbageCollector::Delete()
     if (gc)
     {
         delete gc;
-        gc = NULL;
+        gc = nullptr;
     }
 }
 
@@ -725,7 +725,7 @@ void *GarbageCollector::DebugPointer(void *ptr)
                                   << "chunk #" << chunkIndex << " ";
 
                     uint freeIndex = 0;
-                    Chunk_vp prev = NULL;
+                    Chunk_vp prev = nullptr;
                     for (Chunk_vp f = alloc->freeList; f; f = f->next)
                     {
                         freeIndex++;
@@ -739,7 +739,7 @@ void *GarbageCollector::DebugPointer(void *ptr)
                     }
 
                     freeIndex = 0;
-                    prev = NULL;
+                    prev = nullptr;
                     for (Chunk_vp f = alloc->toDelete; f; f = f->next)
                     {
                         freeIndex++;

@@ -70,7 +70,7 @@ Tree::~Tree()
 //   Delete the tree and associated data
 // ----------------------------------------------------------------------------
 {
-    Info *next = NULL;
+    Info *next = nullptr;
     assert (info != (Info *) 0xD00DEL && "Please report this in bug #922");
     for (Info *i = info; i; i = next)
     {

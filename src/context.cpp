@@ -154,7 +154,7 @@ Context *Context::Parent()
 {
     if (Scope *psyms = Enclosing(symbols))
         return new Context(psyms);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -172,7 +172,7 @@ bool Context::ProcessDeclarations(Tree *what)
 //   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
 {
-    Tree_p next   = NULL;
+    Tree_p next   = nullptr;
     bool   result = false;
 
     while (what)
@@ -237,7 +237,7 @@ bool Context::ProcessDeclarations(Tree *what)
 
         // Consider next in chain
         what = next;
-        next = NULL;
+        next = nullptr;
     }
     return result;
 }
@@ -321,7 +321,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
 {
     // If the rewrite is not good, just exit
     if (!IsDeclaration(rewrite))
-        return NULL;
+        return nullptr;
 
     // In interpreted mode, just skip any C declaration
 #ifndef INTERPRETER_ONLY
@@ -330,7 +330,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
         if (Prefix *cdecl = rewrite->right->AsPrefix())
             if (Name *cname = cdecl->left->AsName())
                 if (cname->value == "C")
-                    return NULL;
+                    return nullptr;
 
     // Find 'from', 'to' and 'hash' for the rewrite
     Tree *from = rewrite->left;
@@ -357,7 +357,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     Scope   *scope  = symbols;
     Tree_p  &locals = ScopeLocals(scope);
     Tree_p  *parent = &locals;
-    Rewrite *result = NULL;
+    Rewrite *result = nullptr;
     while (!result)
     {
         // If we have found a nil spot, that's where we can insert
@@ -595,7 +595,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 {
     // Quick exit if we have no rewrite for that tree kind
     if (!HasRewritesFor(what->Kind()))
-        return NULL;
+        return nullptr;
 
     Scope * scope = symbols;
     ulong   h0    = Hash(what);
@@ -605,7 +605,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         // Initialize local scope
         Tree_p &locals = ScopeLocals(scope);
         Tree_p *parent = &locals;
-        Tree *result = NULL;
+        Tree *result = nullptr;
         ulong h = h0;
 
         while (true)
@@ -648,7 +648,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
     }
 
     // Return NULL if all evaluations failed
-    return NULL;
+    return nullptr;
 }
 
 
@@ -666,10 +666,10 @@ Rewrite *Context::Reference(Tree *form, bool recurse)
 //   Find an existing definition in the symbol table that matches the form
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(form, findReference, NULL, recurse))
+    if (Tree *result = Lookup(form, findReference, nullptr, recurse))
         if (Rewrite *decl = result->As<Rewrite>())
             return decl;
-    return NULL;
+    return nullptr;
 }
 
 
@@ -678,10 +678,10 @@ Tree *Context::DeclaredForm(Tree *form)
 //   Find the original declaration associated to a given form
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(form, findReference, NULL, true))
+    if (Tree *result = Lookup(form, findReference, nullptr, true))
         if (Rewrite *decl = result->As<Rewrite>())
             return RewriteDefined(decl->left);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -692,7 +692,7 @@ static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 {
     if (what->IsLeaf())
         if (!Tree::Equal(what, RewriteDefined(decl->left)))
-            return NULL;
+            return nullptr;
     return decl->right;
 }
 
@@ -705,7 +705,7 @@ static Tree *findValueX(Scope *, Scope *scope,
 {
     if (what->IsLeaf())
         if (!Tree::Equal(what, RewriteDefined(decl->left)))
-            return NULL;
+            return nullptr;
     Prefix *rewriteInfo = (Prefix *) info;
     rewriteInfo->left = scope;
     rewriteInfo->right = decl;
@@ -718,7 +718,7 @@ Tree *Context::Bound(Tree *form, bool recurse)
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
-    Tree *result = Lookup(form, findValue, NULL, recurse);
+    Tree *result = Lookup(form, findValue, nullptr, recurse);
     return result;
 }
 
@@ -728,7 +728,7 @@ Tree *Context::Bound(Tree *form, bool recurse, Rewrite_p *rewrite, Scope_p *ctx)
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
-    Prefix info(NULL, NULL);
+    Prefix info(nullptr, nullptr);
     Tree *result = Lookup(form, findValueX, &info, recurse);
     if (ctx)
         *ctx = info.left->As<Scope>();
@@ -803,7 +803,7 @@ ulong Context::ListNames(text begin, RewriteList &list,
         Rewrite *locals = ScopeRewrites(scope);
         count += listNames(locals, begin, list, includePrefixes);
         if (!recurse)
-            scope = NULL;
+            scope = nullptr;
         else
             scope = Enclosing(scope);
     }
@@ -973,7 +973,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
         }
         else
         {
-            rw = NULL;
+            rw = nullptr;
         }
     } // while (rw)
 }

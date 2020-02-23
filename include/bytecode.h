@@ -114,9 +114,9 @@ public:
     virtual Op *        Run(Data data XL_UNUSED) { return success; }
 
 public:
-                        Op()                    : success(NULL) {}
+                        Op()                    : success(nullptr) {}
     virtual             ~Op()                   {}
-    virtual Op *        Fail()                  { return NULL; }
+    virtual Op *        Fail()                  { return nullptr; }
     virtual void        Dump(std::ostream &out) { out << OpID(); }
     virtual kstring     OpID()                  { return "op"; }
 };
@@ -215,7 +215,7 @@ public:
     int         Evaluate(Context *, Tree *, bool deferEval = false);
     int         EvaluationTemporary(Tree *);
     void        Enclose(Context *context, Scope *old, Tree *what);
-    int         Bind(Name *name, Tree *value, Tree *type=NULL);
+    int         Bind(Name *name, Tree *value, Tree *type=nullptr);
     CallOp *    Call(Context *context, Tree *value, Tree *type,
                      TreeIDs &inputs, ParmOrder &parms);
 
@@ -377,7 +377,7 @@ inline std::ostream &operator<<(std::ostream &out, Ops &instrs)
 //   Dump all the opcodes in a sequence
 // ----------------------------------------------------------------------------
 {
-    Code::Dump(out, NULL, instrs);
+    Code::Dump(out, nullptr, instrs);
     return out;
 }
 

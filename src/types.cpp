@@ -627,7 +627,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
         return infix;
     }
     }
-    return NULL; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
+    return nullptr; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
 }
 
 
@@ -1015,9 +1015,9 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 {
     record(types_joined, "In %p replace %t with %t in %t",
            this, old, replace, type);
-    XL_REQUIRE (type != NULL);
-    XL_REQUIRE (old != NULL);
-    XL_REQUIRE (replace != NULL);
+    XL_REQUIRE (type != nullptr);
+    XL_REQUIRE (old != nullptr);
+    XL_REQUIRE (replace != nullptr);
 
     if (type == old || type == replace)
         return replace;
@@ -1079,7 +1079,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
     }
 
     }
-    return NULL; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
+    return nullptr; // Get rid of bogus GCC 8.3.1 warning "Control reaches end"
 }
 
 

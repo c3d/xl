@@ -66,7 +66,7 @@ Tree *Bytecode::Evaluate(Scope *scope, Tree *what)
     TreeList captured;
     Context_p context = new Context(scope);
 
-    Procedure *proc = Compile(context, what, NULL, noParms, captured);
+    Procedure *proc = Compile(context, what, nullptr, noParms, captured);
     Tree_p result = what;
     if (proc)
     {
@@ -283,7 +283,7 @@ struct ClearOp : Op
     virtual Op *        Run(Data data)
     {
         for (int v = lo; v <= hi; v++)
-            data[v] = NULL;
+            data[v] = nullptr;
         return success;
     }
 
@@ -502,7 +502,7 @@ struct IndexOp : FailOp
             {
                 // If we have a single name on the left, like (X->X+1)
                 // interpret that as a lambda function
-                Tree      *result = NULL;
+                Tree      *result = nullptr;
                 if (Name *lfname = lifx->left->AsName())
                 {
                     // Case like '(X is X+1) Arg':
@@ -580,7 +580,7 @@ Code::Code(Context *ctx, Tree *self)
 // ----------------------------------------------------------------------------
 //    Create a new code from the given ops
 // ----------------------------------------------------------------------------
-    : context(ctx), self(self), ops(NULL), instrs()
+    : context(ctx), self(self), ops(nullptr), instrs()
 {}
 
 
@@ -612,7 +612,7 @@ void Code::SetOps(Op **newOps, Ops *instrsToTakeOver, uint outId)
 // ----------------------------------------------------------------------------
 {
     ops = *newOps;
-    *newOps = NULL;
+    *newOps = nullptr;
     XL_ASSERT(instrs.size() == 0);
     std::swap(instrs, *instrsToTakeOver);
 
@@ -681,7 +681,7 @@ void Code::Dump(std::ostream &out)
 }
 
 
-static Ops *currentDump = NULL;
+static Ops *currentDump = nullptr;
 
 void Code::Dump(std::ostream &out, Op *ops, Ops &instrs)
 // ----------------------------------------------------------------------------
@@ -722,7 +722,7 @@ text Code::Ref(Op *op, text sep, text set, text null)
     bool found = false;
     uint max = currentDump ? currentDump->size() : 0;
 
-    if (op == NULL)
+    if (op == nullptr)
         found = bool(out << sep << null);
     for (uint o = 0; o < max; o++)
         if ((*currentDump)[o] == op)
@@ -844,12 +844,12 @@ CodeBuilder::CodeBuilder(TreeList &captured)
 // ----------------------------------------------------------------------------
 //   Create a code builder
 // ----------------------------------------------------------------------------
-    : ops(NULL), lastOp(&ops),
+    : ops(nullptr), lastOp(&ops),
       inputs(), values(), captured(captured),
       nEvals(0), nParms(0), candidates(0),
-      test(NULL), resultType(NULL),
-      context(NULL), parmsCtx(NULL), argsCtx(NULL),
-      failOp(NULL), successOp(NULL),
+      test(nullptr), resultType(nullptr),
+      context(nullptr), parmsCtx(nullptr), argsCtx(nullptr),
+      failOp(nullptr), successOp(nullptr),
       instrs(), subexprs(), parms(), defer(false)
 {}
 
@@ -967,7 +967,7 @@ void CodeBuilder::Success()
 
     lastOp = &failOp->success;
     instrs.push_back(failOp);
-    failOp = NULL;
+    failOp = nullptr;
 
     XL_ASSERT(!*lastOp);
 }
@@ -1057,7 +1057,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
     // Create the scope for evaluation
     Context_p    context = new Context(evalScope);
-    Context_p    argsCtx = NULL;
+    Context_p    argsCtx = nullptr;
 
     // Save current state of the builder
     Save<Tree_p>    saveSelf(builder->test, self);
@@ -1068,7 +1068,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Op *         oldFailOp = builder->failOp;
     Op *         failOp = new LabelOp("fail");
     builder->failOp = failOp;
-    builder->resultType = NULL;
+    builder->resultType = nullptr;
 
     // We start with new parameters for each candidate
     ParmOrder           noParms;
@@ -1089,7 +1089,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                    depth, cindex, self, decl->left);
             builder->failOp = oldFailOp;
             delete failOp;
-            return NULL;
+            return nullptr;
         }
         argsCtx = context;
     }
@@ -1112,7 +1112,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
                    depth, cindex, self, decl->left);
 
             // Remove the instructions that were added and the failed exit
-            *lastOp = NULL;
+            *lastOp = nullptr;
             uint lastNow = builder->instrs.size();
             for (uint i = lastInstrSize; i < lastNow; i++)
                 delete builder->instrs[i];
@@ -1120,10 +1120,10 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
             builder->failOp = oldFailOp;
             builder->lastOp = lastOp;
             delete failOp;
-            return NULL;
+            return nullptr;
         }
         if (builder->resultType == tree_type)
-            builder->resultType = NULL;
+            builder->resultType = nullptr;
     }
 
     // Check if we have builtins (opcode or C bindings)
@@ -1169,7 +1169,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
 
     if (strength == CodeBuilder::ALWAYS)
         return decl;
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1221,7 +1221,7 @@ Procedure *CodeBuilder::Compile(Context *ctx, Tree *what,
 
     // We failed, delete the result and return
     what->Purge<Code>();
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1236,7 +1236,7 @@ Op *CodeBuilder::CompileInternal(Context *ctx, Tree *what, bool deferEval)
         return result;
 
     // Save the place where we insert instructions
-    Save<Op *>      saveOps(ops, NULL);
+    Save<Op *>      saveOps(ops, nullptr);
     Save<Op **>     saveLastOp(lastOp, &ops);
     ParmOrder       noParms;
     Save<ParmOrder> saveParms(parms, noParms);
@@ -1263,8 +1263,8 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 //    Compile an instruction or a sequence of instructions
 // ----------------------------------------------------------------------------
 {
-    Save<Op *> saveSuccessOp(successOp, NULL);
-    Save<Op *> saveFailOp(failOp, NULL);
+    Save<Op *> saveSuccessOp(successOp, nullptr);
+    Save<Op *> saveFailOp(failOp, nullptr);
     Scope_p    originalScope = ctx->Symbols();
     Context_p  gcContext     = ctx;
     TreeIDs    empty;
@@ -1298,7 +1298,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
         // In that case, the 'success' label was not used
         delete success;
-        successOp = NULL;
+        successOp = nullptr;
 
         // Forms that we recognize directly and deal with here
         kind whatK = what->Kind();
@@ -1385,7 +1385,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
                         // Bind arg in new context and evaluate body
                         Rewrite *rw = ctx->Define(lfname, arg);
                         outs[rw->left] = -1;
-                        CallOp *call = Call(ctx, lifx->right, NULL,
+                        CallOp *call = Call(ctx, lifx->right, nullptr,
                                             outs, parms);
                         Add(call);
                         return true;
@@ -1409,7 +1409,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
                             return true;
                         }
                         delete success;
-                        successOp = NULL;
+                        successOp = nullptr;
                         Add(new FormErrorOp(what));
                         return true;
                     }
@@ -1492,7 +1492,7 @@ int CodeBuilder::ValueID(Tree *self)
     Rewrite_p rw;
     if (context)
         if (Name *name = self->AsName())
-            if (context->Bound(name, true, &rw, NULL))
+            if (context->Bound(name, true, &rw, nullptr))
                 self = rw;
 
     TreeIDs::iterator found = values.find(self);
@@ -1787,7 +1787,7 @@ struct InfixMatchOp : FailOp
     virtual Op *        Run(Data data)
     {
         Tree *test = DataResult(data);
-        Context_p ctx = NULL;
+        Context_p ctx = nullptr;
         if (Tree *inside = Interpreter::IsClosure(test, &ctx))
             test = inside;
         if (Infix *ifx = test->AsInfix())
@@ -2008,7 +2008,7 @@ CodeBuilder::strength CodeBuilder::Do(Infix *what)
         }
 
         // Typed name: evaluate type and check match
-        Tree *namedType = NULL;
+        Tree *namedType = nullptr;
         Tree *type = what->right;
         if (Name *typeName = type->AsName())
             if (Tree *found = context->Bound(typeName))

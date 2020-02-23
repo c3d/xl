@@ -52,7 +52,7 @@ struct Info
 // ----------------------------------------------------------------------------
 {
 public:
-                        Info()                  : next(NULL) {}
+                        Info()                  : next(nullptr) {}
     virtual             ~Info()                 {}
     virtual void        Delete()                { delete this; }
 
@@ -65,7 +65,7 @@ public:
 
 private:
     // Can't copy info
-                        Info(const Info &)      : next(NULL) {}
+                        Info(const Info &)      : next(nullptr) {}
 };
 
 XL_END

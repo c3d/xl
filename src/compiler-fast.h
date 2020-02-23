@@ -128,12 +128,12 @@ struct O1CompileUnit
                   TreeList parms, bool closure);
     ~O1CompileUnit();
 
-    bool                IsForwardCall()         { return entrybb == NULL; }
+    bool                IsForwardCall()         { return entrybb == nullptr; }
     eval_fn             Finalize(bool topLevel);
 
     enum { knowAll = -1, knowLocals = 1, knowValues = 2 };
 
-    JIT::Value_p        NeedStorage(Tree *tree, Tree *source = NULL);
+    JIT::Value_p        NeedStorage(Tree *tree, Tree *source = nullptr);
     bool                IsKnown(Tree *tree, uint which = knowAll);
     JIT::Value_p        Known(Tree *tree, uint which = knowAll );
 
@@ -272,7 +272,7 @@ struct ArgumentMatch
                    Scope *symbols, Scope *decl, bool data):
         compile(compile),
         symbols(symbols), declContext(decl), argContext(decl),
-        test(test), defined(NULL),
+        test(test), defined(nullptr),
         parms(), args(),
         data(data)
     {

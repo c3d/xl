@@ -102,7 +102,7 @@ inline Tree *Interpreter::IsClosure(Tree *tree, Context_p *context)
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 

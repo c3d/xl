@@ -60,7 +60,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-Renderer *Renderer::renderer = NULL;
+Renderer *Renderer::renderer = nullptr;
 
 struct EnterFormatsAction
 // ----------------------------------------------------------------------------
@@ -111,7 +111,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
 //   Renderer constructor
 // ----------------------------------------------------------------------------
     : output(out), syntax(stx), formats(),
-      indent(0), self(""), left(NULL), right(NULL), current_quote("\""),
+      indent(0), self(""), left(nullptr), right(nullptr), current_quote("\""),
       priority(0),
       had_space(true), had_newline(false), had_punctuation(false),
       need_separator(false), need_newline(false), no_indents(false)
@@ -515,7 +515,7 @@ void Renderer::Render(Tree *what)
     if (highlight)
         hname = highlights[what];
     std::streampos hbegin, hend;
-    CommentsInfo *cinfo = what ? what->GetInfo<CommentsInfo>() : NULL;
+    CommentsInfo *cinfo = what ? what->GetInfo<CommentsInfo>() : nullptr;
     CommentsList::iterator ci;
 
     if (highlight)

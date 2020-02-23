@@ -91,8 +91,8 @@ struct FindParentAction : Action
                 level--;
             return ancestor;
         }
-        // Nothing found on this path, return NULL
-        return NULL;
+        // Nothing found on this path, return nullptr
+        return nullptr;
     }
 
     Tree *Do(Integer *what)
@@ -101,7 +101,7 @@ struct FindParentAction : Action
         {
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Real *what)
     {
@@ -109,7 +109,7 @@ struct FindParentAction : Action
         {
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Text *what)
     {
@@ -117,7 +117,7 @@ struct FindParentAction : Action
         {
             return what;
         }
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Name *what)
     {
@@ -125,7 +125,7 @@ struct FindParentAction : Action
         {
             return what;
         }
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Prefix *what)
@@ -138,7 +138,7 @@ struct FindParentAction : Action
             return left;
         if (Tree *right = FindParent(what, what->right, "r"))
             return right;
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Postfix *what)
@@ -151,7 +151,7 @@ struct FindParentAction : Action
             return left;
         if (Tree *right = FindParent(what, what->right, "r"))
             return right;
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Infix *what)
@@ -164,7 +164,7 @@ struct FindParentAction : Action
             return left;
         if (Tree *right = FindParent(what, what->right, "r"))
             return right;
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Block *what)
     {
@@ -174,7 +174,7 @@ struct FindParentAction : Action
         }
         if (Tree *aChild = FindParent(what, what->child, "c"))
             return aChild;
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Tree *what)
@@ -183,7 +183,7 @@ struct FindParentAction : Action
         {
             return what;
         }
-        return NULL;
+        return nullptr;
     }
 
     Tree_p      child;
@@ -209,7 +209,7 @@ struct FindChildAction : Action
     {
 
         if (depth +l <= 0)
-            return NULL;
+            return nullptr;
         depth += l;
         Tree * result = aChild->Do(this);
         depth -= l;
@@ -220,19 +220,19 @@ struct FindChildAction : Action
 
     Tree *Do(Integer *)
     {
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Real *)
     {
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Text *)
     {
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Name *)
     {
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Prefix *what)
@@ -244,14 +244,14 @@ struct FindChildAction : Action
         }
         if (Tree *right = FindChild(what->right, "r", -1))
             return right;
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Postfix *what)
     {
         if (Tree *left = FindChild(what->left, "l", -1))
             return left;
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Infix *what)
@@ -260,18 +260,18 @@ struct FindChildAction : Action
             return left;
         if (Tree *right = FindChild(what->right, "r", 0))
             return right;
-        return NULL;
+        return nullptr;
     }
     Tree *Do(Block *what)
     {
         if (Tree *aChild = FindChild(what->child, "c", 0))
             return aChild;
-        return NULL;
+        return nullptr;
     }
 
     Tree *Do(Tree *)
     {
-        return NULL;
+        return nullptr;
     }
 
     text   look;

@@ -49,7 +49,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-Syntax *Syntax::syntax = NULL;
+Syntax *Syntax::syntax = nullptr;
 
 
 Syntax::Syntax(const Syntax &other)
@@ -268,7 +268,7 @@ Syntax *Syntax::HasSpecialSyntax(text Begin, text &End)
     // Find associated syntax file
     delimiter_table::iterator found = subsyntax_file.find(Begin);
     if (found == subsyntax_file.end())
-        return NULL;
+        return nullptr;
 
     // Find associated child syntax
     text filename = (*found).second;
@@ -278,7 +278,7 @@ Syntax *Syntax::HasSpecialSyntax(text Begin, text &End)
     // Find delimiters in that child syntax
     delimiter_table::iterator dfound = child->delimiters.find(Begin);
     if (dfound == child->delimiters.end())
-        return NULL;            // Defensive codeing, should not happen
+        return nullptr;            // Defensive codeing, should not happen
 
     // Success, return the syntax we found
     End = (*dfound).second;
@@ -305,7 +305,7 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
     token_t     tok = tokNAME;
     int         priority = 0;
     bool        done = false;
-    ChildSyntax *childSyntax = NULL;
+    ChildSyntax *childSyntax = nullptr;
 
     while(tok != tokEOF && !done)
     {

@@ -327,7 +327,7 @@ Tree *Deserializer::ReadTree()
 {
     // If it's bad to start with, stop reading further...
     if (!in.good())
-        return NULL;
+        return nullptr;
 
     SerializationTag tag = SerializationTag(ReadUnsigned());
     text             tvalue, opening, closing;
@@ -336,12 +336,12 @@ Tree *Deserializer::ReadTree()
     Tree *           left;
     Tree *           right;
     Tree *           child;
-    Tree *           result = NULL;
+    Tree *           result = nullptr;
 
     switch(tag)
     {
     case serialNULL:
-        result = NULL;
+        result = nullptr;
         break;
 
     case serialINTEGER:

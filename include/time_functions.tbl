@@ -39,7 +39,7 @@ FUNCTION(sleep, integer,
          struct timespec ts;
          ts.tv_sec = (time_t) floor(duration);
          ts.tv_nsec = (long) floor(1.0e9 * (duration - ts.tv_sec));
-         R_INT(nanosleep(&ts, NULL)));
+         R_INT(nanosleep(&ts, nullptr)));
 
 #define R_TIME(tmfield)                         \
     struct tm tm = { 0 };                       \
@@ -60,5 +60,5 @@ NAME_FN(YearDay,        integer, "year_day",    R_TIME(tm.tm_yday));
 
 NAME_FN(Time,           real,   "time",
         struct timeval tv;
-        gettimeofday(&tv, NULL);
+        gettimeofday(&tv, nullptr);
         R_REAL(tv.tv_sec % 86400 + 1.0e-6 * tv.tv_usec));

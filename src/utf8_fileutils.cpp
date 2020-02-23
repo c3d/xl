@@ -50,7 +50,7 @@ std::wstring utf8_decode(const std::string &str)
 // ----------------------------------------------------------------------------
 {
     int needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(),
-                                     NULL, 0);
+                                     nullptr, 0);
     std::wstring dest(needed, 0);
     MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(),
                         &dest[0], needed);

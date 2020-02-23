@@ -749,7 +749,7 @@ Tree *RewriteCalls::Check (Scope *scope,
     // Keep going unless we had a perfect binding
     if (binding == PERFECT)
         return what;
-    return NULL;
+    return nullptr;
 }
 
 

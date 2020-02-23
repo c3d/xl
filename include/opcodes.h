@@ -130,14 +130,14 @@ public:
     }
     Opcode(const Opcode &other): Op(other), Info()
     {
-        XL_ASSERT(success == NULL);
-        XL_ASSERT(next == NULL);
-        XL_ASSERT(owner == NULL);
+        XL_ASSERT(success == nullptr);
+        XL_ASSERT(next == nullptr);
+        XL_ASSERT(owner == nullptr);
     }
 
     virtual void                Delete(){ /* Not owned by the tree */ }
     virtual void                Register(Context *);
-    virtual Tree *              Shape() { return NULL; }
+    virtual Tree *              Shape() { return nullptr; }
     virtual Opcode *            Clone() = 0;
     virtual Op *                Run(Data data) = 0;
     virtual void                SetParms(ParmOrder &parms XL_UNUSED)  { }
@@ -301,7 +301,7 @@ struct FunctionOpcode : Opcode
 // ----------------------------------------------------------------------------
 //   This is intended to be used with the PARM macro below
 {
-    FunctionOpcode() : result(NULL), ptr(&result), size(0) {}
+    FunctionOpcode() : result(nullptr), ptr(&result), size(0) {}
     virtual Tree *Shape() = 0;
 
     template<class TreeType>
@@ -343,7 +343,7 @@ struct FunctionArguments
         if ((uint) -index >= size)
         {
             Ooops("Not enough arguments for parameter $1").Arg(name);
-            return NULL;
+            return nullptr;
         }
         Tree *tree = args[--index];
         TreeType *result = tree->As<TreeType>();
@@ -478,7 +478,7 @@ XL_END
     {                                                                   \
         (void) context;                                                 \
         Condition;                                                      \
-        return NULL;                                                    \
+        return nullptr;                                                 \
     }                                                                   \
                                                                         \
     inline Name *OpcodeType(symbol##_p)                                 \
@@ -526,7 +526,7 @@ XL_END
     {                                                                   \
         Ooops("Argument $1 to $2 is not a " #Type, (Value))             \
             .Arg(#Name);                                                \
-        return NULL;                                                    \
+        return nullptr;                                                 \
     }                                                                   \
     Type##_r &Name = *Name##Ptr; (void) Name;
 

@@ -106,7 +106,7 @@ Tree * FastCompiler::Evaluate(Scope *scope, Tree *source)
 {
     record(compiler, "Fast compiling program %t in scope %t", source, scope);
     if (!source || !scope)
-        return NULL;
+        return nullptr;
 
     eval_fn code = CompileAll(scope, source);
     record(compiler, "Fast compiled %t in scope %t as %p",
@@ -513,7 +513,7 @@ JIT::Function_p FastCompiler::TreeFunction(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     FastCompilerInfo *info = Info(tree);
-    return info ? info->function : NULL;
+    return info ? info->function : nullptr;
 }
 
 
@@ -533,7 +533,7 @@ JIT::Function_p FastCompiler::TreeClosure(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     FastCompilerInfo *info = Info(tree);
-    return info ? info->closure : NULL;
+    return info ? info->closure : nullptr;
 }
 
 
@@ -553,7 +553,7 @@ eval_fn FastCompiler::TreeCode(Tree *tree)
 // ----------------------------------------------------------------------------
 {
     FastCompilerInfo *info = Info(tree);
-    return info ? info->code : NULL;
+    return info ? info->code : nullptr;
 }
 
 
@@ -642,7 +642,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
     if (!envOK)
     {
         Ooops("Internal: what environment in $1?", source);
-        return NULL;
+        return nullptr;
     }
 
     // Create the parameter list with all imported locals
@@ -691,7 +691,7 @@ Tree *ArgumentMatch::Do(Tree *)
 //   Default is to return failure
 // ----------------------------------------------------------------------------
 {
-    return NULL;
+    return nullptr;
 }
 
 
@@ -705,19 +705,19 @@ Tree *ArgumentMatch::Do(Integer *what)
     {
         Integer *it = test->AsInteger();
         if (!it)
-            return NULL;
+            return nullptr;
         if (!compile.keepAlternatives)
         {
             if (it->value == what->value)
                 return what;
-            return NULL;
+            return nullptr;
         }
     }
 
     // Compile the test tree
     Tree *compiled = CompileValue(test, true);
     if (!compiled)
-        return NULL;
+        return nullptr;
 
     // Compare at run-time the actual tree value with the test value
     compile.unit.IntegerTest(compiled, what->value);
@@ -735,19 +735,19 @@ Tree *ArgumentMatch::Do(Real *what)
     {
         Real *rt = test->AsReal();
         if (!rt)
-            return NULL;
+            return nullptr;
         if (!compile.keepAlternatives)
         {
             if (rt->value == what->value)
                 return what;
-            return NULL;
+            return nullptr;
         }
     }
 
     // Compile the test tree
     Tree *compiled = CompileValue(test, true);
     if (!compiled)
-        return NULL;
+        return nullptr;
 
     // Compare at run-time the actual tree value with the test value
     compile.unit.RealTest(compiled, what->value);
@@ -765,19 +765,19 @@ Tree *ArgumentMatch::Do(Text *what)
     {
         Text *tt = test->AsText();
         if (!tt)
-            return NULL;
+            return nullptr;
         if (!compile.keepAlternatives)
         {
             if (tt->value == what->value)
                 return what;
-            return NULL;
+            return nullptr;
         }
     }
 
     // Compile the test tree
     Tree *compiled = CompileValue(test, true);
     if (!compiled)
-        return NULL;
+        return nullptr;
 
     // Compare at run-time the actual tree value with the test value
     compile.unit.TextTest(compiled, what->value);
@@ -798,7 +798,7 @@ Tree *ArgumentMatch::Do(Name *what)
         if (Name *nt = test->AsName())
             if (nt->value == what->value)
                 return what;
-        return NULL;
+        return nullptr;
     }
     else
     {
@@ -813,7 +813,7 @@ Tree *ArgumentMatch::Do(Name *what)
                 {
                     if (nt->value == what->value)
                         return what;
-                    return NULL;
+                    return nullptr;
                 }
             }
 
@@ -823,10 +823,10 @@ Tree *ArgumentMatch::Do(Name *what)
                 // Insert a dynamic tree comparison test
                 Tree *testCode = Compile(test, false);
                 if (!testCode || !unit.IsKnown(testCode))
-                    return NULL;
+                    return nullptr;
                 Tree *thisCode = Compile(existing, false);
                 if (!thisCode || !unit.IsKnown(thisCode))
-                    return NULL;
+                    return nullptr;
                 unit.ShapeTest(testCode, thisCode);
 
                 // Return compilation success
@@ -837,7 +837,7 @@ Tree *ArgumentMatch::Do(Name *what)
         // Bind expression to name, not value of expression (create a closure)
         Tree *compiled = CompileClosure(test);
         if (!compiled)
-            return NULL;
+            return nullptr;
 
         // If first occurence of the name, enter it in symbol table
         Rewrite *rewrite = argContext.Define(what, compiled);
@@ -875,7 +875,7 @@ Tree *ArgumentMatch::Do(Block *what)
         return what->child->Do(this);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -900,7 +900,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                     {
                         value = CompileValue(value, false);
                         if (!value)
-                            return NULL;
+                            return nullptr;
                     }
                     if (unit.IsKnown(value))
                         test = value;
@@ -935,12 +935,12 @@ Tree *ArgumentMatch::Do(Infix *what)
             Tree *lr = what->left->Do(this);
             test = it;
             if (!lr)
-                return NULL;
+                return nullptr;
             test = it->right;
             Tree *rr = what->right->Do(this);
             test = it;
             if (!rr)
-                return NULL;
+                return nullptr;
             return what;
         }
     }
@@ -955,7 +955,7 @@ Tree *ArgumentMatch::Do(Infix *what)
         if (!varName)
         {
             Ooops("Expected a name, got $1 ", what->left);
-            return NULL;
+            return nullptr;
         }
 
         // Check for types that don't require a type check
@@ -992,11 +992,11 @@ Tree *ArgumentMatch::Do(Infix *what)
                     {
                         record(statictypes, "Built-in types and constant");
                         if (namedType == text_type    && tk != TEXT)
-                            return NULL;
+                            return nullptr;
                         if (namedType == integer_type && tk != INTEGER)
-                            return NULL;
+                            return nullptr;
                         if (namedType == real_type && tk == TEXT)
-                            return NULL;
+                            return nullptr;
                         needEvaluation = false;
                         needRTTypeTest = false;
                         record(statictypes, "Constant matches type");
@@ -1010,7 +1010,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                              namedType == postfix_type)
                     {
                         record(statictypes, "Structure type mismatch");
-                        return NULL;
+                        return nullptr;
                     }
 
                 }
@@ -1028,7 +1028,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                         if (validSymbol)
                             namedType = name_type;
                         else
-                            return NULL;
+                            return nullptr;
                     }
                     if (namedType == operator_type)
                     {
@@ -1038,7 +1038,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                         if (validOp)
                             namedType = name_type;
                         else
-                            return NULL;
+                            return nullptr;
                     }
                 }
 
@@ -1090,7 +1090,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                 if (!typeExpr)
                 {
                     record(statictypes, "Invalid type %t", what->right);
-                    return NULL;
+                    return nullptr;
                 }
             }
             if (typeExpr == tree_type)
@@ -1103,14 +1103,14 @@ Tree *ArgumentMatch::Do(Infix *what)
 
         // Compile what we are testing against
         Tree *compiled = test;
-        Tree *exprType = NULL;
+        Tree *exprType = nullptr;
         if (needEvaluation)
         {
             record(statictypes, "Need evaluation for %t", test);
             compiled = Compile(compiled, true);
             record(statictypes, "Test %t compiles as %t", test, compiled);
             if (!compiled)
-                return NULL;
+                return nullptr;
             exprType = symbols.Type(compiled);
             record(statictypes, "Type of compiled is %t", exprType);
         }
@@ -1162,7 +1162,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                 {
                     record(statictypes, "Static type mismatch %t vs %t",
                            exprType, typeExpr);
-                    return NULL;
+                    return nullptr;
                 }
 
                 if (exprType != typeExpr)
@@ -1187,7 +1187,7 @@ Tree *ArgumentMatch::Do(Infix *what)
     }
 
     // Otherwise, this is a mismatch
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1202,13 +1202,13 @@ Tree *ArgumentMatch::Do(Prefix *what)
         // Note that we must test left first to define 'f' in above case
         Infix *defined_infix = defined->AsInfix();
         if (defined_infix)
-            defined = NULL;
+            defined = nullptr;
 
         test = pt->left;
         Tree *lr = what->left->Do(this);
         test = pt;
         if (!lr)
-            return NULL;
+            return nullptr;
         test = pt->right;
         Tree *rr = what->right->Do(this);
         if (!rr)
@@ -1221,12 +1221,12 @@ Tree *ArgumentMatch::Do(Prefix *what)
         }
         test = pt;
         if (!rr)
-            return NULL;
+            return nullptr;
         if (!defined && defined_infix)
             defined = defined_infix;
         return what;
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1244,7 +1244,7 @@ Tree *ArgumentMatch::Do(Postfix *what)
         Tree *rr = what->right->Do(this);
         test = pt;
         if (!rr)
-            return NULL;
+            return nullptr;
         test = pt->left;
         Tree *lr = what->left->Do(this);
         if (!lr)
@@ -1257,10 +1257,10 @@ Tree *ArgumentMatch::Do(Postfix *what)
         }
         test = pt;
         if (!lr)
-            return NULL;
+            return nullptr;
         return what;
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1396,7 +1396,7 @@ Tree *EvaluateChildren::Do(Prefix *what)
     unit.ConstantTree(what->left);
     Tree *right = what->right->Do(compile);
     if (!right)
-        return NULL;
+        return nullptr;
     unit.CallFillPrefix(what);
     return what;
 }
@@ -1410,7 +1410,7 @@ Tree *EvaluateChildren::Do(Postfix *what)
     O1CompileUnit &unit = compile.unit;
     Tree *left = what->left->Do(compile);
     if (!left)
-        return NULL;
+        return nullptr;
     unit.ConstantTree(what->right);
     unit.CallFillPostfix(what);
     return what;
@@ -1425,10 +1425,10 @@ Tree *EvaluateChildren::Do(Infix *what)
     O1CompileUnit &unit = compile.unit;
     Tree *left = what->left->Do(compile);
     if (!left)
-        return NULL;
+        return nullptr;
     Tree *right = what->right->Do(compile);
     if (!right)
-        return NULL;
+        return nullptr;
     unit.CallFillInfix(what);
     return what;
 }
@@ -1442,7 +1442,7 @@ Tree *EvaluateChildren::Do(Block *what)
     O1CompileUnit &unit = compile.unit;
     Tree *child = what->child->Do(compile);
     if (!child)
-        return NULL;
+        return nullptr;
     unit.CallFillBlock(what);
     return what;
 }
@@ -1682,7 +1682,7 @@ Tree *CompileAction::Do(Name *what, bool forceEval)
             return what;
         }
         Ooops("Name $1 does not exist", what);
-        return NULL;
+        return nullptr;
     }
     if (Tree *type = symbols.Type(RewriteDefined(rw->left)))
         symbols.SetType(what, type);
@@ -1775,20 +1775,20 @@ Tree *CompileAction::Do(Infix *what)
         if (Name *leftAsName = what->left->AsName())
         {
             if (!Do(leftAsName, true))
-                return NULL;
+                return nullptr;
         }
         else if (!what->left->Do(this))
         {
-            return NULL;
+            return nullptr;
         }
         if (Name *rightAsName = what->right->AsName())
         {
             if (!Do(rightAsName, true))
-                return NULL;
+                return nullptr;
         }
         else if (!what->right->Do(this))
         {
-            return NULL;
+            return nullptr;
         }
         if (unit.IsKnown(what->right))
         {
@@ -1953,7 +1953,7 @@ static Tree * lookupRewrite(Scope *evalScope,
         if (!foundUnconditional)
         {
             unit.CallTypeError(what);
-            returnType = NULL;
+            returnType = nullptr;
         }
     }
 
@@ -1986,10 +1986,10 @@ Tree *CompileAction::Rewrites(Tree *what)
             // Set the symbols for the result
             if (!noDataForms)
                 RewriteChildren(what);
-            return NULL;
+            return nullptr;
         }
         Ooops("No rewrite candidate for $1", what);
-        return NULL;
+        return nullptr;
     }
 
 
@@ -2159,7 +2159,7 @@ O1CompileUnit::O1CompileUnit(FastCompiler &compiler,
     exitcode.Return(retVal);
 
     // Record current entry/exit points for the current expression
-    failbb = NULL;
+    failbb = nullptr;
 
     // Local copy of the types for the macro below
     JIT::IntegerType_p  booleanTy        = compiler.booleanTy;
@@ -2214,7 +2214,7 @@ O1CompileUnit::~O1CompileUnit()
         // If entrybb is clear, we may be looking at a forward declaration
         // Otherwise, if exitbb was not cleared by Finalize(), this means we
         // failed to compile. Make sure the compiler forgets the function
-        compiler.SetTreeFunction(source, NULL);
+        compiler.SetTreeFunction(source, nullptr);
         function->eraseFromParent();
     }
 }
@@ -2240,7 +2240,7 @@ eval_fn O1CompileUnit::Finalize(bool topLevel)
     if (RECORDER_TRACE(llvm_code) & 2)
         jit.Print("Optimized (fast compiler):\n", function);
 
-    void *result = NULL;
+    void *result = nullptr;
     if (topLevel)
     {
         result = jit.ExecutableCode(function);
@@ -2249,7 +2249,7 @@ eval_fn O1CompileUnit::Finalize(bool topLevel)
         record(llvm_functions, "Fast code %p for %v", result, function);
     }
 
-    exitbb = NULL;              // Tell destructor we were successful
+    exitbb = nullptr;              // Tell destructor we were successful
     return (eval_fn) result;
 }
 
@@ -2307,7 +2307,7 @@ JIT::Value_p O1CompileUnit::Known(Tree *tree, uint which)
 //   Return the known local or global value if any
 // ----------------------------------------------------------------------------
 {
-    JIT::Value_p result = NULL;
+    JIT::Value_p result = nullptr;
     if ((which & knowLocals) && storage.count(tree) > 0)
     {
         // Value is stored in a local variable
@@ -2716,7 +2716,7 @@ JIT::Value_p O1CompileUnit::CreateClosure(Tree *callee,
     JIT::Values argV;
     JIT::Value_p calleeVal = Known(callee);
     if (!calleeVal)
-        return NULL;
+        return nullptr;
     JIT::Value_p countVal = code.IntegerConstant(compiler.unsignedTy,
                                             (unsigned) args.size());
     TreeList::iterator a, p;
@@ -2775,7 +2775,7 @@ JIT::BasicBlock_p O1CompileUnit::TagTest(Tree *tree, unsigned tagValue)
     if (!treeValue)
     {
         Ooops("No value for $1", tree);
-        return NULL;
+        return nullptr;
     }
     JIT::Value_p tagPtr = code.StructGEP(treeValue, 0, "tagPtr");
     JIT::Value_p tag = code.Load(tagPtr, "tag");
@@ -2894,7 +2894,7 @@ JIT::BasicBlock_p O1CompileUnit::ShapeTest(Tree *left, Tree *right)
     assert(leftVal);
     assert(rightVal);
     if (leftVal == rightVal) // How unlikely?
-        return NULL;
+        return nullptr;
 
     // Where we go if the tests fail
     JIT::BasicBlock_p notGood = NeedTest();
@@ -2934,9 +2934,9 @@ JIT::BasicBlock_p O1CompileUnit::InfixMatchTest(Tree *actual, Infix *reference)
 
     // We are on the right path: extract left and right
     code.Store(afterExtract, refVal);
-    MarkComputed(reference, NULL);
-    MarkComputed(reference->left, NULL);
-    MarkComputed(reference->right, NULL);
+    MarkComputed(reference, nullptr);
+    MarkComputed(reference->left, nullptr);
+    MarkComputed(reference->right, nullptr);
     Left(reference);
     Right(reference);
 
@@ -3043,9 +3043,9 @@ ExpressionReduction::ExpressionReduction(CompileAction &compile, Tree *source)
 //    Snapshot current basic blocks in the compiled unit
 // ----------------------------------------------------------------------------
     : compile(compile), source(source),
-      storage(NULL), computed(NULL),
-      savedfailbb(NULL),
-      entrybb(NULL), savedbb(NULL), successbb(NULL),
+      storage(nullptr), computed(nullptr),
+      savedfailbb(nullptr),
+      entrybb(nullptr), savedbb(nullptr), successbb(nullptr),
       savedvalue(compile.unit.value),
       matches(0)
 {
@@ -3056,7 +3056,7 @@ ExpressionReduction::ExpressionReduction(CompileAction &compile, Tree *source)
 
     // Save compile unit's data
     savedfailbb = unit.failbb;
-    unit.failbb = NULL;
+    unit.failbb = nullptr;
 
     // Create the end-of-expression point if we find a match or had it already
     successbb = unit.BeginLazy(source);
@@ -3092,7 +3092,7 @@ void ExpressionReduction::NewForm ()
 
     // Create entry / exit basic blocks for this expression
     entrybb = unit.code.NewBlock("subexpr");
-    unit.failbb = NULL;
+    unit.failbb = nullptr;
 
     // Set the insertion point to the new invokation code
     unit.code.SwitchTo(entrybb);
@@ -3126,7 +3126,7 @@ void ExpressionReduction::Succeeded(void)
         JIT::BasicBlock_p empty = unit.code.NewBlock("empty");
         unit.code.SwitchTo(empty);
     }
-    unit.failbb = NULL;
+    unit.failbb = nullptr;
 }
 
 
@@ -3144,7 +3144,7 @@ void ExpressionReduction::Failed()
         unit.code.SwitchTo(unit.failbb);
         unit.CallTypeError(source);
         unit.code.Branch(successbb);
-        unit.failbb = NULL;
+        unit.failbb = nullptr;
     }
 
     unit.code.SwitchTo(savedbb);
@@ -3185,9 +3185,9 @@ Tree *xl_new_closure(eval_fn toCall, Tree *expr, uint ntrees, ...)
            toCall, ntrees, expr);
 
     // Build the list of parameter names and associated arguments
-    Tree_p result = NULL;
+    Tree_p result = nullptr;
     Tree_p *treePtr = &result;
-    Infix *decl = NULL;
+    Infix *decl = nullptr;
     va_list va;
     va_start(va, ntrees);
     for (uint i = 0; i < ntrees; i++)

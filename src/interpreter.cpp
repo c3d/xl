@@ -109,7 +109,7 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *what)
 {
     Context_p context = new Context(scope);
     Tree *result = EvaluateClosure(context, what);
-    if (Tree *inside = IsClosure(result, NULL))
+    if (Tree *inside = IsClosure(result, nullptr))
         result = inside;
     return result;
 }
@@ -160,7 +160,7 @@ Opcode *Interpreter::OpcodeInfo(Infix *decl)
                     if (Opcode *opcode = Opcode::Find(prefix, opName->value))
                         return SetInfo(decl, opcode->Clone());
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -181,7 +181,7 @@ struct Bindings
     Bindings(Context *context, Context *locals,
              Tree *test, EvalCache &cache, TreeList &args)
         : context(context), locals(locals),
-          test(test), cache(cache), resultType(NULL), args(args) {}
+          test(test), cache(cache), resultType(nullptr), args(args) {}
 
     // Tree::Do interface
     bool  Do(Integer *what);
@@ -529,7 +529,7 @@ Tree *Bindings::MustEvaluate(Context *context, Tree *tval)
         record(interpreter_lazy, "Evaluate %t in context %t is old %t",
                tval, context, evaluated);
     }
-    if (Tree *inside = Interpreter::IsClosure(evaluated, NULL))
+    if (Tree *inside = Interpreter::IsClosure(evaluated, nullptr))
     {
         record(interpreter_lazy, "Encapsulate %t in closure %t",
                evaluated, inside);
@@ -568,7 +568,7 @@ void Bindings::BindClosure(Name *name, Tree *value)
 //
 // ============================================================================
 
-static Tree *error_result = NULL;
+static Tree *error_result = nullptr;
 
 
 static Tree *evalLookup(Scope *evalScope, Scope *declScope,
@@ -592,15 +592,15 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
 
     // Create the scope for evaluation
     Context_p context = new Context(evalScope);
-    Context_p locals  = NULL;
-    Tree *result = NULL;
+    Context_p locals  = nullptr;
+    Tree *result = nullptr;
 
     // Check if the decl is an opcode or C binding
     Errors *errors = MAIN->errors;
     uint errCount = errors->Count();
     Opcode *opcode = Interpreter::OpcodeInfo(decl);
     if (errors->Count() != errCount)
-        return NULL;
+        return nullptr;
 
     // If we lookup a name or a number, just return it
     Tree *defined = RewriteDefined(decl->left);
@@ -613,7 +613,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         {
             record(interpreter_eval, "Eval%u %t from constant %t: mismatch",
                    depth, self, decl->left);
-            return NULL;
+            return nullptr;
         }
         locals = context;
     }
@@ -632,7 +632,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         {
             record(interpreter_eval, "Eval%u %t from %t: mismatch",
                    depth, self, decl->left);
-            return NULL;
+            return nullptr;
         }
         if (bindings.resultType)
             resultType = bindings.resultType;
@@ -751,7 +751,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
             Tree   *callee = pfx->left;
 
             // Check if we had something like '(X->X+1) 31' as closure
-            Context_p calleeContext = NULL;
+            Context_p calleeContext = nullptr;
             if (Tree *inside = IsClosure(callee, &calleeContext))
                 callee = inside;
 
@@ -763,7 +763,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
                     return what;
 
             // This variable records if we evaluated the callee
-            Tree *newCallee = NULL;
+            Tree *newCallee = nullptr;
             Tree *arg = pfx->right;
 
             // If we have an infix on the left, check if it's a single rewrite
@@ -930,7 +930,7 @@ struct Expansion
     {
         if (Tree *bound = context->Bound(what))
         {
-            if (Tree *eval = Interpreter::IsClosure(bound, NULL))
+            if (Tree *eval = Interpreter::IsClosure(bound, nullptr))
                 bound = eval;
             return bound;
         }
@@ -995,7 +995,7 @@ static Tree *formTypeCheck(Scope *scope, Tree *shape, Tree *value)
     {
         record(interpreter_typecheck, "Shape of tree %t does not match %t",
                value, shape);
-        return NULL;
+        return nullptr;
     }
 
     // Reconstruct the resulting value from the shape
@@ -1042,7 +1042,7 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 
     // No direct or converted match, end of game
     record(interpreter_typecheck, "Type checking %t failed", value);
-    return NULL;
+    return nullptr;
 }
 
 

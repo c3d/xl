@@ -133,7 +133,7 @@ token_t Parser::NextToken()
                     if (!beginningLine && comments.size() && commented)
                     {
                         AddComments(commented, false);
-                        commented = NULL;
+                        commented = nullptr;
                     }
 
                     pending = tokNEWLINE;
@@ -200,7 +200,7 @@ token_t Parser::NextToken()
                 if (!beginningLine && comments.size() && commented)
                 {
                     AddComments(commented, false);
-                    commented = NULL;
+                    commented = nullptr;
                 }
             }
 
@@ -218,7 +218,7 @@ token_t Parser::NextToken()
                 if (!beginningLine && comments.size() && commented)
                 {
                     AddComments(commented, false);
-                    commented = NULL;
+                    commented = nullptr;
                 }
             }
 
@@ -316,9 +316,9 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
        We hope that semantic will catch such a case later and let us know...
  */
 {
-    Tree *               result             = NULL;
-    Tree *               left               = NULL;
-    Tree *               right              = NULL;
+    Tree *               result             = nullptr;
+    Tree *               left               = nullptr;
+    Tree *               right              = nullptr;
     text                 prefix             = "";
     bool                 done               = false;
     int                  default_priority   = syntax.default_priority;
@@ -354,7 +354,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
         bool wasBeginningLine = beginningLine;
 
         // Scan next token
-        right = NULL;
+        right = nullptr;
         prefix_priority = infix_priority = default_priority;
         tok = NextToken();
 
@@ -479,7 +479,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                         }
                         right = new Postfix(result, right, pos);
                         prefix_priority = postfix_priority;
-                        result = NULL;
+                        result = nullptr;
                     }
                     else
                     {
@@ -573,7 +573,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             // We just got 'then', but 'then' will be an infix
             // so we can't really attach comments to it.
             // Instead, we defer the comment to the next 'right'
-            commented = NULL;
+            commented = nullptr;
         }
 
 
@@ -606,7 +606,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                 // Push "A and" in the above example
                 ulong st_pos = new_statement ? left->Position() : pos;
                 stack.push_back(Pending(infix, left, infix_priority, st_pos));
-                left = NULL;
+                left = nullptr;
 
                 // Start over with "not"
                 result = right;
@@ -645,9 +645,9 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                     // Something like A+B+C, just got second +
                     ulong st_pos = new_statement ? left->Position() : pos;
                     stack.push_back(Pending(infix,left,infix_priority,st_pos));
-                    result = NULL;
+                    result = nullptr;
                 }
-                left = NULL;
+                left = nullptr;
             }
         }
         else if (right)

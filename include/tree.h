@@ -133,9 +133,9 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), info(NULL) {}
+        tag((pos<<KINDBITS) | k), info(nullptr) {}
     Tree(kind k, Tree *from):
-        tag(from->tag), info(NULL)
+        tag(from->tag), info(nullptr)
     {
         assert(k == Kind()); (void) k;
     }
@@ -157,7 +157,7 @@ struct Tree
 
     // Safe cast to an appropriate subclass
     template<class T>
-    T *                 As(Scope *context = NULL);
+    T *                 As(Scope *context = nullptr);
     Integer *           AsInteger();
     Real *              AsReal();
     Text *              AsText();
@@ -401,7 +401,7 @@ struct Infix : Tree
 template <class T>
 bool IsNotNull(T *ptr)
 // ----------------------------------------------------------------------------
-//   Workaround overly capable compilers that "know" this can't be NULL
+//   Workaround overly capable compilers that "know" this can't be nullptr
 // ----------------------------------------------------------------------------
 {
     return ptr != 0;
@@ -417,7 +417,7 @@ inline T * Tree::As(Scope *)
 {
     if (IsNotNull(this) && Kind() == T::KIND)
         return (T *) this;
-    return NULL;
+    return nullptr;
 }
 
 template<>
@@ -522,7 +522,7 @@ template <class I> inline void Tree::Set(typename I::data_t data)
 {
     Info *i = new I(data);
     // The info can only be owned by a single tree, should not be linked
-    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, nullptr, this));
     LinkedListInsert(info, i);
 }
 
@@ -535,7 +535,7 @@ template <class I> inline I* Tree::GetInfo() const
     for (Info *i = info; i; i = i->next)
         if (I *ic = dynamic_cast<I *> (i))
             return ic;
-    return NULL;
+    return nullptr;
 }
 
 
@@ -545,7 +545,7 @@ template <class I> inline void Tree::SetInfo(I *i)
 // ----------------------------------------------------------------------------
 {
     // The info can only be owned by a single tree, should not be linked
-    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, NULL, this));
+    XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, nullptr, this));
     XL_ASSERT(!i->Info::next);
 
     Info *asInfo = i;           // For proper deduction if I is a derived class
@@ -571,19 +571,19 @@ template <class I> inline bool Tree::Purge()
 // ----------------------------------------------------------------------------
 {
 retry:
-    Info *prev = NULL;
-    Info *next = NULL;
+    Info *prev = nullptr;
+    Info *next = nullptr;
     bool purged = false;
     for (Info *i = info; i; i = next)
     {
         next = i->next;
         if (I *ic = dynamic_cast<I *> (i))
         {
-            if (!Atomic<Info *>::SetQ(i->next, next, NULL))
+            if (!Atomic<Info *>::SetQ(i->next, next, nullptr))
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, nullptr));
             ic->Delete();
             purged = true;
         }
@@ -602,22 +602,22 @@ template <class I> inline I* Tree::Remove()
 // ----------------------------------------------------------------------------
 {
 retry:
-    Info *prev = NULL;
+    Info *prev = nullptr;
     for (Info *i = info; i; i = i->next)
     {
         if (I *ic = dynamic_cast<I *> (i))
         {
             Info *next = i->next;
-            if (!Atomic<Info *>::SetQ(i->next, next, NULL))
+            if (!Atomic<Info *>::SetQ(i->next, next, nullptr))
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, nullptr));
             return ic;
         }
         prev = i;
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -627,23 +627,23 @@ template <class I> inline I* Tree::Remove(I *toFind)
 // ----------------------------------------------------------------------------
 {
 retry:
-    Info *prev = NULL;
+    Info *prev = nullptr;
     for (Info *i = info; i; i = i->next)
     {
         I *ic = dynamic_cast<I *> (i);
         if (ic == toFind)
         {
             Info *next = i->next;
-            if (!Atomic<Info *>::SetQ(i->next, next, NULL))
+            if (!Atomic<Info *>::SetQ(i->next, next, nullptr))
                 goto retry;
             if (!Atomic<Info *>::SetQ(prev ? prev->next : info, i, next))
                 goto retry;
-            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, NULL));
+            XL_ASSERT(Atomic<Tree *>::SetQ(i->owner, this, nullptr));
             return ic;
         }
         prev = i;
     }
-    return NULL;
+    return nullptr;
 }
 
 extern Name_p   xl_true;

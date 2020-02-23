@@ -47,9 +47,9 @@ CDeclaration::CDeclaration()
 // ----------------------------------------------------------------------------
 //   Constructor for the C declaration preprocessor
 // ----------------------------------------------------------------------------
-    : name(NULL),
-      returnType(NULL),
-      rewrite(NULL),
+    : name(nullptr),
+      returnType(nullptr),
+      rewrite(nullptr),
       parameters(0)
 {}
 
@@ -67,7 +67,7 @@ Infix *CDeclaration::Declaration(Tree *input)
     while (Prefix *prefix = input->AsPrefix())
     {
         if (!TypeAndName(prefix->left, returnType, name, mods))
-            return NULL;
+            return nullptr;
         input = prefix->right;
     }
 
@@ -75,12 +75,12 @@ Infix *CDeclaration::Declaration(Tree *input)
     if (!returnType)
     {
         Ooops("Unable to find return type in $1", source);
-        return NULL;
+        return nullptr;
     }
     if (!name)
     {
         Ooops("Unable to find function name in $1", source);
-        return NULL;
+        return nullptr;
     }
 
     // Process parameter declaration
@@ -91,7 +91,7 @@ Infix *CDeclaration::Declaration(Tree *input)
             // Process parameters
             input = Parameters(parms);
             if (!input)
-                return NULL;
+                return nullptr;
 
             // Assemble the final result
             bool nullParms = false;
@@ -112,7 +112,7 @@ Infix *CDeclaration::Declaration(Tree *input)
     }
 
     Ooops("Malformed C declaration $1", source);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -143,7 +143,7 @@ Tree *CDeclaration::TypeAndName(Tree *input,
         if (!result)
         {
             Ooops("No valid C type in $1", prefix->left);
-            return NULL;
+            return nullptr;
         }
         declType = result;
 
@@ -169,7 +169,7 @@ Tree *CDeclaration::TypeAndName(Tree *input,
         if (declName)
         {
             Ooops("Got second name $1 after $2", named, declName);
-            return NULL;
+            return nullptr;
         }
 
         // Otherwise, that should be the name
@@ -179,7 +179,7 @@ Tree *CDeclaration::TypeAndName(Tree *input,
 
 
     Ooops("Unable to make sense of $1 as a C type or name", input);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -210,13 +210,13 @@ Tree *CDeclaration::Parameters(Block *input)
 
     // Process non-empty parameter lists
     Tree *next = args;
-    Tree_p result = NULL;
+    Tree_p result = nullptr;
     Tree_p *parent = &result;
 
     while (next)
     {
         args = next;
-        next = NULL;
+        next = nullptr;
 
         // Check comma-separated lists
         Infix *infix = args->AsInfix();
@@ -230,14 +230,14 @@ Tree *CDeclaration::Parameters(Block *input)
         }
 
         // Check if we have a prefix like 'int x'
-        Tree_p declType = NULL;
-        Name_p declName = NULL;
+        Tree_p declType = nullptr;
+        Name_p declName = nullptr;
         uint mods = 0;
         Tree *rewritten = TypeAndName(args, declType, declName, mods);
         if (!rewritten || !declType)
         {
             Ooops("Invalid declaration $1", args);
-            return NULL;
+            return nullptr;
         }
         if (!declName)
             declName = Anonymous();
@@ -284,7 +284,7 @@ Tree *CDeclaration::Type(Tree *input, uint &mods)
                         if (Tree *combo = BaroqueTypeMods(ln, rn, mods))
                             return combo;
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -308,7 +308,7 @@ Tree *CDeclaration::PointerType(Postfix *input)
     }
 
     // Other cases: not a pointer
-    return NULL;
+    return nullptr;
 }
 
 
@@ -320,7 +320,7 @@ Tree *CDeclaration::ArrayType(Tree *pointedTo)
     uint mods = 0;
     Tree *type = Type(pointedTo, mods);
     if (!type)
-        return NULL;
+        return nullptr;
     return new Infix("to",
                      new Name("pointer", pointedTo->Position()),
                      type,
@@ -403,7 +403,7 @@ Name *CDeclaration::BaroqueTypeMods(Name *first,
             (b == cvt[i].first && a == cvt[i].second))
             return new Name(cvt[i].to, first->Position());
 
-    return NULL;
+    return nullptr;
 }
 
 

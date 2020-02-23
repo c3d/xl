@@ -445,7 +445,7 @@ static void xl_list_files(Scope *scope, Tree *patterns, Tree_p *&parent)
     {
         glob_t files;
         text filename = regexp->value;
-        glob(filename.c_str(), GLOB_MARK, NULL, &files);
+        glob(filename.c_str(), GLOB_MARK, nullptr, &files);
         for (uint i = 0; i < files.gl_pathc; i++)
         {
             std::string entry(files.gl_pathv[i]);
@@ -480,7 +480,7 @@ Tree *xl_list_files(Scope *scope, Tree *patterns)
 //   List all files in the given pattern
 // ----------------------------------------------------------------------------
 {
-    Tree_p result = NULL;
+    Tree_p result = nullptr;
     Tree_p *parent = &result;
     xl_list_files(scope, patterns, parent);
     if (!result)
@@ -731,15 +731,15 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
 
         // Restart with clean data
         perFile.data.clear();
-        perFile.loaded = NULL;
+        perFile.loaded = nullptr;
     }
 
     // Read data from file
     char     buffer[256];
     char    *ptr       = buffer;
     char    *end       = buffer + sizeof(buffer) - 1;
-    Tree_p   tree      = NULL;
-    Tree_p   line      = NULL;
+    Tree_p   tree      = nullptr;
+    Tree_p   line      = nullptr;
     Tree_p  *treePtr   = &tree;
     Tree_p  *linePtr   = &line;
     bool     hasQuote  = false;
@@ -786,12 +786,12 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
         if (!c)
         {
             text token;
-            Tree *child = NULL;
+            Tree *child = nullptr;
 
             if (isdigit(buffer[0]) ||
                 ((buffer[0] == '-' || buffer[0] == '+') && isdigit(buffer[1])))
             {
-                char *ptr2 = NULL;
+                char *ptr2 = nullptr;
                 longlong l = strtoll(buffer, &ptr2, 10);
                 if (ptr2 == ptr-1)
                 {
@@ -804,7 +804,7 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
                         child = new Real(d);
                 }
             }
-            if (child == NULL)
+            if (child == nullptr)
             {
                 if (buffer[0] == '"' && ptr > buffer+2 && ptr[-2] == '"')
                     token = text(buffer+1, ptr - buffer - 3);
@@ -868,7 +868,7 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
                     {
                         *treePtr = line;
                     }
-                    line = NULL;
+                    line = nullptr;
                     linePtr = &line;
                 }
             }
@@ -1170,7 +1170,7 @@ real_t xl_time(real_t delay)
 // ----------------------------------------------------------------------------
 {
     struct timeval tv;
-    gettimeofday(&tv, NULL);
+    gettimeofday(&tv, nullptr);
     MAIN->Refresh(delay);
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
@@ -1241,7 +1241,7 @@ XLCall &XLCall::Arg(Tree *tree)
 //   Create an argument from the given tree
 // ----------------------------------------------------------------------------
 {
-    call = NULL;
+    call = nullptr;
     if (*pointer)
     {
         Infix *infix = new Infix(",", *pointer, tree);

@@ -210,7 +210,7 @@ eval_fn CompilerFunction::Finalize(bool createCode)
     if (RECORDER_TRACE(llvm_code) & 2)
         jit.Print("LLVM IR after optimizations:\n", function);
 
-    void *result = NULL;
+    void *result = nullptr;
     if (createCode)
     {
         result = jit.ExecutableCode(function);
@@ -276,7 +276,7 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
     // Check if cache already contains a compilation for this function
     Scope *scope = types->TypesScope();
     JIT::Function_p &function = unit.Compiled(scope, rc, args);
-    if (function == NULL)
+    if (function == nullptr)
     {
         Tree *body = rc->RewriteBody();
 
