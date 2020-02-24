@@ -1240,25 +1240,27 @@ Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
     Types::Decl decl = Types::Decl::NORMAL;
     Tree *body = rw->right;
 
-    // Case of [sin X is C]: Use the name 'sin'
     if (Name *bodyname = body->AsName())
     {
+        // Case of [sin X is C]: Use the name 'sin'
         if (bodyname->value == "C")
             if (Name *defname = defined->AsName())
                 if (IsValidCName(defname, label))
                     decl = Types::Decl::C;
+        // Case of [X, Y is self]: Mark as DATA
         if (bodyname->value == "self")
             decl = Types::Decl::DATA;
     }
 
-    // Case of [alloc X is C "_malloc"]: Use "_malloc"
     if (Prefix *prefix = body->AsPrefix())
     {
         if (Name *name = prefix->left->AsName())
         {
+            // Case of [alloc X is C "_malloc"]: Use "_malloc"
             if (name->value == "C")
                 if (IsValidCName(prefix->right, label))
                     decl = Types::Decl::C;
+            // Case of [X+Y is builtin Add]: select BUILTIN type
             if (name->value == "builtin")
                 decl = Types::Decl::BUILTIN;
         }
