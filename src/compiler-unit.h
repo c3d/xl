@@ -38,8 +38,8 @@
 
 #include "compiler.h"
 #include "compiler-args.h"
+#include "compiler-types.h"
 #include "llvm-crap.h"
-#include "types.h"
 #include <map>
 
 XL_BEGIN

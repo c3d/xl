@@ -38,9 +38,9 @@
 // *****************************************************************************
 
 #include "compiler.h"
-#include "compiler-unit.h"
 #include "compiler-args.h"
-#include "types.h"
+#include "compiler-unit.h"
+#include "compiler-types.h"
 
 
 XL_BEGIN

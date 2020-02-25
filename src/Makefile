@@ -88,10 +88,10 @@ SOURCES_llvm =					\
 	compiler-function.cpp			\
 	compiler-prototype.cpp			\
 	compiler-unit.cpp			\
+	compiler-types.cpp			\
 	compiler.cpp				\
 	llvm-crap.cpp				\
-	native.cpp				\
-	types.cpp
+	native.cpp
 
 HEADERS=$(HEADERS_$(VARIANT))
 HEADERS_lib=$(wildcard ../include/*.h *.tbl)

@@ -38,7 +38,6 @@
 #include "gc.h"
 #include "info.h"
 #include "errors.h"
-#include "types.h"
 #include "renderer.h"
 #include "basics.h"
 #include "runtime.h"

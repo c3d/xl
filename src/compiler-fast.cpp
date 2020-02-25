@@ -35,6 +35,7 @@
 // ****************************************************************************
 
 #include "compiler-fast.h"
+#include "compiler-types.h"
 #include "context.h"
 #include "save.h"
 #include "tree.h"
@@ -45,7 +46,6 @@
 #include "compiler.h"
 #include "runtime.h"
 #include "main.h"
-#include "types.h"
 #include "tree-clone.h"
 #include "llvm-crap.h"
 #include <iostream>

@@ -36,7 +36,6 @@
 // *****************************************************************************
 
 #include "cdecls.h"
-#include "types.h"
 #include "errors.h"
 
 #include <sstream>

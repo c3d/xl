@@ -1,5 +1,5 @@
 // *****************************************************************************
-// types.cpp                                                          XL project
+// compiler-types.cpp                                               XL project
 // *****************************************************************************
 //
 // File description:
@@ -36,13 +36,13 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-#include "types.h"
+#include "compiler-types.h"
+#include "compiler-args.h"
 #include "tree.h"
 #include "runtime.h"
 #include "errors.h"
 #include "options.h"
 #include "save.h"
-#include "compiler-args.h"
 #include "cdecls.h"
 #include "renderer.h"
 #include "basics.h"

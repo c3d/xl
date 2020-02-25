@@ -1,7 +1,7 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef COMPILER_TYPES_H
+#define COMPILER_TYPES_H
 // *****************************************************************************
-// types.h                                                            XL project
+// compiler-types.h                                                 XL project
 // *****************************************************************************
 //
 // File description:
@@ -266,4 +266,4 @@ RECORDER_DECLARE(types_calls);
 RECORDER_DECLARE(types_boxing);
 RECORDER_DECLARE(types_joined);
 
-#endif // TYPES_H
+#endif // COMPILER_TYPES_H

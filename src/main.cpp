@@ -44,7 +44,6 @@
 #include "errors.h"
 #include "tree.h"
 #include "context.h"
-#include "types.h"
 #include "options.h"
 #include "basics.h"
 #include "serializer.h"

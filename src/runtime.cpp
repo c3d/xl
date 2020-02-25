@@ -54,7 +54,6 @@
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
-#include "types.h"
 #include "native.h"
 #else // !INTERPRETER_ONLY
 #define XL_NATIVE(fn)

@@ -41,7 +41,6 @@
 #include "parser.h"
 #include "renderer.h"
 #include "runtime.h"
-#include "types.h"
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"

@@ -52,7 +52,6 @@
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
-#include "types.h"
 #endif // INTERPRETER_ONLY
 
 #include <iostream>
