@@ -4,7 +4,7 @@
 //
 // File description:
 //
-//
+//    Representation of a function inside a translation unit
 //
 //
 //
