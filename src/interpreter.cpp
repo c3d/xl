@@ -757,9 +757,8 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
 
             if (Name *name = callee->AsName())
                 // A few cases where we don't interpret the result
-                if (name->value == "type"   ||
-                    name->value == "extern" ||
-                    name->value == "data")
+                if (name->value == "matching"   ||
+                    name->value == "extern")
                     return what;
 
             // This variable records if we evaluated the callee
@@ -1029,10 +1028,10 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
     }
     else
     {
-        // Check a type like 'type (X, Y)'
+        // Check a type like 'matching (X, Y)'
         if (Prefix *ptype = type->AsPrefix())
             if (Name *ptypename = ptype->left->AsName())
-                if (ptypename->value == "type")
+                if (ptypename->value == "matching")
                     return formTypeCheck(scope, ptype->right, value);
 
         record(interpreter_typecheck, "No code for %t, opcode is %O",

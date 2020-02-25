@@ -28,6 +28,7 @@ INFIX
         600     :
 
 PREFIX
+        20      matching
         30      type class module function method procedure to operation
         30      data macro generic polymorphic iterator
         30      fast small global thread static

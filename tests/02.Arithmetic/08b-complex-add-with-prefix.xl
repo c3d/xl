@@ -1,5 +1,5 @@
 // FILTER=sed -e 's/) )/))/g'
-complex is type(complex(re:real, im:real))
+complex is matching(complex(re:real, im:real))
 Z1:complex + Z2:complex as complex is complex(Z1.re + Z2.re, Z1.im + Z2.im)
 
 (complex(3,4) + complex(5, 6))

@@ -1,4 +1,4 @@
-complex is type(re:real, im:real)
+complex is matching(re:real, im:real)
 Z1:complex + Z2:complex is (Z1.re + Z2.re, Z1.im + Z2.im)
 Z1:complex + Z2:real    is (Z1.re + Z2, Z1.im)
 Z1:complex - Z2:complex is (Z1.re - Z2.re, Z1.im - Z2.im)
@@ -11,7 +11,7 @@ Z1:complex / Z2:complex is
     denom is Z2.re^2 + Z2.im^2
     numer / denom
 
-write Z:complex         is write "(", Z.re, ",", Z.im, ")"
+write Z:complex       is write "(", Z.re, ",", Z.im, ")"
 print T, C:complex    is print T, "(", C.re, ", ", C.im, ")"
 
 print "(3,4) + (5,6)=", (3,4) + (5,6)

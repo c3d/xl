@@ -1,4 +1,4 @@
-complex is type((re:real, im:real))
+complex is matching((re:real, im:real))
 Z1:complex + Z2:complex as complex is (Z1.re + Z2.re, Z1.im + Z2.im)
 
 (3,4) + (5, 6)
