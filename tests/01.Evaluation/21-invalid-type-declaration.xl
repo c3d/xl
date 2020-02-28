@@ -1,4 +1,6 @@
-// EXIT=1
+// This is now valid, as it's a type annotation map
+// The type annotation may seem to make little sense, but it would be
+// a valid declaration for a map like { 0 is 27; 1 is 82; 2 is 41; 3 is 124 }
 0:27
 1:82
 2:41

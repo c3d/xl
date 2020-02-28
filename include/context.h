@@ -535,7 +535,7 @@ inline bool IsDeclaration(Infix *infix)
 //   Check if an infix is a declaration
 // ----------------------------------------------------------------------------
 {
-    return (IsConstantDeclaration(infix) ||
+    return (IsConstantDeclaration(infix) || IsTypeAnnotation(infix) ||
             (IsAssignment(infix) && IsTypeAnnotation(infix->left)));
 }
 
