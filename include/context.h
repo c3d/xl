@@ -594,7 +594,7 @@ inline Infix *IsCommaList(Tree *tree)
 }
 
 
-inline bool IsCondition(Infix *infix)
+inline bool IsPatternCondition(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix marks a condition
 // ----------------------------------------------------------------------------
@@ -603,13 +603,13 @@ inline bool IsCondition(Infix *infix)
 }
 
 
-inline Infix *IsCondition(Tree *tree)
+inline Infix *IsPatternCondition(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree marks a condition
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        if (IsCondition(infix))
+        if (IsPatternCondition(infix))
             return infix;
     return nullptr;
 }
@@ -632,7 +632,7 @@ inline Tree * RewriteDefined(Tree *form)
 
         // Check 'X when Condition', we define X
         if (Infix *typeDecl = form->AsInfix())
-            if (IsCondition(typeDecl))
+            if (IsPatternCondition(typeDecl))
                 form = typeDecl->left;
 
         // Check outermost (X): we define X

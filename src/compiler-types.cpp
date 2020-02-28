@@ -613,7 +613,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
                 infix = new Infix(infix, infix->left, right);
             return infix;
         }
-        if (IsCondition(infix))
+        if (IsPatternCondition(infix))
         {
             Tree *left = MakeTypesExplicit(infix->left);
             if (left != infix->left)

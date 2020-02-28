@@ -953,7 +953,7 @@ struct Expansion
     }
     Tree *  Do(Infix *what)
     {
-        if (IsTypeAnnotation(what) || IsCondition(what))
+        if (IsTypeAnnotation(what) || IsPatternCondition(what))
             return what->left->Do(this);
         Tree *left  = what->left->Do(this);
         Tree *right = what->right->Do(this);

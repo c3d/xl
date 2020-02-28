@@ -667,7 +667,7 @@ JIT::Value_p CompilerFunction::Unbox(JIT::Value_p boxed,
     case INFIX:
     {
         Infix *infix = (Infix *) pattern;
-        if (IsTypeAnnotation(infix) || IsCondition(infix))
+        if (IsTypeAnnotation(infix) || IsPatternCondition(infix))
             return Unbox(boxed, infix->left, index);
         ref = ConstantTree(infix);
         ref = code.BitCast(ref, compiler.infixTreePtrTy);
