@@ -55,7 +55,7 @@ XL_BEGIN
 // ============================================================================
 
 TreePosition Tree::NOWHERE = Tree::UNKNOWN_POSITION;
-kstring Tree::kindName[KIND_COUNT] =
+kstring Tree::KindName[KIND_COUNT] =
 // ----------------------------------------------------------------------------
 //   The names of the tree kinds for debugging purpose
 // ----------------------------------------------------------------------------
