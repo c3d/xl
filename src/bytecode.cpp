@@ -93,15 +93,6 @@ Tree * Bytecode::TypeCheck(Scope *scope, Tree *type, Tree *val)
 }
 
 
-bool Bytecode::TypeAnalysis(Scope *scope, Tree *input)
-// ----------------------------------------------------------------------------
-//    No type analysis for the bytecode analyzer
-// ----------------------------------------------------------------------------
-{
-    return true;
-}
-
-
 Procedure *Bytecode::Compile(Context *ctx, Tree *what, Tree *type,
                              TreeIDs &parms, TreeList &captured)
 // ----------------------------------------------------------------------------

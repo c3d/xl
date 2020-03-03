@@ -50,7 +50,6 @@ public:
 
     virtual Tree *      Evaluate(Scope *, Tree *source) = 0;
     virtual Tree *      TypeCheck(Scope *, Tree *type, Tree *value) = 0;
-    virtual bool        TypeAnalysis(Scope *, Tree *tree) = 0;
 };
 
 XL_END

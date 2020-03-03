@@ -1282,8 +1282,10 @@ bool XLCall::Analyze(Scope *scope)
     if (!call)
         Build();
     assert(scope && call);
-    bool result = MAIN->TypeAnalysis(scope, call);
-    return result;
+#warning "Need to re-connect to new type analysis when available"
+    // bool result = MAIN->TypeAnalysis(scope, call);
+
+    return true;
 }
 
 

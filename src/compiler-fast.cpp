@@ -132,15 +132,6 @@ Tree * FastCompiler::TypeCheck(Scope *, Tree *type, Tree *val)
 }
 
 
-bool FastCompiler::TypeAnalysis(Scope *scope, Tree *program)
-// ----------------------------------------------------------------------------
-//   Perform type analysis on the input tree
-// ----------------------------------------------------------------------------
-{
-    return true;                // Analysis is done at run-time ;-)
-}
-
-
 
 // ============================================================================
 //

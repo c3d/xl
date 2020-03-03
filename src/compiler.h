@@ -74,7 +74,6 @@ struct Compiler : Evaluator
     // Interpreter interface
     Tree *              Evaluate(Scope *, Tree *source) override;
     Tree *              TypeCheck(Scope *, Tree *type, Tree *val) override;
-    bool                TypeAnalysis(Scope *, Tree *tree) override;
 
     // Find the machine type corresponding to the tree type or value
     JIT::PointerType_p  TreeMachineType(Tree *tree);

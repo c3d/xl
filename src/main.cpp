@@ -289,15 +289,6 @@ Tree *Main::Evaluate(Scope *scope, Tree *source)
 }
 
 
-bool Main::TypeAnalysis(Scope *scope, Tree *source)
-// ----------------------------------------------------------------------------
-//   Dispatch type analysis to the appropriate engine for the given opt level
-// ----------------------------------------------------------------------------
-{
-    return evaluator->TypeAnalysis(scope, source);
-}
-
-
 Tree *Main::TypeCheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Dispatch evaluation to the appropriate engine for the given opt level

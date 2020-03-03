@@ -87,7 +87,6 @@ public:
 
     Tree *              Evaluate(Scope *, Tree *input) override;
     Tree *              TypeCheck(Scope *, Tree *type, Tree *val) override;
-    bool                TypeAnalysis(Scope *, Tree *input) override;
 
 public:
     static Procedure *  Compile(Context *context,

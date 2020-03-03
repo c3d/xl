@@ -188,15 +188,6 @@ eval_fn CompilerUnit::Compile()
 }
 
 
-bool CompilerUnit::TypeAnalysis()
-// ----------------------------------------------------------------------------
-//   Perform type analysis on the given tree
-// ----------------------------------------------------------------------------
-{
-    return types->TypeAnalysis(source) != nullptr;
-}
-
-
 JIT::Value_p CompilerUnit::Global(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the LLVM value associated with the tree

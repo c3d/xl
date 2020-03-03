@@ -114,15 +114,6 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *what)
 }
 
 
-bool Interpreter::TypeAnalysis(Scope *scope, Tree *source)
-// ----------------------------------------------------------------------------
-//    No type analysis for the interpreter
-// ----------------------------------------------------------------------------
-{
-    return true;
-}
-
-
 
 // ============================================================================
 //

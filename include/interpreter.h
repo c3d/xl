@@ -56,7 +56,6 @@ public:
 
     Tree *              Evaluate(Scope *, Tree *source) override;
     Tree *              TypeCheck(Scope *, Tree *type, Tree *value) override;
-    bool                TypeAnalysis(Scope *, Tree *tree) override;
 
 public:
     static Tree *       EvaluateClosure(Context *context, Tree *code);

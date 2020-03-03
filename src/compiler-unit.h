@@ -75,7 +75,6 @@ public:
 public:
     // Top-level compilation for the whole unit
     eval_fn             Compile();
-    bool                TypeAnalysis();
 
     // Global values (defined at the unit level)
     JIT::Value_p        Global(Tree *tree);

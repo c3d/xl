@@ -73,8 +73,6 @@ struct FastCompiler : Compiler
     Tree *                      TypeCheck(Scope *,
                                           Tree *type,
                                           Tree *val) override;
-    bool                        TypeAnalysis(Scope *,
-                                             Tree *tree) override;
 
     // Interface formerly in struct Symbol
     Tree *                      Compile(Scope *scope,

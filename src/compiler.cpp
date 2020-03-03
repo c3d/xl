@@ -177,16 +177,6 @@ Tree * Compiler::TypeCheck(Scope *, Tree *type, Tree *val)
 }
 
 
-bool Compiler::TypeAnalysis(Scope *scope, Tree *program)
-// ----------------------------------------------------------------------------
-//   Perform type analysis on the input tree
-// ----------------------------------------------------------------------------
-{
-    CompilerUnit unit(*this, scope, program);
-    return unit.TypeAnalysis();
-}
-
-
 JIT::PointerType_p Compiler::TreeMachineType(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Return the LLVM tree type associated to a given XL expression
