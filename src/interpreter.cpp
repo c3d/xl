@@ -593,7 +593,7 @@ static Tree *evalLookup(Scope *evalScope, Scope *declScope,
         return nullptr;
 
     // If we lookup a name or a number, just return it
-    Tree *defined = RewriteDefined(decl->left);
+    Tree *defined = PatternBase(decl->left);
     Tree *resultType = tree_type;
     TreeList args;
     if (defined->IsLeaf())
@@ -756,7 +756,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
             Tree *arg = pfx->right;
 
             // If we have an infix on the left, check if it's a single rewrite
-            if (Infix *lifx = IsConstantDeclaration(callee))
+            if (Infix *lifx = IsDefinition(callee))
             {
                 // If we have a single name on the left, like (X->X+1)
                 // interpret that as a lambda function
@@ -795,7 +795,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
                 {
                     what = arg;
                     // Check if we have a single definition on the left
-                    if (Infix *ifx = IsConstantDeclaration(inside))
+                    if (Infix *ifx = IsDefinition(inside))
                         what = new Prefix(newCallee, arg, pfx->Position());
                 }
                 else

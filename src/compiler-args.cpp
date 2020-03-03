@@ -73,7 +73,7 @@ bool RewriteBinding::IsDeferred()
 
     // Defer sequences and function definitions
     if (Infix *infix = val->AsInfix())
-        return IsSequence(infix) || IsConstantDeclaration(infix);
+        return IsSequence(infix) || IsDefinition(infix);
 
     return false;
 }
@@ -173,7 +173,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         bool needArg = true;
 
         // Ignore function name if that is all we have
-        Tree *fname = RewriteDefined(rewrite->left);
+        Tree *fname = PatternBase(rewrite->left);
         if (fname == name)
         {
             defined = name;
@@ -671,8 +671,8 @@ Tree *RewriteCalls::Check (Scope *scope,
 
     // Attempt binding / unification of parameters to arguments
     Tree *form = candidate->left;
-    Tree *defined = RewriteDefined(form);
-    Tree *declType = RewriteType(form);
+    Tree *defined = PatternBase(form);
+    Tree *declType = AnnotatedType(form);
     Tree *type = declType
         ? types->EvaluateType(declType)
         : types->KnownType(form);

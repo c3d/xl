@@ -138,7 +138,7 @@ JIT::Value_p CompilerExpression::Do(Name *what)
     Context      *context  = function.FunctionContext();
     Tree         *existing = context->Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
-    Tree *from = RewriteDefined(rewrite->left);
+    Tree *from = PatternBase(rewrite->left);
     if (where == context->Symbols())
         if (JIT::Value_p result = function.Known(from))
             return result;
@@ -188,7 +188,7 @@ JIT::Value_p CompilerExpression::Do(Infix *infix)
 
     // Declarations: it's too early to define a function just yet,
     // because we don't have the actual argument types.
-    if (IsConstantDeclaration(infix))
+    if (IsDefinition(infix))
         return function.ConstantTree(infix);
 
     // General case: expression

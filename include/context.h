@@ -467,6 +467,12 @@ inline void Context::HasOneRewriteFor(kind k)
 }
 
 
+// ============================================================================
+//
+//   Inline helpers defining the shape of trees in the context
+//
+// ============================================================================
+
 inline bool IsTypeAnnotation(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix is a type annotation
@@ -509,7 +515,7 @@ inline Infix *IsAssignment(Tree *tree)
 }
 
 
-inline bool IsConstantDeclaration(Infix *infix)
+inline bool IsDefinition(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix is a constant declaration
 // ----------------------------------------------------------------------------
@@ -518,13 +524,34 @@ inline bool IsConstantDeclaration(Infix *infix)
 }
 
 
-inline Infix *IsConstantDeclaration(Tree *tree)
+inline Infix *IsDefinition(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree is an assignment
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        if (IsConstantDeclaration(infix))
+        if (IsDefinition(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsVariableDeclaration(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a variable declaration [Name : Type := Init]
+// ----------------------------------------------------------------------------
+{
+    return IsAssignment(infix) && IsTypeAnnotation(infix->left);
+}
+
+
+inline Infix *IsVariableDeclaration(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a variable declaration
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsVariableDeclaration(infix))
             return infix;
     return nullptr;
 }
@@ -535,8 +562,9 @@ inline bool IsDeclaration(Infix *infix)
 //   Check if an infix is a declaration
 // ----------------------------------------------------------------------------
 {
-    return (IsConstantDeclaration(infix) || IsTypeAnnotation(infix) ||
-            (IsAssignment(infix) && IsTypeAnnotation(infix->left)));
+    return (IsDefinition(infix) ||
+            IsTypeAnnotation(infix) ||
+            IsVariableDeclaration(infix));
 }
 
 
@@ -615,7 +643,52 @@ inline Infix *IsPatternCondition(Tree *tree)
 }
 
 
-inline Tree * RewriteDefined(Tree *form)
+inline bool IsPatternMatchingType(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is [matching Pattern]
+// ----------------------------------------------------------------------------
+{
+    if (Name *matching = prefix->left->AsName())
+        if (matching->value == "matching")
+            return true;
+    return false;
+}
+
+
+inline Prefix *IsPatternMatchingType(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a [matching Pattern] prefix
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = tree->AsPrefix())
+        if (IsPatternMatchingType(prefix))
+            return prefix;
+    return nullptr;
+}
+
+
+inline bool IsSelf(Name *name)
+// ----------------------------------------------------------------------------
+//   Return true if this is a [self] name
+// ----------------------------------------------------------------------------
+{
+    return name->value == "self";
+}
+
+
+inline Name *IsSelf(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a definition is the 'self' tree
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = tree->AsName())
+        if (IsSelf(name))
+            return name;
+    return nullptr;
+}
+
+
+inline Tree * PatternBase(Tree *form)
 // ----------------------------------------------------------------------------
 //   Find what we actually define based on the shape of the left of a 'is'
 // ----------------------------------------------------------------------------
@@ -645,7 +718,7 @@ inline Tree * RewriteDefined(Tree *form)
 }
 
 
-inline Tree * RewriteType(Tree *what)
+inline Tree * AnnotatedType(Tree *what)
 // ----------------------------------------------------------------------------
 //   If we have a declaration with 'X as Type', return Type
 // ----------------------------------------------------------------------------

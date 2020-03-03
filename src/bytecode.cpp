@@ -489,7 +489,7 @@ struct IndexOp : FailOp
         if (Infix *lifx = callee->AsInfix())
         {
             // Check if we have a function definition
-            if (IsConstantDeclaration(lifx))
+            if (IsDefinition(lifx))
             {
                 // If we have a single name on the left, like (X->X+1)
                 // interpret that as a lambda function
@@ -1068,7 +1068,7 @@ static Tree *compileLookup(Scope *evalScope, Scope *declScope,
     Save<TreeIDs>       saveOutputs(builder->outputs, empty);
 
     // If we lookup a name or a number, just return it
-    Tree *defined = RewriteDefined(decl->left);
+    Tree *defined = PatternBase(decl->left);
     bool isLeaf = defined->IsLeaf();
     CodeBuilder::strength strength = CodeBuilder::ALWAYS;
     if (isLeaf)
@@ -1357,7 +1357,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             // Create a call for forms like (X -> X+1) 31
             if (Infix *lifx = callee->AsInfix())
             {
-                if (IsConstantDeclaration(lifx))
+                if (IsDefinition(lifx))
                 {
                     TreeIDs   outs;
                     ParmOrder parms;
@@ -1556,7 +1556,7 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
                 int inputId = (*found).second;
 
                 // Don't evaluate if already evaluated during argument passing
-                Tree *type = RewriteType(rw->left);
+                Tree *type = AnnotatedType(rw->left);
                 evaluate = false;
                 if (!type || type == tree_type)
                 {
@@ -1614,7 +1614,7 @@ int CodeBuilder::Evaluate(Context *ctx, Tree *self, bool deferEval)
                     // No code yet: generate it
                     ParmOrder noParms;
                     TreeIDs   noParmIDs;
-                    Tree *type = RewriteType(rw->left);
+                    Tree *type = AnnotatedType(rw->left);
                     CallOp *call = Call(ctx, value, type, noParmIDs, noParms);
                     instrs.push_back(call);
                     AddEval(id, call);

@@ -832,7 +832,7 @@ Tree *ArgumentMatch::Do(Name *what)
 
         // If first occurence of the name, enter it in symbol table
         Rewrite *rewrite = argContext.Define(what, compiled);
-        parms.push_back(RewriteDefined(rewrite->left));
+        parms.push_back(PatternBase(rewrite->left));
         args.push_back(compiled);
         return what;
     }
@@ -1171,8 +1171,8 @@ Tree *ArgumentMatch::Do(Infix *what)
 
         // Enter the compiled expression in the symbol table
         Rewrite *rw = argContext.Define(varName->value, compiled);
-        argContext.SetType(RewriteDefined(rw->left), typeExpr);
-        argContext.SetType(RewriteDefined(rw->right), typeExpr);
+        argContext.SetType(PatternBase(rw->left), typeExpr);
+        argContext.SetType(PatternBase(rw->right), typeExpr);
         record(statictypes, "Entering %t as %t:%t",compiled,varName,typeExpr);
         return what;
     }
@@ -1280,7 +1280,7 @@ Tree *EnvironmentScan::Do(Name *what)
     Rewrite_p rewrite;
     Scope_p scope;
     if (Tree *found = context.Bound(what, true, &rewrite, &scope))
-        if (Tree *tree = RewriteDefined(rewrite->left))
+        if (Tree *tree = PatternBase(rewrite->left))
             if (Name *name = tree->AsName())
                 if (!captured.count(name))
                     captured[name] = found;
@@ -1646,18 +1646,6 @@ Tree *CompileAction::Do(Name *what)
 }
 
 
-static inline bool IsSelf(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Check if a tree is "self"
-// ----------------------------------------------------------------------------
-{
-    if (Name *name = tree->AsName())
-        if (name->value == "self")
-            return true;
-    return false;
-}
-
-
 Tree *CompileAction::Do(Name *what, bool forceEval)
 // ----------------------------------------------------------------------------
 //   Build a unique reference in the context for the entity
@@ -1675,7 +1663,7 @@ Tree *CompileAction::Do(Name *what, bool forceEval)
         Ooops("Name $1 does not exist", what);
         return nullptr;
     }
-    if (Tree *type = symbols.Type(RewriteDefined(rw->left)))
+    if (Tree *type = symbols.Type(PatternBase(rw->left)))
         symbols.SetType(what, type);
 
     // Normally, the name should have been declared in ParameterMatch
@@ -1793,7 +1781,7 @@ Tree *CompileAction::Do(Infix *what)
     }
 
     // Check if this is a rewrite declaration
-    if (IsConstantDeclaration(what))
+    if (IsDefinition(what))
     {
         // If so, skip, this has been done in DeclarationAction
         return what;
@@ -1851,7 +1839,7 @@ static Tree * lookupRewrite(Scope *evalScope,
     ExpressionReduction &reduction = *((ExpressionReduction *) info);
     CompileAction &compile = reduction.compile;
     O1CompileUnit &unit = compile.unit;
-    Tree *form = RewriteDefined(decl->left);
+    Tree *form = PatternBase(decl->left);
     Tree *body = decl->right;
     bool foundUnconditional = false;
     Context context(evalScope);

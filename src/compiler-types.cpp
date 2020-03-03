@@ -311,7 +311,7 @@ Tree *Types::Do(Name *what)
     Tree *body = context->Bound(what, true, &rw, &scope);
     if (body && body != what)
     {
-        Tree *defined = RewriteDefined(rw->left);
+        Tree *defined = PatternBase(rw->left);
 
         // Check if this is some built-in type
         if (defined->GetInfo<TypeCheckOpcode>())
@@ -346,7 +346,7 @@ Tree *Types::Do(Name *what)
     if (type && rw && rw->left != rw->right)
     {
         Tree *decl = rw->left;
-        Tree *def = RewriteDefined(decl);
+        Tree *def = PatternBase(decl);
         if (def != what)
         {
             Tree *rwtype = TypeOfRewrite(rw);
@@ -417,7 +417,7 @@ Tree *Types::Do(Infix *what)
         return TypeDeclaration(what);
 
     // Case of [X is Y]: Analysis if any will be done during
-    if (IsConstantDeclaration(what))
+    if (IsDefinition(what))
         return TypeOfRewrite(what);
 
     // For all other cases, evaluate the infix

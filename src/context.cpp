@@ -335,7 +335,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
     Tree *from = rewrite->left;
 
     // Check what we are really defining, and verify if it's a name
-    Tree *defined = RewriteDefined(from);
+    Tree *defined = PatternBase(from);
     Name *name = defined->AsName();
     ulong h = Hash(defined);
 
@@ -387,7 +387,7 @@ Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
         if (name)
         {
             Infix *decl = RewriteDeclaration(entry);
-            Tree *declDef = RewriteDefined(decl->left);
+            Tree *declDef = PatternBase(decl->left);
             if (Name *declName = declDef->AsName())
             {
                 if (declName->value == name->value)
@@ -440,7 +440,7 @@ Tree *Context::Assign(Tree *ref, Tree *value)
     else
     {
         // Check if the declaration has a type, i.e. it is 'X as integer'
-        if (Tree *type = RewriteType(decl->left))
+        if (Tree *type = AnnotatedType(decl->left))
         {
             Scope *scope = Symbols();
             Tree *castedValue = xl_typecheck(scope, type, value);
@@ -622,7 +622,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
             XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
 
             // Check that hash matches
-            Tree *defined = RewriteDefined(decl->left);
+            Tree *defined = PatternBase(decl->left);
             ulong declHash = Hash(defined);
             if (declHash == h0)
             {
@@ -679,7 +679,7 @@ Tree *Context::DeclaredForm(Tree *form)
 {
     if (Tree *result = Lookup(form, findReference, nullptr, true))
         if (Rewrite *decl = result->As<Rewrite>())
-            return RewriteDefined(decl->left);
+            return PatternBase(decl->left);
     return nullptr;
 }
 
@@ -690,7 +690,7 @@ static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
 {
     if (what->IsLeaf())
-        if (!Tree::Equal(what, RewriteDefined(decl->left)))
+        if (!Tree::Equal(what, PatternBase(decl->left)))
             return nullptr;
     return decl->right;
 }
@@ -703,7 +703,7 @@ static Tree *findValueX(Scope *, Scope *scope,
 // ----------------------------------------------------------------------------
 {
     if (what->IsLeaf())
-        if (!Tree::Equal(what, RewriteDefined(decl->left)))
+        if (!Tree::Equal(what, PatternBase(decl->left)))
             return nullptr;
     Prefix *rewriteInfo = (Prefix *) info;
     rewriteInfo->left = scope;

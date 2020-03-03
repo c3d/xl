@@ -333,7 +333,7 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
             {
                 // Constructor for a 'data' form, e.g. [X,Y is self]
                 unsigned index = 0;
-                Tree *form = RewriteDefined(rc->RewriteForm());
+                Tree *form = PatternBase(rc->RewriteForm());
                 JIT::Value_p box = evalfn.returned;
                 JIT::Value_p retv = evalfn.Data(form, box, index);
                 evalfn.Return(body, retv);
