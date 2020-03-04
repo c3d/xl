@@ -195,6 +195,17 @@ struct TypeCheckOpcode : NameOpcode
 };
 
 
+inline Tree *TypeCheck(Scope *scope, Tree *type, Tree *value)
+// ----------------------------------------------------------------------------
+//   Apply a built-in type-check
+// ----------------------------------------------------------------------------
+{
+    if (TypeCheckOpcode *tco = type->GetInfo<TypeCheckOpcode>())
+        return tco->Check(scope, value);
+    return nullptr;
+}
+
+
 struct InfixOpcode : Opcode
 // ----------------------------------------------------------------------------
 //   An infix opcode, regisered at initialization time
