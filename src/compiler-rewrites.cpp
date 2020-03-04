@@ -79,7 +79,9 @@ bool RewriteBinding::IsDeferred()
 }
 
 
-RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
+RewriteCandidate::RewriteCandidate(Infix *rewrite,
+                                   Scope *scope,
+                                   CompilerTypes *types)
 // ----------------------------------------------------------------------------
 //   Create a rewrite candidate within the given types
 // ----------------------------------------------------------------------------
@@ -87,7 +89,7 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
       scope(scope),
       bindings(),
       value_types(types),
-      binding_types(new Types(scope, types)),
+      binding_types(new CompilerTypes(scope, types)),
       type(nullptr),
       defined(nullptr),
       defined_name()
@@ -642,7 +644,7 @@ void RewriteCandidate::Dump()
 //
 // ============================================================================
 
-RewriteCalls::RewriteCalls(Types *types)
+RewriteCalls::RewriteCalls(CompilerTypes *types)
 // ----------------------------------------------------------------------------
 //   Create a new type context to evaluate the calls for a rewrite
 // ----------------------------------------------------------------------------
@@ -665,8 +667,8 @@ Tree *RewriteCalls::Check (Scope *scope,
     RewriteCandidate *rc = new RewriteCandidate(candidate, scope, types);
 
     // All the following is in candidate types
-    Types *binding_types = rc->binding_types;
-    record(types, "Types %p created for bindings of %t in candidate %t",
+    CompilerTypes *binding_types = rc->binding_types;
+    record(types, "CompilerTypes %p created for bindings of %t in candidate %t",
            binding_types, what, candidate->left);
 
     // Attempt binding / unification of parameters to arguments
@@ -699,7 +701,7 @@ Tree *RewriteCalls::Check (Scope *scope,
         // Check built-ins and C functions
         if (binding != FAILED)
         {
-            builtin = Types::RewriteCategory(rc) != Types::Decl::NORMAL;
+            builtin = CompilerTypes::RewriteCategory(rc) != CompilerTypes::Decl::NORMAL;
             if (!builtin)
             {
                 // Process declarations in the initializer

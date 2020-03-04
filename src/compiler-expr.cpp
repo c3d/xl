@@ -259,7 +259,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     JIT::Value_p result = nullptr;
 
     record(compiler_expr, "Call %t", call);
-    Types *types = function.types;
+    CompilerTypes *types = function.types;
     rcall_map &rcalls = types->TypesRewriteCalls();
     rcall_map::iterator found = rcalls.find(call);
     record(types_calls, "Looking up %t in %p (%u entries)",
@@ -465,7 +465,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     // Save the type of the return value
     if (result)
     {
-        Types *vtypes = cand->value_types;
+        CompilerTypes *vtypes = cand->value_types;
         Tree *base = vtypes->CodegenType(call);
         JIT::Type_p retTy = code.Type(result);
         function.AddBoxedType(base, retTy);

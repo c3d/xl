@@ -50,7 +50,7 @@ XL_BEGIN
 CompilerFunction::CompilerFunction(CompilerUnit &unit,
                                    Tree *pattern,
                                    Tree *body,
-                                   Types *types,
+                                   CompilerTypes *types,
                                    JIT::FunctionType_p ftype,
                                    text name)
 // ----------------------------------------------------------------------------
@@ -302,12 +302,12 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
         Tree *body = rc->RewriteBody();
 
         // Check if we have C or data patterns
-        Types::Decl d = Types::RewriteCategory(rc);
-        bool isC = d == Types::Decl::C;
-        bool isData = d == Types::Decl::DATA;
+        CompilerTypes::Decl d = CompilerTypes::RewriteCategory(rc);
+        bool isC = d == CompilerTypes::Decl::C;
+        bool isData = d == CompilerTypes::Decl::DATA;
 
         // Identify the return type for the rewrite
-        Types *btypes = rc->binding_types;
+        CompilerTypes *btypes = rc->binding_types;
         Tree *base = btypes->BaseType(rc->type);
         JIT::Type_p retTy = rc->RewriteType();
         if (!retTy && rc->type)
@@ -1241,7 +1241,7 @@ JIT::Value_p CompilerFunction::Primitive(Tree *what,
 
 CompilerEval::CompilerEval(CompilerUnit &unit,
                            Tree *body,
-                           Types *types)
+                           CompilerTypes *types)
 // ----------------------------------------------------------------------------
 //   Build a compiler eval function
 // ----------------------------------------------------------------------------

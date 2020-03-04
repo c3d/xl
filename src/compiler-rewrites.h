@@ -48,9 +48,9 @@ RECORDER_DECLARE(argument_bindings);
 
 XL_BEGIN
 
-class Types;
+class CompilerTypes;
 class CompilerFunction;
-typedef GCPtr<Types> Types_p;
+typedef GCPtr<CompilerTypes> CompilerTypes_p;
 
 enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
@@ -103,7 +103,7 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Infix *rewrite, Scope *scope, Types *types);
+    RewriteCandidate(Infix *rewrite, Scope *scope, CompilerTypes *types);
     void Condition(Tree *value, Tree *test)
     {
         conditions.push_back(RewriteCondition(value, test));
@@ -143,8 +143,8 @@ public:
     RewriteBindings     bindings;
     RewriteKinds        kinds;
     RewriteConditions   conditions;
-    Types_p             value_types;
-    Types_p             binding_types;
+    CompilerTypes_p     value_types;
+    CompilerTypes_p     binding_types;
     Tree_p              type;
     Tree_p              defined;
     text                defined_name;
@@ -160,13 +160,13 @@ struct RewriteCalls
 //   Identify the way to invoke rewrites for a particular pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCalls(Types *ti);
+    RewriteCalls(CompilerTypes *ti);
 
     Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
     void                Dump();
 
 public:
-    Types_p             types;
+    CompilerTypes_p     types;
     RewriteCandidates   candidates;
     GARBAGE_COLLECT(RewriteCalls);
 };

@@ -73,7 +73,7 @@ extern Name_p tree_type;
 //
 // ============================================================================
 
-class Types
+class CompilerTypes
 // ----------------------------------------------------------------------------
 //   Record type information
 // ----------------------------------------------------------------------------
@@ -89,9 +89,9 @@ class Types
     static uint id;             // Id of next type
 
 public:
-    Types(Scope *scope);
-    Types(Scope *scope, Types *parent);
-    ~Types();
+    CompilerTypes(Scope *scope);
+    CompilerTypes(Scope *scope, CompilerTypes *parent);
+    ~CompilerTypes();
     typedef Tree *value_type;
 
 public:
@@ -183,9 +183,9 @@ public:
     void        DumpRewriteCalls();
 
 public:
-    GARBAGE_COLLECT(Types);
+    GARBAGE_COLLECT(CompilerTypes);
 };
-typedef GCPtr<Types> Types_p;
+typedef GCPtr<CompilerTypes> CompilerTypes_p;
 
 
 
@@ -214,7 +214,7 @@ struct TypeInfo : Info
 //
 // ============================================================================
 
-inline bool Types::IsGeneric(text name)
+inline bool CompilerTypes::IsGeneric(text name)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
@@ -223,7 +223,7 @@ inline bool Types::IsGeneric(text name)
 }
 
 
-inline Name *Types::IsGeneric(Tree *type)
+inline Name *CompilerTypes::IsGeneric(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
@@ -235,7 +235,7 @@ inline Name *Types::IsGeneric(Tree *type)
 }
 
 
-inline Name *Types::IsTypeName(Tree *type)
+inline Name *CompilerTypes::IsTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a 'true' type name, i.e. not generated
 // ----------------------------------------------------------------------------
@@ -257,7 +257,7 @@ inline bool IsTreeType(Tree *type)
 
 XL_END
 
-XL::Types *xldebug(XL::Types *ti);
+XL::CompilerTypes *xldebug(XL::CompilerTypes *ti);
 
 RECORDER_DECLARE(types);
 RECORDER_DECLARE(types_ids);

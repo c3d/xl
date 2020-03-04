@@ -57,9 +57,9 @@ XL_BEGIN
 //
 // ============================================================================
 
-uint Types::id= 0;
+uint CompilerTypes::id= 0;
 
-Types::Types(Scope *scope)
+CompilerTypes::CompilerTypes(Scope *scope)
 // ----------------------------------------------------------------------------
 //   Constructor for top-level type inferences
 // ----------------------------------------------------------------------------
@@ -74,11 +74,11 @@ Types::Types(Scope *scope)
     types[xl_nil] = xl_nil;
     types[xl_true] = boolean_type;
     types[xl_false] = boolean_type;
-    record(types, "Created Types %p for scope %t", this, scope);
+    record(types, "Created CompilerTypes %p for scope %t", this, scope);
 }
 
 
-Types::Types(Scope *scope, Types *parent)
+CompilerTypes::CompilerTypes(Scope *scope, CompilerTypes *parent)
 // ----------------------------------------------------------------------------
 //   Constructor for "child" type inferences, i.e. done within a parent
 // ----------------------------------------------------------------------------
@@ -92,20 +92,20 @@ Types::Types(Scope *scope, Types *parent)
 {
     context.CreateScope();
     scope = context.Symbols();
-    record(types, "Created child Types %p scope %t", this, scope);
+    record(types, "Created child CompilerTypes %p scope %t", this, scope);
 }
 
 
-Types::~Types()
+CompilerTypes::~CompilerTypes()
 // ----------------------------------------------------------------------------
 //    Destructor - Nothing to explicitly delete, but useful for debugging
 // ----------------------------------------------------------------------------
 {
-    record(types, "Deleted Types %p", this);
+    record(types, "Deleted CompilerTypes %p", this);
 }
 
 
-Tree *Types::TypeAnalysis(Tree *program)
+Tree *CompilerTypes::TypeAnalysis(Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program
 // ----------------------------------------------------------------------------
@@ -130,7 +130,7 @@ Tree *Types::TypeAnalysis(Tree *program)
 }
 
 
-Tree *Types::BaseType(Tree *type)
+Tree *CompilerTypes::BaseType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Return the base type (end of unification chain) for the input type
 // ----------------------------------------------------------------------------
@@ -143,7 +143,7 @@ Tree *Types::BaseType(Tree *type)
 }
 
 
-Tree *Types::KnownType(Tree *expr)
+Tree *CompilerTypes::KnownType(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type for the expression if it's already known
 // ----------------------------------------------------------------------------
@@ -155,7 +155,7 @@ Tree *Types::KnownType(Tree *expr)
 }
 
 
-Tree *Types::Type(Tree *expr)
+Tree *CompilerTypes::Type(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type associated with a given expression
 // ----------------------------------------------------------------------------
@@ -173,7 +173,7 @@ Tree *Types::Type(Tree *expr)
 }
 
 
-Tree *Types::ValueType(Tree *expr)
+Tree *CompilerTypes::ValueType(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type associated with something known to be a value
 // ----------------------------------------------------------------------------
@@ -183,7 +183,7 @@ Tree *Types::ValueType(Tree *expr)
 }
 
 
-Tree *Types::DeclarationType(Tree *expr)
+Tree *CompilerTypes::DeclarationType(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type associated with something known to be a declaration
 // ----------------------------------------------------------------------------
@@ -193,7 +193,7 @@ Tree *Types::DeclarationType(Tree *expr)
 }
 
 
-Tree *Types::CodegenType(Tree *expr)
+Tree *CompilerTypes::CodegenType(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type associated during code generation
 // ----------------------------------------------------------------------------
@@ -203,7 +203,7 @@ Tree *Types::CodegenType(Tree *expr)
 }
 
 
-rcall_map & Types::TypesRewriteCalls()
+rcall_map & CompilerTypes::TypesRewriteCalls()
 // ----------------------------------------------------------------------------
 //   Returns the list of rewrite calls for this
 // ----------------------------------------------------------------------------
@@ -213,7 +213,7 @@ rcall_map & Types::TypesRewriteCalls()
 }
 
 
-RewriteCalls *Types::HasRewriteCalls(Tree *what)
+RewriteCalls *CompilerTypes::HasRewriteCalls(Tree *what)
 // ----------------------------------------------------------------------------
 //   Check if we have rewrite calls for this specific tree
 // ----------------------------------------------------------------------------
@@ -226,7 +226,7 @@ RewriteCalls *Types::HasRewriteCalls(Tree *what)
 }
 
 
-Context &Types::TypesContext()
+Context &CompilerTypes::TypesContext()
 // ----------------------------------------------------------------------------
 //   Returns the context where we evaluated the types
 // ----------------------------------------------------------------------------
@@ -235,7 +235,7 @@ Context &Types::TypesContext()
 }
 
 
-Scope *Types::TypesScope()
+Scope *CompilerTypes::TypesScope()
 // ----------------------------------------------------------------------------
 //   Returns the scope where we evaluated the types
 // ----------------------------------------------------------------------------
@@ -244,7 +244,7 @@ Scope *Types::TypesScope()
 }
 
 
-Tree *Types::Do(Integer *what)
+Tree *CompilerTypes::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Annotate an integer tree with its value
 // ----------------------------------------------------------------------------
@@ -253,7 +253,7 @@ Tree *Types::Do(Integer *what)
 }
 
 
-Tree *Types::Do(Real *what)
+Tree *CompilerTypes::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   Annotate a real tree with its value
 // ----------------------------------------------------------------------------
@@ -262,7 +262,7 @@ Tree *Types::Do(Real *what)
 }
 
 
-Tree *Types::Do(Text *what)
+Tree *CompilerTypes::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   Annotate a text tree with its own value
 // ----------------------------------------------------------------------------
@@ -271,7 +271,7 @@ Tree *Types::Do(Text *what)
 }
 
 
-Tree *Types::DoConstant(Tree *what, kind k)
+Tree *CompilerTypes::DoConstant(Tree *what, kind k)
 // ----------------------------------------------------------------------------
 //   All constants have themselves as type, and evaluate normally
 // ----------------------------------------------------------------------------
@@ -290,7 +290,7 @@ Tree *Types::DoConstant(Tree *what, kind k)
 }
 
 
-Tree *Types::Do(Name *what)
+Tree *CompilerTypes::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a name
 // ----------------------------------------------------------------------------
@@ -324,7 +324,7 @@ Tree *Types::Do(Name *what)
             if (scope != context.Symbols())
                 captured[what] = defined;
             text label;
-            if (RewriteCategory(rw, defined, label) == Types::Decl::NORMAL)
+            if (RewriteCategory(rw, defined, label) == CompilerTypes::Decl::NORMAL)
                 type = Type(body);
             else
                 type = Type(defined);
@@ -362,7 +362,7 @@ Tree *Types::Do(Name *what)
 }
 
 
-Tree *Types::Do(Prefix *what)
+Tree *CompilerTypes::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a prefix and then to its children
 // ----------------------------------------------------------------------------
@@ -388,7 +388,7 @@ Tree *Types::Do(Prefix *what)
 }
 
 
-Tree *Types::Do(Postfix *what)
+Tree *CompilerTypes::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   Assign an unknown type to a postfix and then to its children
 // ----------------------------------------------------------------------------
@@ -398,7 +398,7 @@ Tree *Types::Do(Postfix *what)
 }
 
 
-Tree *Types::Do(Infix *what)
+Tree *CompilerTypes::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   Assign type to infix forms
 // ----------------------------------------------------------------------------
@@ -425,7 +425,7 @@ Tree *Types::Do(Infix *what)
 }
 
 
-Tree *Types::Do(Block *what)
+Tree *CompilerTypes::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   A block evaluates either as itself, or as its child
 // ----------------------------------------------------------------------------
@@ -442,7 +442,7 @@ Tree *Types::Do(Block *what)
 }
 
 
-Tree *Types::AssignType(Tree *expr, Tree *type)
+Tree *CompilerTypes::AssignType(Tree *expr, Tree *type)
 // ----------------------------------------------------------------------------
 //   Set the type of the expression to be 'type'
 // ----------------------------------------------------------------------------
@@ -463,7 +463,7 @@ Tree *Types::AssignType(Tree *expr, Tree *type)
 }
 
 
-Tree *Types::TypeOf(Tree *expr)
+Tree *CompilerTypes::TypeOf(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type of the expr as a [type X] expression
 // ----------------------------------------------------------------------------
@@ -544,7 +544,7 @@ Tree *Types::TypeOf(Tree *expr)
 }
 
 
-Tree *Types::MakeTypesExplicit(Tree *expr)
+Tree *CompilerTypes::MakeTypesExplicit(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Make the types explicit in a tree shape
 // ----------------------------------------------------------------------------
@@ -631,7 +631,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
 }
 
 
-Tree *Types::TypeDeclaration(Rewrite *decl)
+Tree *CompilerTypes::TypeDeclaration(Rewrite *decl)
 // ----------------------------------------------------------------------------
 //   Explicitely define the type for an expression
 // ----------------------------------------------------------------------------
@@ -646,7 +646,7 @@ Tree *Types::TypeDeclaration(Rewrite *decl)
 }
 
 
-Tree *Types::TypeOfRewrite(Rewrite *what)
+Tree *CompilerTypes::TypeOfRewrite(Rewrite *what)
 // ----------------------------------------------------------------------------
 //   Assign an [A => B] type to a rewrite
 // ----------------------------------------------------------------------------
@@ -691,7 +691,7 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
 }
 
 
-Tree *Types::Statements(Tree *expr, Tree *left, Tree *right)
+Tree *CompilerTypes::Statements(Tree *expr, Tree *left, Tree *right)
 // ----------------------------------------------------------------------------
 //   Return the type of a combo statement, skipping declarations
 // ----------------------------------------------------------------------------
@@ -724,7 +724,7 @@ static Tree *lookupRewriteCalls(Scope *evalScope, Scope *sc,
 }
 
 
-Tree *Types::Evaluate(Tree *what, bool mayFail)
+Tree *CompilerTypes::Evaluate(Tree *what, bool mayFail)
 // ----------------------------------------------------------------------------
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
@@ -786,7 +786,7 @@ static Tree *lookupType(Scope *evalScope, Scope *sc,
 }
 
 
-Tree *Types::EvaluateType(Tree *type)
+Tree *CompilerTypes::EvaluateType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Find candidates for the given expression and infer types from that
 // ----------------------------------------------------------------------------
@@ -799,7 +799,7 @@ Tree *Types::EvaluateType(Tree *type)
 }
 
 
-Tree *Types::Unify(Tree *t1, Tree *t2)
+Tree *CompilerTypes::Unify(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Unify two type forms
 // ----------------------------------------------------------------------------
@@ -893,7 +893,7 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
 }
 
 
-Tree *Types::IsTypeOf(Tree *type)
+Tree *CompilerTypes::IsTypeOf(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a type pattern, i.e. type ( ... )
 // ----------------------------------------------------------------------------
@@ -916,7 +916,7 @@ Tree *Types::IsTypeOf(Tree *type)
 }
 
 
-Infix *Types::IsRewriteType(Tree *type)
+Infix *CompilerTypes::IsRewriteType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a rewrite type, i.e. something like [X => Y]
 // ----------------------------------------------------------------------------
@@ -929,7 +929,7 @@ Infix *Types::IsRewriteType(Tree *type)
 }
 
 
-Infix *Types::IsRangeType(Tree *type)
+Infix *CompilerTypes::IsRangeType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a range type, i.e. [X..Y] with [X] and [Y] constant
 // ----------------------------------------------------------------------------
@@ -949,7 +949,7 @@ Infix *Types::IsRangeType(Tree *type)
 }
 
 
-Infix *Types::IsUnionType(Tree *type)
+Infix *CompilerTypes::IsUnionType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a union type, i.e. something like [integer|real]
 // ----------------------------------------------------------------------------
@@ -962,7 +962,7 @@ Infix *Types::IsUnionType(Tree *type)
 }
 
 
-Tree *Types::Join(Tree *old, Tree *replacement)
+Tree *CompilerTypes::Join(Tree *old, Tree *replacement)
 // ----------------------------------------------------------------------------
 //   Replace the old type with the new one
 // ----------------------------------------------------------------------------
@@ -1008,7 +1008,7 @@ Tree *Types::Join(Tree *old, Tree *replacement)
 }
 
 
-Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
+Tree *CompilerTypes::JoinedType(Tree *type, Tree *old, Tree *replace)
 // ----------------------------------------------------------------------------
 //   Build a type after joining, in case that's necessary
 // ----------------------------------------------------------------------------
@@ -1083,7 +1083,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 }
 
 
-Tree *Types::UnionType(Tree *t1, Tree *t2)
+Tree *CompilerTypes::UnionType(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //    Create the union of two types
 // ----------------------------------------------------------------------------
@@ -1105,7 +1105,7 @@ Tree *Types::UnionType(Tree *t1, Tree *t2)
 }
 
 
-bool Types::TypeCoversConstant(Tree *type, Tree *cst)
+bool CompilerTypes::TypeCoversConstant(Tree *type, Tree *cst)
 // ----------------------------------------------------------------------------
 //    Check if a type covers a constant or range
 // ----------------------------------------------------------------------------
@@ -1171,7 +1171,7 @@ bool Types::TypeCoversConstant(Tree *type, Tree *cst)
 }
 
 
-bool Types::TypeCoversType(Tree *top, Tree *bottom)
+bool CompilerTypes::TypeCoversType(Tree *top, Tree *bottom)
 // ----------------------------------------------------------------------------
 //   Check if the top type covers all values in the bottom type
 // ----------------------------------------------------------------------------
@@ -1196,7 +1196,7 @@ bool Types::TypeCoversType(Tree *top, Tree *bottom)
 }
 
 
-Tree *Types::DeclaredTypeName(Tree *type)
+Tree *CompilerTypes::DeclaredTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 //   If we have a type name, lookup its definition
 // ----------------------------------------------------------------------------
@@ -1223,7 +1223,7 @@ Tree *Types::DeclaredTypeName(Tree *type)
 }
 
 
-Types::Decl Types::RewriteCategory(RewriteCandidate *rc)
+CompilerTypes::Decl CompilerTypes::RewriteCategory(RewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Check if the rewrite candidate is of a special kind
 // ----------------------------------------------------------------------------
@@ -1232,12 +1232,12 @@ Types::Decl Types::RewriteCategory(RewriteCandidate *rc)
 }
 
 
-Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
+CompilerTypes::Decl CompilerTypes::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
 // ----------------------------------------------------------------------------
 //   Check if the declaration is of a special kind
 // ----------------------------------------------------------------------------
 {
-    Types::Decl decl = Types::Decl::NORMAL;
+    CompilerTypes::Decl decl = CompilerTypes::Decl::NORMAL;
     Tree *body = rw->right;
 
     if (Name *bodyname = body->AsName())
@@ -1246,10 +1246,10 @@ Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
         if (bodyname->value == "C")
             if (Name *defname = defined->AsName())
                 if (IsValidCName(defname, label))
-                    decl = Types::Decl::C;
+                    decl = CompilerTypes::Decl::C;
         // Case of [X, Y is self]: Mark as DATA
         if (bodyname->value == "self")
-            decl = Types::Decl::DATA;
+            decl = CompilerTypes::Decl::DATA;
     }
 
     if (Prefix *prefix = body->AsPrefix())
@@ -1259,10 +1259,10 @@ Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
             // Case of [alloc X is C "_malloc"]: Use "_malloc"
             if (name->value == "C")
                 if (IsValidCName(prefix->right, label))
-                    decl = Types::Decl::C;
+                    decl = CompilerTypes::Decl::C;
             // Case of [X+Y is builtin Add]: select BUILTIN type
             if (name->value == "builtin")
-                decl = Types::Decl::BUILTIN;
+                decl = CompilerTypes::Decl::BUILTIN;
         }
     }
 
@@ -1270,7 +1270,7 @@ Types::Decl Types::RewriteCategory(Rewrite *rw, Tree *defined, text &label)
 }
 
 
-bool Types::IsValidCName(Tree *tree, text &label)
+bool CompilerTypes::IsValidCName(Tree *tree, text &label)
 // ----------------------------------------------------------------------------
 //   Check if the name is valid for C
 // ----------------------------------------------------------------------------
@@ -1308,7 +1308,7 @@ bool Types::IsValidCName(Tree *tree, text &label)
 }
 
 
-Tree *Types::TypeError(Tree *t1, Tree *t2)
+Tree *CompilerTypes::TypeError(Tree *t1, Tree *t2)
 // ----------------------------------------------------------------------------
 //   Show type matching errors
 // ----------------------------------------------------------------------------
@@ -1361,7 +1361,7 @@ Tree *Types::TypeError(Tree *t1, Tree *t2)
 //
 // ============================================================================
 
-void Types::AddBoxedType(Tree *type, JIT::Type_p mtype)
+void CompilerTypes::AddBoxedType(Tree *type, JIT::Type_p mtype)
 // ----------------------------------------------------------------------------
 //   Associate a tree type to a boxed machine type
 // ----------------------------------------------------------------------------
@@ -1376,7 +1376,7 @@ void Types::AddBoxedType(Tree *type, JIT::Type_p mtype)
 }
 
 
-JIT::Type_p Types::BoxedType(Tree *type)
+JIT::Type_p CompilerTypes::BoxedType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Return the boxed type if there is one
 // ----------------------------------------------------------------------------
@@ -1398,7 +1398,7 @@ JIT::Type_p Types::BoxedType(Tree *type)
 //
 // ============================================================================
 
-void Types::DumpTypes()
+void CompilerTypes::DumpTypes()
 // ----------------------------------------------------------------------------
 //   Dump the list of types in this
 // ----------------------------------------------------------------------------
@@ -1423,7 +1423,7 @@ void Types::DumpTypes()
 }
 
 
-void Types::DumpMachineTypes()
+void CompilerTypes::DumpMachineTypes()
 // ----------------------------------------------------------------------------
 //   Dump the list of machine types in this
 // ----------------------------------------------------------------------------
@@ -1444,7 +1444,7 @@ void Types::DumpMachineTypes()
 }
 
 
-void Types::DumpUnifications()
+void CompilerTypes::DumpUnifications()
 // ----------------------------------------------------------------------------
 //   Dump the current unifications
 // ----------------------------------------------------------------------------
@@ -1462,7 +1462,7 @@ void Types::DumpUnifications()
 }
 
 
-void Types::DumpRewriteCalls()
+void CompilerTypes::DumpRewriteCalls()
 // ----------------------------------------------------------------------------
 //   Dump the list of rewrite calls
 // ----------------------------------------------------------------------------
@@ -1483,14 +1483,14 @@ void Types::DumpRewriteCalls()
 XL_END
 
 
-XL::Types *xldebug(XL::Types *ti)
+XL::CompilerTypes *xldebug(XL::CompilerTypes *ti)
 // ----------------------------------------------------------------------------
 //   Dump a type inference
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
+    if (!XL::Allocator<XL::CompilerTypes>::IsAllocated(ti))
     {
-        std::cout << "Cowardly refusing to show bad Types pointer "
+        std::cout << "Cowardly refusing to show bad CompilerTypes pointer "
                   << (void *) ti << "\n";
     }
     else
@@ -1502,7 +1502,7 @@ XL::Types *xldebug(XL::Types *ti)
     }
     return ti;
 }
-XL::Types *xldebug(XL::Types_p ti)      { return xldebug((XL::Types *) ti); }
+XL::CompilerTypes *xldebug(XL::CompilerTypes_p ti)      { return xldebug((XL::CompilerTypes *) ti); }
 
 XL::Tree *xldebug(XL::Tree *);
 XL::Context *xldebug(XL::Context *);
@@ -1533,7 +1533,7 @@ void *xldebug(uintptr_t address)
     CHECK_ALLOC(Prefix);
     CHECK_ALLOC(Postfix);
     CHECK_ALLOC(Infix);
-    CHECK_ALLOC(Types);
+    CHECK_ALLOC(CompilerTypes);
     CHECK_ALLOC(Context);
     CHECK_ALLOC(RewriteCalls);
     CHECK_ALLOC(RewriteCandidate);
