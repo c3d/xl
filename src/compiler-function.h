@@ -38,7 +38,7 @@
 
 #include "compiler.h"
 #include "compiler-unit.h"
-#include "compiler-args.h"
+#include "compiler-rewrites.h"
 #include "compiler-prototype.h"
 #include "compiler-types.h"
 

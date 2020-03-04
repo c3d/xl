@@ -37,7 +37,7 @@
 // *****************************************************************************
 
 #include "compiler.h"
-#include "compiler-args.h"
+#include "compiler-rewrites.h"
 #include "compiler-types.h"
 #include "llvm-crap.h"
 #include <map>

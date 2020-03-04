@@ -37,7 +37,7 @@
 
 #include "compiler-expr.h"
 #include "compiler-unit.h"
-#include "compiler-args.h"
+#include "compiler-rewrites.h"
 #include "compiler-types.h"
 #include "save.h"
 #include "errors.h"

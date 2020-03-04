@@ -82,13 +82,13 @@ SOURCES_VARIANT_lib     =			\
 	$(MODULES_SOURCES)
 
 SOURCES_llvm =					\
-	compiler-args.cpp			\
 	compiler-expr.cpp			\
 	compiler-fast.cpp			\
 	compiler-function.cpp			\
 	compiler-prototype.cpp			\
-	compiler-unit.cpp			\
+	compiler-rewrites.cpp			\
 	compiler-types.cpp			\
+	compiler-unit.cpp			\
 	compiler.cpp				\
 	llvm-crap.cpp				\
 	native.cpp

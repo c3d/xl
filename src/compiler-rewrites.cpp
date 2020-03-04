@@ -1,5 +1,5 @@
 // *****************************************************************************
-// compiler-args.cpp                                                  XL project
+// compiler-rewrites.cpp                                              XL project
 // *****************************************************************************
 //
 // File description:
@@ -35,7 +35,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-#include "compiler-args.h"
+#include "compiler-rewrites.h"
 #include "compiler-unit.h"
 #include "compiler-function.h"
 #include "compiler-types.h"

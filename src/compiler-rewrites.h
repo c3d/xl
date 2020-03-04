@@ -1,7 +1,7 @@
-#ifndef COMPILER_ARG_H
-#define COMPILER_ARG_H
+#ifndef COMPILER_REWRITES_H
+#define COMPILER_REWRITES_H
 // *****************************************************************************
-// compiler-args.h                                                    XL project
+// compiler-rewrites.h                                                XL project
 // *****************************************************************************
 //
 // File description:
@@ -175,4 +175,4 @@ typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 
 XL_END
 
-#endif // COMPILER_ARGS_H
+#endif // COMPILER_REWRITES_H
