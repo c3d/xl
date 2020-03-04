@@ -106,6 +106,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
     JIT::PointerType_p  evalFnTy         = compiler.evalFnTy;
 
     // Initialize all the static functions
+#define MTYPE(Name, Arity, Code)
 #define UNARY(Name)
 #define BINARY(Name)
 #define CAST(Name)

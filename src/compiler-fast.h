@@ -193,6 +193,7 @@ public:
 
 private:
     // Import all runtime functions
+#define MTYPE(Name, Arity, Code)
 #define UNARY(Name)
 #define BINARY(Name)
 #define CAST(Name)

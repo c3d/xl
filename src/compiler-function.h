@@ -143,17 +143,27 @@ protected:
     // Primitives, i.e. functions generating native LLVM code
     typedef JIT::Value_p (CompilerFunction::*primitive_fn)(Tree *,
                                                            JIT::Value_p *args);
+    typedef JIT::Type_p  (CompilerFunction::*mtype_fn)(Tree *);
     struct PrimitiveInfo
     {
         primitive_fn    function;
         unsigned        arity;
     };
-    typedef std::map<text,PrimitiveInfo> Primitives;
+    struct MachineTypeInfo
+    {
+        mtype_fn        function;
+        unsigned        arity;
+    };
+    typedef std::map<text,PrimitiveInfo>        Primitives;
+    typedef std::map<text,MachineTypeInfo>      MachineTypes;
     static Primitives   primitives;
+    static MachineTypes mtypes;
 
     static void         InitializePrimitives();
 
     // Define LLVM accessors for primitives
+#define MTYPE(Name, Arity, Code)                                        \
+    JIT::Type_p         llvm_type_##Name(Tree *source);
 #define UNARY(Name)                                                     \
     JIT::Value_p        llvm_##Name(Tree *source, JIT::Value_p *args);
 #define BINARY(Name)                                                    \

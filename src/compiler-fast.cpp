@@ -2162,6 +2162,7 @@ O1CompileUnit::O1CompileUnit(FastCompiler &compiler,
     JIT::PointerType_p  evalFnTy         = compiler.evalFnTy;
 
     // Initialize all the static functions
+#define MTYPE(Name, Arity, Code)
 #define UNARY(Name)
 #define BINARY(Name)
 #define CAST(Name)

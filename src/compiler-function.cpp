@@ -109,6 +109,7 @@ CompilerFunction::~CompilerFunction()
 
 
 CompilerFunction::Primitives CompilerFunction::primitives;
+CompilerFunction::MachineTypes CompilerFunction::mtypes;
 
 
 void CompilerFunction::InitializePrimitives()
@@ -119,21 +120,39 @@ void CompilerFunction::InitializePrimitives()
     if (primitives.size())
         return;
 
+#define MTYPE(Name, Arity, Code)                                        \
+    mtypes[#Name] = MachineTypeInfo {                                   \
+        &CompilerFunction::llvm_type_##Name,                            \
+        Arity                                                           \
+    };
 #define UNARY(Name)                                                     \
-    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 1};
+    primitives[#Name] = PrimitiveInfo {                                 \
+        &CompilerFunction::llvm_##Name,                                 \
+        1                                                               \
+    };
 #define BINARY(Name)                                                    \
-    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
+    primitives[#Name] = PrimitiveInfo {                                 \
+        &CompilerFunction::llvm_##Name,                                 \
+        2                                                               \
+    };
 #define CAST(Name)                                                      \
-    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
+    primitives[#Name] = PrimitiveInfo {                                 \
+        &CompilerFunction::llvm_##Name,                                 \
+        2                                                               \
+    };
 #define SPECIAL(Name, Arity, Code)                                      \
-    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, Arity};
+    primitives[#Name] = PrimitiveInfo {                                 \
+        &CompilerFunction::llvm_##Name,                                 \
+        Arity                                                           \
+    };
 #define ALIAS(To, Arity, From)                                          \
-    primitives[#To] = PrimitiveInfo {&CompilerFunction::llvm_##From, Arity};
-
+    primitives[#To] = PrimitiveInfo {                                   \
+        &CompilerFunction::llvm_##From,                                 \
+        Arity                                                           \
+    };
 #define EXTERNAL(Name, ...)
 
 #include "compiler-primitives.tbl"
-
 }
 
 
@@ -1169,6 +1188,12 @@ JIT::Value_p CompilerFunction::Primitive(Tree *what,
 //   Define all the LLVM wrappers
 //
 // ============================================================================
+
+#define MTYPE(Name, Arity, Code)                                        \
+    JIT::Type_p CompilerFunction::llvm_type_##Name(Tree *source)        \
+    {                                                                   \
+        Code;                                                           \
+    }
 
 #define UNARY(Name)                                                     \
     JIT::Value_p CompilerFunction::llvm_##Name(Tree *source,            \

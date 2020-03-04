@@ -38,6 +38,25 @@
 #define VA_EXTERNAL EXTERNAL
 #endif
 
+
+// ============================================================================
+//
+//    Types
+//
+// ============================================================================
+
+MTYPE(i8,        0, return jit.IntegerType(8))
+MTYPE(i16,       0, return jit.IntegerType(16))
+MTYPE(i32,       0, return jit.IntegerType(32))
+MTYPE(i64,       0, return jit.IntegerType(64))
+
+MTYPE(f16,       0, return jit.FloatType(16))
+MTYPE(f32,       0, return jit.FloatType(32))
+MTYPE(f64,       0, return jit.FloatType(64))
+
+
+
+
 // ============================================================================
 //
 //   Special opcodes that perform XL-specific operations
@@ -215,23 +234,6 @@ EXTERNAL(xl_infix_name,         charPtrTy,      infixTreePtrTy);
 
 // ============================================================================
 //
-//    Types
-//
-// ============================================================================
-
-
-
-// ============================================================================
-//
-//   Standard LLVM opcodes (must be at end, undefines UNARY, BINARY and CAST)
-//
-// ============================================================================
-
-#include "llvm-crap.tbl"
-
-
-// ============================================================================
-//
 //   Some opcodes that are simple enough (and multi-typed)
 //
 // ============================================================================
@@ -303,7 +305,17 @@ ALIAS(BOr,    2, Or)
 ALIAS(BXor,   2, Xor)
 ALIAS(BNot,   1, Not)
 
+
+// ============================================================================
+//
+//   Standard LLVM opcodes (must be at end, undefines UNARY, BINARY and CAST)
+//
+// ============================================================================
+
+#include "llvm-crap.tbl"
+
 #undef VA_EXTERNAL
 #undef EXTERNAL
 #undef SPECIAL
 #undef ALIAS
+#undef MTYPE
