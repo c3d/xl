@@ -263,14 +263,7 @@ struct Text : Tree
     text                opening, closing;
     static text         textQuote, charQuote;
     operator value_t()  { return value; }
-    bool IsCharacter()
-    {
-        return
-            opening == charQuote &&
-            closing == charQuote &&
-            value.length() == 1;
-    }
-    bool IsText()       { return !IsCharacter(); }
+    bool IsCharacter()  { return value.length() == 1; }
 
     GARBAGE_COLLECT(Text);
 };
