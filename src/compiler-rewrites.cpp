@@ -89,7 +89,7 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite,
       scope(scope),
       bindings(),
       value_types(types),
-      binding_types(new CompilerTypes(scope, types)),
+      binding_types(new CompilerTypes(scope, rewrite, types)),
       type(nullptr),
       defined(nullptr),
       defined_name()

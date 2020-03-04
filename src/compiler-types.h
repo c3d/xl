@@ -78,6 +78,7 @@ class CompilerTypes
 //   Record type information
 // ----------------------------------------------------------------------------
 {
+    Tree_p      source;         // Source code being compiled
     Context     context;        // Context in which we lookup things
     tree_map    types;          // Map an expression to its type
     tree_map    unifications;   // Map a type to its reference type
@@ -89,8 +90,8 @@ class CompilerTypes
     static uint id;             // Id of next type
 
 public:
-    CompilerTypes(Scope *scope);
-    CompilerTypes(Scope *scope, CompilerTypes *parent);
+    CompilerTypes(Scope *scope, Tree *source);
+    CompilerTypes(Scope *scope, Tree *source, CompilerTypes *parent);
     ~CompilerTypes();
     typedef Tree *value_type;
 

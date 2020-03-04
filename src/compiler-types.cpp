@@ -59,11 +59,12 @@ XL_BEGIN
 
 uint CompilerTypes::id= 0;
 
-CompilerTypes::CompilerTypes(Scope *scope)
+CompilerTypes::CompilerTypes(Scope *scope, Tree *source)
 // ----------------------------------------------------------------------------
 //   Constructor for top-level type inferences
 // ----------------------------------------------------------------------------
-    : context(scope),
+    : source(source),
+      context(scope),
       types(),
       unifications(),
       rcalls(),
@@ -74,11 +75,13 @@ CompilerTypes::CompilerTypes(Scope *scope)
     types[xl_nil] = xl_nil;
     types[xl_true] = boolean_type;
     types[xl_false] = boolean_type;
-    record(types, "Created CompilerTypes %p for scope %t", this, scope);
+    record(types,
+           "Created CompilerTypes %p for %t in scope %t",
+           this, source, scope);
 }
 
 
-CompilerTypes::CompilerTypes(Scope *scope, CompilerTypes *parent)
+CompilerTypes::CompilerTypes(Scope *scope, Tree *source, CompilerTypes *parent)
 // ----------------------------------------------------------------------------
 //   Constructor for "child" type inferences, i.e. done within a parent
 // ----------------------------------------------------------------------------
@@ -92,7 +95,8 @@ CompilerTypes::CompilerTypes(Scope *scope, CompilerTypes *parent)
 {
     context.CreateScope();
     scope = context.Symbols();
-    record(types, "Created child CompilerTypes %p scope %t", this, scope);
+    record(types, "Created child CompilerTypes %p from %p for %t in scope %t",
+           this, parent, source, scope);
 }
 
 
