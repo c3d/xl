@@ -394,10 +394,10 @@ JIT::Value_p CompilerFunction::Data(Tree *expr,
     case NAME:
     {
         // Bound names are returned as is, parameters are evaluated
-        Context *context = types->TypesContext();
+        Context &context = types->TypesContext();
         record(parameter_bindings, "Looking up %t in context %p",
-               expr, (Context *) context);
-        Tree *existing = context->DeclaredPattern(expr);
+               expr, &context);
+        Tree *existing = context.DeclaredPattern(expr);
         assert (existing || !"TypeAnalysis didn't realize a name was missing");
 
         // Arguments bound here are returned directly as a tree
@@ -935,7 +935,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
     if (mtype)
         return mtype;
     Tree *base = types->BaseType(type);
-    Context *context = types->TypesContext();
+    Context &context = types->TypesContext();
     bool isConstant = false;
 
     // Check if we have one of the basic types
@@ -970,7 +970,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         }
         break;
     case NAME:
-        if (Tree *declared = context->DeclaredPattern(type))
+        if (Tree *declared = context.DeclaredPattern(type))
             if (declared != base)
                 base = declared;
 
@@ -1093,8 +1093,8 @@ JIT::Value_p CompilerFunction::BoxedTree(Tree *what)
 {
     if (Name *name = what->AsName())
     {
-        Context *context = types->TypesContext();
-        what = context->Bound(name);
+        Context &context = types->TypesContext();
+        what = context.Bound(name);
     }
 
     // Compute the boxed type for the data
@@ -1128,7 +1128,7 @@ void CompilerFunction::BoxedTreeType(JIT::Signature &sig, Tree *what)
         break;
 
     case NAME:
-        what = types->TypesContext()->DeclaredPattern(what);
+        what = types->TypesContext().DeclaredPattern(what);
         sig.push_back(ValueMachineType(what));
         break;
 

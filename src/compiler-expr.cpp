@@ -130,11 +130,11 @@ JIT::Value_p CompilerExpression::Do(Name *what)
     JITBlock     &code     = function.code;
     Scope_p       where;
     Rewrite_p     rewrite;
-    Context      *context  = function.FunctionContext();
-    Tree         *existing = context->Bound(what, true, &rewrite, &where);
+    Context      &context  = function.FunctionContext();
+    Tree         *existing = context.Bound(what, true, &rewrite, &where);
     assert(existing || !"Type checking didn't realize a name is missing");
     Tree *from = PatternBase(rewrite->left);
-    if (where == context->Symbols())
+    if (where == context.Symbols())
         if (JIT::Value_p result = function.Known(from))
             return result;
 

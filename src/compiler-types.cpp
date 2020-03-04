@@ -63,7 +63,7 @@ Types::Types(Scope *scope)
 // ----------------------------------------------------------------------------
 //   Constructor for top-level type inferences
 // ----------------------------------------------------------------------------
-    : context(new Context(scope)),
+    : context(scope),
       types(),
       unifications(),
       rcalls(),
@@ -90,8 +90,8 @@ Types::Types(Scope *scope, Types *parent)
       declaration(false),
       codegen(false)
 {
-    context->CreateScope();
-    scope = context->Symbols();
+    context.CreateScope();
+    scope = context.Symbols();
     record(types, "Created child Types %p scope %t", this, scope);
 }
 
@@ -226,7 +226,7 @@ RewriteCalls *Types::HasRewriteCalls(Tree *what)
 }
 
 
-Context *Types::TypesContext()
+Context &Types::TypesContext()
 // ----------------------------------------------------------------------------
 //   Returns the context where we evaluated the types
 // ----------------------------------------------------------------------------
@@ -240,7 +240,7 @@ Scope *Types::TypesScope()
 //   Returns the scope where we evaluated the types
 // ----------------------------------------------------------------------------
 {
-    return context->Symbols();
+    return context.Symbols();
 }
 
 
@@ -277,7 +277,7 @@ Tree *Types::DoConstant(Tree *what, kind k)
 // ----------------------------------------------------------------------------
 {
     Tree *type = what;
-    if (context->HasRewritesFor(k))
+    if (context.HasRewritesFor(k))
     {
         type = Evaluate(what);
     }
@@ -302,13 +302,13 @@ Tree *Types::Do(Name *what)
     {
         type = TypeOf(what);
         if (type)
-            context->Define(what, what);
+            context.Define(what, what);
         return type;
     }
 
     Scope_p scope;
     Rewrite_p rw;
-    Tree *body = context->Bound(what, true, &rw, &scope);
+    Tree *body = context.Bound(what, true, &rw, &scope);
     if (body && body != what)
     {
         Tree *defined = PatternBase(rw->left);
@@ -321,7 +321,7 @@ Tree *Types::Do(Name *what)
 
         else if (defined != what)
         {
-            if (scope != context->Symbols())
+            if (scope != context.Symbols())
                 captured[what] = defined;
             text label;
             if (RewriteCategory(rw, defined, label) == Types::Decl::NORMAL)
@@ -492,7 +492,7 @@ Tree *Types::TypeOf(Tree *expr)
         // Lookup original name
         Name *name = (Name *) expr;
         if (name->value == "self")
-            if (Tree *declared = context->DeclaredPattern(expr))
+            if (Tree *declared = context.DeclaredPattern(expr))
                 if (declared != expr)
                     type = TypeOf(declared);
         break;
@@ -561,7 +561,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
     case NAME:
     {
         // Replace name with reference type to minimize size of lookup tables
-        if (Tree *def = context->DeclaredPattern(expr))
+        if (Tree *def = context.DeclaredPattern(expr))
             if (Name *name = def->AsName())
                 expr = name;
 
@@ -662,12 +662,12 @@ Tree *Types::TypeOfRewrite(Rewrite *what)
     record(types_calls, "In %p processing rewrite %t", this, what);
 
     // Evaluate types for the declaration and the body in a new context
-    context->CreateScope(what->Position());
+    context.CreateScope(what->Position());
     Tree *decl = what->left;
     Tree *init = what->right;
     Tree *declt = DeclarationType(decl);
     Tree *initt = ValueType(init);
-    context->PopScope();
+    context.PopScope();
 
     // Create a [type Decl => type Init] type
     if (!declt || !initt)
@@ -747,7 +747,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     uint count = 0;
     Errors errors;
     errors.Log (Error("Unable to evaluate $1:", what), true);
-    context->Lookup(what, lookupRewriteCalls, rc);
+    context.Lookup(what, lookupRewriteCalls, rc);
 
     // If we have no candidate, this is a failure
     count = rc->candidates.size();
@@ -792,7 +792,7 @@ Tree *Types::EvaluateType(Tree *type)
 // ----------------------------------------------------------------------------
 {
     record(types_calls, "In %p evaluating type %t", this, type);
-    Tree *found = context->Lookup(type, lookupType, nullptr);
+    Tree *found = context.Lookup(type, lookupType, nullptr);
     if (found)
         type = Join(type, found);
     return type;
@@ -1210,7 +1210,7 @@ Tree *Types::DeclaredTypeName(Tree *type)
         // Check if we have a type definition. If so, use it
         Rewrite_p rewrite;
         Scope_p scope;
-        Tree *definition = context->Bound(name, true, &rewrite, &scope);
+        Tree *definition = context.Bound(name, true, &rewrite, &scope);
         if (definition && definition != name)
         {
             type = Join(type, definition);

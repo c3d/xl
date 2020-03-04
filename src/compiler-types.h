@@ -78,7 +78,7 @@ class Types
 //   Record type information
 // ----------------------------------------------------------------------------
 {
-    Context_p   context;        // Context in which we lookup things
+    Context     context;        // Context in which we lookup things
     tree_map    types;          // Map an expression to its type
     tree_map    unifications;   // Map a type to its reference type
     tree_map    captured;       // Trees captured from enclosing context
@@ -106,7 +106,7 @@ public:
     rcall_map & TypesRewriteCalls();
     RewriteCalls *HasRewriteCalls(Tree *what);
     Scope *     TypesScope();
-    Context *   TypesContext();
+    Context &   TypesContext();
 
     // Machine types management
     void        AddBoxedType(Tree *treeType, JIT::Type_p machineType);

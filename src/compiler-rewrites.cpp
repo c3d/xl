@@ -195,8 +195,8 @@ BindingStrength RewriteCandidate::Bind(Tree *pattern,
         }
 
         // Test if the name is already bound, and if so, if trees fail to match
-        Context *context = binding_types->TypesContext();
-        if (Tree *bound = context->DeclaredPattern(name))
+        Context &context = binding_types->TypesContext();
+        if (Tree *bound = context.DeclaredPattern(name))
         {
             if (bound != name)
             {
@@ -238,8 +238,8 @@ BindingStrength RewriteCandidate::Bind(Tree *pattern,
         {
             record(argument_bindings,
                    "Binding name %t to %t in %p context %p",
-                   pattern, value, this, (Context *) context);
-            context->Define(pattern, value, true);
+                   pattern, value, this, &context);
+            context.Define(pattern, value, true);
             bindings.push_back(RewriteBinding(name, value));
         }
         else
@@ -703,8 +703,8 @@ Tree *RewriteCalls::Check (Scope *scope,
             if (!builtin)
             {
                 // Process declarations in the initializer
-                Context *bcontext = binding_types->TypesContext();
-                bcontext->ProcessDeclarations(init);
+                Context &bcontext = binding_types->TypesContext();
+                bcontext.ProcessDeclarations(init);
                 type = binding_types->Type(init);
                 if (!type)
                     binding = FAILED;

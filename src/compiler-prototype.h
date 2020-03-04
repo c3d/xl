@@ -72,7 +72,7 @@ public:
     JIT::Function_p     Function();
     virtual bool        IsInterfaceOnly();
     Scope *             FunctionScope();
-    Context *           FunctionContext();
+    Context &           FunctionContext();
 };
 
 XL_END

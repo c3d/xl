@@ -112,7 +112,7 @@ Scope *CompilerPrototype::FunctionScope()
 }
 
 
-Context *CompilerPrototype::FunctionContext()
+Context &CompilerPrototype::FunctionContext()
 // ----------------------------------------------------------------------------
 //   The declaration context for the function
 // ----------------------------------------------------------------------------
