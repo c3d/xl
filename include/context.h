@@ -295,7 +295,7 @@ public:
                                lookup_fn lookup, void *info,
                                bool recurse=true);
     Rewrite *           Reference(Tree *form, bool recurse=true);
-    Tree *              DeclaredForm(Tree *form);
+    Tree *              DeclaredPattern(Tree *form);
     Tree *              Bound(Tree *form,bool recurse=true);
     Tree *              Bound(Tree *form, bool rec, Rewrite_p *rw,Scope_p *ctx);
     Tree *              Named(text name, bool recurse=true);

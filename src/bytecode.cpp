@@ -538,7 +538,7 @@ struct FormErrorOp : Op
     Tree_p self;
     virtual Op *        Run(Data data)
     {
-        Ooops("No form matches $1", self);
+        Ooops("No pattern matches $1", self);
         return success;
     }
     virtual kstring     OpID()  { return "error"; };
@@ -1424,7 +1424,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
 
         case POSTFIX:
         {
-            // Check if there is a form that matches
+            // Check if there is a pattern that matches
             Ooops("No postfix matches $1", what);
             return false;
         }

@@ -652,7 +652,7 @@ Tree *ArgumentMatch::CompileClosure(Tree *source)
         }
         else
         {
-            // This is a local 'name' like a form definition
+            // This is a local 'name' like a pattern definition
             // We don't need to pass these around.
             record(closure_warning, "Name %t not allocated in LLVM", name);
         }
@@ -1839,13 +1839,13 @@ static Tree * lookupRewrite(Scope *evalScope,
     ExpressionReduction &reduction = *((ExpressionReduction *) info);
     CompileAction &compile = reduction.compile;
     O1CompileUnit &unit = compile.unit;
-    Tree *form = PatternBase(decl->left);
+    Tree *pattern = PatternBase(decl->left);
     Tree *body = decl->right;
     bool foundUnconditional = false;
     Context context(evalScope);
     record(rewrites,
            "Candidate %t declaration %t in declaration scope %t",
-           form, decl->left, declScope);
+           pattern, decl->left, declScope);
 
     // Create the invokation point
     reduction.NewForm();
@@ -1853,7 +1853,7 @@ static Tree * lookupRewrite(Scope *evalScope,
     ArgumentMatch match(compile, what, evalScope, declScope, isDataForm);
     Tree *matched = what->Do(match);
     Tree *returnType = reduction.returnType;
-    record(rewrites, "Candidate %t %+s", form, matched ? "ok" : "failed");
+    record(rewrites, "Candidate %t %+s", pattern, matched ? "ok" : "failed");
 
     if (matched)
     {

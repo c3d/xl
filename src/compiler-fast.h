@@ -301,7 +301,7 @@ public:
     Context     argContext;     // Symbols where we declare arguments
     Tree_p      test;           // Tree we test
     Tree_p      defined;        // Tree beind defined, e.g. 'sin' in 'sin X'
-    TreeList    parms;          // Formatl parameters in defined form
+    TreeList    parms;          // Formal parameters in defined pattern
     TreeList    args;           // Arguments (values passed for parameters)
     bool        data;           // Is a data form
 };

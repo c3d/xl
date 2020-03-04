@@ -97,10 +97,10 @@ Infix *CDeclaration::Declaration(Tree *input)
             if (Name *namedParm = input->AsName())
                 if (namedParm->value == "")
                     nullParms = true;
-            Tree *form = nullParms
+            Tree *pattern = nullParms
                 ? name
                 : (Tree *) new Prefix(name, input, position);
-            Infix *decl = new Infix("as", form, returnType, position);
+            Infix *decl = new Infix("as", pattern, returnType, position);
 
             Name *C = new Name("C", source->Position());
             Prefix *cdecl = new Prefix(C, name);

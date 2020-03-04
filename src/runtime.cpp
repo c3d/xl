@@ -139,7 +139,7 @@ Tree *xl_form_error(Scope *scope, Tree *what)
     }
     Save<bool> saveRecursive(recursive, true);
 
-    Ooops("No form match $1 at runtime", what);
+    Ooops("No pattern match $1 at runtime", what);
     return what;
 }
 

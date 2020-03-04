@@ -48,7 +48,7 @@ RECORDER(parameter_bindings, 64, "Looking up parameters in functions");
 XL_BEGIN
 
 CompilerFunction::CompilerFunction(CompilerUnit &unit,
-                                   Tree *form,
+                                   Tree *pattern,
                                    Tree *body,
                                    Types *types,
                                    JIT::FunctionType_p ftype,
@@ -58,7 +58,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
 // ----------------------------------------------------------------------------
 //  This is used for a top-level function, which is turned into an eval_fn
 //  There is no closure since nothing can be captured from enclosing scope
-    : CompilerPrototype(unit, form, types, ftype, name),
+    : CompilerPrototype(unit, pattern, types, ftype, name),
       compiler(unit.compiler),
       jit(unit.jit),
       body(body),
@@ -71,7 +71,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
 {
     InitializeArgs();
     record(compiler_function, "Created %p for %t in %p value %v",
-           this, form, types, function);
+           this, pattern, types, function);
 }
 
 
@@ -80,8 +80,8 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
 // ----------------------------------------------------------------------------
 //   Create new compiler function for optimized evaluation functions
 // ----------------------------------------------------------------------------
-//   This is used by rewrites like [Form is Body].
-//   In that case, 'parms' have been generated to match [Form] free parms,
+//   This is used by rewrites like [Pattern is Body].
+//   In that case, 'parms' have been generated to match [Pattern] free parms,
 //   and we build a closure type if [Body] had captures from the environment
     : CompilerPrototype(caller, rc),
       compiler(caller.compiler),
@@ -97,7 +97,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
     InitializeArgs(rc);
     record(compiler_function,
            "Created optimized %p called by %p for %t function %v",
-           this, &caller, form, function);
+           this, &caller, pattern, function);
 }
 
 
@@ -106,7 +106,7 @@ CompilerFunction::~CompilerFunction()
 //   Delete compiler function
 // ----------------------------------------------------------------------------
 {
-    record(compiler_unit, "Deleted function %p for %t", this, form);
+    record(compiler_unit, "Deleted function %p for %t", this, pattern);
 }
 
 
@@ -224,7 +224,7 @@ eval_fn CompilerFunction::Finalize(bool createCode)
         jit.Print("LLVM IR before verification and optimizations:\n", function);
     if (jit.VerifyFunction(function))
     {
-        Ooops("Generated code verification failed for $1 (internal)", form);
+        Ooops("Generated code verification failed for $1 (internal)", pattern);
         return nullptr;
     }
     jit.Finalize(function);
@@ -255,7 +255,7 @@ void CompilerFunction::InitializeArgs()
     JIT::Value_p scope = *args++;
     JIT::Value_p self = *args++;
 
-    // Insert 'self', mapping to form, and 'scope' for the evaluation scope
+    // Insert 'self', mapping to pattern, and 'scope' for the evaluation scope
     values[scope_type] = scope;
     values[xl_self] = self;
 }
@@ -279,11 +279,11 @@ void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
         values[binding.name] = input;
     }
 
-    // Insert 'self', mapping to form, and 'scope' for the evaluation scope
+    // Insert 'self', mapping to pattern, and 'scope' for the evaluation scope
     Scope *scope = rc->value_types->TypesScope();
-    Tree *form = rc->RewriteForm();
+    Tree *pattern = rc->RewritePattern();
     values[scope_type] = data.PointerConstant(compiler.scopePtrTy, scope);
-    values[xl_self] = data.PointerConstant(compiler.treePtrTy, form);
+    values[xl_self] = data.PointerConstant(compiler.treePtrTy, pattern);
 }
 
 
@@ -301,7 +301,7 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
     {
         Tree *body = rc->RewriteBody();
 
-        // Check if we have C or data forms
+        // Check if we have C or data patterns
         Types::Decl d = Types::RewriteCategory(rc);
         bool isC = d == Types::Decl::C;
         bool isData = d == Types::Decl::DATA;
@@ -323,10 +323,10 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
         {
             if (isData)
                 retTy = StructureType(rc->RewriteSignature(),
-                                      rc->RewriteForm(),
+                                      rc->RewritePattern(),
                                       base);
             else
-                retTy = ValueMachineType(rc->RewriteForm(), true);
+                retTy = ValueMachineType(rc->RewritePattern(), true);
             if (!retTy)
                 retTy = jit.VoidType();
             rc->RewriteType(retTy);
@@ -354,9 +354,9 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
             {
                 // Constructor for a 'data' form, e.g. [X,Y is self]
                 unsigned index = 0;
-                Tree *form = PatternBase(rc->RewriteForm());
+                Tree *pattern = PatternBase(rc->RewritePattern());
                 JIT::Value_p box = evalfn.returned;
-                JIT::Value_p retv = evalfn.Data(form, box, index);
+                JIT::Value_p retv = evalfn.Data(pattern, box, index);
                 evalfn.Return(body, retv);
             }
 
@@ -372,7 +372,7 @@ JIT::Value_p CompilerFunction::Data(Tree *expr,
                                     JIT::Value_p box,
                                     unsigned &index)
 // ----------------------------------------------------------------------------
-//    Generate a constructor for a data form, e.g. [X,Y is self]
+//    Generate a constructor for a data pattern, e.g. [X,Y is self]
 // ----------------------------------------------------------------------------
 {
     JIT::Value_p left, right, child;
@@ -397,7 +397,7 @@ JIT::Value_p CompilerFunction::Data(Tree *expr,
         Context *context = types->TypesContext();
         record(parameter_bindings, "Looking up %t in context %p",
                expr, (Context *) context);
-        Tree *existing = context->DeclaredForm(expr);
+        Tree *existing = context->DeclaredPattern(expr);
         assert (existing || !"TypeAnalysis didn't realize a name was missing");
 
         // Arguments bound here are returned directly as a tree
@@ -970,7 +970,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         }
         break;
     case NAME:
-        if (Tree *declared = context->DeclaredForm(type))
+        if (Tree *declared = context->DeclaredPattern(type))
             if (declared != base)
                 base = declared;
 
@@ -1128,7 +1128,7 @@ void CompilerFunction::BoxedTreeType(JIT::Signature &sig, Tree *what)
         break;
 
     case NAME:
-        what = types->TypesContext()->DeclaredForm(what);
+        what = types->TypesContext()->DeclaredPattern(what);
         sig.push_back(ValueMachineType(what));
         break;
 

@@ -492,7 +492,7 @@ Tree *Types::TypeOf(Tree *expr)
         // Lookup original name
         Name *name = (Name *) expr;
         if (name->value == "self")
-            if (Tree *declared = context->DeclaredForm(expr))
+            if (Tree *declared = context->DeclaredPattern(expr))
                 if (declared != expr)
                     type = TypeOf(declared);
         break;
@@ -561,7 +561,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
     case NAME:
     {
         // Replace name with reference type to minimize size of lookup tables
-        if (Tree *def = context->DeclaredForm(expr))
+        if (Tree *def = context->DeclaredPattern(expr))
             if (Name *name = def->AsName())
                 expr = name;
 
@@ -734,7 +734,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     if (declaration)
         return TypeOf(what);
 
-    // Test if we are already trying to evaluate this particular form
+    // Test if we are already trying to evaluate this particular pattern
     rcall_map::iterator found = rcalls.find(what);
     bool recursive = found != rcalls.end();
     if (recursive)

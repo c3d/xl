@@ -242,12 +242,12 @@ bool Context::ProcessDeclarations(Tree *what)
 }
 
 
-static void ValidateNames(Tree *form)
+static void ValidateNames(Tree *pattern)
 // ----------------------------------------------------------------------------
 //   Check that we have only valid names in the pattern
 // ----------------------------------------------------------------------------
 {
-    switch(form->Kind())
+    switch(pattern->Kind())
     {
     case INTEGER:
     case REAL:
@@ -255,21 +255,21 @@ static void ValidateNames(Tree *form)
         break;
     case NAME:
     {
-        Name *name = (Name *) form;
+        Name *name = (Name *) pattern;
         if (name->value.length() && !isalpha(name->value[0]))
             Ooops("The pattern variable $1 is not a name", name);
         break;
     }
     case INFIX:
     {
-        Infix *infix = (Infix *) form;
+        Infix *infix = (Infix *) pattern;
         ValidateNames(infix->left);
         ValidateNames(infix->right);
         break;
     }
     case PREFIX:
     {
-        Prefix *prefix = (Prefix *) form;
+        Prefix *prefix = (Prefix *) pattern;
         if (prefix->left->Kind() != NAME)
             ValidateNames(prefix->left);
         ValidateNames(prefix->right);
@@ -277,7 +277,7 @@ static void ValidateNames(Tree *form)
     }
     case POSTFIX:
     {
-        Postfix *postfix = (Postfix *) form;
+        Postfix *postfix = (Postfix *) pattern;
         if (postfix->right->Kind() != NAME)
             ValidateNames(postfix->right);
         ValidateNames(postfix->left);
@@ -285,7 +285,7 @@ static void ValidateNames(Tree *form)
     }
     case BLOCK:
     {
-        Block *block = (Block *) form;
+        Block *block = (Block *) pattern;
         ValidateNames(block->child);
         break;
     }
@@ -293,12 +293,12 @@ static void ValidateNames(Tree *form)
 }
 
 
-Rewrite *Context::Define(Tree *form, Tree *value, bool overwrite)
+Rewrite *Context::Define(Tree *pattern, Tree *value, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
-    Infix *decl = new Infix("is", form, value, form->Position());
+    Infix *decl = new Infix("is", pattern, value, pattern->Position());
     return Enter(decl, overwrite);
 }
 
@@ -660,24 +660,24 @@ static Tree *findReference(Scope *, Scope *, Tree *what, Infix *decl, void *)
 }
 
 
-Rewrite *Context::Reference(Tree *form, bool recurse)
+Rewrite *Context::Reference(Tree *pattern, bool recurse)
 // ----------------------------------------------------------------------------
-//   Find an existing definition in the symbol table that matches the form
+//   Find an existing definition in the symbol table that matches the pattern
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(form, findReference, nullptr, recurse))
+    if (Tree *result = Lookup(pattern, findReference, nullptr, recurse))
         if (Rewrite *decl = result->As<Rewrite>())
             return decl;
     return nullptr;
 }
 
 
-Tree *Context::DeclaredForm(Tree *form)
+Tree *Context::DeclaredPattern(Tree *pattern)
 // ----------------------------------------------------------------------------
 //   Find the original declaration associated to a given form
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(form, findReference, nullptr, true))
+    if (Tree *result = Lookup(pattern, findReference, nullptr, true))
         if (Rewrite *decl = result->As<Rewrite>())
             return PatternBase(decl->left);
     return nullptr;
@@ -686,7 +686,7 @@ Tree *Context::DeclaredForm(Tree *form)
 
 static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
-//   Return the value bound to a given form
+//   Return the value bound to a given pattern
 // ----------------------------------------------------------------------------
 {
     if (what->IsLeaf())
@@ -699,7 +699,7 @@ static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 static Tree *findValueX(Scope *, Scope *scope,
                         Tree *what, Infix *decl, void *info)
 // ----------------------------------------------------------------------------
-//   Return the value bound to a given form, as well as its scope and decl
+//   Return the value bound to a given pattern, as well as its scope and decl
 // ----------------------------------------------------------------------------
 {
     if (what->IsLeaf())
@@ -712,23 +712,26 @@ static Tree *findValueX(Scope *, Scope *scope,
 }
 
 
-Tree *Context::Bound(Tree *form, bool recurse)
+Tree *Context::Bound(Tree *pattern, bool recurse)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
-    Tree *result = Lookup(form, findValue, nullptr, recurse);
+    Tree *result = Lookup(pattern, findValue, nullptr, recurse);
     return result;
 }
 
 
-Tree *Context::Bound(Tree *form, bool recurse, Rewrite_p *rewrite, Scope_p *ctx)
+Tree *Context::Bound(Tree *pattern,
+                     bool recurse,
+                     Rewrite_p *rewrite,
+                     Scope_p *ctx)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
     Prefix info(nullptr, nullptr);
-    Tree *result = Lookup(form, findValueX, &info, recurse);
+    Tree *result = Lookup(pattern, findValueX, &info, recurse);
     if (ctx)
         *ctx = info.left->As<Scope>();
     if (rewrite)

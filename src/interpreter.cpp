@@ -813,7 +813,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
 
         case POSTFIX:
         {
-            // Check if there is a form that matches
+            // Check if there is a pattern that matches
             Ooops("No postifx matches $1", what);
             return encloseResult(context, originalScope, what);
         }

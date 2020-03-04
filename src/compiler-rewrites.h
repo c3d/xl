@@ -6,7 +6,7 @@
 //
 // File description:
 //
-//    Check if a tree matches the form on the left of a rewrite
+//    Check if a tree matches the pattern on the left of a rewrite
 //
 //
 //
@@ -100,7 +100,7 @@ typedef std::vector<RewriteKind> RewriteKinds;
 
 struct RewriteCandidate
 // ----------------------------------------------------------------------------
-//    A rewrite candidate for a particular tree form
+//    A rewrite candidate for a particular tree pattern
 // ----------------------------------------------------------------------------
 {
     RewriteCandidate(Infix *rewrite, Scope *scope, Types *types);
@@ -122,11 +122,11 @@ struct RewriteCandidate
     BindingStrength     BindBinary(Tree *form1, Tree *value1,
                                    Tree *form2, Tree *value2);
     bool                Unify(Tree *valueType, Tree *formType,
-                              Tree *value, Tree *form,
+                              Tree *value, Tree *pattern,
                               bool declaration = false);
 
     // Code generation
-    Tree *              RewriteForm()           { return rewrite->left; }
+    Tree *              RewritePattern()        { return rewrite->left; }
     Tree *              RewriteBody()           { return rewrite->right; }
     JIT::Function_p     Prototype(JIT &jit);
     JIT::FunctionType_p FunctionType(JIT &jit);
@@ -157,7 +157,7 @@ typedef std::vector<RewriteCandidate_p> RewriteCandidates;
 
 struct RewriteCalls
 // ----------------------------------------------------------------------------
-//   Identify the way to invoke rewrites for a particular form
+//   Identify the way to invoke rewrites for a particular pattern
 // ----------------------------------------------------------------------------
 {
     RewriteCalls(Types *ti);

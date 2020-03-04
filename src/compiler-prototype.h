@@ -52,7 +52,7 @@ class CompilerPrototype
 {
 protected:
     CompilerUnit &      unit;       // The unit we compile from
-    Tree_p              form;       // Interface for this function
+    Tree_p              pattern;    // Interface for this function
     Types_p             types;      // Type system for this function
     JIT::Function_p     function;   // The LLVM function we are building
 
@@ -61,7 +61,7 @@ protected:
 public:
     // Constructors for the top-level functions
     CompilerPrototype(CompilerUnit &unit,
-                      Tree *form,
+                      Tree *pattern,
                       Types *types,
                       JIT::FunctionType_p ftype,
                       text name);

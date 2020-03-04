@@ -4,7 +4,7 @@
 //
 // File description:
 //
-//    Check if a tree matches the form on the left of a rewrite
+//    Check if a tree matches the pattern on the left of a rewrite
 //
 //
 //
@@ -119,24 +119,24 @@ Tree *RewriteCandidate::ValueType(Tree *value)
 }
 
 
-BindingStrength RewriteCandidate::Bind(Tree *form,
+BindingStrength RewriteCandidate::Bind(Tree *pattern,
                                        Tree *value)
 // ----------------------------------------------------------------------------
-//   Attempts to bind 'value' to the pattern form given in 'form'
+//   Attempts to bind 'value' to the given 'pattern'
 // ----------------------------------------------------------------------------
 {
-    if (form == value)
+    if (pattern == value)
         return PERFECT;
 
     static const char *sname[] = { "impossible", "possible", "unconditional" };
     Tree *vtype = nullptr;
-    kind k = form->Kind();
+    kind k = pattern->Kind();
 
     switch(k)
     {
 #define BIND_CONSTANT(Type, mtype)                                      \
         {                                                               \
-            Type *f = (Type *) form;                                    \
+            Type *f = (Type *) pattern;                                 \
             if (Type *iv = value->As##Type())                           \
             {                                                           \
                 BindingStrength result =                                \
@@ -144,21 +144,21 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
                 record(argument_bindings,                               \
                        "Binding " #mtype " constant %t to %t in %p "    \
                        "is %+s",                                        \
-                       form, value, this, sname[result]);               \
+                       pattern, value, this, sname[result]);            \
                 return result;                                          \
             }                                                           \
             vtype = ValueType(value);                                   \
-            if (Unify(vtype, mtype##_type, value, form))                \
+            if (Unify(vtype, mtype##_type, value, pattern))             \
             {                                                           \
-                Condition(value, form);                                 \
+                Condition(value, pattern);                              \
                 record(argument_bindings,                               \
                        "Binding " #mtype " %t to %t in %p is possible", \
-                       form, value, this);                              \
+                       pattern, value, this);                           \
                 return POSSIBLE;                                        \
             }                                                           \
             record(argument_bindings,                                   \
                    "Binding " #mtype " %t to %t in %p type mismatch",   \
-                   form, value, this);                                  \
+                   pattern, value, this);                               \
             return FAILED;                                              \
         }
 
@@ -169,7 +169,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
     case NAME:
     {
-        Name *name = (Name *) form;
+        Name *name = (Name *) pattern;
         bool needArg = true;
 
         // Ignore function name if that is all we have
@@ -180,7 +180,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             defined_name = name->value;
             record(argument_bindings,
                    "Binding identical name %t to %t in %p is unconditional",
-                   form, value, this);
+                   pattern, value, this);
             return PERFECT;     // Will degrade to 'POSSIBLE' if there are args
         }
 
@@ -190,23 +190,23 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         {
             record(argument_bindings,
                    "Binding identical name %t to %t in %p type mismatch",
-                   form, value, this);
+                   pattern, value, this);
             return FAILED;
         }
 
         // Test if the name is already bound, and if so, if trees fail to match
         Context *context = binding_types->TypesContext();
-        if (Tree *bound = context->DeclaredForm(name))
+        if (Tree *bound = context->DeclaredPattern(name))
         {
             if (bound != name)
             {
                 Tree *boundType = ValueType(bound);
-                if (!Unify(vtype, boundType, value, form))
+                if (!Unify(vtype, boundType, value, pattern))
                 {
                     record(argument_bindings,
                            "Binding duplicate name %t to %t in %p "
                            "type mismatch",
-                           form, value, this);
+                           pattern, value, this);
                     return FAILED;
                 }
 
@@ -214,9 +214,9 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
                 record(argument_bindings,
                        "Binding duplicate name %t to %t in %p "
                        "check values",
-                       form, value, this);
+                       pattern, value, this);
 
-                Condition(value, form);
+                Condition(value, pattern);
 
                 // Since we are testing an existing value, don't pass arg
                 needArg = false;
@@ -225,11 +225,11 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
         // Check if we can unify the value and name types
         Tree *nameType = binding_types->DeclarationType(name);
-        if (!Unify(vtype, nameType, value, form))
+        if (!Unify(vtype, nameType, value, pattern))
         {
             record(argument_bindings,
                    "Binding name %t to %t in %p type mismatch",
-                   form, value, this);
+                   pattern, value, this);
             return FAILED;
         }
 
@@ -238,47 +238,47 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         {
             record(argument_bindings,
                    "Binding name %t to %t in %p context %p",
-                   form, value, this, (Context *) context);
-            context->Define(form, value, true);
+                   pattern, value, this, (Context *) context);
+            context->Define(pattern, value, true);
             bindings.push_back(RewriteBinding(name, value));
         }
         else
         {
             record(argument_bindings,
                    "Binding name %t to %t in %p has no separate argument",
-                   form, value, this);
+                   pattern, value, this);
         }
         return PERFECT;
     }
 
     case INFIX:
     {
-        Infix *fi = (Infix *) form;
+        Infix *fi = (Infix *) pattern;
 
         // Check type declarations
         if (IsTypeAnnotation(fi))
         {
             // Assign the given type to the declared expression
-            Tree *form = fi->left;
+            Tree *pattern = fi->left;
             Tree *declType = fi->right;
-            vtype = binding_types->AssignType(form, declType);
+            vtype = binding_types->AssignType(pattern, declType);
 
             // Check if we can bind the value from what we know
-            if (Bind(form, value) == FAILED)
+            if (Bind(pattern, value) == FAILED)
             {
                 record(argument_bindings,
                        "Binding name of typed %t to %t in %p failed",
-                       form, value, this);
+                       pattern, value, this);
                 return FAILED;
             }
 
             // Add type binding with the given type
             Tree *valueType = binding_types->Type(value);
-            if (!Unify(valueType, vtype, value, form, true))
+            if (!Unify(valueType, vtype, value, pattern, true))
             {
                 record(argument_bindings,
                        "Binding typed %t to %t in %p type mismatch",
-                       form, value, this);
+                       pattern, value, this);
                 return FAILED;
             }
 
@@ -286,7 +286,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             BindingStrength result = Unconditional() ? PERFECT : POSSIBLE;
             record(argument_bindings,
                    "Binding typed %t to %t in %p %+s",
-                   form, value, this, sname[result]);
+                   pattern, value, this, sname[result]);
             return result;
 
         } // We have an infix :
@@ -297,7 +297,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             {
                 record(argument_bindings,
                        "Binding name of conditional %t to %t in %p failed",
-                       form, value, this);
+                       pattern, value, this);
                 return FAILED;
             }
 
@@ -306,7 +306,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             {
                 record(argument_bindings,
                        "Guard of conditional %t to %t in %p type mismatch",
-                       form, value, this);
+                       pattern, value, this);
                 return FAILED;
             }
 
@@ -316,7 +316,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             {
                 record(argument_bindings,
                        "Binding conditional %t to %t in %p type mismatch",
-                       form, value, this);
+                       pattern, value, this);
                 return FAILED;
             }
 
@@ -326,7 +326,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
             // The guard makes the binding weak
             record(argument_bindings,
                    "Binding conditional %t to %t in %p added condition",
-                   form, value, this);
+                   pattern, value, this);
             return POSSIBLE;
         }
 
@@ -353,7 +353,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
                 record(argument_bindings,
                        "Binding infix %t to %t in %p is %+s",
-                       form, value, this, sname[left]);
+                       pattern, value, this, sname[left]);
                 return left;
             }
         }
@@ -366,21 +366,21 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p value type mismatch",
-                   form, value, this);
+                   pattern, value, this);
             return FAILED;
         }
 
         // Then check if the type matches
-        if (!Unify(vtype, infix_type, value, form))
+        if (!Unify(vtype, infix_type, value, pattern))
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p type mismatch",
-                   form, value, this);
+                   pattern, value, this);
             return FAILED;
         }
 
         // If we had to evaluate, we need a runtime pattern match (weak binding)
-        TreePosition pos = form->Position();
+        TreePosition pos = pattern->Position();
         Tree *infixLeft  = new Prefix(new Name("left", pos), value);
         BindingStrength left  = Bind(fi->left, infixLeft);
         if (left == FAILED)
@@ -394,7 +394,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p name mismatch",
-                   form, value, this);
+                   pattern, value, this);
             return FAILED;
         }
         Tree *infixRequiredName = new Text(fi->name, pos);
@@ -402,7 +402,7 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
         {
             record(argument_bindings,
                    "Binding infix %t to %t in %p text mismatch",
-                   form, value, this);
+                   pattern, value, this);
             return FAILED;
         }
         Condition(infixName, infixRequiredName);
@@ -413,56 +413,56 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
 
         record(argument_bindings,
                "Binding infix %t to %t in %p is %+s",
-               form, value, this, sname[left]);
+               pattern, value, this, sname[left]);
         return left;
     }
 
     case PREFIX:
     {
-        Prefix *prefixForm = (Prefix *) form;
+        Prefix *prefixPattern = (Prefix *) pattern;
 
         // Must match a postfix with the same name
         BindingStrength ok = FAILED;
         if (Prefix *prefixValue = value->AsPrefix())
         {
-            ok = BindBinary(prefixForm->left,
+            ok = BindBinary(prefixPattern->left,
                             prefixValue->left,
-                            prefixForm->right,
+                            prefixPattern->right,
                             prefixValue->right);
         }
         record(argument_bindings,
                "Binding prefix %t to %t in %p is %+s",
-               form, value, this, sname[ok]);
+               pattern, value, this, sname[ok]);
         return ok;
     }
 
     case POSTFIX:
     {
-        Postfix *postfixForm = (Postfix *) form;
+        Postfix *postfixPattern = (Postfix *) pattern;
 
         // Must match a postfix with the same name
         // REVISIT: Variables that denote a function name...
         BindingStrength ok = FAILED;
         if (Postfix *postfixValue = value->AsPostfix())
         {
-            ok = BindBinary(postfixForm->right,
+            ok = BindBinary(postfixPattern->right,
                             postfixValue->right,
-                            postfixForm->left,
+                            postfixPattern->left,
                             postfixValue->left);
         }
         record(argument_bindings,
                "Binding postfix %t to %t in %p is %+s",
-               form, value, this, sname[ok]);
+               pattern, value, this, sname[ok]);
         return ok;
     }
 
     case BLOCK:
     {
         // Ignore blocks, just look inside
-        Block *block = (Block *) form;
+        Block *block = (Block *) pattern;
         BindingStrength ok = Bind(block->child, value);
         record(argument_bindings, "Binding block %t to %t in %p is %+s",
-               form, value, this, sname[ok]);
+               pattern, value, this, sname[ok]);
         return ok;
     }
     }
@@ -470,39 +470,39 @@ BindingStrength RewriteCandidate::Bind(Tree *form,
     // Default is to return false
     record(argument_bindings,
            "Binding %t to %t in %p: unexpected kind %u",
-           form, value, this, k);
+           pattern, value, this, k);
     return FAILED;
 }
 
 
-BindingStrength RewriteCandidate::BindBinary(Tree *form1, Tree *value1,
-                                             Tree *form2, Tree *value2)
+BindingStrength RewriteCandidate::BindBinary(Tree *pattern1, Tree *value1,
+                                             Tree *pattern2, Tree *value2)
 // ----------------------------------------------------------------------------
-//    Bind a binary form (prefix or postfix)
+//    Bind a binary pattern (prefix or postfix)
 // ----------------------------------------------------------------------------
 {
     // Check if we have the same name as operand, e.g 'sin X' vs 'sin (A+B)'
-    Name *formName = form1->AsName();
-    if (!formName)
+    Name *patternName = pattern1->AsName();
+    if (!patternName)
         return FAILED;
     Name *valueName = value1->AsName();
     if (!valueName)
         return FAILED;
-    if (formName->value != valueName->value)
+    if (patternName->value != valueName->value)
         return FAILED;
     if (!defined)
     {
-        defined = formName;
-        defined_name = "xl." + formName->value;
+        defined = patternName;
+        defined_name = "xl." + patternName->value;
     }
 
 
-    return Bind(form2, value2);
+    return Bind(pattern2, value2);
 }
 
 
-bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
-                             Tree *value, Tree *form,
+bool RewriteCandidate::Unify(Tree *valueType, Tree *patternType,
+                             Tree *value, Tree *pattern,
                              bool declaration)
 // ----------------------------------------------------------------------------
 //   Check unification for types in a given candidate
@@ -511,12 +511,12 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
     Tree *refType = binding_types->DeclaredTypeName(valueType);
 
     record(call_types,
-           "Unify %t as %t with %t as %t", value, valueType, form, formType);
+           "Unify %t as %t with %t as %t", value, valueType, pattern, patternType);
 
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)
     {
-        Tree *vrefType = binding_types->DeclaredTypeName(formType);
+        Tree *vrefType = binding_types->DeclaredTypeName(patternType);
         kind k = valueType->Kind();
         if (k == INTEGER || vrefType == integer_type)
             KindCondition(value, INTEGER);
@@ -537,9 +537,9 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *formType,
     }
 
     // Otherwise, do type inference
-    Tree *unified = binding_types->Unify(valueType, formType);
+    Tree *unified = binding_types->Unify(valueType, patternType);
     unified = binding_types->AssignType(value, unified);
-    unified = binding_types->AssignType(form, unified);
+    unified = binding_types->AssignType(pattern, unified);
     return unified;
 }
 
@@ -670,12 +670,12 @@ Tree *RewriteCalls::Check (Scope *scope,
            binding_types, what, candidate->left);
 
     // Attempt binding / unification of parameters to arguments
-    Tree *form = candidate->left;
-    Tree *defined = PatternBase(form);
-    Tree *declType = AnnotatedType(form);
+    Tree *pattern = candidate->left;
+    Tree *defined = PatternBase(pattern);
+    Tree *declType = AnnotatedType(pattern);
     Tree *type = declType
         ? types->EvaluateType(declType)
-        : types->KnownType(form);
+        : types->KnownType(pattern);
 
     BindingStrength binding = rc->Bind(defined, what);
     if (binding == FAILED)
@@ -717,11 +717,11 @@ Tree *RewriteCalls::Check (Scope *scope,
         }
     }
 
-    // Match the type of the form and declared entity
+    // Match the type of the pattern and declared entity
     if (binding != FAILED && type != nullptr)
     {
-        type = binding_types->AssignType(form, type);
-        if (defined && form != defined)
+        type = binding_types->AssignType(pattern, type);
+        if (defined && pattern != defined)
             type = binding_types->AssignType(defined, type);
     }
 

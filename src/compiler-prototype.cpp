@@ -44,7 +44,7 @@ RECORDER(compiler_prototype, 64, "Function prototypes");
 XL_BEGIN
 
 CompilerPrototype::CompilerPrototype(CompilerUnit &unit,
-                                     Tree *form,
+                                     Tree *pattern,
                                      Types *types,
                                      JIT::FunctionType_p type,
                                      text name)
@@ -52,12 +52,12 @@ CompilerPrototype::CompilerPrototype(CompilerUnit &unit,
 //   Create new compiler prototype (e.g. for a C function)
 // ----------------------------------------------------------------------------
     : unit(unit),
-      form(form),
+      pattern(pattern),
       types(types),
       function(unit.jit.Function(type, name))
 {
     record(compiler_prototype, "Created prototype %p for %t as %v",
-           this, form, function);
+           this, pattern, function);
 }
 
 
@@ -67,12 +67,12 @@ CompilerPrototype::CompilerPrototype(CompilerPrototype &caller,
 //    Create a new compiler prototype for rewrites
 // ----------------------------------------------------------------------------
     : unit(caller.unit),
-      form(rc->RewriteForm()),
+      pattern(rc->RewritePattern()),
       types(rc->binding_types),
       function(rc->Prototype(unit.jit))
 {
     record(compiler_prototype, "Created rewrite %p for %t as %v",
-           this, form, function);
+           this, pattern, function);
 }
 
 
@@ -81,7 +81,7 @@ CompilerPrototype::~CompilerPrototype()
 //   Delete compiler function
 // ----------------------------------------------------------------------------
 {
-    record(compiler_unit, "Deleted function %p for %t", this, form);
+    record(compiler_unit, "Deleted function %p for %t", this, pattern);
 }
 
 

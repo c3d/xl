@@ -42,7 +42,7 @@
 //     type positive_add is matching X+Y when X > 0 and Y > 0
 //
 //  A value can belong to multiple types. For example, 3+5 belongs to
-//  the infix type (since 3+5 is an infix form) as well as to positive_add
+//  the infix type (since 3+5 is an infix) as well as to positive_add
 
 #include "tree.h"
 #include "context.h"

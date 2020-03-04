@@ -69,7 +69,7 @@ protected:
 public:
     // Constructors for the top-level functions
     CompilerFunction(CompilerUnit &unit,
-                     Tree *form,
+                     Tree *pattern,
                      Tree *body,
                      Types *types,
                      JIT::FunctionType_p ftype,
@@ -97,7 +97,7 @@ private:
     void                AddBoxedType(Tree *treeType, JIT::Type_p machineType);
     JIT::Type_p         HasBoxedType(Tree *type);
 
-    JIT::Type_p         ReturnType(Tree *form);
+    JIT::Type_p         ReturnType(Tree *pattern);
     JIT::Type_p         StructureType(Tree *rwform, Tree *type);
     JIT::Type_p         StructureType(const JIT::Signature &signature,
                                       Tree *rwform, Tree *type);
@@ -109,16 +109,16 @@ private:
     JIT::Value_p        Compile(Tree *call,
                                 RewriteCandidate *rc,
                                 const JIT::Values &args);
-    JIT::Value_p        Data(Tree *form,
+    JIT::Value_p        Data(Tree *pattern,
                              JIT::Value_p box,
                              unsigned &index);
     JIT::Value_p        Autobox(Tree *source,
                                 JIT::Value_p value,
                                 JIT::Type_p requested);
     JIT::Function_p     UnboxFunction(JIT::Type_p type,
-                                      Tree *form);
+                                      Tree *pattern);
     JIT::Value_p        Unbox(JIT::Value_p arg,
-                              Tree *form,
+                              Tree *pattern,
                               uint &index);
     JIT::Value_p        Primitive(Tree *,
                                   text name,
