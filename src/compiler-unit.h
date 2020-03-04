@@ -7,10 +7,10 @@
 // File description:
 //
 //     Information about a single compilation unit, i.e. the code generated
-//     for a particular tree rerite.
-//
-//
-//
+//     for a particular source file. This corresponds to an LLVM module,
+//     and generates a single eval_fn function, i.e. an evaluation function
+//     taking a Scope and a Tree as input. If the compilation fails, the
+//     Compile() function returns a nullptr.
 //
 //
 //

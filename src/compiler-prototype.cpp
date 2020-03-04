@@ -4,10 +4,10 @@
 //
 // File description:
 //
+//     A function prototype generated in the CompilerUnit
 //
-//
-//
-//
+//     Prototypes are generated for references to external functions
+//     They are also used as a base class for CompilerFunction
 //
 //
 //

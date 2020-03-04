@@ -4,10 +4,10 @@
 //
 // File description:
 //
-//     The type system in XL
+//     Representation of machine-level types for the compiler
 //
-//
-//
+//     This keeps tracks of the boxed representation associated to all
+//     type expressions
 //
 //
 //

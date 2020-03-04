@@ -6,14 +6,15 @@
 //
 // File description:
 //
-//     A function generated in the compiler unit
+//     A function generated in a CompilerUnit
 //
 //     There are, broadly, two kinds of functions being generated:
-//     1. Eval functions, with evalTy as their signature (aka eval_fn)
-//     2. Optimized functions, with arbitrary signatures.
+//     1. CompilerEval functions, with evalTy as their signature (aka eval_fn)
+//     2. CompilerFunction Optimized functions, with arbitrary signatures.
 //
 //     Optimized functions have a 'closure type' as their first argument
 //     if symbols from surrounding contexts were captured during analysis
+//
 //
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3
