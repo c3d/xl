@@ -65,7 +65,7 @@ CompilerExpression::CompilerExpression(CompilerFunction &function)
 
 
 
-JIT::Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
+JIT::Value_p CompilerExpression::Evaluate(Tree *expr)
 // ----------------------------------------------------------------------------
 //   For top-level expressions, make sure we evaluate closures
 // ----------------------------------------------------------------------------
@@ -73,14 +73,9 @@ JIT::Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
     JIT::Value_p result = expr->Do(this);
     if (result)
     {
-        CompilerUnit &unit = function.unit;
         JITBlock &code = function.code;
         JIT::Type_p mtype = code.Type(result);
         function.ValueMachineType(expr, mtype);
-        if (force && unit.IsClosureType(mtype))
-        {
-            /* Invoke closure */
-        }
     }
     return result;
 }
@@ -171,8 +166,8 @@ JIT::Value_p CompilerExpression::Do(Infix *infix)
     // Sequences
     if (IsSequence(infix))
     {
-        JIT::Value_p left = Evaluate(infix->left, true);
-        JIT::Value_p right = Evaluate(infix->right, true);
+        JIT::Value_p left = Evaluate(infix->left);
+        JIT::Value_p right = Evaluate(infix->right);
         if (right)
             return right;
         if (left)

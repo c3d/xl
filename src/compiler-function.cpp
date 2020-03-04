@@ -167,13 +167,13 @@ bool CompilerFunction::IsInterfaceOnly()
 }
 
 
-JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
+JIT::Function_p CompilerFunction::Compile(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Compile a given tree in given function and return the associated value
 // ----------------------------------------------------------------------------
 {
     CompilerExpression expr(*this);
-    JIT::Value_p result = expr.Evaluate(tree, force);
+    JIT::Value_p result = expr.Evaluate(tree);
     if (returned)
         Return(tree, result);
     return function;

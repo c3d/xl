@@ -58,7 +58,7 @@ public:
     CompilerExpression(CompilerFunction &function);
 
 public:
-    value_type  Evaluate(Tree *tree, bool force = false);
+    value_type  Evaluate(Tree *tree);
 
     value_type  Do(Integer *what);
     value_type  Do(Real *what);

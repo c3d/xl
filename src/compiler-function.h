@@ -80,7 +80,7 @@ public:
     bool                IsInterfaceOnly() override;
 
 
-    JIT::Function_p     Compile(Tree *tree, bool forceEvaluation = false);
+    JIT::Function_p     Compile(Tree *tree);
     JIT::Value_p        Return(Tree *tree, JIT::Value_p value);
     eval_fn             Finalize(bool createCode);
 

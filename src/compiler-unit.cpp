@@ -174,7 +174,7 @@ eval_fn CompilerUnit::Compile()
     JIT::Value_p global = function.Function();
     Global(source, global);
 
-    JIT::Value_p returned = function.Compile(source, true);
+    JIT::Value_p returned = function.Compile(source);
     if (!returned)
     {
         Ooops("Compilation for $1 failed", source);
