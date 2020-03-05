@@ -109,6 +109,21 @@ CompilerTypes::~CompilerTypes()
 }
 
 
+CompilerRewriteCalls *CompilerTypes::RewriteCallsFor(Tree *what)
+// ----------------------------------------------------------------------------
+//   Check if we have rewrite calls for this specific expression
+// ----------------------------------------------------------------------------
+{
+    auto it = rcalls.find(what);
+    RewriteCalls *result = it != rcalls.end() ? it->second : nullptr;
+    record(types_calls, "In compiled %p calls for %t are %p (%u entries)",
+           this, what, result, result ? result->EntriesCount() : 0);
+
+    // In a CompilerTypes, we know they are all CompilerRewriteCalls *
+    return (CompilerRewriteCalls *) result;
+}
+
+
 Tree *CompilerTypes::TypeAnalysis(Tree *program)
 // ----------------------------------------------------------------------------
 //   Perform all the steps of type inference on the given program

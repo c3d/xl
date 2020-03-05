@@ -47,6 +47,7 @@
 #include "tree.h"
 #include "context.h"
 #include "llvm-crap.h"
+#include "compiler-rewrites.h"
 #include <map>
 
 
@@ -182,6 +183,8 @@ public:
     void        DumpMachineTypes();
     void        DumpUnifications();
     void        DumpRewriteCalls();
+
+    CompilerRewriteCalls *      RewriteCallsFor(Tree *what);
 
 public:
     GARBAGE_COLLECT(CompilerTypes);

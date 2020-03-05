@@ -74,7 +74,7 @@ public:
                      CompilerTypes *types,
                      JIT::FunctionType_p ftype,
                      text name);
-    CompilerFunction(CompilerFunction &caller, RewriteCandidate *rc);
+    CompilerFunction(CompilerFunction &caller, CompilerRewriteCandidate *rc);
     ~CompilerFunction();
 
     bool                IsInterfaceOnly() override;
@@ -91,7 +91,7 @@ public:
 private:
     // Function interface creation
     void                InitializeArgs();
-    void                InitializeArgs(RewriteCandidate *rc);
+    void                InitializeArgs(CompilerRewriteCandidate *rc);
 
     // Machine types management
     void                AddBoxedType(Tree *treeType, JIT::Type_p machineType);
@@ -107,7 +107,7 @@ private:
 private:
     // Compilation of rewrites and data
     JIT::Value_p        Compile(Tree *call,
-                                RewriteCandidate *rc,
+                                CompilerRewriteCandidate *rc,
                                 const JIT::Values &args);
     JIT::Value_p        Data(Tree *pattern,
                              JIT::Value_p box,

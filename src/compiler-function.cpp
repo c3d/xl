@@ -76,7 +76,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
 
 
 CompilerFunction::CompilerFunction(CompilerFunction &caller,
-                                   RewriteCandidate *rc)
+                                   CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Create new compiler function for optimized evaluation functions
 // ----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ void CompilerFunction::InitializeArgs()
 }
 
 
-void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
+void CompilerFunction::InitializeArgs(CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Initialize the arguments and return statements for optimized functions
 // ----------------------------------------------------------------------------
@@ -288,7 +288,7 @@ void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
 
 
 JIT::Value_p CompilerFunction::Compile(Tree *call,
-                                       RewriteCandidate *rc,
+                                       CompilerRewriteCandidate *rc,
                                        const JIT::Values &args)
 // ----------------------------------------------------------------------------
 //    Compile a given rewrite for a tree

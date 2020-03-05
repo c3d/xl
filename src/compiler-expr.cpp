@@ -260,24 +260,18 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 
     record(compiler_expr, "Call %t", call);
     CompilerTypes *types = function.types;
-    rcall_map &rcalls = types->TypesRewriteCalls();
-    rcall_map::iterator found = rcalls.find(call);
-    record(types_calls, "Looking up %t in %p (%u entries)",
-           call, types, rcalls.size());
-    if (mayfail && found == rcalls.end())
+    CompilerRewriteCalls *rc = types->RewriteCallsFor(call);
+    if (mayfail && rc == nullptr)
         return nullptr;
-    assert(found != rcalls.end() || !"Type analysis botched on expression");
-
-    RewriteCalls *rc = (*found).second;
-    RewriteCandidates &calls = rc->candidates;
+    assert(rc || !"Type analysis botched on expression");
 
     // Optimize the frequent case where we have a single call candidate
-    uint i, max = calls.size();
+    uint i, max = rc->EntriesCount();
     record(compiler_expr, "Call %t has %u candidates", call, max);
     if (max == 1)
     {
         // We now evaluate in that rewrite's type system
-        RewriteCandidate* cand = calls[0];
+        CompilerRewriteCandidate* cand = rc->Candidate(0);
         if (cand->Unconditional())
         {
             result = DoRewrite(call, cand);
@@ -301,7 +295,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     for (i = 0; i < max; i++)
     {
         // Now evaluate in that candidate's type system
-        RewriteCandidate *cand = calls[i];
+        CompilerRewriteCandidate *cand = rc->Candidate(i);
         Save<value_map> saveComputed(computed, computed);
         JIT::Value_p condition = nullptr;
 
@@ -401,7 +395,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 }
 
 
-JIT::Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
+JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
+                                           CompilerRewriteCandidate *cand)
 // ----------------------------------------------------------------------------
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------

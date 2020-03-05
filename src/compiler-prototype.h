@@ -65,7 +65,7 @@ public:
                       CompilerTypes *types,
                       JIT::FunctionType_p ftype,
                       text name);
-    CompilerPrototype(CompilerPrototype &caller, RewriteCandidate *rc);
+    CompilerPrototype(CompilerPrototype &caller, CompilerRewriteCandidate *rc);
     ~CompilerPrototype();
 
 public:

@@ -62,7 +62,7 @@ CompilerPrototype::CompilerPrototype(CompilerUnit &unit,
 
 
 CompilerPrototype::CompilerPrototype(CompilerPrototype &caller,
-                                     RewriteCandidate *rc)
+                                     CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //    Create a new compiler prototype for rewrites
 // ----------------------------------------------------------------------------

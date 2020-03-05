@@ -71,6 +71,7 @@ SOURCES_VARIANT_lib     =			\
 	options.cpp				\
 	parser.cpp				\
 	renderer.cpp				\
+	rewrites.cpp				\
 	runtime.cpp				\
 	scanner.cpp				\
 	serializer.cpp				\
