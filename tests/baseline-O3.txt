@@ -1,2 +1,10 @@
 O3/optimized-library-writeln-list.xl
+O3/extern-writeln-hello-world-integer-puts.xl
+O3/optimized-builtin-right.xl
 O3/optimized-factorial.xl
+O3/optimized-return-self-tree.xl
+O3/optimized-self-comma-list.xl
+O3/optimized-builtin-kind-block.xl
+O3/optimized-builtin-left.xl
+O3/extern-writeln-hello-world.xl
+O3/unknown-external.xl
