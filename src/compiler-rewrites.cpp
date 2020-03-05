@@ -50,6 +50,23 @@ XL_BEGIN
 
 // ============================================================================
 //
+//   Bug workarounds
+//
+// ============================================================================
+
+// Workaround unsatisfied symbol with GCC
+#ifndef __clang__
+#define INSTANTIATE_GC(Object)                                          \
+    template<> Allocator<Object> *Allocator<Object>::allocator = nullptr;
+
+INSTANTIATE_GC(Types);
+INSTANTIATE_GC(CompilerRewriteCalls);
+INSTANTIATE_GC(CompilerRewriteCandidate);
+#endif // __clang__
+
+
+// ============================================================================
+//
 //   Compiler implementation of rewrite checks
 //
 // ============================================================================
