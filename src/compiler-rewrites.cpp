@@ -48,6 +48,12 @@
 
 XL_BEGIN
 
+// ============================================================================
+//
+//   Compiler implementation of rewrite checks
+//
+// ============================================================================
+
 CompilerRewriteCandidate::CompilerRewriteCandidate(Infix *rewrite,
                                                    Scope *scope,
                                                    CompilerTypes *types)
@@ -55,6 +61,14 @@ CompilerRewriteCandidate::CompilerRewriteCandidate(Infix *rewrite,
 //   Create a rewrite candidate within the given types
 // ----------------------------------------------------------------------------
     : RewriteCandidate(rewrite, scope, types)
+{
+}
+
+
+CompilerRewriteCandidate::~CompilerRewriteCandidate()
+// ----------------------------------------------------------------------------
+//   Destructor
+// ----------------------------------------------------------------------------
 {}
 
 

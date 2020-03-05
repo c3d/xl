@@ -93,6 +93,14 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite,
 {}
 
 
+RewriteCandidate::~RewriteCandidate()
+// ----------------------------------------------------------------------------
+//    Destructor
+// ----------------------------------------------------------------------------
+{}
+
+
+
 Tree *RewriteCandidate::ValueType(Tree *value)
 // ----------------------------------------------------------------------------
 //   Return the value type for this value, and associated calls

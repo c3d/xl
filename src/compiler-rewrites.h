@@ -54,6 +54,7 @@ struct CompilerRewriteCandidate : public RewriteCandidate
 //    This has additional machine-type information
 {
     CompilerRewriteCandidate(Infix *rewrite, Scope *scope, CompilerTypes *);
+    virtual ~CompilerRewriteCandidate();
 
     // Machine-level information
     JIT::Function_p     Prototype(JIT &jit);

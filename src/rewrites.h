@@ -103,6 +103,8 @@ struct RewriteCandidate
 // ----------------------------------------------------------------------------
 {
     RewriteCandidate(Infix *rewrite, Scope *scope, Types *types);
+    virtual ~RewriteCandidate();
+
     void Condition(Tree *value, Tree *test)
     {
         conditions.push_back(RewriteCondition(value, test));
