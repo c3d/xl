@@ -460,7 +460,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
     // Save the type of the return value
     if (result)
     {
-        CompilerTypes *vtypes = cand->value_types;
+        CompilerTypes *vtypes = cand->Arguments();
         Tree *base = vtypes->CodegenType(call);
         JIT::Type_p retTy = code.Type(result);
         function.AddBoxedType(base, retTy);

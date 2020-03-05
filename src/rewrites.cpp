@@ -35,11 +35,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-#include "compiler-rewrites.h"
-#include "compiler-unit.h"
-#include "compiler-function.h"
-#include "compiler-types.h"
-#include "compiler.h"
+#include "rewrites.h"
+#include "types.h"
 #include "save.h"
 #include "errors.h"
 #include "renderer.h"
@@ -81,7 +78,7 @@ bool RewriteBinding::IsDeferred()
 
 RewriteCandidate::RewriteCandidate(Infix *rewrite,
                                    Scope *scope,
-                                   CompilerTypes *types)
+                                   Types *types)
 // ----------------------------------------------------------------------------
 //   Create a rewrite candidate within the given types
 // ----------------------------------------------------------------------------
@@ -89,7 +86,7 @@ RewriteCandidate::RewriteCandidate(Infix *rewrite,
       scope(scope),
       bindings(),
       value_types(types),
-      binding_types(new CompilerTypes(scope, rewrite, types)),
+      binding_types(types->DerivedTypesInScope(scope, rewrite)),
       type(nullptr),
       defined(nullptr),
       defined_name()
@@ -584,7 +581,7 @@ void RewriteCandidate::Dump()
 //
 // ============================================================================
 
-RewriteCalls::RewriteCalls(CompilerTypes *types)
+RewriteCalls::RewriteCalls(Types *types)
 // ----------------------------------------------------------------------------
 //   Create a new type context to evaluate the calls for a rewrite
 // ----------------------------------------------------------------------------
@@ -614,7 +611,7 @@ Tree *RewriteCalls::Check (Scope *scope,
     RewriteCandidate *rc = new RewriteCandidate(candidate, scope, types);
 
     // All the following is in candidate types
-    CompilerTypes *binding_types = rc->binding_types;
+    Types *binding_types = rc->Parameters();
     record(types, "CompilerTypes %p created for bindings of %t in candidate %t",
            binding_types, what, candidate->left);
 
@@ -648,7 +645,7 @@ Tree *RewriteCalls::Check (Scope *scope,
         // Check built-ins and C functions
         if (binding != FAILED)
         {
-            builtin = CompilerTypes::RewriteCategory(rc) != CompilerTypes::Decl::NORMAL;
+            builtin = Types::RewriteCategory(rc) != Types::Decl::NORMAL;
             if (!builtin)
             {
                 // Process declarations in the initializer

@@ -68,7 +68,7 @@ CompilerPrototype::CompilerPrototype(CompilerPrototype &caller,
 // ----------------------------------------------------------------------------
     : unit(caller.unit),
       pattern(rc->RewritePattern()),
-      types(rc->binding_types),
+      types(rc->Parameters()),
       function(rc->Prototype(unit.jit))
 {
     record(compiler_prototype, "Created rewrite %p for %t as %v",

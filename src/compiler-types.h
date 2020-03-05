@@ -44,6 +44,7 @@
 //  A value can belong to multiple types. For example, 3+5 belongs to
 //  the infix type (since 3+5 is an infix) as well as to positive_add
 
+#include "types.h"
 #include "tree.h"
 #include "context.h"
 #include "llvm-crap.h"
@@ -55,219 +56,58 @@ XL_BEGIN
 
 // ============================================================================
 //
-//   Forward classes
+//   Type definitions
 //
 // ============================================================================
 
-struct RewriteCalls;
-struct RewriteCandidate;
-typedef GCPtr<RewriteCalls>              RewriteCalls_p;
-typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
 typedef std::map<Tree_p, JIT::Type_p>    box_map;
 
-extern Name_p tree_type;
 
 
 // ============================================================================
 //
-//   Class used to record types in a program
+//   Class used to record types in a program in the compiled case
 //
 // ============================================================================
 
-class CompilerTypes
+class CompilerTypes : public Types
 // ----------------------------------------------------------------------------
 //   Record type information
 // ----------------------------------------------------------------------------
 {
-    Tree_p      source;         // Source code being compiled
-    Context     context;        // Context in which we lookup things
-    tree_map    types;          // Map an expression to its type
-    tree_map    unifications;   // Map a type to its reference type
-    tree_map    captured;       // Trees captured from enclosing context
-    rcall_map   rcalls;         // Rewrites to call for a given tree
     box_map     boxed;          // Tree type -> machine type
-    bool        declaration;    // Analyzing type of a declaration
-    bool        codegen;        // Code generation started
-    static uint id;             // Id of next type
 
 public:
     CompilerTypes(Scope *scope, Tree *source);
     CompilerTypes(Scope *scope, Tree *source, CompilerTypes *parent);
-    ~CompilerTypes();
+    virtual ~CompilerTypes();
     typedef Tree *value_type;
 
 public:
-    // Main entry point
-    Tree *      TypeAnalysis(Tree *source);
-    Tree *      Type(Tree *expr);
-    Tree *      KnownType(Tree *expr);
-    Tree *      ValueType(Tree *expr);
-    Tree *      DeclarationType(Tree *expr);
-    Tree *      CodegenType(Tree *expr);
-    Tree *      BaseType(Tree *expr);
-    rcall_map & TypesRewriteCalls();
-    RewriteCalls *HasRewriteCalls(Tree *what);
-    Scope *     TypesScope();
-    Context &   TypesContext();
-
     // Machine types management
     void        AddBoxedType(Tree *treeType, JIT::Type_p machineType);
     JIT::Type_p BoxedType(Tree *type);
 
-public:
-    // Interface for Tree::Do() to annotate the tree
-    Tree *      Do(Integer *what);
-    Tree *      Do(Real *what);
-    Tree *      Do(Text *what);
-    Tree *      Do(Name *what);
-    Tree *      Do(Prefix *what);
-    Tree *      Do(Postfix *what);
-    Tree *      Do(Infix *what);
-    Tree *      Do(Block *what);
-
-public:
-    // Common code for all constants (integer, real, text)
-    Tree *      DoConstant(Tree *what, kind k);
-
-    // Annotate expressions with type variables
-    Tree *      AssignType(Tree *expr, Tree *type);
-    Tree *      TypeOf(Tree *expr);
-    Tree *      MakeTypesExplicit(Tree *expr);
-    Tree *      TypeDeclaration(Rewrite *decl);
-    Tree *      TypeOfRewrite(Rewrite *rw);
-    Tree *      Statements(Tree *expr, Tree *left, Tree *right);
-
-    // Attempt to evaluate an expression and perform required unifications
-    Tree *      Evaluate(Tree *tree, bool mayFail = false);
-
-    // Evaluate a type expression
-    Tree *      EvaluateType(Tree *tree);
-
-    // Indicates that two trees must have compatible types
-    Tree *      Unify(Tree *t1, Tree *t2);
-    Tree *      Join(Tree *old, Tree *replacement);
-    Tree *      JoinedType(Tree *type, Tree *old, Tree *replacement);
-    Tree *      UnionType(Tree *t1, Tree *t2);
-
-    // Check attributes of the given name
-    bool        IsGeneric(text name);
-    Name *      IsGeneric(Tree *type);
-    Name *      IsTypeName(Tree *type);
-
-    // Operations on types
-    Tree *      ValueMatchesType(Tree *type, Tree *value, bool conversions);
-    bool        IsTreeType(Tree *type);
-    bool        TypeCoversConstant(Tree *type, Tree *cst);
-    bool        TypeCoversType(Tree *type, Tree *test);
-
-    // Checking if we have specific kinds of types
-    Tree *      IsTypeOf(Tree *type);
-    Infix *     IsRewriteType(Tree *type);
-    Infix *     IsRangeType(Tree *type);
-    Infix *     IsUnionType(Tree *type);
-
-    // Lookup a type name in the given context
-    Tree *      DeclaredTypeName(Tree *input);
-
-    // Checking if a declaration is data or a C declaration
-    enum class Decl { NORMAL, C, DATA, BUILTIN };
-    static Decl RewriteCategory(RewriteCandidate *rc);
-    static Decl RewriteCategory(Rewrite *rw, Tree *defined, text &label);
-    static bool IsValidCName(Tree *tree, text &label);
-
-    // Error messages
-    Tree *      TypeError(Tree *t1, Tree *t2);
-
     // Debug utilities
-    void        DumpTypes();
     void        DumpMachineTypes();
-    void        DumpUnifications();
-    void        DumpRewriteCalls();
 
-    CompilerRewriteCalls *      RewriteCallsFor(Tree *what);
+public:
+    virtual CompilerRewriteCalls *      NewRewriteCalls() override;
+    virtual CompilerRewriteCandidate *  NewRewriteCandidate(Rewrite *,
+                                                            Scope *) override;
+    virtual CompilerTypes *             DerivedTypesInScope(Scope *,
+                                                            Tree *) override;
+    virtual CompilerRewriteCalls *      RewriteCallsFor(Tree *what) override;
 
 public:
     GARBAGE_COLLECT(CompilerTypes);
 };
 typedef GCPtr<CompilerTypes> CompilerTypes_p;
 
-
-
-// ============================================================================
-//
-//    Representation of types
-//
-// ============================================================================
-
-struct TypeInfo : Info
-// ----------------------------------------------------------------------------
-//    Information recording the type of a given tree
-// ----------------------------------------------------------------------------
-{
-    TypeInfo(Tree *type): type(type) {}
-    typedef Tree_p       data_t;
-    operator             data_t()  { return type; }
-    Tree_p               type;
-};
-
-
-
-// ============================================================================
-//
-//   Inline functions
-//
-// ============================================================================
-
-inline bool CompilerTypes::IsGeneric(text name)
-// ----------------------------------------------------------------------------
-//   Check if a given type is a generated generic type name
-// ----------------------------------------------------------------------------
-{
-    return name.size() && name[0] == '#';
-}
-
-
-inline Name *CompilerTypes::IsGeneric(Tree *type)
-// ----------------------------------------------------------------------------
-//   Check if a given type is a generated generic type name
-// ----------------------------------------------------------------------------
-{
-    if (Name *name = type->AsName())
-        if (IsGeneric(name->value))
-            return name;
-    return nullptr;
-}
-
-
-inline Name *CompilerTypes::IsTypeName(Tree *type)
-// ----------------------------------------------------------------------------
-//   Check if a given type is a 'true' type name, i.e. not generated
-// ----------------------------------------------------------------------------
-{
-    if (Name *name = type->AsName())
-        if (!IsGeneric(name->value))
-            return name;
-    return nullptr;
-}
-
-
-inline bool IsTreeType(Tree *type)
-// ----------------------------------------------------------------------------
-//   Return true for the 'tree' type
-// ----------------------------------------------------------------------------
-{
-    return type == tree_type;
-}
-
 XL_END
 
 XL::CompilerTypes *xldebug(XL::CompilerTypes *ti);
 
-RECORDER_DECLARE(types);
-RECORDER_DECLARE(types_ids);
-RECORDER_DECLARE(types_unifications);
-RECORDER_DECLARE(types_calls);
 RECORDER_DECLARE(types_boxing);
-RECORDER_DECLARE(types_joined);
 
 #endif // COMPILER_TYPES_H

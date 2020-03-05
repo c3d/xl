@@ -37,7 +37,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-#include "compiler.h"
+#include "context.h"
 #include "renderer.h"
 
 #include <recorder/recorder.h>
@@ -48,9 +48,8 @@ RECORDER_DECLARE(argument_bindings);
 
 XL_BEGIN
 
-class CompilerTypes;
-class CompilerFunction;
-typedef GCPtr<CompilerTypes> CompilerTypes_p;
+class Types;
+typedef GCPtr<Types> Types_p;
 
 enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
@@ -103,7 +102,7 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Infix *rewrite, Scope *scope, CompilerTypes *types);
+    RewriteCandidate(Infix *rewrite, Scope *scope, Types *types);
     void Condition(Tree *value, Tree *test)
     {
         conditions.push_back(RewriteCondition(value, test));
@@ -130,6 +129,10 @@ struct RewriteCandidate
     Tree *              RewriteBody()           { return rewrite->right; }
     text                FunctionName();
 
+    // Access to the underlying fields
+    Types *             Arguments()             { return value_types; }
+    Types *             Parameters()            { return binding_types; }
+
     void                Dump();
 
 public:
@@ -138,8 +141,8 @@ public:
     RewriteBindings     bindings;
     RewriteKinds        kinds;
     RewriteConditions   conditions;
-    CompilerTypes_p     value_types;
-    CompilerTypes_p     binding_types;
+    Types_p             value_types;
+    Types_p             binding_types;
     Tree_p              type;
     Tree_p              defined;
     text                defined_name;
@@ -155,7 +158,7 @@ struct RewriteCalls
 //   Identify the way to invoke rewrites for a particular pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCalls(CompilerTypes *ti);
+    RewriteCalls(Types *ti);
     virtual ~RewriteCalls();
 
     Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
@@ -165,7 +168,7 @@ struct RewriteCalls
     RewriteCandidate *  Candidate(size_t nth);
 
 public:
-    CompilerTypes_p     types;
+    Types_p             types;
     RewriteCandidates   candidates;
     GARBAGE_COLLECT(RewriteCalls);
 };

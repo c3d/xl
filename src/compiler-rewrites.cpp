@@ -91,7 +91,7 @@ JIT::Signature CompilerRewriteCandidate::RewriteSignature()
     {
         Tree *valueType = ValueType(binding.value);
         assert(valueType && "Type for bound value is required during codegen");
-        JIT::Type_p valueTy = value_types->BoxedType(valueType);
+        JIT::Type_p valueTy = Arguments()->BoxedType(valueType);
         assert(valueTy && "Machine type for bound value should exist");
         signature.push_back(valueTy);
     }
@@ -104,7 +104,7 @@ JIT::Type_p CompilerRewriteCandidate::RewriteType()
 //   Boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    JIT::Type_p ty = binding_types->BoxedType(type);
+    JIT::Type_p ty = Parameters()->BoxedType(type);
     return ty;
 }
 
@@ -114,7 +114,7 @@ void CompilerRewriteCandidate::RewriteType(JIT::Type_p ty)
 //   Set the boxed type for the rewrite
 // ----------------------------------------------------------------------------
 {
-    binding_types->AddBoxedType(type, ty);
+    Parameters()->AddBoxedType(type, ty);
 }
 
 

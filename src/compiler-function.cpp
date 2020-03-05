@@ -307,7 +307,7 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
         bool isData = d == CompilerTypes::Decl::DATA;
 
         // Identify the return type for the rewrite
-        CompilerTypes *btypes = rc->binding_types;
+        CompilerTypes *btypes = rc->Parameters();
         Tree *base = btypes->BaseType(rc->type);
         JIT::Type_p retTy = rc->RewriteType();
         if (!retTy && rc->type)

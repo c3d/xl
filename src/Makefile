@@ -77,6 +77,7 @@ SOURCES_VARIANT_lib     =			\
 	serializer.cpp				\
 	syntax.cpp				\
 	tree.cpp				\
+	types.cpp				\
 	utf8_fileutils.cpp			\
 	version.cpp				\
 	winglob.cpp				\
