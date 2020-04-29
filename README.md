@@ -634,7 +634,7 @@ Simplistic compiler that does only run-time type analysis
 - [ ] Types
 - [ ] Arrays
 - [ ] STL-style containers
-- [ ] Algoriths
+- [ ] Algorithms
 - [ ] I/Os
 - [ ] Threading / synchronization
 - [ ] Math and numerics
