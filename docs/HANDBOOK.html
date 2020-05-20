@@ -9563,6 +9563,8 @@ machine representation. The requested size may be rounded up to a more
 convenient or more efficient machine representation. For example, on a
 32-bit machine, <code>integer bits 22</code> might be more efficiently represented
 as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
+Irrespective of the representation, these subtypes will wrap around
+exactly as if the type had the given number of bits.
 </td>
 </tr>
 </table>
@@ -9606,8 +9608,8 @@ bases <code>2</code>, <code>10</code> and <code>16</code> are allowed. Base <cod
 <td class="content">
 <div class="paragraph">
 <p>In some cases, the types created using one of these operators may not
-be subtypes of <code>real</code>. For example, on any machine using machine using
-the most common floating-point representation available in hardware,
+be subtypes of <code>real</code>. For example, on any machine using the most
+common floating-point representation available in hardware,
 <a href="https://en.wikipedia.org/wiki/IEEE-754">IEEE-754</a>, the value <code>0.01</code> cannot be
 <a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding">represented accurately</a>.
 This means that an implicit conversion from <code>real quantum 0.01</code> to
@@ -9678,8 +9680,8 @@ operators:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>letter is character range 'A'..'Z'
-ASCII  is character bits 7</pre>
+<pre>type letter is character range 'A'..'Z'
+type ASCII  is character bits 7</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9702,6 +9704,20 @@ have <code>character</code> values that sort following German rules, you would u
 <code>character collation "de_DE"</code></p>
 </li>
 </ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Encoding, collation and locale can be implemented by adding
+fields to the base type that record these attributes, and by having
+additional runtime operations that take these attributes into account.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect3">
@@ -9730,7 +9746,7 @@ subtypes.</p>
 This may come at the expense of performance.</p>
 </li>
 <li>
-<p><code>unaligned T</code> is a type derived from <code>T</code> that may not respcet normal
+<p><code>unaligned T</code> is a type derived from <code>T</code> that may not respect normal
 alignment rules, and may require slower mis-aligned accesses.</p>
 </li>
 <li>
@@ -9750,6 +9766,13 @@ if this is significantly more expensive.</p>
 <li>
 <p><code>packed T</code> is a type derived from <code>T</code> where data is packed as
 tightly as possible, even to the detriment of performance.</p>
+</li>
+<li>
+<p><code>little_endian T</code>, <code>big_endian T</code> and <code>native_endian T</code> are types
+derived from <code>T</code> where the in-memory representation is either
+little-endian, big-endian respectively or the native endianness of
+the host. Depending on the platform, using such type may severely
+impact performance.</p>
 </li>
 </ul>
 </div>
@@ -13301,7 +13324,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-20 22:32:27 +0200
+Last updated 2020-05-20 23:15:54 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
