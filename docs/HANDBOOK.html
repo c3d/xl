@@ -8570,7 +8570,7 @@ constructor is illustrated by the following code:</p>
 A:large := 44   // OK
 B:large := 99.1 // OK
 C:large         // Error
-create V:out large is
+to create V:out large is
     print "Creator called"</pre>
 </div>
 </div>
@@ -8591,9 +8591,9 @@ version of the <code>create</code> function:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>large is matching (N when N &gt; 42)
+<pre>type large is matching (N when N &gt; 42)
 C:large         // OK
-create V:out large is
+to create V:out large is
     print "Creator called"
     V := 44     // Creator for a large value</pre>
 </div>
@@ -8623,20 +8623,20 @@ based on Unix-style file descriptors:</p>
 <div id="my_file" class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">MY_FILE as module with
-    file as type
-    open(Name:text) as file
-    close F:io file
+    type file
+    to open(Name:text) as file
+    to close F:io file
 
 MY_FILE as module is
-    type file is matching file(fd:integer)
-    open(Name:text) as file is
+    type file matches file(fd:integer)
+    to open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
-    close F:inout file is
+    to close F:inout file is
         if fd &gt;= 0 then
             libc.close(F.fd)
             F.fd := -2
-    delete F:inout file is close F    // Destruction, see below</code></pre>
+    to delete F:inout file is close F    // Destruction, see below</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8685,7 +8685,7 @@ the body of the definition.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>delete Z:inout complex is
+<pre>to delete Z:inout complex is
     print "Deleting complex ", Z</pre>
 </div>
 </div>
@@ -8694,7 +8694,7 @@ the body of the definition.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>delete Z:inout complex is
+<pre>to delete Z:inout complex is
     print "Deleting complex ", Z
     (delete Z.Im)
     (delete Z.Re)</pre>
@@ -8706,7 +8706,7 @@ effect and matches any value, and which only deletes the fields:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>delete Anything is nil</pre>
+<pre>to delete Anything is nil</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8724,8 +8724,8 @@ values, that might be reflected in the implementation as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>delete F:inout file when F.fd &lt; 0  is ... // Invalid flie
-delete F:inout file                is ... // Valid file</pre>
+<pre>to delete F:inout file when F.fd &lt; 0  is ... // Invalid flie
+to delete F:inout file                is ... // Valid file</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8931,7 +8931,7 @@ message, or a simple message and a payload.:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">error as type is one_of
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type error is one_of
     error Message:text
     error Message:text, Payload</code></pre>
 </div>
@@ -13301,7 +13301,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-20 21:10:50 +0200
+Last updated 2020-05-20 22:32:27 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

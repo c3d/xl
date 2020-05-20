@@ -5872,7 +5872,7 @@ type large is matching (N when N > 42)
 A:large := 44   // OK
 B:large := 99.1 // OK
 C:large         // Error
-create V:out large is
+to create V:out large is
     print "Creator called"
 ....
 
@@ -5890,9 +5890,9 @@ matches the type's pattern. The following is an almost acceptable
 version of the `create` function:
 
 ....
-large is matching (N when N > 42)
+type large is matching (N when N > 42)
 C:large         // OK
-create V:out large is
+to create V:out large is
     print "Creator called"
     V := 44     // Creator for a large value
 ....
@@ -5912,20 +5912,20 @@ based on Unix-style file descriptors:
 [source]
 ----
 MY_FILE as module with
-    file as type
-    open(Name:text) as file
-    close F:io file
+    type file
+    to open(Name:text) as file
+    to close F:io file
 
 MY_FILE as module is
-    type file is matching file(fd:integer)
-    open(Name:text) as file is
+    type file matches file(fd:integer)
+    to open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
-    close F:inout file is
+    to close F:inout file is
         if fd >= 0 then
             libc.close(F.fd)
             F.fd := -2
-    delete F:inout file is close F    // Destruction, see below
+    to delete F:inout file is close F    // Destruction, see below
 ----
 
 If the interface provides a `create` operation, it must be ready to
@@ -5958,13 +5958,13 @@ the body of the definition.
 For example, consider the definition below:
 
 ....
-delete Z:inout complex is
+to delete Z:inout complex is
     print "Deleting complex ", Z
 ....
 
 That definition is actually equivalent to the definition below:
 ....
-delete Z:inout complex is
+to delete Z:inout complex is
     print "Deleting complex ", Z
     (delete Z.Im)
     (delete Z.Re)
@@ -5974,7 +5974,7 @@ There is a built-in default definition of that statement that has no
 effect and matches any value, and which only deletes the fields:
 
 ....
-delete Anything is nil
+to delete Anything is nil
 ....
 
 There may be multiple destructors that match a given expression. When
@@ -5989,8 +5989,8 @@ Consider for example the deletion of the `file` type defined in the
 values, that might be reflected in the implementation as follows:
 
 ....
-delete F:inout file when F.fd < 0  is ... // Invalid flie
-delete F:inout file                is ... // Valid file
+to delete F:inout file when F.fd < 0  is ... // Invalid flie
+to delete F:inout file                is ... // Valid file
 ....
 
 However, this also means that the programmer could create a
@@ -6158,7 +6158,7 @@ message, or a simple message and a payload.:
 
 [source]
 ----
-error as type is one_of
+type error is one_of
     error Message:text
     error Message:text, Payload
 ----
