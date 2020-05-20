@@ -9977,7 +9977,7 @@ derives from the <code>text</code> type and adds a color, the interface might be
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>colored_text as some text with
+<pre>type colored_text like text with
     foreground : color
     background : color</pre>
 </div>
@@ -9987,7 +9987,7 @@ derives from the <code>text</code> type and adds a color, the interface might be
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>colored_text is text with
+<pre>type colored_text is text with
    background : color
    foreground : color</pre>
 </div>
@@ -10006,45 +10006,6 @@ would look like this:</p>
 <div class="content">
 <pre>derived:colored_text as text is derived.base</pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Data inheritance can be used to inherit any scope. A particular idiom
-is to inherit a generic module that implements shared features.
-For example, in order to simplify the definition of a generic
-<code>complex</code> type, one can write a generic module in which it is
-called simply  <code>complex</code>:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>module COMPLEX[real:some number] with
-
-    complex as some number
-    X:complex + Y:complex as complex
-    ...</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>A non-generic module can then build a generic type with all the
-trimmings simply with:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>module COMPLEX with
-    complex[real:some number] as some number is
-        super.COMPLEX[real].complex with super.COMPLEX[real]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>What this means in English is: <code>COMPLEX</code> is a <code>module</code> with a
-<code>complex[real]</code> type that inherits <code>number</code>, where <code>real</code> is itself a
-number, and that type is the <code>complex</code> type from the <code>COMPLEX[real]</code>
-module in the enclosing scope, inheriting the entire scope of that
-module.</p>
-</div>
-<div class="paragraph">
-<p>The consequence of that idiom is that any use of <code>complex</code> from the
-<code>COMPLEX</code> module will automatically inherit operations like the
-addition which have been defined in the generic <code>COMPLEX[real]</code> module.</p>
 </div>
 </div>
 <div class="sect3">
@@ -13342,7 +13303,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-20 23:39:41 +0200
+Last updated 2020-05-20 23:57:17 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
