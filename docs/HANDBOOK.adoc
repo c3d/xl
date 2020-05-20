@@ -6630,6 +6630,8 @@ machine representation. The requested size may be rounded up to a more
 convenient or more efficient machine representation. For example, on a
 32-bit machine, `integer bits 22` might be more efficiently represented
 as a 32-bit value in registers and as 3 bytes, i.e. 24 bits, in memory.
+Irrespective of the representation, these subtypes will wrap around
+exactly as if the type had the given number of bits.
 
 ==== Real subtypes
 
@@ -6657,8 +6659,8 @@ well as with additional constraints more specific to the `real` type:
 [WARNING]
 ====
 In some cases, the types created using one of these operators may not
-be subtypes of `real`. For example, on any machine using machine using
-the most common floating-point representation available in hardware,
+be subtypes of `real`. For example, on any machine using the most
+common floating-point representation available in hardware,
 link:https://en.wikipedia.org/wiki/IEEE-754[IEEE-754], the value `0.01` cannot be
 link:https://en.wikipedia.org/wiki/Floating-point_arithmetic#Representable_numbers,_conversion_and_rounding[represented accurately].
 This means that an implicit conversion from `real quantum 0.01` to
@@ -6709,8 +6711,8 @@ The `character` types can be subtyped with the `range` and `bits`
 operators:
 
 ....
-letter is character range 'A'..'Z'
-ASCII  is character bits 7
+type letter is character range 'A'..'Z'
+type ASCII  is character bits 7
 ....
 
 In addition, character types can be subtyped with the following infix
@@ -6723,6 +6725,10 @@ operators:
 * The `collation` operator specifies collating order. For example, to
   have `character` values that sort following German rules, you would use
   `character collation "de_DE"`
+
+NOTE: Encoding, collation and locale can be implemented by adding
+fields to the base type that record these attributes, and by having
+additional runtime operations that take these attributes into account.
 
 
 ==== Text subtypes
@@ -6744,7 +6750,7 @@ The following standard subtypes implement memory-related semantics:
   link:https://en.cppreference.com/w/c/language/atomic[atomic operations].
   This may come at the expense of performance.
 
-* `unaligned T` is a type derived from `T` that may not respcet normal
+* `unaligned T` is a type derived from `T` that may not respect normal
   alignment rules, and may require slower mis-aligned accesses.
 
 * `T aligned N` guarantees that values of type `T` use memory
@@ -6760,6 +6766,12 @@ The following standard subtypes implement memory-related semantics:
 
 * `packed T` is a type derived from `T` where data is packed as
   tightly as possible, even to the detriment of performance.
+
+* `little_endian T`, `big_endian T` and `native_endian T` are types
+  derived from `T` where the in-memory representation is either
+  little-endian, big-endian respectively or the native endianness of
+  the host. Depending on the platform, using such type may severely
+  impact performance.
 
 Additional subtypes may be available to match the features of the
 machine the code runs on.
