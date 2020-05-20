@@ -6937,7 +6937,7 @@ For example, using data inheritance to implement a `colored_text` that
 derives from the `text` type and adds a color, the interface might be:
 
 ....
-colored_text as some text with
+type colored_text like text with
     foreground : color
     background : color
 ....
@@ -6945,7 +6945,7 @@ colored_text as some text with
 An implementation using data inheritance would look like this:
 
 ....
-colored_text is text with
+type colored_text is text with
    background : color
    foreground : color
 ....
@@ -6962,39 +6962,6 @@ would look like this:
 ....
 derived:colored_text as text is derived.base
 ....
-
-Data inheritance can be used to inherit any scope. A particular idiom
-is to inherit a generic module that implements shared features.
-For example, in order to simplify the definition of a generic
-`complex` type, one can write a generic module in which it is
-called simply  `complex`:
-
-....
-module COMPLEX[real:some number] with
-
-    complex as some number
-    X:complex + Y:complex as complex
-    ...
-....
-
-A non-generic module can then build a generic type with all the
-trimmings simply with:
-
-....
-module COMPLEX with
-    complex[real:some number] as some number is
-        super.COMPLEX[real].complex with super.COMPLEX[real]
-....
-
-What this means in English is: `COMPLEX` is a `module` with a
-`complex[real]` type that inherits `number`, where `real` is itself a
-number, and that type is the `complex` type from the `COMPLEX[real]`
-module in the enclosing scope, inheriting the entire scope of that
-module.
-
-The consequence of that idiom is that any use of `complex` from the
-`COMPLEX` module will automatically inherit operations like the
-addition which have been defined in the generic `COMPLEX[real]` module.
 
 
 ==== Indirect implementation
