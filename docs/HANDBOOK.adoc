@@ -3038,8 +3038,9 @@ When a block in a pattern defines a link:#sequences[sequence] of
 declarations or definitions, that block is called a _((parameter scope))_,
 and it can be matched by any _((argument scope))_ that provides
 matching definitions. In that case, the definitions in the argument
-scope may be provided in a different order, and the scope does not
-need to use the same delimiters or separators:
+scope may be provided in a different order, provide additional
+declarations, and the scope does not need to use the same delimiters
+or separators:
 
 [source]
 ----
@@ -3047,9 +3048,10 @@ circle(Radius:real, CenterX:real, CenterY:real) as circle <1>
 C1 : circle := circle(3.5, 2.6, 3.2) <2>
 C2 : circle := circle(CenterX is 0.0; CenterY is 1.5; Radius is 2.4) <3>
 C3 : circle := circle <4>
-    Radius  is 1.5
-    CenterX is 3.5
-    CenterY is 2.4
+    Scaling is 1.3 <5>
+    Radius  is 1.5 * Scaling
+    CenterX is 3.5 * Scaling
+    CenterY is 2.4 * Scaling
 ----
 <1> The formal parameters are a comma-separated sequence of
     declarations, meaning that they form a valid scope. A semi-colon
@@ -3063,6 +3065,10 @@ C3 : circle := circle <4>
 <4> The argument scope need not use the same separators as the
     parameter scope. Using indentation and line separators removes the
     need for parentheses, since all kinds of blocks are equivalent.
+<5> The argument scope may contain additional helper declarations or
+    definitions. It is just a regular scope where the only constraint
+    is that it must provide bindings that match what is required from
+    the parameter scope.
 
 This form is often used for data types containing a large number of
 parameters:
@@ -5911,12 +5917,12 @@ based on Unix-style file descriptors:
 [[my_file]]
 [source]
 ----
-MY_FILE as module with
+module MY_FILE with
     type file
     to open(Name:text) as file
     to close F:io file
 
-MY_FILE as module is
+module MY_FILE is
     type file matches file(fd:integer)
     to open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
@@ -6794,7 +6800,7 @@ it. Specifically, the interface defines:
 A feature is said to be _advertised_(((advertised feature))) if it is
 explicitly and intentionally part of the interface. A feature is said
 to be _exposed_(((exposed feature))) if it is made visible as an
-unintentional or even undesirable side effect of the interface.
+unintentional or even undesirable side effect of the implementation.
 For example, if an implementation requires ((dynamic values)), this may
 force the interface to expose the `storage_error` values that might be
 generated as a result of out-of-memory conditions.
@@ -6825,9 +6831,9 @@ type text like [string of character] with
 ----
 
 An _abstract type_ is a type for which features or inheritance are not
-provide. The only thing known about such a type is its name. In the
+provided. The only thing known about such a type is its name. In the
 earlier `MY_FILE` link:#my_file[example], `file` was an abstract type defined
-as folows:
+as follows:
 
 ....
 file as type
@@ -6886,12 +6892,24 @@ The simplest way to implement any feature of a type is to ensure that
 the implementation of the type has a matching feature. This is called
 a _((direct implementation))_ of the feature.
 
-A feature is directly implemented by providing a definition for it in
-the link:#pattern-matching-scope[pattern matching scope] for the type
-implementation. In particular, the formal parameters for a
-link:#creation[constructor] naturally provide a direct implementation
-for the interface. For example, a constructor for type `picture` might
-look like:
+A feature is directly implemented by providing a definition for it.
+For example:
+
+....
+type point with { X:real; Y:real }
+type point is point(X:real, Y:real)
+....
+
+In that case, type `point` type implementation creates a scope that
+contains definitions for `X` and `Y`. In other words, if `P` is a
+`point`, then `P.X` is defined by the implementation, and therefore
+the interface requirement for `P.X` is satisfied as well.
+
+This is a particular case of the
+a link:#pattern-matching-scope[pattern matching scope] rule applied to
+the type implementation.
+
+A direct implementation for the type `picture` interface might look like:
 
 ....
 type picture is matching picture
@@ -6899,12 +6917,6 @@ type picture is matching picture
     width  : size
     height : size
 ....
-
-In a scope where the implementation is known, if `P` is a `picture`,
-we know that there is a pattern matching scope in `P` which contains
-the bindings of the formal parameters to the argument values.
-This pattern matching scope is where the binding, and therefore value
-of `width` in `P.width` is found.
 
 In a context where only the interface is visible, an expression like
 `P.width` is known to be valid because we can look it up in the
