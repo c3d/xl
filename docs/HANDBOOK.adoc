@@ -350,9 +350,9 @@ loop Body       is      { Body; loop Body }     // Define an infnite loop
 ====
 [source]
 ----
-complex         is polar or cartesian
-cartesian       is matching cartesian(re:number, im:number)
-polar           is matching polar(mod:number, arg:number)
+type complex    is polar or cartesian
+type cartesian  matches cartesian(re:number, im:number)
+type polar      matches polar(mod:number, arg:number)
 ----
 
 NOTE: link:#types[((type))s] in XL indicate the shape of ((parse tree))s. In
@@ -1445,7 +1445,7 @@ sequence of ASCII characters in `Hello!`.
 For ((fractional number))s, a dot `.` is used as ((decimal separator)),
 and must separate digits. For example, `0.2` and `2.0` are valid but,
 unlike in C, `.2` and `2.` are not numbers but a prefix and
-postifix `.` respectively. This is necessary to avoid ambiguities.
+dpostfix `.` respectively. This is necessary to avoid ambiguities.
 Also, the ((standard library)) denotes link:#range[((range))s] using
 an infix `..`, so `2..3` is an infix `..` with `2` and `3` as
 operands, representing the range between 2 and 3.
@@ -1959,8 +1959,9 @@ for example with the `extern` name in the
 link:{xl}src/xl.syntax#L62[default syntax].
 . Identifying binary data: words such as `bits` marked as introducing
 `BINARY` data in the syntax file are treated specially during parsing,
-to generate parse tree nodes representing binary data. > NOTE: this is
-not currently implemented.
+to generate parse tree nodes representing binary data.
+
+NOTE: this is not currently implemented.
 
 The need to process `use` statements during parsing means that it’s not
 possible in XL to have computed `use` statements. The name of the module
@@ -1987,7 +1988,7 @@ block’s child
 +
 [source]
 ----
-loop { print "Hello World" }
+{ print "Hello World" }
 ----
 * An infix `NEWLINE`, semi-colon `;` or comma `,`, in which case the
 left and right operands of the infix are processed in that order.
@@ -2076,7 +2077,7 @@ finishes.
 During the declaration phase, all declarations are stored in order in
 the context, so that they appear before any declaration that was already
 in the context. As a result, the new declarations may _shadow_ existing
-declarations that match(((declaration,shadowing)).
+declarations that match(((declaration,shadowing))).
 
 In the example above, the declaration phase would result in a context
 that looks something like:
@@ -2718,18 +2719,22 @@ Such name patterns are called _wildcard parameters_ because they can
 match any expression, or _untyped parameters_ because no type checking
 occurs on the matched argument.
 
-In order to catch anything at the top-level, for example in
-link:#scoping[maps], it is necessary to use the `lambda` notation:
+Wildcards do not apply to the top level of a pattern, since they would
+be interpreted as name definitions there. For example, `X is 3` will
+define name `X` and not define a pattern that matches anything and
+returns `3`. There are use cases where it is interesting to be able to
+do that, for example in link:#scoping[maps]. In that case, it is
+necessary to use the `lambda` notation:
 
 [cols="24%,38%,38%",options="header",]
 |==========================================================
 | Declaration | Matched by              | Not matched by
+| `lambda N`  | Any value               | Nothing
 | `\N`        | Any value               | Nothing
 |==========================================================
 
-
-NOTE: This case only applies to names, not to operators. You cannot
-define a `+` parameter that way.
+NOTE: Wildcards only applies to names, not to operators. You cannot
+define a parameter named `+` that way.
 
 ==== Type annotations
 
@@ -2753,11 +2758,12 @@ A type annotation as a sub-pattern declares a parameter:
 |==============================================================================
 | Parameter pattern    | Matched by| Not matched by
 | `X:integer`          | `42`      | `X` (unless bound to an `integer`)
-| `seconds as integer` | `42`      |`X` (unless constant bound to an `integer`)
+| `seconds as integer` | `42`      |`X` (unless bound to constant `integer`)
 |==============================================================================
 
 Such patterns are called _type annotations_, and are used to perform
-type checking. Normally, type annotations using `:` are used to declare
+type checking. The precedence of `as` is lower than `:`, which means
+that in a procedure or function, type annotations using `:` are used to declare
 the type of parameters, whereas `as` is used to declare the type of the
 expression being defined, as shown for the pattern on the left of `is`
 in the example below:
@@ -2786,8 +2792,8 @@ P : picture is picture
     Buffer is my_buffer
 ----
 
-The link:#scope-pattern-matching[scope pattern matching] makes it
-possible to give arguments in a different order in that case.
+A rule called link:#scope-pattern-matching[scope pattern matching]
+makes it possible to give arguments in a different order in that case.
 
 ==== Function (prefix) definitions
 
@@ -3028,12 +3034,12 @@ C : circle := circle(0.3, 2.6, 4.0)
 
 [[parameter-scope]]
 [[argument-scope]]
-When a block in a pattern defines a link:#scoping[scope], i.e. a
-link:#sequences[sequence] of declarations or definitions, that scope
-is called a _((parameter scope))_, and it can be matched by any
-_((argument scope))_ that provides matching definitions. In that case,
-the definitions in the argument scope may be provided in a different
-order, and the scope does not need to use the same delimiters or separators:
+When a block in a pattern defines a link:#sequences[sequence] of
+declarations or definitions, that block is called a _((parameter scope))_,
+and it can be matched by any _((argument scope))_ that provides
+matching definitions. In that case, the definitions in the argument
+scope may be provided in a different order, and the scope does not
+need to use the same delimiters or separators:
 
 [source]
 ----
@@ -3117,8 +3123,8 @@ For example, a `complex` data type and the addition of `complex`
 numbers can be written as follows:
 
 ....
-complex is type complex(Re:real, Im:real) <1>
-Z1:complex + Z2.complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im) <2>
+type complex matches complex(Re:real, Im:real) <1>
+Z1:complex + Z2:complex as complex is complex(Z1.Re+Z2.Re, Z1.Im+Z2.Im) <2>
 Z:complex := complex(1.3, 4.5) + complex(6.3, 2.5) <3>
 ....
 <1> This is a link:#types[((type definition))] based on a pattern.
@@ -3771,10 +3777,10 @@ N!                      is N * (N-1)!
 apply Function, Value   is Function(Value)
 
 // Using an anonymous map to compute 3!
-apply { \N is N! }, 3
+apply { lambda N is N! }, 3
 
 // Using a named map to compute 5!
-factorial   is { \N is N! }
+factorial   is { lamdba N is N! }
 apply factorial, 5
 ----
 
@@ -3817,12 +3823,21 @@ evaluation(((evaluation,self))). Note that you cannot write for
 example `true is true`, as `true` in the body is a statement, which
 would require further evaluation, hence an ((infinite recursion)).
 
-It is possible to use `self` for data structures. For example, in order
-to ensure that comma-separated lists are not evaluated, you can write :
+It is possible to use `self` for data structures. For example, in
+order to ensure that elements of a comma-separated `list` are not
+evaluated, you can write :
 
 [source]
 ----
-X, Y    is self
+list (X, Y)             is self
+----
+
+A sugar form using `data` is usually in that case to draw attention to
+this situation.
+
+[source]
+----
+data list(X, Y)         is self
 ----
 
 Note that the following values also evaluate as themselves:
@@ -3937,7 +3952,7 @@ are, however, multiple ways to pass arguments. This is all discussed in
 more details link:#binding[in the next chapter].
 
 NOTE: *RATIONALE* For simple types such as arithmetic types, an assignment
-performs a copy, which is a relatively inexpensive memmory copy between
+performs a copy, which is a relatively inexpensive memory copy between
 fixed-size locations. For more complicated data types, such as
 `spreadsheet`, `graph` or `picture`, a copy involves copying possibly
 megabytes of data, or complex webs of interconnected objects, which can
@@ -4172,10 +4187,14 @@ number_spelling is
     70              is "seventy"
     80              is "eighty"
     90              is "ninety"
+    ten N           is N<100  and N mod 10 = 0
+    hun N           is N<1000 and N mod 100 = 0
+    \N when ten N   is (number_spelling[N/10*10])
     \N when N<100   is (number_spelling[N/10*10] & " " &
                         digit_spelling[N mod 10])
+    \N when hun N   is (digit_spelling[N/100] & "hundred")
     \N when N<1000  is (digit_spelling[N/100] & " hundred and " &
-                        digit_spelling[N mod 100])
+                        number_spelling[N mod 100])
 ----
 
 Another common idiom is to use a named map to group related
@@ -4247,8 +4266,9 @@ foo 3                           // Returns 45
 ----
 
 NOTE: In this specific use-case, the notation `super.X` would find the
-declaration for `X`. In general, however, it is more advisable to use
-`super X` in order to find `X` even if it's defined in some enclosing context.
+declaration for `X`, because it is in the immediately enclosing
+scope. In general, however, it is more advisable to use `super X`, so
+that `X` is found even if it's in some further enclosing scope.
 
 
 ==== Static context
@@ -4314,7 +4334,7 @@ the current scope.
 ----
 // Process next-item
 thread.{ work_items as list of tasks }
-global.{ work_items as list of tasks;
+global.{ work_items as list of tasks }
 next_work_item as [work_item or nil] is
     if not thread.work_items.empty then
         pop thread.work_items
@@ -4419,7 +4439,7 @@ error.
 error (otherwise, it returns… an `error`!)
 * `error` is an `error` value that should only be accessed when there
 was an error. Otherwise, it returns `nil`.
-* `good` is `true` if there was no error, and `bad` otherwise.
+* `good` is `true` if there was no error, and `false` otherwise.
 * `bad` is equivalent to `not good`.
 
 The following code shows how to use a `mayfail real` type to return
@@ -4467,7 +4487,7 @@ always an `error` value being returned, not an exception being thrown.
 ==== Error statements
 
 If a statement, assignment or declaration returns an `error`, then as a
-special evaluation rule, that any `error` value is immediately returned by
+special evaluation rule, any `error` value is immediately returned by
 the enclosing function. It is a type error if the interface of the
 enclosing function does not allow an `error` return value.
 
@@ -4620,7 +4640,7 @@ NOTE: *RATIONALE* In languages such as {cpp}, some members of a
 class can be made _private_ or _protected_. This restricts their
 usage, but the compiler (and the programmer) still have knowledge of
 internal details of the implementation. This facilitates some
-low-level copmiler optimizations (most of which are obsolete or
+low-level compiler optimizations (most of which are obsolete or
 irrelevant today when link-time optimizations are widely available),
 but also results in a number of long-term maintenance issues. Exposing
 implementation details in the interface worsens the
@@ -4806,7 +4826,7 @@ that `positive` as defined above is a type that accepts both `integer`
 values such as `27` and `real` values such as `3.14`, since the
 expression `X > 0` is valid in both cases. As a matter of fact, it
 applies to any type where the expression `X > 0` is valid. Types like
-this are often used in type expressoins such as `integer and positive`.
+this are often used in type expressions such as `ordered and positive`.
 Using such types makes it possible to write _((constrained generic code))_,
 i.e. code that applies on a large class of cases, while being properly
 constrained.
@@ -4818,7 +4838,7 @@ plays for C or `record` for Pascal. A `complex` data type can be
 created and used as shown in the following code:
 
 ....
-complex is matching complex(Re:real, Im:real)
+type complex matches complex(Re:real, Im:real)
 Z:complex := complex(4.3, 2.1)
 ....
 
@@ -4878,8 +4898,8 @@ Standard type expressions include:
   in particular for error reporting through types like `real or error`.
 * `T1 and T2` is a type that contains values belonging both to `T1`
   and `T2`. It is primarily  used to constrain types in generic code,
-  for example `integer and positive`.
-* `not T` is a type that contains vlaues that do not belong to `T`. It
+  for example `ordered and positive`.
+* `not T` is a type that contains values that do not belong to `T`. It
   can be used to exclude specific types from a definition.
 * `mayfail T` is a shortcut for `T or error` and is used when a
   function may fail.
@@ -4900,6 +4920,8 @@ color is one_of
     cymk  Cyan:component, Yellow:component, Magenta:component, Black:component
     named Name:text
     named Name:text, Alpha:component
+Red        : color := { rgb 100%, 0%, 0% }
+Background : color := { named "black" }
 ....
 * `any_of Patterns` is a type that accept any combination of the
   following patterns. It can be used to implement flags, like the
@@ -4910,22 +4932,31 @@ color is one_of
   and a line color:
 +
 ....
-text_style is any_of
+type permissions is any_of(READ, WRITE, EXECUTE)
+normal_access : permissions := { READ; WRITE }
+
+type text_style is any_of
     family F:font_family
     weigth W:font_weight
     slant S:font_slant
     fill_color C:color
     line_color C:color
+default_style : text_style := { family "Arial"; weight 100% }
 ....
+
+NOTE: The `one_of` and `any_of` can be implemented using a tagged
+union, where the first _tag_ field is an enumeration in the case of `one_of`
+and a bit flag in the case of `any_of`, and the memory layout of the
+following fields depends on the value of the tag.
 
 Below is code for a `complex` type that uses some of these features,
 and is somewhat closer to the actual implementation in
 `XL.MATH.COMPLEX` than what we have shown so far:
 
 ....
-complex[real:type]      is real or polar[real] or cartesian[real]
-cartesian[real:type]    is matching cartesian(Re:real, Im:real)
-polar[real:type]        is matching polar(Mod:real, Arg:real)
+type complex[real:type]         is real or polar[real] or cartesian[real]
+type cartesian[real:type]       matches cartesian(Re:real, Im:real)
+type polar[real:type]           matches polar(Mod:real, Arg:real)
 
 with
     real : some number
@@ -4961,7 +4992,7 @@ as complicated as this one.  For example, the following code will fail
 type system checks:
 
 ....
-resize (P:inout packet, S:size) is
+to Resize (P:inout packet, S:size) is
     P.header.byte_count := S <1>
 ....
 <1> This is a type error on the `packet` type, because the existing
@@ -4974,12 +5005,12 @@ possibly reallocate memory for the new packet, and deal with three
 distinct cases for resizing:
 
 ....
-resize (P:inout packet, S:size) when S = P.header.byte_count is nil
-resize (P:inout packet, S:size) when S < P.header.byte_count is
+to Resize (P:inout packet, S:size) when S = P.header.byte_count is nil
+to Resize (P:inout packet, S:size) when S < P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := P.payload[0..S-1]
     P := packet(new_header, new_payload)
-resize (P:inout packet, S:size) when S > P.header.byte_count is
+to Resize (P:inout packet, S:size) when S > P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
         lambda I when I < P.byte_count   is P.payload[I]
@@ -5126,11 +5157,13 @@ _((basic types))_, and include the following:
   `natural`.
 
 * `offset` is a type that plays for `integer` the role that `size`
-  plays for `natural`, i.e. it is intended to indicate offsets for
-  example while indexing an array.
+  plays for `natural`, i.e. it is intended to indicate offsets that
+  can be either positive or negative, for example while indexing an
+  array.
 
 * `byte` is the smallest unsigned type that is naturally represented
-  on the machine. On most modern machine, it is an 8-bit value.
+  on the machine. On most modern machine, it is an 8-bit value. It is
+  the same type as `XL.MEMORY.byte`.
 
 * `character` is a representation of the ((native character set)) on the
   target machine. On modern machines, it should generally follow the
@@ -5246,7 +5279,7 @@ Container types include in particular the following:
      which can hold up to `1000` values of the `integer` type.
   ** Bounded, range-indexed strings, such as `string[1..10] of real`,
      which can hold up to `10` values, indexed starting at `1`.
-  ** Multi-dimesional strings, such as `string[25,80] of character`,
+  ** Multi-dimensional strings, such as `string[25,80] of character`,
      which is a storage-efficient way to store possibly blank text screens.
 
 * `list` to store a variable number of linked elements. Unlike arrays
@@ -5291,11 +5324,14 @@ This makes it possible to write true generic code that takes an
 `array` argument, as follows:
 
 ....
-sum(A:array) as A.value is
-    result := 0
+function sum(A:array) as A.value is
+    result := 0 <1>
     for I in A loop
         result += I
 ....
+<1> This assignment may require an implicit conversion of the value
+`0` to the `A.value` type. There is a requirement for the `number`
+type that values `0` and `1` can be implicitly converted to it.
 
 It is possible for the pattern of the true generic type to be somewhat
 more restrictive. For example, for a `complex` type, one might want to
@@ -5304,7 +5340,7 @@ create a type that only accepts numbers for the `real` type. The type
 generic type for `complex` can be defined with something like:
 
 ....
-complex is matching complex[real:some number]
+type complex matches complex[real:some number]
 ....
 
 A true generic type with constraints like in the above example is
@@ -5341,7 +5377,9 @@ They include the following:
 
 * `range of T` holds ranges of values of type `T`. For example, the
   type `range of integer` can hold a value such as `1..5`, which is
-  the range between values `1` and `5` inclusive.
+  the range between values `1` and `5` inclusive. This can be used for
+  simple iteration, but it is also a
+  link:#mathematical-type[mathematical type] with range arithmetic.
 
 * `own T` holds a dynamically allocated value of type `T` that is
   link:#ownership[owned] by the `own` value, i.e. it is disposed of
@@ -5359,8 +5397,10 @@ They include the following:
 
 * `in_out T` can be used for input-output arguments of type `T`,
   i.e. values that can be modified by the callee but are created and
-  owned by the caller. Due to the rules about name lookup in XL, it is
-  also possible to spell this type as `inout T` or `io T`.
+  owned by the caller. Due to the rules about name lookup in XL, which
+  ignores the `_` character, it is also possible to spell this type as
+  `inout T`. Since this is very common, an alternate spelling, `io T`,
+  is also made available.
 
 * `any T` can hold a value of type `T` or any
   link:#inheritance[derived type], preserving the original type
@@ -5383,13 +5423,15 @@ Computers are often used to perform mathematical operations. XL
 features several mathematical types designed for that purpose:
 
 * `number` represent all kinds of numbers and is intended to be used
-  in generic code.
+  in generic code. All `number` types must accept the values `0` and
+  `1` through implicit conversion, although they may represent for
+  example a null vector or an identity matrix respectively.
 
 * `natural` represent natural numbers, i.e. non-negative whole numbers.
 
 * `integer` represent integer numbers, i.e. signed whole numbers.
 
-* `rational` represent rational numbers, i.e. a rato of two whole
+* `rational` represent rational numbers, i.e. a signed ratio of two whole
   numbers. They can be used to perform accurate computations on ratios.
 
 * `real` is the base floating-point type, but it also provides
@@ -5397,7 +5439,7 @@ features several mathematical types designed for that purpose:
 
 * `range of T` is a type that represents a range of numbers, and
   features range arithmetic, which makes it possible to estimate
-  the effect of rounding errors in complex calculations involving
+  the effect of rounding errors in complicated calculations involving
   floating-point types.
 
 * `complex[T]` is a generic representation for complex numbers using
@@ -5475,13 +5517,13 @@ specialized types. Here are some examples:
 
 * In module `XL.FILE`
 ** `file` is a representation for a file on the file system, allowing
-   *operations such as reading or writing.
+   operations such as reading or writing.
 ** `name` is a representation for file names that can be converted to
    and from `text`.
 ** `path` is a representation for hierarchical access paths made of
    individual `name` instances
 ** `directory` is a representation for directories, allowing to get a
-    of files.
+   list of files in a directory, to find the parent directory, and so on.
 ** `attributes` describe file-related attributes, such as creation and
    modification date or access rights.
 
@@ -5689,7 +5731,7 @@ the value is live, by calling programmer-supplied code at the
 appropriate times.
 
 The ((lifetime)) of a value `V` begins by implicitly evaluating
-a _((creation))_statement `create V`. This happens in particular
+a _((creation))_ statement `create V`. This happens in particular
 if you create a local variable without initializing it.
 
 For example, consider the following code:
@@ -5739,6 +5781,7 @@ _((zero initialize))_ them as follows:
 
 * `type` and `nil` values receive `nil`.
 * All integer types receive value `0`
+* All real types receive value `0.0`
 * All character types receive `character 0`.
 * `text` receive `""`.
 * `boolean` receive `false`.
@@ -5777,10 +5820,15 @@ type complex is matching complex(Re:real, Im:real)
 ----
 
 This means that a shape like `complex(2.3, 5.6)` is a `complex`. This
-also means that the _only_ elementary way to create a `complex` is by
-creating such a shape. It is therefore not possible to have an
-uninitialized element in a `complex`, since for example `complex(1.3)`
-would not match the shape and not have the right type.
+also means that the _only_ elementary way to build an arbitrary
+`complex` value is by creating such a shape. It is therefore not
+possible to have an uninitialized element in a `complex`, since for
+example `complex(X, Y)` would not match the shape unless both `X` and
+`Y` were valid `real` values.
+
+However, there are contexts where it is desirable to _default
+initialize_ a complex value, for example when creating a container,
+and this is where the `create` operation is necessary.
 
 Using the shape explicitly given for the type is called the
 _constructor_ for the type, and can be used in definitions or in
@@ -5838,8 +5886,8 @@ value `0` would not match the pattern.
 
 The code above can be fixed, however, by using a constructor for the
 `large` type inside the creator, which means supplying a value that
-matches the type's pattern. The following is an acceptable version of
-the `create` function:
+matches the type's pattern. The following is an almost acceptable
+version of the `create` function:
 
 ....
 large is matching (N when N > 42)
@@ -5848,6 +5896,11 @@ create V:out large is
     print "Creator called"
     V := 44     // Creator for a large value
 ....
+
+NOTE: The above is only _almost_ acceptable because it calls `print`,
+which may fail. Returning an `error` is not allowed by default by the
+signature of `create` for efficiency reasons. If this is desirable,
+then you must explicitly mark `create` as returning `mayfail`.
 
 A type implementation may be _hidden_ in a
 link:#modules[module interface], in which case the module
@@ -6893,7 +6946,7 @@ For example, in order to simplify the definition of a generic
 called simply  `complex`:
 
 ....
-COMPLEX[real:some number] as module with
+module COMPLEX[real:some number] with
 
     complex as some number
     X:complex + Y:complex as complex
@@ -6904,7 +6957,7 @@ A non-generic module can then build a generic type with all the
 trimmings simply with:
 
 ....
-COMPLEX as module with
+module COMPLEX with
     complex[real:some number] as some number is
         super.COMPLEX[real].complex with super.COMPLEX[real]
 ....
