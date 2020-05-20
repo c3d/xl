@@ -6795,7 +6795,7 @@ A feature is said to be _advertised_(((advertised feature))) if it is
 explicitly and intentionally part of the interface. A feature is said
 to be _exposed_(((exposed feature))) if it is made visible as an
 unintentional or even undesirable side effect of the interface.
-For example, if an implementation reqauires ((dynamic values)), this may
+For example, if an implementation requires ((dynamic values)), this may
 force the interface to expose the `storage_error` values that might be
 generated as a result of out-of-memory conditions.
 
