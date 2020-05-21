@@ -8099,8 +8099,8 @@ enum kind { NATURAL, REAL, CHARACTER, ... };
 struct `P.tree`                       { enum kind kind; position_t position; ... };
 ....
 
-The leaf nodes simpy contain one of the basic values tpyes that can be
-foudn in the source code:
+The leaf nodes simply contain one of the basic values types that can be
+found in the source code:
 
 ....
 struct `P.natural`    : `P.tree`    { `natural` value; };
