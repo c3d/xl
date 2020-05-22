@@ -1032,7 +1032,8 @@ that is on the left into the code that is on the right.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">pi              is      3.1415926</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define pi as a numerical constant
+pi              is      3.1415926</code></pre>
 </div>
 </div>
 </div>
@@ -1042,7 +1043,8 @@ that is on the left into the code that is on the right.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">funny_words     is      "xylophage", "zygomatic", "barfitude"
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define a constant list and a constant array
+funny_words     is      "xylophage", "zygomatic", "barfitude"
 identity_matrix is
     [ [1, 0, 0],
       [0, 1, 0],
@@ -1056,7 +1058,8 @@ identity_matrix is
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">abs X:number    is      if X &lt; 0 then -X else X</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define the 'abs' function in a generic way for all numbered ordered types
+abs X           is      if X &lt; 0 then -X else X</code></pre>
 </div>
 </div>
 </div>
@@ -1066,7 +1069,8 @@ identity_matrix is
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X ≠ Y           is      (not X = Y)</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define a not-equal operator using unicode sign
+X ≠ Y           is      (not X = Y)</code></pre>
 </div>
 </div>
 </div>
@@ -1076,7 +1080,8 @@ identity_matrix is
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">0!              is      1
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Factorial definition requires a specialization for case 0!
+0!              is      1
 N!  when N &gt; 0  is      N * (N-1)!</code></pre>
 </div>
 </div>
@@ -1087,7 +1092,8 @@ N!  when N &gt; 0  is      N * (N-1)!</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">A in B..C       is      A &gt;= B and A &lt;= C</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Check if value A is in interval B..C
+A in B..C       is      A &gt;= B and A &lt;= C</code></pre>
 </div>
 </div>
 </div>
@@ -1097,8 +1103,11 @@ N!  when N &gt; 0  is      N * (N-1)!</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X * 1           is      X
-X + 0           is      X</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Optimize various common cases for arithmetic
+X * 1           is      X
+X + 0           is      X
+X - X           is      0
+X / X when X≠0  is      1</code></pre>
 </div>
 </div>
 </div>
@@ -1108,7 +1117,8 @@ X + 0           is      X</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">loop Body       is      { Body; loop Body }     // Define an infnite loop</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define an infinite loop using recursion
+loop Body       is      { Body; loop Body }</code></pre>
 </div>
 </div>
 </div>
@@ -1118,7 +1128,8 @@ X + 0           is      X</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type complex    is polar or cartesian
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define a 'complex' type with either polar or cartesian representation
+type complex    is polar or cartesian
 type cartesian  matches cartesian(re:number, im:number)
 type polar      matches polar(mod:number, arg:number)</code></pre>
 </div>
@@ -1145,7 +1156,8 @@ for example <code>cartesian(1,5)</code>.
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">adder N         is      { lambda X is N + X }
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// A function that returns a function
+adder N         is      { lambda X is N + X }
 add3            is      ( adder 3 )
 
  // This will compute 8
@@ -1198,29 +1210,67 @@ have been written as:</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">my_map is
-    0 is 4
-    1 is 0
-    8 is "World"
-    27 is 32
-    lambda N when N &lt; 45 is N + 1
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Spelling numbers in English
+number_spelling is
+    0           is "zero"
+    1           is "one"
+    2           is "two"
+    3           is "three"
+    4           is "four"
+    5           is "five"
+    6           is "six"
+    7           is "seven"
+    8           is "eight"
+    9           is "nine"
+    10          is "ten"
+    11          is "eleven"
+    12          is "twelve"
+    13          is "thirteen"
+    14          is "fourteen"
+    15          is "fifteen"
+    16          is "sixteen"
+    17          is "seventeen"
+    18          is "eighteen"
+    19          is "nineteen"
+    20          is "twenty"
+    30          is "thirty"
+    40          is "forty"
+    50          is "fifty"
+    60          is "sixty"
+    70          is "seventy"
+    80          is "eighty"
+    90          is "ninety"
+    lambda N when N mod 100 = 0 and N &lt; 2000 is
+        number_spelling[N/100] &amp; "hundred"
+    lambda N when N mod 1000 = 0 is
+        number_spelling[N/1000] &amp; "thousand"
+    lambda N when N &lt; 100 is
+        number_spelling[N/10] &amp; " " &amp; number_spelling[N mod 10]
+    lambda N when N &lt; 1000 is
+        number_spelling[N/100] &amp; "hundred and " &amp; number_spelling[N mod 100]
+    lamdba N when N &lt; 1e6 is
+        number_spelling[N/1000] &amp; "thousand " &amp; number_spelling[N mod 1000]
+    lambda N when N mod 1e6 = 0 is
+        number_spelling[N/1e6] &amp; "million"
+    lambda N when N &lt; 1e9 is
+        number_spelling[N/1e6] &amp; "million " &amp; number_spelling[N mod 1e6]
+    lambda N when N mod 1e9 = 0 is
+        number_spelling[N/1e9] &amp; "billion"
+    lambda N when N &lt; 1e9 is
+        number_spelling[N/1e9] &amp; "billion " &amp; number_spelling[N mod 1e9]
 
-// The following is "World"
-my_map 8
-
-// The following is 32
-my_map[27]
-
-// The following is 45
-my_map (44)</code></pre>
+// This will return "twelve thousand one hundred and seventy three"
+number_spelling[12173]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This provides a functionality roughly equivalent to <code>std::map</code> in C++.
-However, it’s really nothing more than a regular function with a number
-of special cases. The compiler can optimize special kinds of mapping to
-provide an efficient implementation, for example if all the indexes are
-contiguous integers.</p>
+<p>With simple value, XL maps provide a functionality roughly equivalent
+to <code>std::map</code> in C.  However, it’s really nothing more than a
+regular function with a number of special cases, and it is a much more
+general kind of mapping that C, as the <code>lambda N</code> example above
+demonstrates. Like for all functions, the compiler can optimize
+special kinds of mapping to provide an efficient implementation, for
+example if all the indexes are contiguous integers.</p>
 </div>
 </div>
 </details>
@@ -1230,15 +1280,28 @@ contiguous integers.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// An (inefficient) implementation of a generic 1-based array type
-array[1] of T is record
+
+// array[1] of T, start of the recurrence
+array[1] of T with
+    // Interface exposes A[1] which is a mutable T value
+    1 : T
+is
+    // Implementation stores one variable value of type T
     Value : T
     1 is Value
-array[N] of T when N &gt; 1 is record
+
+// array[N] of T: defined based on array[N-1] of T
+array[N] of T when N &gt; 1 like Array[N-1] of T with
+    // Unified interface for A[I] which is a mutable T value
+    (lambda I when I in 1..N) : T
+is
+    // Implemenation is a two-parter for Head and Tail
     Head  : array[N-1] of T
     Tail  : T
     lambda I when I&lt;N is Head[I]
     lambda I when I=N is Tail
 
+// Usage looks exactly like a regular array in another language
 A : array[5] of integer
 for I in 1..5 loop
     A[I] := I * I</code></pre>
@@ -1251,7 +1314,8 @@ for I in 1..5 loop
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">min X, Y    is { Z is min Y; if X &lt; Z then X else Z }
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// A general implementation of minimum
+min X, Y    is { Z is min Y; if X &lt; Z then X else Z }
 min X       is X
 
 // Computes 4
@@ -13311,7 +13375,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-21 12:26:31 +0200
+Last updated 2020-05-22 14:23:03 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
