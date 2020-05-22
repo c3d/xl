@@ -131,7 +131,7 @@ Another interesting, if slightly more complicated version of "Hello
 World" is one written in the link:https://tao3d.sf.net[Tao3D] dialect
 of XL that produces this result:
 
-video::6WIMWlUZJvs[youtube,title=Helo World in Tao3D,width=800,height=600]
+video::6WIMWlUZJvs[youtube,title=Hello World in Tao3D,width=800,height=600]
 
 .Source code for the Tao3D "Hello World"
 [%collapsible]
@@ -9097,10 +9097,10 @@ I sometimes describe XLR as a language with a single operator, `is`,
 which reads as _transforms into_. Thus, `X is 0` declares that `X` has
 value `0`.
 
-Until very recently, that operator was spelled using an arrow, as `->`,
+Until very recently, that operator was spelled using an arrow, as `+->+`,
 which I thought expressed the _transforms into_ quite well. Around 2018,
 I decided that this was unreadable for the novice, and switched to using
-`is` as this _definition operator_. This `->` operator is still what you
+`is` as this _definition operator_. This `+->+` operator is still what you
 will find for example on the http://tao3d.sourceforge.net[Tao3D web
 site].
 
@@ -9219,7 +9219,7 @@ image:images/tao3dtheme1.png[Tao3D slide]
 
 The same technique goes well beyond mere bullet points:
 
-http://www.youtube.com/watch?v=4wTQcKvhReo[image:images/tao3d-slide.jpg]
+video::4wTQcKvhReo[youtube,title=Christmas Card in Tao3D,width=800,height=600]
 
 Tao3D developed a relatively large set of specialised modules, dealing
 with things such as stereoscopy or lens flares. As a product, however,
@@ -9246,7 +9246,7 @@ standard parse tree to communicate programs and data across machines.
 
 An ELFE program looks as as if it was running on a single machine, but
 actively exchanges program segments and their associated data between
-distant nodes (in modern XL, `->` below would read `is`):
+distant nodes (in modern XL, `+->+` below would read `is`):
 
 [source]
 ----
@@ -9335,7 +9335,12 @@ of integer constants in the code, `real` the type of real constants, and
 Obviously, that means that in XL, a value can belong to multiple types.
 `2+3*5` belongs to `type(X+Y)`, to `type(X:integer+Y:integer)` or to
 `infix`. This makes the XL type system extremely powerful. For example.
-a type for even numbers is `type(X:integer when X mod 2 = 0)`.
+a type for even numbers is `type(X:integer when X mod 2 = 0)`. I later
+changed `type(X)` into `matching(X)` for two reasons. First, the
+`type(X)` operation was more expected to be the type of value `X`, not
+the type derived from its shape. Second, you need to learn that the XL
+type system is based on pattern matching, and `matching` makes
+somewhat obvious what happens.
 
 ELFE also gave me a chance to implement a relatively crude version of
 this idea and validate that it’s basically sane. Bringing that idea to
@@ -9406,7 +9411,7 @@ approach (designed to allow the use of XL as an extension language) was
 incorporated in XL. As a result, ELFE is dead, but it lives on in the
 main XL tree. XL was also turned into a library, with a very small
 front-end calling that library to evaluate the code.
-* The switch from `->` to `is` as the definition operator was
+* The switch from `+->+` to `is` as the definition operator was
 implemented.
 * The LLVM "Compatibility Restoration Adaptive Protocol" (LLVM-CRAP)
 component of XL was completely redesigned, giving up pre-3.5 versions of
@@ -9498,7 +9503,7 @@ library, and see if it makes it possible to get rid of the garbage
 collector. That would be especially nice for Tao3D, where GC pause,
 while generally quite small, are annoying.
 * Some reworking of XL0, notably to make it easier to add terminal node
-types. An example of use case is version numnbers like `1.0.1`, which
+types. An example of use case is version numbers like `1.0.1`, which
 are hard to deal with currently. The distinction between `Integer` and
 `Real` is indispensable for evaluation, but it may not be indispensable
 at parse time.

@@ -873,7 +873,7 @@ World" is one written in the <a href="https://tao3d.sf.net">Tao3D</a> dialect
 of XL that produces this result:</p>
 </div>
 <div class="videoblock">
-<div class="title">Helo World in Tao3D</div>
+<div class="title">Hello World in Tao3D</div>
 <div class="content">
 <iframe width="800" height="600" src="https://www.youtube.com/embed/6WIMWlUZJvs?rel=0" frameborder="0" allowfullscreen></iframe>
 </div>
@@ -11466,8 +11466,8 @@ struct `P.tree`                       { enum kind kind; position_t position; ...
 </div>
 </div>
 <div class="paragraph">
-<p>The leaf nodes simpy contain one of the basic values tpyes that can be
-foudn in the source code:</p>
+<p>The leaf nodes simply contain one of the basic values types that can be
+found in the source code:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -12724,10 +12724,10 @@ which reads as <em>transforms into</em>. Thus, <code>X is 0</code> declares that
 value <code>0</code>.</p>
 </div>
 <div class="paragraph">
-<p>Until very recently, that operator was spelled using an arrow, as <code>&#8594;</code>,
+<p>Until very recently, that operator was spelled using an arrow, as <code>-&gt;</code>,
 which I thought expressed the <em>transforms into</em> quite well. Around 2018,
 I decided that this was unreadable for the novice, and switched to using
-<code>is</code> as this <em>definition operator</em>. This <code>&#8594;</code> operator is still what you
+<code>is</code> as this <em>definition operator</em>. This <code>-&gt;</code> operator is still what you
 will find for example on the <a href="http://tao3d.sourceforge.net">Tao3D web
 site</a>.</p>
 </div>
@@ -12896,8 +12896,11 @@ slide "An example slide",
 <div class="paragraph">
 <p>The same technique goes well beyond mere bullet points:</p>
 </div>
-<div class="paragraph">
-<p><a href="http://www.youtube.com/watch?v=4wTQcKvhReo">image:images/tao3d-slide.jpg</a></p>
+<div class="videoblock">
+<div class="title">Christmas Card in Tao3D</div>
+<div class="content">
+<iframe width="800" height="600" src="https://www.youtube.com/embed/4wTQcKvhReo?rel=0" frameborder="0" allowfullscreen></iframe>
+</div>
 </div>
 <div class="paragraph">
 <p>Tao3D developed a relatively large set of specialised modules, dealing
@@ -12929,7 +12932,7 @@ standard parse tree to communicate programs and data across machines.</p>
 <div class="paragraph">
 <p>An ELFE program looks as as if it was running on a single machine, but
 actively exchanges program segments and their associated data between
-distant nodes (in modern XL, <code>&#8594;</code> below would read <code>is</code>):</p>
+distant nodes (in modern XL, <code>-&gt;</code> below would read <code>is</code>):</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -13034,7 +13037,12 @@ of integer constants in the code, <code>real</code> the type of real constants, 
 <p>Obviously, that means that in XL, a value can belong to multiple types.
 <code>2+3*5</code> belongs to <code>type(X+Y)</code>, to <code>type(X:integer+Y:integer)</code> or to
 <code>infix</code>. This makes the XL type system extremely powerful. For example.
-a type for even numbers is <code>type(X:integer when X mod 2 = 0)</code>.</p>
+a type for even numbers is <code>type(X:integer when X mod 2 = 0)</code>. I later
+changed <code>type(X)</code> into <code>matching(X)</code> for two reasons. First, the
+<code>type(X)</code> operation was more expected to be the type of value <code>X</code>, not
+the type derived from its shape. Second, you need to learn that the XL
+type system is based on pattern matching, and <code>matching</code> makes
+somewhat obvious what happens.</p>
 </div>
 <div class="paragraph">
 <p>ELFE also gave me a chance to implement a relatively crude version of
@@ -13131,7 +13139,7 @@ main XL tree. XL was also turned into a library, with a very small
 front-end calling that library to evaluate the code.</p>
 </li>
 <li>
-<p>The switch from <code>&#8594;</code> to <code>is</code> as the definition operator was
+<p>The switch from <code>-&gt;</code> to <code>is</code> as the definition operator was
 implemented.</p>
 </li>
 <li>
@@ -13264,7 +13272,7 @@ while generally quite small, are annoying.</p>
 </li>
 <li>
 <p>Some reworking of XL0, notably to make it easier to add terminal node
-types. An example of use case is version numnbers like <code>1.0.1</code>, which
+types. An example of use case is version numbers like <code>1.0.1</code>, which
 are hard to deal with currently. The distinction between <code>Integer</code> and
 <code>Real</code> is indispensable for evaluation, but it may not be indispensable
 at parse time.</p>
@@ -13303,7 +13311,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-20 23:57:17 +0200
+Last updated 2020-05-21 12:26:31 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
