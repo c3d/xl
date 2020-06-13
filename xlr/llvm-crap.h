@@ -546,18 +546,16 @@ inline llvm::Module *JIT::CreateModule(text name)
 //   If the current module has been JITed already, we need to create a new one
 //   as the MCJIT will have "closed" all relocations
 {
-#if LLVM_CRAP_MCJIT
+#ifndef LLVM_CRAP_MCJIT
+    return module;
+#else // LLVM_CRAP_MCJIT
     static unsigned index = 0;
     name += '.';
     name += std::to_string(++index);
-#endif
 
     llvm::Module *m = new llvm::Module(name, context);
     module = m;
-
-#if LLVM_CRAP_MCJIT
     modules.push_back(m);
-#endif
 
 #if 0 && LLVM_VERSION >= 30
     llvm::PassManagerBuilder opts;
@@ -569,6 +567,7 @@ inline llvm::Module *JIT::CreateModule(text name)
 #endif // LLVM_VERSION 3.0
 
     return m;
+#endif // LLVM_CRAP_MCJIT
 }
 
 
