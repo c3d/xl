@@ -409,7 +409,11 @@ inline JIT::JIT()
     engineBuilder.setUseOrcMCJITReplacement(true);
 #endif // 350
 #endif
+#ifndef LLVM_CRAP_MCJIT
+    runtime = engineBuilder.create();
+#else // LLVM_CRAP_MCJIT
     ExecutionEngine *runtime = engineBuilder.create();
+#endif // LLVM_CRAP_MCJIT
 
     // Check if we were successful in the creation of the runtime
     if (!runtime)
