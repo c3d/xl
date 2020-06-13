@@ -1,5 +1,5 @@
 before_script:
-  - dnf install -y llvm-devel git gcc gcc-c++ make findutils diffutils gawk || (apt-get update && apt-get install -y llvm-dev git gcc g++ make findutils gawk)
+  - dnf install -y llvm-devel git gcc gcc-c++ make findutils diffutils gawk || (apt-get update && apt-get install -y llvm-9-dev git gcc g++ make findutils gawk)
   - git submodule update --init --recursive
 
 install:fedora:
