@@ -391,6 +391,10 @@ inline JIT::JIT()
 #endif
 
 #ifndef LLVM_CRAP_MCJIT
+
+    // Create module where we will build the code
+    module = new llvm::Module("xl", llvm::getGlobalContext());
+
 #if LLVM_VERSION < 360
     // Select the fast JIT
     EngineBuilder engineBuilder(module);
