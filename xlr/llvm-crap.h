@@ -90,12 +90,12 @@
 #else // >= 370
 #define LLVM_CRAP_MCJIT         1
 #include <llvm/ExecutionEngine/MCJIT.h>
-#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/IR/LegacyPassManager.h>
 #if LLVM_VERSION > 381
 #include <llvm/Transforms/Scalar/GVN.h>
 #endif // > 371
 #endif // >= 370
+#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/Support/raw_ostream.h>
@@ -391,6 +391,24 @@ inline JIT::JIT()
 #endif
 
 #ifndef LLVM_CRAP_MCJIT
+#if LLVM_VERSION < 360
+    // Select the fast JIT
+    EngineBuilder engineBuilder(module);
+#else
+    // WTF version of the above
+    EngineBuilder engineBuilder(std::move(moduleOwner));
+    engineBuilder.setErrorStr(&llvm_crap_error_string);
+#endif
+
+#if LLVM_VERSION >= 31
+    TargetOptions targetOpts;
+    // targetOpts.JITEmitDebugInfo = true;
+    engineBuilder.setEngineKind(EngineKind::JIT);
+    engineBuilder.setTargetOptions(targetOpts);
+#if LLVM_VERSION < 350
+    engineBuilder.setUseOrcMCJITReplacement(true);
+#endif // 350
+#endif
     ExecutionEngine *runtime = engineBuilder.create();
 
     // Check if we were successful in the creation of the runtime
@@ -677,7 +695,7 @@ inline void *JIT::FunctionPointer(llvm::Function* f)
 {
 #ifndef LLVM_CRAP_MCJIT
     if (optimizer)
-        optimizer->run(*adapter);
+        optimizer->run(*f);
     return runtime->getPointerToFunction(f);
 #else // LLVM_CRAP_MCJIT
     for (auto engine : engines)
@@ -743,6 +761,7 @@ inline void JIT::SetOptimizationLevel(uint opt)
 // ----------------------------------------------------------------------------
 {
     optimizeLevel = opt;
+    using namespace llvm;
 
 #if LLVM_VERSION < 30
     createStandardModulePasses(moduleOptimizer, optLevel,
@@ -810,7 +829,7 @@ inline void JIT::SetOptimizationLevel(uint opt)
 
 
     // If we use the old compiler, we need lazy compilation, see bug #718
-    if (optLevel == 1)
+    if (optimizeLevel == 1)
         runtime->DisableLazyCompilation(false);
 #endif // LLVM_CRAP_MCJIT
 }

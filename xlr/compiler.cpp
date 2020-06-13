@@ -77,8 +77,10 @@ static void* unresolved_external(const std::string& name)
 // ----------------------------------------------------------------------------
 // This is really just to print a fancy error message
 {
+#if LLVM_VERSION >= 370
     if (auto SymAddr = RTDyldMemoryManager::getSymbolAddressInProcess(name))
         return (void *) SymAddr;
+#endif // 370
 
     std::cout.flush();
     std::cerr << "Unable to resolve external: " << name << std::endl;
