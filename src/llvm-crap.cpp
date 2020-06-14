@@ -596,8 +596,10 @@ JIT::ModuleID JITPrivate::CreateModule(text name)
     module = llvm::make_unique<llvm::Module>(name, context);
 #elif LLVM_VERSION < 700
     module = std::make_shared<llvm::Module>(name, context);
-#elif LLVM_VERSION >= 700
+#elif LLVM_VERSION < 1000
     module = llvm::make_unique<llvm::Module>(name, context);
+#elif LLVM_VERSION >= 1000
+    module = std::make_unique<llvm::Module>(name, context);
 #endif // LLVM_VERSION 500
     record(llvm_modules, "Created module %p in %p", module.get(), this);
     module->setDataLayout(layout);

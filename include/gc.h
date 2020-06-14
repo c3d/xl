@@ -61,6 +61,20 @@ template <class Object, typename ValueType=void> struct GCPtr;
 
 // ****************************************************************************
 //
+//    Support of -fno-exceptions (necessary for LLVM10, maybe earlier)
+//
+// ****************************************************************************
+
+#if __cpp_exceptions
+#define NEW_THROW
+#else // ! __cpp_exceptions
+#define NEW_THROW       throw()
+#endif // __cpp_exceptions
+
+
+
+// ****************************************************************************
+//
 //   Type Allocator - Manage allocation for a given type
 //
 // ****************************************************************************
@@ -87,7 +101,7 @@ public:
     TypeAllocator(kstring name, uint objectSize);
     virtual ~TypeAllocator();
 
-    void *              Allocate();
+    void *              Allocate() NEW_THROW;
     void                Delete(void *);
     virtual void        Finalize(void *);
 
@@ -106,7 +120,7 @@ public:
     bool                Sweep();
     void                ResetStatistics();
 
-    void *operator new(size_t size);
+    void *operator new(size_t size) NEW_THROW;
     void operator delete(void *ptr);
 
 public:
@@ -176,7 +190,7 @@ public:
 
     static Allocator *  CreateSingleton();
     static Allocator *  Singleton()             { return allocator; }
-    static Object *     Allocate(size_t size);
+    static Object *     Allocate(size_t size) NEW_THROW;
     static void         Delete(Object *);
     virtual void        Finalize(void *object);
     static bool         IsAllocated(void *ptr);
@@ -540,7 +554,7 @@ Allocator<Object> * Allocator<Object>::CreateSingleton()
 
 
 template<class Object> inline
-Object *Allocator<Object>::Allocate(size_t size)
+Object *Allocator<Object>::Allocate(size_t size) NEW_THROW
 // ----------------------------------------------------------------------------
 //   Allocate an object (invoked by operator new)
 // ----------------------------------------------------------------------------

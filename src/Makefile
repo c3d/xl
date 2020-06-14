@@ -123,6 +123,8 @@ CONFIG= sigaction                       \
         glob                            \
         uchar ushort uint ulong longlong
 
+CXX_STD=
+
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
@@ -136,7 +138,7 @@ LLVM_LDFLAGS=$(LLVM_LDFLAGS_$(COMPILER))
 
 # When LLVM is enabled, we get those
 LLVM_VERSION_llvm=  $(shell $(LLVM_CONFIG) --version | sed -e s/[.a-z-]//g)
-LLVM_FLAGS_llvm=    $(shell $(LLVM_CONFIG) --cppflags | sed -e s/-DNDEBUG//g)
+LLVM_FLAGS_llvm=    $(shell $(LLVM_CONFIG) --cxxflags | sed -e s/-DNDEBUG//g)
 LLVM_LIBS_llvm=     $(shell $(LLVM_CONFIG) --libs) $(LLVM_SYSLIBS)
 # LLVM 3.4 and before have no --system-libs.
 # So LLVM did not only develop source code incompatibility to an art form,
