@@ -112,12 +112,6 @@ llvm-9.0:fedora:
    - dnf install -y llvm9.0-devel
    - make release-check LLVM_CONFIG=llvm-config-9.0-64
 
-llvm-10.0:fedora:
-  image: fedora:latest
-  script:
-   - dnf install -y llvm10.0-devel
-   - make release-check LLVM_CONFIG=llvm-config-10.0-64
-
 install:ubuntu:
   image: ubuntu:latest
   script:
