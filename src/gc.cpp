@@ -390,7 +390,7 @@ void TypeAllocator::ResetStatistics()
 }
 
 
-void *TypeAllocator::operator new(size_t size)
+void *TypeAllocator::operator new(size_t size) NEW_THROW
 // ----------------------------------------------------------------------------
 //   Force 16-byte alignment not guaranteed by regular operator new
 // ----------------------------------------------------------------------------
