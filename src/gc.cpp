@@ -399,7 +399,13 @@ void *TypeAllocator::operator new(size_t size)
 #if defined(HAVE_POSIX_MEMALIGN)
     // Real operating systems
     if (posix_memalign(&result, PTR_MASK+1, size))
+    {
+#if __cpp_has_exceptions
         throw std::bad_alloc();
+#else // !__cpp_has_exceptions
+        return nullptr;
+#endif // __cpp_has_exceptions
+    }
 #elif defined(HAVE_MINGW_ALIGNED_MALLOC)
     // Ancient versions of MinGW
     result = __mingw_aligned_malloc(size, PTR_MASK+1);
