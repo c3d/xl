@@ -1,5 +1,5 @@
 before_script:
-  - dnf install -y llvm-devel git gcc gcc-c++ make findutils diffutils gawk || (apt-get update && apt-get install -y llvm-9-dev git gcc g++ make findutils gawk && (cd /usr/bin && ln -sf ../lib/llvm-9/bin/llvm-config .))
+  - dnf install -y llvm-devel git gcc gcc-c++ make findutils diffutils gawk || (apt-get update && apt-get install -y llvm-dev git gcc g++ make findutils gawk && (cd /usr/bin && ln -sf ../lib/llvm-9/bin/llvm-config .))
   - git submodule update --init --recursive
 
 install:fedora:
@@ -105,6 +105,18 @@ llvm-8.0:fedora:
   script:
    - dnf install -y llvm8.0-devel
    - make release-check LLVM_CONFIG=llvm-config-8.0-64
+
+llvm-9.0:fedora:
+  image: fedora:latest
+  script:
+   - dnf install -y llvm9.0-devel
+   - make release-check LLVM_CONFIG=llvm-config-9.0-64
+
+llvm-10.0:fedora:
+  image: fedora:latest
+  script:
+   - dnf install -y llvm10.0-devel
+   - make release-check LLVM_CONFIG=llvm-config-10.0-64
 
 install:ubuntu:
   image: ubuntu:latest
