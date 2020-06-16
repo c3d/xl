@@ -79,25 +79,25 @@ interpreter:fedora:
 llvm-4.0:fedora:
   image: fedora:28
   script:
-   - dnf install -y llvm4.0-devel
+   - dnf install -y llvm4.0-devel redhat-rpm-config
    - make release-check LLVM_CONFIG=llvm-config-4.0-64
 
 llvm-5.0:fedora:
   image: fedora:31
   script:
-   - dnf install -y llvm5.0-devel
+   - dnf install -y llvm5.0-devel redhat-rpm-config
    - make release-check LLVM_CONFIG=llvm-config-5.0-64
 
 llvm-6.0:fedora:
   image: fedora:latest
   script:
-   - dnf install -y llvm6.0-devel
+   - dnf install -y llvm6.0-devel  redhat-rpm-config
    - make release-check LLVM_CONFIG=llvm-config-6.0-64
 
 llvm-7.0:fedora:
   image: fedora:latest
   script:
-   - dnf install -y llvm7.0-devel
+   - dnf install -y llvm7.0-devel  redhat-rpm-config
    - make release-check LLVM_CONFIG=llvm-config-7.0-64
 
 llvm-8.0:fedora:
