@@ -189,10 +189,6 @@
 # include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
 #endif // LLVM_VERSION 500
 
-#if LLVM_VERSION >= 600
-# include "llvm/ExecutionEngine/Orc/SymbolStringPool.h"
-#endif // LLVM_VERSION 600
-
 // Finally, link everything together.
 // That, apart for the warnings, has remained somewhat stable
 #include "llvm/LinkAllIR.h"
@@ -370,9 +366,6 @@ class JITPrivate
     TargetMachine_u     target;
     const DataLayout    layout;
 #if LLVM_VERSION >= 700
-#if LLVM_VERSION < 800
-    SymbolStringPool    strings;
-#endif // LLVM_VERSION 800
     ExecutionSession    session;
     typedef std::shared_ptr<SymbolResolver> SymbolResolver_s;
     SymbolResolver_s    resolver;
@@ -496,9 +489,6 @@ JITPrivate::JITPrivate(int argc, char **argv)
 #elif LLVM_VERSION < 700
       linker([]() { return std::make_shared<SectionMemoryManager>(); }),
 #else // LLVM_VERSION >= 700
-#if LLVM_VERSION < 800
-      strings(),
-#endif // LLVM_VERSION 800
       session(),
       resolver(createLegacyLookupResolver(
 #if LLVM_VERSION >= 700
