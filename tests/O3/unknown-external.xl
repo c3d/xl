@@ -1,5 +1,5 @@
 // OPT=-O3 -nobuiltins %f
-// FILTER=sed -e 's/_some_unknown_symbol/some_unknown_symbol/g' -e 's/Symbols not found.*some_unknown_symbol.*/Unresolved symbols: some_unknown_symbol/g'
+// FILTER=sed -e 's/_some_unknown_symbol/some_unknown_symbol/g' -e 's/JIT session error: Unresolved symbol:/Unresolved symbols:/g' -e 's/Symbols not found.*some_unknown_symbol.*/Unresolved symbols: some_unknown_symbol/g' | grep -v "Failed to materialize symbols"
 // EXIT=1
 invalid_function X:text is C some_unknown_symbol
 invalid_function "Hello"
