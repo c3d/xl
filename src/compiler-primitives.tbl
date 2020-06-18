@@ -228,7 +228,7 @@ EXTERNAL(xl_integer2real,       treePtrTy,      treePtrTy)
 EXTERNAL(xl_array_index,        treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 VA_EXTERNAL(xl_new_closure,     treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
 EXTERNAL(xl_closure_code,       evalFnTy,       treePtrTy)
-EXTERNAL(xl_infix_name,         charPtrTy,      infixTreePtrTy);
+EXTERNAL(xl_infix_name,         charPtrTy,      infixTreePtrTy)
 
 
 
