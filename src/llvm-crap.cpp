@@ -1114,7 +1114,7 @@ JIT::Function_p JIT::Function(JIT::FunctionType_p type, text name)
     JIT::Function_p f = llvm::Function::Create(type,
                                                llvm::Function::ExternalLinkage,
                                                name, module);
-    record(llvm_functions, "Created function %v type %v in module %p",
+    record(llvm_functions, "Created function %v type %T in module %p",
            f, type, p.Module());
 
     return f;
