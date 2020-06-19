@@ -387,7 +387,6 @@ int Main::LoadFiles()
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
 {
-    source_names::iterator  file;
     bool hadError = false;
 
     // Loop over files we will process
