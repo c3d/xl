@@ -1265,7 +1265,11 @@ void *JIT::ExecutableCode(JIT::Function_p f)
 //   Return an executable pointer to the function
 // ----------------------------------------------------------------------------
 {
+#if LLVM_VERSION < 1100
     JITTargetAddress address = p.Address(f->getName());
+#else // LLVM_VERSION >= 1100
+    JITTargetAddress address = p.Address(f->getName().str());
+#endif // LLVM_VERSION
     record(llvm_functions, "Address of %v is %p", f, (void *) address);
     return (void *) address;
 }
@@ -1292,7 +1296,11 @@ JIT::Function_p JIT::Prototype(JIT::Function_p function)
 //   If the function is in this module, return it, else return prototype for it
 {
     JIT::Module_p module = p.Module();
+#if LLVM_VERSION < 1100
     text          name   = function->getName();
+#else // LLVM_VERSION >= 1100
+    text          name   = function->getName().str();
+#endif
 
     // First check if we don't already have it in the current module
     if (module)
@@ -1583,13 +1591,38 @@ void JITBlock::SwitchTo(JIT::BasicBlock_p block)
 }
 
 
+#if LLVM_VERSION < 1100
+#define Callee(V)       (V)
+#else // LLVM_VERSION >= 1100
+static inline llvm::FunctionCallee Callee(JIT::Value_p callee)
+// ----------------------------------------------------------------------------
+//   Another totally useless wrapper with more damage to come
+// ----------------------------------------------------------------------------
+{
+    JIT::Type_p type = callee->getType();
+    if (type->isFunctionTy())
+    {
+        JIT::FunctionType_p ftype = (JIT::FunctionType_p) type;
+        return llvm::FunctionCallee(ftype, callee);
+    }
+
+    assert(type->isPointerTy() && "Callee requires a callable value");
+    JIT::PointerType_p ptype = (JIT::PointerType_p) type;
+    type = ptype->getElementType();
+    assert(type->isFunctionTy() && "Callee require function type for callee");
+    JIT::FunctionType_p ftype = (JIT::FunctionType_p) type;
+    return llvm::FunctionCallee(ftype, callee);
+}
+#endif
+
+
 JIT::Value_p JITBlock::Call(JIT::Value_p callee, JIT::Value_p arg1)
 // ----------------------------------------------------------------------------
 //   Create a call with one argument
 // ----------------------------------------------------------------------------
 {
     JIT::Value_p proto = b.jit.Prototype(callee);
-    JIT::Value_p result = b->CreateCall(proto, {arg1});
+    JIT::Value_p result = b->CreateCall(Callee(proto), {arg1});
     record(llvm_ir, "Call %v(%v) = %v", callee, arg1, result);
     return result;
 }
@@ -1603,7 +1636,7 @@ JIT::Value_p JITBlock::Call(JIT::Value_p callee,
 // ----------------------------------------------------------------------------
 {
     JIT::Value_p proto = b.jit.Prototype(callee);
-    JIT::Value_p result = b->CreateCall(proto, {arg1, arg2});
+    JIT::Value_p result = b->CreateCall(Callee(proto), {arg1, arg2});
     record(llvm_ir, "Call %v(%v, %v) = %v", callee, arg1, arg2, result);
     return result;
 }
@@ -1618,7 +1651,7 @@ JIT::Value_p JITBlock::Call(JIT::Value_p callee,
 // ----------------------------------------------------------------------------
 {
     JIT::Value_p proto = b.jit.Prototype(callee);
-    JIT::Value_p result = b->CreateCall(proto, {arg1, arg2, arg3});
+    JIT::Value_p result = b->CreateCall(Callee(proto), {arg1, arg2, arg3});
     record(llvm_ir, "Call %v(%v, %v, %v) = %v", callee, arg1,arg2,arg3, result);
     return result;
 }
@@ -1631,7 +1664,8 @@ JIT::Value_p JITBlock::Call(JIT::Value_p callee,
 // ----------------------------------------------------------------------------
 {
     JIT::Value_p proto = b.jit.Prototype(callee);
-    JIT::Value_p result = b->CreateCall(proto, ArrayRef<JIT::Value_p>(args));
+    JIT::Value_p result = b->CreateCall(Callee(proto),
+                                        ArrayRef<JIT::Value_p>(args));
     record(llvm_ir, "Call %v(#%u) = %v", callee, args.size(), result);
     return result;
 }
