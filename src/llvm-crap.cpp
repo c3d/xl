@@ -584,7 +584,11 @@ JITPrivate::JITPrivate(int argc, char **argv)
 #else // LLVM_VERSION >= 900
       magic(exitOnError(LLLazyJITBuilder().create())),
       session(magic->getExecutionSession()),
+#if LLVM_VERSION < 1000
       threadSafeContext(make_unique<LLVMContext>()),
+#else // LLVM_VERSION >= 1000
+      threadSafeContext(std::make_unique<LLVMContext>()),
+#endif // LLVM_VERSION vs 1000
       context(*threadSafeContext.getContext()),
       mangle(session, layout),
 #endif // LLVM_VERSION >= 900
@@ -611,7 +615,6 @@ JITPrivate::JITPrivate(int argc, char **argv)
         });
 #endif
 
-    auto &dylib = session.createJITDylib("xl");
     auto generator = DynamicLibrarySearchGenerator::GetForCurrentProcess(
         layout.getGlobalPrefix(),
         [&](const SymbolStringPtr &str)
@@ -626,7 +629,13 @@ JITPrivate::JITPrivate(int argc, char **argv)
             return result;
         });
     if (generator)
-        dylib.setGenerator(*generator);
+    {
+#if LLVM_VERSION < 1000
+        session.getMainJITDylib().setGenerator(*generator);
+#else // LLVM_VERSION >= 1000
+        magic->getMainJITDylib().addGenerator(std::move(*generator));
+#endif
+    }
     session.setErrorReporter(logErrorsToStdErr);
 #endif // LLVM_VERSION >= 900
     record(llvm, "JITPrivate %p constructed", this);
