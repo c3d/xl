@@ -949,8 +949,8 @@ JITTargetAddress JITPrivate::Address(text name)
     auto r = Symbol(name).getAddress();
     if (hadError(r))
     {
-        record(llvm_symbols, "Symbol error %s", llvmSymbolError);
         text message = errorMsg(r);
+        record(llvm_symbols, "Symbol error %s", message);
         Ooops("Generating machine code for $1 failed: $2")
             .Arg(name, "'")
             .Arg(message, "");
