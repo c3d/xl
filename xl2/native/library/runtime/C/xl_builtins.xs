@@ -1,9 +1,8 @@
-// ****************************************************************************
-//  xl_builtins.xs                  (C) 1992-2004 Christophe de Dinechin (ddd)
-//                                                                 XL2 project
-// ****************************************************************************
+// *****************************************************************************
+// xl_builtins.xs                                                     XL project
+// *****************************************************************************
 //
-//   File Description:
+// File description:
 //
 //     This defines the built-in operations in XL
 //
@@ -14,21 +13,33 @@
 //
 //
 //
-// ****************************************************************************
-// This document is released under the GNU General Public License.
-// See http://www.gnu.org/copyleft/gpl.html for details
-// ****************************************************************************
-// * File       : $RCSFile$
-// * Revision   : $Revision: 305 $
-// * Date       : $Date: 2007-06-20 08:51:09 +0200 (Wed, 20 Jun 2007) $
-// ****************************************************************************
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3+
+// (C) 2005-2009,2015, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 module XL_BUILTINS with
 
     // ========================================================================
-    // 
+    //
     //   Bytecode types
-    // 
+    //
     // ========================================================================
 
     type integer                                                                                is XL.BYTECODE.xlint
@@ -37,7 +48,7 @@ module XL_BUILTINS with
     type character                                                                              is XL.BYTECODE.xlchar
     type text                                                                                   is XL.BYTECODE.xltext
     type record                                                                                 is XL.BYTECODE.xlrecord
-    type boolean                                                                                is enumeration (false, true) as XL.BYTECODE.xlbool 
+    type boolean                                                                                is enumeration (false, true) as XL.BYTECODE.xlbool
 
 
 
@@ -48,9 +59,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //   Signed integers
-    // 
+    //
     // ========================================================================
 
     // Integer operations
@@ -81,9 +92,9 @@ module XL_BUILTINS with
     function BitwiseNot(X : integer) return integer             written not X                   is XL.BYTECODE.not_int
 
     // ========================================================================
-    // 
+    //
     //   Unsigned integer operations
-    // 
+    //
     // ========================================================================
     // REVISIT: Would 'cardinal' or 'natural' be a better name than 'unsigned'?
 
@@ -114,9 +125,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Floating-point operations
-    // 
+    //
     // ========================================================================
 
     // Real operations
@@ -146,18 +157,18 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Fixed-point operations
-    // 
+    //
     // ========================================================================
 
     // TO BE DONE
 
 
     // ========================================================================
-    // 
+    //
     //    Boolean operations
-    // 
+    //
     // ========================================================================
 
     // Boolean operations
@@ -177,9 +188,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Character operations
-    // 
+    //
     // ========================================================================
 
     // Character operations
@@ -195,16 +206,16 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Text
-    // 
+    //
     // ========================================================================
 
 
     // ========================================================================
-    // 
+    //
     //    Ordered and min/max
-    // 
+    //
     // ========================================================================
 
     generic type ordered where
@@ -228,9 +239,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Ranges
-    // 
+    //
     // ========================================================================
 
     generic [type ordered_type]
@@ -244,17 +255,17 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Arrays
-    // 
+    //
     // ========================================================================
 
 
 
     // ========================================================================
-    // 
+    //
     //    Type conversions
-    // 
+    //
     // ========================================================================
 
     // Convert to integer
@@ -283,9 +294,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Iterators
-    // 
+    //
     // ========================================================================
 
     iterator IntegerIterator (
@@ -331,9 +342,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //   Default Index function (for case statements)
-    // 
+    //
     // ========================================================================
 
     generic [type item]
@@ -349,9 +360,9 @@ module XL_BUILTINS with
 
 
     // ========================================================================
-    // 
+    //
     //    Assert macro
-    // 
+    //
     // ========================================================================
 
     procedure xl_assertion_failure(msg : text; file : text; line : integer) is           XL.BYTECODE.xl_assert
