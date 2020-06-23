@@ -16,8 +16,8 @@
 //
 //
 // *****************************************************************************
-// This software is licensed under the GNU General Public License v3
-// (C) 2010-2012,2015-2019, Christophe de Dinechin <cdedinechin@dxo.com>
+// This software is licensed under the GNU General Public License v3+
+// (C) 2010-2012,2015-2020, Christophe de Dinechin <cdedinechin@dxo.com>
 // (C) 2011-2012, Jérôme Forissier <jerome@taodyne.com>
 // (C) 0,
 // *****************************************************************************
@@ -25,8 +25,8 @@
 //
 // XL is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
 //
 // XL is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of

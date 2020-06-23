@@ -15,16 +15,16 @@
 //
 //
 // *****************************************************************************
-// This software is licensed under the GNU General Public License v3
-// (C) 2003-2004,2009-2012,2014-2019, Christophe de Dinechin <christophe@dinechin.org>
+// This software is licensed under the GNU General Public License v3+
+// (C) 2003-2004,2009-2012,2014-2020, Christophe de Dinechin <christophe@dinechin.org>
 // (C) 2010-2013, Jérôme Forissier <jerome@taodyne.com>
 // *****************************************************************************
 // This file is part of XL
 //
 // XL is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
 //
 // XL is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
