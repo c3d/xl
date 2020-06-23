@@ -90,7 +90,7 @@ inline Tree *Interpreter::IsClosure(Tree *tree, Context_p *context)
 {
     if (Scope *closure = tree->AsPrefix())
     {
-        if (Scope *scope = Enclosing(closure))
+        if (Scope *scope = EnclosingScope(closure))
         {
             if (closure->GetInfo<ClosureInfo>())
             {

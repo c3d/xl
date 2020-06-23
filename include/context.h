@@ -235,7 +235,7 @@ public:
 //
 // ============================================================================
 
-inline Scope *Enclosing(Scope *scope)
+inline Scope *EnclosingScope(Scope *scope)
 // ----------------------------------------------------------------------------
 //   Find parent for a given scope
 // ----------------------------------------------------------------------------
@@ -289,7 +289,7 @@ struct ContextStack
     friend std::ostream &operator<<(std::ostream &out, const ContextStack &data)
     {
         out << "[ ";
-        for (Scope *s = data.scope; s; s = Enclosing(s))
+        for (Scope *s = data.scope; s; s = EnclosingScope(s))
             out << (void *) s << " ";
         out << "]";
         return out;

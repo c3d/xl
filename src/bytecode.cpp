@@ -872,7 +872,7 @@ CodeBuilder::depth CodeBuilder::ScopeDepth(Scope *scope)
             return count ? LOCAL : PARAMETER;
         if (scope == globalScope)
             return count ? ENCLOSING : GLOBAL;
-        scope = Enclosing(scope);
+        scope = EnclosingScope(scope);
         count++;
     }
 

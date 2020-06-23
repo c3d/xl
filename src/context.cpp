@@ -141,7 +141,7 @@ void Context::PopScope()
 //   Remove the innermost local scope
 // ----------------------------------------------------------------------------
 {
-    if (Scope *enclosing = Enclosing(symbols))
+    if (Scope *enclosing = EnclosingScope(symbols))
         symbols = enclosing;
 }
 
@@ -151,7 +151,7 @@ Context *Context::Parent()
 //   Return the parent context
 // ----------------------------------------------------------------------------
 {
-    if (Scope *psyms = Enclosing(symbols))
+    if (Scope *psyms = EnclosingScope(symbols))
         return new Context(psyms);
     return nullptr;
 }
@@ -643,7 +643,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
         // The last top-level global will be nil, so we will end with scope=NULL
         if (!recurse)
             break;
-        scope = Enclosing(scope);
+        scope = EnclosingScope(scope);
     }
 
     // Return NULL if all evaluations failed
@@ -807,7 +807,7 @@ ulong Context::ListNames(text begin, RewriteList &list,
         if (!recurse)
             scope = nullptr;
         else
-            scope = Enclosing(scope);
+            scope = EnclosingScope(scope);
     }
     return count;
 }
@@ -912,7 +912,7 @@ void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
 {
     while (scope)
     {
-        Scope *parent = Enclosing(scope);
+        Scope *parent = EnclosingScope(scope);
         Rewrite *rw = ScopeRewrites(scope);
         Dump(out, rw);
         if (parent)
@@ -991,7 +991,7 @@ XL::Scope *xldebug(XL::Scope *scope)
     if (XL::Allocator<XL::Scope>::IsAllocated(scope))
     {
         XL::Context::Dump(std::cerr, scope, false);
-        scope = Enclosing(scope);
+        scope = EnclosingScope(scope);
     }
     else
     {
