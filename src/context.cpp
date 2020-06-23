@@ -313,7 +313,7 @@ Rewrite *Context::Define(text name, Tree *value, bool overwrite)
 }
 
 
-Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
+Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
 // ----------------------------------------------------------------------------

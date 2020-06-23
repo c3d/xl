@@ -162,7 +162,7 @@ public:
     bool                ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
-    Rewrite *           Enter(Infix *decl, bool overwrite=false);
+    Rewrite *           Enter(Rewrite *decl, bool overwrite=false);
     Rewrite *           Define(Tree *from, Tree *to, bool overwrite=false);
     Rewrite *           Define(text name, Tree *to, bool overwrite=false);
     Tree *              Assign(Tree *target, Tree *source);
@@ -219,7 +219,7 @@ public:
 
     // Dump symbol tables
     static void         Dump(std::ostream &out, Scope *symbols, bool recurse);
-    static void         Dump(std::ostream &out, Rewrite *locals);
+    static void         Dump(std::ostream &out, Rewrite *rewrite);
     void                Dump(std::ostream &out) { Dump(out, symbols, true); }
 
 public:
