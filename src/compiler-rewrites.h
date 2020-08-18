@@ -53,7 +53,7 @@ struct CompilerRewriteCandidate : RewriteCandidate
 //    A rewrite candidate for a particular tree pattern
 // ----------------------------------------------------------------------------
 {
-    CompilerRewriteCandidate(Infix *rw, Scope *scope, CompilerTypes *types);
+    CompilerRewriteCandidate(Rewrite *rw, Scope *scope, CompilerTypes *types);
 
     // REVIIST - Hacks from older implemnetation, remove
     Tree *              ValueType(Tree *value);
@@ -91,7 +91,7 @@ struct CompilerRewriteCalls : RewriteCalls
 
     // Factory for rewrite candidates - overloaded by compiler version
     virtual
-    CompilerRewriteCandidate *Candidate(Infix *rewrite,
+    CompilerRewriteCandidate *Candidate(Rewrite *rewrite,
                                         Scope *scope,
                                         Types *types) override;
 

@@ -43,13 +43,14 @@ XL_BEGIN
 
 
 // Forward classes
-class Types;
-typedef GCPtr<Types> Types_p;
-struct RewriteCandidate;
-struct RewriteCalls;
-typedef GCPtr<RewriteCalls> RewriteCalls_p;
+class                                    Types;
+typedef GCPtr<Types>                     Types_p;
+struct                                   RewriteCandidate;
+struct                                   RewriteCalls;
+typedef GCPtr<RewriteCalls>              RewriteCalls_p;
 typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
-extern Name_p tree_type;
+typedef std::map<Tree_p, Tree_p>         tree_map;
+extern Name_p                            tree_type;
 
 
 class Types

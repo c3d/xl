@@ -49,7 +49,7 @@
 
 XL_BEGIN
 
-CompilerRewriteCandidate::CompilerRewriteCandidate(Infix *rewrite,
+CompilerRewriteCandidate::CompilerRewriteCandidate(Rewrite *rewrite,
                                                    Scope *scope,
                                                    CompilerTypes *types)
 // ----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ CompilerRewriteCalls::CompilerRewriteCalls(CompilerTypes *types)
 {}
 
 
-CompilerRewriteCandidate *CompilerRewriteCalls::Candidate(Infix *rewrite,
+CompilerRewriteCandidate *CompilerRewriteCalls::Candidate(Rewrite *rewrite,
                                                           Scope *scope,
                                                           Types *types)
 // ----------------------------------------------------------------------------

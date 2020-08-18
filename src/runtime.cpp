@@ -497,10 +497,9 @@ bool xl_file_exists(Scope *scope, Tree_p self, text path)
 {
     if (!isAbsolute(path))
     {
-        Context context(scope);
-        path = context.ResolvePrefixedPath(path);
         if (!isAbsolute(path))
         {
+            Context context(scope);
             // Relative path: look in same directory as parent
             if (Tree * dir = context.Named("module_dir"))
             {

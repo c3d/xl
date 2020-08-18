@@ -562,7 +562,7 @@ static Tree *error_result = nullptr;
 
 
 static Tree *evalLookup(Scope *evalScope, Scope *declScope,
-                        Tree *self, Infix *decl, void *ec)
+                        Tree *self, Rewrite *decl, void *ec)
 // ----------------------------------------------------------------------------
 //   Calllback function to check if the candidate matches
 // ----------------------------------------------------------------------------

@@ -75,7 +75,7 @@ bool RewriteBinding::IsDeferred()
 }
 
 
-RewriteCandidate::RewriteCandidate(Infix *rewrite, Scope *scope, Types *types)
+RewriteCandidate::RewriteCandidate(Rewrite *rewrite, Scope *scope, Types *types)
 // ----------------------------------------------------------------------------
 //   Create a rewrite candidate within the given types
 // ----------------------------------------------------------------------------
@@ -564,9 +564,9 @@ RewriteCalls::~RewriteCalls()
 {}
 
 
-RewriteCandidate *RewriteCalls::Candidate(Infix *rewrite,
-                                          Scope *scope,
-                                          Types *types)
+RewriteCandidate *RewriteCalls::Candidate(Rewrite *rewrite,
+                                          Scope   *scope,
+                                          Types   *types)
 // ----------------------------------------------------------------------------
 //   Factory for rewrite candidates
 // ----------------------------------------------------------------------------
@@ -575,7 +575,7 @@ RewriteCandidate *RewriteCalls::Candidate(Infix *rewrite,
 }
 
 
-Tree *RewriteCalls::Check (Scope *scope, Tree *what, Infix *candidate)
+Tree *RewriteCalls::Check (Scope *scope, Tree *what, Rewrite *candidate)
 // ----------------------------------------------------------------------------
 //   Check which candidates match, and what binding is required to match
 // ----------------------------------------------------------------------------
