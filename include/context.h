@@ -747,6 +747,18 @@ inline Name *IsSelf(Tree *tree)
 }
 
 
+inline Block *IsMetabox(Tree *tree)
+// ----------------------------------------------------------------------------
+//  Check if a given tree is a metabox
+// ----------------------------------------------------------------------------
+{
+    if (Block *block = tree->AsBlock())
+        if (block->IsMetaBox())
+            return block;
+    return nullptr;
+}
+
+
 inline Tree * PatternBase(Tree *form)
 // ----------------------------------------------------------------------------
 //   Find what we actually define based on the shape of the left of a 'is'
