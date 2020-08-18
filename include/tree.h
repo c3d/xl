@@ -330,6 +330,11 @@ struct Block : Tree
                     return block->child;
         return nullptr;
     }
+    static Block *MetaBox(Tree *child)
+    {
+        TreePosition pos = child->Position();
+        return new Block(new Block(child, "[", "]", pos), "[", "]", pos);
+    }
     Tree_p              child;
     text                opening, closing;
     static text         indent, unindent;
