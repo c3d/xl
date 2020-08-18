@@ -100,7 +100,7 @@ struct RewriteCandidate
 //    A rewrite candidate for a particular tree pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Infix *rewrite, Scope *scope, Types *types);
+    RewriteCandidate(Rewrite *rewrite, Scope *scope, Types *types);
     virtual ~RewriteCandidate();
     void Condition(Tree *value, Tree *test)
     {
@@ -134,7 +134,7 @@ struct RewriteCandidate
     void                Dump();
 
 public:
-    Infix_p             rewrite;
+    Rewrite_p           rewrite;
     Scope_p             scope;
     RewriteBindings     bindings;
     RewriteTypeChecks   typechecks;
@@ -159,12 +159,12 @@ struct RewriteCalls
     RewriteCalls(Types *ti);
     virtual ~RewriteCalls();
 
-    Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
+    Tree *              Check(Scope *scope, Tree *value, Rewrite *candidate);
     void                Dump();
 
     // Factory for rewrite candidates - overloaded by compiler version
     virtual
-    RewriteCandidate *  Candidate(Infix *rewrite, Scope *scope, Types *types);
+    RewriteCandidate *  Candidate(Rewrite *rewrite, Scope *scope, Types *types);
 
     // Types
     Types *             RewriteTypes()          { return types; }

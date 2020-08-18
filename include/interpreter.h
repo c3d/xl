@@ -88,17 +88,14 @@ inline Tree *Interpreter::IsClosure(Tree *tree, Context_p *context)
 //   Check if something is a closure, if so set scope and/or context
 // ----------------------------------------------------------------------------
 {
-    if (Scope *closure = tree->AsPrefix())
+    if (Prefix *closure = tree->AsPrefix())
     {
-        if (Scope *scope = Enclosing(closure))
+        if (Scope *scope = closure->left->As<Scope>())
         {
-            if (closure->GetInfo<ClosureInfo>())
-            {
-                // We normally have a scope on the left
-                if (context)
-                    *context = new Context(scope);
-                return closure->right;
-            }
+            // We normally have a scope on the left
+            if (context)
+                *context = new Context(scope);
+            return closure->right;
         }
     }
     return nullptr;
@@ -110,43 +107,7 @@ inline Tree *Interpreter::MakeClosure(Context *ctx, Tree *value)
 //   Create a closure encapsulating the current context
 // ----------------------------------------------------------------------------
 {
-    Context_p context = ctx;
-
-retry:
-    kind valueKind = value->Kind();
-
-    if (valueKind >= NAME || context->HasRewritesFor(valueKind))
-    {
-        if (valueKind == NAME)
-        {
-            if (Tree *bound = context->Bound(value))
-            {
-                if (Tree *inside = IsClosure(bound, &context))
-                {
-                    if (value != inside)
-                    {
-                        value = inside;
-                        goto retry;
-                    }
-                }
-                if (value != bound)
-                {
-                    value = bound;
-                    goto retry;
-                }
-            }
-        }
-
-        if (valueKind != PREFIX || !value->GetInfo<ClosureInfo>())
-        {
-            Scope *scope = context->Symbols();
-            value = new Prefix(scope, value);
-
-            ClosureInfo *closureMarker = new ClosureInfo;
-            value->SetInfo(closureMarker);
-        }
-    }
-    return value;
+    return new Prefix(ctx->Symbols(), value);
 }
 
 XL_END

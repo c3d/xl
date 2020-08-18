@@ -872,7 +872,7 @@ CodeBuilder::depth CodeBuilder::ScopeDepth(Scope *scope)
             return count ? LOCAL : PARAMETER;
         if (scope == globalScope)
             return count ? ENCLOSING : GLOBAL;
-        scope = Enclosing(scope);
+        scope = scope->Enclosing();
         count++;
     }
 
@@ -1031,7 +1031,7 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
 //  The 'goto' in the above are implicit, marked by 'success' or 'fail' in Op.
 
 static Tree *compileLookup(Scope *evalScope, Scope *declScope,
-                           Tree *self, Infix *decl, void *cb)
+                           Tree *self, Rewrite *decl, void *cb)
 // ----------------------------------------------------------------------------
 //    Lookup a given declaration and generate code for it
 // ----------------------------------------------------------------------------
@@ -1355,7 +1355,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
             }
 
             // Create a call for forms like (X -> X+1) 31
-            if (Infix *lifx = callee->AsInfix())
+            if (Rewrite *lifx = callee->As<Rewrite>())
             {
                 if (IsDefinition(lifx))
                 {

@@ -104,9 +104,9 @@ void Opcode::Register(Context *context)
 
         Save<TreePosition> savePos(Tree::NOWHERE, Tree::BUILTIN);
         static Name_p builtinName = new Name("builtin");
-        Infix *decl = new Infix("is", shape,
-                                new Prefix(builtinName,
-                                           new Name(this->OpID())));
+        Rewrite *decl = new Rewrite(shape,
+                                    new Prefix(builtinName,
+                                               new Name(this->OpID())));
         context->Enter(decl);
         decl->right->SetInfo<Opcode> (this);
     }

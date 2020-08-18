@@ -385,13 +385,9 @@ Tree *Types::DoConstant(Tree *what, Tree *base, kind k)
 //   All constants have themselves as type, and evaluate normally
 // ----------------------------------------------------------------------------
 {
-    Tree *type = nullptr;
-
     // Check if we need to evaluate rewrites for this kind in the context
     // This would happen for something like [0 is 1; 0]
-    bool evaluate = context->HasRewritesFor(k);
-    if (evaluate)
-        type = Evaluate(what, true);
+    Tree *type = Evaluate(what, true);
 
     // For constants, or if we failed to evaluate, assign basic type
     if (!type)
@@ -768,7 +764,7 @@ Tree *Types::PatternCoversPattern(Tree *wide, Tree *narrow, Tree *type)
 // ============================================================================
 
 static Tree *lookupRewriteCalls(Scope *evalScope, Scope *sc,
-                                Tree *what, Infix *entry, void *i)
+                                Tree *what, Rewrite *entry, void *i)
 // ----------------------------------------------------------------------------
 //   Used to check if RewriteCalls pass
 // ----------------------------------------------------------------------------
@@ -859,7 +855,7 @@ Types::TypeEvaluator::TypeEvaluator(Types *types)
 
 
 static Tree *lookupType(Scope *evalScope, Scope *sc,
-                        Tree *what, Infix *entry, void *i)
+                        Tree *what, Rewrite *entry, void *i)
 // ----------------------------------------------------------------------------
 //   Used to lookup type expressions
 // ----------------------------------------------------------------------------

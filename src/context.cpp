@@ -59,8 +59,11 @@
 #include <sstream>
 #include <sys/stat.h>
 
-RECORDER(scope_enter,  16, "Entering items in the scope");
-RECORDER(scope_lookup, 16, "Lookup items from a scope");
+
+
+RECORDER(context,        32, "Context: wrapper for XL symbol table");
+RECORDER(symbols,        32, "XL symbol table");
+RECORDER(symbols_errors, 32, "Errors running symbol table");
 
 XL_BEGIN
 
@@ -70,15 +73,14 @@ XL_BEGIN
 //
 // ============================================================================
 
-uint Context::hasRewritesForKind = 0;
-
 Context::Context()
 // ----------------------------------------------------------------------------
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
     : symbols()
 {
-    symbols = new Scope(xl_nil, xl_nil);
+    symbols = new Scope();
+    record(context, "Created context %p with new symbols %t", this, symbols);
 }
 
 
@@ -89,6 +91,8 @@ Context::Context(Context *parent, TreePosition pos)
     : symbols(parent->symbols)
 {
     CreateScope(pos);
+    record(context, "Created context %p from %p with symbols %t parent %t",
+           this, parent, symbols, parent->symbols);
 }
 
 
@@ -97,7 +101,10 @@ Context::Context(const Context &source)
 //   Constructor for a top-level evaluation context
 // ----------------------------------------------------------------------------
     : symbols(source.symbols)
-{}
+{
+    record(context, "Copy context %p into %p symbols %t",
+           this, &source, symbols);
+}
 
 
 Context::Context(Scope *symbols)
@@ -105,14 +112,18 @@ Context::Context(Scope *symbols)
 //   Constructor from a known symbol table
 // ----------------------------------------------------------------------------
     : symbols(symbols)
-{}
+{
+    record(context, "Create context %p from symbols %t", this, symbols);
+}
 
 
 Context::~Context()
 // ----------------------------------------------------------------------------
 //   Destructor for execution context
 // ----------------------------------------------------------------------------
-{}
+{
+    record(context, "Destroyed context %p");
+}
 
 
 
@@ -127,7 +138,8 @@ Scope *Context::CreateScope(TreePosition pos)
 //    Add a local scope to the current context
 // ----------------------------------------------------------------------------
 {
-    symbols = new Scope(symbols, xl_nil, pos);
+    symbols = new Scope(new Scopes(symbols, new Scope()), pos);
+    record(context, "In context %p created scope %t", this, symbols);
     return symbols;
 }
 
@@ -137,8 +149,11 @@ void Context::PopScope()
 //   Remove the innermost local scope
 // ----------------------------------------------------------------------------
 {
-    if (Scope *enclosing = Enclosing(symbols))
-        symbols = enclosing;
+    Scope *enclosing = symbols->Enclosing();
+    record(context, "In context %p popped scope %t enclosing %t",
+           this, symbols, enclosing);
+    XL_ASSERT(enclosing && "Context::PopScope called on top scope");
+    symbols = enclosing;
 }
 
 
@@ -147,7 +162,10 @@ Context *Context::Parent()
 //   Return the parent context
 // ----------------------------------------------------------------------------
 {
-    if (Scope *psyms = Enclosing(symbols))
+    Scope *psyms = symbols->Enclosing();
+    record(context, "In context %p parent from enclosing symbols %t",
+           this, psyms);
+    if (psyms)
         return new Context(psyms);
     return nullptr;
 }
@@ -160,8 +178,6 @@ Context *Context::Parent()
 //
 // ============================================================================
 
-RECORDER(xl2c, 64, "XL to C translation");
-
 bool Context::ProcessDeclarations(Tree *what)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return true if there are instructions
@@ -170,6 +186,7 @@ bool Context::ProcessDeclarations(Tree *what)
     Tree_p next   = nullptr;
     bool   result = false;
 
+    record(context, "In %p process declarations for %t", this, what);
     while (what)
     {
         bool isInstruction = true;
@@ -177,6 +194,7 @@ bool Context::ProcessDeclarations(Tree *what)
         {
             if (IsDeclaration(infix))
             {
+                record(context, "In %p enter declaration %t", this, infix);
                 Enter(infix);
                 isInstruction = false;
             }
@@ -191,39 +209,7 @@ bool Context::ProcessDeclarations(Tree *what)
                     else
                         isInstruction = ProcessDeclarations(left);
                 }
-                else if (Prefix *left = infix->left->AsPrefix())
-                {
-                    isInstruction = ProcessDeclarations(left);
-                }
                 next = infix->right;
-            }
-        }
-        else if (Prefix *prefix = what->AsPrefix())
-        {
-            if (Name *pname = prefix->left->AsName())
-            {
-                if (pname->value == "data")
-                {
-                    Define(prefix->right, xl_self);
-                    isInstruction = false;
-                }
-                else if (pname->value == "extern")
-                {
-                    CDeclaration *pcd = new CDeclaration;
-                    Infix *normalForm = pcd->Declaration(prefix->right);
-                    record(xl2c, "C: %t is XL: %t", prefix, normalForm);
-                    if (normalForm)
-                    {
-                        // Process C declarations only in optimized mode
-                        Define(normalForm->left, normalForm->right);
-                        prefix->SetInfo<CDeclaration>(pcd);
-                        isInstruction = false;
-                    }
-                    else
-                    {
-                        delete pcd;
-                    }
-                }
             }
         }
 
@@ -289,13 +275,13 @@ static void ValidateNames(Tree *pattern)
 }
 
 
-Rewrite *Context::Define(Tree *pattern, Tree *value, bool overwrite)
+Rewrite *Context::Define(Tree *pattern, Tree *definition, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
-    Infix *decl = new Infix("is", pattern, value, pattern->Position());
-    return Enter(decl, overwrite);
+    Rewrite *rewrite = new Rewrite(pattern, definition);
+    return Enter(rewrite, overwrite);
 }
 
 
@@ -304,114 +290,339 @@ Rewrite *Context::Define(text name, Tree *value, bool overwrite)
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
-    Name *nameTree = new Name(name, value->Position());
-    return Define(nameTree, value, overwrite);
+    Name *pattern = new Name(name, value->Position());
+    return Define(pattern, value, overwrite);
 }
 
 
-Rewrite *Context::Enter(Infix *rewrite, bool overwrite)
+template<typename T> int Sort(T x, T y)
+// ----------------------------------------------------------------------------
+//   Return sort order between the two values
+// ----------------------------------------------------------------------------
+{
+    return x < y ? -1 : x > y ? 1 : 0;
+}
+
+
+enum SortMode
+// ----------------------------------------------------------------------------
+//   Indicate how we process the tree during sorting
+// ----------------------------------------------------------------------------
+{
+    INSERT,                     // Sort for insertion of a pattern
+    INSERT_BIND,                // Sort for insertion, all names identical
+    SEARCH,                     // Sort for search of top pattern
+    SEARCH_BIND,                // Sort for search, all names identical
+    TYPE,                       // Sort for type annotations
+    EXPRESSION                  // Sort for expression (when clauses)
+};
+
+
+inline SortMode SortIgnoreNames(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Once we have recognized a top-level name, ignore other names
+// ----------------------------------------------------------------------------
+//   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
+{
+    if (mode == INSERT)
+        mode = INSERT_BIND;
+    else if (mode == SEARCH)
+        mode = SEARCH_BIND;
+    return mode;
+}
+
+
+inline bool SortNames(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Return true if we want to sort names in this mode
+// ----------------------------------------------------------------------------
+{
+    return mode != INSERT_BIND && mode != SEARCH_BIND;
+}
+
+
+inline bool SortInserting(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Return true if we are inserting
+// ----------------------------------------------------------------------------
+{
+    return mode == INSERT || mode == INSERT_BIND;
+}
+
+
+static int Sort(Tree *pat, Tree *val, SortMode mode)
+// ----------------------------------------------------------------------------
+//   Return the sorting order while inserting patterns
+// ----------------------------------------------------------------------------
+//   The sorting order while inserting a pattern considers the whole pattern,
+//   and does not attempt to interpret it, except for blocks that are ignored.
+//   Therefore, the sorting order should be:
+//       Infix < Prefix < Postfix < Natural < Real < Text < Name
+//   This order is chosen with the assumption that it's not unlikely to add
+//   implicit conversions between Natural and Real, so that 0 is more
+//   specialized than 0.0.
+//   Within a given category, items are sorted based on value, so that
+//   [A+B] precedes [A<B], and [cos X] precedes [sin Y]. However, named
+//   parameters are all considered the same if sortNames == false.
+{
+    // Eliminate blocks
+    if (Block *patb = pat->AsBlock())
+        return Sort(patb->child, val, mode);
+    if (Block *valb = val->AsBlock())
+        return Sort(pat, valb->child, mode);
+
+    // Check case where kinds are different: use sorting rank described above
+    kind patk = pat->Kind();
+    kind valk = val->Kind();
+    if (mode == SEARCH_BIND)
+    {
+        // Catch wildcards
+        if (patk == NAME)
+            return 0;
+        if (patk == INFIX)
+        {
+            if (Infix *typed = IsTypeAnnotation(pat))
+                return Sort(typed->left, val, mode);
+            if (Infix *guarded = IsPatternCondition(pat))
+                return Sort(guarded->left, val, mode);
+        }
+    }
+    if (patk != valk)
+    {
+        static const unsigned SortRank[KIND_COUNT] = {
+            [INFIX]     = 0,
+            [PREFIX]    = 1,
+            [POSTFIX]   = 2,
+            [NATURAL]   = 3,
+            [REAL]      = 4,
+            [TEXT]      = 5,
+            [NAME]      = 6,
+            [BLOCK]     = 7
+        };
+
+        return SortRank[patk] < SortRank[valk] ? -1 : 1;
+    }
+
+    // Otherwise, sort by values if possible
+    switch(patk)
+    {
+    case NATURAL:
+        return Sort(((Natural *) pat)->value,
+                    ((Natural *) val)->value);
+    case REAL:
+        return Sort(((Real *) pat)->value,
+                    ((Real *) val)->value);
+    case TEXT:
+        return Sort(((Text *) pat)->value,
+                    ((Text *) val)->value);
+    case NAME:
+        return SortNames(mode)
+            ? Sort(((Name *) pat)->value,
+                   ((Name *) val)->value)
+            : 0;
+    case BLOCK:
+        // Should never happen (filtered on entry to avoid kind-based sort)
+        return Sort(((Block *) pat)->child,
+                    ((Block *) val)->child,
+                    mode);
+    case PREFIX:
+        if (int pats = Sort(((Prefix *) pat)->left,
+                            ((Prefix *) val)->left,
+                            mode))
+            return pats;
+        return Sort(((Prefix *) pat)->right,
+                    ((Prefix *) val)->right,
+                    SortIgnoreNames(mode));
+    case POSTFIX:
+        if (int vals = Sort(((Postfix *) pat)->right,
+                            ((Postfix *) val)->right,
+                            mode))
+            return vals;
+        return Sort(((Postfix *) pat)->left,
+                    ((Postfix *) val)->left,
+                    SortIgnoreNames(mode));
+    case INFIX:
+        // For type expressions, we want to compare the right as types
+        if (IsTypeAnnotation((Infix *) pat))
+        {
+            if (SortInserting(mode))
+            {
+                // When inserting, compare type annotations as well
+                if (IsTypeAnnotation((Infix *) val))
+                {
+                    if (int pats = Sort(((Infix *) pat)->left,
+                                        ((Infix *) val)->left,
+                                        mode))
+                        return pats;
+                    return Sort(((Infix *) pat)->right,
+                                ((Infix *) val)->right,
+                                TYPE);
+                }
+            }
+            else
+            {
+                // When not inserting, compare untyped pattern with value
+                return Sort(((Infix *) pat)->left, val, mode);
+            }
+        }
+
+        // For guards ("when" clauses), we want to compare the right as expr
+        if (IsPatternCondition((Infix *) pat))
+        {
+            if (SortInserting(mode))
+            {
+                // When inserting, compare guard clauses as well
+                if (IsPatternCondition((Infix *) val))
+                {
+                    if (int pats = Sort(((Infix *) pat)->left,
+                                        ((Infix *) val)->left,
+                                        mode))
+                        return pats;
+                    return Sort(((Infix *) pat)->right,
+                                ((Infix *) val)->right,
+                                EXPRESSION);
+                }
+            }
+            else
+            {
+                // When not inserting, compare unguarded pattern with value
+                return Sort(((Infix *) pat)->left, val, mode);
+            }
+        }
+
+        // Otherwise, compare the operator first
+        if (int ns = Sort(((Infix *) pat)->name,
+                          ((Infix *) val)->name))
+            return ns;
+        if (int pats = Sort(((Infix *) pat)->left,
+                            ((Infix *) val)->left,
+                            SortIgnoreNames(mode)))
+            return pats;
+        return Sort(((Infix *) pat)->right,
+                    ((Infix *) val)->right,
+                    SortIgnoreNames(mode));
+    }
+
+    // Should never happen
+    return 0;
+}
+
+
+Rewrite *Context::Enter(Infix *infix, bool overwrite)
+// ----------------------------------------------------------------------------
+//   Make sure we produce a real rewrite in the symbol table
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(infix->name == "is" && "Context::Enter only accepts 'is'");
+    return Define(infix->left, infix->right, overwrite);
+}
+
+
+Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
 // ----------------------------------------------------------------------------
 {
     // If the rewrite is not good, just exit
     if (!IsDeclaration(rewrite))
-        return nullptr;
-
-    // In interpreted mode, just skip any C declaration
-#ifndef INTERPRETER_ONLY
-    if (Opt::optimize <= 1)
-#endif
-        if (Prefix *cdecl = rewrite->right->AsPrefix())
-            if (Name *cname = cdecl->left->AsName())
-                if (cname->value == "C")
-                    return nullptr;
-
-    // Find 'from', 'to' and 'hash' for the rewrite
-    Tree *from = rewrite->left;
-
-    // Check what we are really defining, and verify if it's a name
-    Tree *defined = PatternBase(from);
-    Name *name = defined->AsName();
-    ulong h = Hash(defined);
-
-    // Record which kinds we have rewrites for
-    HasOneRewriteFor(defined->Kind());
-
-    // Validate form names, emit errors in case of problem.
-    ValidateNames(from);
-
-    // Find locals symbol table, populate it
-    // The context always has the locals on the left and enclosing on the right.
-    // In order to allow for log(N) lookup in the locals, we maintain a
-    // structure matching the old Rewrite class, which has a declaration
-    // and two or more possible children (currently two).
-    // That structure has the following layout: (A->B ; (L; R)), where
-    // A->B is the local declaration, L and R are the possible children.
-    // Children are initially nil.
-    Scope   *scope  = symbols;
-    Tree_p  &locals = ScopeLocals(scope);
-    Tree_p  *parent = &locals;
-    Rewrite *result = nullptr;
-    while (!result)
     {
-        // If we have found a nil spot, that's where we can insert
-        if (*parent == xl_nil)
-        {
-            // Initialize the local entry with nil children
-            RewriteChildren *nil_children =
-                new RewriteChildren(REWRITE_CHILDREN_NAME,
-                                    xl_nil, xl_nil,
-                                    rewrite->Position());
-
-            // Create the local entry
-            Rewrite *entry = new Rewrite(REWRITE_NAME, rewrite, nil_children,
-                                         rewrite->Position());
-
-            // Insert the entry in the parent
-            *parent = entry;
-
-            // We are done
-            result = entry;
-            break;
-        }
-
-        // This should be a rewrite entry, follow it
-        Rewrite *entry = (*parent)->As<Rewrite>();
-
-        // If we are definig a name, signal if we redefine it
-        if (name)
-        {
-            Infix *decl = RewriteDeclaration(entry);
-            Tree *declDef = PatternBase(decl->left);
-            if (Name *declName = declDef->AsName())
-            {
-                if (declName->value == name->value)
-                {
-                    if (overwrite)
-                    {
-                        decl->right = rewrite->right;
-                        return entry;
-                    }
-                    else
-                    {
-                        Ooops("Name $1 is redefined", name);
-                        Ooops("Previous definition was in $1", decl);
-                    }
-                }
-            }
-        }
-
-        RewriteChildren *children = RewriteNext(entry);
-        if (h & 1)
-            parent = &children->right;
-        else
-            parent = &children->left;
-        h = Rehash(h);
+        record(symbols_errors, "In %p, malformed rewrite %t", this, rewrite);
+        return nullptr;
     }
 
-    // Return the entry we created
-    return result;
+    // Find pattern from the rewrite
+    Tree *pattern = rewrite->Pattern();
+
+    // Validate form names, emit errors in case of problem.
+    ValidateNames(pattern);
+
+    // Find locals symbol table, populate it
+    Scope   *scope  = symbols;
+    Tree_p  &locals = scope->Locals();
+
+    // If empty scope, insert the rewrite
+    if (locals == xl_nil)
+    {
+        record(symbols, "In %p insert top-level rewrite %t", this, rewrite);
+        locals = rewrite;
+        return rewrite;
+    }
+
+    // Now we process multiple rewrites
+    Tree_p  *entry = &locals;
+    while (true)
+    {
+        // Reached single rewrite: decide if we add new one left or right
+        if (Rewrite *old = (*entry)->As<Rewrite>())
+        {
+            int sort = Sort(old->Pattern(), pattern, INSERT);
+            record(symbols, "In %p old %t rewrite %t sort %d",
+                   this, old, rewrite, sort);
+            if (sort < 0)
+            {
+                *entry = new Rewrites(old, rewrite);
+            }
+            else if (sort > 0)
+            {
+                *entry = new Rewrites(rewrite, old);
+            }
+            else if (overwrite)
+            {
+                *entry = rewrite;
+            }
+            else
+            {
+                Ooops("Redefinition of $1", pattern);
+                Ooops("Previous definition is $1", old->Pattern());
+            }
+            return rewrite;
+        }
+
+        // If multiple rewrites, select if we move left or right
+        Rewrites *rewrites = (*entry)->As<Rewrites>();
+        XL_ASSERT(rewrites && "Malformed symbol table: expected rewrites");
+
+        // Check the payload for this entry
+        Rewrite *left = rewrites->Payload();
+        XL_ASSERT(left && "Malformed symbol table: expected rewrite");
+
+        // Check if the right item is a single rewrite: 3 items, reorder
+        if (Rewrite *right = rewrites->Second())
+        {
+            int cmpleft = Sort(pattern, left->Pattern(), INSERT);
+            if (cmpleft < 0)
+            {
+                // Here pattern < left < right
+                rewrites->right = new Rewrites(rewrite, right);
+                return rewrite;
+            }
+
+            int cmpright = Sort(pattern, right->Pattern(), INSERT);
+            if (cmpright < 0)
+            {
+                // Here left <= pattern < right: reorder
+                rewrites->left = rewrite;
+                rewrites->right = new Rewrites(left, right);
+                return rewrite;
+            }
+
+            // Here, left <= right <= pattern: reorder
+            rewrites->left = right;
+            rewrites->right = new Rewrites(left, rewrite);
+            return rewrite;
+        }
+
+        // The right should be a Rewrites as well
+        Rewrites *right = rewrites->Children();
+        XL_ASSERT(right && "Malformed symbol table: unknown type on the right");
+
+        // Compare with current node to decide if we go left or right
+        int cmpleft = Sort(pattern, left->Pattern(), INSERT);
+        entry = cmpleft < 0 ? &right->left : &right->right;
+    }
+
+    // Never happens
+    return nullptr;
 }
 
 
@@ -421,40 +632,31 @@ Tree *Context::Assign(Tree *ref, Tree *value)
 // ----------------------------------------------------------------------------
 {
     // Check if the reference already exists
-    Infix *decl = Reference(ref);
-    if (!decl)
+    Rewrite *declaration = Reference(ref);
+    if (!declaration)
     {
-        // The reference does not exist: we need to create it.
-
-        // Strip outermost block if there is one
-        if (Block *block = ref->AsBlock())
-            ref = block->child;
-
-        // Enter in the symbol table
-        Define(ref, value);
+        // The reference does not exist: this is an error
+        Ooops("Assigning $1 to unknown reference $2", value, ref);
+        return value;
     }
-    else
+
+    // Check if the declaration has a type, i.e. it is 'X as natural'
+    if (Tree *type = AnnotatedType(declaration->left))
     {
-        // Check if the declaration has a type, i.e. it is 'X as natural'
-        if (Tree *type = AnnotatedType(decl->left))
+        Scope *scope = Symbols();
+        Tree *cast = xl_typecheck(scope, type, value);
+        if (!cast)
         {
-            Scope *scope = Symbols();
-            Tree *castedValue = xl_typecheck(scope, type, value);
-            if (castedValue)
-            {
-                value = castedValue;
-            }
-            else
-            {
-                Ooops("New value $1 does not match existing type", value);
-                Ooops("for declaration $1", decl);
-                value = decl->right; // Preserve existing value
-            }
+            Ooops("New value $1 does not match type $2", value, type);
+            Ooops("required from declaration $1", declaration);
+            return declaration->right;
         }
 
-        // Update existing value in place
-        decl->right = value;
+        value = cast;
     }
+
+    // Update existing value with assigned value
+    declaration->right = value;
 
     // Return evaluated assigned value
     return value;
@@ -555,91 +757,107 @@ Rewrite *Context::SetAttribute(text attribute, text value, bool owr)
 
 // ============================================================================
 //
-//    Path management
-//
-// ============================================================================
-
-void Context::SetPrefixPath(text prefix, text path)
-// ----------------------------------------------------------------------------
-//   Set the path for the given prefix
-// ----------------------------------------------------------------------------
-{
-}
-
-
-text Context::ResolvePrefixedPath(text path)
-// ----------------------------------------------------------------------------
-//   Resolve the file name in the current paths
-// ----------------------------------------------------------------------------
-{
-    return path;
-}
-
-
-
-// ============================================================================
-//
 //    Looking up symbols
 //
 // ============================================================================
+
+static Tree *LookupEntry(Scope              *symbols,
+                         Scope              *scope,
+                         Tree_p             *entry,
+                         Tree               *what,
+                         Context::lookup_fn  lookup,
+                         void               *info)
+// ----------------------------------------------------------------------------
+//   Internal lookup helper
+// ----------------------------------------------------------------------------
+{
+    // If we have found a nil or empty spot, done with current scope
+    if (*entry == xl_nil)
+        return nullptr;
+    if (Name *name = (*entry)->AsName())
+        if (name->value == "")
+            return nullptr;
+
+    while (true)
+    {
+        // If we have a definition in this entry, check it
+        if (Rewrite *rewrite = (*entry)->As<Rewrite>())
+        {
+            int cmp = Sort(rewrite->Pattern(), what, SEARCH);
+            if (cmp == 0)
+            {
+                Tree *result = lookup(symbols, scope, what, rewrite, info);
+                if (result)
+                    return result;
+            }
+            return nullptr;
+        }
+
+        // Check rewrites at that level
+        Rewrites *rewrites = (*entry)->As<Rewrites>();
+        XL_ASSERT(rewrites && "Missing Rewrites entry during lookup");
+
+        // Check payload in the rewrites
+        Rewrite *left = rewrites->Payload();
+        XL_ASSERT(left && "Missing Rewrite payload during lookup");
+
+        // Check how we compare to the current entry
+        int cmpleft = Sort(left->Pattern(), what, SEARCH);
+
+        // If right is a rewrite, test left then right
+        if (Rewrite *right = rewrites->Second())
+        {
+            // left <= right, matching left: test left then right
+            if (cmpleft == 0)
+                if (Tree *result = lookup(symbols, scope, what, left, info))
+                    return result;
+            entry = &rewrites->right;
+            continue;
+        }
+
+        // Multiple rewrites, sorted as right->left <= left <= right->right
+        Rewrites *right = rewrites->Children();
+        XL_ASSERT(right && "Missing right Rewrites during lookup");
+
+        // If we need to explore only left or right branch
+        if (cmpleft)
+        {
+            entry = cmpleft > 0 ? &right->left : &right->right;
+            continue;
+        }
+
+        // Need to explore left branch first
+        if (Tree *result = LookupEntry(symbols, scope,
+                                       &right->left, what, lookup, info))
+            return result;
+
+        // Since payload matches, need to check it too
+        if (Tree *result = lookup(symbols, scope, what, left, info))
+            return result;
+
+        // Then need to check right branch
+        entry = &right->right;
+    }
+}
+
 
 Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 // ----------------------------------------------------------------------------
 //   Lookup a tree using the given lookup function
 // ----------------------------------------------------------------------------
 {
-    // Quick exit if we have no rewrite for that tree kind
-    if (!HasRewritesFor(what->Kind()))
-        return nullptr;
-
     Scope * scope = symbols;
-    ulong   h0    = Hash(what);
-
     while (scope)
     {
         // Initialize local scope
-        Tree_p &locals = ScopeLocals(scope);
-        Tree_p *parent = &locals;
-        Tree *result = nullptr;
-        ulong h = h0;
-
-        while (true)
-        {
-            // If we have found a nil spot, we are done with current scope
-            if (*parent == xl_nil)
-                break;
-
-            // This should be a rewrite entry, follow it
-            Rewrite *entry = (*parent)->As<Rewrite>();
-            XL_ASSERT(entry && entry->name == REWRITE_NAME);
-            Infix *decl = RewriteDeclaration(entry);
-            XL_ASSERT(!decl || IsDeclaration(decl));
-            RewriteChildren *children = RewriteNext(entry);
-            XL_ASSERT(children && children->name == REWRITE_CHILDREN_NAME);
-
-            // Check that hash matches
-            Tree *defined = PatternBase(decl->left);
-            ulong declHash = Hash(defined);
-            if (declHash == h0)
-            {
-                result = lookup(symbols, scope, what, decl, info);
-                if (result)
-                    return result;
-            }
-
-            // Keep going in local symbol table
-            if (h & 1)
-                parent = &children->right;
-            else
-                parent = &children->left;
-            h = Rehash(h);
-        }
+        Tree_p &locals = scope->Locals();
+        if (Tree *result = LookupEntry(symbols, scope,
+                                       &locals, what, lookup, info))
+            return result;
 
         // Not found in this scope. Keep going with next scope if recursing
         // The last top-level global will be nil, so we will end with scope=NULL
-        if (!recurse)
-            break;
-        scope = Enclosing(scope);
+        scope = recurse ? scope->Enclosing() : nullptr;
     }
 
     // Return NULL if all evaluations failed
@@ -647,7 +865,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 }
 
 
-static Tree *findReference(Scope *, Scope *, Tree *what, Infix *decl, void *)
+static Tree *findReference(Scope *, Scope *, Tree *what, Rewrite *decl, void *)
 // ----------------------------------------------------------------------------
 //   Return the reference we found
 // ----------------------------------------------------------------------------
@@ -680,7 +898,7 @@ Tree *Context::DeclaredPattern(Tree *pattern)
 }
 
 
-static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
+static Tree *findValue(Scope *, Scope *, Tree *what, Rewrite *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given pattern
 // ----------------------------------------------------------------------------
@@ -693,7 +911,7 @@ static Tree *findValue(Scope *, Scope *, Tree *what, Infix *decl, void *info)
 
 
 static Tree *findValueX(Scope *, Scope *scope,
-                        Tree *what, Infix *decl, void *info)
+                        Tree *what, Rewrite *decl, void *info)
 // ----------------------------------------------------------------------------
 //   Return the value bound to a given pattern, as well as its scope and decl
 // ----------------------------------------------------------------------------
@@ -751,22 +969,21 @@ bool Context::IsEmpty()
 //   Return true if the context has no declaration inside
 // ----------------------------------------------------------------------------
 {
-    return symbols->right == xl_nil;
+    return symbols->child == xl_nil;
 }
 
 
-static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
+static ulong listNames(Tree_p *entry, text begin, RewriteList &list, bool pfx)
 // ----------------------------------------------------------------------------
 //   List names in the given tree
 // ----------------------------------------------------------------------------
 {
     ulong count = 0;
-    while (where)
+    while (entry)
     {
-        Infix *decl = RewriteDeclaration(where);
-        if (decl && IsDeclaration(decl))
+        if (Rewrite *rewrite = (*entry)->As<Rewrite>())
         {
-            Tree *declared = decl->left;
+            Tree *declared = rewrite->left;
             Name *name = declared->AsName();
             if (!name && pfx)
             {
@@ -776,13 +993,20 @@ static ulong listNames(Rewrite *where, text begin, RewriteList &list, bool pfx)
             }
             if (name && name->value.find(begin) == 0)
             {
-                list.push_back(decl);
+                list.push_back(rewrite);
                 count++;
             }
+            entry = nullptr;
         }
-        if (IsSequence(where))
-            count += listNames(where->left->As<Rewrite>(), begin, list, pfx);
-        where = decl->right->As<Rewrite>();
+        else if (Rewrites *rewrites = (*entry)->As<Rewrites>())
+        {
+            count += listNames(&rewrites->left, begin, list, pfx);
+            entry = &rewrites->right;
+        }
+        else
+        {
+            entry = nullptr;
+        }
     }
     return count;
 }
@@ -798,90 +1022,11 @@ ulong Context::ListNames(text begin, RewriteList &list,
     ulong count = 0;
     while (scope)
     {
-        Rewrite *locals = ScopeRewrites(scope);
-        count += listNames(locals, begin, list, includePrefixes);
-        if (!recurse)
-            scope = nullptr;
-        else
-            scope = Enclosing(scope);
+        Tree_p &locals = scope->Locals();
+        count += listNames(&locals, begin, list, includePrefixes);
+        scope = recurse ? scope->Enclosing() : nullptr;
     }
     return count;
-}
-
-
-
-// ============================================================================
-//
-//    Hash functions to balance things in the symbol table
-//
-// ============================================================================
-
-static inline ulong HashText(const text &t)
-// ----------------------------------------------------------------------------
-//   Compute the has for some text
-// ----------------------------------------------------------------------------
-{
-    ulong h = 0;
-    uint  l = t.length();
-    kstring ptr = t.data();
-    if (l > 8)
-        l = 8;
-    for (uint i = 0; i < l; i++)
-        h = (h * 0x301) ^ *ptr++;
-    return h;
-}
-
-
-static inline longlong hashRealToNatural(double value)
-// ----------------------------------------------------------------------------
-//   Force a static conversion without "breaking strict aliasing rules"
-// ----------------------------------------------------------------------------
-{
-    union { double d; longlong i; } u;
-    u.d = value;
-    return u.i;
-}
-
-
-ulong Context::Hash(Tree *what)
-// ----------------------------------------------------------------------------
-//   Compute the hash code in the rewrite table
-// ----------------------------------------------------------------------------
-{
-    kind        k = what->Kind();
-    ulong       h = 0xC0DEDUL + 0x29912837UL*k;
-
-    switch(k)
-    {
-    case NATURAL:
-        h += ((Natural *) what)->value;
-        break;
-    case REAL:
-        h += hashRealToNatural(((Real *) what)->value);
-        break;
-    case TEXT:
-        h += HashText(((Text *) what)->value);
-        break;
-    case NAME:
-        h += HashText(((Name *) what)->value);
-        break;
-    case BLOCK:
-        h += HashText(((Block *) what)->opening);
-        break;
-    case INFIX:
-        h += HashText(((Infix *) what)->name);
-        break;
-    case PREFIX:
-        if (Name *name = ((Prefix *) what)->left->AsName())
-            h += HashText(name->value);
-        break;
-    case POSTFIX:
-        if (Name *name = ((Postfix *) what)->right->AsName())
-            h += HashText(name->value);
-        break;
-    }
-
-    return h;
 }
 
 
@@ -897,7 +1042,7 @@ void Context::Clear()
 //   Clear the symbol table
 // ----------------------------------------------------------------------------
 {
-    symbols->right = xl_nil;
+    symbols->child = xl_nil;
 }
 
 
@@ -908,70 +1053,48 @@ void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
 {
     while (scope)
     {
-        Scope *parent = Enclosing(scope);
-        Rewrite *rw = ScopeRewrites(scope);
-        Dump(out, rw);
+        Scope *parent = scope->Enclosing();
+        Tree_p &locals = scope->Locals();
+        Dump(out, &locals);
         if (parent)
             out << "// Parent " << (void *) parent << "\n";
-        if (!recurse)
-            break;
-        scope = parent;
+        scope = recurse ? parent : nullptr;
     }
 }
 
 
-void Context::Dump(std::ostream &out, Rewrite *rw)
+void Context::Dump(std::ostream &out, Tree_p *entry)
 // ----------------------------------------------------------------------------
 //   Dump the symbol table to the given stream
 // ----------------------------------------------------------------------------
 {
-    while (rw)
+    while (entry)
     {
-        Infix * decl = RewriteDeclaration(rw);
-        Rewrite *next = RewriteNext(rw);
-
-        if (rw->name != REWRITE_NAME && rw->name != REWRITE_CHILDREN_NAME)
+        if (Rewrite *rewrite = (*entry)->As<Rewrite>())
         {
-            out << "SCOPE?" << rw << "\n";
+            out << rewrite << "\n";
+            entry = nullptr;
         }
-
-        if (decl)
+        else if (Rewrites *rewrites = (*entry)->As<Rewrites>())
         {
-            if (IsDeclaration(decl))
-                out << decl << "\n";
-            else
-                out << "DECL?" << decl << "\n";
-        }
-        else if (rw->left != xl_nil)
-        {
-            out << "LEFT?" << rw->left << "\n";
-        }
-
-        // Iterate, avoid recursion in the common case of enclosed scopes
-        if (next)
-        {
-            Infix *nextl = next->left->AsInfix();
-            Infix *nextr = next->right->AsInfix();
-
-            if (nextl && nextr)
+            if (Rewrites *right = rewrites->Children())
             {
-                Dump(out, nextl);
-                rw = nextr;
-            }
-            else if (nextl)
-            {
-                rw = nextl;
+                Dump(out, &right->left);
+                out << rewrites->left << "\n";
+                entry = &right->right;
             }
             else
             {
-                rw = nextr;
+                out << rewrites << "\n";
+                entry = nullptr;
             }
         }
         else
         {
-            rw = nullptr;
+            out << "Empty scope: " << *entry << "\n";
+            entry = nullptr;
         }
-    } // while (rw)
+    }
 }
 
 
@@ -986,15 +1109,8 @@ XL::Scope *xldebug(XL::Scope *scope)
 {
     if (XL::Allocator<XL::Scope>::IsAllocated(scope))
     {
-        if (IsScope(scope))
-        {
-            XL::Context::Dump(std::cerr, scope, true);
-            scope = Enclosing(scope);
-        }
-        else
-        {
-            xldebug((XL::Tree *) scope);
-        }
+        XL::Context::Dump(std::cerr, scope, false);
+        scope = scope->Enclosing();
     }
     else
     {
@@ -1005,22 +1121,34 @@ XL::Scope *xldebug(XL::Scope *scope)
 }
 
 
+XL::Scopes *xldebug(XL::Scopes *scopes)
+// ----------------------------------------------------------------------------
+//    Helper to show a global scopes in a symbol table
+// ----------------------------------------------------------------------------
+{
+    if (XL::Allocator<XL::Scope>::IsAllocated(scopes))
+    {
+        XL::Context::Dump(std::cerr, scopes->left->As<XL::Scope>(), true);
+        XL::Context::Dump(std::cerr, scopes->right->As<XL::Scope>(), true);
+    }
+    else
+    {
+        std::cerr << "Cowardly refusing to render unknown scope pointer "
+                  << (void *) scopes << "\n";
+    }
+    return scopes;
+}
+
+
 XL::Rewrite *xldebug(XL::Rewrite *rw)
 // ----------------------------------------------------------------------------
-//   Helper to show an infix as a local symbol table for debugging purpose
+//   Helper to show a rewrite for debugging purpose
 // ----------------------------------------------------------------------------
 //   The infix can be shown using debug(), but it's less convenient
 {
     if (XL::Allocator<XL::Rewrite>::IsAllocated(rw))
     {
-        if (IsSymbolTable(rw))
-        {
-            XL::Context::Dump(std::cerr, rw);
-        }
-        else
-        {
-            xldebug((XL::Tree *) rw);
-        }
+        std::cerr << rw << "\n";
     }
     else
     {
@@ -1031,7 +1159,26 @@ XL::Rewrite *xldebug(XL::Rewrite *rw)
 }
 
 
-XL::Scope *xldebug(XL::Context *context)
+XL::Rewrites *xldebug(XL::Rewrites *rws)
+// ----------------------------------------------------------------------------
+//   Helper to show a rewrite for debugging purpose
+// ----------------------------------------------------------------------------
+//   The infix can be shown using debug(), but it's less convenient
+{
+    if (XL::Allocator<XL::Rewrites>::IsAllocated(rws))
+    {
+        std::cerr << rws << "\n";
+    }
+    else
+    {
+        std::cerr << "Cowardly refusing to render unknown rewrites pointer "
+                  << (void *) rws << "\n";
+    }
+    return rws;
+}
+
+
+XL::Context *xldebug(XL::Context *context)
 // ----------------------------------------------------------------------------
 //   Helper to show a context for debugging purpose
 // ----------------------------------------------------------------------------
@@ -1039,7 +1186,8 @@ XL::Scope *xldebug(XL::Context *context)
     if (XL::Allocator<XL::Context>::IsAllocated(context))
     {
         XL::Scope *scope = context->Symbols();
-        return xldebug(scope);
+        xldebug(scope);
+        return context;
     }
     else
     {
@@ -1048,4 +1196,7 @@ XL::Scope *xldebug(XL::Context *context)
         return nullptr;
     }
 }
-XL::Scope *xldebug(XL::Context_p c) { return xldebug((XL::Context *) c); }
+XL::Context *xldebug(XL::Context_p c)
+{
+    return xldebug((XL::Context *) c);
+}
