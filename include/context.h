@@ -6,11 +6,11 @@
 //
 // File description:
 //
-//     The execution environment for XL
+//     Defines the evaluation context for XL programs
 //
-//     This defines both the compile-time environment (Context), where we
-//     keep symbolic information, e.g. how to rewrite trees, and the
-//     runtime environment (Runtime), which we use while executing trees
+//     The evaluation context is represented by a standard XL parse tree.
+//     The Context C++ class is a simple wrapper around such parse trees
+//     that makes it a bit easier to manipulate the trees from C++ programs.
 //
 //
 //
@@ -38,141 +38,77 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 /*
-  COMPILATION STRATEGY:
+  A scope is defined as a block that contains bindings.
 
-  The version of XL implemented here is a very simple language based
-  on tree rewrites, designed to serve as a dynamic document description
-  language (DDD), as well as a tool to implement the "larger" XL in a more
-  dynamic way. Both usage models imply that the language is compiled on the
-  fly, not statically. We use LLVM as a back-end, see compiler.h.
+  For example, if you have an operator [foo X,Y] defined as [foo X,Y is X+Y],
+  and if you invoke that operator as [foo 3, 4], then it is evaluated in a
+  scope that looks like [{X is 3; Y is 4}]
 
-  Also, because the language is designed to manipulate program trees, which
-  serve as the primary data structure, this implies that the program trees
-  will exist at run-time as well. As a resut, there needs to be a
-  garbage collection phase. The chosen garbage collection technique is
-  based on reference counting because trees are not cyclic, so that
-  ref-counting is both faster and simpler.
+  The scope is exactly similar to how you would define it in the language
+  itself, but for efficienty, it is balanced based on size and specialization of
+  the trees, to make sure that the largest and most specialized definition is
+  found. For example, consider the following definitions:
 
+      N! is N * (N-1)!
+      0! is 1
 
-  PREDEFINED FORMS:
+  In that case, the definition [0!] is more specialized than [N!]. As a result,
+  the sorted scope after insertions will have the two definitions reversed. This
+  ensures that the behavior of a program does not depend on the order of
+  declarations.
 
-  XL is really built on a very small number of predefined forms recognized by
-  the compilation phase.
+  If definitions have the same size and specialization, then they are kept in
+  program order, so that the first one is selected. For example, the two
+  following definitions would be kept in order:
 
-    "A->B" defines a rewrite rule, rewriting A as B. The form A can be
-           "guarded" by a "when" clause, e.g. "N! when N>0 -> N * (N-1)!"
-    "A:B" is a type annotation, indicating that the type of A is B
-    "(A)" is the same as A, allowing to override default precedence,
-          and the same holds for A in an indentation (indent block)
-    "A;B" is a sequence, evaluating A, then B, the value being B.
-          The newline infix operator plays the same role.
-    "data A" declares A as a form that cannot be reduced further.
-          This can be used to declare data structures.
+      foo X is 1
+      foo Y is 2
 
-  The XL type system is itself based on tree shapes. For example,
-  "natural" is a type that covers all Natural trees. Verifying if X
-  has type Y is performed by evaluting the value X:Y.
+   Consider a context containing an outer scope and an inner scope as follows:
 
-  - In the direct type match case, this evaluates to X.
-    For example, '1:natural' will evaluate directly to 1.
+      // Outer scope
+      min X in X
+      min X, Y is { mX is min X; mY is min Y; if mX < mY then mX else mY }
 
-  - The X:Y expression may perform an implicit type conversion.
-    For example, '1:real' will evaluate to 1.0 (converting 1 to real)
+      // Inner scope
+      A is 3
+      B is 4
+      printf "Min of %d and %d is %d\n", A, B, min(A, B)
 
-  - Finally, in case of type mismatch, X:Y evaluates to the same X:Y tree.
+   In that scenario, the context structure while executing [min(A,B)] will look
+   like a sequence of prefixes, which is searched from right to left, where the
+   outer contexxt was sorted "largest and most specialized first":
 
-  The compiler is allowed to special-case any such form. For example, if it
-  determines that the type of a tree is "natural", it may represent it using a
-  machine natural. It must however convert to/from tree when connecting to
-  code that deals with less specialized trees.
+      {  min X, Y is ... ; min X is X } { A is 3; B is 4 } { X is A; Y is B }
 
-  The compiler is also primed with a number of declarations such as:
-     x:natural+y:natural -> [builtin]
-  This tells the compiler to lookup a native compilation function. These
-  functions are declared in basics.tbl (and possibly additional .tbl files)
+   The following C++ classes wrap specific structures in this symbol table:
 
+   - The Rewrite class wraps a declaration, like [A is 3]
+   - The Rewrites class wraps a sequence, like [A is 3; B is 4]
+   - The Scope class wraps a single scope, like [{A is 3; B is 4}]
+   - The Scopes class wraps a nested scopes, like [{A is 3} {B is 4}]
 
-  RUNTIME EXECUTION:
+   To avoid a linear search on the symbol table, entries are organized in the
+   symbol table to allow a more efficient binary search. This works as follows,
+   where [A < B] means that A is larger or more specialized than B:
 
-  The evaluation functions pointed to by 'code' in the Tree structure are
-  designed to be invoked by normal C code using the normal C stack. This
-  facilitate the interaction with other code.
+   - A Rewrites always has a Rewrite on the left, its "payload".
+   - A Rewrites can have either:
+     + A Rewrite on the right, in which case left < right
+     + A Rewrites on the right, in which case right.left < left < right.right
 
-  At top-level, the compiler generates only functions with the same
-  prototype as native_fn, i.e. Tree * (Context *, Tree *). The code is being
-  generated on invokation of a form, and helps rewriting it, although
-  attempts are made to leverage existing rewrites.
+   For example, if we insert { A is 3; B is 4; C is 5 }, we end up with the
+   followign structure:
 
-  Compiling such top-level forms invokes a number of rewrites. A
-  specific rewrite can invoke multiple candidates. For example,
-  consider the following factorial declaration:
-     0! -> 1
-     N! where N>0 -> N * (N-1)!
+      { B is 4; ( A is 3; C is 5 ) }
 
-  In that case, code invoking N! will generate a test to check if N is 0, and
-  if so invoke the first rule, otherwise invoke the second rule. The same
-  principle applies when there are guarded rules, i.e. the "when N>0" clause
-  will cause a test N>0 to be added guarding the second rule.
+   which corresponds to the order A, B, C, since the outer node has [B is 4] on
+   its right, and assumes that the node on the left of its left precedes it, and
+   the node on the right follows it.
 
-  If all these invokations fail, then the input tree is in "reduced form",
-  i.e. it cannot be reduced further. If it is a non-leaf tree, then an attempt
-  is made to evaluate its children.
-
-  If no evaluation can be found for a given form that doesn't match a 'data'
-  clause, the compiler will emit a diagnostic. This is not a fatal condition,
-  however, and code will be generated that simply leaves the tree as is when
-  that happens.
-
-
-  GENERATING CODE FOR REWRITES:
-
-  The code for a rewrite is kept in the 'code' field of the definition.
-  This definition should never be evaluated directly, because the code field
-  doesn't have the expected signature for evaluation. Specifically,
-  it has additional Tree * parameters, corresponding to the variables
-  in the pattern (the left-hand side of the rewrite).
-
-  For example, the rewrite 'bar X:natural, Y -> foo X, Y+1' has two variables
-  in its pattern, X and Y. Therefore, the code field for 'foo X, Y+1' will
-  have the following signature: Tree *(Tree *self, Tree *X, Tree *Y).
-  Note that bar is not a variable for the pattern. While the name 'bar' is
-  being defined partially by this rewrite, it is not a variable in the pattern.
-
-  The generated code will only be invoked if the conditions for invoking it
-  are fulfilled. In the example, it will not be invoked if X is not an natural
-  or for a form such as 'bar 3' because 3 doesn't match 'X:natural, Y'.
-
-
-  CLOSURES:
-
-  Closures are a way to "embed" the value of variables in a tree so that
-  it can be safely passed around. For example, consider
-      AtoB T ->
-         A; do T; B
-      foo X ->
-         AtoB { write X+1 }
-
-  In this example, the rules of the language state that 'write X+1' is not
-  evaluated before being passed to 'AtoB', because nothing in the 'AtoB'
-  pattern requires evaluation. However, 'write X+1' needs the value of 'X'
-  to evaluate properly in 'AtoB'. Therefore, what is passed to 'AtoB' is
-  a closure retaining the value of X in 'foo'.
-
-  In the symbol table, closures are simply implemented as additional
-  declarations that precede the original code. For example, in teh
-  above example, if X is 17 in the environment, the closure would be
-  created as a scope containing { X -> 17 }, and would be applied as a
-  prefix, i.e. { X -> 17 } { write X+1 }.
-
-  In boxed formats, closures take a slightly more complicated form.
-
-
-  LAZY EVALUATION:
-
-  Trees are evaluated as late as possible (lazy evaluation). In order to
-  achieve that, the compiler maintains a boolean variable per tree that may
-  be evaluated lazily. This variable is allocated by CompilerUnit::NeedLazy.
-  It is set when the value is evaluated, and initially cleared.
+   To avoid skewing of the binary tree constructed that way, we may later follow
+   the red-black tree algorithm for rebalancing. The convention could be that a
+   an infix ; corresponds to black, and an infix \n corresponds to red.
  */
 
 #include "base.h"
@@ -194,23 +130,81 @@ XL_BEGIN
 // ============================================================================
 
 struct Context;                                 // Execution context
-
-// Give names to components of a symbol table
-typedef Prefix                          Scope;
-typedef GCPtr<Scope>                    Scope_p;
-typedef Infix                           Rewrite;
-typedef GCPtr<Rewrite>                  Rewrite_p;
-typedef Infix                           RewriteChildren;
-typedef GCPtr<RewriteChildren>          RewriteChildren_p;
-
 typedef GCPtr<Context>                  Context_p;
-typedef std::vector<Infix_p>            RewriteList;
-typedef std::map<Tree_p, Tree_p>        tree_map;
+struct Rewrites;
+
+
+// ============================================================================
+//
+//   C++ type safe wrappers for elements in a symbol table
+//
+// ============================================================================
+
+struct Scope : Block
+// ----------------------------------------------------------------------------
+//   A scope is simply an indentation-based block
+// ----------------------------------------------------------------------------
+{
+    Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE):
+        Block(child, "{", "}", pos) {}
+    Tree * Entries()    { return child; }
+    Scope  *Enclosing();
+    Tree_p &Locals();
+    GARBAGE_COLLECT(Scope);
+};
+typedef GCPtr<Scope> Scope_p;
+
+
+struct Scopes : Prefix
+// ----------------------------------------------------------------------------
+//   A sequence of scopes
+// ----------------------------------------------------------------------------
+{
+    Scopes(Scope *enclosing, Scope *inner, TreePosition pos = NOWHERE):
+        Prefix(enclosing, inner, pos) {}
+    Scope *Enclosing()  { return (Scope *) (Tree *) left; }
+    Scope *Inner()      { return (Scope *) (Tree *) right; }
+    GARBAGE_COLLECT(Scopes);
+};
+typedef GCPtr<Scopes> Scopes_p;
+
+
+struct Rewrite : Infix
+// ----------------------------------------------------------------------------
+//   A rewrite is an infix "is"
+// ----------------------------------------------------------------------------
+{
+    Rewrite(Tree *pattern, Tree *definition):
+        Infix("is", pattern, definition, pattern->Position()) {}
+    Tree *Pattern() { return left; }
+    Tree *BasePattern();
+    Tree *Definition()  { return right; }
+    GARBAGE_COLLECT(Rewrite);
+};
+typedef GCPtr<Rewrite> Rewrite_p;
+
+
+struct Rewrites : Infix
+// ----------------------------------------------------------------------------
+//   Sequence of rewrites are separated by a \n
+// ----------------------------------------------------------------------------
+{
+    Rewrites(Rewrite *left, Rewrite *right):
+        Infix("\n", left, right, left->Position()) {}
+    Rewrites(Rewrite *left, Rewrites *right):
+        Infix("\n", left, right, left->Position()) {}
+    Rewrite  *Payload()         { return (Rewrite *) (Tree *) left; }
+    Rewrite  *Second();
+    Rewrites *Children();
+    GARBAGE_COLLECT(Rewrites);
+};
+typedef GCPtr<Rewrites> Rewrites_p;
+
+
+typedef std::vector<Rewrite_p>          RewriteList;
 typedef Tree *                          (*eval_fn) (Scope *, Tree *);
 typedef std::map<Tree_p, eval_fn>       code_map;
 
-#define REWRITE_NAME            "\n"
-#define REWRITE_CHILDREN_NAME   ";"
 
 
 // ============================================================================
@@ -252,7 +246,6 @@ public:
     Scope *             Symbols()               { return symbols; }
     void                SetSymbols(Scope *s)    { symbols = s; }
     Context *           Parent();
-    Context *           Pointer()               { return this; }
     operator Scope *()                          { return symbols; }
 
     // Special forms of evaluation
@@ -262,9 +255,10 @@ public:
     bool                ProcessDeclarations(Tree *what);
 
     // Adding definitions to the context
-    Rewrite *           Enter(Infix *decl, bool overwrite=false);
-    Rewrite *           Define(Tree *from, Tree *to, bool overwrite=false);
-    Rewrite *           Define(text name, Tree *to, bool overwrite=false);
+    Rewrite *           Enter(Infix *infix, bool overwrite=false);
+    Rewrite *           Enter(Rewrite *rewrite, bool overwrite=false);
+    Rewrite *           Define(Tree *pattern, Tree *def, bool overwrite=false);
+    Rewrite *           Define(text name, Tree *def, bool overwrite=false);
     Tree *              Assign(Tree *target, Tree *source);
 
     // Set and get per-context tree info
@@ -286,13 +280,9 @@ public:
     Rewrite *           SetAttribute(text attr, double value, bool ow=false);
     Rewrite *           SetAttribute(text attr, text value, bool ow=false);
 
-    // Path management
-    void                SetPrefixPath(text prefix, text path);
-    text                ResolvePrefixedPath(text path);
-
     // Looking up definitions in a context
     typedef Tree *      (*lookup_fn)(Scope *evalContext, Scope *declContext,
-                                     Tree *form, Infix *decl, void *info);
+                                     Tree *form, Rewrite *decl, void *info);
     Tree *              Lookup(Tree *what,
                                lookup_fn lookup, void *info,
                                bool recurse=true);
@@ -302,8 +292,6 @@ public:
     Tree *              Bound(Tree *form, bool rec, Rewrite_p *rw,Scope_p *ctx);
     Tree *              Named(text name, bool recurse=true);
     bool                IsEmpty();
-    bool                HasRewritesFor(kind k);
-    void                HasOneRewriteFor(kind k);
 
     // List rewrites of a given type
     ulong               ListNames(text begin, RewriteList &list,
@@ -319,211 +307,13 @@ public:
 
     // Dump symbol tables
     static void         Dump(std::ostream &out, Scope *symbols, bool recurse);
-    static void         Dump(std::ostream &out, Rewrite *locals);
+    static void         Dump(std::ostream &out, Tree_p *locals);
     void                Dump(std::ostream &out) { Dump(out, symbols, true); }
 
 public:
     Scope_p             symbols;
-    static uint         hasRewritesForKind;
     GARBAGE_COLLECT(Context);
 };
-
-
-// ============================================================================
-//
-//    Meaning adapters - Make it more explicit what happens in code
-//
-// ============================================================================
-
-inline Scope *Enclosing(Scope *scope)
-// ----------------------------------------------------------------------------
-//   Find parent for a given scope
-// ----------------------------------------------------------------------------
-{
-    return scope->left->As<Scope>();
-}
-
-
-inline Tree_p &ScopeLocals(Scope *scope)
-// ----------------------------------------------------------------------------
-//   Return the place where we store the parent for a scope
-// ----------------------------------------------------------------------------
-{
-    return scope->right;
-}
-
-
-inline Rewrite *ScopeRewrites(Scope *scope)
-// ----------------------------------------------------------------------------
-//   Find top rewrite for a given scope
-// ----------------------------------------------------------------------------
-{
-    return scope->right->As<Rewrite>();
-}
-
-
-inline Infix *RewriteDeclaration(Rewrite *rw)
-// ----------------------------------------------------------------------------
-//   Find what a rewrite declares
-// ----------------------------------------------------------------------------
-{
-    return rw->left->AsInfix();
-}
-
-
-inline RewriteChildren *RewriteNext(Rewrite *rw)
-// ----------------------------------------------------------------------------
-//   Find the children of a rewrite during lookup
-// ----------------------------------------------------------------------------
-{
-    return rw->right->AsInfix();
-}
-
-
-inline bool IsScope(Scope *scope)
-// ----------------------------------------------------------------------------
-//   Check if a scope (prefix) looks like a scope
-// ----------------------------------------------------------------------------
-{
-    while (scope)
-    {
-        if (scope->left == xl_nil)
-            return scope->right == xl_nil || ScopeRewrites(scope);
-        Scope *parent = scope->left->As<Scope>();
-        scope = parent;
-    }
-    return false;
-}
-
-
-inline Scope *IsScope(Tree *tree)
-// ----------------------------------------------------------------------------
-//    Check if a tree (prefix) looks like a scope, then return it
-// ----------------------------------------------------------------------------
-{
-    if (Scope *scope = tree->As<Scope>())
-        if (IsScope(scope))
-            return scope;
-    return nullptr;
-}
-
-
-inline bool IsSymbolTable(Rewrite *rw)
-// ----------------------------------------------------------------------------
-//   Check if a rewrite (infix) looks like a symbol table
-// ----------------------------------------------------------------------------
-{
-    if (rw->name != REWRITE_NAME && rw->name != REWRITE_CHILDREN_NAME)
-        return false;
-    if (rw->left != xl_nil && !RewriteDeclaration(rw))
-        return false;
-    if (rw->right != xl_nil && !RewriteNext(rw))
-        return false;
-
-    // At this stage, it's a safe bet it looks like a symbol table
-    return true;
-}
-
-
-inline Rewrite *IsSymbolTable(Tree *tree)
-// ----------------------------------------------------------------------------
-//    Check if a tree (prefix) looks like a symbol table
-// ----------------------------------------------------------------------------
-{
-    if (Rewrite *rw = tree->As<Rewrite>())
-        if (IsSymbolTable(rw))
-            return rw;
-    return nullptr;
-}
-
-
-struct ContextStack
-// ----------------------------------------------------------------------------
-//   For debug purpose: display the context stack on a std::ostream
-// ----------------------------------------------------------------------------
-{
-    ContextStack(Scope *scope) : scope(scope) {}
-    friend std::ostream &operator<<(std::ostream &out, const ContextStack &data)
-    {
-        out << "[ ";
-        for (Scope *s = data.scope; s; s = Enclosing(s))
-            out << (void *) s << " ";
-        out << "]";
-        return out;
-    }
-    Scope *scope;
-};
-
-
-
-// ============================================================================
-//
-//    Helper functions to extract key elements from a rewrite
-//
-// ============================================================================
-
-inline Rewrite *Context::SetOverridePriority(double priority)
-// ----------------------------------------------------------------------------
-//   Set the override_priority attribute
-// ----------------------------------------------------------------------------
-{
-    return SetAttribute("override_priority", priority);
-}
-
-
-inline Rewrite *Context::SetModulePath(text path)
-// ----------------------------------------------------------------------------
-//   Set the module_path attribute
-// ----------------------------------------------------------------------------
-{
-    return SetAttribute("module_path", path);
-}
-
-
-inline Rewrite *Context::SetModuleDirectory(text directory)
-// ----------------------------------------------------------------------------
-//   Set the module_directory attribute
-// ----------------------------------------------------------------------------
-{
-    return SetAttribute("module_directory", directory);
-}
-
-
-inline Rewrite *Context::SetModuleFile(text file)
-// ----------------------------------------------------------------------------
-//   Set the module_file attribute
-// ----------------------------------------------------------------------------
-{
-    return SetAttribute("module_file", file);
-}
-
-
-inline Rewrite *Context::SetModuleName(text name)
-// ----------------------------------------------------------------------------
-//   Set the module_name attribute
-// ----------------------------------------------------------------------------
-{
-    return SetAttribute("module_name", name);
-}
-
-
-inline bool Context::HasRewritesFor(kind k)
-// ----------------------------------------------------------------------------
-//    Check if we detected rewrites for a specific kind
-// ----------------------------------------------------------------------------
-//    This is used to avoid useless lookups for reals, naturals, etc.
-{
-    return (hasRewritesForKind & (1<<k)) != 0;
-}
-
-
-inline void Context::HasOneRewriteFor(kind k)
-// ----------------------------------------------------------------------------
-//    Record that we have a new rewrite for a given kind
-// ----------------------------------------------------------------------------
-{
-    hasRewritesForKind |= 1<<k;
-}
 
 
 // ============================================================================
@@ -807,13 +597,201 @@ inline std::ostream &operator<< (std::ostream &out, Context *c)
 // ----------------------------------------------------------------------------
 {
     out << "Context " << (void *) c->Symbols() << ":\n";
-    Context::Dump(out, ScopeRewrites(c->symbols));
+    Context::Dump(out, c->Symbols(), true);
     return out;
 }
 
 
-RECORDER_DECLARE(xl2c);
+
+// ============================================================================
+//
+//   Specialization for Tree::As<T>
+//
+// ============================================================================
+
+template<> inline Scope *Tree::As<Scope>(Scope *)
+// ----------------------------------------------------------------------------
+//   Check that we have an actual scope
+// ----------------------------------------------------------------------------
+{
+    if (Block *block = AsBlock())
+        return (Scope *) block;
+    return nullptr;
+}
+
+
+template<> inline Scopes *Tree::As<Scopes>(Scope *)
+// ----------------------------------------------------------------------------
+//   Check that we have an actual prefix, sequence of scopes
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = AsPrefix())
+        return (Scopes *) prefix;
+    return nullptr;
+}
+
+
+template<> inline Rewrite *Tree::As<Rewrite>(Scope *)
+// ----------------------------------------------------------------------------
+//   Check that the name identifies a rewrite
+// ----------------------------------------------------------------------------
+{
+    if (Infix *definition = IsDefinition(this))
+        return (Rewrite *) definition;
+    return nullptr;
+}
+
+
+template<> inline Rewrites *Tree::As<Rewrites>(Scope *)
+// ----------------------------------------------------------------------------
+//   Check that the name identifies rewrites
+// ----------------------------------------------------------------------------
+{
+    if (Infix *sequence = IsSequence(this))
+        return (Rewrites *) sequence;
+    return nullptr;
+}
+
+
+
+// ============================================================================
+//
+//    Inline functions that cannot be defined before specialization
+//
+// ============================================================================
+
+inline Rewrite *Rewrites::Second()
+// ----------------------------------------------------------------------------
+//   Return the second entry in a Rewrites if it's a Rewrite
+// ----------------------------------------------------------------------------
+{
+    return right->As<Rewrite>();
+}
+
+
+inline Rewrites *Rewrites::Children()
+// ----------------------------------------------------------------------------
+//   Return the second entry in a Rewrites if it's another Rewrites
+// ----------------------------------------------------------------------------
+{
+    return right->As<Rewrites>();
+}
+
+
+inline Tree *Rewrite::BasePattern()
+// ----------------------------------------------------------------------------
+//   Return the base pattern
+// ----------------------------------------------------------------------------
+{
+    return PatternBase(left);
+}
+
+
+
+// ============================================================================
+//
+//    Meaning adapters - Make it more explicit what happens in code
+//
+// ============================================================================
+
+inline Scope *Scope::Enclosing()
+// ----------------------------------------------------------------------------
+//   Find parent for a given scope
+// ----------------------------------------------------------------------------
+{
+    if (Scopes *scopes = child->As<Scopes>())
+        return scopes->Enclosing();
+    return nullptr;
+}
+
+
+inline Tree_p &Scope::Locals()
+// ----------------------------------------------------------------------------
+//   Return the place where we store the parent for a scope
+// ----------------------------------------------------------------------------
+{
+    Scope *scope = this;
+    if (Scopes *scopes = child->As<Scopes>())
+        scope = scopes->Inner();
+    return scope->child;
+}
+
+
+struct ContextStack
+// ----------------------------------------------------------------------------
+//   For debug purpose: display the context stack on a std::ostream
+// ----------------------------------------------------------------------------
+{
+    ContextStack(Scope *scope) : scope(scope) {}
+    friend std::ostream &operator<<(std::ostream &out, const ContextStack &data)
+    {
+        out << "[ ";
+        for (Scope *s = data.scope; s; s = s->Enclosing())
+            out << (void *) s << " ";
+        out << "]";
+        return out;
+    }
+    Scope *scope;
+};
+
+
+
+// ============================================================================
+//
+//    Helper functions to extract key elements from a rewrite
+//
+// ============================================================================
+
+inline Rewrite *Context::SetOverridePriority(double priority)
+// ----------------------------------------------------------------------------
+//   Set the override_priority attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("override_priority", priority);
+}
+
+
+inline Rewrite *Context::SetModulePath(text path)
+// ----------------------------------------------------------------------------
+//   Set the module_path attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_path", path);
+}
+
+
+inline Rewrite *Context::SetModuleDirectory(text directory)
+// ----------------------------------------------------------------------------
+//   Set the module_directory attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_directory", directory);
+}
+
+
+inline Rewrite *Context::SetModuleFile(text file)
+// ----------------------------------------------------------------------------
+//   Set the module_file attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_file", file);
+}
+
+
+inline Rewrite *Context::SetModuleName(text name)
+// ----------------------------------------------------------------------------
+//   Set the module_name attribute
+// ----------------------------------------------------------------------------
+{
+    return SetAttribute("module_name", name);
+}
 
 XL_END
+
+
+RECORDER_DECLARE(context);
+RECORDER_DECLARE(symbols);
+RECORDER_DECLARE(symbols_errors);
+
 
 #endif // CONTEXT_H

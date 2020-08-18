@@ -879,18 +879,22 @@ XL::Tree *xldebug(XL::Tree *tree)
         XL::Allocator<XL::Infix>::IsAllocated(tree)     ||
         XL::Allocator<XL::Prefix>::IsAllocated(tree)    ||
         XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
-        XL::Allocator<XL::Block>::IsAllocated(tree))
+        XL::Allocator<XL::Block>::IsAllocated(tree)     ||
+        XL::Allocator<XL::Scopes>::IsAllocated(tree)    ||
+        XL::Allocator<XL::Rewrite>::IsAllocated(tree)   ||
+        XL::Allocator<XL::Rewrites>::IsAllocated(tree))
     {
-        if (XL::Scope *scope = IsScope(tree))
-            return xldebug(scope);
-        if (XL::Rewrite *rw = IsSymbolTable(tree))
-            return xldebug(rw);
         XL::Renderer render(std::cerr);
         if (xldebug_verbose)
             render.SelectStyleSheet("debug.stylesheet");
         render.RenderFile(tree);
         std::cerr << "\n";
 
+    }
+    else if (XL::Allocator<XL::Scope>::IsAllocated(tree))
+    {
+        extern XL::Scope *xldebug(XL::Scope *scope);
+        return xldebug((XL::Scope *) tree);
     }
     else
     {
