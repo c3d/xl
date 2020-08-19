@@ -203,7 +203,10 @@ Error::operator Tree *()
 //    Return the error converted as a prefix form
 // ----------------------------------------------------------------------------
 {
-    return new Prefix(xl_error, new Text(Message(), position), position);
+    Tree *args = new Text(message, position);
+    for (auto arg : arguments)
+        args = new Infix(",", args, arg);
+    return new Prefix(xl_error, args, position);
 }
 
 
