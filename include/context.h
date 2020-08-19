@@ -253,6 +253,7 @@ public:
 
     // Phases of evaluation
     bool                ProcessDeclarations(Tree *what);
+    Scope *             ProcessScope(Tree *declarations);
 
     // Adding definitions to the context
     Rewrite *           Enter(Infix *infix, bool overwrite=false);
@@ -467,6 +468,27 @@ inline Infix *IsCommaList(Tree *tree)
 {
     if (Infix *infix = tree->AsInfix())
         if (IsCommaList(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsDot(Infix *infix)
+// ----------------------------------------------------------------------------
+//    Check if the infix is a dot operator
+// ----------------------------------------------------------------------------
+{
+    return infix->name == ".";
+}
+
+
+inline Infix *IsDot(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a dot notation
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsDot(infix))
             return infix;
     return nullptr;
 }
