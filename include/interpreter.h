@@ -56,59 +56,7 @@ public:
 
     Tree *              Evaluate(Scope *, Tree *source) override;
     Tree *              TypeCheck(Scope *, Tree *type, Tree *value) override;
-
-public:
-    static Tree *       EvaluateClosure(Context *context, Tree *code);
-    static Tree *       Instructions(Context_p context, Tree_p what);
-
-public:
-    static Tree *       IsClosure(Tree *value, Context_p *scope);
-    static Tree *       MakeClosure(Context *context, Tree *value);
-
-    static Opcode *     SetInfo(Infix *decl, Opcode *opcode);
-    static Opcode *     OpcodeInfo(Infix *decl);
 };
-
-
-// ============================================================================
-//
-//    Closure management (keeping scoping information with values)
-//
-// ============================================================================
-
-struct ClosureInfo : Info
-// ----------------------------------------------------------------------------
-//   Mark a given Prefix as a closure
-// ----------------------------------------------------------------------------
-{};
-
-
-inline Tree *Interpreter::IsClosure(Tree *tree, Context_p *context)
-// ----------------------------------------------------------------------------
-//   Check if something is a closure, if so set scope and/or context
-// ----------------------------------------------------------------------------
-{
-    if (Prefix *closure = tree->AsPrefix())
-    {
-        if (Scope *scope = closure->left->As<Scope>())
-        {
-            // We normally have a scope on the left
-            if (context)
-                *context = new Context(scope);
-            return closure->right;
-        }
-    }
-    return nullptr;
-}
-
-
-inline Tree *Interpreter::MakeClosure(Context *ctx, Tree *value)
-// ----------------------------------------------------------------------------
-//   Create a closure encapsulating the current context
-// ----------------------------------------------------------------------------
-{
-    return new Prefix(ctx->Symbols(), value);
-}
 
 XL_END
 

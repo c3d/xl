@@ -419,6 +419,18 @@ inline bool IsDeclaration(Infix *infix)
 }
 
 
+inline bool IsDeclaration(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is a declaration
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "extern")
+            return true;
+    return false;
+}
+
+
 inline Infix *IsDeclaration(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree is a declaration
@@ -448,6 +460,30 @@ inline Infix *IsSequence(Tree *tree)
     if (Infix *infix = tree->AsInfix())
         if (IsSequence(infix))
             return infix;
+    return nullptr;
+}
+
+
+inline bool IsError(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is an error form
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "error")
+            return true;
+    return false;
+}
+
+
+inline Prefix *IsError(Tree *what)
+// ----------------------------------------------------------------------------
+//   Check if a tree is an error form
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = what->AsPrefix())
+        if (IsError(prefix))
+            return prefix;
     return nullptr;
 }
 
@@ -534,6 +570,30 @@ inline Prefix *IsPatternMatchingType(Tree *tree)
 {
     if (Prefix *prefix = tree->AsPrefix())
         if (IsPatternMatchingType(prefix))
+            return prefix;
+    return nullptr;
+}
+
+
+inline bool IsBuiltin(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is special (extern, builtin, C)
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "builtin")
+            return true;
+    return false;
+}
+
+
+inline Prefix *IsBuiltin(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return a builtin prefix if this is one
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = tree->AsPrefix())
+        if (IsBuiltin(prefix))
             return prefix;
     return nullptr;
 }
