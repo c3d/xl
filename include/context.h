@@ -260,6 +260,7 @@ public:
     Rewrite *           Define(Tree *pattern, Tree *def, bool overwrite=false);
     Rewrite *           Define(text name, Tree *def, bool overwrite=false);
     Tree *              Assign(Tree *target, Tree *source);
+    Tree *              ValidatePattern(Tree *pattern);
 
     // Set and get per-context tree info
     Tree *              Info(text key, Tree *what, bool recurse = false);
