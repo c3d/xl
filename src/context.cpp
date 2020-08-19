@@ -212,6 +212,26 @@ bool Context::ProcessDeclarations(Tree *what)
                 next = infix->right;
             }
         }
+        else if (Prefix *prefix = what->AsPrefix())
+        {
+            if (IsDeclaration(prefix))
+            {
+                CDeclaration *pcd = new CDeclaration;
+                Infix *normalForm = pcd->Declaration(prefix->right);
+                record(context, "C: %t is XL: %t", prefix, normalForm);
+                if (normalForm)
+                {
+                    // Process C declarations only in optimized mode
+                    Define(normalForm->left, normalForm->right);
+                    prefix->SetInfo<CDeclaration>(pcd);
+                    isInstruction = false;
+                }
+                else
+                {
+                    delete pcd;
+                }
+            }
+        }
 
         // Check if we see instructions
         result |= isInstruction;
