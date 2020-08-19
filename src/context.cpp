@@ -224,9 +224,9 @@ bool Context::ProcessDeclarations(Tree *what)
 }
 
 
-static void ValidateNames(Tree *pattern)
+Tree *Context::ValidatePattern(Tree *pattern)
 // ----------------------------------------------------------------------------
-//   Check that we have only valid names in the pattern
+//   Check that we have only valid names in the pattern, evaluate metaboxen
 // ----------------------------------------------------------------------------
 {
     switch(pattern->Kind())
@@ -245,33 +245,50 @@ static void ValidateNames(Tree *pattern)
     case INFIX:
     {
         Infix *infix = (Infix *) pattern;
-        ValidateNames(infix->left);
-        ValidateNames(infix->right);
+        Tree *left = ValidatePattern(infix->left);
+        Tree *right = ValidatePattern(infix->right);
+        if (left != infix->left || right != infix->right)
+            pattern = new Infix(infix, left, right);
         break;
     }
     case PREFIX:
     {
         Prefix *prefix = (Prefix *) pattern;
+        Tree *left = prefix->left;
         if (prefix->left->Kind() != NAME)
-            ValidateNames(prefix->left);
-        ValidateNames(prefix->right);
+            left = ValidatePattern(prefix->left);
+        Tree *right = ValidatePattern(prefix->right);
+        if (left != prefix->left || right != prefix->right)
+            pattern = new Prefix(prefix, left, right);
         break;
     }
     case POSTFIX:
     {
         Postfix *postfix = (Postfix *) pattern;
+        Tree *right = postfix->right;
         if (postfix->right->Kind() != NAME)
-            ValidateNames(postfix->right);
-        ValidateNames(postfix->left);
+            right = ValidatePattern(postfix->right);
+        Tree *left = ValidatePattern(postfix->left);
+        if (left != prefix->left || right != prefix->right)
+            pattern = new Postfix(postfix, left, right);
         break;
     }
     case BLOCK:
     {
         Block *block = (Block *) pattern;
-        ValidateNames(block->child);
+        if (Tree *expr = block->IsMetabox())
+        {
+            pattern = xl_evaluate(Symbols(), expr);
+        }
+        else
+        {
+            Tree *child = ValidatePattern(block->child);
+            if (child != block-> child)
+                pattern = child;
         break;
     }
     }
+    return pattern;
 }
 
 
@@ -533,8 +550,8 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
     // Find pattern from the rewrite
     Tree *pattern = rewrite->Pattern();
 
-    // Validate form names, emit errors in case of problem.
-    ValidateNames(pattern);
+    // Validate form names, replace metaboxes, emit errors in case of problem.
+    pattern = Validate(pattern);
 
     // Find locals symbol table, populate it
     Scope   *scope  = symbols;
