@@ -224,6 +224,23 @@ bool Context::ProcessDeclarations(Tree *what)
 }
 
 
+Scope *Context::ProcessScope(Tree *declarations)
+// ----------------------------------------------------------------------------
+//   If 'declarations' contains only declarations, return scope for them
+// ----------------------------------------------------------------------------
+{
+    // If the left is already identified as a scope, return that
+    if (Scope *scope = declarations->As<Scope>())
+        return scope;
+
+    // Process declarations to check
+    Context child(this);
+    if (!child.ProcessDeclarations(declarations))
+        return child.Symbols();
+    return nullptr;
+}
+
+
 Tree *Context::ValidatePattern(Tree *pattern)
 // ----------------------------------------------------------------------------
 //   Check that we have only valid names in the pattern, evaluate metaboxen
@@ -551,7 +568,7 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
     Tree *pattern = rewrite->Pattern();
 
     // Validate form names, replace metaboxes, emit errors in case of problem.
-    pattern = Validate(pattern);
+    pattern = ValidatePattern(pattern);
 
     // Find locals symbol table, populate it
     Scope   *scope  = symbols;
