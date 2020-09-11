@@ -4343,7 +4343,7 @@ that `X` is found even if it's in some further enclosing scope.
 
 ==== Static context
 
-THe `static` name can be used to refer to a context that is specific
+The `static` name can be used to refer to a context that is specific
 to the current scope, but remains from one evaluation of that scope to
 the next.
 
