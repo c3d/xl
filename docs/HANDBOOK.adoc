@@ -1478,7 +1478,7 @@ fractional part.
 
 NOTE: In the rest of the document, other terminologies, such as
 _integer_ or _real_ numbers may be applied for whole numbers and
-fractional numnbers respectively. This corresponds to numbers having
+fractional numbers respectively. This corresponds to numbers having
 been given a link:#types[type] for ((evaluation)) purpose. This is notably
 the case whenever a computer font is used, e.g. when we refer to
 `integer` or `real` values. Except as far as syntax is concerned, this
@@ -2741,7 +2741,7 @@ expressions:
   values to infix, prefix or postfix patterns.
 * <<Conditional patterns>> match values based on arbitrary conditions
 * <<Literal constants>> match constants with the same value.
-* <<Metabox values>> match values computed by the comiler.
+* <<Metabox values>> match values computed by the compiler.
 * <<Blocks>> change the priority of expressions.
 * <<Scope pattern matching>> allows large lists of paraameters to be
   passed as argument ina more readable way.
@@ -2822,7 +2822,7 @@ A type annotation as a sub-pattern declares a parameter:
 |==============================================================================
 | Parameter pattern    | Matched by| Not matched by
 | `X:integer`          | `42`      | `X` (unless bound to an `integer`)
-| `seconds as integer` | `42`      |`X` (unless bound to constant `integer`)
+| `seconds as integer` | `42`      |`X` (unless bound to mutable `integer`)
 |==============================================================================
 
 Such patterns are called _type annotations_, and are used to perform
