@@ -4321,7 +4321,8 @@ NOTE: The ability to inject something in a context as indicated above
 has some interesting use cases. For example, an object-oriented
 package could inject a "virtual functions table" field in the types
 that are passed to it. Whether this can be implemented in a sane and
-safe way remains to be validated.
+safe way remains to be validated. Also, the syntax may change, as it's unclear
+that the proposed syntax is not ambiguous or unintuitive.
 
 
 ==== Enclosing context
