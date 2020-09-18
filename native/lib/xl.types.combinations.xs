@@ -1,5 +1,5 @@
 // *****************************************************************************
-// combinations.xs                                                    XL project
+// xl.types.combinations.xs                                          XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,10 +34,14 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-with
-    T : type
-    U : type
-do
+module XL.TYPES.COMBINATIONS with
+// ----------------------------------------------------------------------------
+//   Interface for combination operations on types
+// ----------------------------------------------------------------------------
+
+    with
+        T as type
+        U as type
 
     // Return a type whose elements must belong to both input types
     T and U                     as type
