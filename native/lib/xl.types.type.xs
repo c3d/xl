@@ -1,10 +1,10 @@
 // *****************************************************************************
-// type.xs                                                            XL project
+// xl.types.type.xs                                                  XL project
 // *****************************************************************************
 //
 // File description:
 //
-//     Interface for types
+//     Interface for the definition of types in XL
 //
 //     This module provides
 //     - the `type` type itself, including key type attributes
@@ -41,28 +41,31 @@ use MEM    = XL.SYSTEM.MEMORY
 use LIFE   = XL.TYPES.LIFETIME
 
 
-TYPE as module with
+module TYPE with
 // ----------------------------------------------------------------------------
 //    A module providing core type operations
 // ----------------------------------------------------------------------------
 
-    type as [[builtin type]] with
+    // Aliases for types frequently used in this interface
+    type bit_count              is MEM.bit_count
+    type byte_count             is MEM.byte_count
+    type source                 is PARSER.tree
+    type lifetime               is LIFE.lifetime
+
+
+    type type with
     // ------------------------------------------------------------------------
     //   A `type` is used to identify a set of values
     // ------------------------------------------------------------------------
 
-        // Types
-        bit_count               is MEM.bit_count
-        byte_count              is MEM.byte_count
-        source                  is PARSER.tree
-
         // Attributes of the type
         Name                    as source       // Compiler-generated name
         Pattern                 as source       // Pattern for the type
-        Condition               as source       // Condition for the type (when clause)
+        Condition               as source       // 'when' clause
         Constant                as boolean      // Value immutable over lifetime
         Mutable                 as boolean      // Value mutable over lifetime
         Compact                 as boolean      // Uses contiguous memory
+        Lifetime                as lifetime     // Static lifetime for type
 
         // Testing of values of the type
         Contains  Value         as boolean      // Checks if value belongs
@@ -73,17 +76,15 @@ TYPE as module with
 
 
     // Type constructor
-    type Pattern                as type         // Build type for Pattern
+    matching Pattern            as type         // Build type for Pattern
 
-    // Elementary types
+    // Syntactic sugar for type declarations
+    {type T}                    is {T as type}
+    {type T matches P}          is {type T is matching P}
+
+    // Fundamental types matching nothing or everything
     nil                         as type
     anything                    as type
-
-    // Combinaison of types
-    T1:type or  T2:type         as type         // Values from one or the other
-    T1:type and T2:type         as type         // Values from both types
-    not T:type                  as type         // Value not from the type
-
 
     // Generic type creation
     any base:type               as type         // Polymorphic type
