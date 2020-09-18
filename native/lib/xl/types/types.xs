@@ -6,7 +6,7 @@
 //
 //     Interface for the TYPES modules in XL
 //
-//     This defines
+//     This defines all the basic categories of data types
 //
 //
 //
@@ -34,25 +34,30 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-TYPE            as module       // Representation of types
+module TYPES with
+// ----------------------------------------------------------------------------
+//   Interface for the XL.TYPES module
+// ----------------------------------------------------------------------------
 
-COMBINATIONS    as module       // Combinations of types
-LIFETIME        as module       // Lifetime of entities
+    module TYPE                     // Representation of types
 
-NUMBER          as module       // Common aspects of numbers
-ENUMERATED      as module       // Enumerated values
+    module COMBINATIONS             // Combinations of types
+    module LIFETIME                 // Lifetime of entities
 
-BOOLEAN         as module       // Boolean type (true / false)
-INTEGER         as module       // Signed and unsigned integer types
-REAL            as module       // Real numbers
-DECIMAL         as module       // Decimal floating-point numbers
-FIXED_POINT     as module       // Fixed-point numbers
-CHARACTER       as module       // Representation of characters
-TEXT            as module       // Text (sequence of characters)
+    module NUMBER                   // Common aspects of numbers
+    module ENUMERATED               // Enumerated values
 
-CONVERSIONS     as module       // Standard conversions
+    module BOOLEAN                  // Boolean type (true / false)
+    module INTEGER                  // Signed and unsigned integer types
+    module REAL                     // Real numbers
+    module DECIMAL                  // Decimal floating-point numbers
+    module FIXED_POINT              // Fixed-point numbers
+    module CHARACTER                // Representation of characters
+    module TEXT                     // Text (sequence of characters)
 
-RANGE           as module       // Range of elements (and range arithmetic)
-ITERATOR        as module       // Iterator
+    module CONVERSIONS              // Standard conversions
 
-UNSAFE          as module       // Unsafe data types
+    module RANGE                    // Range of elements (and range arithmetic)
+    module ITERATOR                 // Iterator
+
+    module UNSAFE                   // Unsafe data types
