@@ -2591,14 +2591,14 @@ operation seconds as natural    // Seconds in the current time
 function  seconds as natural    // Estimate number of seconds in the universe
 ....
 
-The meaning of these words is intended as follows, and a compiler is
-free to emit a diagnostic if one of the conditions is not met:
+The meaning of these words is intended as follows:
 
 * `constant` indicates that the declaration should be implementable as a
   compile-time constant that can be stored in a read-only area of memory.
 
 * `variable` indicates that the declaration should be implementable
-  as a variable in a writable area of memory.
+  so that the result of the operation is mutable, typically an area of memory or
+  a register.
 
 * `macro` indicates that the declaration should be implemented using
   compile-time manipulations of parse tree arguments, and that the
@@ -2623,32 +2623,63 @@ free to emit a diagnostic if one of the conditions is not met:
   even at the expense of execution time. For example, data could be
   packed and call inlining could be disabled.
 
+A compiler is free to emit a diagnostic if one of the conditions is not
+met. This is only a quality of implementation consideration. In all cases, the
+meaning of the declaration remains the same as far as the semantics of the
+language is concerned. In other words, an annotation should not change what your
+program does, although it may observably change how your program does it.
+
 In order to see the effect that these modifiers may have, we can
 consider code that simply adds a value to itself, and see what {cpp}
 feature this may be related to:
 
-....
-// Compile-time constant: constexpr
-constant twice(X) is X + X
-
-// Variable at run-time: function pointer
-variable twice(X) is X + X
-
-// Source code transformation: #define
-macro twice(X) is X + X
-
-// Instantiation based on arguments: template
-generic twice(X) is X + X
-
-// Dynamic dispatch at run-time: virtual functions
-polymorphic twice(X) is X + X
-
-// Optimize for speed: inline
-fast twice(X) is X + X
-
-// Optimize for size: pragmas, command-line options
-small twice(X) is X + X
-....
+[cols="40%,60%",options="header",]
+|===========================================
+| XL | {cpp}
+| `constant twice(X) is X+X`    | `template<typename T> +
+constexpr T twice(const T& X) +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}return X + X; +
+}`
+| `variable twice(X) is X+X`    | `template<class T> +
+T& twice(T& X) +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}X+=X; +
+{nbsp}{nbsp}{nbsp}{nbsp}return X; +
+}`
+| `macro twice(X) is X+X`       | `#define twice(X) ({ \ +
+{nbsp}{nbsp}{nbsp}{nbsp}typeof(X) _X = (X); \ +
+{nbsp}{nbsp}{nbsp}{nbsp}_X+_X; \ +
+})`
+| `generic twice(X) is X+X`     | `template<typename T> +
+T twice(const T&) +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}return T + T; +
+}`
+| `polymorphic twice(X) is X+X` | `class Base +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}virtual Base &twice(Base &X) +
+{nbsp}{nbsp}{nbsp}{nbsp}{ +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}X += X; +
+{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}{nbsp}return X; +
+{nbsp}{nbsp}{nbsp}{nbsp}} +
+}; +
+Base &twice(Base &X) +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}return X.twice(X); +
+}`
+| `fast twice(X) is X+X`        | `template <typename T> +
+inline T twice(const T &X) +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}return X+X; +
+}`
+| `small twice(X) is X+X`       | `#pragma GCC optimize("Os") +
+template<typename T> +
+constexpr T twice(const T& X) +
+{ +
+{nbsp}{nbsp}{nbsp}{nbsp}return X + X; +
+}`
+|===========================================
 
 
 ==== Storage hints

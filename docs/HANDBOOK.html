@@ -3989,8 +3989,7 @@ function  seconds as natural    // Estimate number of seconds in the universe</p
 </div>
 </div>
 <div class="paragraph">
-<p>The meaning of these words is intended as follows, and a compiler is
-free to emit a diagnostic if one of the conditions is not met:</p>
+<p>The meaning of these words is intended as follows:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -4000,7 +3999,8 @@ compile-time constant that can be stored in a read-only area of memory.</p>
 </li>
 <li>
 <p><code>variable</code> indicates that the declaration should be implementable
-as a variable in a writable area of memory.</p>
+so that the result of the operation is mutable, typically an area of memory or
+a register.</p>
 </li>
 <li>
 <p><code>macro</code> indicates that the declaration should be implemented using
@@ -4033,34 +4033,95 @@ packed and call inlining could be disabled.</p>
 </ul>
 </div>
 <div class="paragraph">
+<p>A compiler is free to emit a diagnostic if one of the conditions is not
+met. This is only a quality of implementation consideration. In all cases, the
+meaning of the declaration remains the same as far as the semantics of the
+language is concerned. In other words, an annotation should not change what your
+program does, although it may observably change how your program does it.</p>
+</div>
+<div class="paragraph">
 <p>In order to see the effect that these modifiers may have, we can
 consider code that simply adds a value to itself, and see what C&#43;&#43;
 feature this may be related to:</p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>// Compile-time constant: constexpr
-constant twice(X) is X + X
-
-// Variable at run-time: function pointer
-variable twice(X) is X + X
-
-// Source code transformation: #define
-macro twice(X) is X + X
-
-// Instantiation based on arguments: template
-generic twice(X) is X + X
-
-// Dynamic dispatch at run-time: virtual functions
-polymorphic twice(X) is X + X
-
-// Optimize for speed: inline
-fast twice(X) is X + X
-
-// Optimize for size: pragmas, command-line options
-small twice(X) is X + X</pre>
-</div>
-</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">XL</th>
+<th class="tableblock halign-left valign-top">C&#43;&#43;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>constant twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>template&lt;typename T&gt;<br>
+constexpr T twice(const T&amp; X)<br>
+{<br>
+&#160;&#160;&#160;&#160;return X + X;<br>
+}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>variable twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>template&lt;class T&gt;<br>
+T&amp; twice(T&amp; X)<br>
+{<br>
+&#160;&#160;&#160;&#160;X+=X;<br>
+&#160;&#160;&#160;&#160;return X;<br>
+}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>macro twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>#define twice(X) ({ \<br>
+&#160;&#160;&#160;&#160;typeof(X) _X = (X); \<br>
+&#160;&#160;&#160;&#160;_X+_X; \<br>
+})</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>generic twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>template&lt;typename T&gt;<br>
+T twice(const T&amp;)<br>
+{<br>
+&#160;&#160;&#160;&#160;return T + T;<br>
+}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>polymorphic twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>class Base<br>
+{<br>
+&#160;&#160;&#160;&#160;virtual Base &amp;twice(Base &amp;X)<br>
+&#160;&#160;&#160;&#160;{<br>
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;X += X;<br>
+&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return X;<br>
+&#160;&#160;&#160;&#160;}<br>
+};<br>
+Base &amp;twice(Base &amp;X)<br>
+{<br>
+&#160;&#160;&#160;&#160;return X.twice(X);<br>
+}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fast twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>template &lt;typename T&gt;<br>
+inline T twice(const T &amp;X)<br>
+{<br>
+&#160;&#160;&#160;&#160;return X+X;<br>
+}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>small twice(X) is X+X</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>#pragma GCC optimize("Os")<br>
+template&lt;typename T&gt;<br>
+constexpr T twice(const T&amp; X)<br>
+{<br>
+&#160;&#160;&#160;&#160;return X + X;<br>
+}</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect3">
 <h4 id="storage-hints"><a class="anchor" href="#storage-hints"></a><a class="link" href="#storage-hints">3.3.6. Storage hints</a></h4>
@@ -13376,7 +13437,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-11 21:30:11 +0200
+Last updated 2020-09-18 23:10:06 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
