@@ -1,5 +1,5 @@
 // *****************************************************************************
-// types.xs                                                           XL project
+// xl.types.xs                                                       XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,9 +34,9 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module TYPES with
+module XL.TYPES with
 // ----------------------------------------------------------------------------
-//   Interface for the XL.TYPES module
+//   Interface for operations on types
 // ----------------------------------------------------------------------------
 
     module TYPE                     // Representation of types
