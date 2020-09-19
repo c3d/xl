@@ -39,8 +39,12 @@ module XL.TYPES with
 //   Interface for operations on types
 // ----------------------------------------------------------------------------
 
+    // Make 'type' visible to all submodules
+    type type                      is TYPE.type
+
     module TYPE                     // Representation of types
 
+    module GENERICS                 // Generic types
     module COMBINATIONS             // Combinations of types
     module LIFETIME                 // Lifetime of entities
 

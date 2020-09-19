@@ -86,22 +86,5 @@ module TYPE with
     nil                         as type
     anything                    as type
 
-    // Generic type creation
-    any base:type               as type         // Polymorphic type
-    some base:type              as type         // Types deriving from 'base'
-    optional base:type          as type         // Optional type
-    one_of Patterns             as type         // Enumeration type
-    any_of Patterns             as type         // Flag type
-    base:type with Declarations as type         // Data inheritance
-    base:type when Condition    as type         // Type condition
-    variable base:type          as type         // Make type mutable
-    constant base:type          as type         // Make type constant
-    own base:type               as type         // Owning type
-    ref base:type               as type         // Reference to owned value
-    in base:type                as type         // Type for input parameters
-    out base:type               as type         // Type for output parameters
-    in_out base:type            as type         // Type for input/output parameters
-    io base:type                as type         // Type for input/output parameters
-
     base:type contains Value    as boolean      // Check if value is contained
     derived:type like base:type as nil          // State derivation relationship
