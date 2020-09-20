@@ -7,12 +7,13 @@ heavily on a number of conventions.
 
 ## Capitalization
 
-The core XL language is insensitive to capitalization and ignores
-underscores. In other words, `JoeDalton`, `JOE_DALTON` and
-`joe_dalton` all represent the same entity, much as they would in
-real-life.
+The core XL language should be insensitive to capitalization and ignores
+underscores. In other words, `JoeDalton`, `JOE_DALTON` and `joe_dalton` all
+represent the same entity, much as they would in real-life. It is unclear if
+this goal can be achieved without introducing too many ambiguities. Therefore,
+it remains possible that XL will be case sensitive.
 
-However, the XL code consistently follows a convention that helps
+In any case, the XL code consistently follows a convention that helps
 identify the purpose or intent of a given symbol.
 
 1. Symbols in `lowercase` normally denote data types, or functions
