@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  xl.types.generics.xs                                          XL project
+//  xl.types.generics.xl                                          XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -33,17 +33,42 @@
 //   along with XL.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
 
-module XL.TYPES.GENERICS with
+module XL.TYPES.GENERICS is
 // ----------------------------------------------------------------------------
-//   Interface for generic types
+//   Implementation for generic types
 // ----------------------------------------------------------------------------
 
     with
         base as type
 
-    // Mutability
-    variable base               as type         // Make type mutable
-    constant base               as type         // Make type constant
+
+    // ========================================================================
+    //
+    //   Mutability
+    //
+    // ========================================================================
+
+    variable base as type is
+    // ------------------------------------------------------------------------
+    //    Create a type like 'base' with additional 'variable' attribute
+    // ------------------------------------------------------------------------
+        Pattern         is variable base.Pattern
+        Condition       is base.Condition
+        Attributes      is base.Condition & {variable}
+        Bases           is base.Bases
+        Lifetime        is base.Lifetime and LIFE.variable
+
+
+    constant base as type is
+    // ------------------------------------------------------------------------
+    //    Create a type like 'base' with additional 'constant' attribute
+    // ------------------------------------------------------------------------
+        Pattern         is constant base.Pattern
+        Condition       is base.Condition
+        Attributes      is base.Condition & {constant}
+        Bases           is base.Bases
+        Lifetime        is base.Lifetime and LIFE.constant
+
 
     // Refining a type
     base with Declarations      as type         // Data inheritance
@@ -51,7 +76,7 @@ module XL.TYPES.GENERICS with
 
     // Parameter passing
     in base                     as type         // Input parameters
-    out base                    as type         // Output parameters
+    out base:                   as type         // Output parameters
     inout base:type             as type         // Input/output parameters
 
     // Ownership
