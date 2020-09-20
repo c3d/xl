@@ -2362,7 +2362,7 @@ A few names are reserved for use as syntactic sugar prefix. These
 names have a very low precedence, and as a result do not significantly
 impact the syntax of the pattern of the declaration they apply to.
 These sugar names are `type`, `class`, `module`, `function`, `method`,
-`procedure`, `to`, `operation`, `data`, `in`, `out`, `inout`, `io`,
+`procedure`, `to`, `operation`, `data`, `in`, `out`, `in out`, `io`,
 `constant`, `variable`, `macro`, `generic`, `polymorphic`, `fast`,
 `small`, `global`, `thread` and `static`. Proper use of these names
 also makes textual search of the declarations or definitions easier.
@@ -2466,7 +2466,7 @@ to:
 
 ==== Parameter sugar
 
-The `in`, `out` and `inout` have a syntactic sugar, where they can be
+The `in`, `out` and `in out` have a syntactic sugar, where they can be
 placed before a type annotation or a pattern, instead of just before
 the type in the type annotation.
 
@@ -5094,7 +5094,7 @@ as complicated as this one.  For example, the following code will fail
 type system checks:
 
 ....
-to Resize (P:inout packet, S:size) is
+to Resize (P:in out packet, S:size) is
     P.header.byte_count := S <1>
 ....
 <1> This is a type error on the `packet` type, because the existing
@@ -5107,12 +5107,12 @@ possibly reallocate memory for the new packet, and deal with three
 distinct cases for resizing:
 
 ....
-to Resize (P:inout packet, S:size) when S = P.header.byte_count is nil
-to Resize (P:inout packet, S:size) when S < P.header.byte_count is
+to Resize (P:in out packet, S:size) when S = P.header.byte_count is nil
+to Resize (P:in out packet, S:size) when S < P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := P.payload[0..S-1]
     P := packet(new_header, new_payload)
-to Resize (P:inout packet, S:size) when S > P.header.byte_count is
+to Resize (P:in out packet, S:size) when S > P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
         lambda I when I < P.byte_count   is P.payload[I]
@@ -5497,12 +5497,9 @@ They include the following:
 * `out T` can be used for output arguments of type `T`, i.e. values
   that are created by the callee.
 
-* `in_out T` can be used for input-output arguments of type `T`,
+* `in out T` can be used for input-output arguments of type `T`,
   i.e. values that can be modified by the callee but are created and
-  owned by the caller. Due to the rules about name lookup in XL, which
-  ignores the `_` character, it is also possible to spell this type as
-  `inout T`. Since this is very common, an alternate spelling, `io T`,
-  is also made available.
+  owned by the caller.
 
 * `any T` can hold a value of type `T` or any
   link:#inheritance[derived type], preserving the original type
@@ -6016,18 +6013,18 @@ based on Unix-style file descriptors:
 module MY_FILE with
     type file
     to open(Name:text) as file
-    to close F:io file
+    to close F:in out file
 
 module MY_FILE is
     type file matches file(fd:integer)
     to open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
-    to close F:inout file is
+    to close F:in out file is
         if fd >= 0 then
             libc.close(F.fd)
             F.fd := -2
-    to delete F:inout file is close F    // Destruction, see below
+    to delete F:in out file is close F    // Destruction, see below
 ----
 
 If the interface provides a `create` operation, it must be ready to
@@ -6049,9 +6046,9 @@ https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization[RAII].
 When the ((lifetime)) of a value `V` terminates, the statement `delete V`
 automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration. A `delete X:T` definition is called a
-_((destructor))_ for type `T`. It often has an link:#inout[inout] parameter
+_((destructor))_ for type `T`. It often has an link:#in out[in out] parameter
 for the value to destroy, in order to be able to modify its argument,
-i.e. a destructor often has a signature like `delete X:inout T`.
+i.e. a destructor often has a signature like `delete X:in out T`.
 
 Symmetrical to link:#field-creation[creation], the body of a `delete V`
 automatically invokes `delete V.X` for any field `X` in `V` at exit of
@@ -6060,13 +6057,13 @@ the body of the definition.
 For example, consider the definition below:
 
 ....
-to delete Z:inout complex is
+to delete Z:in out complex is
     print "Deleting complex ", Z
 ....
 
 That definition is actually equivalent to the definition below:
 ....
-to delete Z:inout complex is
+to delete Z:in out complex is
     print "Deleting complex ", Z
     (delete Z.Im)
     (delete Z.Re)
@@ -6091,8 +6088,8 @@ Consider for example the deletion of the `file` type defined in the
 values, that might be reflected in the implementation as follows:
 
 ....
-to delete F:inout file when F.fd < 0  is ... // Invalid flie
-to delete F:inout file                is ... // Valid file
+to delete F:in out file when F.fd < 0  is ... // Invalid flie
+to delete F:in out file                is ... // Valid file
 ....
 
 However, this also means that the programmer could create a
@@ -6113,7 +6110,7 @@ N:integers > 0 as boolean is
             return false
     return true
 
-delete N:inout positive is
+delete N:in out positive is
     print "Deleting positive: ", N
 
 delete N:integer is
@@ -6142,7 +6139,7 @@ type and `delete` operations above is really equivalent to the following:
 ....
 type integers is matching(base:string of integer)
 
-delete P:inout positive is
+delete P:in out positive is
     print "Deleting positive: ", P
     (delete P.N)        // Delete the N bound in 'positive'
 
@@ -6602,7 +6599,7 @@ number of types intended to access common owner types, including:
   given piece of code.
 * Several types such as `timing`, `dispatch`, `timeout` or `rendezvous`
   will combine `timer`, `thread`, `task` and `context` values.
-* The `in`, `out` and `inout` type expressions can sometimes be
+* The `in`, `out` and `in out` type expressions can sometimes be
   equivalent to an access types if that is the most efficient way to pass
   an argument around. However, this is mostly invisible to the programmer.
 * An `XL.SYSTEM.MEMORY.address` references a specific address in
@@ -7451,7 +7448,7 @@ be used after the move.
 The move operation has the following mandatory interface for all types:
 
 ....
-Target:out T :< Source:in_out T as mayfail T
+Target:out T :< Source:in out T as mayfail T
 move Source:T as mayfail T is result :< Source
 ....
 
@@ -7502,12 +7499,11 @@ indicate this direction and optimize argument passing accordingly:
   modifier is called an _((output parameter))_ and the corresponding
   argument is called an _((output argument))_.
 
-* `inout T`, which can also be spelled `in_out T`, `in out T` or `io T`,
-  indicates that the corresponding value is tranferred to the callee
-  for the duration of the call, and then transferred back to the caller.
+* `in out T` indicates that the corresponding value is tranferred to the
+  callee for the duration of the call, and then transferred back to the caller.
   Its lifetime is interrupted in the caller for the duration of the call,
-  and ownership is temporarily transferred to the callee.  The `inout
-  T` type also inherits from `T`. A parameter with the `inout`
+  and ownership is temporarily transferred to the callee.  The `in out
+  T` type also inherits from `T`. A parameter with the `in out`
   modifier is called a _((bidirectional parameter))_ and the
   corresponding argument is called a _((bidirectional argument))_.
 

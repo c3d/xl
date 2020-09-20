@@ -50,9 +50,9 @@ module XL.TYPES.GENERICS with
     base when Condition         as type         // Type condition
 
     // Parameter passing
+    in out base:type            as type         // Input/output parameters
     in base                     as type         // Input parameters
     out base                    as type         // Output parameters
-    inout base:type             as type         // Input/output parameters
 
     // Ownership
     own base                    as type         // Owning type

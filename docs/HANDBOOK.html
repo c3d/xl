@@ -3698,7 +3698,7 @@ to a functionally equivalent <em>raw</em> version of the same code.</p>
 names have a very low precedence, and as a result do not significantly
 impact the syntax of the pattern of the declaration they apply to.
 These sugar names are <code>type</code>, <code>class</code>, <code>module</code>, <code>function</code>, <code>method</code>,
-<code>procedure</code>, <code>to</code>, <code>operation</code>, <code>data</code>, <code>in</code>, <code>out</code>, <code>inout</code>, <code>io</code>,
+<code>procedure</code>, <code>to</code>, <code>operation</code>, <code>data</code>, <code>in</code>, <code>out</code>, <code>in out</code>, <code>io</code>,
 <code>constant</code>, <code>variable</code>, <code>macro</code>, <code>generic</code>, <code>polymorphic</code>, <code>fast</code>,
 <code>small</code>, <code>global</code>, <code>thread</code> and <code>static</code>. Proper use of these names
 also makes textual search of the declarations or definitions easier.</p>
@@ -3845,7 +3845,7 @@ to:</p>
 <div class="sect3">
 <h4 id="parameter-sugar"><a class="anchor" href="#parameter-sugar"></a><a class="link" href="#parameter-sugar">3.3.3. Parameter sugar</a></h4>
 <div class="paragraph">
-<p>The <code>in</code>, <code>out</code> and <code>inout</code> have a syntactic sugar, where they can be
+<p>The <code>in</code>, <code>out</code> and <code>in out</code> have a syntactic sugar, where they can be
 placed before a type annotation or a pattern, instead of just before
 the type in the type annotation.</p>
 </div>
@@ -7450,7 +7450,7 @@ type system checks:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>to Resize (P:inout packet, S:size) is
+<pre>to Resize (P:in out packet, S:size) is
     P.header.byte_count := S <i class="conum" data-value="1"></i><b>(1)</b></pre>
 </div>
 </div>
@@ -7472,12 +7472,12 @@ distinct cases for resizing:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>to Resize (P:inout packet, S:size) when S = P.header.byte_count is nil
-to Resize (P:inout packet, S:size) when S &lt; P.header.byte_count is
+<pre>to Resize (P:in out packet, S:size) when S = P.header.byte_count is nil
+to Resize (P:in out packet, S:size) when S &lt; P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := P.payload[0..S-1]
     P := packet(new_header, new_payload)
-to Resize (P:inout packet, S:size) when S &gt; P.header.byte_count is
+to Resize (P:in out packet, S:size) when S &gt; P.header.byte_count is
     new_header  : header := header(S)
     new_payload : payload(S) := array
         lambda I when I &lt; P.byte_count   is P.payload[I]
@@ -8011,12 +8011,9 @@ that are <a href="#creation">created</a> and owned by the caller.</p>
 that are created by the callee.</p>
 </li>
 <li>
-<p><code>in_out T</code> can be used for input-output arguments of type <code>T</code>,
+<p><code>in out T</code> can be used for input-output arguments of type <code>T</code>,
 i.e. values that can be modified by the callee but are created and
-owned by the caller. Due to the rules about name lookup in XL, which
-ignores the <code>_</code> character, it is also possible to spell this type as
-<code>inout T</code>. Since this is very common, an alternate spelling, <code>io T</code>,
-is also made available.</p>
+owned by the caller.</p>
 </li>
 <li>
 <p><code>any T</code> can hold a value of type <code>T</code> or any
@@ -8760,18 +8757,18 @@ based on Unix-style file descriptors:</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">module MY_FILE with
     type file
     to open(Name:text) as file
-    to close F:io file
+    to close F:in out file
 
 module MY_FILE is
     type file matches file(fd:integer)
     to open(Name:text) as file is
         fd:integer := libc.open(Name, libc.O_RDONLY)
         file(fd)
-    to close F:inout file is
+    to close F:in out file is
         if fd &gt;= 0 then
             libc.close(F.fd)
             F.fd := -2
-    to delete F:inout file is close F    // Destruction, see below</code></pre>
+    to delete F:in out file is close F    // Destruction, see below</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8806,9 +8803,9 @@ encapsulation, programming contracts or
 When the lifetime of a value <code>V</code> terminates, the statement <code>delete V</code>
 automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration. A <code>delete X:T</code> definition is called a
-<em>destructor</em> for type <code>T</code>. It often has an <a href="#inout">inout</a> parameter
+<em>destructor</em> for type <code>T</code>. It often has an link:#in out[in out] parameter
 for the value to destroy, in order to be able to modify its argument,
-i.e. a destructor often has a signature like <code>delete X:inout T</code>.</p>
+i.e. a destructor often has a signature like <code>delete X:in out T</code>.</p>
 </div>
 <div class="paragraph">
 <p>Symmetrical to <a href="#field-creation">creation</a>, the body of a <code>delete V</code>
@@ -8820,7 +8817,7 @@ the body of the definition.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>to delete Z:inout complex is
+<pre>to delete Z:in out complex is
     print "Deleting complex ", Z</pre>
 </div>
 </div>
@@ -8829,7 +8826,7 @@ the body of the definition.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>to delete Z:inout complex is
+<pre>to delete Z:in out complex is
     print "Deleting complex ", Z
     (delete Z.Im)
     (delete Z.Re)</pre>
@@ -8859,8 +8856,8 @@ values, that might be reflected in the implementation as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>to delete F:inout file when F.fd &lt; 0  is ... // Invalid flie
-to delete F:inout file                is ... // Valid file</pre>
+<pre>to delete F:in out file when F.fd &lt; 0  is ... // Invalid flie
+to delete F:in out file                is ... // Valid file</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8883,7 +8880,7 @@ N:integers &gt; 0 as boolean is
             return false
     return true
 
-delete N:inout positive is
+delete N:in out positive is
     print "Deleting positive: ", N
 
 delete N:integer is
@@ -8915,7 +8912,7 @@ type and <code>delete</code> operations above is really equivalent to the follow
 <div class="content">
 <pre>type integers is matching(base:string of integer)
 
-delete P:inout positive is
+delete P:in out positive is
     print "Deleting positive: ", P
     (delete P.N)        // Delete the N bound in 'positive'
 
@@ -9538,7 +9535,7 @@ given piece of code.</p>
 will combine <code>timer</code>, <code>thread</code>, <code>task</code> and <code>context</code> values.</p>
 </li>
 <li>
-<p>The <code>in</code>, <code>out</code> and <code>inout</code> type expressions can sometimes be
+<p>The <code>in</code>, <code>out</code> and <code>in out</code> type expressions can sometimes be
 equivalent to an access types if that is the most efficient way to pass
 an argument around. However, this is mostly invisible to the programmer.</p>
 </li>
@@ -10582,7 +10579,7 @@ be used after the move.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Target:out T :&lt; Source:in_out T as mayfail T
+<pre>Target:out T :&lt; Source:in out T as mayfail T
 move Source:T as mayfail T is result :&lt; Source</pre>
 </div>
 </div>
@@ -10644,12 +10641,11 @@ modifier is called an <em>output parameter</em> and the corresponding
 argument is called an <em>output argument</em>.</p>
 </li>
 <li>
-<p><code>inout T</code>, which can also be spelled <code>in_out T</code>, <code>in out T</code> or <code>io T</code>,
-indicates that the corresponding value is tranferred to the callee
-for the duration of the call, and then transferred back to the caller.
+<p><code>in out T</code> indicates that the corresponding value is tranferred to the
+callee for the duration of the call, and then transferred back to the caller.
 Its lifetime is interrupted in the caller for the duration of the call,
-and ownership is temporarily transferred to the callee.  The <code>inout
-T</code> type also inherits from <code>T</code>. A parameter with the <code>inout</code>
+and ownership is temporarily transferred to the callee.  The <code>in out
+T</code> type also inherits from <code>T</code>. A parameter with the <code>in out</code>
 modifier is called a <em>bidirectional parameter</em> and the
 corresponding argument is called a <em>bidirectional argument</em>.</p>
 </li>
@@ -13437,7 +13433,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-18 23:10:06 +0200
+Last updated 2020-09-20 12:19:29 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
