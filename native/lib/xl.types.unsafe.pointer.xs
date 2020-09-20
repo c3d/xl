@@ -1,10 +1,10 @@
 // *****************************************************************************
-// pointer.xs                                                         XL project
+// xl.types.unsafe.pointer.xs                                        XL project
 // *****************************************************************************
 //
 // File description:
 //
-//     Machine low-level pointers
+//     C-style machine-level pointers
 //
 //
 //
@@ -34,23 +34,23 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-POINTER[item:type] has
+use MEM = XL.SYSTEM.MEMORY
+
+module POINTER[item:type] with
 // ----------------------------------------------------------------------------
 //   Interface for machine-level pointers
 // ----------------------------------------------------------------------------
 
-    use XL.ALIAS[value]
+    type pointer                        like MEM.address
+    type offset                         is MEM.offset
+    type size                           is MEM.size
 
-    type pointer
-    type offset
-    type size
+    *P:pointer                          as item
 
-    *P:pointer                          as alias[value]
-
-    in out P:pointer++                  as pointer
-    ++in out P:pointer                  as pointer
-    in out P:pointer--                  as pointer
-    --in out P:pointer                  as pointer
+    (in out P:pointer)++                as pointer
+    ++(in out P:pointer)                as pointer
+    (in out P:pointer)--                as pointer
+    --(in out P:pointer)                as pointer
 
     P:pointer + O:offset                as pointer
     P:pointer - O:offset                as pointer
@@ -63,7 +63,7 @@ POINTER[item:type] has
 
     P:pointer[O:offset]                 as value
 
-    P:pointer.(Name:name)               is (*P).Name
+    P:pointer.Something                 is (*P).Something
 
     bit_size  pointer                   as size
     bit_align pointer                   as size
@@ -71,10 +71,10 @@ POINTER[item:type] has
     bit_align X:pointer                 as size
 
 
-POINTER has
+module POINTER with
 // ----------------------------------------------------------------------------
 //   Interface to easily create pointer types
 // ----------------------------------------------------------------------------
 
-    pointer[item:type]                  is POINTER[item].pointer
-    pointer to item:type                is pointer[item]
+    type pointer[item:type]             is POINTER[item].pointer
+    type pointer to item:type           is pointer[item]
