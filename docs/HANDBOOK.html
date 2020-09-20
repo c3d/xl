@@ -8022,6 +8022,11 @@ information, so that dynamic dispatch will happen based on the
 actual type.</p>
 </li>
 <li>
+<p><code>new T</code> is a type that inherits all operations from <code>T</code>, but is not
+directly compatible with <code>T</code>. Explicit conversions are required to
+copy or move a value from one type to another.</p>
+</li>
+<li>
 <p><code>slice of T</code> holds a slice of contiguous containers such as <code>array</code>
 or <code>string</code>, and makes it possible to manipulate subsets of the
 container. This is also useful with <code>text</code>.</p>
@@ -13433,7 +13438,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-20 12:19:29 +0200
+Last updated 2020-09-20 22:21:11 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

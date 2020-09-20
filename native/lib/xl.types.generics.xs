@@ -48,6 +48,7 @@ module XL.TYPES.GENERICS with
     // Refining a type
     base with Declarations      as type         // Data inheritance
     base when Condition         as type         // Type condition
+    new base                    as type         // New incompatible type
 
     // Parameter passing
     in out base:type            as type         // Input/output parameters

@@ -5506,6 +5506,10 @@ They include the following:
   information, so that dynamic dispatch will happen based on the
   actual type.
 
+* `new T` is a type that inherits all operations from `T`, but is not
+  directly compatible with `T`. Explicit conversions are required to
+  copy or move a value from one type to another.
+
 * `slice of T` holds a slice of contiguous containers such as `array`
   or `string`, and makes it possible to manipulate subsets of the
   container. This is also useful with `text`.
