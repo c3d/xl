@@ -40,40 +40,49 @@ module POINTER[item:type] with
 // ----------------------------------------------------------------------------
 //   Interface for machine-level pointers
 // ----------------------------------------------------------------------------
+//   Part of the interface is only avaiable for fixed-size types, i.e.
+//   types where the size of an item does not depend on its value
 
     type pointer                        like MEM.address
-    type offset                         is MEM.offset
-    type size                           is MEM.size
+    type offset                         like MEM.offset
+    type size                           like MEM.size
+    FixedSize                           is MEM.FixedSizeType(item)
 
-    *P:pointer                          as item
-
-    (in out P:pointer)++                as pointer
-    ++(in out P:pointer)                as pointer
-    (in out P:pointer)--                as pointer
-    --(in out P:pointer)                as pointer
-
-    P:pointer + O:offset                as pointer
-    P:pointer - O:offset                as pointer
-    P:pointer - Q:pointer               as offset
-
-    out x:pointer := y:pointer          as pointer
-
-    in out x:pointer += y:offset        as pointer
-    in out x:pointer -= y:offset        as pointer
-
-    P:pointer[O:offset]                 as value
-
-    P:pointer.Something                 is (*P).Something
-
-    bit_size  pointer                   as size
-    bit_align pointer                   as size
-    bit_size  X:pointer                 as size
-    bit_align X:pointer                 as size
+    with
+        Pointer         : pointer
+        Base            : pointer
+        PointerVariable : in out pointer
+        Target          : out pointer
+        Source          : pointer
+        Offset          : offset
+        Value           : item
 
 
-module POINTER with
+    *Pointer                            as item
+    *Pointer := Value                   as item
+
+    PointerVariable++                   as pointer
+    ++PointerVariable                   as pointer
+    PointerVariable--                   as pointer      when FixedSize
+    --PointerVariable                   as pointer      when FixedSize
+
+    Pointer + Offset                    as pointer
+    Pointer - Offset                    as pointer      when FixedSize
+    Pointer - Base                      as offset       when FixedSize
+
+    Target := Source                    as pointer
+
+    PointerVariable += Offset           as pointer
+    PointerVariable -= Offset           as pointer      when FixedSize
+
+    // Shortcuts for "array access" and "implicit dereference"
+    Pointer[Offset]                     as value        is *(Pointer + Offset)
+    Pointer.Something                                   is (*Pointer).Something
+
+
+module POINTER is
 // ----------------------------------------------------------------------------
-//   Interface to easily create pointer types
+//   A module to easily create pointer types
 // ----------------------------------------------------------------------------
 
     type pointer[item:type]             is POINTER[item].pointer

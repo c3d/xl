@@ -34,44 +34,108 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module XL.POINTER[type value] is
+use MEM = XL.SYSTEM.MEMORY
 
-    use XL.INTEGER
-    use XL.UNSIGNED
+module POINTER[item:type] is
+// ----------------------------------------------------------------------------
+//  Implementation of unsafe pointer operations
+// ----------------------------------------------------------------------------
+//  This implements semantics that is roughly similar to C pointers,
+//  i.e. the unit of displacement is one item, except for the case
+//  of variable-size objects, where only forward moves are possible
+//  because you need the object under the pointer to compute the size
 
-    type pointer                                        is builtin pointer
-    type offset                                         is integer64
-    type size                                           is unsigned64
-    type address                                        is unsigned64
+    type address                                        is MEM.address
+    type pointer                                        is new address
+    type offset                                         is MEM.offset
+    type size                                           is MEM.size
 
-    value_size                                          is byte_size value
-    address P:pointer                   as address      is builtin Cast
-    pointer A:address                   as pointer      is builtin Cast
+    // Dereference is built-in load and store operations
+    *Pointer                            as item         is builtin Load
+    *Pointer := Value                   as item         is builtin Store
 
-    *P:pointer                          as alias[value] is builtin Cast
+    ++PointerVariable                   as pointer      is
+    // ------------------------------------------------------------------------
+    //  Pre-increment the pointer and return the new value
+    // ------------------------------------------------------------------------
+    //  XL items, unlike C items, may have a variable size, i.e. the type is
+    //  not enough to determine the offset to the next item
+        Address is address PointerVariable
+        Offset  is MEM.byte_size(*Pointer)
+        PointerVariable := pointer(Address + Offset)
 
-    ++in out P:pointer                  as pointer      is P += 1
-    --in out P:pointer                  as pointer      is P -= 1
-    in out P:pointer++                  as pointer      is { O is P; ++P; O }
-    in out P:pointer--                  as pointer      is { O is P; --P; O }
+    --PointerVariable                   as pointer      when FixedSize is
+    // ------------------------------------------------------------------------
+    //   Pre-decrement the pointer and return the new value
+    // ------------------------------------------------------------------------
+    //  This interface only exists for fixed size types, i.e. when the size
+    //  only depends on the type
+        Address is address PointerVariable
+        Offset  is MEM.byte_size(item)
+        PointerVariable := pointer(Address - Offset)
 
-    P:pointer + O:offset                as pointer      is
-        pointer(address P + O*value_size)
-    P:pointer - O:offset                as pointer      is
-        pointer(address P - O*value_size)
-    P:pointer - Q:pointer               as offset       is
-        (address P - address Q) / value_size
+    (in out P:pointer)++                as pointer      is
+    // ------------------------------------------------------------------------
+    //  Post-increment pointer
+    // ------------------------------------------------------------------------
+        Old is P
+        ++P
+        Old
 
-    out x:pointer := y:pointer          as pointer      is builtin Copy
+    (in out P:pointer)--                as pointer      when FixedSize is
+    // ------------------------------------------------------------------------
+    //  Post-decrement pointer (only for fixed-size types)
+    // ------------------------------------------------------------------------
+        Old is P
+        --P
+        Old
 
-    in out x:pointer += y:offset        as pointer      is x := x + y
-    in out x:pointer -= y:offset        as pointer      is x := x - y
+    Pointer + Offset                    as pointer      when FixedSize is
+    // ------------------------------------------------------------------------
+    //  When the size of pointers is fixed, optimize computation
+    // ------------------------------------------------------------------------
+        Address  is address Pointer
+        ItemSize is MEM.byte_size(item)
+        pointer(Address + Offset * ItemSize)
 
-    P:pointer[O:offset]                 as alias[value] is *(P + O)
+    Pointer + Offset                    as pointer
+    // ------------------------------------------------------------------------
+    //  For variable-size types, need to loop, adding size of each item
+    // ------------------------------------------------------------------------
+        Address is address Pointer
+        while Offset > 0 loop
+            Address += MEM.byte_size(*Pointer)
+            Pointer := pointer(Address)
+        Pointer
 
-    P:pointer.(Name:name)                               is (*P).Name
+    Pointer - Offset                    as pointer      when FixedSize is
+    // ------------------------------------------------------------------------
+    //  Negative offset is only possible for fixed-size types
+    // ------------------------------------------------------------------------
+        Address is address Pointer
+        ItemSize is MEM.byte_size(item)
+        pointer(Address - Offset * ItemSize)
 
-    bit_size  pointer                   as size         is bit_size  address
-    bit_align pointer                   as size         is bit_align address
-    bit_size  X:pointer                 as size         is bit_size  address
-    bit_align X:pointer                 as size         is bit_align address
+    Pointer - Base                      as offset       when FixedSize is
+    // ------------------------------------------------------------------------
+    //  Subtracting offset from a base is only possible for fixed-size types
+    // ------------------------------------------------------------------------
+        LastAddress  is address Pointer
+        FirstAddress is address Base
+        ItemSize     is MEM.byte_size(item)
+        offset((LastAddress - FirstAddress) / ItemSize)
+
+    Target := Source                    as pointer      is builtin Copy
+
+    PointerVariable += Offset           as pointer      is
+    // ------------------------------------------------------------------------
+    //  Adding an offset to a pointer
+    // ------------------------------------------------------------------------
+        PointerVariable := PointerVariable + Offset
+
+
+    PointerVariable -= Offset           as pointer      when FixedSize is
+    // ------------------------------------------------------------------------
+    //  Subtracting an offset from a pointer
+    // ------------------------------------------------------------------------
+        PointerVariable := PointerVariable - Offset
