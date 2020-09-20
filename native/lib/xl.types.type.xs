@@ -35,7 +35,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use PARSER = XL.COMPILER.PARSER
+use PRS    = XL.COMPILER.PARSER
 use CONFIG = XL.SYSTEM.CONFIGURATION
 use MEM    = XL.SYSTEM.MEMORY
 use LIFE   = XL.TYPES.LIFETIME
@@ -49,8 +49,13 @@ module TYPE with
     // Aliases for types frequently used in this interface
     type bit_count              is MEM.bit_count
     type byte_count             is MEM.byte_count
-    type source                 is PARSER.tree
+    type source                 is PRS.tree
     type lifetime               is LIFE.lifetime
+
+    // Forms that are treated specially by the type system
+    type annotation             is matching(I:PRS.infix when I.name in ":","as")
+    type definition             is matching(I:PRS.infix when I.name = "is")
+    type condition              is matching(I:PRS.infix when I.name = "when")
 
 
     type type with
@@ -59,32 +64,29 @@ module TYPE with
     // ------------------------------------------------------------------------
 
         // Attributes of the type
-        Name                    as source       // Compiler-generated name
         Pattern                 as source       // Pattern for the type
         Condition               as source       // 'when' clause
-        Constant                as boolean      // Value immutable over lifetime
-        Mutable                 as boolean      // Value mutable over lifetime
-        Compact                 as boolean      // Uses contiguous memory
+        Attributes              as source       // 'constant', 'mutable', ...
+        Bases                   as source       // List of bases
         Lifetime                as lifetime     // Static lifetime for type
 
-        // Testing of values of the type
-        Contains  Value         as boolean      // Checks if value belongs
-        BitSize   Value:self    as bit_count    // Size in bits
-        BitAlign  Value:self    as bit_count    // Alignment in bits
-        ByteSize  Value:self    as byte_count   // Size in bytes
-        ByteAlign Value:self    as byte_count   // Alignment in bytes
+    // Type constructor, building a type from a pattern
+    matching Pattern            as type
 
-
-    // Type constructor
-    matching Pattern            as type         // Build type for Pattern
+    // Fundamental operator actually defining the types
+    Value in Type:type          as boolean
 
     // Syntactic sugar for type declarations
-    {type T}                    is {T as type}
-    {type T matches P}          is {type T is matching P}
+    macro type T               is T as type
+    macro type T matches P     is type T is matching P
 
     // Fundamental types matching nothing or everything
     nil                         as type
     anything                    as type
 
-    base:type contains Value    as boolean      // Check if value is contained
-    derived:type like base:type as nil          // State derivation relationship
+    // Derived ways you can check if a value belongs to a type
+    Type:type contains Value    as boolean      is Value in Type
+    Value matches Pattern       as boolean
+
+    // State a derivation relationship
+    Derived:ref type like Base:type as ref type
