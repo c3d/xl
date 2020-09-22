@@ -38,27 +38,20 @@ use SLICE
 use STRING
 use MEMORY
 
-type text[type character is UTF8] with
+module XL.TYPES.TEXT[type character] with
 // ----------------------------------------------------------------------------
-//    A basic representation for text
+//    A module handling the text data types
 // ----------------------------------------------------------------------------
 
-    as copiable
-    as movable
-    as clonable
-    as deletable
-    as comparable
-    as sized
-    as aligned
+    // Represent text using a string of character
+    type text                           is string of character
 
-    type representation                 is string of character
-    type slice                          is slice  of character
+    // Slices of text are slices of the representation
+    type slice                          is slice[text]
 
     with
         Text    : text
-        Owned   : own text
+        Slice   : slice
 
-    Length Text         as size         // Number of characters
-    Size   Text         as size         // Number of bytes
-
+    // Convert a text value to a slice. Most other operations use slices
     Text                as slice

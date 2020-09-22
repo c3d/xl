@@ -34,21 +34,21 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-NUMBER as module with
+module NUMBER with
 // ----------------------------------------------------------------------------
 //    Type representing some kind of number (from integer to complex)
 // ----------------------------------------------------------------------------
 
-    number as type with
+    type number with
         min                     as number
         max                     as number
         epsilon X:number        as number
 
-    number like arithmetic
-    number like copiable
-    number like movable
-    number like clonable
-    number like deletable
-    number like comparable
-    number like sized
-    number like aligned
+        as arithmetic
+        as copiable
+        as movable
+        as clonable
+        as deletable
+        as comparable
+        as sized
+        as aligned

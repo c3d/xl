@@ -1,5 +1,5 @@
 // *****************************************************************************
-// arithmetic.xl                                                      XL project
+//  xl.arithmetic.xl                                                 XL project
 // *****************************************************************************
 //
 // File description:
@@ -35,137 +35,144 @@
 // *****************************************************************************
 
 use COMPARISON
-use    BITWISE
+use BITWISE
 
 
-with
-    Value   : arithmetic
-    Left    : arithmetic
-    Right   : arithmetic
-    Owned   : own arithmetic
-
-
-Left mod Right as arithmetic where Right:ordered is
+module XL.ARITHMETIC[type arithmetic] is
 // ----------------------------------------------------------------------------
-//    Default implementation of `mod` operation when there is an order
+//   Generic implementatoin of some generic arithmetic oeprations
 // ----------------------------------------------------------------------------
 
-    // Check that the result of `rem` is itself ordered
-    Result : (arithmetic and ordered) := Left rem Right
-
-    // The following is legit because `ordered` provides `<` and 0 is arithmetic
-    if Result < 0 then
-        if Right < 0 then
-            Result -= Right
-        else
-            Result += Right
+    with
+        Value    : arithmetic
+        Left     : arithmetic
+        Right    : arithmetic
+        Changing : in out arithmetic
 
 
-Left ^ Power:unsigned as arithmetic is
-// ----------------------------------------------------------------------------
-//   Default implementaiton of exponentiation
-// ----------------------------------------------------------------------------
+    Left mod Right as arithmetic when Right is ordered is
+    // ------------------------------------------------------------------------
+    //    Default implementation of `mod` operation when there is an order
+    // ------------------------------------------------------------------------
 
-    Result     : arithmetic := 1
-    Multiplier : arithmetic := Left
+        // Check that the result of `rem` is itself ordered
+        Result : (arithmetic and ordered) := Left rem Right
 
-    while Power <> 0 loop
-        if (Power and 1) = 1 then
-            Result *= Multiplier
-        Multiplier *= Multiplier
-        Power >>= 1
-
-
--Left as arithmetic is
-// ----------------------------------------------------------------------------
-//   Default implementation of negation
-// ----------------------------------------------------------------------------
-    0 - Left
+        // The following is legit because `ordered` provides `<`
+        // and 0 always belongs to arithmetic
+        if Result < 0 then
+            if Right < 0 then
+                Result -= Right
+            else
+                Result += Right
 
 
-Abs Value as arithmetic where Value:ordered is
-// ----------------------------------------------------------------------------
-//   Default implementation of absolute value for ordered types
-// ----------------------------------------------------------------------------
-    if Value < 0 then -Value else Value
+    Left ^ Power:unsigned as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementaiton of exponentiation
+    // ------------------------------------------------------------------------
+
+        Result     : arithmetic := 1
+        Multiplier : arithmetic := Left
+
+        while Power <> 0 loop
+            if (Power and 1) = 1 then
+                Result *= Multiplier
+            Multiplier *= Multiplier
+            Power /= 2
 
 
-Sign Value as arithmetic where Value:ordered is
-// ----------------------------------------------------------------------------
-//   Default implementation of sign for ordered types
-// ----------------------------------------------------------------------------
-    if Value < 0 then -1 else if Value > 0 then 1 else 0
+    -Left as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of negation
+    // ------------------------------------------------------------------------
+        0 - Left
 
 
-++Owned as arithmetic is
-// ----------------------------------------------------------------------------
-//    Default implementation of pre-incrementation
-// ----------------------------------------------------------------------------
-    Owned += 1
-    Owned
+    Abs Value as arithmetic when Value is ordered is
+    // ------------------------------------------------------------------------
+    //   Default implementation of absolute value for ordered types
+    // ------------------------------------------------------------------------
+        if Value < 0 then -Value else Value
 
 
---Owned as arithmetic is
-// ----------------------------------------------------------------------------
-//    Default implementation of pre-decrementation
-// ----------------------------------------------------------------------------
-    Owned -= 1
-    Owned
+    Sign Value as arithmetic when Value is ordered is
+    // ------------------------------------------------------------------------
+    //   Default implementation of sign for ordered types
+    // ------------------------------------------------------------------------
+        if Value < 0 then -1 else if Value > 0 then 1 else 0
 
 
-Owned++ as arithmetic is
-// ----------------------------------------------------------------------------
-//   Default implementation of post-incrementation
-// ----------------------------------------------------------------------------
-    Result : arithmetic is Owned
-    Owned += 1
+    ++Changing as arithmetic is
+    // ------------------------------------------------------------------------
+    //    Default implementation of pre-incrementation
+    // ------------------------------------------------------------------------
+        Changing += 1
 
 
-Owned-- as arithmetic is
-// ----------------------------------------------------------------------------
-//   Default implementation of post-decrementation
-// ----------------------------------------------------------------------------
-    Result : arithmetic is Owned
-    Owned -= 1
+    --Changing as arithmetic is
+    // ------------------------------------------------------------------------
+    //    Default implementation of pre-decrementation
+    // ------------------------------------------------------------------------
+        Changing -= 1
+        Changing
 
 
-Owned += Right as nil is
-// ----------------------------------------------------------------------------
-//   Default implementation of in-place addition
-// ----------------------------------------------------------------------------
-    Owned := Owned + Right
+    Changing++ as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of post-incrementation
+    // ------------------------------------------------------------------------
+        Result : arithmetic is Changing
+        Changing += 1
+        Result
 
 
-Owned -= Right as nil is
-// ----------------------------------------------------------------------------
-//   Default implementation of in-place subtraction
-// ----------------------------------------------------------------------------
-    Owned := Owned - Right
+    Changing-- as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of post-decrementation
+    // ------------------------------------------------------------------------
+        Result : arithmetic is Changing
+        Changing -= 1
+        Result
 
 
-Owned *= Right as nil is
-// ----------------------------------------------------------------------------
-//   Default implementation of in-place multiplication
-// ----------------------------------------------------------------------------
-    Owned := Owned * Right
+    Changing += Right as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of in-place addition
+    // ------------------------------------------------------------------------
+        Changing := Changing + Right
 
 
-Owned /= Right as nil is
-// ----------------------------------------------------------------------------
-//   Default implementation of in-place division
-// ----------------------------------------------------------------------------
-    Owned := Owned / Right
+    Changing -= Right as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of in-place subtraction
+    // ------------------------------------------------------------------------
+        Changing := Changing - Right
 
 
-0 as arithmetic is
-// ----------------------------------------------------------------------------
-//   Default implementation is to convert using some explicit conversion
-// ----------------------------------------------------------------------------
-    arithmetic 0
+    Changing *= Right as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of in-place multiplication
+    // ------------------------------------------------------------------------
+        Changing := Changing * Right
 
 
-1 as arithmetic
-// ----------------------------------------------------------------------------
-//   Default implementation is to convert using some explicit conversion
-// ----------------------------------------------------------------------------
-    arithmetic 1
+    Changing /= Right as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation of in-place division
+    // ------------------------------------------------------------------------
+        Changing := Changing / Right
+
+
+    0 as arithmetic is
+    // ------------------------------------------------------------------------
+    //   Default implementation is to convert using some explicit conversion
+    // ------------------------------------------------------------------------
+        arithmetic 0
+
+
+    1 as arithmetic
+    // ------------------------------------------------------------------------
+    //   Default implementation is to convert using some explicit conversion
+    // ------------------------------------------------------------------------
+        arithmetic 1

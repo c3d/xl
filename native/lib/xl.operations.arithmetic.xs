@@ -1,5 +1,5 @@
 // *****************************************************************************
-// arithmetic.xs                                                      XL project
+// xl.arithmetic.xs                                                  XL project
 // *****************************************************************************
 //
 // File description:
@@ -36,41 +36,40 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use UNSIGNED
-
-type arithmetic with
+module XL.ARITHMETIC[type arithmetic] with
 // ----------------------------------------------------------------------------
-//   Specification of an arithmetic value type
+//   Specification of arithmetic operations
 // ----------------------------------------------------------------------------
 
     with
-        Value   : arithmetic
-        Left    : arithmetic
-        Right   : arithmetic
-        Owned   : own arithmetic
-    do
-        Left  +  Right          as arithmetic   // Addition
-        Left  -  Right          as arithmetic   // Subtraction
-        Left  *  Right          as arithmetic   // Multiplication
-        Left  /  Right          as arithmetic   // Division
-        Left rem Right          as arithmetic   // Remainder of division
-        Left mod Right          as arithmetic   // Euclidean Modulo
-        Left  ^  Right          as arithmetic   // Power
-        Left  ^  Power:unsigned as arithmetic   // Positive power
-        -Left                   as arithmetic   // Negation
+        Value    : arithmetic
+        Left     : arithmetic
+        Right    : arithmetic
+        Power    : unsigned
+        Changing : in out arithmetic
 
-        Abs  Value              as arithmetic   // Absolute value
-        Sign Value              as arithmetic   // -1, 0 or 1
+    Left  +  Right              as arithmetic   // Addition
+    Left  -  Right              as arithmetic   // Subtraction
+    Left  *  Right              as arithmetic   // Multiplication
+    Left  /  Right              as arithmetic   // Division
+    Left rem Right              as arithmetic   // Remainder of division
+    Left mod Right              as arithmetic   // Euclidean Modulo
+    Left  ^  Right              as arithmetic   // Power
+    Left  ^  Power:unsigned     as arithmetic   // Positive power
+    -Left                       as arithmetic   // Negation
 
-        ++Owned                 as arithmetic   // Pre-incrementation
-        --Owned                 as arithmetic   // Pre-decrementation
-        Owned++                 as arithmetic   // Post-incrementation
-        Owned--                 as arithmetic   // Post-decrementation
+    Abs  Value                  as arithmetic   // Absolute value
+    Sign Value                  as arithmetic   // -1, 0 or 1
 
-        Owned += Right          as nil          // In-place addition
-        Owned -= Right          as nil          // In-place subtraction
-        Owned *= Right          as nil          // In-place multiplication
-        Owned /= Right          as nil          // In-place division
+    ++Changing                  as arithmetic   // Pre-incrementation
+    --Changing                  as arithmetic   // Pre-decrementation
+    Changing++                  as arithmetic   // Post-incrementation
+    Changing--                  as arithmetic   // Post-decrementation
+
+    Changing += Right           as arithmetic   // In-place addition
+    Changing -= Right           as arithmetic   // In-place subtraction
+    Changing *= Right           as arithmetic   // In-place multiplication
+    Changing /= Right           as arithmetic   // In-place division
 
     // Values 0 and 1 should always be convertible to arithmetic values
     0                           as arithmetic
