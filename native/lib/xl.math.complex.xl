@@ -143,5 +143,5 @@ COMPLEX[real  : some number,
     arctanh     Z:polar         as cartesian    is ln((Z+1) / (Z-1)) / 2
 
     use XL.TEXT_IO
-    write       Z:cartesian     as mayfail      is write format("(%1, %2)", Z.Re, Z.Im)
-    write       Z:polar         as mayfail      is write format("(%1∠%2)", Z.Mod, Z.Arg)
+    to write    Z:cartesian                     is write format("(%1, %2)", Z.Re, Z.Im)
+    to write    Z:polar                         is write format("(%1∠%2)", Z.Mod, Z.Arg)

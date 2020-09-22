@@ -165,8 +165,8 @@ COMPLEX[real, angle] as module with
     arctanh     Z:polar         as cartesian
 
     in XL.TEXT_IO
-    write       Z:cartesian     as mayfail
-    write       Z:polar         as mayfail
+    to write    Z:cartesian
+    to write    Z:polar
 
 
 COMPLEX[real] as module is COMPLEX[real, real]

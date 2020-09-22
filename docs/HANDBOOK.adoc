@@ -716,19 +716,19 @@ implementation details were elided as `...`:
 
 [source]
 ----
-write X:text            as mayfail      is ... // <1>
-write X:integer         as mayfail      is ...
-write X:real            as mayfail      is ...
-write X:character       as mayfail      is ...
-write [[true]]          as mayfail      is { write "true"  } // <2>
-write [[false]]         as mayfail      is { write "false" }
-write Head, Rest        as mayfail      is { write Head; write Rest }
+write X:text            as ok   is ... // <1>
+write X:integer         as ok   is ...
+write X:real            as ok   is ...
+write X:character       as ok   is ...
+write [[true]]          as ok   is { write "true"  } // <2>
+write [[false]]         as ok   is { write "false" }
+write Head, Rest        as ok   is { write Head; write Rest }
 
-print                   as mayfail      is { write SOME_NEWLINE_CHARACTER }
-print Items             as mayfail      is { write Items; print }
+print                   as ok   is { write SOME_NEWLINE_CHARACTER }
+print Items             as ok   is { write Items; print }
 ----
 
-<1> The link:#fallible-types[mayfail] type is used to represent
+<1> The link:#fallible-types[ok] type is used to represent
     the `nil or error` type, in other words it indicates that the
     function either returns nothing, or returns an error.
 
@@ -2473,7 +2473,7 @@ the type in the type annotation.
 [source]
 ----
 to Copy(out Target:value, in From:value)                // Sugared
-Copy(Target:out value, From:in value) as mayfail        // Raw
+Copy(Target:out value, From:in value) as ok             // Raw
 ----
 
 This sugar can also be used without a type, in which case the type is
@@ -2482,7 +2482,7 @@ assumed to be `anything`:
 [source]
 ----
 to Debug(in Thing) is print "Debug: ", Thing                    // Sugared
-Debug(Thing:in anything) as mayfail is print "Debug: ", Thing   // Raw
+Debug(Thing:in anything) as ok is print "Debug: ", Thing   // Raw
 ----
 
 
@@ -2528,7 +2528,7 @@ readable, shorter or more precise. In addition, they convey additional
 additional information to the compiler or to a person reading the code:
 
 * `procedure` is typically used for definitions that do not return a
-  value. If no result type is specified for the pattern, then `mayfail` is
+  value. If no result type is specified for the pattern, then `ok` is
   implied (that is `nil or error`), and diagnostics will be emitted
   accordingly. A result type can also be explicitly given. In that
   case, using `procedure` is a hint to the compiler that the
@@ -4529,28 +4529,27 @@ functions will print the associated error message.
 
 ==== Fallible types
 
-Another way to handle errors is to use `mayfail T` types, which hold
-either a `T` or an `error`. The `mayfail` type (without a type
-argument) is the same as `mayfail nil`, and is normally used for
-functions that are not expected to return a value, but can return an
-error.
+Another way to handle errors is to use so-called _fallible types_, which
+use the `T?` notation, a shortcut for `T or error`. The `ok` type is the same as
+`nil?`, and is normally used for functions that are not expected to return a
+value, but can return an error.
 
-`mayfail T` contains four accessible features:
+`T?` contains four accessible features:
 
 * `value` is a `T` value, and can only be accessed when there was no
-error (otherwise, it returns… an `error`!)
+  error (otherwise, it returns… the `error`, there is no escaping it)
 * `error` is an `error` value that should only be accessed when there
-was an error. Otherwise, it returns `nil`.
+  was an error. Otherwise, it returns `nil`.
 * `good` is `true` if there was no error, and `false` otherwise.
 * `bad` is equivalent to `not good`.
 
-The following code shows how to use a `mayfail real` type to return
+The following code shows how to use a `real?` type to return
 `0.0` for the `sqrt` of a negative value:
 
 [source]
 ----
 sanitized_sqrt X:real as real is
-    R : mayfail real := sqrt X
+    R : real? := sqrt X
     if R.bad then
         print "Got an error in sqrt: ", R.error
         R := 0.0
@@ -4642,7 +4641,7 @@ above can be written as follows:
 
 [source]
 ----
-read_thing_from_file FileName:text as mayfail own thing is
+read_thing_from_file FileName:text as own thing? is
     F:file := file(FileName)            // May error out <1>
     H:own thing_header := read(F)       // May error out (and close F) <2>
     if H.size < MIN_SIZE then
@@ -5003,7 +5002,7 @@ Standard type expressions include:
   for example `ordered and positive`.
 * `not T` is a type that contains values that do not belong to `T`. It
   can be used to exclude specific types from a definition.
-* `mayfail T` is a shortcut for `T or error` and is used when a
+* `T?` is a shortcut for `T or error` and is used when a
   function may fail.
 * `one_of Patterns` is a type that accept one of the following
   patterns. It can be used to implement enumerations, such as
@@ -5210,7 +5209,7 @@ with
     T:type
     L:type list of T
 in
-    find Item:T in List:L as mayfail T
+    find Item:T in List:L as T?
 ....
 
 === Standard types
@@ -6001,9 +6000,9 @@ to create V:out large is
 ....
 
 NOTE: The above is only _almost_ acceptable because it calls `print`,
-which may fail. Returning an `error` is not allowed by default by the
-signature of `create` for efficiency reasons. If this is desirable,
-then you must explicitly mark `create` as returning `mayfail`.
+which may fail. Returning an `error` from a `create` is not recommended,
+since it means that simply declaring a value of the type may cause
+an error.
 
 A type implementation may be _hidden_ in a
 link:#modules[module interface], in which case the module
@@ -6276,11 +6275,11 @@ log X:real as error when X <= 0 is
 ....
 
 A function that may fail will often have a `T or error` return value.
-There is a specific shortcut for that, `mayfail T`:
+There is a specific shortcut for that, `T?`:
 
 [source]
 ----
-mayfail T:type as type is T or error
+(T:type)? as type is T or error
 ----
 
 For example, a logarithm returns an error for non-positive values, so
@@ -6288,7 +6287,7 @@ that the signature of the `log` functions is:
 
 [source]
 ----
-log X:real as mayfail real     is ... // May return real or error
+log X:real as real?     is ... // May return real or error
 ----
 
 If possible, error detection should be pushed to the interface of the
@@ -6303,7 +6302,7 @@ log X:real as error                 is ... // Always return an error
 
 With the definitions above, the type of `log X` will be `real` if it
 is known that `X > 0.0`, `error` if it is known that the condition is
-false, and `real or error`, i.e. `mayfail real`, in the more general case.
+false, and `real or error`, i.e. `real?`, in the more general case.
 A benefit of writing code this way is that the compiler can more easily
 figure out that the following code is correct and does not require any
 kind of error handling:
@@ -7250,8 +7249,8 @@ error in the interface, for example:
 [source]
 ----
 type picture with
-    width  : mayfail size
-    height : mayfail size
+    width  : size?
+    height : size?
     pixels : buffer[area] of byte
     area as size
 ----
@@ -7388,8 +7387,8 @@ reminder that a new copy is created.
 The copy operation has the following mandatory interface for all types:
 
 ....
-Target:out T :+ Source:T as mayfail T
-copy Source:T as mayfail T is result :+ Source
+Target:out T :+ Source:T as T?
+copy Source:T as T? is result :+ Source
 ....
 
 The copy returns the `Target` after it has been copied into, or an
@@ -7420,15 +7419,15 @@ for all types. However, as far as possible, such operation should have
 an interface that looks like the following:
 
 ....
-copy (Source:T, StopConditions) as mayfail T
+copy (Source:T, StopConditions) as T?
 ....
 
 For example, the shallow copy for a tree could have the following
 interface, where either a depth or a `node_filter` :
 
 ....
-copy(Source:tree, Depth:count) as mayfail T
-copy(Source:tree, Keep:node_filter) as mayfail T
+copy(Source:tree, Depth:count) as T?
+copy(Source:tree, Keep:node_filter) as T?
 type node_filter is matching(N:node as boolean)
 ....
 
@@ -7452,8 +7451,8 @@ be used after the move.
 The move operation has the following mandatory interface for all types:
 
 ....
-Target:out T :< Source:in out T as mayfail T
-move Source:T as mayfail T is result :< Source
+Target:out T :< Source:in out T as T?
+move Source:T as T? is result :< Source
 ....
 
 The move returns the `Target` after it has been moved into, or an
@@ -7716,7 +7715,7 @@ of derived types using the syntax for types we already saw would be:
 ....
 // Base class
 type shape with
-    draw         as mayfail                     // Draw the shape
+    draw         as ok                          // Draw the shape
     fill_color   as attribute color             // Color of the fill
     stroke_color as attribute color             // Color of the stroke
     stroke_width as attribute dimension         // Width of the stroke
@@ -7780,7 +7779,7 @@ methods as is. This coding style is called a _((class interface))_:
 
 ....
 class shape with
-    draw        as mayfail
+    draw        as ok
     fill_color   : color
     stroke_color : color
     stroke_width : dimension
@@ -8398,12 +8397,12 @@ be implemented as a structure that derives from `struct `type``.
 
 ....
 // type shape_t with
-//    draw         as mayfail
+//    draw         as ok
 //    width        : coordinate
 
 struct `shape_t`_interface : `type`
 {
-    `mayfail`           (*`draw`) (struct `shape` *shape);
+    `ok`                (*`draw`) (struct `shape` *shape);
     `coordinate`        (*`width`)(struct `shape` *shape);
     `coordinate`        (*`width`)(struct `shape` *shape, `coordinate` width);
 }
@@ -8431,9 +8430,9 @@ struct `shape`
     `coordinate` width;
 };
 
-static `mayfail` `draw`(`shape` *shape)
+static `ok` `draw`(`shape` *shape)
 {
-     `mayfail` result;
+     `ok` result;
      result.kind = `error`
      result.error = `logic_error`("Drawing a base shape");
      return result;

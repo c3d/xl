@@ -1547,23 +1547,23 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as mayfail      is ... <i class="conum" data-value="1"></i><b>(1)</b>
-write X:integer         as mayfail      is ...
-write X:real            as mayfail      is ...
-write X:character       as mayfail      is ...
-write [[true]]          as mayfail      is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
-write [[false]]         as mayfail      is { write "false" }
-write Head, Rest        as mayfail      is { write Head; write Rest }
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as ok   is ... <i class="conum" data-value="1"></i><b>(1)</b>
+write X:integer         as ok   is ...
+write X:real            as ok   is ...
+write X:character       as ok   is ...
+write [[true]]          as ok   is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
+write [[false]]         as ok   is { write "false" }
+write Head, Rest        as ok   is { write Head; write Rest }
 
-print                   as mayfail      is { write SOME_NEWLINE_CHARACTER }
-print Items             as mayfail      is { write Items; print }</code></pre>
+print                   as ok   is { write SOME_NEWLINE_CHARACTER }
+print Items             as ok   is { write Items; print }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <a href="#fallible-types">mayfail</a> type is used to represent
+<td>The <a href="#fallible-types">ok</a> type is used to represent
 the <code>nil or error</code> type, in other words it indicates that the
 function either returns nothing, or returns an error.</td>
 </tr>
@@ -3852,7 +3852,7 @@ the type in the type annotation.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Copy(out Target:value, in From:value)                // Sugared
-Copy(Target:out value, From:in value) as mayfail        // Raw</code></pre>
+Copy(Target:out value, From:in value) as ok             // Raw</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3862,7 +3862,7 @@ assumed to be <code>anything</code>:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Debug(in Thing) is print "Debug: ", Thing                    // Sugared
-Debug(Thing:in anything) as mayfail is print "Debug: ", Thing   // Raw</code></pre>
+Debug(Thing:in anything) as ok is print "Debug: ", Thing   // Raw</code></pre>
 </div>
 </div>
 </div>
@@ -3913,7 +3913,7 @@ additional information to the compiler or to a person reading the code:</p>
 <ul>
 <li>
 <p><code>procedure</code> is typically used for definitions that do not return a
-value. If no result type is specified for the pattern, then <code>mayfail</code> is
+value. If no result type is specified for the pattern, then <code>ok</code> is
 implied (that is <code>nil or error</code>), and diagnostics will be emitted
 accordingly. A result type can also be explicitly given. In that
 case, using <code>procedure</code> is a hint to the compiler that the
@@ -6719,20 +6719,19 @@ functions will print the associated error message.
 <div class="sect3">
 <h4 id="fallible-types"><a class="anchor" href="#fallible-types"></a><a class="link" href="#fallible-types">3.9.2. Fallible types</a></h4>
 <div class="paragraph">
-<p>Another way to handle errors is to use <code>mayfail T</code> types, which hold
-either a <code>T</code> or an <code>error</code>. The <code>mayfail</code> type (without a type
-argument) is the same as <code>mayfail nil</code>, and is normally used for
-functions that are not expected to return a value, but can return an
-error.</p>
+<p>Another way to handle errors is to use so-called <em>fallible types</em>, which
+use the <code>T?</code> notation, a shortcut for <code>T or error</code>. The <code>ok</code> type is the same as
+<code>nil?</code>, and is normally used for functions that are not expected to return a
+value, but can return an error.</p>
 </div>
 <div class="paragraph">
-<p><code>mayfail T</code> contains four accessible features:</p>
+<p><code>T?</code> contains four accessible features:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
 <p><code>value</code> is a <code>T</code> value, and can only be accessed when there was no
-error (otherwise, it returns… an <code>error</code>!)</p>
+error (otherwise, it returns… the <code>error</code>, there is no escaping it)</p>
 </li>
 <li>
 <p><code>error</code> is an <code>error</code> value that should only be accessed when there
@@ -6747,13 +6746,13 @@ was an error. Otherwise, it returns <code>nil</code>.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>The following code shows how to use a <code>mayfail real</code> type to return
+<p>The following code shows how to use a <code>real?</code> type to return
 <code>0.0</code> for the <code>sqrt</code> of a negative value:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">sanitized_sqrt X:real as real is
-    R : mayfail real := sqrt X
+    R : real? := sqrt X
     if R.bad then
         print "Got an error in sqrt: ", R.error
         R := 0.0
@@ -6862,7 +6861,7 @@ above can be written as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">read_thing_from_file FileName:text as mayfail own thing is
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">read_thing_from_file FileName:text as own thing? is
     F:file := file(FileName)            // May error out <i class="conum" data-value="1"></i><b>(1)</b>
     H:own thing_header := read(F)       // May error out (and close F) <i class="conum" data-value="2"></i><b>(2)</b>
     if H.size &lt; MIN_SIZE then
@@ -7333,7 +7332,7 @@ for example <code>ordered and positive</code>.</p>
 can be used to exclude specific types from a definition.</p>
 </li>
 <li>
-<p><code>mayfail T</code> is a shortcut for <code>T or error</code> and is used when a
+<p><code>T?</code> is a shortcut for <code>T or error</code> and is used when a
 function may fail.</p>
 </li>
 <li>
@@ -7590,7 +7589,7 @@ type of the elements of the <code>List</code>.</p>
     T:type
     L:type list of T
 in
-    find Item:T in List:L as mayfail T</pre>
+    find Item:T in List:L as T?</pre>
 </div>
 </div>
 </div>
@@ -8743,9 +8742,9 @@ to create V:out large is
 </td>
 <td class="content">
 The above is only <em>almost</em> acceptable because it calls <code>print</code>,
-which may fail. Returning an <code>error</code> is not allowed by default by the
-signature of <code>create</code> for efficiency reasons. If this is desirable,
-then you must explicitly mark <code>create</code> as returning <code>mayfail</code>.
+which may fail. Returning an <code>error</code> from a <code>create</code> is not recommended,
+since it means that simply declaring a value of the type may cause
+an error.
 </td>
 </tr>
 </table>
@@ -9086,11 +9085,11 @@ the payload as numbered argument in a way similar to the
 </div>
 <div class="paragraph">
 <p>A function that may fail will often have a <code>T or error</code> return value.
-There is a specific shortcut for that, <code>mayfail T</code>:</p>
+There is a specific shortcut for that, <code>T?</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">mayfail T:type as type is T or error</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">(T:type)? as type is T or error</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9099,7 +9098,7 @@ that the signature of the <code>log</code> functions is:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">log X:real as mayfail real     is ... // May return real or error</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">log X:real as real?     is ... // May return real or error</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9116,7 +9115,7 @@ log X:real as error                 is ... // Always return an error</code></pre
 <div class="paragraph">
 <p>With the definitions above, the type of <code>log X</code> will be <code>real</code> if it
 is known that <code>X &gt; 0.0</code>, <code>error</code> if it is known that the condition is
-false, and <code>real or error</code>, i.e. <code>mayfail real</code>, in the more general case.
+false, and <code>real or error</code>, i.e. <code>real?</code>, in the more general case.
 A benefit of writing code this way is that the compiler can more easily
 figure out that the following code is correct and does not require any
 kind of error handling:</p>
@@ -10348,8 +10347,8 @@ error in the interface, for example:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type picture with
-    width  : mayfail size
-    height : mayfail size
+    width  : size?
+    height : size?
     pixels : buffer[area] of byte
     area as size</code></pre>
 </div>
@@ -10508,8 +10507,8 @@ reminder that a new copy is created.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Target:out T :+ Source:T as mayfail T
-copy Source:T as mayfail T is result :+ Source</pre>
+<pre>Target:out T :+ Source:T as T?
+copy Source:T as T? is result :+ Source</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10545,7 +10544,7 @@ an interface that looks like the following:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy (Source:T, StopConditions) as mayfail T</pre>
+<pre>copy (Source:T, StopConditions) as T?</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10554,8 +10553,8 @@ interface, where either a depth or a <code>node_filter</code> :</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy(Source:tree, Depth:count) as mayfail T
-copy(Source:tree, Keep:node_filter) as mayfail T
+<pre>copy(Source:tree, Depth:count) as T?
+copy(Source:tree, Keep:node_filter) as T?
 type node_filter is matching(N:node as boolean)</pre>
 </div>
 </div>
@@ -10584,8 +10583,8 @@ be used after the move.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Target:out T :&lt; Source:in out T as mayfail T
-move Source:T as mayfail T is result :&lt; Source</pre>
+<pre>Target:out T :&lt; Source:in out T as T?
+move Source:T as T? is result :&lt; Source</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10957,7 +10956,7 @@ of derived types using the syntax for types we already saw would be:</p>
 <div class="content">
 <pre>// Base class
 type shape with
-    draw         as mayfail                     // Draw the shape
+    draw         as ok                          // Draw the shape
     fill_color   as attribute color             // Color of the fill
     stroke_color as attribute color             // Color of the stroke
     stroke_width as attribute dimension         // Width of the stroke
@@ -11028,7 +11027,7 @@ methods as is. This coding style is called a <em>class interface</em>:</p>
 <div class="literalblock">
 <div class="content">
 <pre>class shape with
-    draw        as mayfail
+    draw        as ok
     fill_color   : color
     stroke_color : color
     stroke_width : dimension
@@ -11830,12 +11829,12 @@ be implemented as a structure that derives from <code>struct `type`</code>.</p>
 <div class="literalblock">
 <div class="content">
 <pre>// type shape_t with
-//    draw         as mayfail
+//    draw         as ok
 //    width        : coordinate
 
 struct `shape_t`_interface : `type`
 {
-    `mayfail`           (*`draw`) (struct `shape` *shape);
+    `ok`                (*`draw`) (struct `shape` *shape);
     `coordinate`        (*`width`)(struct `shape` *shape);
     `coordinate`        (*`width`)(struct `shape` *shape, `coordinate` width);
 }</pre>
@@ -11866,9 +11865,9 @@ struct `shape`
     `coordinate` width;
 };
 
-static `mayfail` `draw`(`shape` *shape)
+static `ok` `draw`(`shape` *shape)
 {
-     `mayfail` result;
+     `ok` result;
      result.kind = `error`
      result.error = `logic_error`("Drawing a base shape");
      return result;
@@ -13438,7 +13437,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-20 22:21:11 +0200
+Last updated 2020-09-22 19:49:43 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
