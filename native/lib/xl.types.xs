@@ -52,7 +52,7 @@ module XL.TYPES with
     module ENUMERATED               // Enumerated values
 
     module BOOLEAN                  // Boolean type (true / false)
-    module INTEGER                  // Signed and unsigned integer types
+    module INTEGER                  // Signed and natural integer types
     module REAL                     // Real numbers
     module DECIMAL                  // Decimal floating-point numbers
     module FIXED_POINT              // Fixed-point numbers

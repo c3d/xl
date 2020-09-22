@@ -10,7 +10,7 @@
 //     like addition, multiplication, ...
 //
 //     Operations in this module are common to a variety of data types,
-//     notably machine-level types such as integer, unsigned or real,
+//     notably machine-level types such as integer, natural or real,
 //     as well as higher-order types such as complex, vector and matrix.
 //
 //
@@ -45,7 +45,7 @@ module XL.ARITHMETIC[type arithmetic] with
         Value    : arithmetic
         Left     : arithmetic
         Right    : arithmetic
-        Power    : unsigned
+        Power    : natural
         Changing : in out arithmetic
 
     Left  +  Right              as arithmetic   // Addition
@@ -55,7 +55,7 @@ module XL.ARITHMETIC[type arithmetic] with
     Left rem Right              as arithmetic   // Remainder of division
     Left mod Right              as arithmetic   // Euclidean Modulo
     Left  ^  Right              as arithmetic   // Power
-    Left  ^  Power:unsigned     as arithmetic   // Positive power
+    Left  ^  Power:natural     as arithmetic   // Positive power
     -Left                       as arithmetic   // Negation
 
     Abs  Value                  as arithmetic   // Absolute value

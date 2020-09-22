@@ -73,8 +73,8 @@ with
 // Other notations for integer types
 type integer range Low..High                    is integer[Low..High]
 type integer bits Bits                          is integer[IRange Bits]
-type unsigned[Low..High]        when Low >= 0   is another integer[Low..High]
-type unsigned range Low..High   when Low >= 0   is unsigned[Low..High]
+type natural[Low..High]        when Low >= 0   is another integer[Low..High]
+type natural range Low..High   when Low >= 0   is natural[Low..High]
 
 // Sized types
 type integer8                                   is integer bits 8
@@ -82,7 +82,7 @@ type integer16                                  is integer bits 16
 type integer32                                  is integer bits 32
 type integer64                                  is integer bits 64
 
-type unsigned8                                  is unsigned bits 8
-type unsigned16                                 is unsigned bits 16
-type unsigned32                                 is unsigned bits 32
-type unsigned64                                 is unsigned bits 64
+type natural8                                  is natural bits 8
+type natural16                                 is natural bits 16
+type natural32                                 is natural bits 32
+type natural64                                 is natural bits 64

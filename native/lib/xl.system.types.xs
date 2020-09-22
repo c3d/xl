@@ -34,8 +34,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-unsigned                as type
+natural                as type
 integer                 as type
-address                 as another unsigned
+address                 as another natural
 offset                  as another integer
-size                    as another unsigned
+size                    as another natural

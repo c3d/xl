@@ -154,7 +154,7 @@ T and U as type is
                     U then return U.Convert ToType
                 nil
 
-            Operation Index:unsigned as optional (Value:anything -> anything) is
+            Operation Index:natural as optional (Value:anything -> anything) is
 
 
 
@@ -220,7 +220,7 @@ T or U as type is either
                     U then return U.Convert ToType
                 nil
 
-            Operation Index:unsigned as optional (Value:anything -> anything) is
+            Operation Index:natural as optional (Value:anything -> anything) is
 
 
 // ============================================================================
@@ -279,4 +279,4 @@ T and U as type is
                     U then return U.Convert ToType
                 nil
 
-            Operation Index:unsigned as optional (Value:anything -> anything) is
+            Operation Index:natural as optional (Value:anything -> anything) is

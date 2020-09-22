@@ -54,4 +54,4 @@ type enumerated with
     Predecessor Value:enumerated        as enumerated
 
     // The underlying representation type
-    representation                      as type like unsigned
+    representation                      as type like natural

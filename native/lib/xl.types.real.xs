@@ -50,8 +50,8 @@ type real[MantissaBits, ExponentBits] with
     Infinity                    as real
     QuietNaN                    as real
     SignalingNaN                as real
-    QuietNaN     Data:unsigned  as real
-    SignalingNaN Data:unsigned  as real
+    QuietNaN     Data:natural  as real
+    SignalingNaN Data:natural  as real
     IsInfinity   Value:real     as boolean
     IsNaN        Value:real     as boolean
 

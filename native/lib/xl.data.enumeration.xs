@@ -36,7 +36,7 @@
 
 use UNSIGNED
 
-ENUMERATION[unsigned:type is unsigned] has
+ENUMERATION[natural:type is natural] has
 // ----------------------------------------------------------------------------
 //   Interface for the enumeration types
 // ----------------------------------------------------------------------------
@@ -73,4 +73,4 @@ ENUMERATION[unsigned:type is unsigned] has
                 Code.source First, Rep
 
     use XL.UNSIGNED
-    enumeration Body is enumeration[unsigned] Body
+    enumeration Body is enumeration[natural] Body

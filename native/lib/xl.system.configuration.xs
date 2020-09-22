@@ -34,10 +34,10 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-ADDRESS_SIZE            as unsigned //
-DATA_SIZE               as unsigned
+ADDRESS_SIZE            as natural //
+DATA_SIZE               as natural
 ENDIANNESS              as MEMORY.endianness
-BITS_PER_BYTE           as unsigned
+BITS_PER_BYTE           as natural
 
 
 use TYPE, UNSIGNED
@@ -56,21 +56,21 @@ module SYSTEM with
     // ------------------------------------------------------------------------
     //    System configuration (filled by the compiler)
     // ------------------------------------------------------------------------
-        ADDRESS_SIZE            as unsigned
-        DATA_SIZE               as unsigned
+        ADDRESS_SIZE            as natural
+        DATA_SIZE               as natural
         ENDIANNESS              as MEMORY.endianness
-        BITS_PER_BYTE           as unsigned
+        BITS_PER_BYTE           as natural
 
 
     module TYPES with
     // ------------------------------------------------------------------------
     //   Native system types exposed by this module
     // ------------------------------------------------------------------------
-        unsigned                as type
+        natural                as type
         integer                 as type
-        address                 as another unsigned
+        address                 as another natural
         offset                  as another integer
-        size                    as another unsigned
+        size                    as another natural
 
     // Make configuration and types visible directly in `SYSTEM`
     use CONFIGURATION, TYPES

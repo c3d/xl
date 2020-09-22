@@ -68,7 +68,7 @@ type integer[Low..High] is type
         Left    : integer
         Right   : integer
         Shift   : bit_count
-        Power   : unsigned
+        Power   : natural
 
     // Implement the 'number' interface
     MinValue                                    is Low
@@ -83,7 +83,7 @@ type integer[Low..High] is type
     Predecessor Value           as integer      is Value - 1
 
     // The underlying representation type
-    representation                      as type like unsigned
+    representation                      as type like natural
 
 
     // Implement the 'arithmetic' interface

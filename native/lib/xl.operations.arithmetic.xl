@@ -67,7 +67,7 @@ module XL.ARITHMETIC[type arithmetic] is
                 Result += Right
 
 
-    Left ^ Power:unsigned as arithmetic is
+    Left ^ Power:natural as arithmetic is
     // ------------------------------------------------------------------------
     //   Default implementaiton of exponentiation
     // ------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 //
 //     Bitwise operations apply on the individual bits in a data type.
 //     Operations in this module are common to a variety of data types,
-//     notably integer, unsigned and boolean, as well as arrays of such types
+//     notably integer, natural and boolean, as well as arrays of such types
 //
 //
 //

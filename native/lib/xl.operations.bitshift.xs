@@ -39,7 +39,7 @@ type bitshift with
 //   Specification for bit shift operations
 // ----------------------------------------------------------------------------
 
-    type bit_count              is unsigned
+    type bit_count              is natural
 
     with
         Value   : bitshift

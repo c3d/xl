@@ -62,13 +62,13 @@ module SYSTEM is
     //    Native system types exposed by the SYSTEM module
     // ------------------------------------------------------------------------
 
-        // Select `integer` and `unsigned` types for this machine
+        // Select `integer` and `natural` types for this machine
         case DATA_SIZE is
             64 then
-                unsigned        is unsigned64
+                natural        is natural64
                 integer         is integer64
             32 then
-                unsigned        is unsigned32
+                natural        is natural32
                 integer         is integer32
             Other then
                 error "Unexpected configuration, data size is $1", Other
@@ -76,12 +76,12 @@ module SYSTEM is
         // Select `address`, `offset` and `size` types for this machine
         case CONFIGURATION.ADDRESS_SIZE is
             64 then
-                address         is unsigned64
+                address         is natural64
                 offset          is integer64
-                size            is unsigned64
+                size            is natural64
             32 then
-                address         is unsigned64
+                address         is natural64
                 offset          is integer32
-                size            is unsigned32
+                size            is natural32
             Other then
                 error "Unexpected configuration, address size is $1", Other

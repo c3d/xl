@@ -5246,7 +5246,7 @@ _((basic types))_, and include the following:
 
 * `natural` is an approximation of natural numbers, with a limited
   range, typically between 0 and 2^64^-1. Like `integer`, it behaves
-  like the underlying hardware in case of overflow. `unsigned` matches
+  like the underlying hardware in case of overflow. `natural` matches
   whole number literal values such as `0`, `16#FF` or `42`.
 
 * `size` is a type similar to `natural`, but specifically intended to

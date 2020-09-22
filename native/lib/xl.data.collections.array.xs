@@ -41,7 +41,7 @@ type array[item:type, index:enumerated, Range:range of index]
 array[Range:range] of item              is array[item, Range.value, Range]
 
 // Readable notation like `array[2] of real`
-array[Size:unsigned] of item            is array[0..Size-1] of item
+array[Size:natural] of item            is array[0..Size-1] of item
 
 // Type used to index the array
 array.index                             is another array.size

@@ -50,8 +50,8 @@ type decimal[Bits, Digits, ExponentMax] with
     Infinity                    as decimal
     QuietNaN                    as decimal
     SignalingNaN                as decimal
-    QuietNaN     Data:unsigned  as decimal
-    SignalingNaN Data:unsigned  as decimal
+    QuietNaN     Data:natural  as decimal
+    SignalingNaN Data:natural  as decimal
     IsInfinity   Value:decimal  as boolean
     IsNaN        Value:decimal  as boolean
 
