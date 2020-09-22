@@ -1,5 +1,5 @@
 // *****************************************************************************
-// pointer.xl                                                         XL project
+//  xl.type.unsafe.pointer.xl                                        XL project
 // *****************************************************************************
 //
 // File description:
@@ -36,7 +36,7 @@
 
 use MEM = XL.SYSTEM.MEMORY
 
-module POINTER[item:type] is
+module XL.TYPE.UNSAFE.POINTER[item:type] is
 // ----------------------------------------------------------------------------
 //  Implementation of unsafe pointer operations
 // ----------------------------------------------------------------------------

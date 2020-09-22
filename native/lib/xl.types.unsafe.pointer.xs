@@ -36,7 +36,7 @@
 
 use MEM = XL.SYSTEM.MEMORY
 
-module POINTER[item:type] with
+module XL.TYPE.UNSAFE.POINTER[item:type] with
 // ----------------------------------------------------------------------------
 //   Interface for machine-level pointers
 // ----------------------------------------------------------------------------
@@ -80,10 +80,10 @@ module POINTER[item:type] with
     Pointer.Something                                   is (*Pointer).Something
 
 
-module POINTER is
+module XL.TYPE.UNSAFE.POINTER is
 // ----------------------------------------------------------------------------
 //   A module to easily create pointer types
 // ----------------------------------------------------------------------------
 
-    type pointer[item:type]             is POINTER[item].pointer
+    type pointer[item:type]             is XL.TYPE.UNSAFE.POINTER[item].pointer
     type pointer to item:type           is pointer[item]
