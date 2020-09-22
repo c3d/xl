@@ -40,7 +40,7 @@ use CONFIG = XL.SYSTEM.CONFIGURATION
 use MEM    = XL.SYSTEM.MEMORY
 use LIFE   = XL.TYPES.LIFETIME
 
-module TYPE is
+module XL.TYPES.TYPE is
 // ----------------------------------------------------------------------------
 //    A module providing core type operations
 // ----------------------------------------------------------------------------
@@ -49,7 +49,6 @@ module TYPE is
     // ------------------------------------------------------------------------
     //  Implementation of a data type in XL
     // ------------------------------------------------------------------------
-        Name            : text
         Pattern         : source
         Condition       : source
         Constant        : boolean

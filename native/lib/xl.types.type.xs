@@ -41,7 +41,7 @@ use MEM    = XL.SYSTEM.MEMORY
 use LIFE   = XL.TYPES.LIFETIME
 
 
-module TYPE with
+module XL.TYPES.TYPE with
 // ----------------------------------------------------------------------------
 //    A module providing core type operations
 // ----------------------------------------------------------------------------
