@@ -2131,7 +2131,15 @@ evaluating the statement on the second line.
 
 The _result_ of a sequence is the value of its last statement. In our
 example, the result of executing the code will be the value computed by
-`circumference 5.3`.
+`circumference 5.3`. A sequence can be made of multiple statements,
+which are link:#sequence-evaluation[evaluated in order]. Note that XL
+statements are expected to evaluate as `nil`. Unlike C, it is a type
+error to have values in a middle of a sequence.
+
+[source]
+----
+invalid as integer is (0; 1)            // Type error: 0 is not nil
+----
 
 ==== Declaration phase
 
@@ -3395,6 +3403,14 @@ constant i as cartesian is cartesian(0,1)
 constant i as polar     is polar(1, pi/2)
 ....
 
+This provides a form of value-based overloading, where a form is
+selected over another based on the return type. This is in particular
+used to implement forms that may return a value or not depending on
+usage. This is in particular the case for link:#assignment[assignment]
+operators, which can either return the assigned value, or `nil`. The
+`nil` case is necessary when they are used as statements, because
+non-`nil` values cannot be ignored in XL.
+
 ==== Dynamic dispatch
 
 As shown above, the declaration that is actually selected to evaluate a
@@ -3891,9 +3907,14 @@ reference to Church’s lambda calculus. The way this works, however, is
 markedly different internally, and is detailed in the section on
 link:#scoping[scoping] above.
 
-=== Special evaluation
+=== Special evaluation rules
 
-A few cases require a special form of evaluation:
+A few cases require special evaluation rules
+
+* link:#sequence-evaluation[Evaluating sequences] forces
+  link:#immediate-evaluation[immediate evaluation] of
+  all the terms in the sequence in order. All the terms but the last
+  one must evaluate as `nil` or an `error`.
 
 * link:#self[Self] is a way to stop the evaluation of a form
 
@@ -3903,6 +3924,19 @@ A few cases require a special form of evaluation:
 * The link:#returned-value[returned value] for a declaration follows
   rules that take into account the `result` variable, `return`
   statements and `error` values.
+
+==== Sequence evaluation
+
+A sequence, i.e. an `infix` with a `;` or new-line as a separator,
+requires link:#immediate-evaluation[immediate evaluation] of its left
+term, and evaluates as its right term, which may be
+link:lazy-evaluation[evaluated lazily].
+
+The left term is expected to evaluate to `nil`. However, if it
+evaluates as link:#error-handling[an `error` value], then
+the sequence as a whole evaluates as that `error` value.
+
+Any other return value results in a type error.
 
 ==== Self
 
@@ -3995,6 +4029,7 @@ factorial_last N:natural as natural is
         N * factorial_last(N-1)
 ....
 
+
 ==== Assignments and moves
 
 [[assignment]]
@@ -4021,13 +4056,13 @@ follows:
 
 [source]
 ----
-X += Y      is      X := X + Y
-X -= Y      is      X := X - Y
-X *= Y      is      X := X * Y
-X /= Y      is      X := X / Y
-X &= Y      is      X := X & Y
-X |= Y      is      X := X | Y
-X ^= Y      is      X := X ^ Y
+Target += Source      is      Target := Target + Source
+Target -= Source      is      Target := Target - Source
+Target *= Source      is      Target := Target * Source
+Target /= Source      is      Target := Target / Source
+Target &= Source      is      Target := Target & Source
+Target |= Source      is      Target := Target | Source
+Target ^= Source      is      Target := Target ^ Source
 ----
 
 XL offers two additional operators, the `:+` _copy_ operator and the
@@ -4063,6 +4098,37 @@ to pass objects around as arguments, and copying data is the less
 frequent case. In any case, the programmer remains in charge, always
 having the possibility to explicitly request a copy or a move.
 
+Assignments can either return the target of the assignment, or
+`nil`. The value-returning variant can be used in expression, whereas the
+`nil`-returning variant is used for statements. This is a result of
+normal overloading, combined with the fact that statements expect a
+`nil` value. One is normally implemented as the other, although the
+choice of which form is primary is left as a choice for the
+implementor.
+
+For example, if for type `value`, the `nil`-returning assignment
+operator is primary, the two operators can be defined as follows:
+
+[source]
+----
+to Copy(Target: out value,
+        Source: in value) as nil written Target := Source is ...
+Target:out value := Source: in value as value is
+    Copy Target, Source
+    Target
+----
+
+If an error can be returned from the copy operation, then the correct
+code would look like the following:
+
+[source]
+----
+to Copy(Target: out value,
+        Source: in value) as ok written Target := Source is ...
+Target:out value := Source: in value as value? is
+    Copy Target, Source
+    Target
+----
 
 === Scoping
 

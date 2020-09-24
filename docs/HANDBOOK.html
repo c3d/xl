@@ -562,12 +562,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#functions-as-values">3.6.3. Functions as values</a></li>
 </ul>
 </li>
-<li><a href="#special-evaluation">3.7. Special evaluation</a>
+<li><a href="#special-evaluation-rules">3.7. Special evaluation rules</a>
 <ul class="sectlevel3">
-<li><a href="#self">3.7.1. Self</a></li>
-<li><a href="#implicit-result-variable">3.7.2. Implicit result variable</a></li>
-<li><a href="#returned-value">3.7.3. Returned value</a></li>
-<li><a href="#assignments-and-moves">3.7.4. Assignments and moves</a></li>
+<li><a href="#sequence-evaluation">3.7.1. Sequence evaluation</a></li>
+<li><a href="#self">3.7.2. Self</a></li>
+<li><a href="#implicit-result-variable">3.7.3. Implicit result variable</a></li>
+<li><a href="#returned-value">3.7.4. Returned value</a></li>
+<li><a href="#assignments-and-moves">3.7.5. Assignments and moves</a></li>
 </ul>
 </li>
 <li><a href="#scoping">3.8. Scoping</a>
@@ -3427,7 +3428,15 @@ evaluating the statement on the second line.</p>
 <div class="paragraph">
 <p>The <em>result</em> of a sequence is the value of its last statement. In our
 example, the result of executing the code will be the value computed by
-<code>circumference 5.3</code>.</p>
+<code>circumference 5.3</code>. A sequence can be made of multiple statements,
+which are <a href="#sequence-evaluation">evaluated in order</a>. Note that XL
+statements are expected to evaluate as <code>nil</code>. Unlike C, it is a type
+error to have values in a middle of a sequence.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">invalid as integer is (0; 1)            // Type error: 0 is not nil</code></pre>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -5292,6 +5301,15 @@ constant i as cartesian is cartesian(0,1)
 constant i as polar     is polar(1, pi/2)</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>This provides a form of value-based overloading, where a form is
+selected over another based on the return type. This is in particular
+used to implement forms that may return a value or not depending on
+usage. This is in particular the case for <a href="#assignment">assignment</a>
+operators, which can either return the assigned value, or <code>nil</code>. The
+<code>nil</code> case is necessary when they are used as statements, because
+non-<code>nil</code> values cannot be ignored in XL.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="dynamic-dispatch"><a class="anchor" href="#dynamic-dispatch"></a><a class="link" href="#dynamic-dispatch">3.5.2. Dynamic dispatch</a></h4>
@@ -5891,12 +5909,18 @@ markedly different internally, and is detailed in the section on
 </div>
 </div>
 <div class="sect2">
-<h3 id="special-evaluation"><a class="anchor" href="#special-evaluation"></a><a class="link" href="#special-evaluation">3.7. Special evaluation</a></h3>
+<h3 id="special-evaluation-rules"><a class="anchor" href="#special-evaluation-rules"></a><a class="link" href="#special-evaluation-rules">3.7. Special evaluation rules</a></h3>
 <div class="paragraph">
-<p>A few cases require a special form of evaluation:</p>
+<p>A few cases require special evaluation rules</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p><a href="#sequence-evaluation">Evaluating sequences</a> forces
+<a href="#immediate-evaluation">immediate evaluation</a> of
+all the terms in the sequence in order. All the terms but the last
+one must evaluate as <code>nil</code> or an <code>error</code>.</p>
+</li>
 <li>
 <p><a href="#self">Self</a> is a way to stop the evaluation of a form</p>
 </li>
@@ -5912,7 +5936,23 @@ statements and <code>error</code> values.</p>
 </ul>
 </div>
 <div class="sect3">
-<h4 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.7.1. Self</a></h4>
+<h4 id="sequence-evaluation"><a class="anchor" href="#sequence-evaluation"></a><a class="link" href="#sequence-evaluation">3.7.1. Sequence evaluation</a></h4>
+<div class="paragraph">
+<p>A sequence, i.e. an <code>infix</code> with a <code>;</code> or new-line as a separator,
+requires <a href="#immediate-evaluation">immediate evaluation</a> of its left
+term, and evaluates as its right term, which may be
+<a href="lazy-evaluation">evaluated lazily</a>.</p>
+</div>
+<div class="paragraph">
+<p>The left term is expected to evaluate to <code>nil</code>. However, if it
+evaluates as an <code>error</code> value, then
+<a href="#error-handling">the sequence as a whole</a> evaluates as
+that <code>error</code> value. Any other return value results in a compile-time
+type error.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="self"><a class="anchor" href="#self"></a><a class="link" href="#self">3.7.2. Self</a></h4>
 <div class="paragraph">
 <p>In a definition body, <code>self</code> refers to the input parse tree. A
 special idiom is a definition where the body is <code>self</code>, called a
@@ -5970,7 +6010,7 @@ particular the contexts captured for
 </div>
 </div>
 <div class="sect3">
-<h4 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.7.2. Implicit result variable</a></h4>
+<h4 id="implicit-result-variable"><a class="anchor" href="#implicit-result-variable"></a><a class="link" href="#implicit-result-variable">3.7.3. Implicit result variable</a></h4>
 <div class="paragraph">
 <p>Within the body of a definition, an implicit variable called <code>result</code>
 holds the value that will be given to the caller. For example, an
@@ -5986,7 +6026,7 @@ iterative version of the factorial function can be written as follows:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.7.3. Returned value</a></h4>
+<h4 id="returned-value"><a class="anchor" href="#returned-value"></a><a class="link" href="#returned-value">3.7.4. Returned value</a></h4>
 <div class="paragraph">
 <p>The value returned by the body of a definition is, in order:</p>
 </div>
@@ -6035,7 +6075,7 @@ statement, although it is not quite idiomatic:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.7.4. Assignments and moves</a></h4>
+<h4 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.7.5. Assignments and moves</a></h4>
 <div id="assignment" class="paragraph">
 <p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
 returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
@@ -6070,13 +6110,13 @@ follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X += Y      is      X := X + Y
-X -= Y      is      X := X - Y
-X *= Y      is      X := X * Y
-X /= Y      is      X := X / Y
-X &amp;= Y      is      X := X &amp; Y
-X |= Y      is      X := X | Y
-X ^= Y      is      X := X ^ Y</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Target += Source      is      Target := Target + Source
+Target -= Source      is      Target := Target - Source
+Target *= Source      is      Target := Target * Source
+Target /= Source      is      Target := Target / Source
+Target &amp;= Source      is      Target := Target &amp; Source
+Target |= Source      is      Target := Target | Source
+Target ^= Source      is      Target := Target ^ Source</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6124,6 +6164,41 @@ having the possibility to explicitly request a copy or a move.
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>Assignments can either return the target of the assignment, or
+<code>nil</code>. The value-returning variant can be used in expression, whereas the
+<code>nil</code>-returning variant is used for statements. This is a result of
+normal overloading, combined with the fact that statements expect a
+<code>nil</code> value. One is normally implemented as the other, although the
+choice of which form is primary is left as a choice for the
+implementor.</p>
+</div>
+<div class="paragraph">
+<p>For example, if for type <code>value</code>, the <code>nil</code>-returning assignment
+operator is primary, the two operators can be defined as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Copy(Target: out value,
+        Source: in value) as nil written Target := Source is ...
+Target:out value := Source: in value as value is
+    Copy Target, Source
+    Target</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If an error can be returned from the copy operation, then the correct
+code would look like the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Copy(Target: out value,
+        Source: in value) as ok written Target := Source is ...
+Target:out value := Source: in value as value? is
+    Copy Target, Source
+    Target</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -13437,7 +13512,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-22 23:04:29 +0200
+Last updated 2020-09-24 23:09:28 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
