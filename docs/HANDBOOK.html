@@ -568,7 +568,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#self">3.7.2. Self</a></li>
 <li><a href="#implicit-result-variable">3.7.3. Implicit result variable</a></li>
 <li><a href="#returned-value">3.7.4. Returned value</a></li>
-<li><a href="#assignments-and-moves">3.7.5. Assignments and moves</a></li>
+<li><a href="#assignment-and-move">3.7.5. Assignment and move</a></li>
 </ul>
 </li>
 <li><a href="#scoping">3.8. Scoping</a>
@@ -5933,6 +5933,11 @@ used to set the value returned by a declaration.</p>
 rules that take into account the <code>result</code> variable, <code>return</code>
 statements and <code>error</code> values.</p>
 </li>
+<li>
+<p><a href="#assignment-and-move">Assignment and move</a> operations are somewhat
+special insofar as they are used during parameter passing while
+evaluating other operations.</p>
+</li>
 </ul>
 </div>
 <div class="sect3">
@@ -5945,10 +5950,11 @@ term, and evaluates as its right term, which may be
 </div>
 <div class="paragraph">
 <p>The left term is expected to evaluate to <code>nil</code>. However, if it
-evaluates as an <code>error</code> value, then
-<a href="#error-handling">the sequence as a whole</a> evaluates as
-that <code>error</code> value. Any other return value results in a compile-time
-type error.</p>
+evaluates as <a href="#error-handling">an <code>error</code> value</a>, then
+the sequence as a whole evaluates as that <code>error</code> value.</p>
+</div>
+<div class="paragraph">
+<p>Any other return value results in a type error.</p>
 </div>
 </div>
 <div class="sect3">
@@ -6075,7 +6081,7 @@ statement, although it is not quite idiomatic:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="assignments-and-moves"><a class="anchor" href="#assignments-and-moves"></a><a class="link" href="#assignments-and-moves">3.7.5. Assignments and moves</a></h4>
+<h4 id="assignment-and-move"><a class="anchor" href="#assignment-and-move"></a><a class="link" href="#assignment-and-move">3.7.5. Assignment and move</a></h4>
 <div id="assignment" class="paragraph">
 <p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
 returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
@@ -9330,7 +9336,7 @@ Answer as integer is 42                 // Named constant</code></pre>
 <div class="paragraph">
 <p>A mutable value can be initialized or modified using the <code>:=</code> operator,
 which is called an
-<a href="##assignments-and-moves"><em>assignment</em></a>.
+<a href="##assignment-and-move"><em>assignment</em></a>.
 There are a number of derived operators, such as <code>+=</code>, that combine a
 frequent arithmetic operation and an assignment.</p>
 </div>
@@ -13512,7 +13518,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-24 23:09:28 +0200
+Last updated 2020-09-24 23:30:51 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

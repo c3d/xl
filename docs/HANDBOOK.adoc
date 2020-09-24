@@ -3925,6 +3925,10 @@ A few cases require special evaluation rules
   rules that take into account the `result` variable, `return`
   statements and `error` values.
 
+* link:#assignment-and-move[Assignment and move] operations are somewhat
+  special insofar as they are used during parameter passing while
+  evaluating other operations.
+
 ==== Sequence evaluation
 
 A sequence, i.e. an `infix` with a `;` or new-line as a separator,
@@ -4030,7 +4034,7 @@ factorial_last N:natural as natural is
 ....
 
 
-==== Assignments and moves
+==== Assignment and move
 
 [[assignment]]
 The infix `:=` operator is used to perform _((assignments))_ and
@@ -6477,7 +6481,7 @@ Answer as integer is 42                 // Named constant
 
 A mutable value can be initialized or modified using the `:=` operator,
 which is called an
-link:##assignments-and-moves[_assignment_].
+link:##assignment-and-move[_assignment_].
 There are a number of derived operators, such as `+=`, that combine a
 frequent arithmetic operation and an assignment.
 
