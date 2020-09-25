@@ -26,7 +26,7 @@ variety of programming needs with ease.
 Being _extensible_ means that the language is designed to make it very
 easy for programmers to adapt the language to suit their needs, for
 example by adding new programming constructs. In XL, extending the
-language is a routine operation, much like adding a function or
+language is a routine and safe operation, much like adding a function or
 creating a class in more traditional programming languages.
 This extensibility is demonstrated by the fact that operations that
 are built-in in other programming languages, such as integer
@@ -42,9 +42,10 @@ programming, as illustrated by https://github.com/c3d/elfe[ELFE].
 
 WARNING: XL is a work in progress. Even if there are some bits and
 pieces that happen to already work, and even if there were fully
-functioning releases like the XL version used in https://tao3d.sf.net[Tao3D]
-in the past, XL is being totally reworked, and the compiler in this
-repository is presently not suitable for any serious
+functioning releases like the XL version used in
+https://tao3d.sf.net[Tao3D] in the past, XL is presently in a long process of
+being totally reworked and overhauled. As a result, the compiler in
+this repository is presently not suitable for any serious
 programming. Examples given below may sometimes simply not work. Take
 it as a painful reminder that the work is far from finished, and, who
 knows, as an idea for a contribution. See link:#history-of-xl[HISTORY]
@@ -4411,7 +4412,7 @@ X : integer := 42
 
 foo Ctx, Value is
     Ctx.X := Value
-    Ctx +=
+    Ctx &=
         Y is "Hello"
 
 foo context, 33
