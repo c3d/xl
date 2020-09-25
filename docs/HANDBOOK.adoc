@@ -72,9 +72,9 @@ really means three things:
   other ((programming language))s, like the `while` ((loop)), or ((integer
   arithmetic)), are _constructed_ in XL. Specifically, they are provided by
   the link:#the-standard-library[((standard library))], using techniques that
-  any programmer can use in their program. This, obviously, means that
-  programmers can add their own loops, or their own machine-level data
-  types, and even extend existing ones.
+  any programmer can use in their program. This proves by example that
+  programmers can add their own program constructs, their own
+  machine-level data types, from scratch or by extending existing ones.
 
 . XL provides link:#efficient-translation[complete control] over the
   ((program translation)) process. This means that libraries(((library)))
