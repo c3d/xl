@@ -60,10 +60,11 @@ Extensible? What does that mean for a programming language? For XL, it
 really means three things:
 
 [arabic]
-. XL has a method to extend the language(((extensible,language))) with any
-  kind of feature, not just functions or data types, but also
-  ((programming construct))s, ((optimization))s, ((domain-specific
-  notation))s, and more. Actually, all this is done with a
+. XL offers a standard way to extend the
+  language(((extensible,language))) with any kind of feature, not just
+  functions or data types, but also ((programming construct))s,
+  ((optimization))s, ((domain-specific notation))s, and
+  more. Actually, all this is done with a
   link:#one-operator-to-rule-them-all[single operator], `is`, called
   the _((definition operator))_.
 
