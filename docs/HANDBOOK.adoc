@@ -2008,23 +2008,23 @@ performed during parsing:
 
 [arabic]
 . Filtering out comments: Comments should not have an effect on the
-program, so they are simply eliminated during parsing.
+  program, so they are simply eliminated during parsing.
 . Processing `syntax` statements: This must be done during parsing,
-because `syntax` is designed to modify the
-link:#extending-the-syntax[spelling and precedence]
-of operators, and that information is used during the parsing phase.
+  because `syntax` is designed to modify the
+  link:#extending-the-syntax[spelling and precedence]
+  of operators, and that information is used during the parsing phase.
 . Processing `use` statements: Since imported modules can contain
-`syntax` statements, they must at least partially be processed during
-parsing. Details about `use` statements are covered in the
-link:#modules[chapter about modules].
+  `syntax` statements, they must at least partially be processed during
+  parsing. Details about `use` statements are covered in the
+  link:#modules[chapter about modules].
 . Identifying words that switch to a
-link:#child-syntax[child syntax]: symbols that
-activate a child syntax are recognized during parsing. This is the case
-for example with the `extern` name in the
-link:{xl}src/xl.syntax#L62[default syntax].
+  link:#child-syntax[child syntax]: symbols that
+  activate a child syntax are recognized during parsing. This is the case
+  for example with the `extern` name in the
+  link:{xl}src/xl.syntax#L62[default syntax].
 . Identifying binary data: words such as `bits` marked as introducing
-`BINARY` data in the syntax file are treated specially during parsing,
-to generate parse tree nodes representing binary data.
+  `BINARY` data in the syntax file are treated specially during parsing,
+  to generate parse tree nodes representing binary data.
 
 NOTE: this is not currently implemented.
 
@@ -3514,12 +3514,12 @@ also in the following cases:
 
 [arabic]
 . When the formal parameter being checked has a type annotation, like
-`Radius` in our example, and when the annotation type does not match the
-type associated to the argument parse tree. Immediate evaluation is
-required in such cases in order to check if the argument type is of the
-expected type after evaluation. Evaluation is _not_ required if the
-argument and the declared type for the formal parameter match, as in the
-following example:
+  `Radius` in our example, and when the annotation type does not match the
+  type associated to the argument parse tree. Immediate evaluation is
+  required in such cases in order to check if the argument type is of the
+  expected type after evaluation. Evaluation is _not_ required if the
+  argument and the declared type for the formal parameter match, as in the
+  following example:
 +
 [source]
 ----
@@ -3531,9 +3531,9 @@ In that case, since `A+3` is already an `infix`, it is possible to bind
 it to `X` directly without evaluating it. So we will evaluate the body
 with binding `X:infix is A+3`.
 . When the part of the pattern being checked is a constant or a
-link:#metabox[metabox]. For example, this is the case in the definition
-of the factorial below, where the expression `(N-1)` must be evaluated
-in order to check if it matches the value `0` in pattern `0!`:
+  link:#metabox[metabox]. For example, this is the case in the definition
+  of the factorial below, where the expression `(N-1)` must be evaluated
+  in order to check if it matches the value `0` in pattern `0!`:
 +
 [source]
 ----
@@ -3984,10 +3984,10 @@ Note that the following values also evaluate as themselves:
 
 [arabic]
 . `integer`, `real` or `text` constants, unless an explicit declaration
-in the current context matches.
+  in the current context matches.
 . Sequences of declarations, like `{ Zero is 0; One is 1 }`, in
-particular the contexts captured(((closure,capture))) for
-link:#closures[((closure))s].
+  particular the contexts captured(((closure,capture))) for
+  link:#closures[((closure))s].
 
 ==== Implicit result variable
 
