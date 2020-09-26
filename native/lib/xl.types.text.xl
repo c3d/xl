@@ -1,10 +1,10 @@
 // *****************************************************************************
-// text.xl                                                            XL project
+//  xl.types.text.xl                                                 XL project
 // *****************************************************************************
 //
 // File description:
 //
-//     The basic text operations
+//     The basic text data type and operations
 //
 //
 //
@@ -34,19 +34,20 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module XL.TEXT[value:type] is
+module XL.TYPES.TEXT[character:type] is
+// ----------------------------------------------------------------------------
+//  Implementation of the text data type
+// ----------------------------------------------------------------------------
 
-    X:text = Y:text                 as boolean is C xl_text_eq
-    X:text <> Y:text                as boolean is C xl_text_ne
-    X:text > Y:text                 as boolean is C xl_text_gt
-    X:text >= Y:text                as boolean is C xl_text_ge
-    X:text < Y:text                 as boolean is C xl_text_lt
-    X:text <= Y:text                as boolean is C xl_text_le
+    type text is string of character
+    type slice is SLICE.slice[text]
 
-    for Variable in Text:slice loop Body is
-        I               : index         := 0
-        Length          : size          := length Text
-        while I < Length loop
-            [[Variable]] is Text[I]
-            Body
-            I++
+    with
+        Text    : text
+        Slice   : slice
+
+    Text as slice is
+    // ------------------------------------------------------------------------
+    //  Convert a text into a slice for the whole text
+    // ------------------------------------------------------------------------
+        slice(Text)

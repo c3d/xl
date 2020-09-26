@@ -1,10 +1,10 @@
 // *****************************************************************************
-// text.xs                                                            XL project
+//  xl.types.text.xs                                                XL project
 // *****************************************************************************
 //
 // File description:
 //
-//     Interface for text functions
+//     Interface for the text data type and basic functions
 //
 //
 //
@@ -34,20 +34,20 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use SLICE
-use STRING
-use MEMORY
+use XL.TYPES.SLICE
+use XL.TYPES.STRING
+use XL.SYSTEM.MEMORY
 
-module XL.TYPES.TEXT[type character] with
+module XL.TYPES.TEXT[character:type] with
 // ----------------------------------------------------------------------------
-//    A module handling the text data types
+//    Interface for the text data type
 // ----------------------------------------------------------------------------
 
-    // Represent text using a string of character
-    type text                           is string of character
+    // Text type
+    type text                   like string of character
 
     // Slices of text are slices of the representation
-    type slice                          is slice[text]
+    type slice                  like SLICE.slice[text]
 
     with
         Text    : text
