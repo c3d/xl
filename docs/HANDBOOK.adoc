@@ -4891,40 +4891,136 @@ the number of seconds in the current time from some real-time clock.
 === Type conversions
 
 In some cases, a value from one type needs to be converted to some
-other type. This is called a _((type conversion))_. There are two
-kinds of type conversion: _((explicit conversion))_, and _((implicit
-conversion))_. In addition, it is also possible to resolve
-type-related ambiguities using _((type hints))_.
+other type. This is called a _((type conversion))_. There are thre
+kinds of type conversion:
+[arabic]
+. link:#conversion-using-constructor[using constructors] to create a type value
+  explicitly using its link:#creation[constructor] pattern,
+. link:#explicit-conversion[explicit conversions] use the type name as a prefix
+  to create functions dedicated to value conversion. This is mostly useful when
+  writing generic code,
+. link:#implicit-conversion[implicit conversions] are special forms allowing one
+  type to transparently convert to another one when needed.
 
-Explicit type conversions are usually provided using a
-link:#creation[constructor]. As a result, they look like any other
-expression. For example, if you provide a `distance` type based on
-`real`, you might have a creator for `distance` values, and then use
-that for explicit conversions.
+==== Conversion using constructors
+
+(((conversion,using constructors)))
+The simplest way to convert a type to another is to embed the original type in a
+constructor for the second type. This only works if the original type is
+compatible with the pattern for the second type.
 
 ....
 distance is matching distance(D:real)
-X:distance + Y:distance as distance     is distance(X.D+Y.D)
+X:distance + Y:distance as distance     is distance(X.D+Y.D) <1>
 ....
 
-All prefix functions that use the name of a type are renamed for
-derived types. For example:
+<1> This can be interpreted as a "conversion" of the `real` value `X.D+Y.D` to a
+    `distance` type using the constructor.
+
+In the above example, `distance` is both the name of the type and a prefix used
+as a constructor for the type. This is only coincidental, if frequent. The above
+example could be written using a postfix form as follows:
 
 ....
-long_distance is distance when distance.D >= 1000.0
-km : long_distance := distance 1000.0
-Mm : long_distance := long_distance 1_000_000.0
+distance is matching D:real m
+X:distance + Y:distance as distance is distance(X.D + Y.D) // Error <1>
+X:distance + Y:distance as distance is (X.D + Y.D) m       // OK <2>
 ....
 
+<1> This is an error because there is no prefix `distance D` form that matches
+    expressions `distance(X.D+Y.D)`.
+<2> This works because the value of the type is really something like `2.3 m`
+
+Rewrite the code as seen above demonstrates that what really matters is the
+constructor pattern, not the name of the type, which is nothing special.
+
+
+==== Explicit conversion
+
+(((conversion,explicit)))
+Having to use a type-specific constructor pattern is not practical when writing
+generic code. Consider for example that you want to create a `long_distance`
+subtype that corresponds to distances greater than `1000 m`
+
 ....
-long_distance as some distance is matching distance(D:real) when D > 1000.0
-Z := long_distance(3.3)
+distance      is matching distance(D:real)
+long_distance is matching distance(D:real when D >= 1000.0)
+km : long_distance := distance 1000.0                   // OK <1>
+Mm : long_distance := long_distance 1_000_000.0         // Error <2>
 ....
 
-Implicit type conversions are provided by definitions that have a
-single typed parameter and return a different type. For example, if
-you want to be able to implicitly convert between polar and cartesian
-form for a complex number, you would need:
+<1> This works because the prefix being used corresponds to the constructor
+    pattern.
+<2> There is no `long_distance` prefix pattern for the type
+
+In such cases, it is possible to create an _((explicit conversion))_ form that
+takes the target type as a prefix, using a link:#metabox[metabox] to make it
+clear that the _type_, not its _name_, is what you use as a prefix:
+
+....
+distance is matching distance(D:real)
+[[distance]] D:real as distance is distance D
+
+long_distance is matching (D:distance when D.D >= 1000.0)
+[[long_distance]] D:real when D >= 1000.0 as long_distance is distance D
+....
+
+Invoking such an explicit conversion function requires you to evaluate the type
+separately, not as part of a prefix form. This can be done by putting the type
+expression in a block:
+
+....
+km : long_distance := (distance) 1000.0                 // OK <1>
+Mm : long_distance := (long_distance) 1_000_000.0       // OK <2>
+Gm : long_distance := long_distance 1.0e9               // OK <3>
+....
+
+<1> This now calls the form `[[distance]] D:real`, and type checks that the
+    `D >= 1000.0` is valid in order to assign to a `long_distance` value. If the
+    type check fails, e.g. if you replace value `1000.0` with `100.0`, then it
+    is reported on the assignment.
+<2> This now calls the form `[[long_distance]] D:real`. As a result, this
+    validates that the value obeys the condition `D >= 1000.0` earlier, in the
+    right-hand side expression. If the value given fails the validation, it will
+    be reported in the expression itself.
+<3> This now works and calls the explicit conversion _if_ there is no form such
+    as `long_distance D:real` that would match the form first.
+
+NOTE: It is only coincidental, if quite fortunate, that this explicit type
+conversion  notation happens to match the syntax for type casting in C and C++.
+
+The rules of overloading are such that, in general, the parentheses are not
+necessary to invoke an explicit conversion. Programmers should use the
+parenthese form if they intend to make it clear that this is an explicit
+conversion, and if they want to avoid calling any prefix form with a matching
+name. This is also the only possible syntax if the type results form an
+expression. Conversely, If they want to pick up the prefix form first if it
+exists, then they should use the prefix form.
+
+....
+// C-style low-level pointer cast: must use parentheses for type expression
+P : pointer to integer := (pointer to integer) malloc(integer.ByteSize)
+
+// Numerical conversion: might prefer more precise prefix form if it exists
+Circumference is natural(2 * pi * 1000)
+....
+
+There are explicit conversion functions for most numerical types
+(((numerical conversions)))(((conversion,numerical))), which in
+general allows you to get the closest numerical value in the target form.
+
+Many types also have an explicit conversion to
+`text`(((text conversion)))(((conversion,to text))), which must produce a
+human-readable version of the value. Some types can also feature an explicit
+conversion from `text`, which can be used to parse a value given in
+human-readable form.
+
+==== Implicit conversion
+
+(((conversion,implicit)))
+Implicit type conversions are definitions that have a single typed parameter and
+return a different type. For example, if you want to be able to implicitly
+convert between polar and cartesian form for a complex number, you would need:
 
 ....
 Z:polar as cartesian
@@ -4942,7 +5038,7 @@ foo 1.0                 // OK, implicit conversion from real to complex
 foo 1                   // Error: two implicit conversions required
 ....
 
-In a case like the one that causes an error, you can use a _type hint_,
+In a case like the one that causes an error, you can use a _((type hint))_,
 which is simply a sequence of explicit conversions indicating how to
 get from one type to another.
 
@@ -4951,6 +5047,35 @@ foo X:complex as complex
 X:real as complex
 foo 1.0                 // OK, implicit conversion from real to complex
 foo real 1              // OK: first convert to real, then implicit complex
+....
+
+Implicit type conversions can also be used on return values or when evaluating
+statements, in order to adjust a value to what is expected in that context.
+In particular, the `ignorable T` (((ignorable type))) generic type provided by
+the standard library can implicitly convert to either `T` or `nil` so that it
+can be either returned from a function or used in a statement. Its definition is
+roughly as follows:
+
+....
+with
+    T : type
+type ignorable[T]               is matching ignore(Value:T)
+V:ignorable[T]          as T    is V.Value
+V:ignorable[T]          as nil  is nil
+....
+
+An ignorable type can be used for the return value of any operation that is
+useful, but may safely be ignored. The most common use case for this are
+link:#assignments[assignments], which are used primarily for the side effect of
+assigning to the target, but can also return the value of the target.
+
+....
+// Ignore the return value by implicitly converting it to 'nil'
+X := 3
+
+// Use the return value of the assignment to compare with ' '
+while (NextChar := ReadNextCharacterFrom(File)) > ' ' loop
+    print "We got ", NextChar
 ....
 
 === Type definitions
@@ -5578,10 +5703,6 @@ They include the following:
   link:#inheritance[derived type], preserving the original type
   information, so that dynamic dispatch will happen based on the
   actual type.
-
-* `new T` is a type that inherits all operations from `T`, but is not
-  directly compatible with `T`. Explicit conversions are required to
-  copy or move a value from one type to another.
 
 * `slice of T` holds a slice of contiguous containers such as `array`
   or `string`, and makes it possible to manipulate subsets of the
