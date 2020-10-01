@@ -2781,6 +2781,7 @@ expressions:
 * <<Argument splitting>> match names bound to infix, prefix or postfix
   values to infix, prefix or postfix patterns.
 * <<Conditional patterns>> match values based on arbitrary conditions
+* <<Validated patterns>> validate a pattern using code snippets
 * <<Literal constants>> match constants with the same value.
 * <<Metabox values>> match values computed by the compiler.
 * <<Blocks>> change the priority of expressions.
@@ -3004,7 +3005,7 @@ evaluates to `true` after bindings
 | `log X when X > 0` | `log 3.5`  | `log(-3.5)`
 |=================================================
 
-Such patterns are called _conditional patterns_. They do not match if
+Such patterns are called _((conditional patterns))_. They do not match if
 the expression evaluates to anything but `true`, notably if it evaluates
 to any kind of error. For example:
 
@@ -3013,6 +3014,76 @@ to any kind of error. For example:
 log X when X > 0 is ...
 log "Logging an error"        // Will not match the definition above
 ----
+
+==== Validated patterns
+
+When a top-level pattern is an infix like `Pattern where Validation`, then
+the pattern matches an expression if the pattern on the left of the
+infix matches the expression, and if the validation on the right
+compiles correctly after binding.
+
+[cols="24%,38%,38%",options="header",]
+|==================================================================
+| Pattern                    | Matched by       | Not matched by
+| `print X where { write X } | `print "Hello"`  | Any value where `write X` is invalid
+|==================================================================
+
+Such patterns are called _((validated patterns))_. They do not match if
+the evaluation of the validation fails, i.e. returns an error. Like
+for conditional patterns, all bindings defined in the pattern are
+visible in the body of the validation.
+
+[source]
+----
+// Document that you can 'print' something if you can 'write' it
+print X where
+    write X
+----
+
+The validation is part of the _interface_ of the pattern. This enables
+more precise error reporting.
+
+The most common use case for validated patterns is to create so-called
+_((validated generic types))_(((type,validation))), which are types
+used solely to indicate that a specific operation is available,
+facilitating the use of generic code.
+
+For example, the `ordered` type defined by the standard library
+requires a comparison between values of the type, and can be defined with
+something like:
+
+[source]
+----
+type ordered where
+     MustHaveLessThan(A:ordered, B:ordered) as boolean is A < B
+----
+
+This can also be used to create advanced type interfaces that would be
+difficult to express clearly using the more common pattern syntax. To
+facilitate that usage, type annotations in a validation that apply to
+parameters bound in the pattern apply as if they were directly in the
+pattern.
+
+For example, an interface for matrix multiplication can validate the
+dimensions and value type as follows:
+
+[source]
+----
+Left * Right as result_matrix where
+    number: type
+    N     : integer
+    M     : integer
+    O     : integer
+    Left  : matrix[N,M] of number
+    Right : matrix[M,O] of number
+    type result_matrix is matrix[N,O] of number
+----
+
+NOTE: This second usage is somewhat reminiscent of
+link:https://doc.rust-lang.org/rust-by-example/generics/where.html[where
+clauses] in Rust, and it is fortunate that there is some
+similarity. However, the use of `where` for validated generics
+link:https://github.com/c3d/xl/commit/899a07cf05e9be7c29e1a9cef1cd81326f738e02#diff-7ef85d49d753b59c4ba987b01c6a2b45[predates the Rust usage by several years].
 
 ==== Literal constants
 
