@@ -1,5 +1,5 @@
 // *****************************************************************************
-// real.xs                                                            XL project
+//  xl.types.real.xs                                                XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,13 +34,12 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type real[MantissaBits, ExponentBits] with
+module XL.TYPES.REAL[MantissaBits : natural, ExponentBits : natural] with
 // ----------------------------------------------------------------------------
-//    A generic interface for real types
+//  A generic interface for real types
 // ----------------------------------------------------------------------------
 
-    // Interfaces that 'real' implements
-    as number
+    type real                   like number
 
     // Implement the necessary interface for `type`
     BitSize                     as bit_count
@@ -50,18 +49,27 @@ type real[MantissaBits, ExponentBits] with
     Infinity                    as real
     QuietNaN                    as real
     SignalingNaN                as real
-    QuietNaN     Data:natural  as real
-    SignalingNaN Data:natural  as real
+    QuietNaN     Data:natural   as real
+    SignalingNaN Data:natural   as real
     IsInfinity   Value:real     as boolean
     IsNaN        Value:real     as boolean
 
 
-type real digits Digits exponent Exponent
-type real mantissa MantissaBits Digits exponent ExponentBits
+module XL.TYPES.REAL with
+// ----------------------------------------------------------------------------
+//   Concreate real tyeps
+// ----------------------------------------------------------------------------
 
+    type real[MantissaBits : natural, ExponentBits : natural] is
+        XL.TYPES.REAL[MantissaBits, ExponentBist].real
 
-// Standard IEEE-754 types
-type real16                     is real[ 11,  5]
-type real32                     is real[ 24,  8]
-type real64                     is real[ 53, 11]
-type real128                    is real[113, 15]
+    type real digits Digits exponent Exponent
+
+    type real digits Digits exponent Exponent
+    type real mantissa MantissaBits exponent ExponentBits
+
+    // Standard IEEE-754 types
+    type real16                     is real[ 11,  5]
+    type real32                     is real[ 24,  8]
+    type real64                     is real[ 53, 11]
+    type real128                    is real[113, 15]
