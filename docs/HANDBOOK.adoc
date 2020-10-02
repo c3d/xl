@@ -828,10 +828,9 @@ write C:text, D:integer is
 All these definitions are then available as shortcuts whenever the
 compiler evaluates future function calls.
 
-The `print` function as defined above is both type-safe(((type
-safety))) and extensible(((extensible,function))),
-unlike similar facilities found for example in the C programming
-language.
+The `print` function as defined above is both type-safe(((type,safety)))
+ and extensible(((extensible,function))), unlike similar facilities found for
+example in the C programming language.
 
 It is type-safe because the compiler knows the type of each argument at
 every step, and can check that there is a matching `write` function.
@@ -6840,7 +6839,7 @@ type complex inherits compact
 
 === Subtypes
 
-A type can be given additional constraints(((type constraints))),
+A type can be given additional constraints(((type,constraints))),
 which define a _((subtype))_. A subtype can always be converted to the
 type it was derived from, and therefore derives from that type in the
 link:#inheritance[inheritance] sense. A subtype ((machine representation))
@@ -7710,8 +7709,12 @@ the same copy or move semantics applies to assignment and to binding.
 
 However, the precise transfer operations associated to binding
 may be modified depending on the direction of the transfer between the
-caller and the callee. The following type modifiers are provided to
-indicate this direction and optimize argument passing accordingly:
+caller and the callee. This is achieved by using
+_((argument-passing types))_(((type,argument passing))) with an assignment
+designed to optimize the passing of arguents.
+
+The following types are provided to indicate this direction and optimize
+argument passing accordingly:
 
 * `in T` indicates that the corresponding value is passed from the
   caller to the callee. An `in T` value is read-only in the callee,
@@ -7721,6 +7724,8 @@ indicate this direction and optimize argument passing accordingly:
   corresponding argument is called an _((input argument))_. The
   link:#lifetime[lifetime] of an input argument must be larger than
   that of the call, and ownership remains in the caller.
+  An input parameter is typically either copied on entry, or passed by
+  reference.
 
 * `out T` indicates that the corresponding value is passed from the
   callee to the caller. In that case, the value is created in the
@@ -7729,6 +7734,7 @@ indicate this direction and optimize argument passing accordingly:
   An `out T` inherits from `T`. A parameter with the `out` type
   modifier is called an _((output parameter))_ and the corresponding
   argument is called an _((output argument))_.
+  An output parameter is typically either moved on exit, or passed by reference.
 
 * `in out T` indicates that the corresponding value is tranferred to the
   callee for the duration of the call, and then transferred back to the caller.
@@ -7737,11 +7743,23 @@ indicate this direction and optimize argument passing accordingly:
   T` type also inherits from `T`. A parameter with the `in out`
   modifier is called a _((bidirectional parameter))_ and the
   corresponding argument is called a _((bidirectional argument))_.
+  An input/output parameter is typically either moved on entry and exit, or
+  passed by reference.
 
-All these types are intended to provide access to a value of type `T`
-within the caller in a way that is possibly less expensive than
-directly using the assignment for `T`. Common optimization strategies
-include:
+If the type of a parameter is specified, but without `in`, `out` or `in out`,
+then the parameter is treated like an input parameter. If no type is given, then
+the type is treated like an by-reference input/output parameter:
+
+....
+// Here, Times is `in integer` and Body is passed by reference
+repeat(Times:integer, Body) as integer is
+    for I in 1..Times loop
+        Body
+....
+
+The argument-passing types are intended to provide access to a value of type `T`
+within the caller in a way that is possibly less expensive than directly using
+the assignment for `T`. Common optimization strategies include:
 
 * Passing a pointer to large values rather than copying them, a
   technique often called passing the value _((by reference))_.
@@ -7755,7 +7773,7 @@ modifiers is the `text` type. This is an example of owning type, since
 it owns the `character` values in it. Since there is a possibly large
 number of characters, it may be quite expensive to copy.
 
-It would be inconveient to have pure move semantics for `text`, since
+It would be inconvenient to have pure move semantics for `text`, since
 it would mean that an assignment would destroy the source value.
 Consider the following code to see how this would be uncomfortable:
 
@@ -7780,6 +7798,12 @@ link:#access-types[access type] that is cheap to copy around, and that
 references the original text. This organization provides the
 convenience of copy semantics for local variables and the speed of
 move semantics for calls.
+
+Argument-passing types can be used in other contexts than arguments.
+For example, code that creates a closure or a callback may store
+argument-passing types in an intermediate structure in order to pass it to the
+closure or callback.
+
 
 ==== Name parameters
 
