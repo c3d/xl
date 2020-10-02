@@ -6220,7 +6220,7 @@ https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization[RAII].
 When the ((lifetime)) of a value `V` terminates, the statement `delete V`
 automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration. A `delete X:T` definition is called a
-_((destructor))_ for type `T`. It often has an link:#in out[in out] parameter
+_((destructor))_ for type `T`. It often has an link:#binding[in out] parameter
 for the value to destroy, in order to be able to modify its argument,
 i.e. a destructor often has a signature like `delete X:in out T`.
 

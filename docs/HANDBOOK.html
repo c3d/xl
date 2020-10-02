@@ -540,11 +540,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#infix-definitions">3.4.6. Infix definitions</a></li>
 <li><a href="#argument-splitting">3.4.7. Argument splitting</a></li>
 <li><a href="#conditional-patterns">3.4.8. Conditional patterns</a></li>
-<li><a href="#literal-constants">3.4.9. Literal constants</a></li>
-<li><a href="#metabox-values">3.4.10. Metabox values</a></li>
-<li><a href="#blocks">3.4.11. Blocks</a></li>
-<li><a href="#scope-pattern-matching">3.4.12. Scope pattern matching</a></li>
-<li><a href="#pattern-matching-scope">3.4.13. Pattern-matching scope</a></li>
+<li><a href="#validated-patterns">3.4.9. Validated patterns</a></li>
+<li><a href="#literal-constants">3.4.10. Literal constants</a></li>
+<li><a href="#metabox-values">3.4.11. Metabox values</a></li>
+<li><a href="#blocks">3.4.12. Blocks</a></li>
+<li><a href="#scope-pattern-matching">3.4.13. Scope pattern matching</a></li>
+<li><a href="#pattern-matching-scope">3.4.14. Pattern-matching scope</a></li>
 </ul>
 </li>
 <li><a href="#declaration-selection">3.5. Declaration selection</a>
@@ -568,7 +569,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#self">3.7.2. Self</a></li>
 <li><a href="#implicit-result-variable">3.7.3. Implicit result variable</a></li>
 <li><a href="#returned-value">3.7.4. Returned value</a></li>
-<li><a href="#assignment-and-move">3.7.5. Assignment and move</a></li>
 </ul>
 </li>
 <li><a href="#scoping">3.8. Scoping</a>
@@ -596,7 +596,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#types">4. Types</a>
 <ul class="sectlevel2">
 <li><a href="#type-annotations-2">4.1. Type annotations</a></li>
-<li><a href="#type-conversions">4.2. Type conversions</a></li>
+<li><a href="#type-conversions">4.2. Type conversions</a>
+<ul class="sectlevel3">
+<li><a href="#conversion-using-constructors">4.2.1. Conversion using constructors</a></li>
+<li><a href="#explicit-conversion">4.2.2. Explicit conversion</a></li>
+<li><a href="#implicit-conversion">4.2.3. Implicit conversion</a></li>
+<li><a href="#ignorable-type">4.2.4. Ignorable type</a></li>
+</ul>
+</li>
 <li><a href="#type-definitions">4.3. Type definitions</a></li>
 <li><a href="#type-expressions">4.4. Type expressions</a></li>
 <li><a href="#variable-sized-types">4.5. Variable sized types</a></li>
@@ -654,12 +661,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#transfers">4.11. Transfers</a>
 <ul class="sectlevel3">
-<li><a href="#assignments">4.11.1. Assignments</a></li>
+<li><a href="#assignment">4.11.1. Assignment</a></li>
 <li><a href="#copy">4.11.2. Copy</a></li>
 <li><a href="#move">4.11.3. Move</a></li>
-<li><a href="#binding">4.11.4. Binding</a></li>
-<li><a href="#name-parameters">4.11.5. Name parameters</a></li>
-<li><a href="#attributes">4.11.6. Attributes</a></li>
+<li><a href="#computing-assignment">4.11.4. Computing assignment</a></li>
+<li><a href="#binding">4.11.5. Binding</a></li>
+<li><a href="#name-parameters">4.11.6. Name parameters</a></li>
+<li><a href="#attributes">4.11.7. Attributes</a></li>
 </ul>
 </li>
 </ul>
@@ -745,7 +753,7 @@ variety of programming needs with ease.</p>
 <p>Being <em>extensible</em> means that the language is designed to make it very
 easy for programmers to adapt the language to suit their needs, for
 example by adding new programming constructs. In XL, extending the
-language is a routine operation, much like adding a function or
+language is a routine and safe operation, much like adding a function or
 creating a class in more traditional programming languages.
 This extensibility is demonstrated by the fact that operations that
 are built-in in other programming languages, such as integer
@@ -769,9 +777,10 @@ programming, as illustrated by <a href="https://github.com/c3d/elfe">ELFE</a>.</
 <td class="content">
 XL is a work in progress. Even if there are some bits and
 pieces that happen to already work, and even if there were fully
-functioning releases like the XL version used in <a href="https://tao3d.sf.net">Tao3D</a>
-in the past, XL is being totally reworked, and the compiler in this
-repository is presently not suitable for any serious
+functioning releases like the XL version used in
+<a href="https://tao3d.sf.net">Tao3D</a> in the past, XL is presently in a long process of
+being totally reworked and overhauled. As a result, the compiler in
+this repository is presently not suitable for any serious
 programming. Examples given below may sometimes simply not work. Take
 it as a painful reminder that the work is far from finished, and, who
 knows, as an idea for a contribution. See <a href="#history-of-xl">HISTORY</a>
@@ -794,9 +803,11 @@ really means three things:</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>XL has a method to extend the language with any
-kind of feature, not just functions or data types, but also
-programming constructs, optimizations, domain-specific notations, and more. Actually, all this is done with a
+<p>XL offers a standard way to extend the
+language with any kind of feature, not just
+functions or data types, but also programming constructs,
+optimizations, domain-specific notations, and
+more. Actually, all this is done with a
 <a href="#one-operator-to-rule-them-all">single operator</a>, <code>is</code>, called
 the <em>definition operator</em>.</p>
 </li>
@@ -804,9 +815,9 @@ the <em>definition operator</em>.</p>
 <p>As a validation of the concept, most features that are built-in in
 other programming languages, like the <code>while</code> loop, or integer arithmetic, are <em>constructed</em> in XL. Specifically, they are provided by
 the <a href="#the-standard-library">standard library</a>, using techniques that
-any programmer can use in their program. This, obviously, means that
-programmers can add their own loops, or their own machine-level data
-types, and even extend existing ones.</p>
+any programmer can use in their program. This proves by example that
+programmers can add their own program constructs, their own
+machine-level data types, from scratch or by extending existing ones.</p>
 </li>
 <li>
 <p>XL provides <a href="#efficient-translation">complete control</a> over the
@@ -1675,9 +1686,9 @@ write C:text, D:integer is
 compiler evaluates future function calls.</p>
 </div>
 <div class="paragraph">
-<p>The <code>print</code> function as defined above is both type-safe and extensible,
-unlike similar facilities found for example in the C programming
-language.</p>
+<p>The <code>print</code> function as defined above is both type-safe
+ and extensible, unlike similar facilities found for
+example in the C programming language.</p>
 </div>
 <div class="paragraph">
 <p>It is type-safe because the compiler knows the type of each argument at
@@ -4269,6 +4280,9 @@ values to infix, prefix or postfix patterns.</p>
 <p><a href="#conditional-patterns">Conditional patterns</a> match values based on arbitrary conditions</p>
 </li>
 <li>
+<p><a href="#validated-patterns">Validated patterns</a> validate a pattern using code snippets</p>
+</li>
+<li>
 <p><a href="#literal-constants">Literal constants</a> match constants with the same value.</p>
 </li>
 <li>
@@ -4755,7 +4769,110 @@ log "Logging an error"        // Will not match the definition above</code></pre
 </div>
 </div>
 <div class="sect3">
-<h4 id="literal-constants"><a class="anchor" href="#literal-constants"></a><a class="link" href="#literal-constants">3.4.9. Literal constants</a></h4>
+<h4 id="validated-patterns"><a class="anchor" href="#validated-patterns"></a><a class="link" href="#validated-patterns">3.4.9. Validated patterns</a></h4>
+<div class="paragraph">
+<p>When a top-level pattern is an infix like <code>Pattern where Validation</code>, then
+the pattern matches an expression if the pattern on the left of the
+infix matches the expression, and if the validation on the right
+compiles correctly after binding.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 24%;">
+<col style="width: 38%;">
+<col style="width: 38%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Pattern</th>
+<th class="tableblock halign-left valign-top">Matched by</th>
+<th class="tableblock halign-left valign-top">Not matched by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">`print X where { write X }</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>print "Hello"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Any value where <code>write X</code> is invalid</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Such patterns are called <em>validated patterns</em>. They do not match if
+the evaluation of the validation fails, i.e. returns an error. Like
+for conditional patterns, all bindings defined in the pattern are
+visible in the body of the validation.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Document that you can 'print' something if you can 'write' it
+print X where
+    write X</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The validation is part of the <em>interface</em> of the pattern. This enables
+more precise error reporting.</p>
+</div>
+<div class="paragraph">
+<p>The most common use case for validated patterns is to create so-called
+<em>validated generic types</em>, which are types
+used solely to indicate that a specific operation is available,
+facilitating the use of generic code.</p>
+</div>
+<div class="paragraph">
+<p>For example, the <code>ordered</code> type defined by the standard library
+requires a comparison between values of the type, and can be defined with
+something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">type ordered where
+     MustHaveLessThan(A:ordered, B:ordered) as boolean is A &lt; B</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This can also be used to create advanced type interfaces that would be
+difficult to express clearly using the more common pattern syntax. To
+facilitate that usage, type annotations in a validation that apply to
+parameters bound in the pattern apply as if they were directly in the
+pattern.</p>
+</div>
+<div class="paragraph">
+<p>For example, an interface for matrix multiplication can validate the
+dimensions and value type as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Left * Right as result_matrix where
+    number: type
+    N     : integer
+    M     : integer
+    O     : integer
+    Left  : matrix[N,M] of number
+    Right : matrix[M,O] of number
+    type result_matrix is matrix[N,O] of number</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This second usage is somewhat reminiscent of
+<a href="https://doc.rust-lang.org/rust-by-example/generics/where.html">where
+clauses</a> in Rust, and it is fortunate that there is some
+similarity. However, the use of <code>where</code> for validated generics
+<a href="https://github.com/c3d/xl/commit/899a07cf05e9be7c29e1a9cef1cd81326f738e02#diff-7ef85d49d753b59c4ba987b01c6a2b45">predates the Rust usage by several years</a>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="literal-constants"><a class="anchor" href="#literal-constants"></a><a class="link" href="#literal-constants">3.4.10. Literal constants</a></h4>
 <div class="paragraph">
 <p>When the pattern is an <code>integer</code> like <code>0</code>, a <code>real</code> like <code>3.5</code>, a <code>text</code>
 like <code>"ABC"</code>, it only matches an expression with the same value, as
@@ -4799,7 +4916,7 @@ top-level patterns, which is primarily useful in <a href="#scoping">maps</a>:</p
 </div>
 </div>
 <div class="sect3">
-<h4 id="metabox-values"><a class="anchor" href="#metabox-values"></a><a class="link" href="#metabox-values">3.4.10. Metabox values</a></h4>
+<h4 id="metabox-values"><a class="anchor" href="#metabox-values"></a><a class="link" href="#metabox-values">3.4.11. Metabox values</a></h4>
 <div class="paragraph">
 <p>When the pattern is a an expression between two square brackets, like
 <code>[[true]]</code>, it is called a <em>metabox</em>, and it only matches a value that
@@ -4852,7 +4969,7 @@ false and X       is false</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="blocks"><a class="anchor" href="#blocks"></a><a class="link" href="#blocks">3.4.11. Blocks</a></h4>
+<h4 id="blocks"><a class="anchor" href="#blocks"></a><a class="link" href="#blocks">3.4.12. Blocks</a></h4>
 <div class="paragraph">
 <p>When the pattern is a block, it matches what the block’s child would
 match. In other words, blocks in patterns can be used to change the
@@ -4949,7 +5066,7 @@ C : circle := circle(0.3, 2.6, 4.0)</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.4.12. Scope pattern matching</a></h4>
+<h4 id="scope-pattern-matching"><a class="anchor" href="#scope-pattern-matching"></a><a class="link" href="#scope-pattern-matching">3.4.13. Scope pattern matching</a></h4>
 <div id="argument-scope" class="paragraph">
 <p>When a block in a pattern defines a <a href="#sequences">sequence</a> of
 declarations or definitions, that block is called a <em>parameter scope</em>,
@@ -5032,7 +5149,7 @@ JohnDoe : person := person
 </div>
 </div>
 <div class="sect3">
-<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.4.13. Pattern-matching scope</a></h4>
+<h4 id="pattern-matching-scope"><a class="anchor" href="#pattern-matching-scope"></a><a class="link" href="#pattern-matching-scope">3.4.14. Pattern-matching scope</a></h4>
 <div id="pattern-scope" class="paragraph">
 <p>When matching a pattern, a <a href="#execution-context">local execution context</a>
 is created that holds the bindings associated to the patterns being
@@ -5925,18 +6042,18 @@ one must evaluate as <code>nil</code> or an <code>error</code>.</p>
 <p><a href="#self">Self</a> is a way to stop the evaluation of a form</p>
 </li>
 <li>
-<p>The <a href="#implicit-result-variable">implicit <code>result</code> variable</a> can be
-used to set the value returned by a declaration.</p>
+<p>The <a href="#implicit-result-variable">implicit <code>result</code> variable</a> can be used to
+set the value returned by a declaration.</p>
 </li>
 <li>
-<p>The <a href="#returned-value">returned value</a> for a declaration follows
-rules that take into account the <code>result</code> variable, <code>return</code>
-statements and <code>error</code> values.</p>
+<p>The <a href="#returned-value">returned value</a> for a declaration follows rules that
+take into account the <code>result</code> variable, <code>return</code> statements and <code>error</code>
+values.</p>
 </li>
 <li>
-<p><a href="#assignment-and-move">Assignment and move</a> operations are somewhat
-special insofar as they are used during parameter passing while
-evaluating other operations.</p>
+<p><a href="#assignment">Assignment</a> operations are somewhat special insofar as they
+are used for <a href="#transfers">transfers</a> of values during parameter passing
+while evaluating all other operations.</p>
 </li>
 </ul>
 </div>
@@ -6077,133 +6194,6 @@ statement, although it is not quite idiomatic:</p>
         1
     else
         N * factorial_last(N-1)</pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="assignment-and-move"><a class="anchor" href="#assignment-and-move"></a><a class="link" href="#assignment-and-move">3.7.5. Assignment and move</a></h4>
-<div id="assignment" class="paragraph">
-<p>The infix <code>:=</code> operator is used to perform <em>assignments</em> and
-returns the value being assigned. Variants such as <code>+=</code>, <code>-=</code>, <code>*=</code>,
-<code>/=</code> are equivalent to performing the corresponding operating and
-assigning the result.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X : integer := 0    // Initialize X to 0
-X := 5              // Now X contains value 5
-X += 7              // Now X contains value 12</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The <code>:=</code> operator (and only that operator) is a <em>variable
-declaration</em> when its left operand is an infix <code>:</code>. This was discussed
-<a href="#sequences">earlier</a>, and corresponds to the first line in the
-example above. A variable declaration is <em>not</em> an assignment.
-</td>
-</tr>
-</table>
-</div>
-<div id="operator_assignment" class="paragraph">
-<p>Seven combined operators are defined independently of the type as
-follows:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Target += Source      is      Target := Target + Source
-Target -= Source      is      Target := Target - Source
-Target *= Source      is      Target := Target * Source
-Target /= Source      is      Target := Target / Source
-Target &amp;= Source      is      Target := Target &amp; Source
-Target |= Source      is      Target := Target | Source
-Target ^= Source      is      Target := Target ^ Source</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>XL offers two additional operators, the <code>:+</code> <em>copy</em> operator and the
-<code>:&lt;</code> <em>move</em> operator (which is also sometimes <em>cut</em> operator because of
-its shape that evokes scissors). The <code>:+</code> operator guarantees that all
-data is being copied, and that the new object is an independent copy of
-the original (hence the <code>+</code> character in it). The <code>:&lt;</code> operator may
-simply move ownership of the value if that is less expensive than
-copying it, and invalidates the right side of the operator, which may no
-longer be used.</p>
-</div>
-<div class="paragraph">
-<p>Depending on the data type, <code>:=</code> may correspond to a copy or a move. The
-precise details of which operator is selected and the associated
-rationale are detailed in <a href="#ownership">the next
-chapter</a>. In all cases, the previous value that was held in the left
-operand is <a href="#destruction">destroyed</a> by the
-assignment.</p>
-</div>
-<div class="paragraph">
-<p>The <code>:=</code> operator is used to transfer arguments to parameters. This
-means that passing an argument in XL, like in Rust, can make the
-argument invalid in the caller if it is moved rather than copied. There
-are, however, multiple ways to pass arguments. This is all discussed in
-more details <a href="#binding">in the next chapter</a>.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<strong>RATIONALE</strong> For simple types such as arithmetic types, an assignment
-performs a copy, which is a relatively inexpensive memory copy between
-fixed-size locations. For more complicated data types, such as
-<code>spreadsheet</code>, <code>graph</code> or <code>picture</code>, a copy involves copying possibly
-megabytes of data, or complex webs of interconnected objects, which can
-be very expensive, and often leaves an unused copy behind. For such data
-types, moving data is the frequently desirable operations, for example
-to pass objects around as arguments, and copying data is the less
-frequent case. In any case, the programmer remains in charge, always
-having the possibility to explicitly request a copy or a move.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Assignments can either return the target of the assignment, or
-<code>nil</code>. The value-returning variant can be used in expression, whereas the
-<code>nil</code>-returning variant is used for statements. This is a result of
-normal overloading, combined with the fact that statements expect a
-<code>nil</code> value. One is normally implemented as the other, although the
-choice of which form is primary is left as a choice for the
-implementor.</p>
-</div>
-<div class="paragraph">
-<p>For example, if for type <code>value</code>, the <code>nil</code>-returning assignment
-operator is primary, the two operators can be defined as follows:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Copy(Target: out value,
-        Source: in value) as nil written Target := Source is ...
-Target:out value := Source: in value as value is
-    Copy Target, Source
-    Target</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>If an error can be returned from the copy operation, then the correct
-code would look like the following:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Copy(Target: out value,
-        Source: in value) as ok written Target := Source is ...
-Target:out value := Source: in value as value? is
-    Copy Target, Source
-    Target</code></pre>
 </div>
 </div>
 </div>
@@ -6536,7 +6526,8 @@ current context to some other declaration:</p>
 
 foo Ctx, Value is
     Ctx.X := Value
-    Ctx.{ Y is "Hello" }
+    Ctx &amp;=
+        Y is "Hello"
 
 foo context, 33
 
@@ -6554,8 +6545,9 @@ The ability to inject something in a context as indicated above
 has some interesting use cases. For example, an object-oriented
 package could inject a "virtual functions table" field in the types
 that are passed to it. Whether this can be implemented in a sane and
-safe way remains to be validated. Also, the syntax may change, as it&#8217;s unclear
-that the proposed syntax is not ambiguous or unintuitive.
+safe way without making any kind of optimization impossible remains to
+be validated. Also, the syntax may change, as it&#8217;s unclear that the
+proposed syntax is not ambiguous or unintuitive.
 </td>
 </tr>
 </table>
@@ -7170,45 +7162,208 @@ the number of seconds in the current time from some real-time clock.</p>
 <h3 id="type-conversions"><a class="anchor" href="#type-conversions"></a><a class="link" href="#type-conversions">4.2. Type conversions</a></h3>
 <div class="paragraph">
 <p>In some cases, a value from one type needs to be converted to some
-other type. This is called a <em>type conversion</em>. There are two
-kinds of type conversion: <em>explicit conversion</em>, and <em>implicit conversion</em>. In addition, it is also possible to resolve
-type-related ambiguities using <em>type hints</em>.</p>
+other type. This is called a <em>type conversion</em>. There are thre
+kinds of type conversion:</p>
 </div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><a href="#conversion-using-constructor">using constructors</a> to create a type value
+explicitly using its <a href="#creation">constructor</a> pattern,</p>
+</li>
+<li>
+<p><a href="#explicit-conversion">explicit conversions</a> use the type name as a prefix
+to create functions dedicated to value conversion. This is mostly useful when
+writing generic code,</p>
+</li>
+<li>
+<p><a href="#implicit-conversion">implicit conversions</a> are special forms allowing one
+type to transparently convert to another one when needed.</p>
+</li>
+</ol>
+</div>
+<div class="sect3">
+<h4 id="conversion-using-constructors"><a class="anchor" href="#conversion-using-constructors"></a><a class="link" href="#conversion-using-constructors">4.2.1. Conversion using constructors</a></h4>
 <div class="paragraph">
-<p>Explicit type conversions are usually provided using a
-<a href="#creation">constructor</a>. As a result, they look like any other
-expression. For example, if you provide a <code>distance</code> type based on
-<code>real</code>, you might have a creator for <code>distance</code> values, and then use
-that for explicit conversions.</p>
+<p>
+The simplest way to convert a type to another is to embed the original type in a
+constructor for the second type. This only works if the original type is
+compatible with the pattern for the second type.</p>
 </div>
 <div class="literalblock">
 <div class="content">
 <pre>distance is matching distance(D:real)
-X:distance + Y:distance as distance     is distance(X.D+Y.D)</pre>
+X:distance + Y:distance as distance     is distance(X.D+Y.D) <i class="conum" data-value="1"></i><b>(1)</b></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This can be interpreted as a "conversion" of the <code>real</code> value <code>X.D+Y.D</code> to a
+<code>distance</code> type using the constructor.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p>All prefix functions that use the name of a type are renamed for
-derived types. For example:</p>
+<p>In the above example, <code>distance</code> is both the name of the type and a prefix used
+as a constructor for the type. This is only coincidental, if frequent. The above
+example could be written using a postfix form as follows:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>long_distance is distance when distance.D &gt;= 1000.0
-km : long_distance := distance 1000.0
-Mm : long_distance := long_distance 1_000_000.0</pre>
+<pre>distance is matching D:real m
+X:distance + Y:distance as distance is distance(X.D + Y.D) // Error <i class="conum" data-value="1"></i><b>(1)</b>
+X:distance + Y:distance as distance is (X.D + Y.D) m       // OK <i class="conum" data-value="2"></i><b>(2)</b></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is an error because there is no prefix <code>distance D</code> form that matches
+expressions <code>distance(X.D+Y.D)</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This works because the value of the type is really something like <code>2.3 m</code></td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Rewrite the code as seen above demonstrates that what really matters is the
+constructor pattern, not the name of the type, which is nothing special.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="explicit-conversion"><a class="anchor" href="#explicit-conversion"></a><a class="link" href="#explicit-conversion">4.2.2. Explicit conversion</a></h4>
+<div class="paragraph">
+<p>
+Having to use a type-specific constructor pattern is not practical when writing
+generic code. Consider for example that you want to create a <code>long_distance</code>
+subtype that corresponds to distances greater than <code>1000 m</code></p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>long_distance as some distance is matching distance(D:real) when D &gt; 1000.0
-Z := long_distance(3.3)</pre>
+<pre>distance      is matching distance(D:real)
+long_distance is matching distance(D:real when D &gt;= 1000.0)
+km : long_distance := distance 1000.0                   // OK <i class="conum" data-value="1"></i><b>(1)</b>
+Mm : long_distance := long_distance 1_000_000.0         // Error <i class="conum" data-value="2"></i><b>(2)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This works because the prefix being used corresponds to the constructor
+pattern.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>There is no <code>long_distance</code> prefix pattern for the type</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In such cases, it is possible to create an <em>explicit conversion</em> form that
+takes the target type as a prefix, using a <a href="#metabox">metabox</a> to make it
+clear that the <em>type</em>, not its <em>name</em>, is what you use as a prefix:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>distance is matching distance(D:real)
+[[distance]] D:real as distance is distance D
+
+long_distance is matching (D:distance when D.D &gt;= 1000.0)
+[[long_distance]] D:real when D &gt;= 1000.0 as long_distance is distance D</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Implicit type conversions are provided by definitions that have a
-single typed parameter and return a different type. For example, if
-you want to be able to implicitly convert between polar and cartesian
-form for a complex number, you would need:</p>
+<p>Invoking such an explicit conversion function requires you to evaluate the type
+separately, not as part of a prefix form. This can be done by putting the type
+expression in a block:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>km : long_distance := (distance) 1000.0                 // OK <i class="conum" data-value="1"></i><b>(1)</b>
+Mm : long_distance := (long_distance) 1_000_000.0       // OK <i class="conum" data-value="2"></i><b>(2)</b>
+Gm : long_distance := long_distance 1.0e9               // OK <i class="conum" data-value="3"></i><b>(3)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This now calls the form <code><a id="distance"></a> D:real</code>, and type checks that the
+<code>D &gt;= 1000.0</code> is valid in order to assign to a <code>long_distance</code> value. If the
+type check fails, e.g. if you replace value <code>1000.0</code> with <code>100.0</code>, then it
+is reported on the assignment.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This now calls the form <code><a id="long_distance"></a> D:real</code>. As a result, this
+validates that the value obeys the condition <code>D &gt;= 1000.0</code> earlier, in the
+right-hand side expression. If the value given fails the validation, it will
+be reported in the expression itself.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>This now works and calls the explicit conversion <em>if</em> there is no form such
+as <code>long_distance D:real</code> that would match the form first.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+It is only coincidental, if quite fortunate, that this explicit type
+conversion  notation happens to match the syntax for type casting in C and C++.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The rules of overloading are such that, in general, the parentheses are not
+necessary to invoke an explicit conversion. Programmers should use the
+parenthese form if they intend to make it clear that this is an explicit
+conversion, and if they want to avoid calling any prefix form with a matching
+name. This is also the only possible syntax if the type results form an
+expression. Conversely, If they want to pick up the prefix form first if it
+exists, then they should use the prefix form.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// C-style low-level pointer cast: must use parentheses for type expression
+P : pointer to integer := (pointer to integer) malloc(integer.ByteSize)
+
+// Numerical conversion: might prefer more precise prefix form if it exists
+Circumference is natural(2 * pi * 1000)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are explicit conversion functions for most numerical types
+, which in
+general allows you to get the closest numerical value in the target form.</p>
+</div>
+<div class="paragraph">
+<p>Many types also have an explicit conversion to
+<code>text</code>, which must produce a
+human-readable version of the value. Some types can also feature an explicit
+conversion from <code>text</code>, which can be used to parse a value given in
+human-readable form.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="implicit-conversion"><a class="anchor" href="#implicit-conversion"></a><a class="link" href="#implicit-conversion">4.2.3. Implicit conversion</a></h4>
+<div class="paragraph">
+<p>
+Implicit type conversions are definitions that have a single typed parameter and
+return a different type. For example, if you want to be able to implicitly
+convert between polar and cartesian form for a complex number, you would need:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -7240,6 +7395,46 @@ get from one type to another.</p>
 X:real as complex
 foo 1.0                 // OK, implicit conversion from real to complex
 foo real 1              // OK: first convert to real, then implicit complex</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Implicit type conversions can also be used on return values or when evaluating
+statements, in order to adjust a value to what is expected in that context.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="ignorable-type"><a class="anchor" href="#ignorable-type"></a><a class="link" href="#ignorable-type">4.2.4. Ignorable type</a></h4>
+<div class="paragraph">
+<p>A particular usage of implicit conversions to adjust to the context is
+<em>ignorable types</em>. the <code>ignorable T</code> generic type
+provided by the standard library can implicitly convert to either <code>T</code> or <code>nil</code>
+so that itcan be either returned from a function or used in a statement. Its
+definition is roughly as follows:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>with
+    T : type
+type ignorable[T]               is matching ignore(Value:T)
+V:ignorable[T]          as T    is V.Value
+V:ignorable[T]          as nil  is nil</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An ignorable type can be used for the return value of any operation that is
+useful, but may safely be ignored. The most common use case for this are
+<a href="#assignment">assignments</a>, which are used primarily for the side effect of
+assigning to the target, but can also return the value of the target.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// Ignore the return value by implicitly converting it to 'nil'
+X := 3
+
+// Use the return value of the assignment to compare with ' '
+while (NextChar := ReadNextCharacterFrom(File)) &gt; ' ' loop
+    print "We got ", NextChar</pre>
+</div>
 </div>
 </div>
 </div>
@@ -8102,11 +8297,6 @@ information, so that dynamic dispatch will happen based on the
 actual type.</p>
 </li>
 <li>
-<p><code>new T</code> is a type that inherits all operations from <code>T</code>, but is not
-directly compatible with <code>T</code>. Explicit conversions are required to
-copy or move a value from one type to another.</p>
-</li>
-<li>
 <p><code>slice of T</code> holds a slice of contiguous containers such as <code>array</code>
 or <code>string</code>, and makes it possible to manipulate subsets of the
 container. This is also useful with <code>text</code>.</p>
@@ -8888,7 +9078,7 @@ encapsulation, programming contracts or
 When the lifetime of a value <code>V</code> terminates, the statement <code>delete V</code>
 automatically evaluates. Declared entites are destroyed in the reverse
 order of their declaration. A <code>delete X:T</code> definition is called a
-<em>destructor</em> for type <code>T</code>. It often has an link:#in out[in out] parameter
+<em>destructor</em> for type <code>T</code>. It often has an <a href="#binding">in out</a> parameter
 for the value to destroy, in order to be able to modify its argument,
 i.e. a destructor often has a signature like <code>delete X:in out T</code>.</p>
 </div>
@@ -9336,7 +9526,7 @@ Answer as integer is 42                 // Named constant</code></pre>
 <div class="paragraph">
 <p>A mutable value can be initialized or modified using the <code>:=</code> operator,
 which is called an
-<a href="##assignment-and-move"><em>assignment</em></a>.
+<a href="#assignment"><em>assignment</em></a>.
 There are a number of derived operators, such as <code>+=</code>, that combine a
 frequent arithmetic operation and an assignment.</p>
 </div>
@@ -10515,56 +10705,63 @@ to crash or your rocket to explode.</p>
 <p>One of the most important operation that can happen to values of any
 type is to <em>transfer</em> them around in the program. These operations
 are so crucial to the behavior of the program that XL provides a
-number of ways to define and optimize them.
-In particular, transfers interact with the <a href="#ownership">ownership</a>
+robust framework for defining and optimizing them.</p>
+</div>
+<div class="paragraph">
+<p>In particular, transfers interact with the <a href="#ownership">ownership</a>
 guarantees that the language may provide, in combination with the rules
-about <a href="#lifetime">lifetime</a>, <a href="#creation">creation</a> and
-<a href="#destruction">destruction</a>. Additionally, they are so frequent
-that it is necessary to consider performance of transfers, which is
-one reason why there are two flavors, <a href="#copy">copy</a> and
-<a href="#move">move</a>.</p>
+about <a href="#binding">binding</a>, <a href="#lifetime">lifetime</a>, <a href="#creation">creation</a>
+and <a href="#destruction">destruction</a>. Additionally, transfers are so frequent that
+it is necessary to consider performance of transfers, which is one reason why
+there are two primary flavors, <a href="#copy">copy</a> and <a href="#move">move</a>.</p>
 </div>
 <div class="sect3">
-<h4 id="assignments"><a class="anchor" href="#assignments"></a><a class="link" href="#assignments">4.11.1. Assignments</a></h4>
+<h4 id="assignment"><a class="anchor" href="#assignment"></a><a class="link" href="#assignment">4.11.1. Assignment</a></h4>
 <div class="paragraph">
-<p>As was <a href="#assignment">already discussed</a>, an <em>assignment</em> is the
-primary way for a programmer to explicitly transfer values from one
-context to another. The <code>:=</code> operator is used in XL to represent
-assignments.</p>
-</div>
-<div class="paragraph">
-<p>For example, the following code implements the core computation of a
-<a href="https://en.wikipedia.org/wiki/Julia_set">Julia set</a>:</p>
+<p>An <em>assignment</em> is the primary way for a programmer to explicitly transfer
+values from one context to another. The <code>:=</code> operator is used in XL to represent
+assignments.  For example, the following code implements the core computation of
+a <a href="https://en.wikipedia.org/wiki/Julia_set">Julia set</a>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>julia_depth(Z:complex, Mu:complex, Bound:real, Max:count) as count is
+<pre>JuliaDepth(Z:complex, Mu:complex, Bound:real, Max:count) as count is
     while result &lt; Max and Z.Re^2 + Z.Im^2 &lt; Bound ^2 loop
         result := result + 1
         Z := Z^2 - Mu</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This code contains two assignments, one to <code>result</code>, the
+<p>The example code above contains two assignments, one to <code>result</code>, the
 <a href="#implicit-result-variable">implicit variable</a> holding the return
 value, and one to <code>Z</code>. The assignment <code>result := result + 1</code> updates
 the variable <code>result</code> with the next <code>count</code> value. This kind of
 assignment combined with a simple operation is so frequent that there
-are <a href="#operator_assignment">shortcut notations</a> for it, and you
-could write <code>result += 1</code> to achieve the same effect.</p>
+are <a href="#computing-assignment">shortcut notations</a> for it, and you
+can write <code>result += 1</code> to achieve the same effect.</p>
 </div>
 <div class="paragraph">
 <p>An assignment is a shortcut for either a <a href="#copy">copy</a> of the
 value, which is the case in the code above, or a <a href="#move">move</a> when
-a copy would be unreasonably expensive. In general, using the
-assignment operator is the safe choice, since it will automatically
-select the most efficient operation for you based on the type.</p>
+a copy would be unreasonably expensive.</p>
+</div>
+<div class="paragraph">
+<p>In general, using the <code>:=</code> assignment operator is the safe choice, since it will
+automatically select the most efficient operation for you based on the type.
+However, in order to give programmers additional control, XL offers two
+additional operators, the <code>:+</code> <em>copy</em> operator and the <code>:&lt;</code> <em>move</em> operator,
+which is also sometimes <em>cut</em> operator because of its shape that evokes
+scissors. The <code>:+</code> operator guarantees that all data is being copied, and that
+the new object is an independent copy of the original (hence the <code>+</code> character
+in it). The <code>:&lt;</code> operator guarantees that the value is moved and
+<a href="#destruction">destroys</a> the right side of the operator, which may no longer
+be used.</p>
 </div>
 <div class="paragraph">
 <p>When you create a new type, you get to choose if the assignment
-operator for that type gets to perform a copy or a move. For example,
+operator for that type performs a copy or a move. For example,
 for <code>complex</code> we may want a copy, and for <code>picture</code> we may want a move
-because there is a lot of data. This would be implemented as follows:</p>
+because there is a lot of data. This would be implemented as follows</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -10572,24 +10769,47 @@ because there is a lot of data. This would be implemented as follows:</p>
 Target:out picture := Source:picture    is Target :&lt; Source     // Move</pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<strong>RATIONALE</strong> For simple types such as arithmetic types, an assignment
+performs a copy, which is a relatively inexpensive memory copy between
+fixed-size locations. For more complicated data types, such as
+<code>spreadsheet</code>, <code>graph</code> or <code>picture</code>, a copy involves copying possibly
+megabytes of data, or complex webs of interconnected objects, which can
+be very expensive, and often leaves an unused copy behind. For such data
+types, moving data is the frequently desirable operations, for example
+to pass objects around as arguments, and copying data is the less
+frequent case. In any case, the programmer remains in charge, always
+having the possibility to explicitly request a copy or a move.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Assignments return their destination as an <a href="#ignorable-type">ignorable type</a>,
+which means that an assignment can be used either as a statement or in an
+expression.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="copy"><a class="anchor" href="#copy"></a><a class="link" href="#copy">4.11.2. Copy</a></h4>
 <div class="paragraph">
 <p>A <em>copy</em> is a kind of transfer which creates a new, "identical",
-yet independent value. The new value can then be modified
-independently from the original, and has a different lifetime.
-XL uses either the prefix <code>copy</code> function or the infix <code>Target :+
-Source</code> as a notation for a copy, the <code>+</code> in that operator being a
-reminder that a new copy is created.</p>
+yet completely independent value. The new value can then be modified
+without impacting the original, and it may have a completely different
+lifetime.</p>
 </div>
 <div class="paragraph">
-<p>The copy operation has the following mandatory interface for all types:</p>
+<p>The copy operation has the following mandatory interface for any type <code>T</code>:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Target:out T :+ Source:T as T?
-copy Source:T as T? is result :+ Source</pre>
+<pre>Target:out[T] :+ Source:in[T] as ignorable[T]?</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10597,6 +10817,10 @@ copy Source:T as T? is result :+ Source</pre>
 <code>error</code> value if there was some failure. When it returns a failure,
 any value that may have been created as part of the copy must
 have been <a href="#destruction">deleted</a> by the copy operation.</p>
+</div>
+<div class="paragraph">
+<p>The returned value is marked as <code>ignorable</code> in order to ensure that a copy, like
+an assignment, can be used in statements as well as expressions.</p>
 </div>
 <div class="paragraph">
 <p>The new copied value is <a href="#creation">created</a> by the operator, and
@@ -10616,27 +10840,21 @@ in other words make sure that the new value has ownership of all the
 elements it refers to, independently from the source value.</p>
 </div>
 <div class="paragraph">
-<p>In some cases, it is important to also feature a <em>shallow copy</em>
-operation, which only copies up to a certain point. Since the
-condition for stopping the copy are highly dependent on the type, it
-is not possible to provide a single unified interface that would work
-for all types. However, as far as possible, such operation should have
-an interface that looks like the following:</p>
+<p>The <code>copy</code> function returns a copy for all types, and is defined as:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy (Source:T, StopConditions) as T?</pre>
+<pre>copy Source is result :+ Source</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>For example, the shallow copy for a tree could have the following
-interface, where either a depth or a <code>node_filter</code> :</p>
+<p>There may be variants of <code>copy</code> for some types that limit the amount of copy
+happening. For example, for a recursive structure, you could limit the depth of
+the copy:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>copy(Source:tree, Depth:count) as T?
-copy(Source:tree, Keep:node_filter) as T?
-type node_filter is matching(N:node as boolean)</pre>
+<pre>copy(Source:hierarchy, Depth:natural) as hierarchy</pre>
 </div>
 </div>
 </div>
@@ -10664,8 +10882,7 @@ be used after the move.</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>Target:out T :&lt; Source:in out T as T?
-move Source:T as T? is result :&lt; Source</pre>
+<pre>Target:out[T] :&lt; Source:in out[T] as ignorable T?</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10674,13 +10891,28 @@ move Source:T as T? is result :&lt; Source</pre>
 the move should essentially have had no effect, i.e. it should not
 cause partially moved, partially created or partially destroyed values.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The use of a move in an expression is generally less useful than the use
+of a copy, since the source is destroyed by the move. For example, while
+possible, it makes little sense to write <code>X :&lt; Y :&lt; Z</code> because the value in Y
+would be destroyed.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>The new moved value is <a href="#creation">created</a> by the operator, and
 should be identical in its behavior to the source. Like for copy, it
 needs not be identical in its internal representation. For example, if
-you move a value with internal pointers, it may need to adjust the
-pointers. Such cases should be infrequent, and are undesirable since
-the main reason for <code>move</code> to exist is performance.</p>
+you move a value with internal pointers, the move operation may need to adjust
+the internal pointers. Such cases should be infrequent, and are undesirable
+since the main reason for <code>move</code> to exist is performance.</p>
 </div>
 <div class="paragraph">
 <p>The source of a move may no longer be used after a move operation, and
@@ -10688,9 +10920,50 @@ should be in the same state as right after a <code>delete</code> operation. The
 compiler should normally issue a diagnostic when an attempt is made to
 use a value that was moved or deleted.</p>
 </div>
+<div class="paragraph">
+<p>The <code>move</code> function moves the value into the result:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>move Source is result :&lt; Source</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Like <code>copy</code>, variants of the <code>move</code> function can take additional parameters.
+For example, some objects may contain internal caches that consume resources
+such as memory. Such caches would not exist if you created a new object from
+scratch. So in a <code>move</code> operation, it may be useful to have a choice top
+preserve cached data or not.</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>move(Source:database, Caches:one_of(ClearCaches,PreserveCaches) as database</pre>
+</div>
+</div>
 </div>
 <div class="sect3">
-<h4 id="binding"><a class="anchor" href="#binding"></a><a class="link" href="#binding">4.11.4. Binding</a></h4>
+<h4 id="computing-assignment"><a class="anchor" href="#computing-assignment"></a><a class="link" href="#computing-assignment">4.11.4. Computing assignment</a></h4>
+<div class="paragraph">
+<p>Seven combined operators are defined independently of the type as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">Target += Source      is      Target := Target + Source
+Target -= Source      is      Target := Target - Source
+Target *= Source      is      Target := Target * Source
+Target /= Source      is      Target := Target / Source
+Target &amp;= Source      is      Target := Target &amp; Source
+Target |= Source      is      Target := Target | Source
+Target ^= Source      is      Target := Target ^ Source</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These variants are equivalent to performing the corresponding operation and
+assigning to the result.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="binding"><a class="anchor" href="#binding"></a><a class="link" href="#binding">4.11.5. Binding</a></h4>
 <div class="paragraph">
 <p>The transfer of an argument to a formal parameter during a call is
 called a <em>binding</em>, and like an assignment, it may involve either
@@ -10701,8 +10974,13 @@ the same copy or move semantics applies to assignment and to binding.</p>
 <div class="paragraph">
 <p>However, the precise transfer operations associated to binding
 may be modified depending on the direction of the transfer between the
-caller and the callee. The following type modifiers are provided to
-indicate this direction and optimize argument passing accordingly:</p>
+caller and the callee. This is achieved by using
+<em>argument-passing types</em> with an assignment
+designed to optimize the passing of arguents.</p>
+</div>
+<div class="paragraph">
+<p>The following types are provided to indicate this direction and optimize
+argument passing accordingly:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -10714,7 +10992,9 @@ words, <code>in T</code> derives from <code>constant T</code>. A parameter with 
 type modifier is called an <em>input parameter</em> and the
 corresponding argument is called an <em>input argument</em>. The
 <a href="#lifetime">lifetime</a> of an input argument must be larger than
-that of the call, and ownership remains in the caller.</p>
+that of the call, and ownership remains in the caller.
+An input parameter is typically either copied on entry, or passed by
+reference.</p>
 </li>
 <li>
 <p><code>out T</code> indicates that the corresponding value is passed from the
@@ -10723,7 +11003,8 @@ callee, and moved to the caller on exit, destroying the previous
 value that may have existed for that argument in the caller.
 An <code>out T</code> inherits from <code>T</code>. A parameter with the <code>out</code> type
 modifier is called an <em>output parameter</em> and the corresponding
-argument is called an <em>output argument</em>.</p>
+argument is called an <em>output argument</em>.
+An output parameter is typically either moved on exit, or passed by reference.</p>
 </li>
 <li>
 <p><code>in out T</code> indicates that the corresponding value is tranferred to the
@@ -10732,15 +11013,29 @@ Its lifetime is interrupted in the caller for the duration of the call,
 and ownership is temporarily transferred to the callee.  The <code>in out
 T</code> type also inherits from <code>T</code>. A parameter with the <code>in out</code>
 modifier is called a <em>bidirectional parameter</em> and the
-corresponding argument is called a <em>bidirectional argument</em>.</p>
+corresponding argument is called a <em>bidirectional argument</em>.
+An input/output parameter is typically either moved on entry and exit, or
+passed by reference.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>All these types are intended to provide access to a value of type <code>T</code>
-within the caller in a way that is possibly less expensive than
-directly using the assignment for <code>T</code>. Common optimization strategies
-include:</p>
+<p>If the type of a parameter is specified, but without <code>in</code>, <code>out</code> or <code>in out</code>,
+then the parameter is treated like an input parameter. If no type is given, then
+the type is treated like an by-reference input/output parameter:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>// Here, Times is `in integer` and Body is passed by reference
+repeat(Times:integer, Body) as integer is
+    for I in 1..Times loop
+        Body</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The argument-passing types are intended to provide access to a value of type <code>T</code>
+within the caller in a way that is possibly less expensive than directly using
+the assignment for <code>T</code>. Common optimization strategies include:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -10763,7 +11058,7 @@ it owns the <code>character</code> values in it. Since there is a possibly large
 number of characters, it may be quite expensive to copy.</p>
 </div>
 <div class="paragraph">
-<p>It would be inconveient to have pure move semantics for <code>text</code>, since
+<p>It would be inconvenient to have pure move semantics for <code>text</code>, since
 it would mean that an assignment would destroy the source value.
 Consider the following code to see how this would be uncomfortable:</p>
 </div>
@@ -10792,9 +11087,15 @@ references the original text. This organization provides the
 convenience of copy semantics for local variables and the speed of
 move semantics for calls.</p>
 </div>
+<div class="paragraph">
+<p>Argument-passing types can be used in other contexts than arguments.
+For example, code that creates a closure or a callback may store
+argument-passing types in an intermediate structure in order to pass it to the
+closure or callback.</p>
+</div>
 </div>
 <div class="sect3">
-<h4 id="name-parameters"><a class="anchor" href="#name-parameters"></a><a class="link" href="#name-parameters">4.11.5. Name parameters</a></h4>
+<h4 id="name-parameters"><a class="anchor" href="#name-parameters"></a><a class="link" href="#name-parameters">4.11.6. Name parameters</a></h4>
 <div class="paragraph">
 <p>In some cases, it is interesting for a form to create new variables
 based on a name given as an argument. The corresponding parameter is
@@ -10885,7 +11186,7 @@ evaluating <code>Body</code>.</td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.11.6. Attributes</a></h4>
+<h4 id="attributes"><a class="anchor" href="#attributes"></a><a class="link" href="#attributes">4.11.7. Attributes</a></h4>
 <div class="paragraph">
 <p>Attributes are a types that behave like a value of a given type, but
 with controlled access when reading or writing values. Attributes also
@@ -13518,7 +13819,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-09-24 23:30:51 +0200
+Last updated 2020-10-02 11:32:05 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
