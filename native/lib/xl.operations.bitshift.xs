@@ -1,12 +1,12 @@
 // *****************************************************************************
-// bitshift.xs                                                        XL project
+// xl.operations.bitshift.xs                                        XL project
 // *****************************************************************************
 //
 // File description:
 //
 //     Interface for bit shifts
 //
-//
+//     Bit shift move bits around
 //
 //
 //
@@ -34,43 +34,57 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type bitshift with
+use MEM = XL.SYSTEM.MEMORY
+use XL.TYPE.RANGE
+
+module XL.OPERATIONS.BITSHIFT[shiftable:type] with
 // ----------------------------------------------------------------------------
 //   Specification for bit shift operations
 // ----------------------------------------------------------------------------
 
-    type bit_count              is natural
+    type bitcount               is natural range 0..MEM.BitSize(shiftable)
 
     with
-        Value   : bitshift
-        Left    : bitshift
-        Right   : bitshift
-        Owned   : copiable and own bitshift
-        Shift   : bit_count
-    do
-        // Shifts
-        Left shl  Shift         as bitshift // Shift left
-        Left shr  Shift         as bitshift // Shift right
-        Left ashr Shift         as bitshift // Arithmetic (signed) shift right
-        Left lshr Shift         as bitshift // Logical shift right
+        Value   : shiftable
+        Left    : shiftable
+        Right   : shiftable
+        Target  : in out shiftable
+        Shift   : bitcount
+        Range   : range of bitcount
 
-        // Rotations
-        Left rol  Shift         as bitshift // Rotate left
-        Left ror  Shift         as bitshift // Rotate right
+    // Shifts
+    Left shl  Shift     as shiftable    // Shift left
+    Left shr  Shift     as shiftable    // Shift right (based on signedness)
+    Left ashr Shift     as shiftable    // Arithmetic (signed) shift right
+    Left lshr Shift     as shiftable    // Logical shift right
 
-        // Traditional C-style operator notations
-        Left  <<  Shift         as bitshift      is Left shl Shift
-        Left  >>  Shift         as bitshift      is Left shr Shift
+    // Rotations
+    Left rol  Shift     as shiftable    // Rotate left
+    Left ror  Shift     as shiftable    // Rotate right
 
-        // In-place operators with a default implementation
-        Owned <<= Shift         as nil          is Owned := Owned << Shift
-        Owned >>= Shift         as nil          is Owned := Owned >> Shift
+    // Endianness adjustments
+    LittleEndian Value  as shiftable    // Byte swap if big-endian
+    BigEndian Value     as shiftable    // Byte swap if little-endian
 
-        // Endianness adjustments
-        LittleEndian Value      as bitshift // Byte swap if big-endian
-        BigEndian Value         as bitshift // Byte swap if little-endian
+    CountOneBits  Value as bitcount
+    CountZeroBits Value as bitcount
+    FirstBitSet   Value as bitcount
+    LastBitSet    Value as bitcount
+    FirstBitClear Value as bitcount     is FirstBitSet(not Value)
+    LastBitClear  Value as bitcount     is LastBitSet(not Value)
 
-        CountOneBits     Value  as bit_count
-        CountZeroBits    Value  as bit_count
-        LowestBit        Value  as bit_count
-        HighestBit       Value  as bit_count
+    // Extract a range of bit, e.g. 16#FF bits 1..3 is
+    Value bits Range    as shiftable
+
+    // 0 and 1 are valid shiftable values
+    0                   as shiftable
+    1                   as shiftable
+
+
+module XL.OPERATIONS.BITSHIFT is
+// ----------------------------------------------------------------------------
+//   Define the shiftable generic type
+// ----------------------------------------------------------------------------
+
+    type shiftable where
+        use XL.OPERATIONS.BITSHIFT[shiftable]

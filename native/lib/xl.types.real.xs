@@ -7,9 +7,8 @@
 //     Floating-point representation for real-numbers
 //
 //     Real numbers are actually stored using a floating-point representation
-//     XL is designed to support floating-point types based on IEEE-754
-//
-//
+//     XL is designed to support floating-point types based on IEEE-754.
+//     There are deviations to provide real types with full ordering.
 //
 //
 //
@@ -39,7 +38,7 @@ module XL.TYPES.REAL[MantissaBits : natural, ExponentBits : natural] with
 //  A generic interface for real types
 // ----------------------------------------------------------------------------
 
-    type real                   like number
+    type real
 
     // Implement the necessary interface for `type`
     BitSize                     as bit_count

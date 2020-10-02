@@ -1,5 +1,5 @@
 // *****************************************************************************
-// boolean.xs                                                         XL project
+// xl.types.boolean.xs                                              XL project
 // *****************************************************************************
 //
 // File description:
@@ -33,6 +33,17 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+
+module XL.TYPES.BOOLEAN with
+// ----------------------------------------------------------------------------
+//  Definition of the boolean type
+// ----------------------------------------------------------------------------
+
+    type boolean                is one_of(true, false)
+
+    good
+
+
 
 use ENUMERATED
 use BITWISE

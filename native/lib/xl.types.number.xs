@@ -1,5 +1,5 @@
 // *****************************************************************************
-// number.xs                                                          XL project
+// xl.types.number.xs                                               XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,10 +34,16 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module NUMBER with
+module XL.TYPES.NUMBER[number:type] with
 // ----------------------------------------------------------------------------
 //    Type representing some kind of number (from integer to complex)
 // ----------------------------------------------------------------------------
+
+    use XL.OPERATIONS.ARITHMETIC[number]
+    use XL.OPERATIONS.COPY[number]
+    use XL.OPERATIONS.MOVE[number]
+    use XL.OPERATIONS.DELETE[number]
+    use XL.OPERATIONS.COMPARE[number]
 
     type number with
         min                     as number

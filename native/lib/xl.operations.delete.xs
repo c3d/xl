@@ -1,5 +1,5 @@
 // *****************************************************************************
-// delete.xs                                                          XL project
+// xl.operations.delete.xs                                          XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,9 +34,21 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type deletable with
+module XL.OPERATIONS.DELETE[deletable:type] with
 // ----------------------------------------------------------------------------
-//    The interface for deleting a value
+//  Interface for deleting values
 // ----------------------------------------------------------------------------
 
-    Delete Value:own deletable          as nil
+    with
+        Value : in out Value
+
+    Delete Value                        as ok
+
+
+module XL.OPERATIONS.DELETE is
+// ----------------------------------------------------------------------------
+//  Define the deletable type
+// ----------------------------------------------------------------------------
+
+    type deletable where
+        use XL.OPERATIONS.DELETABLE[deletable]

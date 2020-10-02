@@ -77,8 +77,8 @@ module XL.TYPES.TYPE with
     Value in Type:type          as boolean
 
     // Syntactic sugar for type declarations
-    macro type T               is T as type
     macro type T matches P     is type T is matching P
+    macro type T               is T as type
 
     // Fundamental types matching nothing or everything
     nil                         as type
@@ -89,4 +89,4 @@ module XL.TYPES.TYPE with
     Value matches Pattern       as boolean
 
     // State a derivation relationship
-    Derived:ref type like Base:type as ref type
+    Derived:type like Base:type as type

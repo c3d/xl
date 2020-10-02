@@ -34,27 +34,21 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-with
-    num_type is some number
-    real  : num_type
-    angle : num_type
-
-
-COMPLEX[real, angle] as module with
+module COMPLEX[real:type, angle:type] with
 // ----------------------------------------------------------------------------
-//    A generic module for complex numbers
+//   A generic module for complex numbers
 // ----------------------------------------------------------------------------
-//    The reason for separating 'real' and 'angle' arguments is to be able
-//    to properly accomodate a non floating-point representation for 'real',
-//    and possibly a natural number representation for angles (e.g. degrees)
+//  The reason for separating 'real' and 'angle' arguments is to be able
+//  to properly accomodate a non floating-point representation for 'real',
+//  and possibly a natural number representation for angles (e.g. degrees)
 
     // A complex can be represented in either cartesian or polar form
-    complex as num_type         is cartesian or polar
-    cartesian                   is type cartesian(Re:real, Im:real)
-    polar                       is type polar(Mod:real, Arg:angle)
+    type complex                is cartesian or polar
+    type cartesian              is matching cartesian(Re:real, Im:real)
+    type polar                  is matching polar(Mod:real, Arg:angle)
 
-    cartesian                   like number
-    polar                       like number
+    type cartesian              like number
+    type polar                  like number
 
     // Imaginary unit
     i                           as cartesian

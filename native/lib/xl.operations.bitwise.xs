@@ -1,5 +1,5 @@
 // *****************************************************************************
-// bitwise.xs                                                         XL project
+// xl.operations.bitwise.xs                                         XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,31 +34,52 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type bitwise with
+use MEM = XL.SYSTEM.MEMORY
+use XL.TYPE.RANGE
+
+module XL.OPERATIONS.BITWISE[bitwise:type] with
 // ----------------------------------------------------------------------------
 //   Specification for bitwise boolean operations
 // ----------------------------------------------------------------------------
 
+    type bitcount               is natural range 0..MEM.BitSize(bitwise)
+
     with
-        Value   : bitwise
-        Left    : bitwise
-        Right   : bitwise
-        Owned   : own bitwise
-        Shift   : bit_count
-    do
-        Left and  Right         as bitwise // Boolean and
-        Left or   Right         as bitwise // Boolean or
-        Left xor  Right         as bitwise // Boolean exclusive or
-        Not Value               as bitwise // Bitwise not
+        Value   : in bitwise
+        Left    : in bitwise
+        Right   : in bitwise
+        Target  : in out bitwise
+        Range   : range of bitcount
 
-        // Traditional C-style operator notations
-        Left  &   Right         as bitwise      is Left and Right
-        Left  |   Right         as bitwise      is Left or  Right
-        Left  ^   Right         as bitwise      is Left xor Right
-        ~Value                  as bitwise      is Not Value
-        !Value                  as bitwise      is Not Value
+    Left and  Right     as bitwise      // Boolean and
+    Left or   Right     as bitwise      // Boolean or
+    Left xor  Right     as bitwise      // Boolean exclusive or
+    not Value           as bitwise      // Bitwise not
 
-        // In-place operators with a default implementation
-        Owned &=  Right         as nil          is Owned := Owned & Right
-        Owned |=  Right         as nil          is Owned := Owned | Right
-        Owned ^=  Right         as nil          is Owned := Owned ^ Right
+    // Traditional C-style operator notations
+    Left  &   Right     as bitwise      is Left and Right
+    Left  |   Right     as bitwise      is Left or  Right
+    Left  ^   Right     as bitwise      is Left xor Right
+    ~Value              as bitwise      is not Value
+    !Value              as bitwise      is not Value
+
+    // In-place operators with a default implementation
+    Target &=  Right                    is Target := Target & Right
+    Target |=  Right                    is Target := Target | Right
+    Target ^=  Right                    is Target := Target ^ Right
+
+    // Define a bit mask
+    bitmask Range       as bitwise
+
+    // 0 and 1 should always be convertible to bitwise
+    0                   as bitwise
+    1                   as bitwise
+
+
+module XL.OPERATIONS.BITWISE is
+// ----------------------------------------------------------------------------
+//   Define the 'bitwise' generic type
+// ----------------------------------------------------------------------------
+
+    type bitwise where
+        use XL.OPERTIONS.BITWISE[bitwise]

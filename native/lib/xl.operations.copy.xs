@@ -1,5 +1,5 @@
 // *****************************************************************************
-// copy.xs                                                            XL project
+// xl.operations.copy.xs                                            XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,21 +34,26 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type copiable[type source is copiable] with
+use XL.TYPES.IGNORABLE
+use XL.TYPES.ERRORS
+
+module XL.OPERATIONS.COPY[copiable:type] with
 // ----------------------------------------------------------------------------
-//    A type that can be copied
+//  Interface for copy operations
 // ----------------------------------------------------------------------------
-//    A copy makes a non-destructive copy of the source into the target
-//    It will `delete` the target if necessary
-//    It will define the target, but will not undefine the source
-//    If copy is too expensive, consider using a move `:<` instead
 
     with
-        Target  : out copiable
-        Source  : source
-    do
-        Target := Source                as nil
-        Copy Target, Source             as nil  is Target := Source
+        Target : out copiable
+        Source : in copiable
 
-    // Indicate if copy can be made bitwise
-    BITWISE_COPY                        as boolean is true
+    Target :+ Source    as ignorable copiable?
+    Copy(Source)                                is result :+ Source
+
+
+module XL.OPERATIONS.COPY is
+// ----------------------------------------------------------------------------
+//  Implementation of the copiable type
+// ----------------------------------------------------------------------------
+
+    type copiable where
+        use XL.OPERATIONS.COPY[copiable]

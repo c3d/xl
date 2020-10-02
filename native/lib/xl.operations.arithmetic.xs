@@ -1,5 +1,5 @@
 // *****************************************************************************
-// xl.arithmetic.xs                                                  XL project
+// xl.operations.arithmetic.xs                                      XL project
 // *****************************************************************************
 //
 // File description:
@@ -36,17 +36,17 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module XL.ARITHMETIC[type arithmetic] with
+module XL.OPERATIONS.ARITHMETIC[arithmetic:type] with
 // ----------------------------------------------------------------------------
-//   Specification of arithmetic operations
+//  Specification of arithmetic operations
 // ----------------------------------------------------------------------------
 
     with
-        Value    : arithmetic
-        Left     : arithmetic
-        Right    : arithmetic
-        Power    : natural
-        Changing : in out arithmetic
+        Value   : arithmetic
+        Left    : arithmetic
+        Right   : arithmetic
+        Power   : natural
+        Target  : in out arithmetic
 
     Left  +  Right              as arithmetic   // Addition
     Left  -  Right              as arithmetic   // Subtraction
@@ -55,22 +55,31 @@ module XL.ARITHMETIC[type arithmetic] with
     Left rem Right              as arithmetic   // Remainder of division
     Left mod Right              as arithmetic   // Euclidean Modulo
     Left  ^  Right              as arithmetic   // Power
-    Left  ^  Power:natural     as arithmetic   // Positive power
+    Left  ^  Power:natural      as arithmetic   // Positive power
     -Left                       as arithmetic   // Negation
 
     Abs  Value                  as arithmetic   // Absolute value
     Sign Value                  as arithmetic   // -1, 0 or 1
 
-    ++Changing                  as arithmetic   // Pre-incrementation
-    --Changing                  as arithmetic   // Pre-decrementation
-    Changing++                  as arithmetic   // Post-incrementation
-    Changing--                  as arithmetic   // Post-decrementation
+    ++Target                    as arithmetic   // Pre-incrementation
+    --Target                    as arithmetic   // Pre-decrementation
+    Target++                    as arithmetic   // Post-incrementation
+    Target--                    as arithmetic   // Post-decrementation
 
-    Changing += Right           as arithmetic   // In-place addition
-    Changing -= Right           as arithmetic   // In-place subtraction
-    Changing *= Right           as arithmetic   // In-place multiplication
-    Changing /= Right           as arithmetic   // In-place division
+    Target += Right             as arithmetic   // In-place addition
+    Target -= Right             as arithmetic   // In-place subtraction
+    Target *= Right             as arithmetic   // In-place multiplication
+    Target /= Right             as arithmetic   // In-place division
 
     // Values 0 and 1 should always be convertible to arithmetic values
     0                           as arithmetic
     1                           as arithmetic
+
+
+module XL.OPERATIONS.ARITHMETIC is
+// ----------------------------------------------------------------------------
+//  Define the generic arithmetic type
+// ----------------------------------------------------------------------------
+
+    type arithmetic where
+        use XL.OPERATIONS.ARITHMETIC[arithmetic]

@@ -1,5 +1,5 @@
 // *****************************************************************************
-// comparison.xs                                                      XL project
+// xl.operations.comparison.xs                                      XL project
 // *****************************************************************************
 //
 // File description:
@@ -48,8 +48,19 @@
 // 1) The properties of comparisons are described on a case-by-case basis
 // 2) XL splits the `real` and `ieee` types (see REAL module)
 
+module XL.OPERATIONS.COMPARISONS[comparable:type] with
+// ----------------------------------------------------------------------------
+//   Types with comparision operations
+// ----------------------------------------------------------------------------
 
-use BOOLEAN
+    with
+        Left    : comparable
+        Right   : comparable
+
+    Left = Right        as boolean      // Equality test (value comparison)
+    Left == Right       as boolean      // Identity test (same address)
+    Left <> Right       as boolean      is not(Left = Right)
+
 
 type equatable with
 // ----------------------------------------------------------------------------

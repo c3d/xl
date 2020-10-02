@@ -1,5 +1,5 @@
 // *****************************************************************************
-// enumerated.xs                                                      XL project
+// xl.types.enumerated.xs                                           XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,24 +34,28 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type enumerated with
+module XL.TYPES.ENUMERATED[enumerated:type] with
 // ----------------------------------------------------------------------------
-//    Interface for enumerated types
+//   Interface for operations on enumerated types
 // ----------------------------------------------------------------------------
 
-    as COPY.copiable
-    as MOVE.movable
-    as CLONE.clonable
-    as DELETE.deletable
-    as COMPARISON.equatable
-    as COMPARISION.ordered
-    as MEMORY.sized
-    as MEMORY.aligned
+    use XL.OPERATIONS.COPY[enumerated]
+    use XL.OPERATIONS.MOVE[enumerated]
+    use XL.OPERATIONS.DELETE[enumerated]
+    use XL.OPERATIONS.COMPARISON[enumerated]
 
-    First                               as enumerated
-    Last                                as enumerated
-    Successor   Value:enumerated        as enumerated
-    Predecessor Value:enumerated        as enumerated
+    type representation like natural
 
-    // The underlying representation type
-    representation                      as type like natural
+    First               as enumerated
+    Last                as enumerated
+    Successor Value     as enumerated
+    Predecessor Value   as enumerated
+
+
+module XL.TYPES.ENUMERATED is
+// ----------------------------------------------------------------------------
+//   Defines the general enumerated type
+// ----------------------------------------------------------------------------
+
+    type enumerated where
+        use XL.TYPES.ENUMERATED[enumerated]

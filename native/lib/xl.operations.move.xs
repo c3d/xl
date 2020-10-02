@@ -1,10 +1,10 @@
 // *****************************************************************************
-// move.xs                                                            XL project
+// xl.operations.move.xs                                            XL project
 // *****************************************************************************
 //
 // File description:
 //
-//    Specification for data move operation
+//    Specification for move operations
 //
 //
 //
@@ -34,21 +34,30 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-type movable[type source is movable] with
+use XL.TYPES.IGNORABLE
+use XL.TYPES.ERRORS
+
+module XL.OPERATIONS.MOVE[moveable:type] with
 // ----------------------------------------------------------------------------
-//    A type that can be moved
+//  Interface for move operations
 // ----------------------------------------------------------------------------
-//    A move transfers a value from the source to the target
-//    It will `delete` the target if necessary
-//    It will undefine the source and define the target with the value
-//    This is the 'scissor operator' as it cuts the source
+//  A move transfers a value from the source to the target
+//  It will `delete` the target if necessary
+//  It will undefine the source and define the target with the value
+//  This is the 'scissor operator' as it cuts the source
 
     with
-        Target  : out movable
-        Source  : in  source
-    do
-        Target :< Source                as nil
-        Move Target, Source             as nil  is Target :< Source
+        Target : out moveable
+        Source : in out moveable
 
-    // Indicate if move can be made bitwise
-    BITWISE_MOVE                        as boolean is true
+    Target :< Source    as ignorable moveable?
+    Move(Source)                                is result :< Source
+
+
+module XL.OPERATIONS.MOVE is
+// ----------------------------------------------------------------------------
+//  Implementation of the moveable type
+// ----------------------------------------------------------------------------
+
+    type moveable where
+        use XL.OPERATIONS.MOVE[moveable]
