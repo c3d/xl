@@ -3991,16 +3991,16 @@ A few cases require special evaluation rules
 
 * link:#self[Self] is a way to stop the evaluation of a form
 
-* The link:#implicit-result-variable[implicit `result` variable] can be
-  used to set the value returned by a declaration.
+* The link:#implicit-result-variable[implicit `result` variable] can be used to
+  set the value returned by a declaration.
 
-* The link:#returned-value[returned value] for a declaration follows
-  rules that take into account the `result` variable, `return`
-  statements and `error` values.
+* The link:#returned-value[returned value] for a declaration follows rules that
+  take into account the `result` variable, `return` statements and `error`
+  values.
 
-* link:#assignment-and-move[Assignment and move] operations are somewhat
-  special insofar as they are used during parameter passing while
-  evaluating other operations.
+* link:#assignment[Assignment] operations are somewhat special insofar as they
+  are used for link:#transfers[transfers] of values during parameter passing
+  while evaluating all other operations.
 
 ==== Sequence evaluation
 
@@ -4106,106 +4106,6 @@ factorial_last N:natural as natural is
         N * factorial_last(N-1)
 ....
 
-
-==== Assignment and move
-
-[[assignment]]
-The infix `:=` operator is used to perform _((assignments))_ and
-returns the value being assigned. Variants such as `+=`, `-=`, `*=`,
-`/=` are equivalent to performing the corresponding operating and
-assigning the result.
-
-[source]
-----
-X : integer := 0    // Initialize X to 0
-X := 5              // Now X contains value 5
-X += 7              // Now X contains value 12
-----
-
-NOTE: The `:=` operator (and only that operator) is a _variable
-declaration_ when its left operand is an infix `:`. This was discussed
-link:#sequences[earlier], and corresponds to the first line in the
-example above. A variable declaration is _not_ an assignment.
-
-[[operator_assignment]]
-Seven combined operators are defined independently of the type as
-follows:
-
-[source]
-----
-Target += Source      is      Target := Target + Source
-Target -= Source      is      Target := Target - Source
-Target *= Source      is      Target := Target * Source
-Target /= Source      is      Target := Target / Source
-Target &= Source      is      Target := Target & Source
-Target |= Source      is      Target := Target | Source
-Target ^= Source      is      Target := Target ^ Source
-----
-
-XL offers two additional operators, the `:+` _copy_ operator and the
-`:<` _move_ operator (which is also sometimes _cut_ operator because of
-its shape that evokes scissors). The `:+` operator guarantees that all
-data is being copied, and that the new object is an independent copy of
-the original (hence the `+` character in it). The `:<` operator may
-simply move ownership of the value if that is less expensive than
-copying it, and invalidates the right side of the operator, which may no
-longer be used.
-
-Depending on the data type, `:=` may correspond to a copy or a move. The
-precise details of which operator is selected and the associated
-rationale are detailed in link:#ownership[the next
-chapter]. In all cases, the previous value that was held in the left
-operand is link:#destruction[destroyed] by the
-assignment.
-
-The `:=` operator is used to transfer arguments to parameters. This
-means that passing an argument in XL, like in Rust, can make the
-argument invalid in the caller if it is moved rather than copied. There
-are, however, multiple ways to pass arguments. This is all discussed in
-more details link:#binding[in the next chapter].
-
-NOTE: *RATIONALE* For simple types such as arithmetic types, an assignment
-performs a copy, which is a relatively inexpensive memory copy between
-fixed-size locations. For more complicated data types, such as
-`spreadsheet`, `graph` or `picture`, a copy involves copying possibly
-megabytes of data, or complex webs of interconnected objects, which can
-be very expensive, and often leaves an unused copy behind. For such data
-types, moving data is the frequently desirable operations, for example
-to pass objects around as arguments, and copying data is the less
-frequent case. In any case, the programmer remains in charge, always
-having the possibility to explicitly request a copy or a move.
-
-Assignments can either return the target of the assignment, or
-`nil`. The value-returning variant can be used in expression, whereas the
-`nil`-returning variant is used for statements. This is a result of
-normal overloading, combined with the fact that statements expect a
-`nil` value. One is normally implemented as the other, although the
-choice of which form is primary is left as a choice for the
-implementor.
-
-For example, if for type `value`, the `nil`-returning assignment
-operator is primary, the two operators can be defined as follows:
-
-[source]
-----
-to Copy(Target: out value,
-        Source: in value) as nil written Target := Source is ...
-Target:out value := Source: in value as value is
-    Copy Target, Source
-    Target
-----
-
-If an error can be returned from the copy operation, then the correct
-code would look like the following:
-
-[source]
-----
-to Copy(Target: out value,
-        Source: in value) as ok written Target := Source is ...
-Target:out value := Source: in value as value? is
-    Copy Target, Source
-    Target
-----
 
 === Scoping
 
@@ -5086,6 +4986,7 @@ human-readable version of the value. Some types can also feature an explicit
 conversion from `text`, which can be used to parse a value given in
 human-readable form.
 
+
 ==== Implicit conversion
 
 (((conversion,implicit)))
@@ -5122,10 +5023,15 @@ foo real 1              // OK: first convert to real, then implicit complex
 
 Implicit type conversions can also be used on return values or when evaluating
 statements, in order to adjust a value to what is expected in that context.
-In particular, the `ignorable T` (((ignorable type))) generic type provided by
-the standard library can implicitly convert to either `T` or `nil` so that it
-can be either returned from a function or used in a statement. Its definition is
-roughly as follows:
+
+
+==== Ignorable type
+
+A particular usage of implicit conversions to adjust to the context is
+_((ignorable types))_(((type,ignorable))). the `ignorable T` generic type
+provided by the standard library can implicitly convert to either `T` or `nil`
+so that itcan be either returned from a function or used in a statement. Its
+definition is roughly as follows:
 
 ....
 with
@@ -5137,7 +5043,7 @@ V:ignorable[T]          as nil  is nil
 
 An ignorable type can be used for the return value of any operation that is
 useful, but may safely be ignored. The most common use case for this are
-link:#assignments[assignments], which are used primarily for the side effect of
+link:#assignment[assignments], which are used primarily for the side effect of
 assigning to the target, but can also return the value of the target.
 
 ....
@@ -6677,7 +6583,7 @@ Answer as integer is 42                 // Named constant
 
 A mutable value can be initialized or modified using the `:=` operator,
 which is called an
-link:##assignment-and-move[_assignment_].
+link:#assignment[_assignment_].
 There are a number of derived operators, such as `+=`, that combine a
 frequent arithmetic operation and an assignment.
 
@@ -7591,76 +7497,98 @@ to crash or your rocket to explode.
 One of the most important operation that can happen to values of any
 type is to _((transfer))_ them around in the program. These operations
 are so crucial to the behavior of the program that XL provides a
-number of ways to define and optimize them.
+robust framework for defining and optimizing them.
+
 In particular, transfers interact with the link:#ownership[ownership]
 guarantees that the language may provide, in combination with the rules
-about link:#lifetime[lifetime], link:#creation[creation] and
-link:#destruction[destruction]. Additionally, they are so frequent
-that it is necessary to consider performance of transfers, which is
-one reason why there are two flavors, link:#copy[copy] and
-link:#move[move].
+about link:#binding[binding], link:#lifetime[lifetime], link:#creation[creation]
+and link:#destruction[destruction]. Additionally, transfers are so frequent that
+it is necessary to consider performance of transfers, which is one reason why
+there are two primary flavors, link:#copy[copy] and link:#move[move].
 
-==== Assignments
+==== Assignment
 
-As was link:#assignment[already discussed], an _((assignment))_ is the
-primary way for a programmer to explicitly transfer values from one
-context to another. The `:=` operator is used in XL to represent
-assignments.
-
-For example, the following code implements the core computation of a
-link:https://en.wikipedia.org/wiki/Julia_set[Julia set]:
+An _((assignment))_ is the primary way for a programmer to explicitly transfer
+values from one context to another. The `:=` operator is used in XL to represent
+assignments.  For example, the following code implements the core computation of
+a link:https://en.wikipedia.org/wiki/Julia_set[Julia set]:
 
 ....
-julia_depth(Z:complex, Mu:complex, Bound:real, Max:count) as count is
+JuliaDepth(Z:complex, Mu:complex, Bound:real, Max:count) as count is
     while result < Max and Z.Re^2 + Z.Im^2 < Bound ^2 loop
         result := result + 1
         Z := Z^2 - Mu
 ....
 
-This code contains two assignments, one to `result`, the
+The example code above contains two assignments, one to `result`, the
 link:#implicit-result-variable[implicit variable] holding the return
 value, and one to `Z`. The assignment `result := result + 1` updates
 the variable `result` with the next `count` value. This kind of
 assignment combined with a simple operation is so frequent that there
-are link:#operator_assignment[shortcut notations] for it, and you
-could write `result += 1` to achieve the same effect.
+are link:#computing-assignment[shortcut notations] for it, and you
+can write `result += 1` to achieve the same effect.
 
 An assignment is a shortcut for either a link:#copy[copy] of the
 value, which is the case in the code above, or a link:#move[move] when
-a copy would be unreasonably expensive. In general, using the
-assignment operator is the safe choice, since it will automatically
-select the most efficient operation for you based on the type.
+a copy would be unreasonably expensive.
+
+In general, using the `:=` assignment operator is the safe choice, since it will
+automatically select the most efficient operation for you based on the type.
+However, in order to give programmers additional control, XL offers two
+additional operators, the `:+` _copy_ operator and the `:<` _move_ operator,
+which is also sometimes _cut_ operator because of its shape that evokes
+scissors. The `:+` operator guarantees that all data is being copied, and that
+the new object is an independent copy of the original (hence the `+` character
+in it). The `:<` operator guarantees that the value is moved and
+link:#destruction[destroys] the right side of the operator, which may no longer
+be used.
 
 When you create a new type, you get to choose if the assignment
-operator for that type gets to perform a copy or a move. For example,
+operator for that type performs a copy or a move. For example,
 for `complex` we may want a copy, and for `picture` we may want a move
-because there is a lot of data. This would be implemented as follows:
+because there is a lot of data. This would be implemented as follows
 
 ....
 Target:out complex := Source:complex    is Target :+ Source     // Copy
 Target:out picture := Source:picture    is Target :< Source     // Move
 ....
 
+NOTE: *RATIONALE* For simple types such as arithmetic types, an assignment
+performs a copy, which is a relatively inexpensive memory copy between
+fixed-size locations. For more complicated data types, such as
+`spreadsheet`, `graph` or `picture`, a copy involves copying possibly
+megabytes of data, or complex webs of interconnected objects, which can
+be very expensive, and often leaves an unused copy behind. For such data
+types, moving data is the frequently desirable operations, for example
+to pass objects around as arguments, and copying data is the less
+frequent case. In any case, the programmer remains in charge, always
+having the possibility to explicitly request a copy or a move.
+
+Assignments return their destination as an link:#ignorable-type[ignorable type],
+which means that an assignment can be used either as a statement or in an
+expression.
+
+
 ==== Copy
 
 A _((copy))_ is a kind of transfer which creates a new, "identical",
-yet independent value. The new value can then be modified
-independently from the original, and has a different lifetime.
-XL uses either the prefix `copy` function or the infix `Target :+
-Source` as a notation for a copy, the `+` in that operator being a
-reminder that a new copy is created.
+yet completely independent value. The new value can then be modified
+without impacting the original, and it may have a completely different
+lifetime.
 
-The copy operation has the following mandatory interface for all types:
+The copy operation has the following mandatory interface for any type `T`:
 
 ....
-Target:out T :+ Source:T as T?
-copy Source:T as T? is result :+ Source
+Target:out[T] :+ Source:in[T] as ignorable[T]?
 ....
 
 The copy returns the `Target` after it has been copied into, or an
 `error` value if there was some failure. When it returns a failure,
 any value that may have been created as part of the copy must
 have been link:#destruction[deleted] by the copy operation.
+
+The returned value is marked as `ignorable` in order to ensure that a copy, like
+an assignment, can be used in statements as well as expressions.
 
 The new copied value is link:#creation[created] by the operator, and
 should be identical in its behavior to the source. It needs not be
@@ -7677,24 +7605,18 @@ the copy operator should perform what is known as a _((deep copy))_,
 in other words make sure that the new value has ownership of all the
 elements it refers to, independently from the source value.
 
-In some cases, it is important to also feature a _((shallow copy))_
-operation, which only copies up to a certain point. Since the
-condition for stopping the copy are highly dependent on the type, it
-is not possible to provide a single unified interface that would work
-for all types. However, as far as possible, such operation should have
-an interface that looks like the following:
+The `copy` function returns a copy for all types, and is defined as:
 
 ....
-copy (Source:T, StopConditions) as T?
+copy Source is result :+ Source
 ....
 
-For example, the shallow copy for a tree could have the following
-interface, where either a depth or a `node_filter` :
+There may be variants of `copy` for some types that limit the amount of copy
+happening. For example, for a recursive structure, you could limit the depth of
+the copy:
 
 ....
-copy(Source:tree, Depth:count) as T?
-copy(Source:tree, Keep:node_filter) as T?
-type node_filter is matching(N:node as boolean)
+copy(Source:hierarchy, Depth:natural) as hierarchy
 ....
 
 ==== Move
@@ -7717,8 +7639,7 @@ be used after the move.
 The move operation has the following mandatory interface for all types:
 
 ....
-Target:out T :< Source:in out T as T?
-move Source:T as T? is result :< Source
+Target:out[T] :< Source:in out[T] as ignorable T?
 ....
 
 The move returns the `Target` after it has been moved into, or an
@@ -7726,17 +7647,58 @@ The move returns the `Target` after it has been moved into, or an
 the move should essentially have had no effect, i.e. it should not
 cause partially moved, partially created or partially destroyed values.
 
+NOTE: The use of a move in an expression is generally less useful than the use
+of a copy, since the source is destroyed by the move. For example, while
+possible, it makes little sense to write `X :< Y :< Z` because the value in Y
+would be destroyed.
+
 The new moved value is link:#creation[created] by the operator, and
 should be identical in its behavior to the source. Like for copy, it
 needs not be identical in its internal representation. For example, if
-you move a value with internal pointers, it may need to adjust the
-pointers. Such cases should be infrequent, and are undesirable since
-the main reason for `move` to exist is performance.
+you move a value with internal pointers, the move operation may need to adjust
+the internal pointers. Such cases should be infrequent, and are undesirable
+since the main reason for `move` to exist is performance.
 
 The source of a move may no longer be used after a move operation, and
 should be in the same state as right after a `delete` operation. The
 compiler should normally issue a diagnostic when an attempt is made to
 use a value that was moved or deleted.
+
+The `move` function moves the value into the result:
+
+....
+move Source is result :< Source
+....
+
+Like `copy`, variants of the `move` function can take additional parameters.
+For example, some objects may contain internal caches that consume resources
+such as memory. Such caches would not exist if you created a new object from
+scratch. So in a `move` operation, it may be useful to have a choice top
+preserve cached data or not.
+
+....
+move(Source:database, Caches:one_of(ClearCaches,PreserveCaches) as database
+....
+
+==== Computing assignment
+
+
+Seven combined operators are defined independently of the type as follows:
+
+[source]
+----
+Target += Source      is      Target := Target + Source
+Target -= Source      is      Target := Target - Source
+Target *= Source      is      Target := Target * Source
+Target /= Source      is      Target := Target / Source
+Target &= Source      is      Target := Target & Source
+Target |= Source      is      Target := Target | Source
+Target ^= Source      is      Target := Target ^ Source
+----
+
+These variants are equivalent to performing the corresponding operation and
+assigning to the result.
+
 
 ==== Binding
 
