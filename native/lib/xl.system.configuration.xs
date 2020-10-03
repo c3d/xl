@@ -1,5 +1,5 @@
 // *****************************************************************************
-// configuration.xs                                                   XL project
+// xl.system.configuration.xs                                       XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,43 +34,17 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-ADDRESS_SIZE            as natural //
-DATA_SIZE               as natural
-ENDIANNESS              as MEMORY.endianness
-BITS_PER_BYTE           as natural
-
-
-use TYPE, UNSIGNED
-use MEMORY
-
-module SYSTEM with
+module XL.SYSTEM.CONFIGURATION with
 // ----------------------------------------------------------------------------
 //    Interface for system configuration
 // ----------------------------------------------------------------------------
 
-    // Declaration for builtin and runtime operations
-    builtin Operation           as anything
-    runtime Operation           as anything
+    type bit_count              as new natural
+    type byte_count             as new natual
 
-    module CONFIGURATION with
-    // ------------------------------------------------------------------------
-    //    System configuration (filled by the compiler)
-    // ------------------------------------------------------------------------
-        ADDRESS_SIZE            as natural
-        DATA_SIZE               as natural
-        ENDIANNESS              as MEMORY.endianness
-        BITS_PER_BYTE           as natural
-
-
-    module TYPES with
-    // ------------------------------------------------------------------------
-    //   Native system types exposed by this module
-    // ------------------------------------------------------------------------
-        natural                as type
-        integer                 as type
-        address                 as another natural
-        offset                  as another integer
-        size                    as another natural
-
-    // Make configuration and types visible directly in `SYSTEM`
-    use CONFIGURATION, TYPES
+    ADDRESS_BITS                as bit_count
+    ADDRESS_BYTES               as byte_count
+    DATA_BITS                   as bit_count
+    DATA_BYTES                  as byte_count
+    ENDIANNESS                  as endianness
+    BITS_PER_BYTE               as bit_count

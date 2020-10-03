@@ -1,5 +1,5 @@
 // *****************************************************************************
-// memory.xs                                                          XL project
+//  xl.system.memory.xs                                              XL project
 // *****************************************************************************
 //
 // File description:
@@ -34,80 +34,31 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use SYSTEM
-use ENUMERATION
-
-MEMORY has
+module XL.SYSTEM.MEMORY with
 // ----------------------------------------------------------------------------
 //   Interface for memory allocation and management
 // ----------------------------------------------------------------------------
 
-    // Make system configuration constants visible in this scope
-    use SYSTEM.CONFIGURATION
-    use TYPES
-    use BYTES
+    type endianness             is one_of(BIG, LITTLE, STRANGE)
+    type bit_count              is new natural
+    type byte_count             is new natural
+    type address                is new natural
+    type offset                 is new integer
+    type size                   is byte_count
 
-    type endianness             is enumeration(BIG, LITTLE, STRANGE)
+    // Explicit conversions between bits and bytes
+    byte_count(Bits:bit_count)  as byte_count
+    bit_count(Bytes:byte_count) as bit_count
 
-    TYPES has
-    // ------------------------------------------------------------------------
-    //    Types related to memory
-    // ------------------------------------------------------------------------
+    // Size of values
+    BitSize(Value)              as bit_count
+    ByteSize(Value)             as byte_count is byte_count(BitSize(Value))
+    BitAlign(Value)             as bit_count
+    ByteAlign(Value)            as byte_count is byte_count(BitAlign(Value))
 
-        // Types imported from `SYSTEM`
-        address                         is SYSTEM.address
-        offset                          is SYSTEM.offset
-        size                            is SYSTEM.size
-
-        // Types used for specific bits and byte operations
-        index                           is another size
-        bit_count                       is another size
-        byte_count                      is another size
-        bit_offset                      is another offset
-        byte_offset                     is another offset
-
-    Align Size:size, To:size            as size
-
-
-    BYTES has
-    // ------------------------------------------------------------------------
-    //   Functions to convert between bits and bytes
-    // ------------------------------------------------------------------------
-
-        // Converts between number of bits and number of bytes
-        byte_count  B:bit_count         as byte_count
-        bit_count   B:byte_count        as bit_count
-        byte_offset B:bit_offset        as byte_offset
-        bit_offset  B:byte_count        as bit_offset
-
-
-    SIZE[item:type] has
-    // ------------------------------------------------------------------------
-    //   Size information for a type
-    // ------------------------------------------------------------------------
-        bit_size   X:item               as bit_count
-        byte_size  X:item               as byte_count
-
-
-    SIZE[item:type, Size:bit_count] : SIZE[item] has
-    // ------------------------------------------------------------------------
-    //   Size information for a type with fixed size
-    // ------------------------------------------------------------------------
-        bit_size   X:item               is bit_count Size
-        byte_size  X:item               is byte_count(bit_size X)
-
-
-    ALIGN[item:type] has
-    // ------------------------------------------------------------------------
-    //   Memory alignment for a type
-    // ------------------------------------------------------------------------
-        bit_align  X:item               as bit_count
-        byte_align X:item               as byte_count
-
-
-    ALIGN[item:type, Align:bit_count] : ALIGN[item] has
-    // ------------------------------------------------------------------------
-    //   Alignemnt information for a type with fixed size
-    // ------------------------------------------------------------------------
-        bit_align  X:item               is bit_count Align
-        byte_align X:item               is byte_count(bit_align X)
+    // Memory allocation
+    type heap
+    Heap                        as heap
+    Allocate(On:heap,Size:size) as address?
+    Allocate(Size:size)         as address? is Allocate(Heap, Size)
+    Free(Address:address)       as ok

@@ -1,10 +1,10 @@
 // *****************************************************************************
-//  xl.system.memory.xl                                             XL project
+// xl.system.configuration.xl                                       XL project
 // *****************************************************************************
 //
 // File description:
 //
-//     Implementation of the memory management interface
+//     Implementation of system configuration
 //
 //
 //
@@ -34,28 +34,15 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use CFG = XL.SYSTEM.CONFIGURATION
-
-module XL.SYSTEM.MEMORY is
+module XL.SYSTEM.CONFIGURATION is
 // ----------------------------------------------------------------------------
-//   Interface for memory allocation and management
+//    Interface for system configuration
 // ----------------------------------------------------------------------------
 
-    byte_count Bits:bit_count as byte_count is
-    // ------------------------------------------------------------------------
-    //  Convert number of bits to number of bytes
-    // ------------------------------------------------------------------------
-        Bytes is ((Bits + (CFG.BITS_PER_BYTE - 1)) / CFG.BITS_PER_BYTE)
-        result := (byte_count) Bytes
-
-
-    bit_count  Bytes:byte_count as bit_count is
-    // ------------------------------------------------------------------------
-    //  Convert number of bytes to number of bits
-    // ------------------------------------------------------------------------
-        Bits is (Bytes / CFG.BITS_PER_BYTE)
-        result := (bit_count) Bits
-
-
-    BitSize   Value             as bit_size     is builtin BitSize
-    BitAlign  Value             as bit_size     is builtin BitAlign
+    // Configuration for a typical ILP64 system
+    ADDRESS_BITS                as bit_count    is 64
+    ADDRESS_BYTES               as byte_count   is 8
+    DATA_BITS                   as bit_count    is 64
+    DATA_BYTES                  as byte_count   is 8
+    ENDIANNESS                  as endianness   is LITTLE
+    BITS_PER_BYTE               as bit_count    is 8

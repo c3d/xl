@@ -57,7 +57,6 @@ module XL.TYPE.UNSAFE.POINTER[item:type] with
         Offset          : offset
         Value           : item
 
-
     *Pointer                            as item
     *Pointer := Value                   as item
 

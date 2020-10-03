@@ -70,11 +70,18 @@ module XL.TYPES.TYPE with
         Bases                   as source       // List of bases
         Lifetime                as lifetime     // Static lifetime for type
 
+    with
+        Type    : type
+        Derived : in out type
+        Base    : type
+        Fixed   : type when IsFixedSize(Fixed)
+        Compact : type when IsCompact(Compact)
+
     // Type constructor, building a type from a pattern
     matching Pattern            as type
 
     // Fundamental operator actually defining the types
-    Value in Type:type          as boolean
+    Value in Type               as boolean
 
     // Syntactic sugar for type declarations
     macro type T matches P     is type T is matching P
@@ -85,8 +92,16 @@ module XL.TYPES.TYPE with
     anything                    as type
 
     // Derived ways you can check if a value belongs to a type
-    Type:type contains Value    as boolean      is Value in Type
+    Type contains Value         as boolean      is Value in Type
     Value matches Pattern       as boolean
 
     // State a derivation relationship
-    Derived:type like Base:type as type
+    macro Derived like Base     as type
+
+    // Attributes of a type
+    IsCompact Type              as boolean // Contiguous in memory
+    IsFixedSize Type            as boolean // All values have same size
+    BitSize Fixed               as bit_count
+    ByteSize Fixed              as byte_count is byte_count(BitSize Fixed)
+    BitAlignment Type           as bit_count
+    ByteAlignment Type          as byte_count is byte_count(BitAlignment Type)
