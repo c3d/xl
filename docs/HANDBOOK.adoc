@@ -501,7 +501,7 @@ is
     1 is Value
 
 // array[N] of T: defined based on array[N-1] of T
-array[N] of T when N > 1 like Array[N-1] of T with
+array[N] of T when N > 1 with
     // Unified interface for A[I] which is a mutable T value
     (lambda I when I in 1..N) : T
 is
