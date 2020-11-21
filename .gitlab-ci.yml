@@ -89,28 +89,28 @@ llvm-5.0:fedora:
    - make release-check LLVM_CONFIG=llvm-config-5.0-64
 
 llvm-6.0:fedora:
-  image: fedora:latest
+  image: fedora:32
   script:
    - dnf install -y llvm6.0-devel  redhat-rpm-config
    - make release-check LLVM_CONFIG=llvm-config-6.0-64
 
 llvm-7.0:fedora:
-  image: fedora:latest
+  image: fedora:32
   script:
    - dnf install -y llvm7.0-devel  redhat-rpm-config
    - make release-check LLVM_CONFIG=llvm-config-7.0-64
 
 llvm-8.0:fedora:
-  image: fedora:latest
+  image: fedora:32
   script:
    - dnf install -y llvm8.0-devel
    - make release-check LLVM_CONFIG=llvm-config-8.0-64
 
-#llvm-9.0:fedora:
-#  image: fedora:latest
-#  script:
-#   - dnf install -y llvm9.0-devel
-#   - make release-check LLVM_CONFIG=llvm-config-9.0-64
+llvm-9.0:fedora:
+  image: fedora:latest
+  script:
+   - dnf install -y llvm9.0-devel
+   - make release-check LLVM_CONFIG=llvm-config-9.0-64
 
 install:ubuntu:
   image: ubuntu:latest
