@@ -107,10 +107,22 @@ llvm-8.0:fedora:
    - make release-check LLVM_CONFIG=llvm-config-8.0-64
 
 llvm-9.0:fedora:
-  image: fedora:latest
+  image: fedora:33
   script:
    - dnf install -y llvm9.0-devel
    - make release-check LLVM_CONFIG=llvm-config-9.0-64
+
+llvm-10:fedora:
+  image: fedora:33
+  script:
+   - dnf install -y llvm10-devel
+   - make release-check LLVM_CONFIG=/usr/lib64/llvm10/bin/llvm-config
+
+llvm-11:fedora:
+  image: fedora:33
+  script:
+   - dnf install -y llvm-devel
+   - make release-check LLVM_CONFIG=llvm-config-64
 
 install:ubuntu:
   image: ubuntu:latest
