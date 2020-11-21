@@ -47,15 +47,11 @@ module COMPLEX[real:type, angle:type] with
     type cartesian              is matching cartesian(Re:real, Im:real)
     type polar                  is matching polar(Mod:real, Arg:angle)
 
-    type cartesian              like number
-    type polar                  like number
-
     // Imaginary unit
     i                           as cartesian
     i                           as polar
     j                           as cartesian    is i
     j                           as polar        is i
-    square_angle                as angle
 
     // Shortcut notation for cartesian notation like `2 + 3i`
     syntax { postfix 400 i j }
@@ -68,18 +64,21 @@ module COMPLEX[real:type, angle:type] with
     Z:cartesian i               as cartesian    is Z * i
     Z:cartesian * [[i]]         as cartesian
     Z:polar     * [[i]]         as polar
-    [[i]]       * Z:cartesian   as cartesian
-    [[i]]       * Z:polar       as polar
+    [[i]]       * Z:cartesian   as cartesian    is Z * i
+    [[i]]       * Z:polar       as polar        is Z * i
 
     // Implicit conversion between the representations
     Z:cartesian                 as polar
     Z:polar                     as cartesian
-    X:real                      as cartesian
-    X:real                      as polar
-    X:real                      as complex
-    X:natural                   as cartesian
-    X:natural                   as polar
-    X:natural                   as complex
+
+    // Implicit conversions from the base type
+    X:real                      as cartesian    is cartesian(X, 0)
+    X:real                      as polar        is polar(X, 0)
+
+    // Implicit conversion from anything that implicitly converts to [real]
+    // This is necessary for [Z:=2] if [real] is floating point
+    X:implicit[real]            as cartesian    is cartesian(real(X), 0)
+    X:implicit[real]            as polar        is polar(real(X), 0)
 `
     // Special operations that can be optimized with one real operand
     Z:cartesian + X:real        as cartesian
@@ -121,22 +120,28 @@ module COMPLEX[real:type, angle:type] with
     ~X:polar                    as polar        // Conjugate
     conjugate X:polar           as polar        is ~X
 
-    // Prefix form for field access
-    re          Z:cartesian     as real
+    // Prefix form for real and imaginary part without whole conversion
+    re          Z:cartesian     as real         is Z.Re
     re          Z:polar         as real
-    im          Z:cartesian     as real
+    im          Z:cartesian     as real         is Z.Im
     im          Z:polar         as real
     mod         Z:cartesian     as real
-    mod         Z:polar         as real
-    arg         Z:polar         as real
+    mod         Z:polar         as real         is Z.Mod
     arg         Z:cartesian     as real
+    arg         Z:polar         as real         is Z.Arg
 
-    // Comparisons
+    // Equality
     X:cartesian = Y:cartesian   as boolean
+    X:polar     = Y:polar       as boolean
+
+    // Total order
+    // The < operator is a lexicographic order, required for some containers
+    // For consistency, it is only defined on the cartesian form, where it
+    // matches the order on real values
     X:cartesian < Y:cartesian   as boolean
 
     // Some elementaty functions on complex numbers
-    abs         Z: complex      as real is mod Z
+    abs         Z: complex      as real         is mod Z
     sqrt        Z:polar         as polar
     exp         Z:cartesian     as polar
     ln          Z:polar         as cartesian when Z.Arg ≠ 0
@@ -158,28 +163,26 @@ module COMPLEX[real:type, angle:type] with
     arccosh     Z:polar         as cartesian
     arctanh     Z:polar         as cartesian
 
-    in XL.TEXT_IO
-    to write    Z:cartesian
-    to write    Z:polar
+    // Basic I/O operations
+    to write    Z:cartesian     as ok
+    to write    Z:polar         as ok
+    to read     Z:out cartesian as ok
+    to read     Z:out polar     as ok
 
 
-COMPLEX[real] as module is COMPLEX[real, real]
+module COMPLEX[real:type] is COMPLEX[real, real]
 // ----------------------------------------------------------------------------
 //   A generic module for the case of floating-point numbers
 // ----------------------------------------------------------------------------
 //   In that case, we can use the same type by default for the angle type
 
 
-COMPLEX as module is
+module COMPLEX with
 // ----------------------------------------------------------------------------
 //   A non-generic module offering a generic type
 // ----------------------------------------------------------------------------
 //   This makes it easier to instantiate the generic modules
 
-    complex[real  : some number,
-            angle : some number] as some number is
-        super.COMPLEX[real, angle].complex with super.COMPLEX[real, angle]
-
-    complex[real : some super.real] as some number is complex[real, real]
-
-    complex as some number is complex[real]
+    type complex[real:type, angle:type] is COMPLEX[real,angle].complex
+    type complex[real:type] is complex[real,real]
+    type complex is complex[real]
