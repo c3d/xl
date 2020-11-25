@@ -206,7 +206,7 @@ JIT::PointerType_p Compiler::TreeMachineType(Tree *tree)
 }
 
 #include "opcodes.h"
-INIT_ALLOCATOR(Types);
+INIT_ALLOCATOR(CompilerTypes);
 INIT_ALLOCATOR(RewriteCalls);
 INIT_ALLOCATOR(RewriteCandidate);
 

@@ -45,7 +45,7 @@ XL_BEGIN
 
 CompilerPrototype::CompilerPrototype(CompilerUnit &unit,
                                      Tree *pattern,
-                                     Types *types,
+                                     CompilerTypes *types,
                                      JIT::FunctionType_p type,
                                      text name)
 // ----------------------------------------------------------------------------

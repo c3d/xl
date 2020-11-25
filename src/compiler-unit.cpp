@@ -79,7 +79,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
       module(jit, "xl.module"),
       context(new Context(scope)),
       source(source),
-      types(new Types(scope)),
+      types(new CompilerTypes(scope)),
       globals(),
       compiled()
 {

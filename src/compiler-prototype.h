@@ -62,7 +62,7 @@ public:
     // Constructors for the top-level functions
     CompilerPrototype(CompilerUnit &unit,
                       Tree *pattern,
-                      Types *types,
+                      CompilerTypes *types,
                       JIT::FunctionType_p ftype,
                       text name);
     CompilerPrototype(CompilerPrototype &caller, RewriteCandidate *rc);

@@ -71,7 +71,7 @@ public:
     CompilerFunction(CompilerUnit &unit,
                      Tree *pattern,
                      Tree *body,
-                     Types *types,
+                     CompilerTypes *types,
                      JIT::FunctionType_p ftype,
                      text name);
     CompilerFunction(CompilerFunction &caller, RewriteCandidate *rc);
@@ -189,7 +189,7 @@ class CompilerEval : public CompilerFunction
 public:
     CompilerEval(CompilerUnit &unit,
                  Tree *body,
-                 Types *types);
+                 CompilerTypes *types);
 
 };
 
