@@ -53,7 +53,7 @@ class CompilerPrototype
 protected:
     CompilerUnit &      unit;       // The unit we compile from
     Tree_p              pattern;    // Interface for this function
-    Types_p             types;      // Type system for this function
+    CompilerTypes_p     types;      // Type system for this function
     JIT::Function_p     function;   // The LLVM function we are building
 
     friend class CompilerExpression;

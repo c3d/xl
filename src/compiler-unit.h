@@ -58,7 +58,7 @@ class CompilerUnit
     JITModule           module;         // The module we are compiling
     Context_p           context;        // Context in which we compile
     Tree_p              source;         // The source of the program to compile
-    Types_p             types;          // Type inferences for this unit
+    CompilerTypes_p     types;          // Type inferences for this unit
     value_map           globals;        // Global definitions in the unit
     compiled_map        compiled;       // Already compiled functions
     closure_set         clotypes;       // Closure types

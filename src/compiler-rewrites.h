@@ -50,7 +50,7 @@ XL_BEGIN
 
 class CompilerTypes;
 class CompilerFunction;
-typedef GCPtr<CompilerTypes> Types_p;
+typedef GCPtr<CompilerTypes> CompilerTypes_p;
 
 enum BindingStrength { FAILED, POSSIBLE, PERFECT };
 
@@ -143,8 +143,8 @@ public:
     RewriteBindings     bindings;
     RewriteKinds        kinds;
     RewriteConditions   conditions;
-    Types_p             value_types;
-    Types_p             binding_types;
+    CompilerTypes_p     value_types;
+    CompilerTypes_p     binding_types;
     Tree_p              type;
     Tree_p              defined;
     text                defined_name;
@@ -166,7 +166,7 @@ struct RewriteCalls
     void                Dump();
 
 public:
-    Types_p             types;
+    CompilerTypes_p     types;
     RewriteCandidates   candidates;
     GARBAGE_COLLECT(RewriteCalls);
 };
