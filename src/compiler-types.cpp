@@ -1515,6 +1515,7 @@ XL::CompilerTypes *xldebug(XL::CompilerTypes_p ti)
 }
 
 XL::Tree *xldebug(XL::Tree *);
+XL::Types *xldebug(XL::Types *);
 XL::Context *xldebug(XL::Context *);
 XL::RewriteCalls *xldebug(XL::RewriteCalls *);
 XL::RewriteCandidate *xldebug(XL::RewriteCandidate *);
@@ -1543,6 +1544,7 @@ void *xldebug(uintptr_t address)
     CHECK_ALLOC(Prefix);
     CHECK_ALLOC(Postfix);
     CHECK_ALLOC(Infix);
+    CHECK_ALLOC(Types);
     CHECK_ALLOC(CompilerTypes);
     CHECK_ALLOC(Context);
     CHECK_ALLOC(RewriteCalls);
@@ -1550,11 +1552,3 @@ void *xldebug(uintptr_t address)
 
     return XL::GarbageCollector::DebugPointer(ptr);
 }
-
-
-RECORDER(types,                 64, "Type analysis");
-RECORDER(types_ids,             64, "Assigned type identifiers");
-RECORDER(types_unifications,    64, "Type unifications");
-RECORDER(types_calls,           64, "Type deductions in rewrites (calls)");
-RECORDER(types_boxing,          64, "Machine type boxing and unboxing");
-RECORDER(types_joined,          64, "Joined types");

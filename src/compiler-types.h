@@ -44,6 +44,7 @@
 //  A value can belong to multiple types. For example, 3+5 belongs to
 //  the infix type (since 3+5 is an infix) as well as to positive_add
 
+#include "types.h"
 #include "tree.h"
 #include "context.h"
 #include "llvm-crap.h"
@@ -258,12 +259,5 @@ inline bool IsTreeType(Tree *type)
 XL_END
 
 XL::CompilerTypes *xldebug(XL::CompilerTypes *ti);
-
-RECORDER_DECLARE(types);
-RECORDER_DECLARE(types_ids);
-RECORDER_DECLARE(types_unifications);
-RECORDER_DECLARE(types_calls);
-RECORDER_DECLARE(types_boxing);
-RECORDER_DECLARE(types_joined);
 
 #endif // COMPILER_TYPES_H
