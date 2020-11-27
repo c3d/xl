@@ -241,7 +241,6 @@ Main::Main(int inArgc,
         JIT::Comment("WARNING: Using -emit_ir or -B option without LLVM.");
         JIT::Comment("         Enabled -O3 to get an LLVM output.");
         Opt::optimize.value = 3;
-
     }
 #endif // INTERPRETER_ONLY
     Opcode::Enter(&context);
