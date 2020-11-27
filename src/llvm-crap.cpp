@@ -1104,7 +1104,7 @@ void JIT::Comment(kstring comment)
 {
     // Emit a ';' so that we can pass that to llvm-mc -assemble
     if (comment)
-        llvm::outs() << ";" << comment;
+        llvm::outs() << "; " << comment;
 }
 
 
@@ -1282,6 +1282,7 @@ void *JIT::ExecutableCode(JIT::Function_p f)
 //   Return an executable pointer to the function
 // ----------------------------------------------------------------------------
 {
+    PrintCode();
 #if LLVM_VERSION < 1100
     JITTargetAddress address = p.Address(f->getName());
 #else // LLVM_VERSION >= 1100
