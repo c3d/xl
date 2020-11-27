@@ -318,6 +318,15 @@ struct Block : Tree
     bool IsBraces()     { return opening == "{" && closing == "}"; }
     bool IsSquare()     { return opening == "[" && closing == "]"; }
     bool IsGroup()      { return IsIndent() || IsParentheses() || IsBraces(); }
+    Tree *IsMetaBox()
+    {
+        // Check if block looks like [[A]], if so return A otherwise nullptr
+        if (IsSquare())
+            if (Block *block = child->AsBlock())
+                if (block->IsSquare())
+                    return block->child;
+        return nullptr;
+    }
     Tree_p              child;
     text                opening, closing;
     static text         indent, unindent;
