@@ -206,6 +206,7 @@ public:
     // JIT attributes
     void                SetOptimizationLevel(unsigned opt);
     void                PrintStatistics();
+    void                PrintCode();
     static void         StackTrace();
 
     // Types

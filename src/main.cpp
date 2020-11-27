@@ -276,6 +276,7 @@ Main::~Main()
 
     delete reader;
     delete writer;
+    delete evaluator;
 }
 
 

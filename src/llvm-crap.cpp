@@ -412,8 +412,8 @@ private:
     text                Mangle(text name);
     JITSymbol           Symbol(text name);
     JITTargetAddress    Address(text name);
+    void                PrintCode();
 };
-
 
 
 #if LLVM_VERSION < 900
@@ -647,7 +647,6 @@ JITPrivate::~JITPrivate()
 //    Destructor for JIT private helper
 // ----------------------------------------------------------------------------
 {
-    DeleteModule((intptr_t) &moduleHandle);
     record(llvm, "JITPrivate %p destroyed", this);
 }
 
@@ -790,13 +789,6 @@ Module_s JITPrivate::OptimizeModule(Module_s module)
 
     if (RECORDER_TRACE(llvm_code) & 0x20)
         dumpModule(module.get(), "Dump of module after optimizations");
-
-    // Emit LLVM IR if requested
-    if (Opt::emitIR)
-    {
-        llvm::outs() << "; LLVM IR for XL program:\n";
-        module->print(llvm::outs(), nullptr);
-    }
 
     return module;
 }
@@ -970,6 +962,17 @@ JITTargetAddress JITPrivate::Address(text name)
 }
 
 
+void JITPrivate::PrintCode()
+// ----------------------------------------------------------------------------
+//   Print the code if this is requested
+// ----------------------------------------------------------------------------
+{
+    // Emit LLVM IR if requested
+    if (module)
+        module->print(llvm::outs(), nullptr);
+}
+
+
 
 // ============================================================================
 //
@@ -1123,6 +1126,19 @@ void JIT::PrintStatistics()
 }
 
 
+void JIT::PrintCode()
+// ----------------------------------------------------------------------------
+//   Print the module output if this is requested
+// ----------------------------------------------------------------------------
+{
+    if (Opt::emitIR)
+    {
+        Comment("LLVM IR for XL program\n");
+        p.PrintCode();
+    }
+}
+
+
 void JIT::StackTrace()
 // ----------------------------------------------------------------------------
 //    Dump the stack trace in case of crash
@@ -1229,6 +1245,7 @@ void JIT::DeleteModule(JIT::ModuleID modID)
 //   Delete a module in the JIT
 // ----------------------------------------------------------------------------
 {
+    PrintCode();
     p.DeleteModule(modID);
 }
 
