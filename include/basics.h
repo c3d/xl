@@ -40,6 +40,7 @@
 
 #include "tree.h"
 #include "context.h"
+#include "types.h"
 
 #include "main.h"
 #include "save.h"
