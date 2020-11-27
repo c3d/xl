@@ -155,18 +155,19 @@ eval_fn CompilerUnit::Compile()
 {
     Scope *scope = context->Symbols();
     record(compiler_unit, "Compile %t in scope %t", source, scope);
-    if (!context->ProcessDeclarations(source))
-    {
-        // No instruction in input source, return as is
-        record(compiler_unit, "No instructions in %t, identity", source);
-        return xl_identity;
-    }
 
-    if (!types->TypeAnalysis(source))
+    Tree *type = types->TypeAnalysis(source);
+    if (!type)
     {
         // Type analysis failed
         Ooops("Type analysis for $1 failed", source);
         record(compiler_unit, "Type analysis for %t failed", source);
+        return xl_identity;
+    }
+    if (type == declaration_type)
+    {
+        // No instruction in input source, return as is
+        record(compiler_unit, "No instructions in %t, identity", source);
         return xl_identity;
     }
 

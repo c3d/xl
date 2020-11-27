@@ -76,7 +76,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
 
 
 CompilerFunction::CompilerFunction(CompilerFunction &caller,
-                                   RewriteCandidate *rc)
+                                   CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Create new compiler function for optimized evaluation functions
 // ----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ void CompilerFunction::InitializeArgs()
 }
 
 
-void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
+void CompilerFunction::InitializeArgs(CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Initialize the arguments and return statements for optimized functions
 // ----------------------------------------------------------------------------
@@ -288,7 +288,7 @@ void CompilerFunction::InitializeArgs(RewriteCandidate *rc)
 
 
 JIT::Value_p CompilerFunction::Compile(Tree *call,
-                                       RewriteCandidate *rc,
+                                       CompilerRewriteCandidate *rc,
                                        const JIT::Values &args)
 // ----------------------------------------------------------------------------
 //    Compile a given rewrite for a tree
@@ -307,7 +307,7 @@ JIT::Value_p CompilerFunction::Compile(Tree *call,
         bool isData = d == CompilerTypes::Decl::DATA;
 
         // Identify the return type for the rewrite
-        CompilerTypes *btypes = rc->binding_types;
+        CompilerTypes *btypes = rc->BindingTypes();
         Tree *base = btypes->BaseType(rc->type);
         JIT::Type_p retTy = rc->RewriteType();
         if (!retTy && rc->type)
@@ -618,7 +618,7 @@ JIT::Function_p CompilerFunction::UnboxFunction(JIT::Type_p type,
 
     if (!function)
     {
-        if (Tree *inner = types->IsMatching(pattern))
+        if (Tree *inner = types->IsPatternType(pattern))
             pattern = inner;
 
         // Get original form representing that data type
@@ -871,7 +871,7 @@ JIT::Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
 // ----------------------------------------------------------------------------
 {
     // Find the base type for the expression
-    Tree *base = types->CodegenType(tree);
+    Tree *base = types->CodeGenerationType(tree);
     if (!base)
     {
         if (mayfail)
@@ -899,7 +899,7 @@ void CompilerFunction::ValueMachineType(Tree *tree, JIT::Type_p type)
 //    Record the global value associated to a type name or expression
 // ----------------------------------------------------------------------------
 {
-    Tree *base = types->CodegenType(tree);
+    Tree *base = types->CodeGenerationType(tree);
     AddBoxedType(base, type);
 }
 
@@ -1012,9 +1012,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         break;
 
     case INFIX:
-        if (Infix *range = types->IsRangeType(type))
-            mtype = BoxedType(range->left);
-        if (Tree *pattern = types->Matching(type))
+        if (Tree *pattern = types->IsPatternType(type))
             mtype = StructureType(pattern, type);
         break;
 
@@ -1045,7 +1043,7 @@ JIT::Type_p CompilerFunction::ReturnType(Tree *parmForm)
 // ----------------------------------------------------------------------------
 {
     // Type inference gives us the return type for this form
-    Tree *type = types->CodegenType(parmForm);
+    Tree *type = types->CodeGenerationType(parmForm);
     JIT::Type_p mtype = BoxedType(type);
     if (!mtype)
         mtype = jit.VoidType();

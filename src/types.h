@@ -41,8 +41,15 @@
 
 XL_BEGIN
 
+
+// Forward classes
 class Types;
 typedef GCPtr<Types> Types_p;
+struct RewriteCandidate;
+struct RewriteCalls;
+typedef GCPtr<RewriteCalls> RewriteCalls_p;
+typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
+extern Name_p tree_type;
 
 
 class Types
@@ -50,55 +57,87 @@ class Types
 //   Record types information in a given context
 // ----------------------------------------------------------------------------
 {
-    Context_p   context;        // Context for lookups
-    tree_map    types;          // Type associated with an expression if any
-    tree_map    aliases;        // Aliases for a type
-    Types_p     parent;         // Parent type information if any
-
 public:
     Types(Scope *scope);
-    Types(Scope *scope, Types *parent);
-    ~Types();
+    virtual ~Types();
     typedef Tree *value_type;
+
+    // Create a types structure for local processing
+    virtual Types *     LocalTypes();
+
+    // Create rewrite calls for this class
+    virtual RewriteCalls *NewRewriteCalls();
 
 public:
     // Main entry point: perform type analysis on a whole program
-    Tree *      TypeAnalysis(Tree *source);
+    virtual Tree *      TypeAnalysis(Tree *source);
 
-    // Return the type for an expression
-    Tree *      Type(Tree *expr);
+    // Return the type for the current mode, for a value and for a declaration
+    Tree *              Type(Tree *expr);
+    Tree *              ValueType(Tree *expr);
+    Tree *              DeclarationType(Tree *expr);
+    Tree *              BaseType(Tree *type, bool recurse = true);
+    Tree *              KnownType(Tree *expr, bool recurse = true);
+
+    // Access to the scope
+    Scope *             TypesScope()            { return context->Symbols(); }
+    Context *           TypesContext()          { return context; }
 
 public:
     // Interface for Tree::Do() to traverse and annotate the tree
-    Tree *      Do(Integer *what);
-    Tree *      Do(Real *what);
-    Tree *      Do(Text *what);
-    Tree *      Do(Name *what);
-    Tree *      Do(Prefix *what);
-    Tree *      Do(Postfix *what);
-    Tree *      Do(Infix *what);
-    Tree *      Do(Block *what);
+    Tree *              Do(Integer *what);
+    Tree *              Do(Real *what);
+    Tree *              Do(Text *what);
+    Tree *              Do(Name *what);
+    Tree *              Do(Prefix *what);
+    Tree *              Do(Postfix *what);
+    Tree *              Do(Infix *what);
+    Tree *              Do(Block *what);
 
 protected:
+    // Local types (use LocalTypes() to create)
+    Types(Scope *scope, Types *parent);
+
     // Common code for all constants (integer, real, text)
-    Tree *      DoConstant(Tree *what, Tree *type, kind k);
-    Tree *      DoStatements(Tree *expr, Tree *left, Tree *right);
-    Tree *      DoTypeAnnotation(Infix *decl);
-    Tree *      DoRewrite(Infix *rewrite);
+    Tree *              DoConstant(Tree *what, Tree *type, kind k);
+    Tree *              DoStatements(Tree *expr, Tree *left, Tree *right);
+    Tree *              DoTypeAnnotation(Infix *decl);
+    Tree *              DoRewrite(Infix *rewrite);
 
-    // Try to evaluate expression and perform required unifications
-    Tree *      Evaluate(Tree *tree, bool mayFail = false);
-
-    // Type properties
-    Tree *      AssignType(Tree *expr, Tree *type, bool add = false);
-    Tree *      KnownType(Tree *expr, bool recurse = true);
-    Tree *      ExprMatchesType(Tree *expr, Tree *type);
-    Tree *      TypeMatchesType(Tree *type, Tree *ref);
-    Tree *      AliasType(Tree *alias, Tree *base);
-    Tree *      UnionType(Tree *t1, Tree *t2);
-    Tree *      BaseType(Tree *alias);
+    // Type compatibility checks
+    Tree *              TypeCoversType(Tree *type, Tree *ref);
 
 public:
+    // Evaluate expression and perform required unifications
+    virtual Tree *      Evaluate(Tree *tree, bool mayFail = false);
+
+    // Evaluate a type epxression
+    virtual Tree *      EvaluateType(Tree *tree, bool mayfail = false);
+
+    // Type associations and unifications
+    Tree *              TypeError(Tree *t1, Tree *t2);
+    Tree *              AssignType(Tree *expr, Tree *type, bool add = false);
+    Tree *              Unify(Tree *t1, Tree *t2);
+    Tree *              Join(Tree *old, Tree *replacement);
+    Tree *              JoinedType(Tree *type, Tree *old, Tree *replacement);
+    Tree *              UnionType(Tree *t1, Tree *t2);
+    Tree *              PatternType(Tree *form);
+    Tree *              MakeTypesExplicit(Tree *expr);
+
+    // Checking if we have specific kinds of types
+    static Tree *       IsPatternType(Tree *type);
+    static Tree *       IsRewriteType(Tree *type);
+    static Infix *      IsUnionType(Tree *type);
+    static bool         IsGeneric(text name);
+    static Name *       IsGeneric(Tree *type);
+    static Name *       IsTypeName(Tree *type);
+
+    // Access to rewrite calls
+    RewriteCalls *      TreeRewriteCalls(Tree *what, bool recurse = true);
+    void                TreeRewriteCalls(Tree *what, RewriteCalls *rc);
+
+
+protected:
     struct TypeEvaluator
     {
         TypeEvaluator(Types *types);
@@ -108,18 +147,95 @@ public:
         Tree *  Do(Tree *what);
         Tree *  Do(Name *what);
         Tree *  Do(Infix *what);
+        Tree *  Do(Prefix *what);
         Tree *  Evaluate(Tree *what);
 
         Types_p types;
     };
 
 public:
+    // Checking if a declaration is data or a C declaration
+    enum class Decl { NORMAL, C, DATA, BUILTIN };
+    static Decl RewriteCategory(RewriteCandidate *rc);
+    static Decl RewriteCategory(Rewrite *rw, Tree *defined, text &label);
+    static bool IsValidCName(Tree *tree, text &label);
+
+public:
     // Debug utilities
-    void        Dump();
+    virtual void Dump();
+    virtual void DumpAll();
 
 public:
     GARBAGE_COLLECT(Types);
+
+protected:
+    Context_p   context;        // Context for lookups
+    tree_map    types;          // Type associated with an expression if any
+    tree_map    unifications;   // Map a type to its reference type
+    tree_map    captured;       // Trees captured from enclosing context
+    rcall_map   rcalls;         // Rewrites to call for a given tree
+    Types_p     parent;         // Parent type information if any
+    bool        declaration;    // Analyzing type of a declaration
+    static uint id;             // Id of next type
 };
+
+
+
+// ============================================================================
+//
+//   Inline functions
+//
+// ============================================================================
+
+inline bool Types::IsGeneric(text name)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a generated generic type name
+// ----------------------------------------------------------------------------
+{
+    return name.size() && name[0] == '#';
+}
+
+
+inline Name *Types::IsGeneric(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a generated generic type name
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+        if (IsGeneric(name->value))
+            return name;
+    return nullptr;
+}
+
+
+inline Name *Types::IsTypeName(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a given type is a 'true' type name, i.e. not generated
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = type->AsName())
+        if (!IsGeneric(name->value))
+            return name;
+    return nullptr;
+}
+
+
+inline bool IsTreeType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Return true for the 'tree' type
+// ----------------------------------------------------------------------------
+{
+    return type == tree_type;
+}
+
+
+inline bool IsErrorType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a type represents an error
+// ----------------------------------------------------------------------------
+{
+    return type == nullptr;
+}
 
 XL_END
 

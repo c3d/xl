@@ -57,6 +57,8 @@ INIT_ALLOCATOR(Infix);
 
 INIT_ALLOCATOR(Context);
 INIT_ALLOCATOR(Types);
+INIT_ALLOCATOR(RewriteCalls);
+INIT_ALLOCATOR(RewriteCandidate);
 
 
 // ============================================================================

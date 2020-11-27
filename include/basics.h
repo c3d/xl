@@ -41,6 +41,7 @@
 #include "tree.h"
 #include "context.h"
 #include "types.h"
+#include "rewrites.h"
 
 #include "main.h"
 #include "save.h"

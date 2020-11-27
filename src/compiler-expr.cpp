@@ -265,15 +265,11 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 
     record(compiler_expr, "Call %t", call);
     CompilerTypes *types = function.types;
-    rcall_map &rcalls = types->TypesRewriteCalls();
-    rcall_map::iterator found = rcalls.find(call);
-    record(types_calls, "Looking up %t in %p (%u entries)",
-           call, types, rcalls.size());
-    if (mayfail && found == rcalls.end())
+    RewriteCalls *rc = types->TreeRewriteCalls(call);
+    record(types_calls, "Looking up %t in %p: got %p", call, types, rc);
+    if (mayfail && !rc)
         return nullptr;
-    assert(found != rcalls.end() || !"Type analysis botched on expression");
-
-    RewriteCalls *rc = (*found).second;
+    XL_ASSERT(rc && "Type analysis botched on expression");
     RewriteCandidates &calls = rc->candidates;
 
     // Optimize the frequent case where we have a single call candidate
@@ -285,7 +281,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         RewriteCandidate* cand = calls[0];
         if (cand->Unconditional())
         {
-            result = DoRewrite(call, cand);
+            result = DoRewrite(call, (CompilerRewriteCandidate *) cand);
             return result;
         }
     }
@@ -373,7 +369,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             code.IfBranch(condition, isGood, isBad);
             code.SwitchTo(isGood);
             value_map saveComputed = computed;
-            result = DoRewrite(call, cand);
+            result = DoRewrite(call, (CompilerRewriteCandidate *) cand);
             computed = saveComputed;
             result = function.Autobox(call, result, storageType);
             record(compiler_expr, "Call %t candidate %u is conditional: %v",
@@ -385,7 +381,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         else
         {
             // If this particular call was unconditional, we are done
-            result = DoRewrite(call, cand);
+            result = DoRewrite(call, (CompilerRewriteCandidate *) cand);
             result = function.Autobox(call, result, storageType);
             code.Store(result, storage);
             code.Branch(isDone);
@@ -406,7 +402,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 }
 
 
-JIT::Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
+JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
+                                           CompilerRewriteCandidate *cand)
 // ----------------------------------------------------------------------------
 //   Generate code for a particular rewwrite candidate
 // ----------------------------------------------------------------------------
@@ -470,8 +467,8 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call, RewriteCandidate *cand)
     // Save the type of the return value
     if (result)
     {
-        CompilerTypes *vtypes = cand->value_types;
-        Tree *base = vtypes->CodegenType(call);
+        CompilerTypes *vtypes = cand->ValueTypes();
+        Tree *base = vtypes->CodeGenerationType(call);
         JIT::Type_p retTy = code.Type(result);
         function.AddBoxedType(base, retTy);
         record(compiler_expr, "Transporting type %t (%T) of %t into %p",

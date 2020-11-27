@@ -70,7 +70,7 @@ public:
     value_type  Do(Block *what);
 
     value_type  DoCall(Tree *call, bool mayfail = false);
-    value_type  DoRewrite(Tree *call, RewriteCandidate *candidate);
+    value_type  DoRewrite(Tree *call, CompilerRewriteCandidate *candidate);
     value_type  Value(Tree *expr);
     value_type  Compare(Tree *value, Tree *test);
 };

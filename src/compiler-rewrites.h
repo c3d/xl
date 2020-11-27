@@ -37,141 +37,68 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+#include "rewrites.h"
 #include "compiler.h"
 #include "renderer.h"
 
 #include <recorder/recorder.h>
 
 
-RECORDER_DECLARE(call_types);
-RECORDER_DECLARE(argument_bindings);
-
 XL_BEGIN
 
 class CompilerTypes;
-class CompilerFunction;
-typedef GCPtr<CompilerTypes> CompilerTypes_p;
 
-enum BindingStrength { FAILED, POSSIBLE, PERFECT };
-
-struct RewriteBinding
-// ----------------------------------------------------------------------------
-//   Binding of a given parameter to a value
-// ----------------------------------------------------------------------------
-//   If [foo X is ...] is invoked as [foo 2], then this records the binding
-//   of [X] to [2].
-{
-    RewriteBinding(Name *name, Tree *value)
-        : name(name), value(value) {}
-    bool       IsDeferred();
-    Name_p     name;
-    Tree_p     value;
-};
-typedef std::vector<RewriteBinding> RewriteBindings;
-
-
-struct RewriteCondition
-// ----------------------------------------------------------------------------
-//   A condition for a given rewrite to be valid
-// ----------------------------------------------------------------------------
-//   For [foo X when X > 0 is ...] being called as [foo 2], this records
-//   the condition [X > 0] along with [2].
-{
-    RewriteCondition(Tree *value, Tree *test): value(value), test(test) {}
-    Tree_p      value;
-    Tree_p      test;
-};
-typedef std::vector<RewriteCondition> RewriteConditions;
-
-
-struct RewriteKind
-// ----------------------------------------------------------------------------
-//   A kind-based condition for a given rewrite to be valid
-// ----------------------------------------------------------------------------
-//   For [foo X,Y], the input must be an infix, so when called "ambiguously"
-//   as [foo Z], this will check that [Z] hss an infix kind.
-{
-    RewriteKind(Tree *value, kind test): value(value), test(test) {}
-    Tree_p      value;
-    kind        test;
-};
-typedef std::vector<RewriteKind> RewriteKinds;
-
-
-struct RewriteCandidate
+struct CompilerRewriteCandidate : RewriteCandidate
 // ----------------------------------------------------------------------------
 //    A rewrite candidate for a particular tree pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCandidate(Infix *rewrite, Scope *scope, CompilerTypes *types);
-    void Condition(Tree *value, Tree *test)
-    {
-        conditions.push_back(RewriteCondition(value, test));
-    }
-    void KindCondition(Tree *value, kind k)
-    {
-        record(call_types, "Check if %t has kind %u", value, (unsigned) k);
-        kinds.push_back(RewriteKind(value, k));
-    }
+    CompilerRewriteCandidate(Infix *rw, Scope *scope, CompilerTypes *types);
 
-    bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
-
-    // Argument binding
+    // REVIIST - Hacks from older implemnetation, remove
     Tree *              ValueType(Tree *value);
-    BindingStrength     Bind(Tree *ref, Tree *what);
-    BindingStrength     BindBinary(Tree *form1, Tree *value1,
-                                   Tree *form2, Tree *value2);
-    bool                Unify(Tree *valueType, Tree *formType,
-                              Tree *value, Tree *pattern,
-                              bool declaration = false);
 
     // Code generation
-    Tree *              RewritePattern()        { return rewrite->left; }
-    Tree *              RewriteBody()           { return rewrite->right; }
     JIT::Function_p     Prototype(JIT &jit);
     JIT::FunctionType_p FunctionType(JIT &jit);
-    text                FunctionName();
     JIT::Signature      RewriteSignature();
     JIT::Type_p         RewriteType();
     void                RewriteType(JIT::Type_p type);
 
-    void                Dump();
+    // Access types in Compiler form
+    CompilerTypes *     ValueTypes()
+    {
+        return (CompilerTypes *) (Types *) value_types;
+    }
+    CompilerTypes *     BindingTypes()
+    {
+        return (CompilerTypes *) (Types *) binding_types;
+    }
 
 public:
-    Infix_p             rewrite;
-    Scope_p             scope;
-    RewriteBindings     bindings;
-    RewriteKinds        kinds;
-    RewriteConditions   conditions;
-    CompilerTypes_p     value_types;
-    CompilerTypes_p     binding_types;
-    Tree_p              type;
-    Tree_p              defined;
-    text                defined_name;
-
-    GARBAGE_COLLECT(RewriteCandidate);
+    GARBAGE_COLLECT(CompilerRewriteCandidate);
 };
-typedef GCPtr<RewriteCandidate> RewriteCandidate_p;
-typedef std::vector<RewriteCandidate_p> RewriteCandidates;
+typedef GCPtr<CompilerRewriteCandidate> CompilerRewriteCandidate_p;
+typedef std::vector<CompilerRewriteCandidate_p> CompilerRewriteCandidates;
 
 
-struct RewriteCalls
+struct CompilerRewriteCalls : RewriteCalls
 // ----------------------------------------------------------------------------
 //   Identify the way to invoke rewrites for a particular pattern
 // ----------------------------------------------------------------------------
 {
-    RewriteCalls(CompilerTypes *ti);
+    CompilerRewriteCalls(CompilerTypes *ti);
 
-    Tree *              Check(Scope *scope, Tree *value, Infix *candidate);
-    void                Dump();
+    // Factory for rewrite candidates - overloaded by compiler version
+    virtual
+    CompilerRewriteCandidate *Candidate(Infix *rewrite,
+                                        Scope *scope,
+                                        Types *types) override;
 
 public:
-    CompilerTypes_p     types;
-    RewriteCandidates   candidates;
-    GARBAGE_COLLECT(RewriteCalls);
+    GARBAGE_COLLECT(CompilerRewriteCalls);
 };
-typedef GCPtr<RewriteCalls> RewriteCalls_p;
-typedef std::map<Tree_p, RewriteCalls_p> rcall_map;
+typedef GCPtr<CompilerRewriteCalls> CompilerRewriteCalls_p;
 
 XL_END
 

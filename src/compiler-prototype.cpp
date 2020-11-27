@@ -62,13 +62,13 @@ CompilerPrototype::CompilerPrototype(CompilerUnit &unit,
 
 
 CompilerPrototype::CompilerPrototype(CompilerPrototype &caller,
-                                     RewriteCandidate *rc)
+                                     CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //    Create a new compiler prototype for rewrites
 // ----------------------------------------------------------------------------
     : unit(caller.unit),
       pattern(rc->RewritePattern()),
-      types(rc->binding_types),
+      types(rc->BindingTypes()),
       function(rc->Prototype(unit.jit))
 {
     record(compiler_prototype, "Created rewrite %p for %t as %v",
