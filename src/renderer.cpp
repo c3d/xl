@@ -44,6 +44,7 @@
 #include "action.h"
 #include "options.h"
 #include "interpreter.h"
+#include "context.h"
 
 #include <recorder/recorder.h>
 #include <iostream>
@@ -879,6 +880,10 @@ XL::Tree *xldebug(XL::Tree *tree)
         XL::Allocator<XL::Postfix>::IsAllocated(tree)   ||
         XL::Allocator<XL::Block>::IsAllocated(tree))
     {
+        if (XL::Scope *scope = IsScope(tree))
+            return xldebug(scope);
+        if (XL::Rewrite *rw = IsSymbolTable(tree))
+            return xldebug(rw);
         XL::Renderer render(std::cerr);
         if (xldebug_verbose)
             render.SelectStyleSheet("debug.stylesheet");

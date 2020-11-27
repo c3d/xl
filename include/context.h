@@ -209,6 +209,8 @@ typedef std::map<Tree_p, Tree_p>        tree_map;
 typedef Tree *                          (*eval_fn) (Scope *, Tree *);
 typedef std::map<Tree_p, eval_fn>       code_map;
 
+#define REWRITE_NAME            "\n"
+#define REWRITE_CHILDREN_NAME   ";"
 
 
 // ============================================================================
@@ -375,6 +377,63 @@ inline RewriteChildren *RewriteNext(Rewrite *rw)
 // ----------------------------------------------------------------------------
 {
     return rw->right->AsInfix();
+}
+
+
+inline bool IsScope(Scope *scope)
+// ----------------------------------------------------------------------------
+//   Check if a scope (prefix) looks like a scope
+// ----------------------------------------------------------------------------
+{
+    while (scope)
+    {
+        if (scope->left == xl_nil)
+            return scope->right == xl_nil || ScopeRewrites(scope);
+        Scope *parent = scope->left->As<Scope>();
+        scope = parent;
+    }
+    return false;
+}
+
+
+inline Scope *IsScope(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Check if a tree (prefix) looks like a scope, then return it
+// ----------------------------------------------------------------------------
+{
+    if (Scope *scope = tree->As<Scope>())
+        if (IsScope(scope))
+            return scope;
+    return nullptr;
+}
+
+
+inline bool IsSymbolTable(Rewrite *rw)
+// ----------------------------------------------------------------------------
+//   Check if a rewrite (infix) looks like a symbol table
+// ----------------------------------------------------------------------------
+{
+    if (rw->name != REWRITE_NAME && rw->name != REWRITE_CHILDREN_NAME)
+        return false;
+    if (rw->left != xl_nil && !RewriteDeclaration(rw))
+        return false;
+    if (rw->right != xl_nil && !RewriteNext(rw))
+        return false;
+
+    // At this stage, it's a safe bet it looks like a symbol table
+    return true;
+}
+
+
+inline Rewrite *IsSymbolTable(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Check if a tree (prefix) looks like a symbol table
+// ----------------------------------------------------------------------------
+{
+    if (Rewrite *rw = tree->As<Rewrite>())
+        if (IsSymbolTable(rw))
+            return rw;
+    return nullptr;
 }
 
 

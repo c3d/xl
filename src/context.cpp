@@ -70,10 +70,6 @@ XL_BEGIN
 //
 // ============================================================================
 
-#define REWRITE_NAME            "\n"
-#define REWRITE_CHILDREN_NAME   ";"
-
-
 uint Context::hasRewritesForKind = 0;
 
 Context::Context()
@@ -942,9 +938,7 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
         if (decl)
         {
             if (IsDeclaration(decl))
-                out << decl->left
-                    << decl->name
-                    << ShortTreeForm(decl->right) << "\n";
+                out << decl << "\n";
             else
                 out << "DECL?" << decl << "\n";
         }
@@ -983,6 +977,8 @@ void Context::Dump(std::ostream &out, Rewrite *rw)
 
 XL_END
 
+extern XL::Tree *xldebug(XL::Tree *tree);
+
 XL::Scope *xldebug(XL::Scope *scope)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scope in a symbol table
@@ -990,8 +986,15 @@ XL::Scope *xldebug(XL::Scope *scope)
 {
     if (XL::Allocator<XL::Scope>::IsAllocated(scope))
     {
-        XL::Context::Dump(std::cerr, scope, false);
-        scope = Enclosing(scope);
+        if (IsScope(scope))
+        {
+            XL::Context::Dump(std::cerr, scope, true);
+            scope = Enclosing(scope);
+        }
+        else
+        {
+            xldebug((XL::Tree *) scope);
+        }
     }
     else
     {
@@ -1009,10 +1012,21 @@ XL::Rewrite *xldebug(XL::Rewrite *rw)
 //   The infix can be shown using debug(), but it's less convenient
 {
     if (XL::Allocator<XL::Rewrite>::IsAllocated(rw))
-        XL::Context::Dump(std::cerr, (XL::Rewrite *) rw);
+    {
+        if (IsSymbolTable(rw))
+        {
+            XL::Context::Dump(std::cerr, rw);
+        }
+        else
+        {
+            xldebug((XL::Tree *) rw);
+        }
+    }
     else
+    {
         std::cerr << "Cowardly refusing to render unknown rewrite pointer "
                   << (void *) rw << "\n";
+    }
     return rw;
 }
 
