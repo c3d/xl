@@ -52,6 +52,7 @@ class Types
 {
     Context_p   context;        // Context for lookups
     tree_map    types;          // Type associated with an expression if any
+    tree_map    aliases;        // Aliases for a type
     Types_p     parent;         // Parent type information if any
 
 public:
@@ -66,6 +67,51 @@ public:
 
     // Return the type for an expression
     Tree *      Type(Tree *expr);
+
+public:
+    // Interface for Tree::Do() to traverse and annotate the tree
+    Tree *      Do(Integer *what);
+    Tree *      Do(Real *what);
+    Tree *      Do(Text *what);
+    Tree *      Do(Name *what);
+    Tree *      Do(Prefix *what);
+    Tree *      Do(Postfix *what);
+    Tree *      Do(Infix *what);
+    Tree *      Do(Block *what);
+
+protected:
+    // Common code for all constants (integer, real, text)
+    Tree *      DoConstant(Tree *what, Tree *type, kind k);
+    Tree *      DoStatements(Tree *expr, Tree *left, Tree *right);
+    Tree *      DoTypeAnnotation(Infix *decl);
+    Tree *      DoRewrite(Infix *rewrite);
+
+    // Try to evaluate expression and perform required unifications
+    Tree *      Evaluate(Tree *tree, bool mayFail = false);
+
+    // Type properties
+    Tree *      AssignType(Tree *expr, Tree *type, bool add = false);
+    Tree *      KnownType(Tree *expr, bool recurse = true);
+    Tree *      ExprMatchesType(Tree *expr, Tree *type);
+    Tree *      TypeMatchesType(Tree *type, Tree *ref);
+    Tree *      AliasType(Tree *alias, Tree *base);
+    Tree *      UnionType(Tree *t1, Tree *t2);
+    Tree *      BaseType(Tree *alias);
+
+public:
+    struct TypeEvaluator
+    {
+        TypeEvaluator(Types *types);
+
+        // Interface for Tree::Do() to traverse and annotate the tree
+        typedef Tree *value_type;
+        Tree *  Do(Tree *what);
+        Tree *  Do(Name *what);
+        Tree *  Do(Infix *what);
+        Tree *  Evaluate(Tree *what);
+
+        Types_p types;
+    };
 
 public:
     // Debug utilities

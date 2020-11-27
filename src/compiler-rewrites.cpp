@@ -512,8 +512,8 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *patternType,
 {
     Tree *refType = binding_types->DeclaredTypeName(valueType);
 
-    record(call_types,
-           "Unify %t as %t with %t as %t", value, valueType, pattern, patternType);
+    record(call_types, "Unify %t as %t with %t as %t",
+           value, valueType, pattern, patternType);
 
     // If we have a tree, it may have the right type, must check at runtime
     if (refType == tree_type)
