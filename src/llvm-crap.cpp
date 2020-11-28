@@ -1245,7 +1245,6 @@ void JIT::DeleteModule(JIT::ModuleID modID)
 //   Delete a module in the JIT
 // ----------------------------------------------------------------------------
 {
-    PrintCode();
     p.DeleteModule(modID);
 }
 
