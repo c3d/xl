@@ -50,7 +50,7 @@ PRODUCTS_bootstrap=	bxl.exe
 PRODUCTS_reboot=	rxl.exe
 PRODUCTS_stability=	sxl.exe
 
-XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXE_EXT)
+XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXT.exe)
 XL_cplusplus=		xl2c
 XL_bootstrap=		cxl
 XL_reboot=		bxl
@@ -79,8 +79,8 @@ xl_lib.h: ../xl_lib.h
 xl.syntax: ../xl.syntax
 	$(PRINT_COPY) cp $< $@
 
-$(MIQ_OBJDIR)%.xl$(OBJ_EXT): $(MIQ_OBJDIR)%.xl.cpp
-	$(PRINT_COMPILE) $(MAKE_CXX)
+$(MIQ_OBJDIR)%.xl$(EXT.obj): $(MIQ_OBJDIR)%.xl.cpp
+	$(PRINT_COMPILE) $(COMPILE.cpp)
 
 $(MIQ_OBJDIR)%.xl.cpp: %.xl $(XL) $(OTHER_SOURCES)
 	$(PRINT_COMPILE) $(XL) $< > $@

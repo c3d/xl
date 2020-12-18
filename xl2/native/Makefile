@@ -103,7 +103,7 @@ PRODUCTS_native=	nxl.exe
 PRODUCTS_reboot=	nrxl.exe
 PRODUCTS_stability=	nsxl.exe
 
-XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXE_EXT)
+XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXT.exe)
 XL_native=		sxl
 XL_reboot=		nxl
 XL_stability=		nrxl
@@ -137,8 +137,8 @@ xl_lib.h: ../xl_lib.h
 xl.syntax: ../xl.syntax
 	$(PRINT_COPY) cp $< $@
 
-$(MIQ_OBJDIR)%.xl$(OBJ_EXT): $(MIQ_OBJDIR)%.xl.cpp
-	$(PRINT_COMPILE) $(MAKE_CXX)
+$(MIQ_OBJDIR)%.xl$(EXT.obj): $(MIQ_OBJDIR)%.xl.cpp
+	$(PRINT_COMPILE) $(COMPILE.cpp)
 
 $(MIQ_OBJDIR)%.xl.cpp: %.xl $(XL) $(OTHER_SOURCES)
 	$(PRINT_COMPILE) $(XL) -bootstrap -g $< > $@
