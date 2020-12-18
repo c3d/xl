@@ -795,7 +795,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
                 {
                     what = arg;
                     // Check if we have a single definition on the left
-                    if (Infix *ifx = IsDefinition(inside))
+                    if (IsDefinition(inside))
                         what = new Prefix(newCallee, arg, pfx->Position());
                 }
                 else
