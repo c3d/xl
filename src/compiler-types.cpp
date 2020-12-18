@@ -855,9 +855,9 @@ Tree *CompilerTypes::Unify(Tree *t1, Tree *t2)
         return Join(t1, t2);
 
     // Check type patterns, i.e. [type X] as in [type(X:integer, Y:real)]
-    if (Tree *pat1 = IsTypeOf(t1))
+    if (IsTypeOf(t1))
         return Join(t2, t1);
-    if (Tree *pat2 = IsTypeOf(t2))
+    if (IsTypeOf(t2))
         return Join(t1, t2);
 
     // If either is a generic, unify with the other
