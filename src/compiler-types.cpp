@@ -283,7 +283,7 @@ Tree *CompilerTypes::DoConstant(Tree *what, kind k)
     }
     else
     {
-        type = TypeOf(what);
+        type = Matching(what);
         type = AssignType(what, type);
     }
     return type;
@@ -300,7 +300,7 @@ Tree *CompilerTypes::Do(Name *what)
            this, declaration ? "declaring" : "processing", what);
     if (declaration)
     {
-        type = TypeOf(what);
+        type = Matching(what);
         if (type)
             context->Define(what, what);
         return type;
@@ -349,7 +349,7 @@ Tree *CompilerTypes::Do(Name *what)
         Tree *def = PatternBase(decl);
         if (def != what)
         {
-            Tree *rwtype = TypeOfRewrite(rw);
+            Tree *rwtype = RewriteType(rw);
             if (!rwtype)
                 return nullptr;
             type = AssignType(decl, type);
@@ -378,7 +378,7 @@ Tree *CompilerTypes::Do(Prefix *what)
                 Ooops("No C declaration for $1", what);
                 return nullptr;
             }
-            Tree *type = TypeOfRewrite(cdecl->rewrite);
+            Tree *type = RewriteType(cdecl->rewrite);
             return type;
         }
     }
@@ -418,7 +418,7 @@ Tree *CompilerTypes::Do(Infix *what)
 
     // Case of [X is Y]: Analysis if any will be done during
     if (IsDefinition(what))
-        return TypeOfRewrite(what);
+        return RewriteType(what);
 
     // For all other cases, evaluate the infix
     return Evaluate(what);
@@ -463,7 +463,7 @@ Tree *CompilerTypes::AssignType(Tree *expr, Tree *type)
 }
 
 
-Tree *CompilerTypes::TypeOf(Tree *expr)
+Tree *CompilerTypes::Matching(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Return the type of the expr as a [type X] expression
 // ----------------------------------------------------------------------------
@@ -494,12 +494,12 @@ Tree *CompilerTypes::TypeOf(Tree *expr)
         if (name->value == "self")
             if (Tree *declared = context->DeclaredPattern(expr))
                 if (declared != expr)
-                    type = TypeOf(declared);
+                    type = Matching(declared);
         break;
     }
 
     case BLOCK:
-        type = TypeOf(((Block *) expr)->child);
+        type = Matching(((Block *) expr)->child);
         break;
 
     case PREFIX:
@@ -520,7 +520,7 @@ Tree *CompilerTypes::TypeOf(Tree *expr)
         {
             TreePosition pos = type->Position();
             type = MakeTypesExplicit(type);
-            type = new Prefix(type_type, type, pos);
+            type = new Prefix(xl_matching, type, pos);
         }
         break;
     }
@@ -638,7 +638,7 @@ Tree *CompilerTypes::TypeDeclaration(Rewrite *decl)
 {
     Tree *declared = decl->left;
     Tree *type = EvaluateType(decl->right);
-    Tree *declt = TypeOf(declared);
+    Tree *declt = Matching(declared);
     record(types_ids, "In %p declaration %t declared %t type %t",
            this, decl, declared, type);
     type = Join(declt, type);
@@ -646,7 +646,7 @@ Tree *CompilerTypes::TypeDeclaration(Rewrite *decl)
 }
 
 
-Tree *CompilerTypes::TypeOfRewrite(Rewrite *what)
+Tree *CompilerTypes::RewriteType(Rewrite *what)
 // ----------------------------------------------------------------------------
 //   Assign an [A => B] type to a rewrite
 // ----------------------------------------------------------------------------
@@ -732,14 +732,14 @@ Tree *CompilerTypes::Evaluate(Tree *what, bool mayFail)
     record(types_calls, "In %p %+s %t",
            this, declaration ? "declaring" : "evaluating", what);
     if (declaration)
-        return TypeOf(what);
+        return Matching(what);
 
     // Test if we are already trying to evaluate this particular pattern
     rcall_map::iterator found = rcalls.find(what);
     bool recursive = found != rcalls.end();
     if (recursive)
         // Need to assign a type name, will be unified by outer Evaluate()
-        return TypeOf(what);
+        return Matching(what);
 
     // Identify all candidate rewrites in the current context
     RewriteCalls_p rc = new RewriteCalls(this);
@@ -754,7 +754,7 @@ Tree *CompilerTypes::Evaluate(Tree *what, bool mayFail)
     if (count == 0)
     {
         if (declaration || !mayFail)
-            return TypeOf(what);
+            return Matching(what);
         return nullptr;
     }
     errors.Clear();
@@ -855,9 +855,9 @@ Tree *CompilerTypes::Unify(Tree *t1, Tree *t2)
         return Join(t1, t2);
 
     // Check type patterns, i.e. [type X] as in [type(X:integer, Y:real)]
-    if (IsTypeOf(t1))
+    if (IsMatching(t1))
         return Join(t2, t1);
-    if (IsTypeOf(t2))
+    if (IsMatching(t2))
         return Join(t1, t2);
 
     // If either is a generic, unify with the other
@@ -893,7 +893,7 @@ Tree *CompilerTypes::Unify(Tree *t1, Tree *t2)
 }
 
 
-Tree *CompilerTypes::IsTypeOf(Tree *type)
+Tree *CompilerTypes::IsMatching(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if type is a type pattern, i.e. type ( ... )
 // ----------------------------------------------------------------------------
@@ -902,7 +902,7 @@ Tree *CompilerTypes::IsTypeOf(Tree *type)
     {
         if (Name *tname = pfx->left->AsName())
         {
-            if (tname == type_type)
+            if (tname == xl_matching)
             {
                 Tree *pattern = pfx->right;
                 if (Block *block = pattern->AsBlock())

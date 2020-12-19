@@ -130,10 +130,10 @@ public:
 
     // Annotate expressions with type variables
     Tree *      AssignType(Tree *expr, Tree *type);
-    Tree *      TypeOf(Tree *expr);
+    Tree *      Matching(Tree *expr);
     Tree *      MakeTypesExplicit(Tree *expr);
     Tree *      TypeDeclaration(Rewrite *decl);
-    Tree *      TypeOfRewrite(Rewrite *rw);
+    Tree *      RewriteType(Rewrite *rw);
     Tree *      Statements(Tree *expr, Tree *left, Tree *right);
 
     // Attempt to evaluate an expression and perform required unifications
@@ -160,7 +160,7 @@ public:
     bool        TypeCoversType(Tree *type, Tree *test);
 
     // Checking if we have specific kinds of types
-    Tree *      IsTypeOf(Tree *type);
+    Tree *      IsMatching(Tree *type);
     Infix *     IsRewriteType(Tree *type);
     Infix *     IsRangeType(Tree *type);
     Infix *     IsUnionType(Tree *type);

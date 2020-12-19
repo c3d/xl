@@ -618,7 +618,7 @@ JIT::Function_p CompilerFunction::UnboxFunction(JIT::Type_p type,
 
     if (!function)
     {
-        if (Tree *inner = types->IsTypeOf(pattern))
+        if (Tree *inner = types->IsMatching(pattern))
             pattern = inner;
 
         // Get original form representing that data type
@@ -1014,7 +1014,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
     case INFIX:
         if (Infix *range = types->IsRangeType(type))
             mtype = BoxedType(range->left);
-        if (Tree *pattern = types->TypeOf(type))
+        if (Tree *pattern = types->Matching(type))
             mtype = StructureType(pattern, type);
         break;
 
