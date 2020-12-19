@@ -449,10 +449,8 @@ Tree *CompilerTypes::AssignType(Tree *expr, Tree *type)
 {
     if (type)
     {
-        auto it = types.find(expr);
-        if (it != types.end())
+        if (Tree *existing = KnownType(expr))
         {
-            Tree *existing = it->second;
             if (existing == type)
                 return type;
             type = Unify(existing, type);
