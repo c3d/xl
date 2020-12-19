@@ -1,0 +1,4 @@
+// Simply test that we emit the correct error message when we have an
+// ambiguous option like -s. We used to emit the same message twice.
+// OPT=-s
+// EXIT=1

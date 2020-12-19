@@ -706,7 +706,7 @@ kstring Options::ParseNext()
                   Tree::COMMAND_LINE)
                 .Arg(input)
                 .Arg(ambiguous->Name())
-                .Arg(ambiguous->Name());
+                .Arg(best->Name());
             break;
         }
         best->Process(*this);
