@@ -989,11 +989,11 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         STYPE(integer16);
         STYPE(integer32);
         STYPE(integer64);
-        STYPE(unsigned);
-        CTYPE(unsigned8,        integer8);
-        CTYPE(unsigned16,       integer16);
-        CTYPE(unsigned32,       integer32);
-        CTYPE(unsigned64,       integer64);
+        CTYPE(natural,          integer64);
+        CTYPE(natural8,         integer8);
+        CTYPE(natural16,        integer16);
+        CTYPE(natural32,        integer32);
+        CTYPE(natural64,        integer64);
         STYPE(character);
         CTYPE(text,             charPtr);
         STYPE(real);

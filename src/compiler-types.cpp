@@ -1118,11 +1118,11 @@ bool CompilerTypes::TypeCoversConstant(Tree *type, Tree *cst)
     // Check if we match against some sized type, otherwise force type
     if (Integer *icst = cst->AsInteger())
     {
-        if (type == integer_type   || type == unsigned_type   ||
-            type == integer8_type  || type == unsigned8_type  ||
-            type == integer16_type || type == unsigned16_type ||
-            type == integer32_type || type == unsigned32_type ||
-            type == integer64_type || type == unsigned64_type)
+        if (type == integer_type   || type == natural_type   ||
+            type == integer8_type  || type == natural8_type  ||
+            type == integer16_type || type == natural16_type ||
+            type == integer32_type || type == natural32_type ||
+            type == integer64_type || type == natural64_type)
             return true;
         if (range)
             if (Integer *il = range->left->AsInteger())

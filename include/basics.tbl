@@ -173,30 +173,30 @@ TYPE(integer64,integer,
      if (Integer *ival = AsInteger())
          return (integer64_p) ival;
     );
-TYPE(unsigned,integer,
+TYPE(natural,integer,
      if (Integer *ival = AsInteger())
          if (ival->value >= 0)
-             return (unsigned_p) ival;
+             return (natural_p) ival;
     );
-TYPE(unsigned8,unsigned,
+TYPE(natural8,natural,
      if (Integer *ival = AsInteger())
          if (ival->value >= 0 && ival->value < 0x100)
-             return (unsigned8_p) ival;
+             return (natural8_p) ival;
     );
-TYPE(unsigned16,unsigned,
+TYPE(natural16,natural,
      if (Integer *ival = AsInteger())
          if (ival->value >= 0 && ival->value < 0x10000)
-             return (unsigned16_p) ival;
+             return (natural16_p) ival;
     );
-TYPE(unsigned32,unsigned,
+TYPE(natural32,natural,
      if (Integer *ival = AsInteger())
          if (ival->value >= 0 && ival->value < 0x100000000)
-             return (unsigned32_p) ival;
+             return (natural32_p) ival;
     );
-TYPE(unsigned64,unsigned,
+TYPE(natural64,natural,
      if (Integer *ival = AsInteger())
          if (ival->value >= 0)
-             return (unsigned64_p) ival;
+             return (natural64_p) ival;
     );
 TYPE(real32,real,
      if (Real *rval = AsReal())

@@ -99,10 +99,10 @@ template <> inline Tree *xl_type<int8>  ::Shape() { return integer8_type; }
 template <> inline Tree *xl_type<int16> ::Shape() { return integer16_type; }
 template <> inline Tree *xl_type<int32> ::Shape() { return integer32_type; }
 template <> inline Tree *xl_type<int64> ::Shape() { return integer64_type; }
-template <> inline Tree *xl_type<uint8> ::Shape() { return unsigned8_type; }
-template <> inline Tree *xl_type<uint16>::Shape() { return unsigned16_type; }
-template <> inline Tree *xl_type<uint32>::Shape() { return unsigned32_type; }
-template <> inline Tree *xl_type<uint64>::Shape() { return unsigned64_type; }
+template <> inline Tree *xl_type<uint8> ::Shape() { return natural8_type; }
+template <> inline Tree *xl_type<uint16>::Shape() { return natural16_type; }
+template <> inline Tree *xl_type<uint32>::Shape() { return natural32_type; }
+template <> inline Tree *xl_type<uint64>::Shape() { return natural64_type; }
 
 
 template <typename Num>
