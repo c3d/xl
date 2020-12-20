@@ -198,6 +198,10 @@ TYPE(natural64,natural,
          if (ival->value >= 0)
              return (natural64_p) ival;
     );
+TYPE(real16,real,
+     if (Real *rval = AsReal())
+         return (real16_p) rval;
+    );
 TYPE(real32,real,
      if (Real *rval = AsReal())
          return (real32_p) rval;
