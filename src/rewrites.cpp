@@ -708,17 +708,25 @@ void RewriteCalls::Dump()
 
 XL_END
 
+#ifndef INTERPRETER_ONLY
+#include "compiler-rewrites.h"
+#endif // INTERPRETER_ONLY
+
 
 XL::RewriteCalls *xldebug(XL::RewriteCalls *rc)
 // ----------------------------------------------------------------------------
 //   Debug rewrite calls
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::RewriteCalls>::IsAllocated(rc))
+    if (XL::Allocator<XL::RewriteCalls>::IsAllocated(rc))
+        rc->Dump();
+#ifndef INTERPRETER_ONLY
+    else if (XL::Allocator<XL::CompilerRewriteCalls>::IsAllocated(rc))
+        rc->Dump();
+#endif // INTERPRETER_ONLY
+    else
         std::cout << "Cowardly refusing to show bad RewriteCalls pointer "
                   << (void *) rc << "\n";
-    else
-        rc->Dump();
     return rc;
 
 }
@@ -738,11 +746,15 @@ XL::RewriteCandidate *xldebug(XL::RewriteCandidate *rc)
 //   Debug rewrite calls
 // ----------------------------------------------------------------------------
 {
-    if (!XL::Allocator<XL::RewriteCandidate>::IsAllocated(rc))
+    if (XL::Allocator<XL::RewriteCandidate>::IsAllocated(rc))
+        rc->Dump();
+#ifndef INTERPRETER_ONLY
+    else if (XL::Allocator<XL::CompilerRewriteCandidate>::IsAllocated(rc))
+        rc->Dump();
+#endif // INTERPRETER_ONLY
+    else
         std::cout << "Cowardly refusing to show bad RewriteCandidate pointer "
                   << (void *) rc << "\n";
-    else
-        rc->Dump();
     return rc;
 
 }

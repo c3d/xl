@@ -1527,20 +1527,20 @@ XL::Types *xldebug(XL::Types *ti)
 //   Dump a type inference
 // ----------------------------------------------------------------------------
 {
-#ifndef INTERPRETER_ONLY
-    if (XL::Allocator<XL::CompilerTypes>::IsAllocated(ti))
+    if (XL::Allocator<XL::Types>::IsAllocated(ti))
     {
-        return xldebug((XL::CompilerTypes *) ti);
+        ti->DumpAll();
+    }
+#ifndef INTERPRETER_ONLY
+    else if (XL::Allocator<XL::CompilerTypes>::IsAllocated(ti))
+    {
+        ti->DumpAll();
     }
 #endif // INTERPRETER_ONLY
-    if (!XL::Allocator<XL::Types>::IsAllocated(ti))
+    else
     {
         std::cout << "Cowardly refusing to show bad Types pointer "
                   << (void *) ti << "\n";
-    }
-    else
-    {
-        ti->DumpAll();
     }
     return ti;
 }
