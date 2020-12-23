@@ -930,9 +930,9 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         return Unify(b1, b2);   // No join here, since already joined with base
 
     // If either is a generic, unify with the other
-    if (IsGeneric(t1))
+    if (IsUnknownType(t1))
         return Join(t1, t2);
-    if (IsGeneric(t2))
+    if (IsUnknownType(t2))
         return Join(t2, t1);
 
     // Lookup type names, replace them with their value
@@ -950,12 +950,6 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     if (TypeCoversType(t1, t2))
         return Join(t1, t2);
     if (TypeCoversType(t2, t1))
-        return Join(t2, t1);
-
-    // If either is a generic, unify with the other
-    if (IsGeneric(t1))
-        return Join(t1, t2);
-    if (IsGeneric(t2))
         return Join(t2, t1);
 
     // None of the above: fail
@@ -1174,19 +1168,27 @@ Tree *Types::PatternType(Tree *expr)
 
     // For other names, assign a new generic type name, e.g. #A, #B, #C
     if (!type)
-    {
-        ulong v = id++;
-        text  name;
-        do
-        {
-            name = char('A' + v % 26) + name;
-            v /= 26;
-        } while (v);
-        type = new Name("#" + name, pos);
-    }
+        type = UnknownType(pos);
 
     // Otherwise, return [type X] and assign it to this expr
     types[expr] = type;
+    return type;
+}
+
+
+Tree *Types::UnknownType(TreePosition pos)
+// ----------------------------------------------------------------------------
+//    Build an "unknown" type, e.g. #A
+// ----------------------------------------------------------------------------
+{
+    ulong v = id++;
+    text  name;
+    do
+    {
+        name = char('A' + v % 26) + name;
+        v /= 26;
+    } while (v);
+    Tree *type = new Name("#" + name, pos);
     return type;
 }
 

@@ -122,14 +122,15 @@ public:
     Tree *              JoinedType(Tree *type, Tree *old, Tree *replacement);
     Tree *              UnionType(Tree *t1, Tree *t2);
     Tree *              PatternType(Tree *form);
+    Tree *              UnknownType(TreePosition pos);
     Tree *              MakeTypesExplicit(Tree *expr);
 
     // Checking if we have specific kinds of types
     static Tree *       IsPatternType(Tree *type);
     static Tree *       IsRewriteType(Tree *type);
     static Infix *      IsUnionType(Tree *type);
-    static bool         IsGeneric(text name);
-    static Name *       IsGeneric(Tree *type);
+    static bool         IsUnknownType(text name);
+    static Name *       IsUnknownType(Tree *type);
     static Name *       IsTypeName(Tree *type);
 
     // Access to rewrite calls
@@ -187,7 +188,7 @@ protected:
 //
 // ============================================================================
 
-inline bool Types::IsGeneric(text name)
+inline bool Types::IsUnknownType(text name)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
@@ -196,13 +197,13 @@ inline bool Types::IsGeneric(text name)
 }
 
 
-inline Name *Types::IsGeneric(Tree *type)
+inline Name *Types::IsUnknownType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a given type is a generated generic type name
 // ----------------------------------------------------------------------------
 {
     if (Name *name = type->AsName())
-        if (IsGeneric(name->value))
+        if (IsUnknownType(name->value))
             return name;
     return nullptr;
 }
@@ -214,7 +215,7 @@ inline Name *Types::IsTypeName(Tree *type)
 // ----------------------------------------------------------------------------
 {
     if (Name *name = type->AsName())
-        if (!IsGeneric(name->value))
+        if (!IsUnknownType(name->value))
             return name;
     return nullptr;
 }
