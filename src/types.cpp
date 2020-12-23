@@ -721,7 +721,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     if (count == 0)
     {
         if (declaration || !mayFail)
-            return PatternType(what);
+            return UnknownType(what->Position());
         return nullptr;
     }
     errors.Clear();
