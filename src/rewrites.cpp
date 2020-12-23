@@ -649,9 +649,6 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Infix *candidate)
                 if (!declaredType)
                     type = declaredType = xl_nil;
                 type = binding_types->Unify(type, declaredType);
-                type = binding_types->AssignType(defined, type);
-                if (pattern != defined)
-                    type = binding_types->AssignType(pattern, type);
                 break;
             }
         }
