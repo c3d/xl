@@ -706,7 +706,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     // Test if we are already trying to evaluate this particular pattern
     // Need to assign a type name, which will be unified by the outer Evaluate()
     if (TreeRewriteCalls(what))
-        return PatternType(what);
+        return UnknownType(what->Position());
 
     // Identify all candidate rewrites in the current context
     RewriteCalls_p rc = NewRewriteCalls();
