@@ -701,7 +701,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     record(types_calls, "In %p %+s %t",
            this, declaration ? "declaring" : "evaluating", what);
     if (declaration)
-        return PatternType(what);
+        return UnknownType(what->Position());
 
     // Test if we are already trying to evaluate this particular pattern
     // Need to assign a type name, which will be unified by the outer Evaluate()
