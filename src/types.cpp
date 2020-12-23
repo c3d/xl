@@ -237,7 +237,7 @@ Tree *Types::Do(Name *what)
 
     if (declaration)
     {
-        type = PatternType(what);
+        type = UnknownType(what->Position());
         if (type)
             context->Define(what, what);
         return type;
