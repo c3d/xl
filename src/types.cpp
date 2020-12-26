@@ -753,7 +753,7 @@ Tree *Types::EvaluateType(Tree *what, bool mayFail)
 {
     TypeEvaluator typeEvaluator(this);
     Tree *type = what->Do(typeEvaluator);
-    if (type)
+    if (type && type != what)
         type = Join(what, type);
     return type;
 }
