@@ -615,7 +615,9 @@ template<> inline Scope *Tree::As<Scope>(Scope *)
 // ----------------------------------------------------------------------------
 {
     if (Block *block = AsBlock())
-        return (Scope *) block;
+        // Check if this was allocated as a scope - Then it's a scope
+        if (XL::Allocator<XL::Scope>::IsAllocated(this))
+            return (Scope *) block;
     return nullptr;
 }
 
