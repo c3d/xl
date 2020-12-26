@@ -466,6 +466,12 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
     if (narrowerType == widerType)
         return narrowerType;
 
+    // Unknown types can match anything
+    if (IsUnknownType(widerType))
+        return Join(widerType, narrowerType);
+    if (IsUnknownType(narrowerType))
+        return Join(narrowerType, widerType);
+
     // The tree type matches anything
     if (widerType == tree_type)
         return narrowerType;
