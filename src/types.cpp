@@ -35,7 +35,9 @@
 
 #include "types.h"
 #include "errors.h"
-#include "basics.h"
+#include "builtins.h"
+#include "rewrites.h"
+#include "save.h"
 #include "cdecls.h"
 
 
@@ -251,12 +253,7 @@ Tree *Types::Do(Name *what)
         Tree *defined = PatternBase(rw->left);
 
         // Check if this is some built-in type
-        if (defined->GetInfo<TypeCheckOpcode>())
-        {
-            type = type_type;
-        }
-
-        else if (defined != what)
+        if (defined != what)
         {
             if (scope != context->Symbols())
                 captured[what] = defined;
