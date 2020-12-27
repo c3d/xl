@@ -1,2 +1,1 @@
 O3/optimized-library-writeln-list.xl
-O3/optimized-factorial.xl

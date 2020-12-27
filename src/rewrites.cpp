@@ -525,6 +525,11 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *patternType,
 
     // Otherwise, do type inference
     Tree *unified = binding_types->Unify(patternType, valueType);
+
+    // If successful unification, then set the type for the pattern
+    if (unified)
+        value_types->AssignType(pattern, patternType);
+
     return unified;
 }
 
