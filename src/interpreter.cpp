@@ -187,6 +187,13 @@ bool Bindings::Do(Block *what)
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
 {
+    // Deal with the case of a metablock: evaluate expression inside
+    if (Tree *expr = what->IsMetaBox())
+    {
+        expr = evaluate(declContext.Symbols(), expr);
+        return Tree::Equal(test, expr);
+    }
+
     return what->child->Do(this);
 }
 
