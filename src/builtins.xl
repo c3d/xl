@@ -114,19 +114,6 @@ not X:boolean                   as boolean is builtin BNot
 // Basic math functions
 abs X:integer                   as natural is builtin IAbs
 abs X:real                      as real    is builtin FAbs
-extern real sqrt(real);
-extern real sin(real);
-extern real cos(real);
-extern real tan(real);
-extern real asin(real);
-extern real acos(real);
-extern real atan(real);
-extern real exp(real);
-extern real expm1(real);
-extern real log(real);
-extern real log10(real);
-extern real log2(real);
-extern real log1p(real);
 pi is 3.1415926535897932384626433
 
 // If-then-else statement
