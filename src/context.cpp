@@ -408,6 +408,15 @@ inline bool SortInserting(SortMode mode)
 }
 
 
+inline bool SortSearching(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Return true if we are searching
+// ----------------------------------------------------------------------------
+{
+    return mode == SEARCH || mode == SEARCH_BIND;
+}
+
+
 static int Sort(Tree *pat, Tree *val, SortMode mode)
 // ----------------------------------------------------------------------------
 //   Return the sorting order while inserting patterns
@@ -481,7 +490,12 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
                    ((Name *) val)->value)
             : 0;
     case BLOCK:
-        // Should never happen (filtered on entry to avoid kind-based sort)
+        // During search, consider that metaboxen can match anything
+        if (SortSearching(mode) &&
+            ((Block *) pat)->IsMetaBox())
+            return 0;
+
+        // Otherwise, sort based on block contents
         return Sort(((Block *) pat)->child,
                     ((Block *) val)->child,
                     mode);
