@@ -113,6 +113,7 @@
 
 #include "base.h"
 #include "tree.h"
+#include "builtins.h"
 
 #include <recorder/recorder.h>
 #include <map>
@@ -147,8 +148,9 @@ struct Scope : Block
 {
     Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE):
         Block(child, "{", "}", pos) {}
-    Tree * Entries()    { return child; }
-    Scope  *Enclosing();
+    Tree  *Entries()    { return child; }
+    Scope *Enclosing();
+    Scope *Inner();
     Tree_p &Locals();
     GARBAGE_COLLECT(Scope);
 };
@@ -254,6 +256,7 @@ public:
     // Phases of evaluation
     bool                ProcessDeclarations(Tree *what);
     Scope *             ProcessScope(Tree *declarations);
+    Prefix *            Closure(Tree *value);
 
     // Adding definitions to the context
     Rewrite *           Enter(Infix *infix, bool overwrite=false);
@@ -790,14 +793,24 @@ inline Scope *Scope::Enclosing()
 }
 
 
-inline Tree_p &Scope::Locals()
+inline Scope *Scope::Inner()
 // ----------------------------------------------------------------------------
-//   Return the place where we store the parent for a scope
+//   Return the inner scope
 // ----------------------------------------------------------------------------
 {
     Scope *scope = this;
     if (Scopes *scopes = child->As<Scopes>())
         scope = scopes->Inner();
+    return scope;
+}
+
+
+inline Tree_p &Scope::Locals()
+// ----------------------------------------------------------------------------
+//   Return the place where we store the parent for a scope
+// ----------------------------------------------------------------------------
+{
+    Scope *scope = Inner();
     return scope->child;
 }
 

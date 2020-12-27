@@ -38,7 +38,8 @@
 
 #include "compiler-function.h"
 #include "compiler-expr.h"
-#include "basics.h"
+#include "errors.h"
+#include "builtins.h"
 #include <stdint.h>
 
 
@@ -1015,7 +1016,6 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         STYPE(real32);
         STYPE(real64);
         CTYPE(tree,             treePtr);
-        CTYPE(value,            treePtr);
         CTYPE(name,             nameTreePtr);
         CTYPE(symbol,           nameTreePtr);
         CTYPE(operator,         nameTreePtr);

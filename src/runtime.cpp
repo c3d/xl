@@ -44,12 +44,12 @@
 #include "renderer.h"
 #include "context.h"
 #include "options.h"
-#include "opcodes.h"
 #include "main.h"
 #include "save.h"
 #include "tree-clone.h"
 #include "utf8_fileutils.h"
 #include "interpreter.h"
+#include "types.h"
 #include "winglob.h"
 
 #ifndef INTERPRETER_ONLY
@@ -1029,7 +1029,7 @@ natural_t xl_text2int(kstring tval)
 {
     text t = tval;
     std::istringstream stream(t);
-    natural_t result = 0.0;
+    natural_t result = 0;
     stream >> result;
     return result;
 }

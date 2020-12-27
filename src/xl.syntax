@@ -30,12 +30,11 @@ INFIX
 PREFIX
         20      matching
         30      type class module function method procedure to operation
-        30      data macro generic polymorphic iterator
+        30      data macro generic polymorphic iterator property
         30      fast small global thread static
         30      in out inout io
         30      constant variable const var
         40      loop while until
-        50      property
         121     case if return yield transform
         350     not
         360     ! ~
