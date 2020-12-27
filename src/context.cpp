@@ -320,11 +320,7 @@ Tree *Context::ValidatePattern(Tree *pattern)
     case BLOCK:
     {
         Block *block = (Block *) pattern;
-        if (Tree *expr = block->IsMetaBox())
-        {
-            pattern = xl_evaluate(Symbols(), expr);
-        }
-        else
+        if (!block->IsMetaBox())
         {
             Tree *child = ValidatePattern(block->child);
             if (child != block-> child)
@@ -429,9 +425,11 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
 {
     // Eliminate blocks
     if (Block *patb = pat->AsBlock())
-        return Sort(patb->child, val, mode);
+        if (!patb->IsMetaBox())
+            return Sort(patb->child, val, mode);
     if (Block *valb = val->AsBlock())
-        return Sort(pat, valb->child, mode);
+        if (!valb->IsMetaBox())
+            return Sort(pat, valb->child, mode);
 
     // Check case where kinds are different: use sorting rank described above
     kind patk = pat->Kind();
