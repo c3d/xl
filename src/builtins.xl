@@ -151,12 +151,12 @@ print Items             is { write Items; print }
 
 // Tree shape and attributes
 kind  X:tree            as natural      is builtin TreeKind
-left  X:prefix          as tree         is builtin TreeLeft
-right X:prefix          as tree         is builtin TreeRight
-left  X:postfix         as tree         is builtin TreeLeft
-right X:postfix         as tree         is builtin TreeRight
-left  X:infix           as tree         is builtin TreeLeft
-right X:infix           as tree         is builtin TreeRight
+left  X:prefix          as tree         is builtin PrefixLeft
+right X:prefix          as tree         is builtin PrefixRight
+left  X:postfix         as tree         is builtin PostfixLeft
+right X:postfix         as tree         is builtin PostfixRight
+left  X:infix           as tree         is builtin InfixLeft
+right X:infix           as tree         is builtin InfixRight
 name  X:infix           as text         is builtin InfixName
 opening X:text          as text         is builtin TextOpening
 closing X:text          as text         is builtin TextClosing
