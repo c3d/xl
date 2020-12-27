@@ -189,9 +189,9 @@ void CompilerTypes::Dump()
     {
         Tree *type = b.first;
         JIT::Type_p mtype = b.second;
-        std::cout << type;
+        std::cerr << type;
         JIT::Print("\t= ", mtype);
-        std::cout << "\n";
+        std::cerr << "\n";
     }
 
     std::cout << "UNIFICATIONS" << (void *) this << ":\n";
@@ -199,7 +199,7 @@ void CompilerTypes::Dump()
     {
         Tree *type = t.first;
         Tree *base = t.second;
-        std::cout << type << " (" << (void *) type << ")"
+        std::cerr << type << " (" << (void *) type << ")"
                   << "\t= " << base << " (" << (void *) base << ")\n";
     }
 }
