@@ -251,7 +251,7 @@ Main::Main(int inArgc,
         evaluator = new Compiler(cname, opt, inArgc, inArgv);
     else
 #endif // INTERPRETER_ONLY
-        evaluator = new Interpreter;
+        evaluator = new Interpreter(context);
 
     // Force a crash if this is requested
     XL_ASSERT(RECORDER_TWEAK(inject_fault) != 2 && "Running late crash test");
@@ -323,6 +323,7 @@ Errors *Main::InitMAIN()
 // ----------------------------------------------------------------------------
 {
     MAIN = this;
+    Interpreter::InitializeBuiltins();
     return nullptr;
 }
 

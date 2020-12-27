@@ -76,7 +76,6 @@ NaturalOption   stackDepth("stack_depth",
 
 static Tree *evaluate(Scope *scope, Tree *value);
 static Tree *typecheck(Scope *scope, Tree *type, Tree *value);
-static bool  initialize();
 
 
 
@@ -86,12 +85,13 @@ static bool  initialize();
 //
 // ============================================================================
 
-Interpreter::Interpreter()
+Interpreter::Interpreter(Context &context)
 // ----------------------------------------------------------------------------
 //   Constructor for interpreter
 // ----------------------------------------------------------------------------
 {
     record(interpreter, "Created interpreter %p", this);
+    InitializeContext(context);
 }
 
 
@@ -101,15 +101,6 @@ Interpreter::~Interpreter()
 // ----------------------------------------------------------------------------
 {
     record(interpreter, "Destroyed interpreter %p", this);
-}
-
-
-void Interpreter::Initialize()
-// ----------------------------------------------------------------------------
-//    Initialize all the names, e.g. xl_nil, and all builtins
-// ----------------------------------------------------------------------------
-{
-    initialize();
 }
 
 
@@ -607,11 +598,9 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 
 // ============================================================================
 //
-//    Generate the builtins
+//    Generate the functions for builtins
 //
 // ============================================================================
-
-std::map<text, Interpreter::builtin_fn> Interpreter::builtins;
 
 #define R_INT(x)        return new Natural((x), self->Position())
 #define R_REAL(x)       return new Real((x), self->Position())
@@ -709,29 +698,67 @@ static Tree *builtin_typecheck_##N(Bindings &bindings)          \
 
 
 
-#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)              \
-Interpreter::builtins[#Name] = builtin_unary_##Name;
+// ============================================================================
+//
+//   Initialize names and types like xl_nil or natural_type
+//
+// ============================================================================
 
-#define BINARY_OP(Name, ReturnType, LeftTYpe, RightType, Body)  \
-Interpreter::builtins[#Name] = builtin_binary_##Name;
-
-#define NAME(N)                                                 \
-Interpreter::builtins[#N] = builtin_name_##N;                   \
-xl_##N = new Name(#N);
-
-#define TYPE(N, Body)                                           \
-Interpreter::builtins[#N] = builtin_type_##N;                   \
-Interpreter::builtins[#N"_check"] = builtin_typecheck_##N;      \
-N##_type = new Name(#N);
-
-
-static bool initialize()
+void Interpreter::InitializeBuiltins()
 // ----------------------------------------------------------------------------
-//   Initialize the builtins
+//    Initialize all the names, e.g. xl_nil, and all builtins
 // ----------------------------------------------------------------------------
+//    This has to be done before the first context is created, because
+//    scopes are initialized with xl_nil
 {
+#define NAME(N)                 xl_##N = new Name(#N);
+#define TYPE(N, Body)           N##_type = new Name(#N);
+#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)
+#define BINARY_OP(Name, ReturnType, LeftTYpe, RightType, Body)
+
 #include "builtins.tbl"
-    return true;
+}
+
+
+
+// ============================================================================
+//
+//    Initialize top-level context
+//
+// ============================================================================
+
+std::map<text, Interpreter::builtin_fn> Interpreter::builtins;
+
+void Interpreter::InitializeContext(Context &context)
+// ----------------------------------------------------------------------------
+//    Initialize all the names, e.g. xl_nil, and all builtins
+// ----------------------------------------------------------------------------
+//    Load the outer context with the type check operators referring to
+//    the builtins.
+{
+#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)      \
+    builtins[#Name] = builtin_unary_##Name;
+
+#define BINARY_OP(Name, RetTy, LeftTy, RightTy, Body)   \
+    builtins[#Name] = builtin_binary_##Name;
+
+#define NAME(N)                                         \
+    builtins[#N] = builtin_name_##N;
+
+#define TYPE(N, Body)                                   \
+    builtins[#N] = builtin_type_##N;                    \
+    builtins[#N"_typecheck"] = builtin_typecheck_##N;   \
+                                                        \
+    Infix *pattern_##N =                                \
+        new Infix("∈",                                  \
+                  new Name("Value"),                    \
+                  Block::MetaBox(N##_type));            \
+    Prefix *value_##N =                                 \
+        new Prefix(xl_builtin,                          \
+                   new Name(#N"_typecheck"));           \
+    context.Define(pattern_##N, value_##N);
+
+#include "builtins.tbl"
 }
 
 XL_END
