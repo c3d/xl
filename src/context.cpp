@@ -490,10 +490,16 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
                    ((Name *) val)->value)
             : 0;
     case BLOCK:
-        // During search, consider that metaboxen can match anything
-        if (SortSearching(mode) &&
-            ((Block *) pat)->IsMetaBox())
-            return 0;
+        // Check metaboxen
+        if (((Block *) pat)->IsMetaBox())
+        {
+            // During search, consider that metaboxen can match anything
+            if (SortSearching(mode))
+                return 0;
+
+            // During insertion, compare metaboxen as expressions
+            mode = EXPRESSION;
+        }
 
         // Otherwise, sort based on block contents
         return Sort(((Block *) pat)->child,
