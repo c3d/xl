@@ -54,7 +54,7 @@ class Interpreter : public Evaluator
 // ----------------------------------------------------------------------------
 {
 public:
-    Interpreter();
+    Interpreter(Context &context);
     virtual ~Interpreter();
 
     Tree *              Evaluate(Scope *, Tree *source) override;
@@ -62,7 +62,9 @@ public:
 
     typedef Tree *(*builtin_fn)(Bindings &bindings);
     static std::map<text, builtin_fn> builtins;
-    static void Initialize();
+
+    static void InitializeBuiltins();
+    static void InitializeContext(Context &context);
 };
 
 
