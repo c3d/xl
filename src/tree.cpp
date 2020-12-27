@@ -38,9 +38,10 @@
 #include "tree.h"
 #include "context.h"
 #include "renderer.h"
-#include "opcodes.h"
 #include "options.h"
 #include "errors.h"
+#include "types.h"
+#include "rewrites.h"
 
 #include <sstream>
 #include <cassert>
@@ -242,5 +243,36 @@ text Block::indent   = "I+";
 text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
+
+
+
+// ============================================================================
+//
+//    Garbage collection initialization
+//
+// ============================================================================
+
+INIT_GC;
+
+INIT_ALLOCATOR(Tree);
+INIT_ALLOCATOR(Natural);
+INIT_ALLOCATOR(Real);
+INIT_ALLOCATOR(Text);
+INIT_ALLOCATOR(Name);
+INIT_ALLOCATOR(Block);
+INIT_ALLOCATOR(Prefix);
+INIT_ALLOCATOR(Postfix);
+INIT_ALLOCATOR(Infix);
+
+INIT_ALLOCATOR(Context);
+INIT_ALLOCATOR(Scope);
+INIT_ALLOCATOR(Scopes);
+INIT_ALLOCATOR(Rewrite);
+INIT_ALLOCATOR(Rewrites);
+
+INIT_ALLOCATOR(Types);
+INIT_ALLOCATOR(RewriteCalls);
+INIT_ALLOCATOR(RewriteCandidate);
+
 
 XL_END

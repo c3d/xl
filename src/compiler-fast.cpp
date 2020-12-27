@@ -42,10 +42,10 @@
 #include "errors.h"
 #include "options.h"
 #include "renderer.h"
-#include "basics.h"
 #include "compiler.h"
 #include "runtime.h"
 #include "main.h"
+#include "builtins.h"
 #include "tree-clone.h"
 #include "llvm-crap.h"
 #include <iostream>
@@ -1033,8 +1033,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                     }
                 }
 
-                if ((tk != NAME    && namedType == source_type) ||
-                    (tk == BLOCK   && namedType == block_type)  ||
+                if ((tk == BLOCK   && namedType == block_type)  ||
                     (tk == INFIX   && namedType == infix_type)  ||
                     (tk == PREFIX  && namedType == prefix_type) ||
                     (tk == POSTFIX && namedType == postfix_type))
@@ -1043,31 +1042,6 @@ Tree *ArgumentMatch::Do(Infix *what)
                     needRTTypeTest = false;
                     record(statictypes,
                            "No evaluation for static type %t", namedType);
-                }
-                if (namedType == reference_type)
-                {
-                    record(statictypes, "Reference evaluation");
-
-                    // Only evaluate local parameters
-                    if (tk == NAME)
-                    {
-                        record(statictypes, "Passing a name against %t", test);
-                        Name *name = (Name *) (Tree *) test;
-                        Rewrite *rw = symbols.Reference(name, false);
-                        if (rw && rw->left == rw->right &&
-                            rw->left->Kind() == NAME)
-                        {
-                            record(statictypes, "Evaluating name %t", varName);
-                            return Do(varName);
-                        }
-                    }
-
-                    // In other case, lazy evaluation, no runtime type test
-                    needEvaluation = false;
-                    needRTTypeTest = false;
-
-                    record(statictypes,
-                           "Lazy name evaluation for %t", varName);
                 }
             }
         }
@@ -2929,11 +2903,7 @@ JIT::BasicBlock_p O1CompileUnit::TypeTest(Tree *value, Tree *type)
 // ----------------------------------------------------------------------------
 {
     // Don't do a type cast for any type where type test is a no-op
-    if (type == tree_type       ||
-        type == source_type     ||
-        type == code_type       ||
-        type == reference_type  ||
-        type == value_type)
+    if (type == tree_type)
         return nullptr;
 
     JIT::Value_p treeValue = Known(value);     assert(treeValue);

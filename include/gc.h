@@ -635,6 +635,34 @@ inline bool GarbageCollector::SafePoint()
     return false;
 }
 
+
+
+
+// ============================================================================
+//
+//   Macros to intiialize allocators (clang constraint)
+//
+// ============================================================================
+
+#define INIT_GC                                                         \
+/* ------------------------------------------------------------ */      \
+/*  Initialize the garbage collector                            */      \
+/* ------------------------------------------------------------ */      \
+    static void *init_global_allocator =                                \
+               (void *) (GarbageCollector::CreateSingleton()            \
+                         /* Remove warning about unused variable */     \
+                         + 0 * sizeof(init_global_allocator));
+
+
+#define INIT_ALLOCATOR(type)                                            \
+/* ------------------------------------------------------------ */      \
+/*  Initialize a type allocator                                 */      \
+/* ------------------------------------------------------------ */      \
+    template<>                                                          \
+    Allocator<type> *Allocator<type>::allocator =                       \
+               Allocator<type>::CreateSingleton();
+
+
 XL_END
 
 #endif // GC_H

@@ -44,6 +44,9 @@
 XL_BEGIN
 
 struct Opcode;
+struct Bindings;
+typedef std::map<Tree_p, Tree_p>        EvaluationCache;
+
 
 class Interpreter : public Evaluator
 // ----------------------------------------------------------------------------
@@ -56,11 +59,72 @@ public:
 
     Tree *              Evaluate(Scope *, Tree *source) override;
     Tree *              TypeCheck(Scope *, Tree *type, Tree *value) override;
+
+    typedef Tree *(*builtin_fn)(Bindings &bindings);
+    static std::map<text, builtin_fn> builtins;
+    static void Initialize();
+};
+
+
+struct Bindings
+// ----------------------------------------------------------------------------
+//   Structure used to record bindings
+// ----------------------------------------------------------------------------
+{
+    typedef bool value_type;
+
+    Bindings(Scope *evalScope, Scope *declScope,
+             Tree *expr, EvaluationCache &cache)
+        : evalContext(evalScope),
+          declContext(declScope),
+          argContext(&evalContext, test->Position()),
+          self(expr),
+          test(expr),
+          cache(cache),
+          type(nullptr),
+          arguments()
+    {}
+
+    // Tree::Do interface
+    bool  Do(Natural *what);
+    bool  Do(Real *what);
+    bool  Do(Text *what);
+    bool  Do(Name *what);
+    bool  Do(Prefix *what);
+    bool  Do(Postfix *what);
+    bool  Do(Infix *what);
+    bool  Do(Block *what);
+
+    // Evaluation and binding of values
+    bool  Evaluate();
+    Tree *EvaluateType(Tree *type);
+    Tree *EvaluateGuard(Tree *guard);
+    void  Bind(Name *name, Tree *value);
+
+    // Return the local bindings
+    Scope *EvaluationScope()    { return evalContext.Symbols(); }
+    Scope *DeclarationScope()   { return declContext.Symbols(); }
+    Scope *ArgumentsScope()     { return argContext.Symbols(); }
+    Tree  *Self()               { return self; }
+
+private:
+    Context             evalContext;
+    Context             declContext;
+    Context             argContext;
+    Tree_p              self;
+    Tree_p              test;
+    EvaluationCache &   cache;
+
+public:
+    Tree_p              type;
+    TreeList            arguments;
 };
 
 XL_END
 
 RECORDER_DECLARE(interpreter);
-RECORDER_DECLARE(interpreter_typecheck);
+RECORDER_DECLARE(eval);
+RECORDER_DECLARE(bindings);
+RECORDER_DECLARE(typecheck);
 
 #endif // INTERPRETER_H

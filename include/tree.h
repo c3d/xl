@@ -656,11 +656,6 @@ retry:
     return nullptr;
 }
 
-extern Name_p   xl_true;
-extern Name_p   xl_false;
-extern Name_p   xl_nil;
-extern Name_p   xl_self;
-
 XL_END
 
 #endif // TREE_H

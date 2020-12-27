@@ -41,14 +41,12 @@
 #include "errors.h"
 #include "options.h"
 #include "renderer.h"
-#include "basics.h"
+#include "builtins.h"
 #include "runtime.h"
 #include "main.h"
-#include "opcodes.h"
 #include "save.h"
 #include "cdecls.h"
 #include "interpreter.h"
-#include "bytecode.h"
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
@@ -261,6 +259,15 @@ Scope *Context::ProcessScope(Tree *declarations)
 }
 
 
+Prefix *Context::Closure(Tree *value)
+// ----------------------------------------------------------------------------
+//   Prefix the value wiht the current symbols - Unwrapped by evaluate()
+// ----------------------------------------------------------------------------
+{
+    return new Prefix(Symbols(), value, value->Position());
+}
+
+
 Tree *Context::ValidatePattern(Tree *pattern)
 // ----------------------------------------------------------------------------
 //   Check that we have only valid names in the pattern, evaluate metaboxen
@@ -306,14 +313,14 @@ Tree *Context::ValidatePattern(Tree *pattern)
         if (postfix->right->Kind() != NAME)
             right = ValidatePattern(postfix->right);
         Tree *left = ValidatePattern(postfix->left);
-        if (left != prefix->left || right != prefix->right)
+        if (left != postfix->left || right != postfix->right)
             pattern = new Postfix(postfix, left, right);
         break;
     }
     case BLOCK:
     {
         Block *block = (Block *) pattern;
-        if (Tree *expr = block->IsMetabox())
+        if (Tree *expr = block->IsMetaBox())
         {
             pattern = xl_evaluate(Symbols(), expr);
         }
@@ -322,6 +329,7 @@ Tree *Context::ValidatePattern(Tree *pattern)
             Tree *child = ValidatePattern(block->child);
             if (child != block-> child)
                 pattern = child;
+        }
         break;
     }
     }

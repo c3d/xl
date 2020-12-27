@@ -40,11 +40,10 @@
 #include "errors.h"
 #include "renderer.h"
 #include "main.h"
-#include "basics.h"
+#include "builtins.h"
 
 
 RECORDER(calls, 64, "Conversion of rewrites to calls");
-RECORDER(bindings, 64, "Binding arguments in calls");
 
 
 XL_BEGIN

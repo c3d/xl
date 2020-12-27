@@ -50,9 +50,9 @@ VARIANTS=lib exe
 COMPILER=llvm
 
 # List of modules to build
-MODULES=basics io math text remote time_functions temperature
-MODULES_SOURCES=$(MODULES:%=%_module.cpp)
-MODULES_HEADERS=$(MODULES:%=%_module.h)
+#MODULES=basics io math text remote time_functions temperature
+#MODULES_SOURCES=$(MODULES:%=%_module.cpp)
+#MODULES_HEADERS=$(MODULES:%=%_module.h)
 
 # List of source files to process
 SOURCES_VARIANT_exe=				\
@@ -60,14 +60,13 @@ SOURCES_VARIANT_exe=				\
 SOURCES_VARIANT_lib     =			\
 	$(SOURCES_$(COMPILER))			\
 	action.cpp				\
-	bytecode.cpp				\
+	builtins.cpp				\
 	cdecls.cpp				\
 	context.cpp				\
 	errors.cpp				\
 	gc.cpp					\
 	interpreter.cpp				\
 	main.cpp				\
-	opcodes.cpp				\
 	options.cpp				\
 	parser.cpp				\
 	renderer.cpp				\
@@ -80,8 +79,7 @@ SOURCES_VARIANT_lib     =			\
 	types.cpp				\
 	utf8_fileutils.cpp			\
 	version.cpp				\
-	winglob.cpp				\
-	$(MODULES_SOURCES)
+	winglob.cpp
 
 SOURCES_llvm =					\
 	compiler-expr.cpp			\
@@ -125,7 +123,8 @@ CONFIG= sigaction                       \
         glob                            \
         uchar ushort uint ulong longlong
 
-CXX_STD=
+CXX_STD=$(CXX_STD_$(COMPILER))
+CXX_STD_none=c++14
 
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk

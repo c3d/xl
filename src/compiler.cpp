@@ -37,7 +37,7 @@
 
 #include "compiler.h"
 #include "compiler-unit.h"
-#include "basics.h"
+#include "builtins.h"
 #include "errors.h"
 #include "main.h"               // For Opt::emitIR
 
@@ -207,7 +207,7 @@ JIT::PointerType_p Compiler::TreeMachineType(Tree *tree)
     return treePtrTy;
 }
 
-#include "opcodes.h"
+#include "gc.h"
 INIT_ALLOCATOR(CompilerTypes);
 INIT_ALLOCATOR(CompilerRewriteCandidate);
 INIT_ALLOCATOR(CompilerRewriteCalls);

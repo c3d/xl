@@ -41,7 +41,6 @@
 #include "base.h"
 #include "tree.h"
 #include "main.h"
-#include "basics.h"
 
 #include <cmath>
 
@@ -61,6 +60,10 @@ struct Postfix;
 struct Context;
 struct Main;
 struct SourceFile;
+
+typedef Natural::value_t        natural_t;
+typedef Real::value_t           real_t;
+typedef Text::value_t           text_t;
 
 
 

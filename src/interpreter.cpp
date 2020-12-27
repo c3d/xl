@@ -39,8 +39,9 @@
 #include "info.h"
 #include "errors.h"
 #include "renderer.h"
-#include "basics.h"
+#include "builtins.h"
 #include "runtime.h"
+#include "save.h"
 
 #include <cmath>
 #include <algorithm>
@@ -49,6 +50,7 @@ RECORDER(interpreter,   32, "Interpreter class evaluation of XL code");
 RECORDER(eval,          32, "Primary evaluation entry point");
 RECORDER(bindings,      32, "Bindings");
 RECORDER(typecheck,     32, "Type checks");
+
 
 XL_BEGIN
 // ============================================================================
@@ -63,6 +65,18 @@ NaturalOption   stackDepth("stack_depth",
                            "Maximum stack depth for interpreter",
                            1000, 25, 25000);
 }
+
+
+
+// ============================================================================
+//
+//   Static functions defined in this file
+//
+// ============================================================================
+
+static Tree *evaluate(Scope *scope, Tree *value);
+static Tree *typecheck(Scope *scope, Tree *type, Tree *value);
+static bool  initialize();
 
 
 
@@ -90,7 +104,13 @@ Interpreter::~Interpreter()
 }
 
 
-static Tree *evaluate(Scope *scope, Tree *value);
+void Interpreter::Initialize()
+// ----------------------------------------------------------------------------
+//    Initialize all the names, e.g. xl_nil, and all builtins
+// ----------------------------------------------------------------------------
+{
+    initialize();
+}
 
 
 
@@ -99,57 +119,6 @@ static Tree *evaluate(Scope *scope, Tree *value);
 //    Parameter binding
 //
 // ============================================================================
-
-typedef std::map<Tree_p, Tree_p>        EvaluationCache;
-
-struct Bindings
-// ----------------------------------------------------------------------------
-//   Structure used to record bindings
-// ----------------------------------------------------------------------------
-{
-    typedef bool value_type;
-
-    Bindings(Scope *evalScope, Scope *declScope,
-             Tree *test, EvaluationCache &cache)
-        : evalContext(evalScope),
-          declContext(declScope),
-          argContext(&evaluation, test->Position()),
-          test(test),
-          cache(cache),
-          type(nullptr),
-          arguments()
-    {}
-
-    // Tree::Do interface
-    bool  Do(Natural *what);
-    bool  Do(Real *what);
-    bool  Do(Text *what);
-    bool  Do(Name *what);
-    bool  Do(Prefix *what);
-    bool  Do(Postfix *what);
-    bool  Do(Infix *what);
-    bool  Do(Block *what);
-
-    // Evaluation and binding of values
-    void  Evaluate();
-    Tree *EvaluateType(Tree *type);
-    void  Bind(Name *name, Tree *value);
-
-    // Return the local bindings
-    Scope *Arguments();
-
-private:
-    Context             evalContext;
-    Context             declContext;
-    Context             argContext;
-    Tree_p              test;
-    EvaluationCache &   cache;
-
-public:
-    Tree_p              type;
-    TreeList            arguments;
-};
-
 
 inline bool Bindings::Do(Natural *what)
 // ----------------------------------------------------------------------------
@@ -160,6 +129,7 @@ inline bool Bindings::Do(Natural *what)
     if (Natural *ival = test->AsNatural())
         if (ival->value == what->value)
             return true;
+    Ooops("Value $1 does not match pattern value $2", test, what);
     return false;
 }
 
@@ -173,6 +143,7 @@ inline bool Bindings::Do(Real *what)
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return true;
+    Ooops("Value $1 does not match pattern value $2", test, what);
     return false;
 }
 
@@ -186,6 +157,7 @@ inline bool Bindings::Do(Text *what)
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
             return true;
+    Ooops("Value $1 does not match pattern value $2", test, what);
     return false;
 }
 
@@ -208,9 +180,12 @@ inline bool Bindings::Do(Name *what)
         bool result = Tree::Equal(bound, test);
         record(interpreter, "Arg check %t vs %t: %+s",
                test, bound, result ? "match" : "failed");
+        if (!result)
+            Ooops("Value $1 does not match named value $2", test, what);
         return result;
     }
 
+    // Otherwise, bind test value to name
     Bind(what, test);
     return true;
 }
@@ -230,41 +205,51 @@ bool Bindings::Do(Prefix *what)
 //   The pattern contains prefix: check that the left part matches
 // ----------------------------------------------------------------------------
 {
-    // The test itself should be a prefix
-    if (Prefix *pfx = test->AsPrefix())
+    bool retrying = true;
+
+    while (retrying)
     {
-        // If we call 'sin X' and match 'sin 3', check if names match
-        if (Name *name = what->left->AsName())
+        retrying = false;
+
+        // The test itself should be a prefix
+        if (Prefix *pfx = test->AsPrefix())
         {
-            if (Name *testName = pfx->left->AsName())
+            // If we call 'sin X' and match 'sin 3', check if names match
+            if (Name *name = what->left->AsName())
             {
-                if (name->value == testName->value)
+                if (Name *testName = pfx->left->AsName())
                 {
-                    test = pfx->right;
-                    return what->right->Do(this);
-                }
-                else
-                {
-                    Ooops("Prefix name $1 does not match $2", name, testName);
-                    return false;
+                    if (name->value == testName->value)
+                    {
+                        test = pfx->right;
+                        return what->right->Do(this);
+                    }
+                    else
+                    {
+                        Ooops("Prefix name $1 does not match $2",
+                              name, testName);
+                        return false;
+                    }
                 }
             }
+
+            // For other cases, we must go deep inside each prefix to check
+            test = pfx->left;
+            if (!what->left->Do(this))
+                return false;
+            test = pfx->right;
+            if (what->right->Do(this))
+                return true;
         }
 
-        // For other cases, we must go deep inside each prefix to check
-        test = pfx->left;
-        if (!what->left->Do(this))
-            return false;
-        test = pfx->right;
-        if (what->right->Do(this))
-            return true;
-    }
-    else
-    {
-
+        // Normal prefix matching failed: try to evaluate test
+        if (Evaluate())
+            if (test->AsPrefix())
+                retrying = true;
     }
 
-    // All other cases are a mismatch
+    // Mismatch
+    Ooops("Prefix $1 does not match $2", what, test);
     return false;
 }
 
@@ -274,35 +259,48 @@ bool Bindings::Do(Postfix *what)
 //   The pattern contains posfix: check that the right part matches
 // ----------------------------------------------------------------------------
 {
-    // The test itself should be a postfix
-    if (Postfix *pfx = test->AsPostfix())
-    {
+    bool retrying = true;
 
-        // If we call 'X!' and match '3!', check if names match
-        if (Name *name = what->right->AsName())
+    while (retrying)
+    {
+        retrying = false;
+
+        // The test itself should be a postfix
+        if (Postfix *pfx = test->AsPostfix())
         {
-            if (Name *testName = pfx->right->AsName())
+
+            // If we call 'X!' and match '3!', check if names match
+            if (Name *name = what->right->AsName())
             {
-                if (name->value == testName->value)
+                if (Name *testName = pfx->right->AsName())
                 {
-                    test = pfx->left;
-                    return what->left->Do(this);
-                }
-                else
-                {
-                    Ooops("Postfix name $1 does not match $2", name, testName);
-                    return false;
+                    if (name->value == testName->value)
+                    {
+                        test = pfx->left;
+                        return what->left->Do(this);
+                    }
+                    else
+                    {
+                        Ooops("Postfix name $1 does not match $2",
+                              name, testName);
+                        return false;
+                    }
                 }
             }
+
+            // For other cases, we must go deep inside each prefix to check
+            test = pfx->right;
+            if (!what->right->Do(this))
+                return false;
+            test = pfx->left;
+            if (what->left->Do(this))
+                return true;
         }
 
-        // For other cases, we must go deep inside each prefix to check
-        test = pfx->right;
-        if (!what->right->Do(this))
-            return false;
-        test = pfx->left;
-        if (what->left->Do(this))
-            return true;
+        // Normal postfix matching failed: try to evaluate test
+        if (Evaluate())
+            if (test->AsPostfix())
+                retrying = true;
     }
 
     // All other cases are a mismatch
@@ -316,59 +314,38 @@ bool Bindings::Do(Infix *what)
 //   The complicated case: various declarations
 // ----------------------------------------------------------------------------
 {
-    Save<Context_p> saveContext(context, context);
-
-    // Check if we have typed arguments, e.g. X:natural
-    if (what->name == ":")
-    {
-        Name *name = what->left->AsName();
-        if (!name)
-        {
-            Ooops("Invalid declaration, $1 is not a name", what->left);
-            return false;
-        }
-
-        // Typed name: evaluate type and check match
-        Scope *scope = context->Symbols();
-        Tree *type = Evaluate(context, what->right);
-        Tree *checked = xl_typecheck(scope, type, test);
-        if (!checked || type == XL::value_type)
-        {
-            Evaluate(type != XL::value_type);
-            checked = xl_typecheck(scope, type, test);
-        }
-        if (checked)
-        {
-            Bind(name, checked);
-            return true;
-        }
-
-        // Type mismatch
-        Ooops("Type $1 does not contain $2", type, test);
-        return false;
-    }
-
-    // Check if we have typed declarations, e.g. X+Y as natural
+    // Check if we have a type annotation, like [X:natural]
     if (IsTypeAnnotation(what))
     {
-        if (resultType)
+        // Need to match the left part with the test
+        if (!what->left->Do(this))
+            return false;
+
+        // Need to evaluate the type on the right
+        Tree *want = EvaluateType(what->right);
+
+        // Type check value against type
+        Tree *checked = typecheck(EvaluationScope(), want, test);
+        if (checked == xl_false || checked == xl_nil)
+            checked = nullptr;
+        if (!checked)
         {
-            Ooops("Duplicate return type declaration $1", what);
-            Ooops("Previously declared type was $1", resultType);
+            Ooops("Value $1 does not belong to type $2", test, type);
+            return false;
         }
-        resultType = Evaluate(context, what->right);
-        return what->left->Do(this);
+        type = want;
+        return true;
     }
 
     // Check if we have a guard clause
-    if (what->name == "when")
+    if (IsPatternCondition(what))
     {
         // It must pass the rest (need to bind values first)
         if (!what->left->Do(this))
             return false;
 
         // Here, we need to evaluate in the local context, not eval one
-        Tree *check = Evaluate(locals, what->right);
+        Tree *check = EvaluateGuard(what->right);
         if (check == xl_true)
             return true;
         else if (check != xl_false)
@@ -380,18 +357,17 @@ bool Bindings::Do(Infix *what)
 
     // In all other cases, we need an infix with matching name
     Infix *ifx = test->AsInfix();
-    if (!ifx)
+    if (!ifx || ifx->name != what->name)
     {
         // Try to get an infix by evaluating what we have
-        Evaluate(true);
+        Evaluate();
         ifx = test->AsInfix();
     }
     if (ifx)
     {
         if (ifx->name != what->name)
         {
-            Ooops("Infix names $1 and $2 don't match", what->Position())
-                .Arg(ifx->name).Arg(what->name);
+            Ooops("Infix names for $1 and $2 don't match", what, ifx);
             return false;
         }
 
@@ -409,7 +385,7 @@ bool Bindings::Do(Infix *what)
 }
 
 
-void Bindings::Evaluate()
+bool Bindings::Evaluate()
 // ----------------------------------------------------------------------------
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
@@ -417,66 +393,48 @@ void Bindings::Evaluate()
     Tree *evaluated = cache[test];
     if (!evaluated)
     {
-        evaluated = evaluate(evalContext.Symbols(), test);
+        evaluated = evaluate(EvaluationScope(), test);
         cache[test] = evaluated;
-        record(interpreter_lazy, "Test %t = new %t", test, evaluated);
+        record(bindings, "Test %t = new %t", test, evaluated);
     }
     else
     {
-        record(interpreter_lazy, "Test %t = old %t", test, evaluated);
+        record(bindings, "Test %t = old %t", test, evaluated);
     }
-
+    bool result = test != evaluated;
     test = evaluated;
+    return result;
 }
 
 
-Tree *Bindings::Evaluate(Context *context, Tree *tval)
+Tree *Bindings::EvaluateType(Tree *type)
 // ----------------------------------------------------------------------------
-//   Ensure that each bound arg is evaluated at most once
+//   Evaluate a type expression (in declaration context)
 // ----------------------------------------------------------------------------
 {
-    Tree *evaluated = cache[tval];
-    if (!evaluated)
-    {
-        evaluated = Interpreter::EvaluateClosure(context, tval);
-        cache[tval] = evaluated;
-        record(interpreter_lazy, "Evaluate %t in context %t is new %t",
-               tval, context, evaluated);
-    }
-    else
-    {
-        record(interpreter_lazy, "Evaluate %t in context %t is old %t",
-               tval, context, evaluated);
-    }
-    if (Tree *inside = Interpreter::IsClosure(evaluated, nullptr))
-    {
-        record(interpreter_lazy, "Encapsulate %t in closure %t",
-               evaluated, inside);
-        evaluated = inside;
-    }
-    return evaluated;
+    return evaluate(DeclarationScope(), type);
 }
 
 
-RECORDER(bind, 64, "Bind values to names");
+Tree *Bindings::EvaluateGuard(Tree *guard)
+// ----------------------------------------------------------------------------
+//   Evaluate a guard condition (in arguments context)
+// ----------------------------------------------------------------------------
+{
+    return evaluate(ArgumentsScope(), guard);
+}
+
+
 void Bindings::Bind(Name *name, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a new binding in the current context, remember left and right
 // ----------------------------------------------------------------------------
+//   We wrap the input argument in a closure to get the proper context on eval
 {
-    record(bind, "Bind %t = %t", name, value);
-    args.push_back(value);
-    locals->Define(name, value);
-}
-
-
-void Bindings::BindClosure(Name *name, Tree *value)
-// ----------------------------------------------------------------------------
-//   Enter a new binding in the current context, preserving its environment
-// ----------------------------------------------------------------------------
-{
-    value = Interpreter::MakeClosure(context, value);
-    Bind(name, value);
+    record(bindings, "Binding %t = %t", name, value);
+    value = evalContext.Closure(value);
+    arguments.push_back(value);
+    argContext.Define(name, value);
 }
 
 
@@ -518,8 +476,12 @@ static Tree *evalLookup(Scope   *evalScope,
         return result;
     }
 
-    // Otherwise evaluate the body in the binding arguments
-    return evaluate(bindings.Arguments(), body);
+    // Check if we evaluate as self
+    if (IsSelf(body))
+        return expr;
+
+    // Otherwise evaluate the body in the binding arguments scope
+    return evaluate(bindings.ArgumentsScope(), body);
 }
 
 
@@ -542,12 +504,20 @@ retry:
     // Short-circuit evaluation of sequences and declarations
     if (Prefix *prefix = expr->AsPrefix())
     {
+        // Check if the left is a block containing only declarations
+        // This deals with [(X is 3) (X + 1)], i.e. closures
+        if (Scope *scope = context.ProcessScope(prefix->left))
+            return evaluate(scope, prefix->right);
+
+        // Filter out declaration such as [extern foo(bar)]
         if (IsDeclaration(prefix))
             return prefix;
     }
 
+    // Short-circuit evaluation of sequences and declarations
     if (Infix *infix = expr->AsInfix())
     {
+        // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
             Tree *left = evaluate(context, infix->left);
@@ -559,16 +529,27 @@ retry:
             goto retry;
         }
 
+        // Skip declarations
         if (IsDeclaration(infix))
             return result;
+
+        // Evaluate X.Y
+        if (IsDot(infix))
+            if (Scope *scope = context.ProcessScope(infix->left))
+                return evaluate(scope->Inner(), infix->right);
     }
 
     // All other cases: lookup in symbol table
+    static uint depth = 0;
+    Save<uint>  save(depth, depth+1);
+    if (depth > Opt::stackDepth)
+        return Error("Stack depth exceeded evaluating $1", expr);
+
     EvaluationCache cache;
     if (Tree *found = context.Lookup(expr, evalLookup, &cache, true))
         result = found;
     else
-        result = Error("No form matching $1", expr);
+        result = (Tree *) Error("No form matching $1", expr);
     return result;
 }
 
@@ -578,13 +559,30 @@ static Tree *evaluate(Scope *scope, Tree *expr)
 //   Helper evaluation function for recursive evaluation
 // ----------------------------------------------------------------------------
 {
+    record(eval, "Evaluating %t in %t", expr, scope);
     Context context(scope);
     Tree_p result = expr;
 
     if (context.ProcessDeclarations(expr))
         result = evaluate(context, expr);
 
+    record(eval, "Evaluated %t in %t as %t", expr, scope, result);
     return result;
+}
+
+
+static Tree *typecheck(Scope *scope, Tree *type, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if we pass the test for the type
+// ----------------------------------------------------------------------------
+{
+    record(typecheck, "Check %t against %t in scope %t",
+           value, type, scope);
+    Tree *test = new Infix("∈", value, type, value->Position());
+    Tree *checked = evaluate(scope, test);
+    record(typecheck, "Checked %t against %t in scope %t, got %t",
+           value, type, scope, checked);
+    return checked;
 }
 
 
@@ -597,540 +595,143 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 }
 
 
-
-// ============================================================================
-//
-//    Primitive cache for 'opcode' and 'C' bindings
-//
-// ============================================================================
-
-Opcode *Interpreter::SetInfo(Infix *decl, Opcode *opcode)
-// ----------------------------------------------------------------------------
-//    Create a new info for the given callback
-// ----------------------------------------------------------------------------
-{
-    decl->right->SetInfo<Opcode>(opcode);
-    return opcode;
-}
-
-
-Opcode *Interpreter::OpcodeInfo(Infix *decl)
-// ----------------------------------------------------------------------------
-//    Check if we have an opcode in the definition
-// ----------------------------------------------------------------------------
-{
-    Tree *right = decl->right;
-    Opcode *info = right->GetInfo<Opcode>();
-    if (info)
-        return info;
-
-    // Check if the declaration is something like 'X -> opcode Foo'
-    // If so, lookup 'Foo' in the opcode table the first time to record it
-    if (Prefix *prefix = right->AsPrefix())
-        if (Name *name = prefix->left->AsName())
-            if (name->value == "builtin")
-                if (Name *opName = prefix->right->AsName())
-                    if (Opcode *opcode = Opcode::Find(prefix, opName->value))
-                        return SetInfo(decl, opcode->Clone());
-
-    return nullptr;
-}
-
-
-
-// ============================================================================
-//
-//   Main evaluation loop for the interpreter
-//
-// ============================================================================
-
-static Tree *error_result = nullptr;
-
-
-static Tree *evalLookup(Scope *evalScope, Scope *declScope,
-                        Tree *self, Rewrite *decl, void *ec)
-// ----------------------------------------------------------------------------
-//   Calllback function to check if the candidate matches
-// ----------------------------------------------------------------------------
-{
-    static uint depth = 0;
-    Save<uint> saveDepth(depth, depth+1);
-    record(interpreter_eval, "Eval%u %t from %t", depth, self, decl->left);
-    if (depth > Opt::stackDepth)
-    {
-        Ooops("Stack depth exceeded evaluating $1", self);
-        return error_result = xl_error;
-    }
-    else if (error_result)
-    {
-        return error_result;
-    }
-
-    // Create the scope for evaluation
-    Context_p context = new Context(evalScope);
-    Context_p locals  = nullptr;
-    Tree *result = nullptr;
-
-    // Check if the decl is an opcode or C binding
-    Errors *errors = MAIN->errors;
-    uint errCount = errors->Count();
-    Opcode *opcode = Interpreter::OpcodeInfo(decl);
-    if (errors->Count() != errCount)
-        return nullptr;
-
-    // If we lookup a name or a number, just return it
-    Tree *defined = PatternBase(decl->left);
-    Tree *resultType = tree_type;
-    TreeList args;
-    if (defined->IsLeaf())
-    {
-        // Must match literally, or we don't have a candidate
-        if (!Tree::Equal(defined, self))
-        {
-            record(interpreter_eval, "Eval%u %t from constant %t: mismatch",
-                   depth, self, decl->left);
-            return nullptr;
-        }
-        locals = context;
-    }
-    else
-    {
-        // Retrieve the evaluation cache for arguments
-        EvalCache *cache = (EvalCache *) ec;
-
-        // Create the scope for evaluation and local bindings
-        locals = new Context(declScope);
-        locals->CreateScope();
-
-        // Check bindings of arguments to declaration, exit if fails
-        Bindings  bindings(context, locals, self, *cache, args);
-        if (!decl->left->Do(bindings))
-        {
-            record(interpreter_eval, "Eval%u %t from %t: mismatch",
-                   depth, self, decl->left);
-            return nullptr;
-        }
-        if (bindings.resultType)
-            resultType = bindings.resultType;
-    }
-
-    // Check if the right is "self"
-    if (result == xl_self)
-    {
-        record(interpreter_eval, "Eval%u %t from %t is self",
-               depth, self, decl->left);
-        return self;
-    }
-
-    // Check if we have builtins (opcode or C bindings)
-    if (opcode)
-    {
-        // Cached callback
-        uint offset = args.size();
-        std::reverse(args.begin(), args.end());
-        args.push_back(decl->right);
-        args.push_back(context->Symbols());
-        Data data = &args[offset];
-        opcode->Run(data);
-        result = DataResult(data);
-        record(interpreter_eval, "Eval%u %t opcode %+s, result %t",
-               depth, self, opcode->OpID(), result);
-        return result;
-    }
-
-    // Normal case: evaluate body of the declaration in the new context
-    result = decl->right;
-    if (resultType != tree_type)
-        result = new Infix("as", result, resultType, self->Position());
-
-    result = Interpreter::MakeClosure(locals, result);
-    record(interpreter_eval, "Eval%u %t in context %t = %t",
-           depth, locals->Symbols(), self, result);
-    return result;
-}
-
-
-inline Tree *encloseResult(Context *context, Scope *old, Tree *what)
-// ----------------------------------------------------------------------------
-//   Encapsulate result with a closure if context is not evaluation context
-// ----------------------------------------------------------------------------
-{
-    if (context->Symbols() != old)
-        what = Interpreter::MakeClosure(context, what);
-    return what;
-}
-
-
-Tree *Interpreter::Instructions(Context_p context, Tree_p what)
-// ----------------------------------------------------------------------------
-//   Evaluate the input tree once declarations have been processed
-// ----------------------------------------------------------------------------
-{
-    Tree_p      result = what;
-    Scope_p     originalScope = context->Symbols();
-
-    // Loop to avoid recursion for a few common cases, e.g. sequences, blocks
-    while (what)
-    {
-        // Fast-track sequences
-        if (Infix *seq = IsSequence(what))
-        {
-            Tree *left = Instructions(context, seq->left);
-            if (left != seq->left)
-                result = left;
-            what = seq->right;
-            continue;
-        }
-
-        // Fast-track declarations
-        if (IsDeclaration(what))
-            return what;
-
-        // First attempt to look things up
-        EvalCache cache;
-        if (Tree *eval = context->Lookup(what, evalLookup, &cache))
-        {
-            if (eval == xl_error)
-                return eval;
-            MAIN->errors->Clear();
-            result = eval;
-            if (Tree *inside = IsClosure(eval, &context))
-            {
-                what = inside;
-                continue;
-            }
-            return encloseResult(context, originalScope, eval);
-        }
-
-        kind whatK = what->Kind();
-        switch (whatK)
-        {
-        case NATURAL:
-        case REAL:
-        case TEXT:
-            return what;
-
-        case NAME:
-            Ooops("No name matches $1", what);
-            return encloseResult(context, originalScope, what);
-
-        case BLOCK:
-        {
-            // Evaluate child in a new context
-            context->CreateScope();
-            what = ((Block *) (Tree *) what)->child;
-            bool hasInstructions = context->ProcessDeclarations(what);
-            if (context->IsEmpty())
-                context->PopScope();
-            if (hasInstructions)
-                continue;
-            return encloseResult(context, originalScope, what);
-        }
-
-        case PREFIX:
-        {
-            // If we have a prefix on the left, check if it's a closure
-            if (Tree *closed = IsClosure(what, &context))
-            {
-                what = closed;
-                continue;
-            }
-
-            // If we have a name on the left, lookup name and start again
-            Prefix *pfx = (Prefix *) (Tree *) what;
-            Tree   *callee = pfx->left;
-
-            // Check if we had something like '(X->X+1) 31' as closure
-            Context_p calleeContext = nullptr;
-            if (Tree *inside = IsClosure(callee, &calleeContext))
-                callee = inside;
-
-            if (Name *name = callee->AsName())
-                // A few cases where we don't interpret the result
-                if (name->value == "matching"   ||
-                    name->value == "extern")
-                    return what;
-
-            // This variable records if we evaluated the callee
-            Tree *newCallee = nullptr;
-            Tree *arg = pfx->right;
-
-            // If we have an infix on the left, check if it's a single rewrite
-            if (Infix *lifx = IsDefinition(callee))
-            {
-                // If we have a single name on the left, like (X->X+1)
-                // interpret that as a lambda function
-                if (Name *lfname = lifx->left->AsName())
-                {
-                    // Case like '(X->X+1) Arg':
-                    // Bind arg in new context and evaluate body
-                    context = new Context(context);
-                    context->Define(lfname, arg);
-                    what = lifx->right;
-                    continue;
-                }
-
-                // Otherwise, enter declaration and retry, e.g.
-                // '(X,Y->X+Y) (2,3)' should evaluate as 5
-                context = new Context(context);
-                context->Define(lifx->left, lifx->right);
-                what = arg;
-                continue;
-            }
-
-            // Other cases: evaluate the callee, and if it changed, retry
-            if (!newCallee)
-            {
-                Context_p newContext = new Context(context);
-                newCallee = EvaluateClosure(newContext, callee);
-            }
-
-            if (newCallee != callee)
-            {
-                // We need to evaluate argument in current context
-                arg = Instructions(context, arg);
-
-                // We built a new context if left was a block
-                if (Tree *inside = IsClosure(newCallee, &context))
-                {
-                    what = arg;
-                    // Check if we have a single definition on the left
-                    if (IsDefinition(inside))
-                        what = new Prefix(newCallee, arg, pfx->Position());
-                }
-                else
-                {
-                    // Other more regular cases
-                    what = new Prefix(newCallee, arg, pfx->Position());
-                }
-                continue;
-            }
-
-            // If we get there, we didn't find anything interesting to do
-            Ooops("No prefix matches $1", what);
-            return encloseResult(context, originalScope, what);
-        }
-
-        case POSTFIX:
-        {
-            // Check if there is a pattern that matches
-            Ooops("No postifx matches $1", what);
-            return encloseResult(context, originalScope, what);
-        }
-
-        case INFIX:
-        {
-            Infix *infix = (Infix *) (Tree *) what;
-            text name = infix->name;
-
-            // Check declarations
-            if (name == "is")
-            {
-                // Declarations evaluate last non-declaration result, or self
-                return encloseResult(context, originalScope, result);
-            }
-
-            // Check type matching
-            if (name == "as")
-            {
-                Scope *scope = context->Symbols();
-                result = xl_typecheck(scope, infix->right, infix->left);
-                if (!result)
-                {
-                    Ooops("Value $1 does not match type $2",
-                          infix->left, infix->right);
-                    result = infix->left;
-                }
-                return encloseResult(context, originalScope, result);
-            }
-
-            // Check scoped reference
-            if (name == ".")
-            {
-                Tree *left = Instructions(context, infix->left);
-                IsClosure(left, &context);
-                what = infix->right;
-                continue;
-            }
-
-            // All other cases: failure
-            Ooops("No infix matches $1", what);
-            return encloseResult(context, originalScope, what);
-        }
-        } // switch
-    }// while(what)
-
-    return encloseResult(context, originalScope, result);
-}
-
-
-Tree *Interpreter::EvaluateClosure(Context *context, Tree *what)
-// ----------------------------------------------------------------------------
-//    Evaluate 'what', possibly returned as a closure in case not in 'context'
-// ----------------------------------------------------------------------------
-{
-    // Create scope for declarations, and evaluate in this context
-    Tree_p result = what;
-    Errors *errors = MAIN->errors;
-    uint errCount = errors->Count();
-    if (context->ProcessDeclarations(what) && errCount == errors->Count())
-        result = Instructions(context, what);
-
-    // This is a safe point for checking collection status
-    GarbageCollector::SafePoint();
-
-    return result;
-}
-
-
-
-// ============================================================================
-//
-//     Type checking
-//
-// ============================================================================
-
-struct Expansion
-// ----------------------------------------------------------------------------
-//   A structure to expand a type-matched structure
-// ----------------------------------------------------------------------------
-{
-    Expansion(Context *context): context(context) {}
-
-    typedef Tree *value_type;
-
-    Tree *  Do(Tree *what)
-    {
-        return what;
-    }
-    Tree *  Do(Name *what)
-    {
-        if (Tree *bound = context->Bound(what))
-        {
-            if (Tree *eval = Interpreter::IsClosure(bound, nullptr))
-                bound = eval;
-            return bound;
-        }
-        return what;
-    }
-    Tree *  Do(Prefix *what)
-    {
-        Tree *left  = what->left->Do(this);
-        Tree *right = what->right->Do(this);
-        if (left != what->left || right != what->right)
-            return new Prefix(left, right, what->Position());
-        return what;
-    }
-    Tree *  Do(Postfix *what)
-    {
-        Tree *left  = what->left->Do(this);
-        Tree *right = what->right->Do(this);
-        if (left != what->left || right != what->right)
-            return new Postfix(left, right, what->Position());
-        return what;
-
-    }
-    Tree *  Do(Infix *what)
-    {
-        if (IsTypeAnnotation(what) || IsPatternCondition(what))
-            return what->left->Do(this);
-        Tree *left  = what->left->Do(this);
-        Tree *right = what->right->Do(this);
-        if (left != what->left || right != what->right)
-            return new Infix(what->name, left, right, what->Position());
-        return what;
-    }
-
-    Tree *  Do(Block *what)
-    {
-        Tree *chld = what->child->Do(this);
-        if (chld != what->child)
-            return new Block(chld,what->opening,what->closing,what->Position());
-        return what;
-    }
-
-    Context_p context;
-};
-
-
-static Tree *formTypeCheck(Scope *scope, Tree *shape, Tree *value)
-// ----------------------------------------------------------------------------
-//    Check a value against a type shape
-// ----------------------------------------------------------------------------
-{
-    // Strip outermost block if there is one
-    if (Block *block = shape->AsBlock())
-        shape = block->child;
-
-    // Check if the shape matches
-    Context_p context = new Context(scope);
-    Context_p locals = new Context(context);
-    EvalCache cache;
-    TreeList  args;
-    Bindings  bindings(context, locals, value, cache, args);
-    if (!shape->Do(bindings))
-    {
-        record(interpreter_typecheck, "Shape of tree %t does not match %t",
-               value, shape);
-        return nullptr;
-    }
-
-    // Reconstruct the resulting value from the shape
-    Expansion expand(locals);
-    value = shape->Do(expand);
-
-    // The value is associated to the symbols we extracted
-    record(interpreter_typecheck, "Shape of tree %t matches %t", value, shape);
-    return Interpreter::MakeClosure(locals, value);
-}
-
-
 Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if 'value' matches 'type' in the given context
 // ----------------------------------------------------------------------------
 {
-    record(interpreter_typecheck, "Check %t against %t in scope %t",
-           value, type, scope);
-
-    // Accelerated type check for the builtin or constructed types
-    if (TypeCheckOpcode *builtin = type->GetInfo<TypeCheckOpcode>())
-    {
-        // If this is marked as builtin, check if the test passes
-        if (Tree *converted = builtin->Check(scope, value))
-        {
-            record(interpreter_typecheck, "Check %t converted as %t",
-                   value, converted);
-            return converted;
-        }
-    }
-    else
-    {
-        // Check a type like 'matching (X, Y)'
-        if (Prefix *ptype = type->AsPrefix())
-            if (Name *ptypename = ptype->left->AsName())
-                if (ptypename->value == "matching")
-                    return formTypeCheck(scope, ptype->right, value);
-
-        record(interpreter_typecheck, "No code for %t, opcode is %O",
-               type, type->GetInfo<Opcode>());
-    }
-
-
-    // No direct or converted match, end of game
-    record(interpreter_typecheck, "Type checking %t failed", value);
-    return nullptr;
+    return typecheck(scope, type, value);
 }
 
 
 
 // ============================================================================
 //
-//    Include the opcodes
+//    Generate the builtins
 //
 // ============================================================================
 
-#include "opcodes.h"
-#include "interpreter.tbl"
+std::map<text, Interpreter::builtin_fn> Interpreter::builtins;
+
+#define R_INT(x)        return new Natural((x), self->Position())
+#define R_REAL(x)       return new Real((x), self->Position())
+#define R_TEXT(x)       return new Text((x), self->Position())
+#define R_BOOL(x)       return (x) ? xl_true : xl_false
+#define LEFT            (left->value)
+#define RIGHT           (right->value)
+#define VALUE           (value->value)
+#define LEFT_B          (LEFT == "true")
+#define RIGHT_B         (RIGHT == "true")
+#define VALUE_B         (VALUE == "true")
+#define SIGNED          (longlong)
+#define UNSIGNED        (ulonglong)
+#define SLEFT           SIGNED LEFT
+#define SRIGHT          SIGNED RIGHT
+#define SVALUE          SIGNED VALUE
+#define ULEFT           UNSIGNED LEFT
+#define URIGHT          UNSIGNED RIGHT
+#define UVALUE          UNSIGNED VALUE
+#define DIV0            if (RIGHT == 0) return Error("Divide $1 by zero", self)
+
+#define UNARY_OP(Name, ReturnType, ArgType, Body)               \
+static Tree *builtin_unary_##Name(Bindings &bindings)           \
+{                                                               \
+    TreeList &args = bindings.arguments;                        \
+    Tree *self = bindings.Self();                               \
+    Tree *result = self;                                        \
+    if (args.size() != 1)                                       \
+        return Error("Invalid number of arguments "             \
+                     "for unary builtin " #Name                 \
+                     " in $1", result);                         \
+    ArgType *value  = args[0]->As<ArgType>();                   \
+    if (!value)                                                 \
+        return Error("Argument $1 is not a " #ArgType           \
+                     " in builtin " #Name, args[0]);            \
+    Body;                                                       \
+}
+
+
+#define BINARY_OP(Name, ReturnType, LeftType, RightType, Body)  \
+static Tree *builtin_binary_##Name(Bindings &bindings)          \
+{                                                               \
+    TreeList &args = bindings.arguments;                        \
+    Tree *self = bindings.Self();                               \
+    if (args.size() != 2)                                       \
+        return Error("Invalid number of arguments "             \
+                     "for binary builtin " #Name                \
+                     " in $1", self);                           \
+    LeftType *left  = args[0]->As<LeftType>();                  \
+    if (!left)                                                  \
+        return Error("First argument $1 is not a " #LeftType    \
+                     " in builtin " #Name, args[0]);            \
+    RightType *right = args[1]->As<RightType>();                \
+    if (!right)                                                 \
+        return Error("Second argument $1 is not a " #RightType  \
+                     " in builtin " #Name, args[1]);            \
+    Body;                                                       \
+}
+
+
+#define NAME(N)                                                 \
+Name_p xl_##N;                                                  \
+static Tree *builtin_name_##N(Bindings &bindings)               \
+{                                                               \
+    if (!xl_##N)                                                \
+        xl_##N = new Name(#N,                                   \
+                          bindings.Self()->Position());         \
+    return xl_##N;                                              \
+}
+
+
+#define TYPE(N, Body)                                           \
+Name_p N##_type;                                                \
+static Tree *builtin_type_##N(Bindings &bindings)               \
+{                                                               \
+    if (!N##_type)                                              \
+        N##_type = new Name(#N,                                 \
+                               bindings.Self()->Position());    \
+    return N##_type;                                            \
+}                                                               \
+                                                                \
+static Tree *builtin_typecheck_##N(Bindings &bindings)          \
+{                                                               \
+    TreeList &args = bindings.arguments;                        \
+    if (args.size() != 2)                                       \
+        return Error("Invalid number of arguments "             \
+                     "for " #N " typecheck"                     \
+                     " in $1", bindings.Self());                \
+    Tree *value = args[0]; (value);                             \
+    Tree *type  = args[1]; (type);                              \
+    Body;                                                       \
+}
+
+#include "builtins.tbl"
+
+
+
+#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)              \
+Interpreter::builtins[#Name] = builtin_unary_##Name;
+
+#define BINARY_OP(Name, ReturnType, LeftTYpe, RightType, Body)  \
+Interpreter::builtins[#Name] = builtin_binary_##Name;
+
+#define NAME(N)                                                 \
+Interpreter::builtins[#N] = builtin_name_##N;                   \
+xl_##N = new Name(#N);
+
+#define TYPE(N, Body)                                           \
+Interpreter::builtins[#N] = builtin_type_##N;                   \
+Interpreter::builtins[#N"_check"] = builtin_typecheck_##N;      \
+N##_type = new Name(#N);
+
+
+static bool initialize()
+// ----------------------------------------------------------------------------
+//   Initialize the builtins
+// ----------------------------------------------------------------------------
+{
+#include "builtins.tbl"
+    return true;
+}
 
 XL_END

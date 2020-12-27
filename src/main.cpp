@@ -45,11 +45,9 @@
 #include "tree.h"
 #include "context.h"
 #include "options.h"
-#include "basics.h"
 #include "serializer.h"
 #include "runtime.h"
 #include "utf8_fileutils.h"
-#include "opcodes.h"
 #include "remote.h"
 #include "interpreter.h"
 #ifndef INTERPRETER_ONLY
@@ -228,8 +226,6 @@ Main::Main(int inArgc,
     recorder_dump_on_common_signals(0, 0);
     recorder_trace_set(".*_(error|warning)");
     recorder_trace_set(getenv("XL_TRACES"));
-    recorder_configure_type('O', recorder_render<std::ostringstream, Op *>);
-    recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
@@ -243,7 +239,6 @@ Main::Main(int inArgc,
         Opt::optimize.value = 3;
     }
 #endif // INTERPRETER_ONLY
-    Opcode::Enter(&context);
 
     // Once all options have been read, enter symbols and setup compiler
 #ifndef INTERPRETER_ONLY
@@ -309,11 +304,13 @@ int Main::LoadAndRun()
     if (!rc && HadErrors())
         rc = 1;
 
+#if 0
     if (!rc && Opt::remote)
     {
         Scope *scope = context.Symbols();
         return xl_listen(scope, Opt::remoteForks, Opt::remotePort);
     }
+#endif
 
     record(main, "LoadAndRun returns %d", rc);
     return rc;
