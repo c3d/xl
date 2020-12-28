@@ -165,7 +165,7 @@ inline bool Bindings::Do(Name *what)
 
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
-    if (Tree *bound = argContext.Bound(what))
+    if (Tree *bound = argContext.Bound(what, false))
     {
         Evaluate();
         bool result = Tree::Equal(bound, test);
@@ -321,6 +321,8 @@ bool Bindings::Do(Infix *what)
 
         // Need to evaluate the type on the right
         Tree *want = EvaluateType(what->right);
+        if (IsError(want))
+            return false;
 
         // Type check value against type
         Tree *checked = typecheck(EvaluationScope(), want, test);
@@ -431,8 +433,8 @@ void Bindings::Bind(Name *name, Tree *value)
 {
     record(bindings, "Binding %t = %t", name, value);
     value = evalContext.Closure(value);
-    arguments.push_back(value);
-    argContext.Define(name, value);
+    Rewrite *rewrite = argContext.Define(name, value);
+    bindings.push_back(rewrite);
 }
 
 
@@ -455,6 +457,16 @@ static Tree *evalLookup(Scope   *evalScope,
     EvaluationCache &cache = *((EvaluationCache *) ec);
     Bindings bindings(evalScope, declScope, expr, cache);
     Tree *pattern = decl->Pattern();
+
+    // If the pattern is a name, directly return the value or fail
+    if (Name *name = pattern->AsName())
+    {
+        if (Name *xname = expr->AsName())
+            if (name->value == xname->value)
+                return decl->right;
+        return nullptr;
+    }
+
     if (!pattern->Do(bindings))
         return nullptr;
 
@@ -472,9 +484,15 @@ static Tree *evalLookup(Scope   *evalScope,
             return Error("Nonexistent builtin $1", name);
 
         // Need to unwrap all arguments
-        for (auto &arg : bindings.arguments)
-            if (Scope *scope = Context::IsClosure(arg))
-                arg = evaluate(scope, arg);
+        for (auto &rewrite : bindings.Rewrites())
+        {
+            Tree_p &value = rewrite->right;
+            while (Scope *scope = Context::IsClosure(value))
+            {
+                Prefix *closure = (Prefix *) (Tree *) value;
+                value = evaluate(scope, closure->right);
+            }
+        }
 
         Tree *result = callback(bindings);
         return result;
@@ -511,7 +529,11 @@ retry:
         // Check if the left is a block containing only declarations
         // This deals with [(X is 3) (X + 1)], i.e. closures
         if (Scope *scope = context.ProcessScope(prefix->left))
-            return evaluate(scope, prefix->right);
+        {
+            expr = evaluate(scope, prefix->right);
+            result = expr;
+            goto retry;
+        }
 
         // Filter out declaration such as [extern foo(bar)]
         if (IsDeclaration(prefix))
@@ -552,7 +574,7 @@ retry:
     EvaluationCache cache;
     if (Tree *found = context.Lookup(expr, evalLookup, &cache, true))
         result = found;
-    else
+    else if(!expr->IsConstant())
         result = (Tree *) Error("No form matching $1", expr);
     return result;
 }
@@ -636,12 +658,11 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 #define DIV0            if (RIGHT == 0) return Error("Divide $1 by zero", self)
 
 #define UNARY_OP(Name, ReturnType, ArgType, Body)               \
-static Tree *builtin_unary_##Name(Bindings &bindings)           \
+static Tree *builtin_unary_##Name(Bindings &args)               \
 {                                                               \
-    TreeList &args = bindings.arguments;                        \
-    Tree *self = bindings.Self();                               \
+    Tree *self = args.Self();                                   \
     Tree *result = self;                                        \
-    if (args.size() != 1)                                       \
+    if (args.Size() != 1)                                       \
         return Error("Invalid number of arguments "             \
                      "for unary builtin " #Name                 \
                      " in $1", result);                         \
@@ -654,11 +675,10 @@ static Tree *builtin_unary_##Name(Bindings &bindings)           \
 
 
 #define BINARY_OP(Name, ReturnType, LeftType, RightType, Body)  \
-static Tree *builtin_binary_##Name(Bindings &bindings)          \
+static Tree *builtin_binary_##Name(Bindings &args)              \
 {                                                               \
-    TreeList &args = bindings.arguments;                        \
-    Tree *self = bindings.Self();                               \
-    if (args.size() != 2)                                       \
+    Tree *self = args.Self();                                   \
+    if (args.Size() != 2)                                       \
         return Error("Invalid number of arguments "             \
                      "for binary builtin " #Name                \
                      " in $1", self);                           \
@@ -676,32 +696,31 @@ static Tree *builtin_binary_##Name(Bindings &bindings)          \
 
 #define NAME(N)                                                 \
 Name_p xl_##N;                                                  \
-static Tree *builtin_name_##N(Bindings &bindings)               \
+static Tree *builtin_name_##N(Bindings &args)                   \
 {                                                               \
     if (!xl_##N)                                                \
         xl_##N = new Name(#N,                                   \
-                          bindings.Self()->Position());         \
+                          args.Self()->Position());             \
     return xl_##N;                                              \
 }
 
 
 #define TYPE(N, Body)                                           \
 Name_p N##_type;                                                \
-static Tree *builtin_type_##N(Bindings &bindings)               \
+static Tree *builtin_type_##N(Bindings &args)                   \
 {                                                               \
     if (!N##_type)                                              \
         N##_type = new Name(#N,                                 \
-                               bindings.Self()->Position());    \
+                            args.Self()->Position());           \
     return N##_type;                                            \
 }                                                               \
                                                                 \
-static Tree *builtin_typecheck_##N(Bindings &bindings)          \
+static Tree *builtin_typecheck_##N(Bindings &args)              \
 {                                                               \
-    TreeList &args = bindings.arguments;                        \
-    if (args.size() != 2)                                       \
+    if (args.Size() != 2)                                       \
         return Error("Invalid number of arguments "             \
                      "for " #N " typecheck"                     \
-                     " in $1", bindings.Self());                \
+                     " in $1", args.Self());                    \
     Tree *value = args[0]; (value);                             \
     Tree *type  = args[1]; (type);                              \
     Body;                                                       \
