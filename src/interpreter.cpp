@@ -116,7 +116,7 @@ inline bool Bindings::Do(Natural *what)
 //   The pattern contains an natural: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Evaluate();
+    MustEvaluate();
     if (Natural *ival = test->AsNatural())
         if (ival->value == what->value)
             return true;
@@ -130,7 +130,7 @@ inline bool Bindings::Do(Real *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Evaluate();
+    MustEvaluate();
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return true;
@@ -144,7 +144,7 @@ inline bool Bindings::Do(Text *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    Evaluate();
+    MustEvaluate();
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
             return true;
@@ -159,15 +159,14 @@ inline bool Bindings::Do(Name *what)
 // ----------------------------------------------------------------------------
 {
     // The test value may have been evaluated. If so, use evaluated value
-    auto found = cache.find(test);
-    if (found != cache.end())
-        test = (*found).second;
+    if (Tree *cached = cache.Cached(test))
+        test = cached;
 
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
     if (Tree *bound = argContext.Bound(what, false))
     {
-        Evaluate();
+        MustEvaluate();
         bool result = Tree::Equal(bound, test);
         record(interpreter, "Arg check %t vs %t: %+s",
                test, bound, result ? "match" : "failed");
@@ -241,7 +240,7 @@ bool Bindings::Do(Prefix *what)
         }
 
         // Normal prefix matching failed: try to evaluate test
-        if (Evaluate())
+        if (MustEvaluate())
             if (test->AsPrefix())
                 retrying = true;
     }
@@ -296,7 +295,7 @@ bool Bindings::Do(Postfix *what)
         }
 
         // Normal postfix matching failed: try to evaluate test
-        if (Evaluate())
+        if (MustEvaluate())
             if (test->AsPostfix())
                 retrying = true;
     }
@@ -325,9 +324,12 @@ bool Bindings::Do(Infix *what)
             return false;
 
         // Type check value against type
+        if (Tree *cached = cache.HasTypeCheck(want, test))
+            return cached == xl_true;
         Tree *checked = typecheck(EvaluationScope(), want, test);
         if (checked == xl_false || checked == xl_nil)
             checked = nullptr;
+        cache.TypeCheck(want, test, checked);
         if (!checked)
         {
             Ooops("Value $1 does not belong to type $2", test, type);
@@ -360,7 +362,7 @@ bool Bindings::Do(Infix *what)
     if (!ifx || ifx->name != what->name)
     {
         // Try to get an infix by evaluating what we have
-        Evaluate();
+        MustEvaluate();
         ifx = test->AsInfix();
     }
     if (ifx)
@@ -385,25 +387,25 @@ bool Bindings::Do(Infix *what)
 }
 
 
-bool Bindings::Evaluate()
+bool Bindings::MustEvaluate()
 // ----------------------------------------------------------------------------
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree *evaluated = cache[test];
+    Tree *evaluated = cache.Cached(test);
     if (!evaluated)
     {
         evaluated = evaluate(EvaluationScope(), test);
-        cache[test] = evaluated;
+        cache.Cache(test, evaluated);
         record(bindings, "Test %t = new %t", test, evaluated);
     }
     else
     {
         record(bindings, "Test %t = old %t", test, evaluated);
     }
-    bool result = test != evaluated;
+    bool changed = test != evaluated;
     test = evaluated;
-    return result;
+    return changed;
 }
 
 
@@ -412,7 +414,13 @@ Tree *Bindings::EvaluateType(Tree *type)
 //   Evaluate a type expression (in declaration context)
 // ----------------------------------------------------------------------------
 {
-    return evaluate(DeclarationScope(), type);
+    Tree *result = cache.Cached(type);
+    if (!result)
+    {
+        result = evaluate(DeclarationScope(), type);
+        cache.Cache(type, result);
+    }
+    return result;
 }
 
 
@@ -421,7 +429,13 @@ Tree *Bindings::EvaluateGuard(Tree *guard)
 //   Evaluate a guard condition (in arguments context)
 // ----------------------------------------------------------------------------
 {
-    return evaluate(ArgumentsScope(), guard);
+    Tree *result = cache.Cached(guard);
+    if (!result)
+    {
+        result = evaluate(ArgumentsScope(), guard);
+        cache.Cache(guard, result);
+    }
+    return result;
 }
 
 
@@ -432,9 +446,11 @@ void Bindings::Bind(Name *name, Tree *value)
 //   We wrap the input argument in a closure to get the proper context on eval
 {
     record(bindings, "Binding %t = %t", name, value);
-    value = evalContext.Closure(value);
+    if (!cache.Cached(value))
+        value = evalContext.Closure(value);
     Rewrite *rewrite = argContext.Define(name, value);
     bindings.push_back(rewrite);
+    cache.Cache(name, value);
 }
 
 
@@ -463,7 +479,7 @@ static Tree *evalLookup(Scope   *evalScope,
     {
         if (Name *xname = expr->AsName())
             if (name->value == xname->value)
-                return decl->right;
+                return IsSelf(decl->right) ? name : decl->right;
         return nullptr;
     }
 
@@ -717,12 +733,12 @@ static Tree *builtin_type_##N(Bindings &args)                   \
                                                                 \
 static Tree *builtin_typecheck_##N(Bindings &args)              \
 {                                                               \
-    if (args.Size() != 2)                                       \
+    if (args.Size() != 1)                                       \
         return Error("Invalid number of arguments "             \
                      "for " #N " typecheck"                     \
                      " in $1", args.Self());                    \
     Tree *value = args[0]; (value);                             \
-    Tree *type  = args[1]; (type);                              \
+    Tree *type  = N##_type; (type);                             \
     Body;                                                       \
 }
 

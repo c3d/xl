@@ -45,7 +45,7 @@ XL_BEGIN
 
 struct Opcode;
 struct Bindings;
-typedef std::map<Tree_p, Tree_p>        EvaluationCache;
+struct EvaluationCache;
 typedef std::vector<Rewrite_p>          RewriteList;
 
 
@@ -66,6 +66,43 @@ public:
 
     static void InitializeBuiltins();
     static void InitializeContext(Context &context);
+};
+
+
+struct EvaluationCache
+// ----------------------------------------------------------------------------
+//   Ensure that a given expression is only evaluated once for a given pattern
+// ----------------------------------------------------------------------------
+{
+    Tree *Cached(Tree *expr)
+    {
+        auto found = values.find(expr);
+        if (found != values.end())
+            return (*found).second;
+        return nullptr;
+    }
+
+    Tree *Cache(Tree *expr, Tree *val)
+    {
+        return values[expr] = val;
+    }
+
+    Tree *HasTypeCheck(Tree *type, Tree *expr)
+    {
+        auto found = types.find(std::make_pair(type,expr));
+        if (found != types.end())
+            return (*found).second ? xl_true : xl_false;
+        return nullptr;
+    }
+
+    void TypeCheck(Tree *type, Tree *expr, bool success)
+    {
+        types[std::make_pair(type,expr)] = success;
+    }
+
+private:
+    std::map<Tree_p, Tree_p>                    values;
+    std::map<std::pair<Tree_p,Tree_p>, bool>    types;
 };
 
 
@@ -99,7 +136,7 @@ struct Bindings
     bool  Do(Block *what);
 
     // Evaluation and binding of values
-    bool  Evaluate();
+    bool  MustEvaluate();
     Tree *EvaluateType(Tree *type);
     Tree *EvaluateGuard(Tree *guard);
     void  Bind(Name *name, Tree *value);
