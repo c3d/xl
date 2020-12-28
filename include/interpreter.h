@@ -46,6 +46,7 @@ XL_BEGIN
 struct Opcode;
 struct Bindings;
 typedef std::map<Tree_p, Tree_p>        EvaluationCache;
+typedef std::vector<Rewrite_p>          RewriteList;
 
 
 class Interpreter : public Evaluator
@@ -84,7 +85,7 @@ struct Bindings
           test(expr),
           cache(cache),
           type(nullptr),
-          arguments()
+          bindings()
     {}
 
     // Tree::Do interface
@@ -102,6 +103,11 @@ struct Bindings
     Tree *EvaluateType(Tree *type);
     Tree *EvaluateGuard(Tree *guard);
     void  Bind(Name *name, Tree *value);
+    Rewrite *Binding(unsigned n){ return bindings[n]; }
+    Tree *Argument(unsigned n)  { return Binding(n)->right; }
+    RewriteList &Rewrites()     { return bindings; }
+    size_t Size()               { return bindings.size(); }
+    Tree *operator[](unsigned n){ return Argument(n); }
 
     // Return the local bindings
     Scope *EvaluationScope()    { return evalContext.Symbols(); }
@@ -117,9 +123,8 @@ private:
     Tree_p              test;
     EvaluationCache &   cache;
 
-public:
     Tree_p              type;
-    TreeList            arguments;
+    RewriteList         bindings;
 };
 
 XL_END
