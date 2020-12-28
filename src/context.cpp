@@ -425,8 +425,12 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
 {
     // Eliminate blocks
     if (Block *patb = pat->AsBlock())
+    {
         if (!patb->IsMetaBox())
             return Sort(patb->child, val, mode);
+        if (SortSearching(mode))
+            return 0;
+    }
     if (Block *valb = val->AsBlock())
         if (!valb->IsMetaBox())
             return Sort(pat, valb->child, mode);
