@@ -534,6 +534,15 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
                                 TYPE);
                 }
             }
+            else if (mode == SEARCH &&
+                     IsTypeCast((Infix *) pat) &&
+                     IsTypeCast((Infix *) val) &&
+                     ((Infix *) pat)->left->AsName())
+            {
+                return Sort(((Infix *) pat)->right,
+                            ((Infix *) val)->right,
+                            TYPE);
+            }
             else
             {
                 // When not inserting, compare untyped pattern with value
