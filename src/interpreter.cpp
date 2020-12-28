@@ -775,7 +775,8 @@ void Interpreter::InitializeContext(Context &context)
     builtins[#Name] = builtin_binary_##Name;
 
 #define NAME(N)                                         \
-    builtins[#N] = builtin_name_##N;
+    builtins[#N] = builtin_name_##N;                    \
+    context.Define(xl_##N, xl_self);
 
 #define TYPE(N, Body)                                   \
     builtins[#N] = builtin_type_##N;                    \
@@ -788,6 +789,7 @@ void Interpreter::InitializeContext(Context &context)
     Prefix *value_##N =                                 \
         new Prefix(xl_builtin,                          \
                    new Name(#N"_typecheck"));           \
+    context.Define(N##_type, xl_self);                  \
     context.Define(pattern_##N, value_##N);
 
 #include "builtins.tbl"

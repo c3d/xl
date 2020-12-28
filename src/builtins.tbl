@@ -40,8 +40,8 @@
 //
 // ============================================================================
 
+NAME(self)                      // Must come first, used in Define(...)
 NAME(nil)
-NAME(self)
 NAME(true)
 NAME(false)
 NAME(error)
