@@ -58,8 +58,11 @@ public:
     Interpreter(Context &context);
     virtual ~Interpreter();
 
-    Tree *              Evaluate(Scope *, Tree *source) override;
-    Tree *              TypeCheck(Scope *, Tree *type, Tree *value) override;
+    Tree *Evaluate(Scope *, Tree *source) override;
+    Tree *TypeCheck(Scope *, Tree *type, Tree *value) override;
+
+    static Tree *DoEvaluate(Scope *scope, Tree *expr, bool recurse = true);
+    static Tree *DoTypeCheck(Scope *scope, Tree *type, Tree *value);
 
     typedef Tree *(*builtin_fn)(Bindings &bindings);
     static std::map<text, builtin_fn> builtins;
@@ -87,22 +90,22 @@ struct EvaluationCache
         return values[expr] = val;
     }
 
-    Tree *HasTypeCheck(Tree *type, Tree *expr)
+    Tree *CachedTypeCheck(Tree *type, Tree *expr)
     {
         auto found = types.find(std::make_pair(type,expr));
         if (found != types.end())
-            return (*found).second ? xl_true : xl_false;
+            return (*found).second;
         return nullptr;
     }
 
-    void TypeCheck(Tree *type, Tree *expr, bool success)
+    void TypeCheck(Tree *type, Tree *expr, Tree *cast)
     {
-        types[std::make_pair(type,expr)] = success;
+        types[std::make_pair(type,expr)] = cast;
     }
 
 private:
     std::map<Tree_p, Tree_p>                    values;
-    std::map<std::pair<Tree_p,Tree_p>, bool>    types;
+    std::map<std::pair<Tree_p,Tree_p>, Tree_p>  types;
 };
 
 
@@ -137,8 +140,11 @@ struct Bindings
 
     // Evaluation and binding of values
     bool  MustEvaluate();
+    Tree *Evaluate(Scope *scope, Tree *expr);
     Tree *EvaluateType(Tree *type);
     Tree *EvaluateGuard(Tree *guard);
+    Tree *TypeCheck(Scope *scope, Tree *type, Tree *expr);
+
     void  Bind(Name *name, Tree *value);
     Rewrite *Binding(unsigned n){ return bindings[n]; }
     Tree *Argument(unsigned n)  { return Binding(n)->right; }

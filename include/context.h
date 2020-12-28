@@ -349,6 +349,27 @@ inline Infix *IsTypeAnnotation(Tree *tree)
 }
 
 
+inline bool IsTypeCast(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a type cast
+// ----------------------------------------------------------------------------
+{
+    return infix->name == "as";
+}
+
+
+inline Infix *IsTypeCast(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Check if a type is a type cast
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsTypeCast(infix))
+            return infix;
+    return nullptr;
+}
+
+
 inline bool IsAssignment(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix is an assignment
@@ -418,7 +439,6 @@ inline bool IsDeclaration(Infix *infix)
 // ----------------------------------------------------------------------------
 {
     return (IsDefinition(infix) ||
-            IsTypeAnnotation(infix) ||
             IsVariableDeclaration(infix));
 }
 

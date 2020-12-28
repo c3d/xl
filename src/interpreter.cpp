@@ -68,16 +68,6 @@ NaturalOption   stackDepth("stack_depth",
 
 
 
-// ============================================================================
-//
-//   Static functions defined in this file
-//
-// ============================================================================
-
-static Tree *evaluate(Scope *scope, Tree *value);
-static Tree *typecheck(Scope *scope, Tree *type, Tree *value);
-
-
 
 // ============================================================================
 //
@@ -189,7 +179,7 @@ bool Bindings::Do(Block *what)
     // Deal with the case of a metablock: evaluate expression inside
     if (Tree *expr = what->IsMetaBox())
     {
-        expr = evaluate(declContext.Symbols(), expr);
+        expr = Evaluate(declContext.Symbols(), expr);
         return Tree::Equal(test, expr);
     }
 
@@ -314,6 +304,16 @@ bool Bindings::Do(Infix *what)
     // Check if we have a type annotation, like [X:natural]
     if (IsTypeAnnotation(what))
     {
+        bool outermost = test == self;
+
+        // Check if we test "Value is integer" against "N is integer"
+        if (IsTypeCast(what))
+            if (Infix *cast = IsTypeCast(test))
+                if (what->left->AsName())
+                    return (test = cast->left) &&
+                        Tree::Equal(what->right, cast->right) &&
+                        what->left->Do(this);
+
         // Need to match the left part with the test
         if (!what->left->Do(this))
             return false;
@@ -324,18 +324,14 @@ bool Bindings::Do(Infix *what)
             return false;
 
         // Type check value against type
-        if (Tree *cached = cache.HasTypeCheck(want, test))
-            return cached == xl_true;
-        Tree *checked = typecheck(EvaluationScope(), want, test);
-        if (checked == xl_false || checked == xl_nil)
-            checked = nullptr;
-        cache.TypeCheck(want, test, checked);
+        Tree *checked = TypeCheck(EvaluationScope(), want, test);
         if (!checked)
         {
             Ooops("Value $1 does not belong to type $2", test, type);
             return false;
         }
-        type = want;
+        if (outermost)
+            type = want;
         return true;
     }
 
@@ -392,20 +388,49 @@ bool Bindings::MustEvaluate()
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree *evaluated = cache.Cached(test);
-    if (!evaluated)
-    {
-        evaluated = evaluate(EvaluationScope(), test);
-        cache.Cache(test, evaluated);
-        record(bindings, "Test %t = new %t", test, evaluated);
-    }
-    else
-    {
-        record(bindings, "Test %t = old %t", test, evaluated);
-    }
+    Tree *evaluated = Evaluate(EvaluationScope(), test);
     bool changed = test != evaluated;
     test = evaluated;
     return changed;
+}
+
+
+Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
+// ----------------------------------------------------------------------------
+//   Helper evaluation function for recursive evaluation
+// ----------------------------------------------------------------------------
+{
+    Tree_p result = cache.Cached(expr);
+    if (!result)
+    {
+        record(bindings, "Evaluating %t in %t", expr, scope);
+        result = Interpreter::DoEvaluate(scope, expr);
+        cache.Cache(expr, result);
+        record(bindings, "Evaluate %t = new %t", test, result);
+    }
+    else
+    {
+        record(bindings, "Evaluate %t = old %t", test, result);
+    }
+
+    return result;
+}
+
+
+Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if we pass the test for the type
+// ----------------------------------------------------------------------------
+{
+    Tree *cast = cache.CachedTypeCheck(type, value);
+    if (!cast)
+    {
+        cast = Interpreter::DoTypeCheck(scope, type, value);
+        cache.TypeCheck(type, value, cast);
+    }
+    if (IsError(cast))
+        cast = nullptr;
+    return cast;
 }
 
 
@@ -414,13 +439,7 @@ Tree *Bindings::EvaluateType(Tree *type)
 //   Evaluate a type expression (in declaration context)
 // ----------------------------------------------------------------------------
 {
-    Tree *result = cache.Cached(type);
-    if (!result)
-    {
-        result = evaluate(DeclarationScope(), type);
-        cache.Cache(type, result);
-    }
-    return result;
+    return Evaluate(DeclarationScope(), type);
 }
 
 
@@ -429,13 +448,7 @@ Tree *Bindings::EvaluateGuard(Tree *guard)
 //   Evaluate a guard condition (in arguments context)
 // ----------------------------------------------------------------------------
 {
-    Tree *result = cache.Cached(guard);
-    if (!result)
-    {
-        result = evaluate(ArgumentsScope(), guard);
-        cache.Cache(guard, result);
-    }
-    return result;
+    return Evaluate(ArgumentsScope(), guard);
 }
 
 
@@ -506,7 +519,7 @@ static Tree *evalLookup(Scope   *evalScope,
             while (Scope *scope = Context::IsClosure(value))
             {
                 Prefix *closure = (Prefix *) (Tree *) value;
-                value = evaluate(scope, closure->right);
+                value = bindings.Evaluate(scope, closure->right);
             }
         }
 
@@ -519,16 +532,39 @@ static Tree *evalLookup(Scope   *evalScope,
         return expr;
 
     // Otherwise evaluate the body in the binding arguments scope
-    return evaluate(bindings.ArgumentsScope(), body);
+    return Interpreter::DoEvaluate(bindings.ArgumentsScope(), body);
 }
 
 
-static Tree *evaluate(Context &context, Tree *expr)
+Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
+// ----------------------------------------------------------------------------
+//    Evaluate 'what', finding the final, non-closure result
+// ----------------------------------------------------------------------------
+{
+    return DoEvaluate(scope, expr);
+}
+
+
+Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if 'value' matches 'type' in the given context
+// ----------------------------------------------------------------------------
+{
+    return DoTypeCheck(scope, type, value);
+}
+
+
+Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, bool recurse)
 // ----------------------------------------------------------------------------
 //   Internal evaluator - Short circuits a few common expressions
 // ----------------------------------------------------------------------------
 {
     Tree_p result = expr;
+    Context context(scope);
+
+    // Check if we have instructions to process. If not, return declarations
+    if (!context.ProcessDeclarations(expr))
+        return expr;
 
 retry:
     // Short-circuit evaluation of blocks
@@ -544,10 +580,12 @@ retry:
     {
         // Check if the left is a block containing only declarations
         // This deals with [(X is 3) (X + 1)], i.e. closures
-        if (Scope *scope = context.ProcessScope(prefix->left))
+        if (Scope *closure = context.ProcessScope(prefix->left))
         {
-            expr = evaluate(scope, prefix->right);
+            scope = closure;
+            expr = prefix->right;
             result = expr;
+            context.SetSymbols(scope);
             goto retry;
         }
 
@@ -562,7 +600,7 @@ retry:
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
-            Tree *left = evaluate(context, infix->left);
+            Tree *left = DoEvaluate(scope, infix->left);
             if (left != infix->left)
                 result = left;
             if (IsError(left))
@@ -578,7 +616,7 @@ retry:
         // Evaluate X.Y
         if (IsDot(infix))
             if (Scope *scope = context.ProcessScope(infix->left))
-                return evaluate(scope->Inner(), infix->right);
+                return DoEvaluate(scope->Inner(), infix->right, false);
     }
 
     // All other cases: lookup in symbol table
@@ -588,7 +626,7 @@ retry:
         return Error("Stack depth exceeded evaluating $1", expr);
 
     EvaluationCache cache;
-    if (Tree *found = context.Lookup(expr, evalLookup, &cache, true))
+    if (Tree *found = context.Lookup(expr, evalLookup, &cache, recurse))
         result = found;
     else if(!expr->IsConstant())
         result = (Tree *) Error("No form matching $1", expr);
@@ -596,53 +634,18 @@ retry:
 }
 
 
-static Tree *evaluate(Scope *scope, Tree *expr)
+Tree *Interpreter::DoTypeCheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
-//   Helper evaluation function for recursive evaluation
-// ----------------------------------------------------------------------------
-{
-    record(eval, "Evaluating %t in %t", expr, scope);
-    Context context(scope);
-    Tree_p result = expr;
-
-    if (context.ProcessDeclarations(expr))
-        result = evaluate(context, expr);
-
-    record(eval, "Evaluated %t in %t as %t", expr, scope, result);
-    return result;
-}
-
-
-static Tree *typecheck(Scope *scope, Tree *type, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if we pass the test for the type
+//   Implementation of type checking in interpreter
 // ----------------------------------------------------------------------------
 {
     record(typecheck, "Check %t against %t in scope %t",
            value, type, scope);
-    Tree *test = new Infix("∈", value, type, value->Position());
-    Tree *checked = evaluate(scope, test);
+    Tree_p test = new Infix("as", value, type, value->Position());
+    Tree_p result = DoEvaluate(scope, test);
     record(typecheck, "Checked %t against %t in scope %t, got %t",
-           value, type, scope, checked);
-    return checked;
-}
-
-
-Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
-// ----------------------------------------------------------------------------
-//    Evaluate 'what', finding the final, non-closure result
-// ----------------------------------------------------------------------------
-{
-    return evaluate(scope, expr);
-}
-
-
-Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if 'value' matches 'type' in the given context
-// ----------------------------------------------------------------------------
-{
-    return typecheck(scope, type, value);
+           value, type, scope, result);
+    return result;
 }
 
 
@@ -799,9 +802,9 @@ void Interpreter::InitializeContext(Context &context)
     builtins[#N"_typecheck"] = builtin_typecheck_##N;   \
                                                         \
     Infix *pattern_##N =                                \
-        new Infix("∈",                                  \
+        new Infix("as",                                 \
                   new Name("Value"),                    \
-                  Block::MetaBox(N##_type));            \
+                  N##_type);                            \
     Prefix *value_##N =                                 \
         new Prefix(xl_builtin,                          \
                    new Name(#N"_typecheck"));           \
