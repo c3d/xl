@@ -470,6 +470,12 @@ static Tree *evalLookup(Scope   *evalScope,
         Interpreter::builtin_fn callback = Interpreter::builtins[name->value];
         if (!callback)
             return Error("Nonexistent builtin $1", name);
+
+        // Need to unwrap all arguments
+        for (auto &arg : bindings.arguments)
+            if (Scope *scope = Context::IsClosure(arg))
+                arg = evaluate(scope, arg);
+
         Tree *result = callback(bindings);
         return result;
     }
