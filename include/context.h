@@ -257,6 +257,7 @@ public:
     bool                ProcessDeclarations(Tree *what);
     Scope *             ProcessScope(Tree *declarations);
     Prefix *            Closure(Tree *value);
+    static Scope *      IsClosure(Tree *value);
 
     // Adding definitions to the context
     Rewrite *           Enter(Infix *infix, bool overwrite=false);
@@ -831,6 +832,34 @@ struct ContextStack
     }
     Scope *scope;
 };
+
+
+
+// ============================================================================
+//
+//   Closure management
+//
+// ============================================================================
+
+inline Prefix *Context::Closure(Tree *value)
+// ----------------------------------------------------------------------------
+//   Prefix the value wiht the current symbols - Unwrapped by evaluate()
+// ----------------------------------------------------------------------------
+{
+    return new Prefix(Symbols(), value, value->Position());
+}
+
+
+inline Scope *Context::IsClosure(Tree *value)
+// ----------------------------------------------------------------------------
+//   Check if this looks like a closure
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = value->AsPrefix())
+        if (Scope *scope = prefix->left->As<Scope>())
+            return scope;
+    return nullptr;
+}
 
 
 

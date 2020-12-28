@@ -174,14 +174,14 @@ Pat:text in Src:text                    is text_index Src, Pat, 0
 Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 
 // A utility function for C-style testing
-good false is false
-good 0     is false
-good 0.0   is false
-good ""    is false
-good nil   is false
-good Other is true
+good [[false]]  is false
+good 0          is false
+good 0.0        is false
+good ""         is false
+good [[nil]]    is false
+good Other      is true
 
-bad X      is not good X
+bad X           is not good X
 
 // Loops
 while Condition loop Body is

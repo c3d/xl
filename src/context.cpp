@@ -259,15 +259,6 @@ Scope *Context::ProcessScope(Tree *declarations)
 }
 
 
-Prefix *Context::Closure(Tree *value)
-// ----------------------------------------------------------------------------
-//   Prefix the value wiht the current symbols - Unwrapped by evaluate()
-// ----------------------------------------------------------------------------
-{
-    return new Prefix(Symbols(), value, value->Position());
-}
-
-
 Tree *Context::ValidatePattern(Tree *pattern)
 // ----------------------------------------------------------------------------
 //   Check that we have only valid names in the pattern, evaluate metaboxen
