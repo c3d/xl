@@ -56,37 +56,37 @@ NAME(builtin)
 //
 // ============================================================================
 
-TYPE(tree,      return xl_true)
-TYPE(natural,   R_BOOL(value->AsNatural()))
-TYPE(real,      R_BOOL(value->AsReal()))
-TYPE(text,      R_BOOL(value->AsText()))
+TYPE(tree,      return value)
+TYPE(natural,   return value->AsNatural())
+TYPE(real,      return value->AsReal())
+TYPE(text,      return value->AsText())
 TYPE(character,
      if (Text *text = value->AsText())
          if (text->IsCharacter())
-             return xl_true;
-     return xl_false)
-TYPE(symbol,    R_BOOL(value->AsName()))
+             return text;
+     return nullptr)
+TYPE(symbol,    return value->AsName())
 TYPE(name,
      if (Name *name = value->AsName())
          if (name->IsName())
-             return xl_true;
-     return xl_false)
+             return name;
+     return nullptr)
 TYPE(operator,
      if (Name *name = value->AsName())
          if (name->IsOperator())
-             return xl_true;
-     return xl_false)
+             return name;
+     return nullptr)
 TYPE(boolean,
      if (Name *name = value->AsName())
          if (name->IsBoolean())
-             return xl_true;
-     return xl_false)
-TYPE(block,     R_BOOL(value->AsBlock()))
-TYPE(infix,     R_BOOL(value->AsInfix()))
-TYPE(prefix,    R_BOOL(value->AsPrefix()))
-TYPE(postfix,   R_BOOL(value->AsPostfix()))
-TYPE(scope,     R_BOOL(value->As<Scope>()))
-TYPE(declaration, R_BOOL(IsDeclaration(value)))
+             return name->value == "true" ? xl_true : xl_false;
+     return nullptr)
+TYPE(block,     return value->AsBlock())
+TYPE(infix,     return value->AsInfix())
+TYPE(prefix,    return value->AsPrefix())
+TYPE(postfix,   return value->AsPostfix())
+TYPE(scope,     return value->As<Scope>())
+TYPE(declaration, return IsDeclaration(value))
 
 
 
@@ -101,22 +101,22 @@ TYPE(declaration, R_BOOL(IsDeclaration(value)))
          if (Natural *nat = value->AsNatural())         \
              if (nat->value >= MinValue &&              \
                  nat->value <= MaxValue)                \
-                 return xl_true;                        \
-         return xl_false)
+                 return nat;                            \
+         return nullptr)
 
 #define INTEGER_TYPE(Name, MinValue, MaxValue)          \
     TYPE(Name,                                          \
          if (Natural *nat = value->AsNatural())         \
              if ((longlong) nat->value >= MinValue &&   \
                  (longlong) nat->value <= MaxValue)     \
-                 return xl_true;                        \
-         return xl_false)
+                 return nat;                            \
+         return nullptr)
 
 #define REAL_TYPE(Name, BitSize)                        \
     TYPE(Name,                                          \
          if (Real *nat = value->AsReal())               \
-             return xl_true;                            \
-         return xl_false)
+             return nat;                                \
+         return nullptr)
 
 
 NATURAL_TYPE(natural8,  0, 0xFF)
@@ -124,7 +124,7 @@ NATURAL_TYPE(natural16, 0, 0xFFFF)
 NATURAL_TYPE(natural32, 0, 0xFFFFFFFF)
 NATURAL_TYPE(natural64, 0, 0xFFFFFFFFFFFFFFFF)
 
-TYPE(integer, R_BOOL(value->AsNatural()))
+TYPE(integer, return value->AsNatural())
 INTEGER_TYPE(integer8, -0x80, 0x7F)
 INTEGER_TYPE(integer16,-0x8000, 0x7FFF)
 INTEGER_TYPE(integer32, -0x80000000, 0x7FFFFFFF)
