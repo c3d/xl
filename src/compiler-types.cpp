@@ -184,7 +184,7 @@ void CompilerTypes::Dump()
     Types::Dump();
 
     Save<intptr_t> saveTrace(RECORDER_TRACE(types_boxing), 0);
-    std::cout << "MACHINE TYPES " << (void *) this << ":\n";
+    std::cout << "\n\nMACHINE TYPES " << (void *) this << ":\n";
     for (auto &b : boxed)
     {
         Tree *type = b.first;
@@ -194,7 +194,7 @@ void CompilerTypes::Dump()
         std::cerr << "\n";
     }
 
-    std::cout << "UNIFICATIONS" << (void *) this << ":\n";
+    std::cout << "\n\nUNIFICATIONS " << (void *) this << ":\n";
     for (auto &t : unifications)
     {
         Tree *type = t.first;

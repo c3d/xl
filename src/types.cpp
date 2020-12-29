@@ -1492,7 +1492,7 @@ void Types::Dump()
         std::cout << "\n";
     }
 
-    std::cout << "CALLS" << (void *) this << ":\n";
+    std::cout << "\n\nCALLS " << (void *) this << ":\n";
     for (auto &t : rcalls)
     {
         Tree *expr = t.first;
