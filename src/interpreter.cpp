@@ -42,6 +42,7 @@
 #include "builtins.h"
 #include "runtime.h"
 #include "save.h"
+#include "native.h"
 
 #include <cmath>
 #include <algorithm>

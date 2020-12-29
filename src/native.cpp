@@ -70,6 +70,7 @@ Native::~Native()
 }
 
 
+#ifndef INTERPRETER_ONLY
 void Native::EnterPrototypes(Compiler &compiler)
 // ----------------------------------------------------------------------------
 //   Enter the prototypes for all functions declared with Native objects
@@ -83,5 +84,6 @@ void Native::EnterPrototypes(Compiler &compiler)
         native->Prototype(compiler, native->symbol);
     }
 }
+#endif
 
 }
