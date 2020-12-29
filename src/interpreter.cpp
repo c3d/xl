@@ -658,6 +658,9 @@ retry:
     if (!error)
         errors.Clear();
 
+    // Run garbage collector if needed
+    GarbageCollector::SafePoint();
+
     return result;
 }
 
