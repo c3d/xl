@@ -67,6 +67,7 @@ SOURCES_VARIANT_lib     =			\
 	gc.cpp					\
 	interpreter.cpp				\
 	main.cpp				\
+	native.cpp				\
 	options.cpp				\
 	parser.cpp				\
 	renderer.cpp				\
@@ -90,8 +91,7 @@ SOURCES_llvm =					\
 	compiler-types.cpp			\
 	compiler-unit.cpp			\
 	compiler.cpp				\
-	llvm-crap.cpp				\
-	native.cpp
+	llvm-crap.cpp
 
 HEADERS=$(HEADERS_$(VARIANT))
 HEADERS_lib=$(wildcard ../include/*.h *.tbl)
