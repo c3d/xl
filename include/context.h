@@ -480,14 +480,38 @@ inline Name *IsLambda(Prefix *prefix)
 }
 
 
-inline Prefix *IsLambda(Tree *what)
+inline Name *IsLambda(Tree *what)
 // ----------------------------------------------------------------------------
 //   Check if a tree is an error form
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = what->AsPrefix())
-        if (IsLambda(prefix))
-            return prefix;
+        if (Name *name = IsLambda(prefix))
+            return name;
+    return nullptr;
+}
+
+
+inline Name *IsTypeCastDeclaration(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a type cast declaration [lambda N as type]
+// ----------------------------------------------------------------------------
+{
+    if (IsTypeCast(infix))
+        if (Name *name = IsLambda(infix->left))
+            return name;
+    return nullptr;
+}
+
+
+inline Name *IsTypeCastDeclaration(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Check if a type is a type cast declaration [lambda N as type]
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (Name *name = IsTypeCastDeclaration(infix))
+            return name;
     return nullptr;
 }
 

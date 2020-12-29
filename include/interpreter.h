@@ -65,6 +65,7 @@ public:
     enum Evaluation
     {
         NORMAL,                 // Evaluate in already-populated context
+        MAYFAIL,                // Return nullptr on error
         TOPLEVEL,               // Process declatations before evaluation
         LOCAL                   // Don't lookup parent scopes
     };

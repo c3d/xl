@@ -434,6 +434,12 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
     if (Block *valb = val->AsBlock())
         if (!valb->IsMetaBox())
             return Sort(pat, valb->child, mode);
+    if (Name *patn = IsLambda(pat))
+    {
+        if (Name *valn = IsLambda(val))
+            val = valn;
+        return Sort(patn, val, SortIgnoreNames(mode));
+    }
 
     // Check case where kinds are different: use sorting rank described above
     kind patk = pat->Kind();
@@ -538,9 +544,8 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
                 }
             }
             else if (mode == SEARCH &&
-                     IsTypeCast((Infix *) pat) &&
-                     IsTypeCast((Infix *) val) &&
-                     ((Infix *) pat)->left->AsName())
+                     IsTypeCastDeclaration((Infix *) pat) &&
+                     IsTypeCast((Infix *) val))
             {
                 return Sort(((Infix *) pat)->right,
                             ((Infix *) val)->right,
