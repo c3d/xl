@@ -467,6 +467,31 @@ inline Infix *IsDeclaration(Tree *tree)
 }
 
 
+inline Name *IsLambda(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is a lambda form
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "lambda" || name->value == "\\")
+            if (Name *defined = prefix->right->AsName())
+                return defined;
+    return nullptr;
+}
+
+
+inline Prefix *IsLambda(Tree *what)
+// ----------------------------------------------------------------------------
+//   Check if a tree is an error form
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = what->AsPrefix())
+        if (IsLambda(prefix))
+            return prefix;
+    return nullptr;
+}
+
+
 inline bool IsSequence(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix represents a sequence, i.e. "A;B" or newline
