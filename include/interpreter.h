@@ -127,7 +127,7 @@ struct Bindings
              Tree *expr, EvaluationCache &cache)
         : evalContext(evalScope),
           declContext(declScope),
-          argContext(&evalContext, test->Position()),
+          argContext(&evalContext, expr->Position()),
           self(expr),
           test(expr),
           cache(cache),
