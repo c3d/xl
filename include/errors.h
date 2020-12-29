@@ -122,6 +122,9 @@ Error &Ooops (kstring m, Tree *a);
 Error &Ooops (kstring m, Tree *a, Tree *b);
 Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
 
+// Check if errors were reported
+bool HadErrors();
+
 // Formatting a tree for error reporting
 text FormatTreeForError(Tree *tree);
 text ShortTreeForm(Tree *tree, uint maxWidth = 60);

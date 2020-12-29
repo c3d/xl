@@ -273,7 +273,7 @@ Errors::Errors (kstring m, Tree *a, Tree *b, Tree *c)
 
 Errors::~Errors()
 // ----------------------------------------------------------------------------
-//   Display errors to top-levle handler
+//   Display errors to top-level handler
 // ----------------------------------------------------------------------------
 {
     assert (MAIN->errors == this);
@@ -296,7 +296,7 @@ void Errors::Clear()
 
 bool Errors::Swallowed()
 // ----------------------------------------------------------------------------
-//   Return true if we swallowed errors
+//   Clear errors, and return true if there were errors before
 // ----------------------------------------------------------------------------
 {
     bool result = errors.size() > context;
@@ -384,6 +384,15 @@ Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c)
 // ----------------------------------------------------------------------------
 {
     return MAIN->errors->Log(Error(m, a, b, c));
+}
+
+
+bool HadErrors()
+// ----------------------------------------------------------------------------
+//   Return true if we had errors
+// ----------------------------------------------------------------------------
+{
+    return MAIN->errors->HadErrors();
 }
 
 
