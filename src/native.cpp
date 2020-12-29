@@ -89,6 +89,7 @@ void Native::EnterPrototypes(Compiler &compiler)
 // Tests
 #include <unistd.h>
 #include <stdio.h>
+
 NATIVE(getpid);
 NATIVE(putchar);
 
