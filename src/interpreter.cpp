@@ -648,10 +648,16 @@ retry:
 
     // All other cases: lookup in symbol table
     EvaluationCache cache;
+    bool error = false;
     if (Tree *found = context.Lookup(expr, evalLookup, &cache, mode != LOCAL))
         result = found;
     else if (expr->IsConstant())
         result = expr;
+    else
+        error = true;
+    if (!error)
+        errors.Clear();
+
     return result;
 }
 
