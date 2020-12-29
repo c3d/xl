@@ -61,7 +61,14 @@ public:
     Tree *Evaluate(Scope *, Tree *source) override;
     Tree *TypeCheck(Scope *, Tree *type, Tree *value) override;
 
-    static Tree *DoEvaluate(Scope *scope, Tree *expr, bool recurse = true);
+public:
+    enum Evaluation
+    {
+        NORMAL,                 // Evaluate in already-populated context
+        TOPLEVEL,               // Process declatations before evaluation
+        LOCAL                   // Don't lookup parent scopes
+    };
+    static Tree *DoEvaluate(Scope *scope, Tree *expr, Evaluation mode = NORMAL);
     static Tree *DoTypeCheck(Scope *scope, Tree *type, Tree *value);
 
     typedef Tree *(*builtin_fn)(Bindings &bindings);

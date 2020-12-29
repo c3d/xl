@@ -551,7 +551,7 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 //    Evaluate 'what', finding the final, non-closure result
 // ----------------------------------------------------------------------------
 {
-    return DoEvaluate(scope, expr);
+    return DoEvaluate(scope, expr, TOPLEVEL);
 }
 
 
@@ -564,7 +564,7 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 }
 
 
-Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, bool recurse)
+Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, Evaluation mode)
 // ----------------------------------------------------------------------------
 //   Internal evaluator - Short circuits a few common expressions
 // ----------------------------------------------------------------------------
@@ -573,8 +573,9 @@ Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, bool recurse)
     Context context(scope);
 
     // Check if we have instructions to process. If not, return declarations
-    if (!context.ProcessDeclarations(expr))
-        return expr;
+    if (mode == TOPLEVEL)
+        if (!context.ProcessDeclarations(expr))
+            return expr;
 
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
@@ -629,7 +630,7 @@ retry:
         // Evaluate X.Y
         if (IsDot(infix))
             if (Scope *scope = context.ProcessScope(infix->left))
-                return DoEvaluate(scope->Inner(), infix->right, false);
+                return DoEvaluate(scope->Inner(), infix->right, LOCAL);
     }
 
     // Check if there was some error, if so don't keep looking
@@ -647,10 +648,10 @@ retry:
 
     // All other cases: lookup in symbol table
     EvaluationCache cache;
-    if (Tree *found = context.Lookup(expr, evalLookup, &cache, recurse))
+    if (Tree *found = context.Lookup(expr, evalLookup, &cache, mode != LOCAL))
         result = found;
-    else if(!expr->IsConstant())
-        result = (Tree *) Error("No form matching $1", expr);
+    else if (expr->IsConstant())
+        result = expr;
     return result;
 }
 
