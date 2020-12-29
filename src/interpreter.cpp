@@ -678,9 +678,14 @@ retry:
         error = true;
 
     if (error)
+    {
+        Ooops("Nothing matches $1", expr);
         result = nullptr;
+    }
     else
+    {
         errors.Clear();
+    }
 
     record(eval, "%+s%t %+s result %t",
            spaces(depth-1), expr, error ? "failed" : "succeeded", result);
