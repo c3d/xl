@@ -443,6 +443,9 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
         // Catch wildcards
         if (patk == NAME)
             return 0;
+        // Match pattern [0] against [N-1]
+        if (patk < NAME && valk != patk)
+            return 0;
         if (patk == INFIX)
         {
             if (Infix *typed = IsTypeAnnotation(pat))
