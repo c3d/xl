@@ -483,6 +483,10 @@ static Tree *evalLookup(Scope   *evalScope,
 //   Bind 'self' to the pattern in 'decl', and if successful, evaluate
 // ----------------------------------------------------------------------------
 {
+    Errors errors;
+    errors.Log(Error("Pattern $1 does not match $2:",
+                     decl->left, expr), true);
+
     EvaluationCache &cache = *((EvaluationCache *) ec);
     Bindings bindings(evalScope, declScope, expr, cache);
     Tree *pattern = decl->Pattern();
@@ -507,10 +511,16 @@ static Tree *evalLookup(Scope   *evalScope,
     {
         Name *name = builtin->right->AsName();
         if (!name)
-            return Error("Malformed builtin $1", builtin);
+        {
+            Ooops("Malformed builtin $1", builtin);
+            return nullptr;
+        }
         Interpreter::builtin_fn callback = Interpreter::builtins[name->value];
         if (!callback)
-            return Error("Nonexistent builtin $1", name);
+        {
+            Ooops("Nonexistent builtin $1", name);
+            return nullptr;
+        }
 
         // Need to unwrap all arguments
         for (auto &rewrite : bindings.Rewrites())
@@ -566,6 +576,9 @@ Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, bool recurse)
     if (!context.ProcessDeclarations(expr))
         return expr;
 
+    Errors errors;
+    errors.Log(Error("Unable to evaluate $1:", expr), true);
+
 retry:
     // Short-circuit evaluation of blocks
     if (Block *block = expr->AsBlock())
@@ -619,12 +632,20 @@ retry:
                 return DoEvaluate(scope->Inner(), infix->right, false);
     }
 
-    // All other cases: lookup in symbol table
+    // Check if there was some error, if so don't keep looking
+    if (HadErrors())
+        return nullptr;
+
+    // Check stack depth during evaluation
     static uint depth = 0;
     Save<uint>  save(depth, depth+1);
     if (depth > Opt::stackDepth)
-        return Error("Stack depth exceeded evaluating $1", expr);
+    {
+        Ooops("Stack depth exceeded evaluating $1", expr);
+        return nullptr;
+    }
 
+    // All other cases: lookup in symbol table
     EvaluationCache cache;
     if (Tree *found = context.Lookup(expr, evalLookup, &cache, recurse))
         result = found;
@@ -674,7 +695,7 @@ Tree *Interpreter::DoTypeCheck(Scope *scope, Tree *type, Tree *value)
 #define ULEFT           UNSIGNED LEFT
 #define URIGHT          UNSIGNED RIGHT
 #define UVALUE          UNSIGNED VALUE
-#define DIV0            if (RIGHT == 0) return Error("Divide $1 by zero", self)
+#define DIV0            if (RIGHT == 0) return Ooops("Divide $1 by zero", self)
 
 #define UNARY_OP(Name, ReturnType, ArgType, Body)               \
 static Tree *builtin_unary_##Name(Bindings &args)               \
@@ -682,12 +703,12 @@ static Tree *builtin_unary_##Name(Bindings &args)               \
     Tree *self = args.Self();                                   \
     Tree *result = self;                                        \
     if (args.Size() != 1)                                       \
-        return Error("Invalid number of arguments "             \
+        return Ooops("Invalid number of arguments "             \
                      "for unary builtin " #Name                 \
                      " in $1", result);                         \
     ArgType *value  = args[0]->As<ArgType>();                   \
     if (!value)                                                 \
-        return Error("Argument $1 is not a " #ArgType           \
+        return Ooops("Argument $1 is not a " #ArgType           \
                      " in builtin " #Name, args[0]);            \
     Body;                                                       \
 }
@@ -698,16 +719,16 @@ static Tree *builtin_binary_##Name(Bindings &args)              \
 {                                                               \
     Tree *self = args.Self();                                   \
     if (args.Size() != 2)                                       \
-        return Error("Invalid number of arguments "             \
+        return Ooops("Invalid number of arguments "             \
                      "for binary builtin " #Name                \
                      " in $1", self);                           \
     LeftType *left  = args[0]->As<LeftType>();                  \
     if (!left)                                                  \
-        return Error("First argument $1 is not a " #LeftType    \
+        return Ooops("First argument $1 is not a " #LeftType    \
                      " in builtin " #Name, args[0]);            \
     RightType *right = args[1]->As<RightType>();                \
     if (!right)                                                 \
-        return Error("Second argument $1 is not a " #RightType  \
+        return Ooops("Second argument $1 is not a " #RightType  \
                      " in builtin " #Name, args[1]);            \
     Body;                                                       \
 }
@@ -737,7 +758,7 @@ static Tree *builtin_type_##N(Bindings &args)                   \
 static Tree *builtin_typecheck_##N(Bindings &args)              \
 {                                                               \
     if (args.Size() != 1)                                       \
-        return Error("Invalid number of arguments "             \
+        return Ooops("Invalid number of arguments "             \
                      "for " #N " typecheck"                     \
                      " in $1", args.Self());                    \
     Tree *value = args[0]; (value);                             \
