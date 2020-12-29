@@ -467,6 +467,23 @@ void Bindings::Bind(Name *name, Tree *value)
 }
 
 
+void Bindings::Unwrap()
+// ----------------------------------------------------------------------------
+//   Unwrap all arguments before calling a builtin or native function
+// ----------------------------------------------------------------------------
+{
+    for (auto &rewrite : Rewrites())
+    {
+        Tree_p &value = rewrite->right;
+        while (Scope *scope = Context::IsClosure(value))
+        {
+            Prefix *closure = (Prefix *) (Tree *) value;
+            value = Evaluate(scope, closure->right);
+        }
+    }
+}
+
+
 
 // ============================================================================
 //
@@ -507,34 +524,38 @@ static Tree *evalLookup(Scope   *evalScope,
     Tree *body = decl->right;
 
     // Check if we have a builtin
-    if (Prefix *builtin = IsBuiltin(body))
+    if (Prefix *prefix = body->AsPrefix())
     {
-        Name *name = builtin->right->AsName();
-        if (!name)
+        if (Name *name = IsBuiltin(prefix))
         {
-            Ooops("Malformed builtin $1", builtin);
-            return nullptr;
-        }
-        Interpreter::builtin_fn callback = Interpreter::builtins[name->value];
-        if (!callback)
-        {
-            Ooops("Nonexistent builtin $1", name);
-            return nullptr;
-        }
-
-        // Need to unwrap all arguments
-        for (auto &rewrite : bindings.Rewrites())
-        {
-            Tree_p &value = rewrite->right;
-            while (Scope *scope = Context::IsClosure(value))
+            Interpreter::builtin_fn callee = Interpreter::builtins[name->value];
+            if (!callee)
             {
-                Prefix *closure = (Prefix *) (Tree *) value;
-                value = bindings.Evaluate(scope, closure->right);
+                Ooops("Nonexistent builtin $1", name);
+                return nullptr;
             }
-        }
 
-        Tree *result = callback(bindings);
-        return result;
+            // Need to unwrap all arguments
+            bindings.Unwrap();
+
+            Tree *result = callee(bindings);
+            return result;
+        }
+        if (Name *name = IsNative(prefix))
+        {
+            Native *native = Interpreter::natives[name->value];
+            if (!native)
+            {
+                Ooops("Nonexistent native function $1", name);
+                return nullptr;
+            }
+
+            // Need to unwrap all arguments
+            bindings.Unwrap();
+
+            Tree *result = native->Call(bindings);
+            return result;
+        }
     }
 
     // Check if we evaluate as self
@@ -845,6 +866,7 @@ void Interpreter::InitializeBuiltins()
 // ============================================================================
 
 std::map<text, Interpreter::builtin_fn> Interpreter::builtins;
+std::map<text, Native *> Interpreter::natives;
 
 void Interpreter::InitializeContext(Context &context)
 // ----------------------------------------------------------------------------
@@ -880,8 +902,16 @@ void Interpreter::InitializeContext(Context &context)
 
 #include "builtins.tbl"
 
+    Name_p C = new Name("C");
     for (Native *native = Native::First(); native; native = native->Next())
+    {
         record(native, "Found %t", native->Shape());
+        kstring symbol = native->Symbol();
+        natives[symbol] = native;
+        Tree *shape = native->Shape();
+        Prefix *body = new Prefix(C, new Name(symbol));
+        context.Define(shape, body);
+    }
 }
 
 XL_END

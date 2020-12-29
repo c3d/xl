@@ -38,6 +38,8 @@
 
 #include "tree.h"
 #include "builtins.h"
+#include "interpreter.h"
+#include "errors.h"
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
@@ -63,13 +65,24 @@ struct xl_type
 //   Provide a common interface to convert an XL type into its
 // ----------------------------------------------------------------------------
 {
-    typedef Tree *            tree_type;
+    typedef Tree              BoxType;
     typedef T                 native_type;
 #ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)   { return c.treePtrTy; }
     static JIT::PointerType_p NativeType(Compiler &c) { return c.treePtrTy; }
 #endif
-    static Tree *             Shape()                 { return XL::tree_type; }
+    static Tree *Shape()
+    {
+        return XL::tree_type;
+    }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return x;
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x;
+    }
 };
 
 
@@ -80,7 +93,7 @@ struct xl_type<Num,
 //   Specialization for natural types
 // ----------------------------------------------------------------------------
 {
-    typedef Natural *    tree_type;
+    typedef Natural      BoxType;
     typedef Num          native_type;
 
 #ifndef INTERPRETER_ONLY
@@ -98,6 +111,21 @@ struct xl_type<Num,
     static Tree *Shape()
     {
         return natural_type;
+    }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return new BoxType(x, pos);
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x->value;
+    }
+    static native_type Unbox(Tree *x)
+    {
+        if (BoxType *check = x->As<BoxType>())
+            return Unbox(check);
+        Ooops("Expected a natural value, got $1", x);
+        return 0;
     }
 };
 
@@ -119,7 +147,7 @@ struct xl_type<Num,
 //   Specialization for floating-point types
 // ----------------------------------------------------------------------------
 {
-    typedef Real *       tree_type;
+    typedef Real         BoxType;
     typedef Num          native_type;
 
 #ifndef INTERPRETER_ONLY
@@ -138,6 +166,21 @@ struct xl_type<Num,
     {
         return real_type;
     }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return new BoxType(x, pos);
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x->value;
+    }
+    static native_type Unbox(Tree *x)
+    {
+        if (BoxType *check = x->As<BoxType>())
+            return Unbox(check);
+        Ooops("Expected a real value, got $1", x);
+        return 0;
+    }
 };
 
 
@@ -150,7 +193,7 @@ struct xl_type<kstring>
 //   Specialization for C-style C strings
 // ----------------------------------------------------------------------------
 {
-    typedef Text *       tree_type;
+    typedef Text         BoxType;
     typedef kstring      native_type;
 
 #ifndef INTERPRETER_ONLY
@@ -169,6 +212,21 @@ struct xl_type<kstring>
     {
         return text_type;
     }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return new BoxType(x, pos);
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x->value.c_str();
+    }
+    static native_type Unbox(Tree *x)
+    {
+        if (BoxType *check = x->As<BoxType>())
+            return Unbox(check);
+        Ooops("Expected a text value, got $1", x);
+        return 0;
+    }
 };
 
 
@@ -178,7 +236,7 @@ struct xl_type<text>
 //   Specialization for C++-style C strings
 // ----------------------------------------------------------------------------
 {
-    typedef Text *       tree_type;
+    typedef Text         BoxType;
     typedef text         native_type;
 
 #ifndef INTERPRETER_ONLY
@@ -197,16 +255,75 @@ struct xl_type<text>
     {
         return text_type;
     }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return new BoxType(x, pos);
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x->value;
+    }
+    static native_type Unbox(Tree *x)
+    {
+        if (BoxType *check = x->As<BoxType>())
+            return Unbox(check);
+        Ooops("Expected a text value, got $1", x);
+        return 0;
+    }
+};
+
+
+template <>
+struct xl_type<char>
+// ----------------------------------------------------------------------------
+//   Specialization for C++-style characters
+// ----------------------------------------------------------------------------
+{
+    typedef Text         BoxType;
+    typedef char         native_type;
+
+#ifndef INTERPRETER_ONLY
+    static JIT::PointerType_p TreeType(Compiler &c)
+    {
+        return c.textTreePtrTy;
+    }
+
+    static JIT::Type_p NativeType(Compiler &c)
+    {
+        return c.characterTy;
+    }
+#endif
+
+    static Tree *Shape()
+    {
+        return text_type;
+    }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return new BoxType(text(x, 1), "'", "'", pos);
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x->value[0];
+    }
+    static native_type Unbox(Tree *x)
+    {
+        if (BoxType *check = x->As<BoxType>())
+            if (check->IsCharacter())
+                return Unbox(check);
+        Ooops("Expected a character value, got $1", x);
+        return 0;
+    }
 };
 
 
 template <>
 struct xl_type<Scope *>
 // ----------------------------------------------------------------------------
-//   Specialization for C++-style C strings
+//   Specialization for scope pointers
 // ----------------------------------------------------------------------------
 {
-    typedef Tree *       tree_type;
+    typedef Scope        BoxType;
     typedef Scope *      native_type;
 
 #ifndef INTERPRETER_ONLY
@@ -224,6 +341,21 @@ struct xl_type<Scope *>
     static Tree *Shape()
     {
         return scope_type;
+    }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return x;
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return x;
+    }
+    static native_type Unbox(Tree *x)
+    {
+        if (BoxType *check = x->As<BoxType>())
+            return Unbox(check);
+        Ooops("Expected a scope, got $1", x);
+        return 0;
     }
 };
 
@@ -244,6 +376,10 @@ struct function_type<R(*)()>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
+    typedef R (*pointer_type)();
+    typedef typename xl_type<R>::BoxType BoxType;
+    static const unsigned Arity = 0;
+
 #ifndef INTERPRETER_ONLY
     static void         Args(Compiler &, JIT::Signature &)  {}
 #endif
@@ -258,6 +394,11 @@ struct function_type<R(*)()>
         record(native, "ReturnShape () = %t", ret);
         return ret;
     }
+
+    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    {
+        return xl_type<R>::Box(callee(), self->Position());
+    }
 };
 
 
@@ -268,6 +409,10 @@ struct function_type<R(*)(T)>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
+    typedef R (*pointer_type)(T);
+    typedef typename xl_type<R>::BoxType BoxType;
+    static const unsigned Arity = 1;
+
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
     {
@@ -297,6 +442,12 @@ struct function_type<R(*)(T)>
         record(native, "Return shape (one) %t", ret);
         return ret;
     }
+
+    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    {
+        return xl_type<R>::Box(callee(xl_type<T>::Unbox(args[0])),
+                               self->Position());
+    }
 };
 
 
@@ -307,6 +458,10 @@ struct function_type<R(*)(T,A...)>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
+    typedef R (*pointer_type)(T, A...);
+    typedef typename xl_type<R>::BoxType BoxType;
+    static const unsigned Arity = 1 + function_type<R(*)(A...)>::Arity;
+
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
     {
@@ -329,6 +484,13 @@ struct function_type<R(*)(T,A...)>
         record(native, "Return shape (...) %t", ret);
         return ret;
     }
+
+    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    {
+        auto value = callee(xl_type<T>::Unbox(args[0]),
+                            xl_type<A>::Unbox(args[1+sizeof...(A)])...);
+        return xl_type<R>::Box(value, self->Position());
+    }
 };
 
 
@@ -344,6 +506,8 @@ struct NativeInterface
 //   Base functions to generate JIT code for a native function
 // ----------------------------------------------------------------------------
 {
+    typedef Interpreter::builtin_fn builtin_fn;
+
     virtual     ~NativeInterface() {}
 #ifndef INTERPRETER_ONLY
     virtual     JIT::Type_p          ReturnType(Compiler &)              = 0;
@@ -351,20 +515,27 @@ struct NativeInterface
     virtual     JIT::Function_p      Prototype(Compiler &, text name)    = 0;
 #endif
     virtual     Tree_p               Shape(Name_p, uint &index)          = 0;
+    virtual     Tree_p               Call(Bindings &bindings)            = 0;
 };
 
 
-template<typename fntype>
+template<typename FType>
 struct NativeImplementation : NativeInterface
 // ----------------------------------------------------------------------------
 //   Generate the interface
 // ----------------------------------------------------------------------------
 {
+    typedef function_type<FType>             ftype;
+    typedef typename ftype::return_type      rtype;
+    typedef typename ftype::pointer_type     ptype;
+    typedef typename xl_type<rtype>::BoxType BoxType;
+
+    NativeImplementation(ptype function): function(function) {}
+
 #ifndef INTERPRETER_ONLY
     virtual JIT::Type_p ReturnType(Compiler &compiler) override
     {
-        typedef typename function_type<fntype>::return_type return_type;
-        xl_type<return_type> xlt;
+        xl_type<rtype> xlt;
         return xlt.NativeType(compiler);
     }
 
@@ -372,7 +543,7 @@ struct NativeImplementation : NativeInterface
     {
         JIT::Type_p rty = ReturnType(compiler);
 
-        function_type<fntype> ft;
+        ftype ft;
         JIT::Signature sig;
         ft.Args(compiler, sig);
         return compiler.jit.FunctionType(rty, sig);
@@ -388,7 +559,7 @@ struct NativeImplementation : NativeInterface
 
     virtual Tree_p Shape(Name_p name, uint &index) override
     {
-        function_type<fntype> ft;
+        ftype ft;
         Tree_p shape = name;
         Tree_p parms = ft.ParameterShape(index);
         if (parms)
@@ -396,9 +567,32 @@ struct NativeImplementation : NativeInterface
         Tree_p retType = ft.ReturnShape();
         if (retType)
             shape = new Infix("as", shape, retType, Tree::BUILTIN);
-        record(native, "Native shape %u %t", index, shape);
+        record(native, "Native shape %t arity %u", shape, index);
         return shape;
     }
+
+    static Tree *Call(ptype function, Bindings &bindings)
+    {
+        unsigned max = bindings.Size();
+        if (max != ftype::Arity)
+        {
+            Ooops("Wrong number of arguments for native $1 ($2 instead of $3)")
+                .Arg(bindings.Self()).Arg(max).Arg(ftype::Arity);
+            return nullptr;
+        }
+
+        TreeList args;
+        for (unsigned a = 0; a < bindings.Size(); a++)
+            args.push_back(bindings.Argument(a));
+        return ftype::Call(function, bindings.Self(), &args[0]);
+    }
+
+    virtual Tree_p Call(Bindings &bindings) override
+    {
+        return Call(function, bindings);
+    }
+
+    ptype       function;
 };
 
 
@@ -414,21 +608,22 @@ struct Native
 //   Native interface for a function with the given signature
 // ----------------------------------------------------------------------------
 {
+    typedef Interpreter::builtin_fn builtin_fn;
+
     template<typename fntype>
-    Native(kstring symbol, fntype input)
-        : symbol(symbol),
-          address((void *) input),
-          implementation(new NativeImplementation<fntype>),
+    Native(fntype function, kstring name)
+        : symbol(name),
+          implementation(new NativeImplementation<fntype>(function)),
           shape(nullptr),
           next(list)
     {
         list = this;
     }
-
     ~Native();
 
     static Native *     First()                 { return list; }
     Native *            Next()                  { return next; }
+    kstring             Symbol()                { return symbol; }
 
 #ifndef INTERPRETER_ONLY
     JIT::Type_p         ReturnType(Compiler &compiler);
@@ -438,11 +633,10 @@ struct Native
 #endif
 
     Tree_p              Shape();
-
+    Tree_p              Call(Bindings &bindings);
 
 public:
     kstring             symbol;
-    void *              address;
     NativeInterface *   implementation;
     Tree_p              shape;
 
@@ -495,9 +689,18 @@ inline Tree_p Native::Shape()
     return shape;
 }
 
+
+inline Tree_p Native::Call(Bindings &bindings)
+// ----------------------------------------------------------------------------
+//   Delegate the shape generation to the implementation
+// ----------------------------------------------------------------------------
+{
+    return implementation->Call(bindings);
+}
+
 } // namespace XL
 
-#define NATIVE(Name)    static Native xl_##Name##_native(#Name, Name)
-#define XL_NATIVE(Name) static Native xl_##Name##_native(#Name, xl_##Name)
+#define NATIVE(Name)    static Native xl_##Name##_native(Name, #Name);
+#define XL_NATIVE(Name) static Native xl_##Name##_native(xl_##Name, #Name);
 
 #endif // NATIVE_H

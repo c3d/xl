@@ -648,26 +648,52 @@ inline Prefix *IsPatternMatchingType(Tree *tree)
 }
 
 
-inline bool IsBuiltin(Prefix *prefix)
+inline Name *IsBuiltin(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is special (extern, builtin, C)
 // ----------------------------------------------------------------------------
 {
-    if (Name *name = prefix->left->AsName())
-        if (name->value == "builtin")
-            return true;
-    return false;
+    if (Name *builtin = prefix->left->AsName())
+        if (builtin->value == "builtin")
+            if (Name *name = prefix->right->AsName())
+                return name;
+    return nullptr;
 }
 
 
-inline Prefix *IsBuiltin(Tree *tree)
+inline Name *IsBuiltin(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Return a builtin prefix if this is one
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = tree->AsPrefix())
-        if (IsBuiltin(prefix))
-            return prefix;
+        if (Name *name = IsBuiltin(prefix))
+            return name;
+    return nullptr;
+}
+
+
+inline Name *IsNative(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is for a native function, e.g. [C mallloc]
+// ----------------------------------------------------------------------------
+{
+    if (Name *C = prefix->left->AsName())
+        if (C->value == "C")
+            if (Name *name = prefix->right->AsName())
+                return name;
+    return nullptr;
+}
+
+
+inline Name *IsNative(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Return a builtin prefix if this is one
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = tree->AsPrefix())
+        if (Name *name = IsNative(prefix))
+            return name;
     return nullptr;
 }
 
