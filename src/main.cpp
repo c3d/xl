@@ -226,6 +226,7 @@ Main::Main(int inArgc,
     recorder_dump_on_common_signals(0, 0);
     recorder_trace_set(".*_(error|warning)");
     recorder_trace_set(getenv("XL_TRACES"));
+    recorder_configure_type('t', recorder_render<std::ostringstream, Tree *>);
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
