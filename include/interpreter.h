@@ -45,6 +45,7 @@ XL_BEGIN
 
 struct Opcode;
 struct Bindings;
+struct Native;
 struct EvaluationCache;
 typedef std::vector<Rewrite_p>          RewriteList;
 
@@ -80,6 +81,7 @@ public:
 
     typedef Tree *(*builtin_fn)(Bindings &bindings);
     static std::map<text, builtin_fn> builtins;
+    static std::map<text, Native *>   natives;
 
     static void InitializeBuiltins();
     static void InitializeContext(Context &context);
@@ -165,6 +167,7 @@ struct Bindings
     RewriteList &Rewrites()     { return bindings; }
     size_t Size()               { return bindings.size(); }
     Tree *operator[](unsigned n){ return Argument(n); }
+    void Unwrap();
 
     // Return the local bindings
     Scope *EvaluationScope()    { return evalContext.Symbols(); }
