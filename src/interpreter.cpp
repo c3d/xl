@@ -404,7 +404,7 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
     if (!result)
     {
         record(bindings, "Evaluating %t in %t", expr, scope);
-        result = Interpreter::DoEvaluate(scope, expr);
+        result = Interpreter::DoEvaluate(scope, expr, Interpreter::NORMAL, cache);
         cache.Cache(expr, result);
         record(bindings, "Evaluate %t = new %t", test, result);
     }
@@ -425,7 +425,7 @@ Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
     Tree *cast = cache.CachedTypeCheck(type, value);
     if (!cast)
     {
-        cast = Interpreter::DoTypeCheck(scope, type, value);
+        cast = Interpreter::DoTypeCheck(scope, type, value, cache);
         cache.TypeCheck(type, value, cast);
     }
     if (IsError(cast))
@@ -542,7 +542,9 @@ static Tree *evalLookup(Scope   *evalScope,
         return expr;
 
     // Otherwise evaluate the body in the binding arguments scope
-    return Interpreter::DoEvaluate(bindings.ArgumentsScope(), body);
+    EvaluationCache bodyCache;
+    return Interpreter::DoEvaluate(bindings.ArgumentsScope(), body,
+                                   Interpreter::NORMAL, bodyCache);
 }
 
 
@@ -551,7 +553,8 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 //    Evaluate 'what', finding the final, non-closure result
 // ----------------------------------------------------------------------------
 {
-    return DoEvaluate(scope, expr, TOPLEVEL);
+    EvaluationCache cache;
+    return DoEvaluate(scope, expr, TOPLEVEL, cache);
 }
 
 
@@ -560,7 +563,8 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 //   Check if 'value' matches 'type' in the given context
 // ----------------------------------------------------------------------------
 {
-    return DoTypeCheck(scope, type, value);
+    EvaluationCache cache;
+    return DoTypeCheck(scope, type, value, cache);
 }
 
 
@@ -574,7 +578,10 @@ static inline const char *spaces(unsigned n)
 }
 
 
-Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, Evaluation mode)
+Tree *Interpreter::DoEvaluate(Scope *scope,
+                              Tree *expr,
+                              Evaluation mode,
+                              EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Internal evaluator - Short circuits a few common expressions
 // ----------------------------------------------------------------------------
@@ -627,7 +634,7 @@ retry:
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
-            Tree *left = DoEvaluate(scope, infix->left);
+            Tree *left = DoEvaluate(scope, infix->left, NORMAL, cache);
             if (left != infix->left)
                 result = left;
             if (IsError(left))
@@ -643,7 +650,7 @@ retry:
         // Evaluate X.Y
         if (IsDot(infix))
             if (Scope *scope = context.ProcessScope(infix->left))
-                return DoEvaluate(scope->Inner(), infix->right, LOCAL);
+                return DoEvaluate(scope->Inner(), infix->right, LOCAL, cache);
     }
 
     // Check if there was some error, if so don't keep looking
@@ -659,7 +666,6 @@ retry:
     }
 
     // All other cases: lookup in symbol table
-    EvaluationCache cache;
     bool error = false;
     if (Tree *found = context.Lookup(expr, evalLookup, &cache, mode != LOCAL))
         result = found;
@@ -680,7 +686,10 @@ retry:
 }
 
 
-Tree *Interpreter::DoTypeCheck(Scope *scope, Tree *type, Tree *value)
+Tree *Interpreter::DoTypeCheck(Scope *scope,
+                               Tree *type,
+                               Tree *value,
+                               EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Implementation of type checking in interpreter
 // ----------------------------------------------------------------------------
@@ -688,7 +697,7 @@ Tree *Interpreter::DoTypeCheck(Scope *scope, Tree *type, Tree *value)
     record(typecheck, "Check %t against %t in scope %t",
            value, type, scope);
     Tree_p test = new Infix("as", value, type, value->Position());
-    Tree_p result = DoEvaluate(scope, test);
+    Tree_p result = DoEvaluate(scope, test, NORMAL, cache);
     record(typecheck, "Checked %t against %t in scope %t, got %t",
            value, type, scope, result);
     return result;
