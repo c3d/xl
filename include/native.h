@@ -247,9 +247,9 @@ struct function_type<R(*)()>
 #ifndef INTERPRETER_ONLY
     static void         Args(Compiler &, JIT::Signature &)  {}
 #endif
-    static Tree *       Shape()
+    static Tree_p       ParameterShape(uint &index)
     {
-        record(native, "Shape returns null");
+        record(native, "ParameterShape returns null");
         return nullptr;
     }
     static Tree_p       ReturnShape()
@@ -275,7 +275,7 @@ struct function_type<R(*)(T)>
         signature.push_back(argTy);
     }
 #endif
-    static Tree_p Shape(uint &index)
+    static Tree_p ParameterShape(uint &index)
     {
         Tree_p type = xl_type<T>::Shape();
         Name_p name = new Name(text(1, 'A' + index), Tree::BUILTIN);
@@ -284,10 +284,11 @@ struct function_type<R(*)(T)>
         {
             Infix_p infix = new Infix(":", name, type);
             record(native,
-                   "Shape %u infix %t : %t = %t", index, type, name, infix);
+                   "ParameterShape %u infix %t : %t = %t",
+                   index, type, name, infix);
             return infix;
         }
-        record(native, "Shape %u name %t", index, name);
+        record(native, "ParameterShape %u name %t", index, name);
         return name;
     }
     static Tree_p ReturnShape()
@@ -313,12 +314,13 @@ struct function_type<R(*)(T,A...)>
         function_type<R(*)(A...)>::Args(compiler, signature);
     }
 #endif
-    static Tree_p Shape(uint &index)
+    static Tree_p ParameterShape(uint &index)
     {
-        Tree_p left = function_type<R(*)(T)>::Shape(index);
-        Tree_p right = function_type<R(*)(A...)>::Shape(index);
+        Tree_p left = function_type<R(*)(T)>::ParameterShape(index);
+        Tree_p right = function_type<R(*)(A...)>::ParameterShape(index);
         Infix_p infix = new Infix(",", left, right);
-        record(native, "Shape %u (...) %t,%t = %t", index, left, right, infix);
+        record(native, "ParameterShape %u (...) %t,%t = %t",
+               index, left, right, infix);
         return infix;
     }
     static Tree_p ReturnShape()
@@ -348,7 +350,7 @@ struct NativeInterface
     virtual     JIT::FunctionType_p  FunctionType(Compiler &)            = 0;
     virtual     JIT::Function_p      Prototype(Compiler &, text name)    = 0;
 #endif
-    virtual     Tree_p               Shape(uint &index)                  = 0;
+    virtual     Tree_p               Shape(Name_p, uint &index)          = 0;
 };
 
 
@@ -384,15 +386,18 @@ struct NativeImplementation : NativeInterface
     }
 #endif
 
-    virtual Tree_p Shape(uint &index) override
+    virtual Tree_p Shape(Name_p name, uint &index) override
     {
         function_type<fntype> ft;
-        Tree_p result = ft.Shape(index);
+        Tree_p shape = name;
+        Tree_p parms = ft.ParameterShape(index);
+        if (parms)
+            shape = new Prefix(shape, parms, Tree::BUILTIN);
         Tree_p retType = ft.ReturnShape();
         if (retType)
-            result = new Infix("as", result, retType);
-        record(native, "Native shape %u %t return %t", index, result, retType);
-        return result;
+            shape = new Infix("as", shape, retType, Tree::BUILTIN);
+        record(native, "Native shape %u %t", index, shape);
+        return shape;
     }
 };
 
@@ -485,15 +490,7 @@ inline Tree_p Native::Shape()
     {
         uint index = 0;
         Name_p name = new Name(symbol, Tree::BUILTIN);
-        if (Tree_p args = implementation->Shape(index))
-        {
-            Prefix_p prefix = new Prefix(name, args, Tree::BUILTIN);
-            shape = prefix;
-        }
-        else
-        {
-            shape = name;
-        }
+        shape = implementation->Shape(name, index);
     }
     return shape;
 }

@@ -868,6 +868,9 @@ void Interpreter::InitializeContext(Context &context)
     context.Define(pattern_##N, value_##N);
 
 #include "builtins.tbl"
+
+    for (Native *native = Native::First(); native; native = native->Next())
+        record(native, "Found %t", native->Shape());
 }
 
 XL_END
