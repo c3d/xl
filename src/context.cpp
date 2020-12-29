@@ -1056,7 +1056,7 @@ bool Context::IsEmpty()
 //   Return true if the context has no declaration inside
 // ----------------------------------------------------------------------------
 {
-    return symbols->child == xl_nil;
+    return symbols->Inner()->child == xl_nil;
 }
 
 
