@@ -68,8 +68,14 @@ public:
         TOPLEVEL,               // Process declatations before evaluation
         LOCAL                   // Don't lookup parent scopes
     };
-    static Tree *DoEvaluate(Scope *scope, Tree *expr, Evaluation mode = NORMAL);
-    static Tree *DoTypeCheck(Scope *scope, Tree *type, Tree *value);
+    static Tree *DoEvaluate(Scope *scope,
+                            Tree *expr,
+                            Evaluation mode,
+                            EvaluationCache &cache);
+    static Tree *DoTypeCheck(Scope *scope,
+                             Tree *type,
+                             Tree *value,
+                             EvaluationCache &cache);
 
     typedef Tree *(*builtin_fn)(Bindings &bindings);
     static std::map<text, builtin_fn> builtins;
