@@ -564,13 +564,24 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 }
 
 
+static inline const char *spaces(unsigned n)
+// ----------------------------------------------------------------------------
+//   Insert spaces for indentation in front of evaluation traces
+// ----------------------------------------------------------------------------
+{
+    const char *indent = "                                ";
+    return indent + (32 - n%32);
+}
+
+
 Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, Evaluation mode)
 // ----------------------------------------------------------------------------
 //   Internal evaluator - Short circuits a few common expressions
 // ----------------------------------------------------------------------------
 {
+    static uint depth = 0;
     const char *modename[3] = { "normal", "toplevel", "local" };
-    record(eval, "Eval %t %+s in %p", expr, modename[mode], scope);
+    record(eval, "%+s%t %+s in %p", spaces(depth), expr, modename[mode], scope);
     Tree_p result = expr;
     Context context(scope);
 
@@ -640,7 +651,6 @@ retry:
         return nullptr;
 
     // Check stack depth during evaluation
-    static uint depth = 0;
     Save<uint>  save(depth, depth+1);
     if (depth > Opt::stackDepth)
     {
@@ -660,8 +670,8 @@ retry:
     if (!error)
         errors.Clear();
 
-    record(eval, "Eval %t %+s result %t",
-           expr, error ? "failed" : "succeeded", result);
+    record(eval, "%+s%t %+s result %t",
+           spaces(depth-1), expr, error ? "failed" : "succeeded", result);
 
     // Run garbage collector if needed
     GarbageCollector::SafePoint();
