@@ -47,6 +47,7 @@ NAME(false)
 NAME(error)
 NAME(matching)
 NAME(builtin)
+NAME(lambda)
 
 
 
