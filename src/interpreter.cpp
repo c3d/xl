@@ -158,7 +158,7 @@ inline bool Bindings::Do(Name *what)
     {
         MustEvaluate();
         bool result = Tree::Equal(bound, test);
-        record(interpreter, "Arg check %t vs %t: %+s",
+        record(bindings, "Arg check %t vs %t: %+s",
                test, bound, result ? "match" : "failed");
         if (!result)
             Ooops("Value $1 does not match named value $2", test, what);
@@ -569,6 +569,8 @@ Tree *Interpreter::DoEvaluate(Scope *scope, Tree *expr, Evaluation mode)
 //   Internal evaluator - Short circuits a few common expressions
 // ----------------------------------------------------------------------------
 {
+    const char *modename[3] = { "normal", "toplevel", "local" };
+    record(eval, "Eval %t %+s in %p", expr, modename[mode], scope);
     Tree_p result = expr;
     Context context(scope);
 
@@ -657,6 +659,9 @@ retry:
         error = true;
     if (!error)
         errors.Clear();
+
+    record(eval, "Eval %t %+s result %t",
+           expr, error ? "failed" : "succeeded", result);
 
     // Run garbage collector if needed
     GarbageCollector::SafePoint();
