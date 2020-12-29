@@ -590,6 +590,11 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
     static uint depth = 0;
     const char *modename[3] = { "normal", "toplevel", "local" };
     record(eval, "%+s%t %+s in %p", spaces(depth), expr, modename[mode], scope);
+
+    // Check if there was some error, if so don't keep looking
+    if (HadErrors())
+        return nullptr;
+
     Tree_p result = expr;
     Context context(scope);
 
@@ -653,10 +658,6 @@ retry:
             if (Scope *scope = context.ProcessScope(infix->left))
                 return DoEvaluate(scope->Inner(), infix->right, LOCAL, cache);
     }
-
-    // Check if there was some error, if so don't keep looking
-    if (HadErrors())
-        return nullptr;
 
     // Check stack depth during evaluation
     Save<uint>  save(depth, depth+1);
