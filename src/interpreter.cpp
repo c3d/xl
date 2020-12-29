@@ -308,12 +308,11 @@ bool Bindings::Do(Infix *what)
         bool outermost = test == self;
 
         // Check if we test "Value is integer" against "N is integer"
-        if (IsTypeCast(what))
+        if (Name *declared = IsTypeCastDeclaration(what))
             if (Infix *cast = IsTypeCast(test))
-                if (what->left->AsName())
-                    return (test = cast->left) &&
-                        Tree::Equal(what->right, cast->right) &&
-                        what->left->Do(this);
+                return (test = cast->left) &&
+                    Tree::Equal(what->right, cast->right) &&
+                    declared->Do(this);
 
         // Need to match the left part with the test
         if (!what->left->Do(this))
@@ -328,7 +327,7 @@ bool Bindings::Do(Infix *what)
         Tree *checked = TypeCheck(EvaluationScope(), want, test);
         if (!checked)
         {
-            Ooops("Value $1 does not belong to type $2", test, type);
+            Ooops("Value $1 does not belong to type $2", test, want);
             return false;
         }
         if (outermost)
@@ -673,9 +672,14 @@ retry:
         result = found;
     else if (expr->IsConstant())
         result = expr;
+    else if (mode == MAYFAIL)
+        result = nullptr;
     else
         error = true;
-    if (!error)
+
+    if (error)
+        result = nullptr;
+    else
         errors.Clear();
 
     record(eval, "%+s%t %+s result %t",
@@ -699,7 +703,7 @@ Tree *Interpreter::DoTypeCheck(Scope *scope,
     record(typecheck, "Check %t against %t in scope %t",
            value, type, scope);
     Tree_p test = new Infix("as", value, type, value->Position());
-    Tree_p result = DoEvaluate(scope, test, NORMAL, cache);
+    Tree_p result = DoEvaluate(scope, test, MAYFAIL, cache);
     record(typecheck, "Checked %t against %t in scope %t, got %t",
            value, type, scope, result);
     return result;
@@ -860,7 +864,8 @@ void Interpreter::InitializeContext(Context &context)
                                                         \
     Infix *pattern_##N =                                \
         new Infix("as",                                 \
-                  new Name("Value"),                    \
+                  new Prefix(xl_lambda,                 \
+                             new Name("Value")),        \
                   N##_type);                            \
     Prefix *value_##N =                                 \
         new Prefix(xl_builtin,                          \
