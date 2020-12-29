@@ -36,10 +36,13 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-#include "compiler.h"
-#include "llvm-crap.h"
 #include "tree.h"
 #include "builtins.h"
+
+#ifndef INTERPRETER_ONLY
+#include "compiler.h"
+#include "llvm-crap.h"
+#endif
 
 #include <recorder/recorder.h>
 #include <type_traits>
@@ -62,8 +65,10 @@ struct xl_type
 {
     typedef Tree *            tree_type;
     typedef T                 native_type;
+#ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)   { return c.treePtrTy; }
     static JIT::PointerType_p NativeType(Compiler &c) { return c.treePtrTy; }
+#endif
     static Tree *             Shape()                 { return XL::tree_type; }
 };
 
@@ -78,6 +83,7 @@ struct xl_type<Num,
     typedef Natural *    tree_type;
     typedef Num          native_type;
 
+#ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
     {
         return c.naturalTreePtrTy;
@@ -87,6 +93,8 @@ struct xl_type<Num,
     {
         return c.jit.IntegerType<Num>();
     }
+#endif
+
     static Tree *Shape()
     {
         return natural_type;
@@ -114,6 +122,7 @@ struct xl_type<Num,
     typedef Real *       tree_type;
     typedef Num          native_type;
 
+#ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
     {
         return c.realTreePtrTy;
@@ -123,6 +132,7 @@ struct xl_type<Num,
     {
         return c.jit.FloatType(c.jit.BitsPerByte * sizeof(Num));
     }
+#endif
 
     static Tree *Shape()
     {
@@ -143,6 +153,7 @@ struct xl_type<kstring>
     typedef Text *       tree_type;
     typedef kstring      native_type;
 
+#ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
     {
         return c.textTreePtrTy;
@@ -152,6 +163,7 @@ struct xl_type<kstring>
     {
         return c.charPtrTy;
     }
+#endif
 
     static Tree *Shape()
     {
@@ -169,6 +181,7 @@ struct xl_type<text>
     typedef Text *       tree_type;
     typedef text         native_type;
 
+#ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
     {
         return c.textTreePtrTy;
@@ -178,6 +191,7 @@ struct xl_type<text>
     {
         return c.textPtrTy;
     }
+#endif
 
     static Tree *Shape()
     {
@@ -195,6 +209,7 @@ struct xl_type<Scope *>
     typedef Tree *       tree_type;
     typedef Scope *      native_type;
 
+#ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
     {
         return c.scopePtrTy;
@@ -204,6 +219,7 @@ struct xl_type<Scope *>
     {
         return c.scopePtrTy;
     }
+#endif
 
     static Tree *Shape()
     {
@@ -228,7 +244,9 @@ struct function_type<R(*)()>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
+#ifndef INTERPRETER_ONLY
     static void         Args(Compiler &, JIT::Signature &)  {}
+#endif
     static Tree *       Shape()
     {
         record(native, "Shape returns null");
@@ -250,11 +268,13 @@ struct function_type<R(*)(T)>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
+#ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
     {
         JIT::Type_p argTy = xl_type<T>::NativeType(compiler);
         signature.push_back(argTy);
     }
+#endif
     static Tree_p Shape(uint &index)
     {
         Tree_p type = xl_type<T>::Shape();
@@ -286,11 +306,13 @@ struct function_type<R(*)(T,A...)>
 // ----------------------------------------------------------------------------
 {
     typedef R return_type;
+#ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
     {
         function_type<R(*)(T)>::Args(compiler, signature);
         function_type<R(*)(A...)>::Args(compiler, signature);
     }
+#endif
     static Tree_p Shape(uint &index)
     {
         Tree_p left = function_type<R(*)(T)>::Shape(index);
@@ -321,9 +343,11 @@ struct NativeInterface
 // ----------------------------------------------------------------------------
 {
     virtual     ~NativeInterface() {}
+#ifndef INTERPRETER_ONLY
     virtual     JIT::Type_p          ReturnType(Compiler &)              = 0;
     virtual     JIT::FunctionType_p  FunctionType(Compiler &)            = 0;
     virtual     JIT::Function_p      Prototype(Compiler &, text name)    = 0;
+#endif
     virtual     Tree_p               Shape(uint &index)                  = 0;
 };
 
@@ -334,6 +358,7 @@ struct NativeImplementation : NativeInterface
 //   Generate the interface
 // ----------------------------------------------------------------------------
 {
+#ifndef INTERPRETER_ONLY
     virtual JIT::Type_p ReturnType(Compiler &compiler) override
     {
         typedef typename function_type<fntype>::return_type return_type;
@@ -357,6 +382,7 @@ struct NativeImplementation : NativeInterface
         JIT::Function_p f = compiler.jit.ExternFunction(fty, name);
         return f;
     }
+#endif
 
     virtual Tree_p Shape(uint &index) override
     {
@@ -399,13 +425,15 @@ struct Native
     static Native *     First()                 { return list; }
     Native *            Next()                  { return next; }
 
+#ifndef INTERPRETER_ONLY
     JIT::Type_p         ReturnType(Compiler &compiler);
     JIT::FunctionType_p FunctionType(Compiler &compiler);
     JIT::Function_p     Prototype(Compiler &compiler, text name);
+    static void         EnterPrototypes(Compiler &compiler);
+#endif
 
     Tree_p              Shape();
 
-    static void         EnterPrototypes(Compiler &compiler);
 
 public:
     kstring             symbol;
@@ -419,6 +447,7 @@ private:
 };
 
 
+#ifndef INTERPRETER_ONLY
 inline JIT::Type_p Native::ReturnType(Compiler &compiler)
 // ----------------------------------------------------------------------------
 //   Delegate the return type computation to the implementation
@@ -444,6 +473,7 @@ inline JIT::Function_p Native::Prototype(Compiler &compiler, text name)
 {
     return implementation->Prototype(compiler, name);
 }
+#endif
 
 
 inline Tree_p Native::Shape()
