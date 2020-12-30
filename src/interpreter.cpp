@@ -517,7 +517,10 @@ static Tree *evalLookup(Scope   *evalScope,
     {
         if (Name *xname = expr->AsName())
             if (name->value == xname->value)
-                return IsSelf(decl->right) ? name : decl->right;
+                return IsSelf(decl->right)
+                    ? name
+                    : Interpreter::DoEvaluate(evalScope, decl->right,
+                                              Interpreter::TOPLEVEL, cache);
         return nullptr;
     }
 
@@ -625,7 +628,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
     // Check if we have instructions to process. If not, return declarations
     if (mode == TOPLEVEL)
         if (!context.ProcessDeclarations(expr))
-            return expr;
+            return context.Symbols();
 
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
@@ -679,8 +682,15 @@ retry:
 
         // Evaluate X.Y
         if (IsDot(infix))
-            if (Scope *scope = context.ProcessScope(infix->left))
+        {
+            Context child(&context);
+            Scope *symbols = child.Symbols();
+            Tree *where = DoEvaluate(symbols, infix->left, TOPLEVEL, cache);
+            if (Scope *scope = where->As<Scope>())
                 return DoEvaluate(scope->Inner(), infix->right, LOCAL, cache);
+            else
+                Ooops("No scope in $1 (evaluated as $2)", infix->left, where);
+        }
     }
 
     // Check stack depth during evaluation
