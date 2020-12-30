@@ -161,11 +161,20 @@ JIT::Type_p CompilerTypes::BoxedType(Tree *type)
 {
     // Check if we already had this signature
     Tree *base = BaseType(type);
-    auto it = boxed.find(base);
-    JIT::Type_p mtype = (it != boxed.end()) ? it->second : nullptr;
-    record(types_boxing, "In %p type %T is boxing %t (%t)",
-           this, mtype, type, base);
-    return mtype;
+    for (CompilerTypes *ts = this;
+         ts;
+         ts = (CompilerTypes *) (Types *) ts->parent)
+    {
+        auto it = ts->boxed.find(base);
+        if (it != ts->boxed.end())
+        {
+
+            record(types_boxing, "In %p type %T is boxing %t (%t)",
+                   ts, it->second, type, base);
+            return it->second;
+        }
+    }
+    return nullptr;
 }
 
 
