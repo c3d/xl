@@ -117,11 +117,11 @@ abs X:real                      as real    is builtin FAbs
 pi is 3.1415926535897932384626433
 
 // If-then-else statement
-if true  then TrueBody else FalseBody   is TrueBody
-if false then TrueBody else FalseBody   is FalseBody
+if [[true]]  then True else False   is True
+if [[false]] then True else False   is False
 
-if true  then TrueBody                  is TrueBody
-if false then TrueBody                  is false
+if [[true]]  then True              is True
+if [[false]] then True              is false
 
 // Console / debugging operations
 write X:text            as boolean      is C xl_write_text
