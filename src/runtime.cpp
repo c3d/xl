@@ -45,6 +45,7 @@
 #include "context.h"
 #include "options.h"
 #include "main.h"
+#include "native.h"
 #include "save.h"
 #include "tree-clone.h"
 #include "utf8_fileutils.h"
@@ -54,9 +55,6 @@
 
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
-#include "native.h"
-#else // !INTERPRETER_ONLY
-#define XL_NATIVE(fn)
 #endif // INTERPRETER_ONLY
 
 #include <iostream>
@@ -78,7 +76,7 @@ Tree *  xl_evaluate(Scope *scope, Tree *tree)
 {
     return MAIN->Evaluate(scope, tree);
 }
-XL_NATIVE(evaluate);
+NATIVE(xl_evaluate);
 
 
 Tree *  xl_identity(Scope *scope, Tree *tree)
@@ -152,7 +150,7 @@ Tree *xl_stack_overflow(Tree *what)
     Ooops("Stack overflow evaluating $1", what);
     return what;
 }
-XL_NATIVE(stack_overflow);
+NATIVE(xl_stack_overflow);
 
 
 bool xl_same_text(Tree *what, const char *ref)
@@ -163,7 +161,7 @@ bool xl_same_text(Tree *what, const char *ref)
     Text *tval = what->AsText(); assert(tval);
     return tval->value == text(ref);
 }
-XL_NATIVE(same_text);
+NATIVE(xl_same_text);
 
 
 bool xl_same_shape(Tree *left, Tree *right)
@@ -902,7 +900,7 @@ bool xl_write_natural(ulonglong x)
     std::cout << (longlong) x;
     return true;
 }
-XL_NATIVE(write_natural);
+NATIVE(xl_write_natural);
 
 
 bool xl_write_integer(longlong x)
@@ -913,7 +911,7 @@ bool xl_write_integer(longlong x)
     std::cout << x;
     return true;
 }
-XL_NATIVE(write_integer);
+NATIVE(xl_write_integer);
 
 
 bool xl_write_real(double x)
@@ -924,7 +922,7 @@ bool xl_write_real(double x)
     std::cout << x;
     return true;
 }
-XL_NATIVE(write_real);
+NATIVE(xl_write_real);
 
 
 bool xl_write_text(kstring x)
@@ -935,7 +933,7 @@ bool xl_write_text(kstring x)
     std::cout << x;
     return true;
 }
-XL_NATIVE(write_text);
+NATIVE(xl_write_text);
 
 
 bool xl_write_tree(Tree *tree)
@@ -946,6 +944,7 @@ bool xl_write_tree(Tree *tree)
     std::cout << tree;
     return true;
 }
+NATIVE(xl_write_tree);
 
 
 bool xl_write_character(char x)
@@ -956,6 +955,7 @@ bool xl_write_character(char x)
     std::cout << x;
     return true;
 }
+NATIVE(xl_write_character);
 
 
 bool xl_write_cr()
@@ -966,6 +966,7 @@ bool xl_write_cr()
     std::cout << '\n';
     return true;
 }
+NATIVE(xl_write_cr);
 
 
 bool xl_text_eq(kstring x, kstring y)
@@ -975,6 +976,7 @@ bool xl_text_eq(kstring x, kstring y)
 {
     return strcmp(x, y) == 0;
 }
+NATIVE(xl_text_eq);
 
 
 bool xl_text_ne(kstring x, kstring y)
@@ -984,6 +986,7 @@ bool xl_text_ne(kstring x, kstring y)
 {
     return strcmp(x, y) != 0;
 }
+NATIVE(xl_text_ne);
 
 
 bool xl_text_lt(kstring x, kstring y)
@@ -993,6 +996,7 @@ bool xl_text_lt(kstring x, kstring y)
 {
     return strcmp(x, y) < 0;
 }
+NATIVE(xl_text_lt);
 
 
 bool xl_text_le(kstring x, kstring y)
@@ -1002,6 +1006,7 @@ bool xl_text_le(kstring x, kstring y)
 {
     return strcmp(x, y) <= 0;
 }
+NATIVE(xl_text_le);
 
 
 bool xl_text_gt(kstring x, kstring y)
@@ -1011,6 +1016,7 @@ bool xl_text_gt(kstring x, kstring y)
 {
     return strcmp(x, y) > 0;
 }
+NATIVE(xl_text_gt);
 
 
 bool xl_text_ge(kstring x, kstring y)
@@ -1020,6 +1026,7 @@ bool xl_text_ge(kstring x, kstring y)
 {
     return strcmp(x, y) >= 0;
 }
+NATIVE(xl_text_ge);
 
 
 natural_t xl_text2int(kstring tval)
@@ -1033,6 +1040,7 @@ natural_t xl_text2int(kstring tval)
     stream >> result;
     return result;
 }
+NATIVE(xl_text2int);
 
 
 real_t xl_text2real(kstring tval)
@@ -1046,6 +1054,7 @@ real_t xl_text2real(kstring tval)
     stream >> result;
     return result;
 }
+NATIVE(xl_text2real);
 
 
 text xl_int2text(natural_t value)
@@ -1057,6 +1066,7 @@ text xl_int2text(natural_t value)
     out << value;
     return out.str();
 }
+NATIVE(xl_int2text);
 
 
 text xl_real2text(real_t value)
@@ -1068,42 +1078,59 @@ text xl_real2text(real_t value)
     out << value;
     return out.str();
 }
+NATIVE(xl_real2text);
 
 
-natural_t xl_mod(natural_t x, natural_t y)
+integer_t xl_integer_mod(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
 // ----------------------------------------------------------------------------
 {
-    natural_t tmp = x % y;
+    integer_t tmp = x % y;
     if (tmp && (x^y) < 0)
         tmp += y;
     return tmp;
 }
+NATIVE(xl_integer_mod);
 
 
-natural_t xl_pow(natural_t x, natural_t y)
+natural_t xl_natural_pow(natural_t x, natural_t y)
 // ----------------------------------------------------------------------------
 //   Compute natural power
 // ----------------------------------------------------------------------------
 {
-    natural_t tmp = 0;
-    if (y >= 0)
+    natural_t tmp = 1;
+    while (y)
     {
-        tmp = 1;
-        while (y)
-        {
-            if (y & 1)
-                tmp *= x;
-            x *= x;
-            y >>= 1;
-        }
+        if (y & 1)
+            tmp *= x;
+        x *= x;
+        y >>= 1;
     }
     return tmp;
 }
+NATIVE(xl_natural_pow);
 
 
-real_t xl_modf(real_t x, real_t y)
+integer_t xl_integer_pow(integer_t x, natural_t y)
+// ----------------------------------------------------------------------------
+//   Compute natural power
+// ----------------------------------------------------------------------------
+{
+    natural_t tmp = 1;
+    while (y)
+    {
+        if (y & 1)
+            tmp *= x;
+        x *= x;
+        y >>= 1;
+    }
+    return tmp;
+}
+NATIVE(xl_integer_pow);
+
+
+real_t xl_real_mod(real_t x, real_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from fmod
 // ----------------------------------------------------------------------------
@@ -1113,9 +1140,20 @@ real_t xl_modf(real_t x, real_t y)
         tmp += y;
     return tmp;
 }
+NATIVE(xl_real_mod);
 
 
-real_t xl_powf(real_t x, natural_t y)
+real_t xl_real_rem(real_t x, real_t y)
+// ----------------------------------------------------------------------------
+//   Compute a mathematical 'rem' from fmod
+// ----------------------------------------------------------------------------
+{
+    return fmod(x,y);
+}
+NATIVE(xl_real_rem);
+
+
+real_t xl_real_pow(real_t x, natural_t y)
 // ----------------------------------------------------------------------------
 //   Compute real power with an natural on the right
 // ----------------------------------------------------------------------------
@@ -1135,6 +1173,7 @@ real_t xl_powf(real_t x, natural_t y)
         tmp = 1.0/tmp;
     return tmp;
 }
+NATIVE(xl_real_pow);
 
 
 text xl_text_replace(text txt, text before, text after)
@@ -1150,6 +1189,7 @@ text xl_text_replace(text txt, text before, text after)
     }
     return txt;
 }
+NATIVE(xl_text_replace);
 
 
 text xl_text_repeat(uint count, text txt)
@@ -1174,6 +1214,7 @@ text xl_text_repeat(uint count, text txt)
     }
     return result;
 }
+NATIVE(xl_text_repeat);
 
 
 real_t xl_time(real_t delay)
@@ -1186,6 +1227,7 @@ real_t xl_time(real_t delay)
     MAIN->Refresh(delay);
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
+NATIVE(xl_time);
 
 
 #define XL_TIME(tmfield, delay)               \
@@ -1201,7 +1243,7 @@ natural_t  xl_seconds()     { XL_TIME(tm_sec,       1.0); }
 natural_t  xl_minutes()     { XL_TIME(tm_min,      60.0); }
 natural_t  xl_hours()       { XL_TIME(tm_hour,    3600.0); }
 natural_t  xl_month_day()   { XL_TIME(tm_mday,   86400.0); }
-natural_t  xl_mon()         { XL_TIME(tm_mon,    86400.0); }
+natural_t  xl_month()       { XL_TIME(tm_mon,    86400.0); }
 natural_t  xl_year()        { XL_TIME(tm_year,   86400.0); }
 natural_t  xl_week_day()    { XL_TIME(tm_wday,   86400.0); }
 natural_t  xl_year_day()    { XL_TIME(tm_yday,   86400.0); }
@@ -1211,6 +1253,19 @@ text_t     xl_timezone()    { XL_TIME(tm_zone,   86400.0); }
 natural_t  xl_GMT_offset()  { XL_TIME(tm_gmtoff, 86400.0); }
 #endif // CONFIG_MINGW
 
+NATIVE(xl_seconds);
+NATIVE(xl_minutes);
+NATIVE(xl_hours);
+NATIVE(xl_month_day);
+NATIVE(xl_month);
+NATIVE(xl_year);
+NATIVE(xl_week_day);
+NATIVE(xl_year_day);
+NATIVE(xl_summer_time);
+#ifndef CONFIG_MINGW
+NATIVE(xl_timezone);
+NATIVE(xl_GMT_offset);
+#endif // CONFIG_MINGW
 
 real_t xl_random()
 // ----------------------------------------------------------------------------
@@ -1223,6 +1278,7 @@ real_t xl_random()
     return real_t(rand()) / RAND_MAX;
 #endif // HAVE_DRAND48
 }
+NATIVE(random);
 
 
 bool xl_random_seed(int seed)
@@ -1238,6 +1294,7 @@ bool xl_random_seed(int seed)
 
     return true;
 }
+NATIVE(xl_random_seed);
 
 } // extern "C"
 

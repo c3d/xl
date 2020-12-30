@@ -701,6 +701,5 @@ inline Tree_p Native::Call(Bindings &bindings)
 } // namespace XL
 
 #define NATIVE(Name)    static Native xl_##Name##_native(Name, #Name);
-#define XL_NATIVE(Name) static Native xl_##Name##_native(xl_##Name, #Name);
 
 #endif // NATIVE_H

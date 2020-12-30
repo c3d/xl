@@ -62,6 +62,7 @@ struct Main;
 struct SourceFile;
 
 typedef Natural::value_t        natural_t;
+typedef longlong                integer_t;
 typedef Real::value_t           real_t;
 typedef Text::value_t           text_t;
 
@@ -116,11 +117,13 @@ natural_t       xl_text2int(kstring t);
 real_t          xl_text2real(kstring t);
 text            xl_int2text(natural_t value);
 text            xl_real2text(real_t value);
-natural_t       xl_mod(natural_t x, natural_t y);
-natural_t       xl_pow(natural_t x, natural_t y);
-real_t          xl_modf(real_t x, real_t y);
-real_t          xl_powf(real_t x, natural_t y);
-text            xl_text_replace(text txt, text before, text after);
+integer_t       xl_integer_mod(integer_t x, integer_t y);
+natural_t       xl_natural_pow(natural_t x, natural_t y);
+integer_t       xl_integer_pow(integer_t x, natural_t y);
+real_t          xl_real_mod(real_t x, real_t y);
+real_t          xl_real_rem(real_t x, real_t y);
+real_t          xl_real_pow(real_t x, natural_t y);
+text            xl_text_repolace(text txt, text before, text after);
 text            xl_text_repeat(uint count, text data);
 
 real_t          xl_time(real_t delay);
