@@ -518,25 +518,19 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             if (SortInserting(mode))
             {
                 // Inserting [X + Y as integer] vs. [X * Y as integer]
-                if (IsTypeAnnotation((Infix *) val))
+                if (Infix *vali = IsTypeAnnotation(val))
                 {
-                    if (int pats = Sort(((Infix *) pat)->left,
-                                        ((Infix *) val)->left,
-                                        mode))
+                    if (int pats = Sort(pati->left, vali->left, mode))
                         return pats;
-                    return Sort(((Infix *) pat)->right,
-                                ((Infix *) val)->right,
-                                TYPE);
+                    return Sort(pati->right, vali->right, TYPE);
                 }
             }
             else if (mode == SEARCH &&
-                     IsTypeCastDeclaration((Infix *) pat) &&
-                     IsTypeCast((Infix *) val))
+                     IsTypeCastDeclaration(pati) &&
+                     IsTypeCast(val))
             {
                 // Searching [X+Y as integer] vs [lambda N as integer]
-                return Sort(((Infix *) pat)->right,
-                            ((Infix *) val)->right,
-                            TYPE);
+                return Sort(pati->right, ((Infix *) val)->right, TYPE);
             }
 
             // For expressions and types, sort left first, then right
@@ -552,15 +546,11 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             if (SortInserting(mode))
             {
                 // When inserting, compare guard clauses as well
-                if (IsPatternCondition((Infix *) val))
+                if (Infix *vali = IsPatternCondition(val))
                 {
-                    if (int pats = Sort(((Infix *) pat)->left,
-                                        ((Infix *) val)->left,
-                                        mode))
+                    if (int pats = Sort(pati->left, vali->left, mode))
                         return pats;
-                    return Sort(((Infix *) pat)->right,
-                                ((Infix *) val)->right,
-                                EXPRESSION);
+                    return Sort(pati->right, vali->right, EXPRESSION);
                 }
             }
 
@@ -575,15 +565,26 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     if (valk == INFIX)
     {
         Infix *vali = (Infix *) val;
+
         if (IsTypeAnnotation(vali))
         {
-            if (int vals = Sort(pat, vali->left, SortIgnoreNames(mode)))
+            // The case annotation vs. annotation is handled above.
+            // So here, we have [Expr] vs. [X+Y as integer]
+            if (SortSearching(mode))
+            {
+                // Searching [A+B as integer] looks for [lambda N as integer]
+                return -1;
+            }
+
+            if (int vals = Sort(pat, vali->left, mode))
                 return vals;
+            return SortSearching(mode) ? 0 : 1;
         }
         else if (IsPatternCondition(vali))
         {
-            if (int pats = Sort(val, vali->left, SortIgnoreNames(mode)))
+            if (int vals = Sort(val, vali->left, mode))
                 return vals;
+            return SortSearching(mode) ? 0 : 1;
         }
     }
     if (patk != valk)
@@ -620,17 +621,6 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                    ((Name *) val)->value)
             : 0;
     case BLOCK:
-        // Check metaboxen
-        if (((Block *) pat)->IsMetaBox())
-        {
-            // During search, consider that metaboxen can match anything
-            if (SortSearching(mode))
-                return 0;
-
-            // During insertion, compare metaboxen as expressions
-            mode = EXPRESSION;
-        }
-
         // Otherwise, sort based on block contents
         return Sort(((Block *) pat)->child,
                     ((Block *) val)->child,
@@ -652,62 +642,6 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                     ((Postfix *) val)->left,
                     SortIgnoreNames(mode));
     case INFIX:
-        // For type expressions, we want to compare the right as types
-        if (IsTypeAnnotation((Infix *) pat))
-        {
-            if (SortInserting(mode))
-            {
-                // When inserting, compare type annotations as well
-                if (IsTypeAnnotation((Infix *) val))
-                {
-                    if (int pats = Sort(((Infix *) pat)->left,
-                                        ((Infix *) val)->left,
-                                        mode))
-                        return pats;
-                    return Sort(((Infix *) pat)->right,
-                                ((Infix *) val)->right,
-                                TYPE);
-                }
-            }
-            else if (mode == SEARCH &&
-                     IsTypeCastDeclaration((Infix *) pat) &&
-                     IsTypeCast((Infix *) val))
-            {
-                return Sort(((Infix *) pat)->right,
-                            ((Infix *) val)->right,
-                            TYPE);
-            }
-            else
-            {
-                // When not inserting, compare untyped pattern with value
-                return Sort(((Infix *) pat)->left, val, mode);
-            }
-        }
-
-        // For guards ("when" clauses), we want to compare the right as expr
-        if (IsPatternCondition((Infix *) pat))
-        {
-            if (SortInserting(mode))
-            {
-                // When inserting, compare guard clauses as well
-                if (IsPatternCondition((Infix *) val))
-                {
-                    if (int pats = Sort(((Infix *) pat)->left,
-                                        ((Infix *) val)->left,
-                                        mode))
-                        return pats;
-                    return Sort(((Infix *) pat)->right,
-                                ((Infix *) val)->right,
-                                EXPRESSION);
-                }
-            }
-            else
-            {
-                // When not inserting, compare unguarded pattern with value
-                return Sort(((Infix *) pat)->left, val, mode);
-            }
-        }
-
         // Otherwise, compare the operator first
         if (int ns = Sort(((Infix *) pat)->name,
                           ((Infix *) val)->name))
