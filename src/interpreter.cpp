@@ -295,7 +295,7 @@ bool Bindings::Do(Infix *what)
                 test = cast->left;
                 Tree *wtype = EvaluateType(what->right);
                 Tree *ttype = EvaluateType(cast->right);
-                if (wtype != ttype)
+                if (wtype != ttype || HadErrors())
                 {
                     Ooops("Type $2 of $1", cast->right, cast);
                     Ooops("does not match type $2 of $1", what->right, what);
@@ -442,7 +442,8 @@ Tree *Bindings::EvaluateType(Tree *type)
 //   Evaluate a type expression (in declaration context)
 // ----------------------------------------------------------------------------
 {
-    return Evaluate(DeclarationScope(), type);
+    Tree_p result = Evaluate(DeclarationScope(), type);
+    return result;
 }
 
 
@@ -616,7 +617,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
 
     // Check if there was some error, if so don't keep looking
     if (HadErrors())
-        return nullptr;
+        return Errors::Aborting();
 
     Tree_p result = expr;
     Context context(scope);
@@ -663,8 +664,7 @@ retry:
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
-            EvaluationCache lcache;
-            Tree *left = DoEvaluate(scope, infix->left, TOPLEVEL, lcache);
+            Tree *left = DoEvaluate(scope, infix->left, NORMAL, cache);
             if (left != infix->left)
                 result = left;
             if (HadErrors() || IsError(left))
@@ -687,9 +687,8 @@ retry:
     Save<uint>  save(depth, depth+1);
     if (depth > Opt::stackDepth)
     {
-        save.saved = depth;     // Don't restore on exit, pop out all the way
-        Ooops("Stack depth exceeded evaluating $1", expr);
-        return nullptr;
+        Errors::Abort(Ooops("Stack depth exceeded evaluating $1", expr));
+        return expr;
     }
 
     // All other cases: lookup in symbol table
@@ -708,7 +707,7 @@ retry:
         Ooops("Nothing matches $1", expr);
         result = expr;
     }
-    else
+    else if (!Errors::Aborting())
     {
         errors.Clear();
     }

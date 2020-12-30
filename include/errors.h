@@ -125,6 +125,7 @@ Error &Ooops (kstring m, Tree *a);
 Error &Ooops (kstring m, Tree *a, Tree *b);
 Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
 
+
 // Check if errors were reported
 bool HadErrors();
 
