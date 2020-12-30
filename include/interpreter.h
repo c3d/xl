@@ -183,6 +183,8 @@ private:
     Tree_p              test;
     EvaluationCache &   cache;
 
+    // Output of the process
+    Tree_p              defined;
     Tree_p              type;
     RewriteList         bindings;
 };
