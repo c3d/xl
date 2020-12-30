@@ -217,6 +217,10 @@ bool Bindings::Do(Prefix *what)
         // The test itself should be a prefix
         if (Prefix *pfx = test->AsPrefix())
         {
+            // Case of [until Condition loop Body]: define [until]
+            if (defined->AsInfix())
+                defined = nullptr;
+
             // Check prefix left first, which may set 'defined' to name
             test = pfx->left;
             if (!what->left->Do(this))
