@@ -153,6 +153,21 @@ inline bool Bindings::Do(Name *what)
     if (Tree *cached = cache.Cached(test))
         test = cached;
 
+    // Check if we are testing e.g. [getpid as integer32] vs. [getpid]
+    if (!defined)
+    {
+        if (Name *name = test->AsName())
+        {
+            if (name->value == what->value)
+            {
+                defined = what;
+                return true;
+            }
+        }
+        Ooops("Value $1 does not match name $2", test, what);
+        return false;
+    }
+
     // If there is already a binding for that name, value must match
     // This covers both a pattern with 'pi' in it and things like 'X+X'
     if (Tree *bound = argContext.Bound(what, false))
@@ -202,26 +217,7 @@ bool Bindings::Do(Prefix *what)
         // The test itself should be a prefix
         if (Prefix *pfx = test->AsPrefix())
         {
-            // If we call 'sin X' and match 'sin 3', check if names match
-            if (Name *name = what->left->AsName())
-            {
-                if (Name *testName = pfx->left->AsName())
-                {
-                    if (name->value == testName->value)
-                    {
-                        test = pfx->right;
-                        return what->right->Do(this);
-                    }
-                    else
-                    {
-                        Ooops("Prefix name $1 does not match $2",
-                              name, testName);
-                        return false;
-                    }
-                }
-            }
-
-            // For other cases, we must go deep inside each prefix to check
+            // Check prefix left first, which may set 'defined' to name
             test = pfx->left;
             if (!what->left->Do(this))
                 return false;
@@ -256,27 +252,7 @@ bool Bindings::Do(Postfix *what)
         // The test itself should be a postfix
         if (Postfix *pfx = test->AsPostfix())
         {
-
-            // If we call 'X!' and match '3!', check if names match
-            if (Name *name = what->right->AsName())
-            {
-                if (Name *testName = pfx->right->AsName())
-                {
-                    if (name->value == testName->value)
-                    {
-                        test = pfx->left;
-                        return what->left->Do(this);
-                    }
-                    else
-                    {
-                        Ooops("Postfix name $1 does not match $2",
-                              name, testName);
-                        return false;
-                    }
-                }
-            }
-
-            // For other cases, we must go deep inside each prefix to check
+            // Check postfix right first, which maye set 'defined' to name
             test = pfx->right;
             if (!what->right->Do(this))
                 return false;
@@ -307,12 +283,26 @@ bool Bindings::Do(Infix *what)
     {
         bool outermost = test == self;
 
-        // Check if we test "Value is integer" against "N is integer"
+        // Check if we test [A+B as integer] against [lambda N as integer]
         if (Name *declared = IsTypeCastDeclaration(what))
+        {
             if (Infix *cast = IsTypeCast(test))
-                return (test = cast->left) &&
-                    Tree::Equal(what->right, cast->right) &&
-                    declared->Do(this);
+            {
+                test = cast->left;
+                Tree *wtype = EvaluateType(what->right);
+                Tree *ttype = EvaluateType(cast->right);
+                if (wtype != ttype)
+                {
+                    Ooops("Type $2 of $1", cast->right, cast);
+                    Ooops("does not match type $2 of $1", what->right, what);
+                    return false;
+                }
+
+                // Process the lambda name
+                defined = what;
+                return declared->Do(this);
+            }
+        }
 
         // Need to match the left part with the test
         if (!what->left->Do(this))
@@ -339,6 +329,10 @@ bool Bindings::Do(Infix *what)
         }
         return true;
     }
+
+    // If nothing defined yet, we are it
+    if (!defined)
+        defined = what;
 
     // Check if we have a guard clause
     if (IsPatternCondition(what))
