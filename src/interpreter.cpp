@@ -107,7 +107,8 @@ inline bool Bindings::Do(Natural *what)
 //   The pattern contains an natural: check we have the same
 // ----------------------------------------------------------------------------
 {
-    MustEvaluate();
+    if (test->Kind() != NATURAL)
+        MustEvaluate();
     if (Natural *ival = test->AsNatural())
         if (ival->value == what->value)
             return true;
@@ -121,7 +122,8 @@ inline bool Bindings::Do(Real *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    MustEvaluate();
+    if (test->Kind() != REAL)
+        MustEvaluate();
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return true;
@@ -135,7 +137,8 @@ inline bool Bindings::Do(Text *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
-    MustEvaluate();
+    if (test->Kind() != TEXT)
+        MustEvaluate();
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
             return true;
