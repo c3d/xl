@@ -152,7 +152,9 @@ void Error::Display()
 //   Display an error on the error output
 // ----------------------------------------------------------------------------
 {
-    std::cerr << Position() << ": " << text(indent, ' ') << Message() << '\n';
+    std::cerr << Position() << ": "
+              << text(indent < 20 ? indent : 20, ' ')
+              << Message() << '\n';
 }
 
 
@@ -344,6 +346,9 @@ Error &Errors::Log(const Error &e, bool isContext)
 }
 
 
+Tree_p Errors::aborting;
+
+
 
 // ============================================================================
 //
@@ -392,7 +397,7 @@ bool HadErrors()
 //   Return true if we had errors
 // ----------------------------------------------------------------------------
 {
-    return MAIN->errors->HadErrors();
+    return Errors::Aborting() || MAIN->errors->HadErrors();
 }
 
 

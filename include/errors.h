@@ -79,6 +79,7 @@ struct Error
 
     // Converting to a prefix form for error evaluation
                         operator Tree *();
+                        operator Tree_p() { return (Tree *) (*this); }
 
 
 public:
@@ -106,13 +107,16 @@ struct Errors
     void                Display();
     Error &             Log(const Error &e, bool context = false);
     Error &             Context(const Error &e) { return Log(e, true); }
-    uint                Count()        { return errors.size() + count; }
-    bool                HadErrors()    { return errors.size() > context; }
+    uint                Count()         { return errors.size() + count; }
+    bool                HadErrors()     { return errors.size() > context; }
+    static Tree_p       Aborting()      { return aborting; }
+    static void         Abort(Error &e) { if (!aborting) aborting = e; }
 
     std::vector<Error>  errors;
     Errors *            parent;
     ulong               count;
     ulong               context;
+    static Tree_p       aborting;
 };
 
 
@@ -121,6 +125,7 @@ Error &Ooops (kstring m, TreePosition pos = Tree::NOWHERE);
 Error &Ooops (kstring m, Tree *a);
 Error &Ooops (kstring m, Tree *a, Tree *b);
 Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
+
 
 // Check if errors were reported
 bool HadErrors();
