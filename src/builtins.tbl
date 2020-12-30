@@ -97,45 +97,50 @@ TYPE(declaration, return IsDeclaration(value))
 //
 // ============================================================================
 
-#define NATURAL_TYPE(Name, MinValue, MaxValue)          \
-    TYPE(Name,                                          \
-         if (Natural *nat = value->AsNatural())         \
-             if (nat->value >= MinValue &&              \
-                 nat->value <= MaxValue)                \
-                 return nat;                            \
+#define IN_RANGE(X, CType)                              \
+        ((X) >= std::numeric_limits<CType>::min() &&    \
+         (X) <= std::numeric_limits<CType>::max())
+
+#define NATURAL_TYPE(Name, CType)               \
+    TYPE(Name,                                  \
+         if (Natural *nat = value->AsNatural()) \
+             if (IN_RANGE(nat->value, CType))   \
+                 return nat;                    \
          return nullptr)
 
-#define INTEGER_TYPE(Name, MinValue, MaxValue)          \
-    TYPE(Name,                                          \
-         if (Natural *nat = value->AsNatural())         \
-             if ((longlong) nat->value >= MinValue &&   \
-                 (longlong) nat->value <= MaxValue)     \
-                 return nat;                            \
+#define INTEGER_TYPE(Name, CType)                               \
+    TYPE(Name,                                                  \
+         if (Natural *nat = value->AsNatural())                 \
+             if (IN_RANGE((longlong) nat->value, CType))        \
+                 return nat;                                    \
          return nullptr)
 
-#define REAL_TYPE(Name, BitSize)                        \
+#define REAL_TYPE(Name, CType)                          \
     TYPE(Name,                                          \
          if (Real *nat = value->AsReal())               \
+         {                                              \
+             CType tmp = nat->value;                    \
+             if (tmp != nat->value)                     \
+                 return new Real(tmp, nat->Position()); \
              return nat;                                \
+         }                                              \
          return nullptr)
 
 
-NATURAL_TYPE(natural8,  0, 0xFF)
-NATURAL_TYPE(natural16, 0, 0xFFFF)
-NATURAL_TYPE(natural32, 0, 0xFFFFFFFF)
-NATURAL_TYPE(natural64, 0, 0xFFFFFFFFFFFFFFFF)
+NATURAL_TYPE(natural8,  uint8_t)
+NATURAL_TYPE(natural16, uint16_t)
+NATURAL_TYPE(natural32, uint32_t)
+NATURAL_TYPE(natural64, uint64_t)
 
 TYPE(integer, return value->AsNatural())
-INTEGER_TYPE(integer8, -0x80, 0x7F)
-INTEGER_TYPE(integer16,-0x8000, 0x7FFF)
-INTEGER_TYPE(integer32, -0x80000000, 0x7FFFFFFF)
-INTEGER_TYPE(integer64, -0x8000000000000000, 0x7FFFFFFFFFFFFFFF)
+INTEGER_TYPE(integer8,  int8_t)
+INTEGER_TYPE(integer16, int16_t)
+INTEGER_TYPE(integer32, int32_t)
+INTEGER_TYPE(integer64, int64_t)
 
-REAL_TYPE(real16, 16)
-REAL_TYPE(real32, 32)
-REAL_TYPE(real64, 64)
-REAL_TYPE(real80, 80)
-
+REAL_TYPE(real16, _Float16)
+REAL_TYPE(real32, float)
+REAL_TYPE(real64, double)
 
 
 // ============================================================================
