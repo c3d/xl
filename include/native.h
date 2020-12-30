@@ -423,7 +423,7 @@ struct function_type<R(*)(T)>
     static Tree_p ParameterShape(uint &index)
     {
         Tree_p type = xl_type<T>::Shape();
-        Name_p name = new Name(text(1, 'A' + index), Tree::BUILTIN);
+        Name_p name = new Name(text(1, 'a' + index), Tree::BUILTIN);
         ++index;
         if (type)
         {
@@ -683,7 +683,7 @@ inline Tree_p Native::Shape()
     if (!shape)
     {
         uint index = 0;
-        Name_p name = new Name(symbol, Tree::BUILTIN);
+        Name_p name = new Name(Normalize(symbol), symbol, Tree::BUILTIN);
         shape = implementation->Shape(name, index);
     }
     return shape;
