@@ -731,7 +731,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
         return nullptr;
     }
     errors.Clear();
-    errors.Log(Error("Cannot determien the type of $1 because", what), true);
+    errors.Log(Error("Cannot determine the type of $1 because", what), true);
 
     // The resulting type is the union of all candidates
     Tree *type = rc->candidates[0]->type;
