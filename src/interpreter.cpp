@@ -663,7 +663,8 @@ retry:
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
-            Tree *left = DoEvaluate(scope, infix->left, NORMAL, cache);
+            EvaluationCache lcache;
+            Tree *left = DoEvaluate(scope, infix->left, TOPLEVEL, lcache);
             if (left != infix->left)
                 result = left;
             if (IsError(left))
@@ -686,6 +687,7 @@ retry:
     Save<uint>  save(depth, depth+1);
     if (depth > Opt::stackDepth)
     {
+        save.saved = depth;     // Don't restore on exit, pop out all the way
         Ooops("Stack depth exceeded evaluating $1", expr);
         return nullptr;
     }
