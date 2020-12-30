@@ -37,6 +37,7 @@
 
 #include "compiler.h"
 #include "compiler-unit.h"
+#include "basics.h"
 #include "errors.h"
 #include "main.h"               // For Opt::emitIR
 
@@ -158,7 +159,7 @@ Tree * Compiler::Evaluate(Scope *scope, Tree *source)
     if (!code)
     {
         Ooops("Error compiling $1", source);
-        return source;
+        return xl_error;
     }
 
     Tree *result = source;

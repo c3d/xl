@@ -171,14 +171,15 @@ eval_fn CompilerUnit::Compile()
         return xl_identity;
     }
 
+    Errors errors;
     CompilerEval function(*this, source, types);
     JIT::Value_p global = function.Function();
     Global(source, global);
 
     JIT::Value_p returned = function.Compile(source, true);
-    if (!returned)
+    if (!returned || errors.HadErrors())
     {
-        Ooops("Compilation for $1 failed", source);
+        Ooops("Compilation failed", source);
         record(compiler_unit, "Compilation for %t failed", source);
         return xl_identity;
     }
@@ -186,6 +187,11 @@ eval_fn CompilerUnit::Compile()
     eval_fn result = function.Finalize(true);
     record(compiler_unit, "Compilation of %t returned %p",
            source, (void *) result);
+    if (errors.HadErrors())
+    {
+        Ooops("Finalization failed", source);
+        result = xl_identity;
+    }
     return result;
 }
 
