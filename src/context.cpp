@@ -62,6 +62,8 @@
 RECORDER(context,        32, "Context: wrapper for XL symbol table");
 RECORDER(symbols,        32, "XL symbol table");
 RECORDER(symbols_errors, 32, "Errors running symbol table");
+RECORDER(symbols_sort,   32, "Sorting entries in the symbol table");
+
 
 XL_BEGIN
 
@@ -238,6 +240,8 @@ bool Context::ProcessDeclarations(Tree *what)
         what = next;
         next = nullptr;
     }
+    if (RECORDER_TRACE(symbols_sort))
+        Dump(std::cerr, symbols, false);
     return result;
 }
 
@@ -408,10 +412,41 @@ inline bool SortSearching(SortMode mode)
 }
 
 
+static int ISort(Tree *pat, Tree *val, SortMode mode);
 static int Sort(Tree *pat, Tree *val, SortMode mode)
+// ----------------------------------------------------------------------------
+//   For instrumentation purpose
+// ----------------------------------------------------------------------------
+{
+    int result = ISort(pat, val, mode);
+    static const char *modename[] =
+    {
+        "INSERT",
+        "INSERT_BIND",
+        "SEARCH",
+        "SEARCH_BIND",
+        "TYPE",
+        "EXPRESSION"
+    };
+    record(symbols_sort, "%+12s %t %+s %t",
+           modename[mode], pat, result<0 ? "<" : result>0 ? ">" : "=", val);
+    return result;
+}
+
+
+static int ISort(Tree *pat, Tree *val, SortMode mode)
 // ----------------------------------------------------------------------------
 //   Return the sorting order while inserting patterns
 // ----------------------------------------------------------------------------
+//   The sort order implements the "largest and more specialized first" order
+//   required for the XL semantics. In other words, a pattern precedes another
+//   if it should be considered first during lookup.
+//
+//   For example:
+//      [X,Y] < [X] because it's larger
+//      [0] < [X] because it's a more specialized case
+//      [X] < [lambda X] when we match [X], because it's more specialized
+//
 //   The sorting order while inserting a pattern considers the whole pattern,
 //   and does not attempt to interpret it, except for blocks that are ignored.
 //   Therefore, the sorting order should be:
@@ -444,26 +479,111 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
     if (patk == PREFIX)
     {
         Prefix *patp = (Prefix *) pat;
+
+        // Put lambda behind anything but other lambdas and parameter names
         if (Name *patn = IsLambda(patp))
         {
             if (Name *valn = IsLambda(val))
-                val = valn;
-            return Sort(patn, val, SortIgnoreNames(mode));
+                return 0;
+            if (valk == NAME)
+                return SortNames(mode) ? 1 : 0;
+            return 1;
+        }
+    }
+    if (valk == PREFIX)
+    {
+        Prefix *valp = (Prefix *) val;
+
+        // Put lambdas last
+        if (Name *valn = IsLambda(valp))
+        {
+            if (patk == NAME)
+                return SortNames(mode) ? -1 : 0;
+            return -1;
         }
     }
 
     // Check case where kinds are different: use sorting rank described above
     if (mode == SEARCH_BIND)
     {
-        // Catch wildcards
+        // Catch wildcards, and consider that 0 vs "A" is "upper" problem
         if (patk <= NAME)
             return 0;
-        if (patk == INFIX)
+    }
+    if (patk == INFIX)
+    {
+        Infix *pati = (Infix *) pat;
+        if (IsTypeAnnotation(pati))
         {
-            if (Infix *typed = IsTypeAnnotation(pat))
-                return Sort(typed->left, val, mode);
-            if (Infix *guarded = IsPatternCondition(pat))
-                return Sort(guarded->left, val, mode);
+            if (SortInserting(mode))
+            {
+                // Inserting [X + Y as integer] vs. [X * Y as integer]
+                if (IsTypeAnnotation((Infix *) val))
+                {
+                    if (int pats = Sort(((Infix *) pat)->left,
+                                        ((Infix *) val)->left,
+                                        mode))
+                        return pats;
+                    return Sort(((Infix *) pat)->right,
+                                ((Infix *) val)->right,
+                                TYPE);
+                }
+            }
+            else if (mode == SEARCH &&
+                     IsTypeCastDeclaration((Infix *) pat) &&
+                     IsTypeCast((Infix *) val))
+            {
+                // Searching [X+Y as integer] vs [lambda N as integer]
+                return Sort(((Infix *) pat)->right,
+                            ((Infix *) val)->right,
+                            TYPE);
+            }
+
+            // For expressions and types, sort left first, then right
+            if (int pats = Sort(pati->left, val, mode))
+                return pats;
+
+            // Same left: if searching, stop here. Otherwise [X:Y] < [X]
+            return SortSearching(mode) ? 0 : -1;
+
+        }
+        else if (IsPatternCondition(pati))
+        {
+            if (SortInserting(mode))
+            {
+                // When inserting, compare guard clauses as well
+                if (IsPatternCondition((Infix *) val))
+                {
+                    if (int pats = Sort(((Infix *) pat)->left,
+                                        ((Infix *) val)->left,
+                                        mode))
+                        return pats;
+                    return Sort(((Infix *) pat)->right,
+                                ((Infix *) val)->right,
+                                EXPRESSION);
+                }
+            }
+
+            // For expressions and types, sort left first, then right
+            if (int pats = Sort(pati->left, val, mode))
+                return pats;
+
+            // Same left: if searching, stop here. Otherwise [X when Y] < [X]
+            return SortSearching(mode) ? 0 : -1;
+        }
+    }
+    if (valk == INFIX)
+    {
+        Infix *vali = (Infix *) val;
+        if (IsTypeAnnotation(vali))
+        {
+            if (int vals = Sort(pat, vali->left, SortIgnoreNames(mode)))
+                return vals;
+        }
+        else if (IsPatternCondition(vali))
+        {
+            if (int pats = Sort(val, vali->left, SortIgnoreNames(mode)))
+                return vals;
         }
     }
     if (patk != valk)
