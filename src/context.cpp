@@ -995,6 +995,10 @@ static Tree *LookupEntry(Scope              *symbols,
 
     while (true)
     {
+        // Quick exit in case we are dropping evaluation
+        if (Errors::Aborting())
+            return nullptr;
+
         // If we have a definition in this entry, check it
         if (Rewrite *rewrite = (*entry)->As<Rewrite>())
         {
