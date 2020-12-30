@@ -423,34 +423,40 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
 //   [A+B] precedes [A<B], and [cos X] precedes [sin Y]. However, named
 //   parameters are all considered the same if sortNames == false.
 {
+    kind patk = pat->Kind();
+    kind valk = val->Kind();
+
     // Eliminate blocks
-    if (Block *patb = pat->AsBlock())
+    if (patk == BLOCK)
     {
+        Block *patb = pat->AsBlock();
         if (!patb->IsMetaBox())
             return Sort(patb->child, val, mode);
         if (SortSearching(mode))
             return 0;
     }
-    if (Block *valb = val->AsBlock())
+    if (valk == BLOCK)
+    {
+        Block *valb = val->AsBlock();
         if (!valb->IsMetaBox())
             return Sort(pat, valb->child, mode);
-    if (Name *patn = IsLambda(pat))
+    }
+    if (patk == PREFIX)
     {
-        if (Name *valn = IsLambda(val))
-            val = valn;
-        return Sort(patn, val, SortIgnoreNames(mode));
+        Prefix *patp = (Prefix *) pat;
+        if (Name *patn = IsLambda(patp))
+        {
+            if (Name *valn = IsLambda(val))
+                val = valn;
+            return Sort(patn, val, SortIgnoreNames(mode));
+        }
     }
 
     // Check case where kinds are different: use sorting rank described above
-    kind patk = pat->Kind();
-    kind valk = val->Kind();
     if (mode == SEARCH_BIND)
     {
         // Catch wildcards
-        if (patk == NAME)
-            return 0;
-        // Match pattern [0] against [N-1]
-        if (patk < NAME && valk != patk)
+        if (patk <= NAME)
             return 0;
         if (patk == INFIX)
         {
