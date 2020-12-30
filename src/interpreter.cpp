@@ -912,6 +912,9 @@ void Interpreter::InitializeContext(Context &context)
         Prefix *body = new Prefix(C, new Name(symbol));
         context.Define(shape, body);
     }
+
+    if (RECORDER_TRACE(symbols_sort))
+        context.Dump(std::cerr, context.Symbols(), false);
 }
 
 XL_END
