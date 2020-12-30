@@ -60,8 +60,8 @@ XL_BEGIN
 namespace Opt
 {
 BooleanOption caseSensitive("case_sensitive",
-                            "Make scanner case sensitive",
-                            true);
+                            "Distinguish names based on case and underscores",
+                            false);
 } // namespace Opt
 
 

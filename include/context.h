@@ -679,7 +679,7 @@ inline Name *IsNative(Prefix *prefix)
 // ----------------------------------------------------------------------------
 {
     if (Name *C = prefix->left->AsName())
-        if (C->value == "C")
+        if (C->value == "C" || C->value == "c")
             if (Name *name = prefix->right->AsName())
                 return name;
     return nullptr;

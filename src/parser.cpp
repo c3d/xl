@@ -73,9 +73,10 @@ struct Pending
 //   Pending expression while parsing
 // ----------------------------------------------------------------------------
 {
-    Pending(text o, Tree *a, int p, ulong pos):
-        opcode(o), argument(a), priority(p), position(pos) {}
+    Pending(text o, text s, Tree *a, int p, ulong pos):
+        opcode(o), spelling(s), argument(a), priority(p), position(pos) {}
     text   opcode;
+    text   spelling;
     Tree_p argument;
     int    priority;
     ulong  position;
@@ -334,7 +335,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
     bool                 new_statement      = true;
     ulong                pos                = 0;
     uint                 old_indent         = 0;
-    text                 infix, name;
+    text                 name, infix;
+    text                 spelling, infix_spelling;
     text                 comment_end;
     token_t              tok;
     char                 separator;
@@ -399,7 +401,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             break;
         case tokNAME:
         case tokSYMBOL:
-            name = scanner.NameValue();
+            name = scanner.TokenText();
+            spelling = scanner.NameValue();
             if (name == closing)
             {
                 done = true;
@@ -412,7 +415,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                        name.c_str(), blk_closing.c_str(), pos);
                 Parser childParser(scanner, cs);
                 right = childParser.Parse(blk_closing, name, pos);
-                right = new Prefix(new Name(name), right, pos);
+                right = new Prefix(new Name(name, spelling, pos),
+                                   right, pos);
                 pos = childParser.scanner.Position();
                 scanner.SetPosition(pos);
                 record(scanner, "Special syntax result %t new position %lu",
@@ -421,7 +425,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             else if (!result)
             {
                 prefix_priority = syntax.PrefixPriority(name);
-                right = new Name(name, pos);
+                right = new Name(name, spelling, pos);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
                 if (new_statement && tok == tokNAME)
@@ -435,7 +439,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                 // parse this as "A and (not B)" rather than as
                 // "(A and not) B"
                 prefix_priority = syntax.PrefixPriority(name);
-                right = new Name(name, pos);
+                right = new Name(name, spelling, pos);
                 if (prefix_priority == default_priority)
                     prefix_priority = function_priority;
             }
@@ -451,6 +455,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                     // We got an infix
                     left = result;
                     infix = name;
+                    infix_spelling = spelling;
                 }
                 else
                 {
@@ -458,7 +463,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                     if (postfix_priority != default_priority)
                     {
                         // We have a postfix operator
-                        right = new Name(name, pos);
+                        right = new Name(name, spelling, pos);
 
                         // Flush higher priority items on stack
                         // This is the case for X:natural!
@@ -473,8 +478,9 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                                 result = CreatePrefix(prev.argument, result,
                                                       prev.position);
                             else
-                                result = new Infix(prev.opcode, prev.argument,
-                                                   result, prev.position);
+                                result = new Infix(prev.opcode, prev.spelling,
+                                                   prev.argument, result,
+                                                   prev.position);
                             stack.pop_back();
                         }
                         right = new Postfix(result, right, pos);
@@ -484,7 +490,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                     else
                     {
                         // No priority: take this as a prefix by default
-                        right = new Name(name, pos);
+                        right = new Name(name, spelling, pos);
                         prefix_priority = prefix_vs_infix;
                         if (prefix_priority == default_priority)
                         {
@@ -500,6 +506,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             // Consider new-line as an infix operator
             infix = "\n";
             name = infix;
+            spelling = infix;
             infix_priority = syntax.InfixPriority(infix);
             left = result;
             break;
@@ -605,7 +612,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             {
                 // Push "A and" in the above example
                 ulong st_pos = new_statement ? left->Position() : pos;
-                stack.push_back(Pending(infix, left, infix_priority, st_pos));
+                stack.push_back(Pending(infix, infix_spelling,
+                                        left, infix_priority, st_pos));
                 left = nullptr;
 
                 // Start over with "not"
@@ -629,7 +637,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                     if (prev.opcode == prefix)
                         left = CreatePrefix(prev.argument, left, prev.position);
                     else
-                        left = new Infix(prev.opcode, prev.argument, left,
+                        left = new Infix(prev.opcode, prev.spelling,
+                                         prev.argument, left,
                                          prev.position);
                     stack.pop_back();
                 }
@@ -644,7 +653,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                 {
                     // Something like A+B+C, just got second +
                     ulong st_pos = new_statement ? left->Position() : pos;
-                    stack.push_back(Pending(infix,left,infix_priority,st_pos));
+                    stack.push_back(Pending(infix, infix_spelling,
+                                            left, infix_priority,st_pos));
                     result = nullptr;
                 }
                 left = nullptr;
@@ -675,8 +685,9 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                         result = CreatePrefix(prev.argument, result,
                                               prev.position);
                     else
-                        result = new Infix(prev.opcode, prev.argument,
-                                           result, prev.position);
+                        result = new Infix(prev.opcode, prev.spelling,
+                                           prev.argument, result,
+                                           prev.position);
                     stack.pop_back();
                 }
             }
@@ -689,7 +700,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                         result_priority = statement_priority;
 
             // Push a recognized prefix op
-            stack.push_back(Pending(prefix,result,result_priority,pos));
+            stack.push_back(Pending(prefix, prefix,
+                                    result,result_priority,pos));
             result = right;
             result_priority = prefix_priority;
         }
@@ -702,7 +714,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             Pending &last = stack.back();
             if (last.opcode != text("\n"))
                 result = new Postfix(last.argument,
-                                     new Name(last.opcode, last.position));
+                                     new Name(last.opcode, last.spelling,
+                                              last.position));
             else
                 result = last.argument;
             stack.pop_back();
@@ -715,8 +728,9 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             if (prev.opcode == prefix)
                 result = CreatePrefix(prev.argument, result, prev.position);
             else
-                result = new Infix(prev.opcode, prev.argument,
-                                   result, prev.position);
+                result = new Infix(prev.opcode, prev.spelling,
+                                   prev.argument, result,
+                                   prev.position);
             stack.pop_back();
         }
     }

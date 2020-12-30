@@ -280,15 +280,18 @@ struct Name : Tree
     typedef Name self_t;
     typedef text value_t;
 
+    Name(value_t n, value_t s, TreePosition pos = NOWHERE):
+        Tree(NAME, pos), value(n), spelling(s) { }
     Name(value_t n, TreePosition pos = NOWHERE):
-        Tree(NAME, pos), value(n) {}
+        Tree(NAME, pos), value(n), spelling(n) { }
     Name(Name *n):
-        Tree(NAME, n), value(n->value) {}
+        Tree(NAME, n), value(n->value), spelling(n->spelling) { }
     bool        IsEmpty()       { return value.length() == 0; }
     bool        IsOperator()    { return !IsEmpty() && !isalpha(value[0]); }
     bool        IsName()        { return !IsEmpty() && isalpha(value[0]); }
     bool        IsBoolean()     { return value=="true" || value=="false"; }
     value_t     value;
+    value_t     spelling;
     operator    value_t()       { return value; }
     GARBAGE_COLLECT(Name);
 };
@@ -389,13 +392,16 @@ struct Infix : Tree
     typedef Infix *     value_t;
 
     Infix(text n, Tree *l, Tree *r, TreePosition pos = NOWHERE):
-        Tree(INFIX, pos), left(l), right(r), name(n) {}
+        Tree(INFIX, pos), left(l), right(r), name(n), spelling(n) { }
+    Infix(text n, text s, Tree *l, Tree *r, TreePosition pos = NOWHERE):
+        Tree(INFIX, pos), left(l), right(r), name(n), spelling(s) { }
     Infix(Infix *i, Tree *l, Tree *r):
-        Tree(INFIX, i), left(l), right(r), name(i->name) {}
+        Tree(INFIX, i),left(l),right(r), name(i->name),spelling(i->spelling) { }
     Infix *             LastStatement(text sep1 = ";", text sep2 = "\n");
     Tree_p              left;
     Tree_p              right;
     text                name;
+    text                spelling;
     GARBAGE_COLLECT(Infix);
 };
 
@@ -503,6 +509,17 @@ inline Infix *Infix::LastStatement(text sep1, text sep2)
     }
     return last;
 }
+
+
+
+// ============================================================================
+//
+//    Utilities
+//
+// ============================================================================
+
+// Case normalization according to XL language rules
+text Normalize(text spelling);
 
 
 

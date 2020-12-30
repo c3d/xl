@@ -1584,10 +1584,6 @@ but `⇒A2` is presently a valid XL name, and this is considered a bug.
 Case and delimiters are not significant in XL, so that `JOE_DALTON` and
 `JoeDalton` are treated identically.
 
-WARNING: For historical reasons, the current implementations are quite
-lacking in that respect, and will treat `V` and `v` differently. There
-is still an open debate about giving a semantic role to capitalization.
-
 Operators begin with one of the ASCII punctuation characters:
 
 ....

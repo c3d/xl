@@ -42,6 +42,7 @@
 #include "errors.h"
 #include "types.h"
 #include "rewrites.h"
+#include "main.h"
 
 #include <sstream>
 #include <cassert>
@@ -138,15 +139,19 @@ int Tree::Compare(Tree *left, Tree *right, bool recurse)
     {
         Name *ln = (Name *) left;
         Name *rn = (Name *) right;
-        return ln->value < rn->value ? -1 : ln->value > rn->value ? 1 : 0;
+        text &lt = ln->value;
+        text &rt = rn->value;
+        return lt < rt ? -1 : lt > rt ? 1 : 0;
     }
     case INFIX:
     {
         Infix *li = (Infix *) left;
         Infix *ri = (Infix *) right;
-        if (li->name < ri->name)
+        text &lt = li->name;
+        text &rt = ri->name;
+        if (lt < rt)
             return -2;
-        else if (li->name > ri->name)
+        else if (lt > rt)
             return 2;
         if (recurse)
         {
@@ -243,6 +248,28 @@ text Block::indent   = "I+";
 text Block::unindent = "I-";
 text Text::textQuote = "\"";
 text Text::charQuote = "'";
+
+
+
+// ============================================================================
+//
+//   Case / underscore normalization
+//
+// ============================================================================
+
+text Normalize(text spelling)
+// ----------------------------------------------------------------------------
+//   Normalize input according to XL rules
+// ----------------------------------------------------------------------------
+{
+    if (Opt::caseSensitive)
+        return spelling;
+    text name;
+    for (auto c : spelling)
+        if (c != '_')
+            name += tolower(c);
+    return name;
+}
 
 
 
