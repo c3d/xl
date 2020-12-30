@@ -324,14 +324,19 @@ bool Bindings::Do(Infix *what)
             return false;
 
         // Type check value against type
-        Tree *checked = TypeCheck(EvaluationScope(), want, test);
-        if (!checked)
-        {
-            Ooops("Value $1 does not belong to type $2", test, want);
-            return false;
-        }
         if (outermost)
+        {
             type = want;
+        }
+        else
+        {
+            Tree *checked = TypeCheck(EvaluationScope(), want, test);
+            if (!checked)
+            {
+                Ooops("Value $1 does not belong to type $2", test, want);
+                return false;
+            }
+        }
         return true;
     }
 
