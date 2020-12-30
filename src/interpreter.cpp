@@ -667,7 +667,7 @@ retry:
             Tree *left = DoEvaluate(scope, infix->left, TOPLEVEL, lcache);
             if (left != infix->left)
                 result = left;
-            if (IsError(left))
+            if (HadErrors() || IsError(left))
                 return left;
             expr = infix->right;
             goto retry;
@@ -706,7 +706,7 @@ retry:
     if (error)
     {
         Ooops("Nothing matches $1", expr);
-        result = nullptr;
+        result = expr;
     }
     else
     {
