@@ -607,7 +607,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
 // ----------------------------------------------------------------------------
 {
     static uint depth = 0;
-    const char *modename[3] = { "normal", "toplevel", "local" };
+    const char *modename[] = { "normal", "mayfail", "toplevel", "local" };
     record(eval, "%+s%t %+s in %p", spaces(depth), expr, modename[mode], scope);
 
     // Check if there was some error, if so don't keep looking
