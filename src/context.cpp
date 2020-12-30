@@ -366,8 +366,10 @@ enum SortMode
 {
     INSERT,                     // Sort for insertion of a pattern
     INSERT_BIND,                // Sort for insertion, all names identical
+    INSERT_INFIX,               // Sort for insertion, matched infix
     SEARCH,                     // Sort for search of top pattern
     SEARCH_BIND,                // Sort for search, all names identical
+    SEARCH_INFIX,               // Sort for search, matched top infix
     TYPE,                       // Sort for type annotations
     EXPRESSION                  // Sort for expression (when clauses)
 };
@@ -387,12 +389,44 @@ inline SortMode SortIgnoreNames(SortMode mode)
 }
 
 
+inline SortMode SortIgnoreNamesInInfix(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Once we have recognized a top-level name, ignore other names
+// ----------------------------------------------------------------------------
+//   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
+{
+    if (mode == INSERT)
+        mode = INSERT_INFIX;
+    else if (mode == SEARCH)
+        mode = SEARCH_INFIX;
+    return mode;
+}
+
+
+inline SortMode SortCheckNamesInInfix(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Once we have recognized a top-level name, ignore other names
+// ----------------------------------------------------------------------------
+//   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
+{
+    if (mode == INSERT_INFIX)
+        mode = INSERT;
+    else if (mode == SEARCH_INFIX)
+        mode = SEARCH;
+    return mode;
+}
+
+
 inline bool SortNames(SortMode mode)
 // ----------------------------------------------------------------------------
 //   Return true if we want to sort names in this mode
 // ----------------------------------------------------------------------------
 {
-    return mode != INSERT_BIND && mode != SEARCH_BIND;
+    return
+        mode != INSERT_BIND &&
+        mode != INSERT_INFIX &&
+        mode != SEARCH_BIND &&
+        mode != SEARCH_INFIX;
 }
 
 
@@ -401,7 +435,7 @@ inline bool SortInserting(SortMode mode)
 //   Return true if we are inserting
 // ----------------------------------------------------------------------------
 {
-    return mode == INSERT || mode == INSERT_BIND;
+    return mode == INSERT || mode == INSERT_BIND || mode == INSERT_INFIX;
 }
 
 
@@ -410,7 +444,7 @@ inline bool SortSearching(SortMode mode)
 //   Return true if we are searching
 // ----------------------------------------------------------------------------
 {
-    return mode == SEARCH || mode == SEARCH_BIND;
+    return mode == SEARCH || mode == SEARCH_BIND || mode == SEARCH_INFIX;
 }
 
 
@@ -425,8 +459,10 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
     {
         "INSERT",
         "INSERT_BIND",
+        "INSERT_INFIX",
         "SEARCH",
         "SEARCH_BIND",
+        "SEARCH_INFIX",
         "TYPE",
         "EXPRESSION"
     };
@@ -467,10 +503,21 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     if (patk == BLOCK)
     {
         Block *patb = pat->AsBlock();
-        if (!patb->IsMetaBox())
+        if (Tree *patm = patb->IsMetaBox())
+        {
+            if (SortSearching(mode))
+                return 0;
+            if (valk == BLOCK)
+            {
+                Block *valb = (Block *) val;
+                if (Tree *valm = valb->IsMetaBox())
+                    return Sort(patm, valm, EXPRESSION);
+            }
+        }
+        else
+        {
             return Sort(patb->child, val, mode);
-        if (SortSearching(mode))
-            return 0;
+        }
     }
     if (valk == BLOCK)
     {
@@ -506,7 +553,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     }
 
     // Check case where kinds are different: use sorting rank described above
-    if (mode == SEARCH_BIND)
+    if (mode == SEARCH_BIND || mode == SEARCH_INFIX)
     {
         // Catch wildcards, and consider that 0 vs "A" is "upper" problem
         if (patk <= NAME)
@@ -628,6 +675,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                     ((Block *) val)->child,
                     mode);
     case PREFIX:
+        mode = SortCheckNamesInInfix(mode);
         if (int pats = Sort(((Prefix *) pat)->left,
                             ((Prefix *) val)->left,
                             mode))
@@ -650,7 +698,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             return ns;
         if (int pats = Sort(((Infix *) pat)->left,
                             ((Infix *) val)->left,
-                            SortIgnoreNames(mode)))
+                            SortIgnoreNamesInInfix(mode)))
             return pats;
         return Sort(((Infix *) pat)->right,
                     ((Infix *) val)->right,
@@ -669,6 +717,16 @@ Rewrite *Context::Enter(Infix *infix, bool overwrite)
 {
     XL_ASSERT(infix->name == "is" && "Context::Enter only accepts 'is'");
     return Define(infix->left, infix->right, overwrite);
+}
+
+
+static inline void Redefined(Tree *pattern, Rewrite *old)
+// ----------------------------------------------------------------------------
+//   Emit a message if we redefined a patterb
+// ----------------------------------------------------------------------------
+{
+    Ooops("Redefinition of $1", pattern);
+    Ooops("Previous definition is $1", old->Pattern());
 }
 
 
@@ -726,8 +784,7 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
             }
             else
             {
-                Ooops("Redefinition of $1", pattern);
-                Ooops("Previous definition is $1", old->Pattern());
+                Redefined(pattern, old);
             }
             return rewrite;
         }
@@ -744,6 +801,8 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
         if (Rewrite *right = rewrites->Second())
         {
             int cmpleft = Sort(pattern, left->Pattern(), INSERT);
+            if (cmpleft == 0 && !overwrite)
+                Redefined(pattern, left);
             if (cmpleft < 0)
             {
                 // Here pattern < left < right
@@ -752,6 +811,8 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
             }
 
             int cmpright = Sort(pattern, right->Pattern(), INSERT);
+            if (cmpright == 0 && !overwrite)
+                Redefined(pattern, right);
             if (cmpright < 0)
             {
                 // Here left <= pattern < right: reorder
