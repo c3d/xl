@@ -165,8 +165,8 @@ X:real in A:real..B:real is X >= A and X <= B
 N:natural! is N * (N-1)!
 
 // Boolean to text conversion
-text true  is "true"
-text false is "false"
+text [[true]]  is "true"
+text [[false]] is "false"
 
 // A few additional text notations
 Source:text / From:text /  To:text      is text_replace Source, From, To

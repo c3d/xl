@@ -1014,6 +1014,6 @@ XL_END
 RECORDER_DECLARE(context);
 RECORDER_DECLARE(symbols);
 RECORDER_DECLARE(symbols_errors);
-
+RECORDER_DECLARE(symbols_sort);
 
 #endif // CONTEXT_H
