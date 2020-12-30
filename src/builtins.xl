@@ -37,6 +37,7 @@ X:natural + Y:natural           as natural is builtin Add
 X:natural - Y:natural           as natural is builtin Sub
 X:natural * Y:natural           as natural is builtin Mul
 X:natural / Y:natural           as natural is builtin UDiv
+X:natural ^ Y:natural           as natural is C xl_natural_pow
 X:natural rem Y:natural         as natural is builtin URem
 X:natural mod Y:natural         as natural is builtin UMod
 X:natural and Y:natural         as natural is builtin And
@@ -52,8 +53,9 @@ X:integer + Y:integer           as integer is builtin Add
 X:integer - Y:integer           as integer is builtin Sub
 X:integer * Y:integer           as integer is builtin Mul
 X:integer / Y:integer           as integer is builtin UDiv
-X:integer rem Y:integer         as integer is builtin URem
-X:integer mod Y:integer         as integer is builtin UMod
+X:integer ^ Y:natural           as integer is C xl_integer_pow
+X:integer rem Y:integer         as integer is builtin SRem
+X:integer mod Y:integer         as integer is C xl_integer_mod
 X:integer and Y:integer         as integer is builtin And
 X:integer or  Y:integer         as integer is builtin Or
 X:integer xor Y:integer         as integer is builtin Xor
@@ -67,8 +69,8 @@ X:real + Y:real                 as real is builtin FAdd
 X:real - Y:real                 as real is builtin FSub
 X:real * Y:real                 as real is builtin FMul
 X:real / Y:real                 as real is builtin FDiv
-X:real rem Y:real               as real is C fmod
-X:real mod Y:real               as real is C xl_modf
+X:real rem Y:real               as real is C xl_real_rem
+X:real mod Y:real               as real is C xl_real_mod
 -X:real                         as real is builtin FNeg
 
 // Comparison operators
