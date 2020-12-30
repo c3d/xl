@@ -403,7 +403,7 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
     if (!result)
     {
         record(bindings, "Evaluating %t in %t", expr, scope);
-        result = Interpreter::DoEvaluate(scope, expr, Interpreter::NORMAL, cache);
+        result = Interpreter::DoEvaluate(scope,expr,Interpreter::NORMAL,cache);
         cache.Cache(expr, result);
         record(bindings, "Evaluate %t = new %t", test, result);
     }
@@ -867,6 +867,8 @@ void Interpreter::InitializeBuiltins()
 std::map<text, Interpreter::builtin_fn> Interpreter::builtins;
 std::map<text, Native *> Interpreter::natives;
 
+#define NORM2(x) Normalize(x), x
+
 void Interpreter::InitializeContext(Context &context)
 // ----------------------------------------------------------------------------
 //    Initialize all the names, e.g. xl_nil, and all builtins
@@ -874,41 +876,41 @@ void Interpreter::InitializeContext(Context &context)
 //    Load the outer context with the type check operators referring to
 //    the builtins.
 {
-#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)      \
-    builtins[#Name] = builtin_unary_##Name;
+#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)                      \
+    builtins[Normalize(#Name)] = builtin_unary_##Name;
 
-#define BINARY_OP(Name, RetTy, LeftTy, RightTy, Body)   \
-    builtins[#Name] = builtin_binary_##Name;
+#define BINARY_OP(Name, RetTy, LeftTy, RightTy, Body)                   \
+    builtins[Normalize(#Name)] = builtin_binary_##Name;
 
-#define NAME(N)                                         \
-    builtins[#N] = builtin_name_##N;                    \
+#define NAME(N)                                                         \
+    builtins[Normalize(#N)] = builtin_name_##N;                         \
     context.Define(xl_##N, xl_self);
 
-#define TYPE(N, Body)                                   \
-    builtins[#N] = builtin_type_##N;                    \
-    builtins[#N"_typecheck"] = builtin_typecheck_##N;   \
-                                                        \
-    Infix *pattern_##N =                                \
-        new Infix("as",                                 \
-                  new Prefix(xl_lambda,                 \
-                             new Name("Value")),        \
-                  N##_type);                            \
-    Prefix *value_##N =                                 \
-        new Prefix(xl_builtin,                          \
-                   new Name(#N"_typecheck"));           \
-    context.Define(N##_type, xl_self);                  \
+#define TYPE(N, Body)                                                   \
+    builtins[Normalize(#N)] = builtin_type_##N;                         \
+    builtins[Normalize(#N"_typecheck")] = builtin_typecheck_##N;        \
+                                                                        \
+    Infix *pattern_##N =                                                \
+        new Infix("as",                                                 \
+                  new Prefix(xl_lambda,                                 \
+                             new Name(NORM2("Value"))),                 \
+                  N##_type);                                            \
+    Prefix *value_##N =                                                 \
+        new Prefix(xl_builtin,                                          \
+                   new Name(NORM2(#N"_typecheck")));                    \
+    context.Define(N##_type, xl_self);                                  \
     context.Define(pattern_##N, value_##N);
 
 #include "builtins.tbl"
 
-    Name_p C = new Name("C");
+    Name_p C = new Name(NORM2("C"));
     for (Native *native = Native::First(); native; native = native->Next())
     {
         record(native, "Found %t", native->Shape());
         kstring symbol = native->Symbol();
-        natives[symbol] = native;
+        natives[Normalize(symbol)] = native;
         Tree *shape = native->Shape();
-        Prefix *body = new Prefix(C, new Name(symbol));
+        Prefix *body = new Prefix(C, new Name(NORM2(symbol)));
         context.Define(shape, body);
     }
 

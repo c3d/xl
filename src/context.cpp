@@ -63,6 +63,7 @@ RECORDER(context,        32, "Context: wrapper for XL symbol table");
 RECORDER(symbols,        32, "XL symbol table");
 RECORDER(symbols_errors, 32, "Errors running symbol table");
 RECORDER(symbols_sort,   32, "Sorting entries in the symbol table");
+RECORDER(symbols_lookup, 32, "Lookup in symbol table");
 
 
 XL_BEGIN
@@ -338,12 +339,13 @@ Rewrite *Context::Define(Tree *pattern, Tree *definition, bool overwrite)
 }
 
 
-Rewrite *Context::Define(text name, Tree *value, bool overwrite)
+Rewrite *Context::Define(text spelling, Tree *value, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
-    Name *pattern = new Name(name, value->Position());
+    text name = Normalize(spelling);
+    Name *pattern = new Name(name, spelling, value->Position());
     return Define(pattern, value, overwrite);
 }
 
@@ -939,6 +941,8 @@ static Tree *LookupEntry(Scope              *symbols,
             if (cmp == 0)
             {
                 Tree *result = lookup(symbols, scope, what, rewrite, info);
+                record(symbols_lookup, "entry %t = %t",
+                       rewrite->Pattern(), result);
                 if (result)
                     return result;
             }
@@ -961,8 +965,12 @@ static Tree *LookupEntry(Scope              *symbols,
         {
             // left <= right, matching left: test left then right
             if (cmpleft == 0)
-                if (Tree *result = lookup(symbols, scope, what, left, info))
+            {
+                Tree *result = lookup(symbols, scope, what, left, info);
+                record(symbols_lookup, "left %t = %t", left->Pattern(), result);
+                if (result)
                     return result;
+            }
             entry = &rewrites->right;
             continue;
         }
@@ -984,7 +992,9 @@ static Tree *LookupEntry(Scope              *symbols,
             return result;
 
         // Since payload matches, need to check it too
-        if (Tree *result = lookup(symbols, scope, what, left, info))
+        Tree *result = lookup(symbols, scope, what, left, info);
+        record(symbols_lookup, "mid %t = %t", left->Pattern(), result);
+        if (result)
             return result;
 
         // Then need to check right branch
@@ -999,6 +1009,7 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 // ----------------------------------------------------------------------------
 {
     Scope * scope = symbols;
+    record(symbols_lookup, "Looking up %t in %t", what, scope);
     while (scope)
     {
         // Initialize local scope

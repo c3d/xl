@@ -55,6 +55,22 @@ RECORDER(renderer, 16, "Rendering parse trees as source code");
 
 XL_BEGIN
 
+
+// ============================================================================
+//
+//    Rendering options
+//
+// ============================================================================
+
+namespace Opt
+{
+BooleanOption renderSpelling("spelling",
+                             "Show the original spelling when rendering",
+                             true);
+} // namespace Opt
+
+
+
 // ============================================================================
 //
 //   Renderer construction / initialization
@@ -323,7 +339,7 @@ void Renderer::RenderFormat(Tree *format)
         {
             RenderText(self);
         }
-        else if (n == "quoted_self")
+        else if (n == Normalize("quoted_self"))
         {
             text escaped;
             uint i;
@@ -337,7 +353,7 @@ void Renderer::RenderFormat(Tree *format)
             }
             RenderText(escaped);
         }
-        else if (n == "unindented_self")
+        else if (n == Normalize("unindented_self"))
         {
             Save<bool> saveNoIndents(no_indents, true);
             RenderText(self);
@@ -522,14 +538,14 @@ void Renderer::Render(Tree *what)
     if (highlight)
     {
         hbegin = output.tellp();
-        RenderFormat("", "highlight_begin_" + hname + " ");
+        RenderFormat("", Normalize("highlight_begin_" + hname + " "));
     }
 
     if (cinfo)
     {
         text saveSelf = self;
         for (ci = cinfo->before.begin(); ci != cinfo->before.end(); ci++)
-            RenderFormat(*ci, "comment_before ", "comment ");
+            RenderFormat(*ci, Normalize("comment_before "), "comment ");
         self = saveSelf;
     }
 
@@ -539,14 +555,14 @@ void Renderer::Render(Tree *what)
     {
         text saveSelf = self;
         for (ci = cinfo->after.begin(); ci != cinfo->after.end(); ci++)
-            RenderFormat(*ci, "comment_after ", "comment ");
+            RenderFormat(*ci, Normalize("comment_after "), "comment ");
         self = saveSelf;
     }
 
     if (highlight)
     {
         hend = output.tellp();
-        RenderFormat("", "highlight_end_" + hname + " ");
+        RenderFormat("", Normalize("highlight_end_" + hname + " "));
 
         stream_range r(hbegin, hend);
         highlighted[hname].push_back(r);
@@ -648,7 +664,9 @@ void Renderer::RenderBody(Tree *what)
                  this->current_quote = saveq;
              }   break;
              case NAME:
-                 t = what->AsName()->value;
+                 t = Opt::renderSpelling
+                     ? what->AsName()->spelling
+                     : what->AsName()->value;
                  RenderFormat (t, t, "name ");
                  break;
              case PREFIX: {
@@ -740,6 +758,7 @@ void Renderer::RenderBody(Tree *what)
                  text in = w->name;
                  if (in == "\n")
                      in = "cr";
+                 text is = Opt::renderSpelling ? w->spelling : in;
                  text n0 = "infix ";
                  text n = n0 + in;
                  Tree *l = w->left;
@@ -762,7 +781,7 @@ void Renderer::RenderBody(Tree *what)
                  this->priority = p0;
                  this->left = l;
                  this->right = r;
-                 this->self = w->name;
+                 this->self = is;
 
                  if (formats.count(n) > 0)
                      RenderFormat(formats[n]);
@@ -771,7 +790,7 @@ void Renderer::RenderBody(Tree *what)
                  else
                  {
                      Render (l);
-                     RenderFormat (w->name, w->name);
+                     RenderFormat (is, in);
                      Render (r);
                  }
              }   break;
