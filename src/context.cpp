@@ -188,6 +188,9 @@ bool Context::ProcessDeclarations(Tree *what)
     bool   result = false;
 
     record(context, "In %p process declarations for %t", this, what);
+    while (Block *block = what->AsBlock())
+        what = block->child;
+
     while (what)
     {
         bool isInstruction = true;
@@ -256,10 +259,13 @@ Scope *Context::ProcessScope(Tree *declarations)
     if (Scope *scope = declarations->As<Scope>())
         return scope;
 
-    // Process declarations to check
-    Context child(this);
-    if (!child.ProcessDeclarations(declarations))
-        return child.Symbols();
+    // For blocks, process declarations and return scope if any
+    if (Block *block = declarations->AsBlock())
+    {
+        Context child(this);
+        if (!child.ProcessDeclarations(block->child))
+            return child.Symbols();
+    }
     return nullptr;
 }
 
