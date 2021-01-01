@@ -675,7 +675,8 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Infix *candidate)
     // If everything went well, define the type for the expression
     if (binding != FAILED)
     {
-        type = binding_types->AssignType(what, type);
+        Types *value_types = rc->value_types;
+        type = value_types->AssignType(what, type);
         if (!type)
             binding = FAILED;
     }

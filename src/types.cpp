@@ -460,17 +460,11 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
 //   Return the innermost type from widerType that covers narrowerType
 // ----------------------------------------------------------------------------
 //   The input types are supposed to be base and evaluated types
-//   REVISIT: We hard-code the name and processing of some type operators here
+//   REVISIT: We hard-code the name and processing of some type operat ors here
 {
     // Direct match: stop here
     if (narrowerType == widerType)
         return narrowerType;
-
-    // Unknown types can match anything
-    if (IsUnknownType(widerType))
-        return Join(widerType, narrowerType);
-    if (IsUnknownType(narrowerType))
-        return Join(narrowerType, widerType);
 
     // The tree type matches anything
     if (widerType == tree_type)
