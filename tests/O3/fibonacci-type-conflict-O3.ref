@@ -1,0 +1,12 @@
+fib 30
+O3/fibonacci-type-conflict.xl:42:6: Unable to evaluate [fib 30]:
+O3/fibonacci-type-conflict.xl:40:5:  Pattern [fib N] doesn't match:
+O3/fibonacci-type-conflict.xl:40:20:   Unable to evaluate [fib (N - 1) + fib (N - 2)]:
+builtins.xl:36:11:    Pattern [X:integer + Y:integer as integer] doesn't match:
+O3/fibonacci-type-conflict.xl:40:14:     The type of [fib (N - 1)] is conflicting because
+O3/fibonacci-type-conflict.xl:38:5:      Cannot unify type [integer] of 0
+<Unknown position>:      with type [text]
+builtins.xl:52:8:    Pattern [X:real + Y:real as real] doesn't match:
+O3/fibonacci-type-conflict.xl:40:25:     The type of [fib (N - 2)] is conflicting because
+O3/fibonacci-type-conflict.xl:38:5:      Cannot unify type [integer] of 0
+<Unknown position>:      with type [text]

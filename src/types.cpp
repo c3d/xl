@@ -724,15 +724,16 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
             return UnknownType(what->Position());
         return nullptr;
     }
+
     errors.Clear();
-    errors.Log(Error("Cannot determine the type of $1 because", what), true);
+    errors.Log(Error("The type of $1 is conflicting because", what), true);
 
     // The resulting type is the union of all candidates
     Tree *type = rc->candidates[0]->type;
-    for (uint i = 1; i < count; i++)
+    for (uint i = 1; type && i < count; i++)
     {
         Tree *ctype = rc->candidates[i]->type;
-        type = UnionType(type, ctype);
+        type = Unify(type, ctype);
     }
     type = AssignType(what, type);
     return type;
@@ -986,12 +987,15 @@ Tree *Types::Join(Tree *old, Tree *replacement)
     // Replace the type in the types map
     for (auto &t : types)
     {
-        Tree *joined = JoinedType(t.second, old, replace);
-        if (joined != t.second)
+        if (t.second)
         {
-            Tree *original = t.second;
-            t.second = joined;
-            Join(original, joined);
+            Tree *joined = JoinedType(t.second, old, replace);
+            if (joined != t.second)
+            {
+                Tree *original = t.second;
+                t.second = joined;
+                Join(original, joined);
+            }
         }
     }
 
