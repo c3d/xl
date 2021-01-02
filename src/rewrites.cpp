@@ -597,7 +597,8 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Infix *candidate)
 // ----------------------------------------------------------------------------
 {
     Errors errors;
-    errors.Log(Error("Pattern $1 doesn't match:", candidate->left), true);
+    errors.Log(Error("Pattern $1 does not match $2:",
+                     candidate->left, what), true);
 
     // Create local type inference deriving from ours
     RewriteCandidate *rc = Candidate(candidate, scope, types);
