@@ -733,7 +733,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     for (uint i = 1; type && i < count; i++)
     {
         Tree *ctype = rc->candidates[i]->type;
-        type = Unify(type, ctype);
+        type = Unify(type, ctype, what, rc->candidates[i]->rewrite->left);
     }
     type = AssignType(what, type);
     return type;
@@ -844,22 +844,20 @@ Tree *Types::TypeEvaluator::Do(Prefix *what)
 //
 // ============================================================================
 
-Tree *Types::TypeError(Tree *t1, Tree *t2)
+Tree *Types::TypeError(Tree *t1, Tree *t2, Tree *x1, Tree *x2)
 // ----------------------------------------------------------------------------
 //   Show type matching errors
 // ----------------------------------------------------------------------------
 {
     // Find expressions that have the type
-    Tree *x1 = nullptr;
-    Tree *x2 = nullptr;
     for (auto &t : types)
     {
-        if (t.second == t1)
-            x1 = t.first;
-        if (t.second == t2)
-            x2 = t.first;
         if (x1 && x2)
             break;
+        if (!x1 && t.second == t1)
+            x1 = t.first;
+        if (!x2 && t.second == t2)
+            x2 = t.first;
     }
 
     if (x1 == x2)
@@ -895,14 +893,14 @@ Tree *Types::AssignType(Tree *expr, Tree *type, bool add)
     {
         if (known == type)
             return type;
-        type = Unify(known, type);
+        type = Unify(known, type, expr);
     }
     types[expr] = type;
     return type;
 }
 
 
-Tree *Types::Unify(Tree *t1, Tree *t2)
+Tree *Types::Unify(Tree *t1, Tree *t2, Tree *x1, Tree *x2)
 // ----------------------------------------------------------------------------
 //   Perform type unification between the two types
 // ----------------------------------------------------------------------------
@@ -920,15 +918,16 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
 
     // Strip out blocks in type specification, i.e. [T] == [(T)]
     if (Block *b1 = t1->AsBlock())
-        return Join(b1, Unify(b1->child, t2));
+        return Join(b1, Unify(b1->child, t2, x1, x2));
     if (Block *b2 = t2->AsBlock())
-        return Join(b2, Unify(t1, b2->child));
+        return Join(b2, Unify(t1, b2->child, x1, x2));
 
     // Check if we have a unification for this type
     Tree *b1 = BaseType(t1);
     Tree *b2 = BaseType(t2);
     if (b1 != t1 || b2 != t2)
-        return Unify(b1, b2);   // No join here, since already joined with base
+        // No join here, since already joined with base
+        return Unify(b1, b2, x1, x2);
 
     // If either is a generic, unify with the other
     if (IsUnknownType(t1))
@@ -939,10 +938,10 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
     // Lookup type names, replace them with their value
     b1 = EvaluateType(t1, true);
     if (b1 && b1 != t1)
-        return Unify(b1, t2);
+        return Unify(b1, t2, x1, x2);
     b2 = EvaluateType(t2, true);
     if (b2 && b2 != t2)
-        return Unify(t1, b2);   // Join() happens in Evaluate()
+        return Unify(t1, b2, x1, x2);   // Join() happens in Evaluate()
 
     // Success if t1 covers t2 or t2 covers t1
     record(types_unifications, "In %p unify %t and %t", this, t1, t2);
@@ -954,7 +953,7 @@ Tree *Types::Unify(Tree *t1, Tree *t2)
         return Join(t2, t1);
 
     // None of the above: fail
-    return TypeError(t1, t2);
+    return TypeError(t1, t2, x1, x2);
 }
 
 
@@ -980,7 +979,7 @@ Tree *Types::Join(Tree *old, Tree *replacement)
     {
         if (it->second == replace)
             return old;
-        return TypeError(old, replace);
+        return TypeError(old, replace, it->first, it->first);
     }
     unifications[old] = replace;
 

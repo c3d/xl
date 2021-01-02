@@ -115,9 +115,9 @@ public:
     virtual Tree *      EvaluateType(Tree *tree, bool mayfail = false);
 
     // Type associations and unifications
-    Tree *              TypeError(Tree *t1, Tree *t2);
+    Tree *              TypeError(Tree *t1, Tree *t2, Tree *x1=0, Tree *x2=0);
     Tree *              AssignType(Tree *expr, Tree *type, bool add = false);
-    Tree *              Unify(Tree *t1, Tree *t2);
+    Tree *              Unify(Tree *t1, Tree *t2, Tree *x1=0, Tree *x2=0);
     Tree *              Join(Tree *old, Tree *replacement);
     Tree *              JoinedType(Tree *type, Tree *old, Tree *replacement);
     Tree *              UnionType(Tree *t1, Tree *t2);

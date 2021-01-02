@@ -524,7 +524,8 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *patternType,
     }
 
     // Otherwise, do type inference
-    Tree *unified = binding_types->Unify(patternType, valueType);
+    Tree *unified = binding_types->Unify(patternType, valueType,
+                                         pattern, value);
 
     // If successful unification, then set the type for the pattern
     if (unified)
@@ -653,7 +654,8 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Infix *candidate)
                 // For builtins, use the declared type, or nil if none given
                 if (!declaredType)
                     type = declaredType = xl_nil;
-                type = binding_types->Unify(type, declaredType);
+                type = binding_types->Unify(type, declaredType,
+                                            what, defined);
                 break;
             }
         }
