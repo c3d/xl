@@ -1282,10 +1282,15 @@ bool XLCall::Analyze(Scope *scope)
     if (!call)
         Build();
     assert(scope && call);
-#warning "Need to re-connect to new type analysis when available"
-    // bool result = MAIN->TypeAnalysis(scope, call);
 
-    return true;
+    Errors errors;
+    errors.Log (Error("Unable to evaluate call $1:", call), true);
+
+    Types types(scope);
+    Tree *type = types.TypeAnalysis(call);
+    bool result = type != nullptr && type != xl_error && !errors.HadErrors();
+
+    return result;
 }
 
 
