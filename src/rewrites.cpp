@@ -242,8 +242,8 @@ BindingStrength RewriteCandidate::Bind(Tree *pattern, Tree *value)
     {
         Infix *fi = (Infix *) pattern;
 
-        // Check type declarations
-        if (IsTypeAnnotation(fi))
+        // Check type declarations, annotations, etc.
+        if (IsTypeAnnotation(fi)) // Infix :
         {
             // Assign the given type to the declared expression
             Tree *pattern = fi->left;
@@ -276,8 +276,8 @@ BindingStrength RewriteCandidate::Bind(Tree *pattern, Tree *value)
                    pattern, value, this, sname[result]);
             return result;
 
-        } // We have an infix :
-        else if (fi->name == "when")
+        }
+        else if (IsPatternCondition(fi)) // Infix "when"
         {
             // We have a guard - first test if we can bind the left part
             if (Bind(fi->left, value) == FAILED)
