@@ -860,6 +860,7 @@ JIT::Value_p CompilerFunction::CallFormError(Tree *what)
 {
     JIT::Value_p ptr = ConstantTree(what);
     JIT::Value_p scope = ConstantTree(types->TypesScope());
+    scope = code.BitCast(scope, compiler.scopePtrTy);
     JIT::Value_p callVal = code.Call(unit.xl_form_error, scope, ptr);
     return callVal;
 }
