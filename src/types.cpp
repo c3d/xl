@@ -397,10 +397,6 @@ Tree *Types::DoConstant(Tree *what, Tree *base, kind k)
     if (!type)
         type = base;
 
-    // Preserve types that were expensive to compute
-    if (evaluate)
-        type = AssignType(what, type);
-
     return type;
 }
 
