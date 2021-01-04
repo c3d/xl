@@ -86,8 +86,6 @@ JIT::Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
 }
 
 
-
-
 JIT::Value_p CompilerExpression::Do(Integer *what)
 // ----------------------------------------------------------------------------
 //   Compile an integer constant
@@ -157,7 +155,7 @@ JIT::Value_p CompilerExpression::Do(Name *what)
 
     JIT::Value_p result = DoCall(what, true);
     if (!result)
-        result = Evaluate(existing);
+        result = Value(existing);
 
     return result;
 }
@@ -309,7 +307,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         // Perform tree-kind tests to check if this candidate is valid
         for (RewriteKind &k : cand->kinds)
         {
-            JIT::Value_p value = Evaluate(k.value);
+            JIT::Value_p value = Value(k.value);
             JIT::Type_p type = code.Type(value);
 
             if (type == compiler.treePtrTy        ||
@@ -369,6 +367,9 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             code.IfBranch(condition, isGood, isBad);
             code.SwitchTo(isGood);
             value_map saveComputed = computed;
+
+            // REVISIT: Insert cast of types here
+
             result = DoRewrite(call, (CompilerRewriteCandidate *) cand);
             computed = saveComputed;
             result = function.Autobox(call, result, storageType);
