@@ -1038,10 +1038,10 @@ Tree *Types::Unify(Tree *t1, Tree *t2, Tree *x1, Tree *x2)
     record(types_unifications, "In %p unify %t and %t", this, t1, t2);
 
     // Check cases of super-types
-    if (TypeCoversType(t1, t2))
-        return Join(t1, t2);
-    if (TypeCoversType(t2, t1))
-        return Join(t2, t1);
+    if (Tree *t = TypeCoversType(t1, t2))
+        return Join(t1, t);
+    if (Tree *t = TypeCoversType(t2, t1))
+        return Join(t1, t);
 
     // None of the above: fail
     return TypeError(t1, t2, x1, x2);
