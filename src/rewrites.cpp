@@ -385,7 +385,7 @@ BindingStrength RewriteCandidate::Bind(Tree *pattern, Tree *value)
             return FAILED;
         }
         Tree *infixRequiredName = new Text(fi->name, pos);
-        if (!binding_types->Type(infixRequiredName))
+        if (!value_types->Type(infixRequiredName))
         {
             record(bindings,
                    "Binding infix %t to %t in %p text mismatch",
