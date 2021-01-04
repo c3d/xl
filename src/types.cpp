@@ -237,7 +237,7 @@ Tree *Types::Do(Name *what)
 
     if (declaration)
     {
-        type = UnknownType(what->Position());
+        type = PatternType(what);
         if (type)
             context->Define(what, what);
         return type;
@@ -455,74 +455,100 @@ Tree *Types::DoRewrite(Infix *rewrite)
 }
 
 
-Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
+Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
 // ----------------------------------------------------------------------------
-//   Return the innermost type from widerType that covers narrowerType
+//   Return the innermost type from wideType that covers narrowType
 // ----------------------------------------------------------------------------
 //   The input types are supposed to be base and evaluated types
 //   REVISIT: We hard-code the name and processing of some type operat ors here
 {
     // Direct match: stop here
-    if (narrowerType == widerType)
-        return narrowerType;
+    if (narrowType == wideType)
+        return narrowType;
+
+    // If there is a pattern, check if we can match the pattern
+    if (Tree *pattern = IsPatternType(wideType))
+    {
+        if (pattern->AsName())
+        {
+            return narrowType;
+        }
+        if (Tree *npat = IsPatternType(narrowType))
+        {
+            if (Tree *t = PatternCoversPattern(pattern, npat, narrowType))
+                return t;
+        }
+        if (Infix *typeAnnotation = IsTypeAnnotation(pattern))
+        {
+            Tree *declaredType = typeAnnotation->right;
+            return TypeCoversType(declaredType, narrowType);
+        }
+        if (Infix *typeCondition = IsPatternCondition(pattern))
+        {
+            Ooops("Not implemented yet; Condition in pattern $1", pattern);
+            return nullptr;
+        }
+
+        return nullptr;
+    }
 
     // The tree type matches anything
-    if (widerType == tree_type)
-        return narrowerType;
+    if (wideType == tree_type)
+        return narrowType;
 
     // The infix type covers any infix type
-    if (widerType == infix_type)
-        if (Tree *pattern = IsPatternType(narrowerType))
+    if (wideType == infix_type)
+        if (Tree *pattern = IsPatternType(narrowType))
             if (pattern->AsInfix())
-                return narrowerType;
+                return narrowType;
 
     // The prefix type covers any prefix type
-    if (widerType == prefix_type)
-        if (Tree *pattern = IsPatternType(narrowerType))
+    if (wideType == prefix_type)
+        if (Tree *pattern = IsPatternType(narrowType))
             if (pattern->AsPrefix())
-                return narrowerType;
+                return narrowType;
 
     // The postfix type covers any postfix type
-    if (widerType == postfix_type)
-        if (Tree *pattern = IsPatternType(narrowerType))
+    if (wideType == postfix_type)
+        if (Tree *pattern = IsPatternType(narrowType))
             if (pattern->AsPostfix())
-                return narrowerType;
+                return narrowType;
 
     // The block type covers any block type
-    if (widerType == block_type)
-        if (Tree *pattern = IsPatternType(narrowerType))
+    if (wideType == block_type)
+        if (Tree *pattern = IsPatternType(narrowType))
             if (pattern->AsBlock())
-                return narrowerType;
+                return narrowType;
 
     // Check integer types
     uint wideBits = 0;
-    if (widerType == integer_type)      wideBits = 63;
-    if (widerType == integer8_type)     wideBits = 7;
-    if (widerType == integer16_type)    wideBits = 15;
-    if (widerType == integer32_type)    wideBits = 31;
-    if (widerType == integer64_type)    wideBits = 63;
-    if (widerType == natural_type)      wideBits = 64;
-    if (widerType == natural8_type)     wideBits = 8;
-    if (widerType == natural16_type)    wideBits = 16;
-    if (widerType == natural32_type)    wideBits = 32;
-    if (widerType == natural64_type)    wideBits = 64;
+    if (wideType == integer_type)       wideBits = 63;
+    if (wideType == integer8_type)      wideBits = 7;
+    if (wideType == integer16_type)     wideBits = 15;
+    if (wideType == integer32_type)     wideBits = 31;
+    if (wideType == integer64_type)     wideBits = 63;
+    if (wideType == natural_type)       wideBits = 64;
+    if (wideType == natural8_type)      wideBits = 8;
+    if (wideType == natural16_type)     wideBits = 16;
+    if (wideType == natural32_type)     wideBits = 32;
+    if (wideType == natural64_type)     wideBits = 64;
 
     uint narrowBits = 0;
-    if (narrowerType == integer_type)   narrowBits = 63;
-    if (narrowerType == integer8_type)  narrowBits = 7;
-    if (narrowerType == integer16_type) narrowBits = 15;
-    if (narrowerType == integer32_type) narrowBits = 31;
-    if (narrowerType == integer64_type) narrowBits = 63;
-    if (narrowerType == natural_type)   narrowBits = 64;
-    if (narrowerType == natural8_type)  narrowBits = 8;
-    if (narrowerType == natural16_type) narrowBits = 16;
-    if (narrowerType == natural32_type) narrowBits = 32;
-    if (narrowerType == natural64_type) narrowBits = 64;
+    if (narrowType == integer_type)     narrowBits = 63;
+    if (narrowType == integer8_type)    narrowBits = 7;
+    if (narrowType == integer16_type)   narrowBits = 15;
+    if (narrowType == integer32_type)   narrowBits = 31;
+    if (narrowType == integer64_type)   narrowBits = 63;
+    if (narrowType == natural_type)     narrowBits = 64;
+    if (narrowType == natural8_type)    narrowBits = 8;
+    if (narrowType == natural16_type)   narrowBits = 16;
+    if (narrowType == natural32_type)   narrowBits = 32;
+    if (narrowType == natural64_type)   narrowBits = 64;
 
     if (wideBits)
     {
         // Check if we have [integer16] vs [matching 42]
-        if (Tree *pattern = IsPatternType(narrowerType))
+        if (Tree *pattern = IsPatternType(narrowType))
         {
             if (Integer *ival = pattern->AsInteger())
             {
@@ -530,13 +556,13 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
                 {
                     longlong v = ival->value;
                     if ((v >> wideBits) == 0 || (v >> wideBits) + 1 == 0)
-                        return narrowerType;
+                        return narrowType;
                 }
                 else
                 {
                     ulonglong v = (ulonglong) ival->value;
                     if ((v >> wideBits) == 0)
-                        return narrowerType;
+                        return narrowType;
                 }
                 return nullptr;
             }
@@ -547,7 +573,7 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
         {
             uint differentSigns = (narrowBits ^ wideBits) & 1;
             if (narrowBits < wideBits + differentSigns)
-                return narrowerType;
+                return narrowType;
             else
                 return nullptr;
         }
@@ -555,24 +581,24 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
 
     // Check real types
     wideBits = 0;
-    if (widerType == real_type)         wideBits = 64;
-    if (widerType == real16_type)       wideBits = 16;
-    if (widerType == real32_type)       wideBits = 32;
-    if (widerType == real64_type)       wideBits = 64;
+    if (wideType == real_type)          wideBits = 64;
+    if (wideType == real16_type)        wideBits = 16;
+    if (wideType == real32_type)        wideBits = 32;
+    if (wideType == real64_type)        wideBits = 64;
 
     narrowBits = 0;
-    if (narrowerType == real_type)      narrowBits = 64;
-    if (narrowerType == real16_type)    narrowBits = 16;
-    if (narrowerType == real32_type)    narrowBits = 32;
-    if (narrowerType == real64_type)    narrowBits = 64;
+    if (narrowType == real_type)        narrowBits = 64;
+    if (narrowType == real16_type)      narrowBits = 16;
+    if (narrowType == real32_type)      narrowBits = 32;
+    if (narrowType == real64_type)      narrowBits = 64;
 
     if (wideBits)
     {
         // Check if we have [integer16] vs [matching 42]
-        if (Tree *pattern = IsPatternType(narrowerType))
+        if (Tree *pattern = IsPatternType(narrowType))
         {
             if (pattern->AsReal())
-                return narrowerType;
+                return narrowType;
             return nullptr;
         }
 
@@ -580,21 +606,21 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
         if (narrowBits)
         {
             if (narrowBits <= wideBits)
-                return narrowerType;
+                return narrowType;
             else
                 return nullptr;
         }
     }
 
     // Check text types
-    if (widerType == text_type || widerType == character_type)
+    if (wideType == text_type || wideType == character_type)
     {
-        if (Tree *pattern = IsPatternType(narrowerType))
+        if (Tree *pattern = IsPatternType(narrowType))
         {
             if (Text *tval = pattern->AsText())
             {
-                if (tval->IsCharacter() == (widerType == character_type))
-                    return narrowerType;
+                if (tval->IsCharacter() == (wideType == character_type))
+                    return narrowType;
                 else
                     return nullptr;
             }
@@ -602,39 +628,39 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
     }
 
     // Check name types
-    if (widerType == name_type)
+    if (wideType == name_type)
     {
-        if (Tree *pattern = IsPatternType(narrowerType))
+        if (Tree *pattern = IsPatternType(narrowType))
         {
             if (Name *nval = pattern->AsName())
-                return narrowerType;
+                return narrowType;
             else
                 return nullptr;
         }
     }
 
     // Check infix operators for the wider type - REVISIT: HARDCODED
-    if (Infix *infix = widerType->AsInfix())
+    if (Infix *infix = wideType->AsInfix())
     {
         if (infix->name == "or")
         {
-            Tree *left = TypeCoversType(infix->left, narrowerType);
+            Tree *left = TypeCoversType(infix->left, narrowType);
             if (left)
                 return left;
-            Tree *right = TypeCoversType(infix->right, narrowerType);
+            Tree *right = TypeCoversType(infix->right, narrowType);
             if (right)
                 return right;
         }
         else if (infix->name == "and")
         {
-            if (Tree *left = TypeCoversType(infix->left, narrowerType))
+            if (Tree *left = TypeCoversType(infix->left, narrowType))
                 if (Tree *right = TypeCoversType(infix->right, left))
                     return right;
         }
         else if (infix->name == "xor")
         {
-            Tree *left = TypeCoversType(infix->left, narrowerType);
-            Tree *right = TypeCoversType(infix->right, narrowerType);
+            Tree *left = TypeCoversType(infix->left, narrowType);
+            Tree *right = TypeCoversType(infix->right, narrowType);
             if (!left)
                 return right;
             if (!right)
@@ -644,29 +670,29 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
     }
 
     // Check some type prefix operators - REVISIT HARDCODED
-    if (Prefix *prefix = widerType->AsPrefix())
+    if (Prefix *prefix = wideType->AsPrefix())
     {
         if (Name *opcode = prefix->left->AsName())
         {
             if (opcode->value == "not")
             {
-                Tree *right = TypeCoversType(prefix->right, narrowerType);
+                Tree *right = TypeCoversType(prefix->right, narrowType);
                 if (!right)
-                    return narrowerType;
+                    return narrowType;
             }
         }
     }
 
     // Check some type infix operators for the narrower type - REVISIT HARDCODED
-    if (Infix *infix = narrowerType->AsInfix())
+    if (Infix *infix = narrowType->AsInfix())
     {
         if (infix->name == "or")
         {
             // For [T] to cover [A or B], it has to cover both [A] and [B]
-            Tree *left = TypeCoversType(widerType, infix->left);
-            Tree *right = TypeCoversType(widerType, infix->right);
+            Tree *left = TypeCoversType(wideType, infix->left);
+            Tree *right = TypeCoversType(wideType, infix->right);
             if (left && right)
-                return narrowerType;
+                return narrowType;
             return nullptr;
         }
     }
@@ -674,6 +700,67 @@ Tree *Types::TypeCoversType(Tree *widerType, Tree *narrowerType)
     return nullptr;
 }
 
+
+Tree *Types::PatternCoversPattern(Tree *wide, Tree *narrow, Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a pattern covers a type, return narrower type
+// ----------------------------------------------------------------------------
+{
+#define CONSTANT_PATTERN(Type)                                          \
+    if (Type *nval = narrow->As<Type>())                                \
+        if (nval->value == ((Type *) wide)->value)                      \
+            return type;                                                \
+    return nullptr
+
+    switch(wide->Kind())
+    {
+    case INTEGER:       CONSTANT_PATTERN(Integer);
+    case REAL:          CONSTANT_PATTERN(Real);
+    case TEXT:          CONSTANT_PATTERN(Text);
+    case NAME:          return narrow;
+
+    case INFIX:
+        if (Infix *typeAnnotation = IsTypeAnnotation(wide))
+        {
+            Tree *declaredType = typeAnnotation->right;
+            return TypeCoversType(declaredType, type);
+        }
+        if (Infix *typeCondition = IsPatternCondition(wide))
+        {
+            Ooops("Not implemented yet; Condition in pattern $1", wide);
+            return nullptr;
+        }
+        if (Infix *ni = narrow->AsInfix())
+            if (Infix *wi = (Infix *) wide)
+                if (ni->name == wi->name)
+                    if (PatternCoversPattern(wi->left, ni->left, type))
+                        if (PatternCoversPattern(wi->right, ni->right, type))
+                            return type;
+        return nullptr;
+    case PREFIX:
+        if (Prefix *np = narrow->AsPrefix())
+            if (Prefix *wp = (Prefix *) wide)
+                if (Name *nn = np->left->AsName())
+                    if (Name *wn = wp->left->AsName())
+                        if (nn->value == wn->value)
+                            if (PatternCoversPattern(wp->right,np->right,type))
+                                return type;
+        return nullptr;
+    case POSTFIX:
+        if (Postfix *np = narrow->AsPostfix())
+            if (Postfix *wp = (Postfix *) wide)
+                if (Name *nn = np->right->AsName())
+                    if (Name *wn = wp->right->AsName())
+                        if (nn->value == wn->value)
+                            if (PatternCoversPattern(wp->left,np->left, type))
+                                return type;
+        return nullptr;
+    case BLOCK:
+        return PatternCoversPattern(((Block *) wide)->child, narrow, type);
+    }
+#undef CONSTANT_PATTERN
+    return nullptr;
+}
 
 
 // ============================================================================
@@ -724,8 +811,8 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     count = rc->candidates.size();
     if (count == 0)
     {
-        if (declaration || !mayFail)
-            return UnknownType(what->Position());
+        if (!mayFail)
+            return PatternType(what);
         return nullptr;
     }
 
@@ -1121,7 +1208,6 @@ Tree *Types::PatternType(Tree *expr)
     if (Tree *known = KnownType(expr))
         return known;
 
-    TreePosition pos = expr->Position();
     Tree *type = expr;
     switch(expr->Kind())
     {
@@ -1173,9 +1259,9 @@ Tree *Types::PatternType(Tree *expr)
         break;
     }
 
-    // For other names, assign a new generic type name, e.g. #A, #B, #C
+    // For other names, assign a new matching type, e.g. matching(X)
     if (!type)
-        type = UnknownType(pos);
+        type = new Prefix(xl_matching, expr, expr->Position());
 
     // Otherwise, return [type X] and assign it to this expr
     types[expr] = type;
