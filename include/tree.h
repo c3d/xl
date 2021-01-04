@@ -263,7 +263,9 @@ struct Text : Tree
     text                opening, closing;
     static text         textQuote, charQuote;
     operator value_t()  { return value; }
-    bool IsCharacter()  { return value.length() == 1; }
+    bool IsCharacter()  { return (opening == "'" &&
+                                  closing == "'" &&
+                                  value.length() == 1); }
 
     GARBAGE_COLLECT(Text);
 };
