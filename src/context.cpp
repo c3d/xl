@@ -245,7 +245,7 @@ static void ValidateNames(Tree *pattern)
 {
     switch(pattern->Kind())
     {
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
         break;
@@ -435,7 +435,7 @@ Tree *Context::Assign(Tree *ref, Tree *value)
     }
     else
     {
-        // Check if the declaration has a type, i.e. it is 'X as integer'
+        // Check if the declaration has a type, i.e. it is 'X as natural'
         if (Tree *type = AnnotatedType(decl->left))
         {
             Scope *scope = Symbols();
@@ -530,7 +530,7 @@ Rewrite *Context::SetAttribute(text attribute, longlong value, bool owr)
 //   Set an attribute for the innermost context
 // ----------------------------------------------------------------------------
 {
-    return SetAttribute(attribute,new Integer(value,symbols->Position()),owr);
+    return SetAttribute(attribute,new Natural(value,symbols->Position()),owr);
 }
 
 
@@ -832,7 +832,7 @@ static inline ulong HashText(const text &t)
 }
 
 
-static inline longlong hashRealToInteger(double value)
+static inline longlong hashRealToNatural(double value)
 // ----------------------------------------------------------------------------
 //   Force a static conversion without "breaking strict aliasing rules"
 // ----------------------------------------------------------------------------
@@ -853,11 +853,11 @@ ulong Context::Hash(Tree *what)
 
     switch(k)
     {
-    case INTEGER:
-        h += ((Integer *) what)->value;
+    case NATURAL:
+        h += ((Natural *) what)->value;
         break;
     case REAL:
-        h += hashRealToInteger(((Real *) what)->value);
+        h += hashRealToNatural(((Real *) what)->value);
         break;
     case TEXT:
         h += HashText(((Text *) what)->value);

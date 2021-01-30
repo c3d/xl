@@ -59,7 +59,7 @@ public:
 public:
     value_type  Evaluate(Tree *tree, bool force = false);
 
-    value_type  Do(Integer *what);
+    value_type  Do(Natural *what);
     value_type  Do(Real *what);
     value_type  Do(Text *what);
     value_type  Do(Name *what);

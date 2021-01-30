@@ -34,15 +34,15 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-INFIX(IntMod,  integer, integer, "mod", integer,R_INT (xl_mod(LEFT, RIGHT0)));
-INFIX(IntRem,  integer, integer, "rem", integer,R_INT (LEFT % RIGHT0));
+INFIX(IntMod,  natural, natural, "mod", natural,R_INT (xl_mod(LEFT, RIGHT0)));
+INFIX(IntRem,  natural, natural, "rem", natural,R_INT (LEFT % RIGHT0));
 INFIX(RealMod, real,    real,    "mod", real,   R_REAL(xl_modf(LEFT, RIGHT0)));
 INFIX(RealRem, real,    real,    "rem", real,   R_REAL(fmod(LEFT, RIGHT0)));
-INFIX(IntPow,  integer, integer, "^",   integer,R_INT (xl_pow(LEFT, RIGHT)));
-INFIX(RealPowI,real,    real,    "^",   integer,R_INT (xl_powf(LEFT, RIGHT)));
+INFIX(IntPow,  natural, natural, "^",   natural,R_INT (xl_pow(LEFT, RIGHT)));
+INFIX(RealPowI,real,    real,    "^",   natural,R_INT (xl_powf(LEFT, RIGHT)));
 INFIX(RealPow, real,    real,    "^",   real,   R_REAL(pow(LEFT, RIGHT)));
 
-PREFIX(AbsI,   integer, "abs", integer,         R_INT(LEFT < 0 ? -LEFT : LEFT));
+PREFIX(AbsI,   natural, "abs", natural,         R_INT(LEFT < 0 ? -LEFT : LEFT));
 PREFIX(AbsR,   real,    "abs", real,            R_REAL(fabs(LEFT)));
 
 #define REALFN(fn)  PREFIX(fn, real, #fn, real, R_REAL(fn(LEFT)))

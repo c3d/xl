@@ -43,8 +43,7 @@ run_test x,y is
     print x xor y
     if x > 0 and y > 0 then
         print x shl y
-        print x ashr y
-        print x lshr y
+        print x shr y
     print -x
     print not x
     print abs x

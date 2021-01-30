@@ -70,7 +70,7 @@ XL_BEGIN
 //  - A function called OpcodeType() to get [name]_type from a [name]_p.
 
 extern Name_p           tree_type;
-extern Name_p           integer_type;
+extern Name_p           natural_type;
 extern Name_p           real_type;
 extern Name_p           text_type;
 extern Name_p           name_type;
@@ -80,7 +80,7 @@ extern Name_p           postfix_type;
 extern Name_p           infix_type;
 
 #define Tree_type       tree_type
-#define Integer_type    integer_type
+#define Natural_type    natural_type
 #define Real_type       real_type
 #define Text_type       text_type
 #define Name_type       name_type
@@ -90,7 +90,7 @@ extern Name_p           infix_type;
 #define Infix_type      infix_type
 
 typedef Tree            Tree_r;
-typedef Integer         Integer_r;
+typedef Natural         Natural_r;
 typedef Real            Real_r;
 typedef Text            Text_r;
 typedef Name            Name_r;
@@ -391,6 +391,8 @@ XL_END
 #define RIGHT           right.value
 #define ULEFT           ((ulonglong) LEFT)
 #define URIGHT          ((ulonglong) RIGHT)
+#define SLEFT           ((longlong) LEFT)
+#define SRIGHT          ((longlong) RIGHT)
 #define RIGHT0          ( RIGHT != 0 ? RIGHT : DIV0)
 #define URIGHT0         (URIGHT != 0 ? URIGHT : DIV0)
 #define DIV0            (Ooops("Divide by 0 for $1", rightPtr), 1)
@@ -399,7 +401,7 @@ XL_END
 #define XL_SCOPE        DataScope(data)
 #define XL_SELF         DataSelf(data)
 #define POSITION        (XL_SELF->Position())
-#define AS_INT(x)       (new Integer((x), POSITION))
+#define AS_INT(x)       (new Natural((x), POSITION))
 #define AS_REAL(x)      (new Real((x), POSITION))
 #define AS_BOOL(x)      ((x) ? xl_true : xl_false)
 #define AS_TEXT(x)      (new Text(x, POSITION))

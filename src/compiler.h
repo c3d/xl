@@ -83,16 +83,17 @@ public:
     JIT                 jit;
     JIT::Type_p         voidTy;
     JIT::IntegerType_p  booleanTy;
-    JIT::IntegerType_p  integerTy;
-    JIT::IntegerType_p  integer8Ty;
-    JIT::IntegerType_p  integer16Ty;
-    JIT::IntegerType_p  integer32Ty;
-    JIT::IntegerType_p  integer64Ty;
-    JIT::IntegerType_p  integer128Ty;
+    JIT::IntegerType_p  naturalTy;
+    JIT::IntegerType_p  natural8Ty;
+    JIT::IntegerType_p  natural16Ty;
+    JIT::IntegerType_p  natural32Ty;
+    JIT::IntegerType_p  natural64Ty;
+    JIT::IntegerType_p  natural128Ty;
     JIT::IntegerType_p  unsignedTy;
     JIT::IntegerType_p  ulongTy;
     JIT::IntegerType_p  ulonglongTy;
     JIT::Type_p         realTy;
+    JIT::Type_p         real16Ty;
     JIT::Type_p         real32Ty;
     JIT::Type_p         real64Ty;
     JIT::IntegerType_p  characterTy;
@@ -105,8 +106,8 @@ public:
     JIT::StructType_p   treeTy;
     JIT::PointerType_p  treePtrTy;
     JIT::PointerType_p  treePtrPtrTy;
-    JIT::StructType_p   integerTreeTy;
-    JIT::PointerType_p  integerTreePtrTy;
+    JIT::StructType_p   naturalTreeTy;
+    JIT::PointerType_p  naturalTreePtrTy;
     JIT::StructType_p   realTreeTy;
     JIT::PointerType_p  realTreePtrTy;
     JIT::StructType_p   textTreeTy;
@@ -138,7 +139,7 @@ public:
 // Index in data structures of fields in Tree types
 #define TAG_INDEX           0
 #define INFO_INDEX          1
-#define INTEGER_VALUE_INDEX 2
+#define NATURAL_VALUE_INDEX 2
 #define REAL_VALUE_INDEX    2
 #define TEXT_VALUE_INDEX    2
 #define TEXT_OPENING_INDEX  3

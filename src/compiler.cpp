@@ -71,16 +71,17 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
     : jit               (argc, argv),
       voidTy            (jit.VoidType()),
       booleanTy         (jit.IntegerType(1)),
-      integerTy         (jit.IntegerType<longlong>()),
-      integer8Ty        (jit.IntegerType(8)),
-      integer16Ty       (jit.IntegerType(16)),
-      integer32Ty       (jit.IntegerType(32)),
-      integer64Ty       (jit.IntegerType(64)),
-      integer128Ty      (jit.IntegerType(128)),
+      naturalTy         (jit.IntegerType<longlong>()),
+      natural8Ty        (jit.IntegerType(8)),
+      natural16Ty       (jit.IntegerType(16)),
+      natural32Ty       (jit.IntegerType(32)),
+      natural64Ty       (jit.IntegerType(64)),
+      natural128Ty      (jit.IntegerType(128)),
       unsignedTy        (jit.IntegerType<unsigned>()),
       ulongTy           (jit.IntegerType<ulong>()),
       ulonglongTy       (jit.IntegerType<ulonglong>()),
       realTy            (jit.FloatType(64)),
+      real16Ty          (jit.FloatType(16)),
       real32Ty          (jit.FloatType(32)),
       real64Ty          (jit.FloatType(64)),
       characterTy       (jit.IntegerType<char>()),
@@ -96,8 +97,8 @@ Compiler::Compiler(kstring moduleName, unsigned opts, int argc, char **argv)
       treeTy            (jit.StructType({TREE},                 "Tree")),
       treePtrTy         (jit.PointerType(treeTy)),
       treePtrPtrTy      (jit.PointerType(treePtrTy)),
-      integerTreeTy     (jit.StructType({TREE, ulonglongTy},    "Integer")),
-      integerTreePtrTy  (jit.PointerType(integerTreeTy)),
+      naturalTreeTy     (jit.StructType({TREE, ulonglongTy},    "Natural")),
+      naturalTreePtrTy  (jit.PointerType(naturalTreeTy)),
       realTreeTy        (jit.StructType({TREE, realTy},         "Real")),
       realTreePtrTy     (jit.PointerType(realTreeTy)),
       textTreeTy        (jit.StructType({TREE, textTy},         "Text")),
@@ -185,8 +186,8 @@ JIT::PointerType_p Compiler::TreeMachineType(Tree *tree)
 {
     switch(tree->Kind())
     {
-    case INTEGER:
-        return integerTreePtrTy;
+    case NATURAL:
+        return naturalTreePtrTy;
     case REAL:
         return realTreePtrTy;
     case TEXT:

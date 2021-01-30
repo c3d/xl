@@ -379,7 +379,7 @@ JIT::Value_p CompilerFunction::Data(Tree *expr,
 
     switch(expr->Kind())
     {
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
     {
@@ -458,9 +458,9 @@ JIT::Value_p CompilerFunction::Autobox(Tree *source,
 // ----------------------------------------------------------------------------
 //   Automatically box/unbox types
 // ----------------------------------------------------------------------------
-//   Primitive values like integers can exist in two forms during execution:
-//   - In boxed form, e.g. as a pointer to an instance of Integer
-//   - In native form, e.g. as an integer
+//   Primitive values like naturals can exist in two forms during execution:
+//   - In boxed form, e.g. as a pointer to an instance of Natural
+//   - In native form, e.g. as an natural
 //   This function automatically converts from one to the other as necessary
 {
     JIT::Type_p     type   = JIT::Type(value);
@@ -490,10 +490,10 @@ JIT::Value_p CompilerFunction::Autobox(Tree *source,
         }
         else
         {
-            // Convert integer constants
-            assert (type == compiler.integerTreePtrTy);
-            result = code.StructGEP(value, INTEGER_VALUE_INDEX, "ubox_int");
-            if (req != compiler.integerTy)
+            // Convert natural constants
+            assert (type == compiler.naturalTreePtrTy);
+            result = code.StructGEP(value, NATURAL_VALUE_INDEX, "ubox_int");
+            if (req != compiler.naturalTy)
                 result = code.Trunc(result, req);
         }
     }
@@ -534,8 +534,8 @@ JIT::Value_p CompilerFunction::Autobox(Tree *source,
     }
     else if (type->isIntegerTy())
     {
-        assert(req == compiler.treePtrTy || req == compiler.integerTreePtrTy);
-        boxFn = unit.xl_new_integer;
+        assert(req == compiler.treePtrTy || req == compiler.naturalTreePtrTy);
+        boxFn = unit.xl_new_natural;
         if (type != compiler.ulonglongTy)
             result = code.SExt(result, compiler.ulonglongTy); // REVISIT: Sign?
     }
@@ -588,7 +588,7 @@ JIT::Value_p CompilerFunction::Autobox(Tree *source,
     // Check if a tree type cast is required
     if (req == compiler.treePtrTy && type != req)
     {
-        if (type == compiler.integerTreePtrTy ||
+        if (type == compiler.naturalTreePtrTy ||
             type == compiler.realTreePtrTy    ||
             type == compiler.textTreePtrTy    ||
             type == compiler.nameTreePtrTy    ||
@@ -669,7 +669,7 @@ JIT::Value_p CompilerFunction::Unbox(JIT::Value_p boxed,
     default:
         assert(!"Invalid tree kind in CompilerFunction::Unbox");
 
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
     {
@@ -813,12 +813,12 @@ JIT::Value_p CompilerFunction::Known(Tree *tree, uint which)
 }
 
 
-JIT::Value_p CompilerFunction::ConstantInteger(Integer *what)
+JIT::Value_p CompilerFunction::ConstantNatural(Natural *what)
 // ----------------------------------------------------------------------------
-//    Generate an Integer tree
+//    Generate an Natural tree
 // ----------------------------------------------------------------------------
 {
-    JIT::Value_p result = code.PointerConstant(compiler.integerTreePtrTy, what);
+    JIT::Value_p result = code.PointerConstant(compiler.naturalTreePtrTy, what);
     return result;
 }
 
@@ -890,8 +890,8 @@ JIT::Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
     {
         if (mayfail)
             return nullptr;
-        Ooops("Internal: No type deduced for $1, using integer", tree);
-        return compiler.integerTy;
+        Ooops("Internal: No type deduced for $1, using natural", tree);
+        return compiler.naturalTy;
     }
 
     // Find the corresponding machine type
@@ -901,7 +901,7 @@ JIT::Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
         if (mayfail)
             return nullptr;
         Ooops("Internal: No type associated to $1", tree);
-        return compiler.integerTy;
+        return compiler.naturalTy;
     }
 
     return type;
@@ -922,8 +922,8 @@ void CompilerFunction::AddBoxedType(Tree *type, JIT::Type_p mtype)
 // ----------------------------------------------------------------------------
 //   Associate a tree type to a boxed machine type
 // ----------------------------------------------------------------------------
-///  The tree type could be a named type, e.g. [integer], or data, e.g. [X,Y]
-//   The machine type could be integerTy or StructType({integerTy, realTy})
+///  The tree type could be a named type, e.g. [natural], or data, e.g. [X,Y]
+//   The machine type could be naturalTy or StructType({naturalTy, realTy})
 {
     types->AddBoxedType(type, mtype);
 }
@@ -960,10 +960,10 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
     // Check types for constants
     switch(type->Kind())
     {
-    case INTEGER:
+    case NATURAL:
         isConstant = true;
-        mtype = compiler.integerTy;
-        base = integer_type;
+        mtype = compiler.naturalTy;
+        base = natural_type;
         break;
     case REAL:
         isConstant = true;
@@ -998,19 +998,20 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         if (base == xl_error)
             mtype = compiler.treePtrTy;
         STYPE(boolean);
-        STYPE(integer);
-        STYPE(integer8);
-        STYPE(integer16);
-        STYPE(integer32);
-        STYPE(integer64);
-        CTYPE(natural,          integer64);
-        CTYPE(natural8,         integer8);
-        CTYPE(natural16,        integer16);
-        CTYPE(natural32,        integer32);
-        CTYPE(natural64,        integer64);
+        STYPE(natural);
+        STYPE(natural8);
+        STYPE(natural16);
+        STYPE(natural32);
+        STYPE(natural64);
+        CTYPE(natural,          natural64);
+        CTYPE(natural8,         natural8);
+        CTYPE(natural16,        natural16);
+        CTYPE(natural32,        natural32);
+        CTYPE(natural64,        natural64);
         STYPE(character);
         CTYPE(text,             charPtr);
         STYPE(real);
+        STYPE(real16);
         STYPE(real32);
         STYPE(real64);
         CTYPE(tree,             treePtr);
@@ -1133,7 +1134,7 @@ void CompilerFunction::BoxedTreeType(JIT::Signature &sig, Tree *what)
 {
     switch(what->Kind())
     {
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
         sig.push_back(BoxedType(what));

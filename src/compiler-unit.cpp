@@ -40,7 +40,7 @@
 // that is transient, i.e. only exists during a given compilation phase
 //
 // In the following, we will consider a rewrite such as:
-//    foo X:integer, Y is bar X + Y
+//    foo X:natural, Y is bar X + Y
 //
 // Such a rewrite is transformed into a function with a prototype that
 // depends on the arguments, i.e. something like:
@@ -85,7 +85,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
 {
     // Local copy of the types for the macro below
     JIT::IntegerType_p  booleanTy        = compiler.booleanTy;
-    JIT::IntegerType_p  integerTy        = compiler.integerTy;
+    JIT::IntegerType_p  naturalTy        = compiler.naturalTy;
     JIT::IntegerType_p  unsignedTy       = compiler.unsignedTy;
     JIT::IntegerType_p  ulongTy          = compiler.ulongTy;
     JIT::IntegerType_p  ulonglongTy      = compiler.ulonglongTy;
@@ -95,7 +95,7 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
     JIT::StructType_p   textTy           = compiler.textTy;
     JIT::PointerType_p  textPtrTy        = compiler.textPtrTy;
     JIT::PointerType_p  treePtrTy        = compiler.treePtrTy;
-    JIT::PointerType_p  integerTreePtrTy = compiler.integerTreePtrTy;
+    JIT::PointerType_p  naturalTreePtrTy = compiler.naturalTreePtrTy;
     JIT::PointerType_p  realTreePtrTy    = compiler.realTreePtrTy;
     JIT::PointerType_p  textTreePtrTy    = compiler.textTreePtrTy;
     JIT::PointerType_p  blockTreePtrTy   = compiler.blockTreePtrTy;

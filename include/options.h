@@ -99,22 +99,22 @@ public:
 };
 
 
-struct IntegerOption : Option
+struct NaturalOption : Option
 // ----------------------------------------------------------------------------
-//   An option accepting integer values
+//   An option accepting natural values
 // ----------------------------------------------------------------------------
 {
-    IntegerOption(kstring name, kstring help,
-                  int64_t value = 0,
-                  int64_t min = INT64_MIN,
-                  int64_t max = INT64_MAX)
+    NaturalOption(kstring name, kstring help,
+                  uint64_t value = 0,
+                  uint64_t min = 0,
+                  uint64_t max = UINT64_MAX)
         : Option(name, help), value(value), min(min), max(max) {}
     virtual void        Process(Options &);
     operator            int64_t() { return value; }
 public:
-    int64_t             value;
-    int64_t             min;
-    int64_t             max;
+    uint64_t            value;
+    uint64_t            min;
+    uint64_t            max;
 };
 
 

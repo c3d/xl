@@ -72,15 +72,15 @@ template <typename Num>
 struct xl_type<Num,
                typename std::enable_if<std::is_integral<Num>::value>::type>
 // ----------------------------------------------------------------------------
-//   Specialization for integer types
+//   Specialization for natural types
 // ----------------------------------------------------------------------------
 {
-    typedef Integer *    tree_type;
+    typedef Natural *    tree_type;
     typedef Num          native_type;
 
     static JIT::PointerType_p TreeType(Compiler &c)
     {
-        return c.integerTreePtrTy;
+        return c.naturalTreePtrTy;
     }
 
     static JIT::Type_p NativeType(Compiler &c)
@@ -89,7 +89,7 @@ struct xl_type<Num,
     }
     static Tree *Shape()
     {
-        return integer_type;
+        return natural_type;
     }
 };
 
@@ -103,7 +103,6 @@ template <> inline Tree *xl_type<uint8> ::Shape() { return natural8_type; }
 template <> inline Tree *xl_type<uint16>::Shape() { return natural16_type; }
 template <> inline Tree *xl_type<uint32>::Shape() { return natural32_type; }
 template <> inline Tree *xl_type<uint64>::Shape() { return natural64_type; }
-
 
 template <typename Num>
 struct xl_type<Num,

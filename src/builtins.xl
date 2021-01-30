@@ -32,19 +32,33 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
+// Binary operations on naturals
+X:natural + Y:natural           as natural is builtin Add
+X:natural - Y:natural           as natural is builtin Sub
+X:natural * Y:natural           as natural is builtin Mul
+X:natural / Y:natural           as natural is builtin UDiv
+X:natural rem Y:natural         as natural is builtin URem
+X:natural mod Y:natural         as natural is builtin UMod
+X:natural and Y:natural         as natural is builtin And
+X:natural or  Y:natural         as natural is builtin Or
+X:natural xor Y:natural         as natural is builtin Xor
+X:natural shl Y:natural         as natural is builtin Shl
+X:natural shr Y:natural         as natural is builtin LShr
+-X:natural                      as integer is builtin Neg
+not X:natural                   as natural is builtin Not
+
 // Binary operations on integers
 X:integer + Y:integer           as integer is builtin Add
 X:integer - Y:integer           as integer is builtin Sub
 X:integer * Y:integer           as integer is builtin Mul
-X:integer / Y:integer           as integer is builtin SDiv
-X:integer rem Y:integer         as integer is builtin SRem
-X:integer mod Y:integer         as integer is builtin SMod
+X:integer / Y:integer           as integer is builtin UDiv
+X:integer rem Y:integer         as integer is builtin URem
+X:integer mod Y:integer         as integer is builtin UMod
 X:integer and Y:integer         as integer is builtin And
-X:integer or Y:integer          as integer is builtin Or
+X:integer or  Y:integer         as integer is builtin Or
 X:integer xor Y:integer         as integer is builtin Xor
-X:integer shl Y:integer         as integer is builtin Shl
-X:integer ashr Y:integer        as integer is builtin AShr
-X:integer lshr Y:integer        as integer is builtin LShr
+X:integer shl Y:natural         as integer is builtin Shl
+X:integer shr Y:natural         as integer is builtin AShr
 -X:integer                      as integer is builtin Neg
 not X:integer                   as integer is builtin Not
 
@@ -64,6 +78,13 @@ X:integer > Y:integer           as boolean is builtin ICmpSGT
 X:integer >= Y:integer          as boolean is builtin ICmpSGE
 X:integer < Y:integer           as boolean is builtin ICmpSLT
 X:integer <= Y:integer          as boolean is builtin ICmpSLE
+
+X:natural = Y:natural           as boolean is builtin ICmpEQ
+X:natural <> Y:natural          as boolean is builtin ICmpNE
+X:natural > Y:natural           as boolean is builtin ICmpUGT
+X:natural >= Y:natural          as boolean is builtin ICmpUGE
+X:natural < Y:natural           as boolean is builtin ICmpULT
+X:natural <= Y:natural          as boolean is builtin ICmpULE
 
 X:real = Y:real                 as boolean is builtin FCmpOEQ
 X:real <> Y:real                as boolean is builtin FCmpONE
@@ -91,7 +112,7 @@ X:boolean xor Y:boolean         as boolean is builtin BXor
 not X:boolean                   as boolean is builtin BNot
 
 // Basic math functions
-abs X:integer                   as integer is builtin IAbs
+abs X:integer                   as natural is builtin IAbs
 abs X:real                      as real    is builtin FAbs
 extern real sqrt(real);
 extern real sin(real);
@@ -118,6 +139,7 @@ if false then TrueBody                  is false
 // Console / debugging operations
 write X:text            as boolean      is C xl_write_text
 write X:integer         as boolean      is C xl_write_integer
+write X:natural         as boolean      is C xl_write_natural
 write X:real            as boolean      is C xl_write_real
 write X:character       as boolean      is C xl_write_character
 print                   as boolean      is C xl_write_cr
@@ -128,7 +150,7 @@ write Head, Rest        is { write Head; write Rest }
 print Items             is { write Items; print }
 
 // Tree shape and attributes
-kind  X:tree            as integer      is builtin TreeKind
+kind  X:tree            as natural      is builtin TreeKind
 left  X:prefix          as tree         is builtin TreeLeft
 right X:prefix          as tree         is builtin TreeRight
 left  X:postfix         as tree         is builtin TreeLeft
@@ -153,7 +175,7 @@ X:real in A:real..B:real is X >= A and X <= B
 
 // Factorial function
 0! is 1
-N:integer! is N * (N-1)!
+N:natural! is N * (N-1)!
 
 // Boolean to text conversion
 text true  is "true"
@@ -162,7 +184,7 @@ text false is "false"
 // A few additional text notations
 Source:text / From:text /  To:text      is text_replace Source, From, To
 Pat:text in Src:text                    is text_index Src, Pat, 0
-Pat:text in Src:text from Idx:integer   is text_index Src, Pat, Idx
+Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 
 // A utility function for C-style testing
 good false is false

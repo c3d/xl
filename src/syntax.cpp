@@ -327,8 +327,8 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
         {
         case tokEOF:
             break;
-        case tokINTEGER:
-            priority = scanner.IntegerValue();
+        case tokNATURAL:
+            priority = scanner.NaturalValue();
             break;
         case tokINDENT:
         case tokPAROPEN:

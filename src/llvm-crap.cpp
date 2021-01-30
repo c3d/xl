@@ -501,7 +501,7 @@ static void logErrorsToStdErr(llvm::Error err) {
 #endif
 
 
-extern "C" Integer *xl_new_integer(TreePosition pos, longlong value);
+extern "C" Natural *xl_new_natural(TreePosition pos, ulonglong value);
 JITPrivate::JITPrivate(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Constructor for JIT private helper

@@ -153,8 +153,8 @@ extern Main *MAIN;
 
 namespace Opt
 {
-extern IntegerOption    optimize;
-extern IntegerOption    remoteForks;
+extern NaturalOption    optimize;
+extern NaturalOption    remoteForks;
 extern TextOption       stylesheet;
 extern BooleanOption    emitIR;
 }

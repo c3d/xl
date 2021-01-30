@@ -368,17 +368,17 @@ void BooleanOption::Process(Options &opts)
 //
 // ============================================================================
 
-void IntegerOption::Process(Options &opts)
+void NaturalOption::Process(Options &opts)
 // ----------------------------------------------------------------------------
 //   Find integer value and check if the range matches
 // ----------------------------------------------------------------------------
 {
     kstring arg = opts.Argument();
     record(option_parsing,
-           "Integer option [%+s] in %llu..%llu, current %llu",
+           "Integer option [%+s] in %lld..%lld, current %lld",
            arg, min, max, value);
     char *end = (char *) arg;
-    int req = strtoll(arg, &end, 0);
+    uint64_t req = strtoull(arg, &end, 0);
     if (end == arg || *end != 0)
     {
         Ooops("Invalid numerical value $1 for option $2", Tree::COMMAND_LINE)

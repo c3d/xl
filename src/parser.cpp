@@ -280,7 +280,7 @@ static inline Tree *CreatePrefix(Tree *left, Tree *right, TreePosition pos)
         {
             if (name->value == "-")
             {
-                if (Integer *iv = right->AsInteger())
+                if (Natural *iv = right->AsNatural())
                 {
                     iv->value = -iv->value;
                     return iv;
@@ -374,8 +374,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                 errors.Log(Error("Unexpected end of text, expected $1",
                                  scanner.Position()).Arg(closing));
             break;
-        case tokINTEGER:
-            right = new Integer(scanner.IntegerValue(), pos);
+        case tokNATURAL:
+            right = new Natural(scanner.NaturalValue(), pos);
             prefix_priority = function_priority;
             break;
         case tokREAL:
@@ -461,7 +461,7 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                         right = new Name(name, pos);
 
                         // Flush higher priority items on stack
-                        // This is the case for X:integer!
+                        // This is the case for X:natural!
                         while (stack.size())
                         {
                             Pending &prev = stack.back();

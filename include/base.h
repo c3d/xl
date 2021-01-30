@@ -119,7 +119,7 @@ typedef unsigned int    uint;
 typedef unsigned long   ulong;
 #endif
 
-/* The largest available integer type */
+/* The largest available natural type */
 #ifdef HAVE_LONGLONG
 typedef long long          longlong;
 typedef unsigned long long ulonglong;
@@ -131,7 +131,7 @@ typedef long            longlong;
 typedef unsigned long   ulonglong;
 #endif /* LONGLONG or INT64 */
 
-/* Sized integers (dependent on the compiler...) - Only when needed */
+/* Sized naturals (dependent on the compiler...) - Only when needed */
 typedef int8_t          int8;
 typedef int16_t         int16;
 typedef int32_t         int32;

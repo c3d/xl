@@ -150,7 +150,7 @@ BindingStrength RewriteCandidate::Bind(Tree *pattern, Tree *value)
         }
 
 
-    case INTEGER:       BIND_CONSTANT(Integer, integer)
+    case NATURAL:       BIND_CONSTANT(Natural, natural)
     case REAL:          BIND_CONSTANT(Real, real);
     case TEXT:          BIND_CONSTANT(Text, text); // REVISIT: text vs character
 

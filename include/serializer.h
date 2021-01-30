@@ -52,7 +52,7 @@ enum SerializationTag
 {
     serialNULL,                 // NULL tree
 
-    serialINTEGER, serialREAL, serialTEXT, serialNAME,
+    serialNATURAL, serialREAL, serialTEXT, serialNAME,
     serialBLOCK, serialPREFIX, serialPOSTFIX, serialINFIX,
     serialINVALID,
 
@@ -76,7 +76,7 @@ struct Serializer
     ~Serializer() {}
 
     // Serialization of the canonical nodes
-    Tree *      Do(Integer *what);
+    Tree *      Do(Natural *what);
     Tree *      Do(Real *what);
     Tree *      Do(Text *what);
     Tree *      Do(Name *what);

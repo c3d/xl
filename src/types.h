@@ -85,7 +85,7 @@ public:
 
 public:
     // Interface for Tree::Do() to traverse and annotate the tree
-    Tree *              Do(Integer *what);
+    Tree *              Do(Natural *what);
     Tree *              Do(Real *what);
     Tree *              Do(Text *what);
     Tree *              Do(Name *what);
@@ -98,7 +98,7 @@ protected:
     // Local types (use LocalTypes() to create)
     Types(Scope *scope, Types *parent);
 
-    // Common code for all constants (integer, real, text)
+    // Common code for all constants (natural, real, text)
     Tree *              DoConstant(Tree *what, Tree *type, kind k);
     Tree *              DoStatements(Tree *expr, Tree *left, Tree *right);
     Tree *              DoTypeAnnotation(Infix *decl);

@@ -40,7 +40,6 @@ print 73 and 3
 print 73 or 3
 print 73 xor 3
 print 73 shl 3
-print 73 ashr 3
-print 73 lshr 3
+print 73 shr 3
 print -73
 print not 73

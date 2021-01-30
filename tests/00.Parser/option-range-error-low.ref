@@ -1,2 +1,2 @@
 
-<Command line>: Value -3 for option "optimize" is outside of 0..3
+<Command line>: Value 10 for option "stack_depth" is outside of 25..25000

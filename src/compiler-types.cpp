@@ -126,7 +126,7 @@ Tree *CompilerTypes::CodeGenerationType(Tree *expr)
     if (!result)
     {
         Ooops("Internal error: No type for $1 at code generation time", expr);
-        return integer_type;
+        return natural_type;
     }
     return result;
 }
@@ -143,8 +143,8 @@ void CompilerTypes::AddBoxedType(Tree *type, JIT::Type_p mtype)
 // ----------------------------------------------------------------------------
 //   Associate a tree type to a boxed machine type
 // ----------------------------------------------------------------------------
-///  The tree type could be a named type, e.g. [integer], or data, e.g. [X,Y]
-//   The machine type could be integerTy or StructType({integerTy, realTy})
+///  The tree type could be a named type, e.g. [natural], or data, e.g. [X,Y]
+//   The machine type could be naturalTy or StructType({naturalTy, realTy})
 {
     Tree *base = BaseType(type);
     record(types_boxing, "In %p add %T boxing %t (%t)",
@@ -264,7 +264,7 @@ void *xldebug(uintptr_t address)
         return xldebug((XL::T *) ptr);                  \
     }
 
-    CHECK_ALLOC(Integer);
+    CHECK_ALLOC(Natural);
     CHECK_ALLOC(Real);
     CHECK_ALLOC(Text);
     CHECK_ALLOC(Name);

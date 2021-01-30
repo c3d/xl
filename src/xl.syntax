@@ -22,7 +22,7 @@ INFIX
         300     & |
         310     + -
         320     * / mod rem
-        330     shl ashr lshr
+        330     shl shr
         381     ^
         480     .
         600     :

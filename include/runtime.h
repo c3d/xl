@@ -82,7 +82,7 @@ Tree *  xl_stack_overflow(Tree *tree);
 bool    xl_same_text(Tree * , const char *);
 bool    xl_same_shape(Tree *t1, Tree *t2);
 
-Integer *xl_new_integer(TreePosition pos, longlong value);
+Natural *xl_new_natural(TreePosition pos, ulonglong value);
 Real    *xl_new_real(TreePosition pos, double value);
 Text    *xl_new_character(TreePosition pos, char value);
 Text    *xl_new_ctext(TreePosition pos, kstring value);
@@ -109,29 +109,29 @@ kstring xl_infix_name(Infix *infix);
 // You first have to ignore the fact that the following pragma may be ignored!
 #pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
-integer_t       xl_text2int(kstring t);
+natural_t       xl_text2int(kstring t);
 real_t          xl_text2real(kstring t);
-text            xl_int2text(integer_t value);
+text            xl_int2text(natural_t value);
 text            xl_real2text(real_t value);
-integer_t       xl_mod(integer_t x, integer_t y);
-integer_t       xl_pow(integer_t x, integer_t y);
+natural_t       xl_mod(natural_t x, natural_t y);
+natural_t       xl_pow(natural_t x, natural_t y);
 real_t          xl_modf(real_t x, real_t y);
-real_t          xl_powf(real_t x, integer_t y);
+real_t          xl_powf(real_t x, natural_t y);
 text            xl_text_replace(text txt, text before, text after);
 text            xl_text_repeat(uint count, text data);
 
 real_t          xl_time(real_t delay);
-integer_t       xl_seconds();
-integer_t       xl_minutes();
-integer_t       xl_hours();
-integer_t       xl_month_day();
-integer_t       xl_mon();
-integer_t       xl_year();
-integer_t       xl_week_day();
-integer_t       xl_year_day();
-integer_t       xl_summer_time();
+natural_t       xl_seconds();
+natural_t       xl_minutes();
+natural_t       xl_hours();
+natural_t       xl_month_day();
+natural_t       xl_mon();
+natural_t       xl_year();
+natural_t       xl_week_day();
+natural_t       xl_year_day();
+natural_t       xl_summer_time();
 text_t          xl_timezone();
-integer_t       xl_GMT_offset();
+natural_t       xl_GMT_offset();
 
 real_t          xl_random();
 bool            xl_random_seed(int seed);
@@ -157,6 +157,7 @@ inline number   xl_random(number low, number high)
 
 extern "C"
 {
+    bool      xl_write_natural(ulonglong);
     bool      xl_write_integer(longlong);
     bool      xl_write_real(double);
     bool      xl_write_text(kstring);
@@ -175,7 +176,7 @@ extern "C"
 
 extern "C"
 {
-    integer_t xl_mod(integer_t, integer_t);
+    natural_t xl_mod(natural_t, natural_t);
     real_t    xl_modf(real_t, real_t);
 }
 
@@ -257,14 +258,14 @@ struct XLCall
     // Adding one arguments
     XLCall &Arg(Tree *tree);
     XLCall &Arg(Tree &tree)     { return Arg(&tree); }
-    XLCall &Arg(Integer::value_t v)     { return Arg((Tree *) new Integer(v)); }
+    XLCall &Arg(Natural::value_t v)     { return Arg((Tree *) new Natural(v)); }
     XLCall &Arg(Real::value_t  v)       { return Arg((Tree *) new Real(v)); }
     XLCall &Arg(Text::value_t  v)       { return Arg((Tree *) new Text(v)); }
 
     template <typename num,
               typename =
               typename std::enable_if<std::is_integral<num>::value>::type>
-    XLCall &Arg(num x)                  { return Arg(Integer::value_t(x)); }
+    XLCall &Arg(num x)                  { return Arg(Natural::value_t(x)); }
 
     // Adding a collection of arguments
     template<typename First, typename ... Rest>

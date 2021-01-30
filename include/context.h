@@ -70,11 +70,11 @@
           This can be used to declare data structures.
 
   The XL type system is itself based on tree shapes. For example,
-  "integer" is a type that covers all Integer trees. Verifying if X
+  "natural" is a type that covers all Natural trees. Verifying if X
   has type Y is performed by evaluting the value X:Y.
 
   - In the direct type match case, this evaluates to X.
-    For example, '1:integer' will evaluate directly to 1.
+    For example, '1:natural' will evaluate directly to 1.
 
   - The X:Y expression may perform an implicit type conversion.
     For example, '1:real' will evaluate to 1.0 (converting 1 to real)
@@ -82,12 +82,12 @@
   - Finally, in case of type mismatch, X:Y evaluates to the same X:Y tree.
 
   The compiler is allowed to special-case any such form. For example, if it
-  determines that the type of a tree is "integer", it may represent it using a
-  machine integer. It must however convert to/from tree when connecting to
+  determines that the type of a tree is "natural", it may represent it using a
+  machine natural. It must however convert to/from tree when connecting to
   code that deals with less specialized trees.
 
   The compiler is also primed with a number of declarations such as:
-     x:integer+y:integer -> [builtin]
+     x:natural+y:natural -> [builtin]
   This tells the compiler to lookup a native compilation function. These
   functions are declared in basics.tbl (and possibly additional .tbl files)
 
@@ -132,15 +132,15 @@
   it has additional Tree * parameters, corresponding to the variables
   in the pattern (the left-hand side of the rewrite).
 
-  For example, the rewrite 'bar X:integer, Y -> foo X, Y+1' has two variables
+  For example, the rewrite 'bar X:natural, Y -> foo X, Y+1' has two variables
   in its pattern, X and Y. Therefore, the code field for 'foo X, Y+1' will
   have the following signature: Tree *(Tree *self, Tree *X, Tree *Y).
   Note that bar is not a variable for the pattern. While the name 'bar' is
   being defined partially by this rewrite, it is not a variable in the pattern.
 
   The generated code will only be invoked if the conditions for invoking it
-  are fulfilled. In the example, it will not be invoked if X is not an integer
-  or for a form such as 'bar 3' because 3 doesn't match 'X:integer, Y'.
+  are fulfilled. In the example, it will not be invoked if X is not an natural
+  or for a form such as 'bar 3' because 3 doesn't match 'X:natural, Y'.
 
 
   CLOSURES:
@@ -511,7 +511,7 @@ inline bool Context::HasRewritesFor(kind k)
 // ----------------------------------------------------------------------------
 //    Check if we detected rewrites for a specific kind
 // ----------------------------------------------------------------------------
-//    This is used to avoid useless lookups for reals, integers, etc.
+//    This is used to avoid useless lookups for reals, naturals, etc.
 {
     return (hasRewritesForKind & (1<<k)) != 0;
 }
@@ -757,7 +757,7 @@ inline Tree * PatternBase(Tree *form)
     {
         old = form;
 
-        // Check 'X as integer', we define X
+        // Check 'X as natural', we define X
         if (Infix *typeDecl = form->AsInfix())
             if (IsTypeAnnotation(typeDecl))
                 form = typeDecl->left;

@@ -59,7 +59,7 @@ XL_BEGIN
 
 namespace Opt
 {
-IntegerOption   stackDepth("stack_depth",
+NaturalOption   stackDepth("stack_depth",
                            "Maximum stack depth for interpreter",
                            1000, 25, 25000);
 }
@@ -174,7 +174,7 @@ struct Bindings
           test(test), cache(cache), resultType(nullptr), args(args) {}
 
     // Tree::Do interface
-    bool  Do(Integer *what);
+    bool  Do(Natural *what);
     bool  Do(Real *what);
     bool  Do(Text *what);
     bool  Do(Name *what);
@@ -201,16 +201,16 @@ public:
 };
 
 
-inline bool Bindings::Do(Integer *what)
+inline bool Bindings::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   The pattern contains an integer: check we have the same
+//   The pattern contains an natural: check we have the same
 // ----------------------------------------------------------------------------
 {
     MustEvaluate();
-    if (Integer *ival = test->AsInteger())
+    if (Natural *ival = test->AsNatural())
         if (ival->value == what->value)
             return true;
-    Ooops("Integer $1 does not match $2", what, test);
+    Ooops("Natural $1 does not match $2", what, test);
     return false;
 }
 
@@ -380,7 +380,7 @@ bool Bindings::Do(Infix *what)
 {
     Save<Context_p> saveContext(context, context);
 
-    // Check if we have typed arguments, e.g. X:integer
+    // Check if we have typed arguments, e.g. X:natural
     if (what->name == ":")
     {
         Name *name = what->left->AsName();
@@ -410,7 +410,7 @@ bool Bindings::Do(Infix *what)
         return false;
     }
 
-    // Check if we have typed declarations, e.g. X+Y as integer
+    // Check if we have typed declarations, e.g. X+Y as natural
     if (IsTypeAnnotation(what))
     {
         if (resultType)
@@ -705,7 +705,7 @@ Tree *Interpreter::Instructions(Context_p context, Tree_p what)
         kind whatK = what->Kind();
         switch (whatK)
         {
-        case INTEGER:
+        case NATURAL:
         case REAL:
         case TEXT:
             return what;

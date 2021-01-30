@@ -198,12 +198,12 @@ Tree *Types::KnownType(Tree *expr, bool recurse)
 //
 // ============================================================================
 
-Tree *Types::Do(Integer *what)
+Tree *Types::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   Annotate an integer tree with its type - normally [integer]
+//   Annotate an natural tree with its type - normally [natural]
 // ----------------------------------------------------------------------------
 {
-    return DoConstant(what, integer_type, INTEGER);
+    return DoConstant(what, natural_type, NATURAL);
 }
 
 
@@ -516,13 +516,14 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
             if (pattern->AsBlock())
                 return narrowType;
 
-    // Check integer types
+    // Check natural types
     uint wideBits = 0;
     if (wideType == integer_type)       wideBits = 63;
     if (wideType == integer8_type)      wideBits = 7;
     if (wideType == integer16_type)     wideBits = 15;
     if (wideType == integer32_type)     wideBits = 31;
     if (wideType == integer64_type)     wideBits = 63;
+
     if (wideType == natural_type)       wideBits = 64;
     if (wideType == natural8_type)      wideBits = 8;
     if (wideType == natural16_type)     wideBits = 16;
@@ -535,6 +536,7 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
     if (narrowType == integer16_type)   narrowBits = 15;
     if (narrowType == integer32_type)   narrowBits = 31;
     if (narrowType == integer64_type)   narrowBits = 63;
+
     if (narrowType == natural_type)     narrowBits = 64;
     if (narrowType == natural8_type)    narrowBits = 8;
     if (narrowType == natural16_type)   narrowBits = 16;
@@ -543,10 +545,10 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
 
     if (wideBits)
     {
-        // Check if we have [integer16] vs [matching 42]
+        // Check if we have [natural16] vs [matching 42]
         if (Tree *pattern = IsPatternType(narrowType))
         {
-            if (Integer *ival = pattern->AsInteger())
+            if (Natural *ival = pattern->AsNatural())
             {
                 if (wideBits & 1)
                 {
@@ -564,7 +566,7 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
             }
         }
 
-        // Check if we have an integer type against another
+        // Check if we have an natural type against another
         if (narrowBits)
         {
             uint differentSigns = (narrowBits ^ wideBits) & 1;
@@ -590,7 +592,7 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
 
     if (wideBits)
     {
-        // Check if we have [integer16] vs [matching 42]
+        // Check if we have [natural16] vs [matching 42]
         if (Tree *pattern = IsPatternType(narrowType))
         {
             if (pattern->AsReal())
@@ -598,7 +600,7 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
             return nullptr;
         }
 
-        // Check if we have an integer type against another
+        // Check if we have an natural type against another
         if (narrowBits)
         {
             if (narrowBits <= wideBits)
@@ -710,7 +712,7 @@ Tree *Types::PatternCoversPattern(Tree *wide, Tree *narrow, Tree *type)
 
     switch(wide->Kind())
     {
-    case INTEGER:       CONSTANT_PATTERN(Integer);
+    case NATURAL:       CONSTANT_PATTERN(Natural);
     case REAL:          CONSTANT_PATTERN(Real);
     case TEXT:          CONSTANT_PATTERN(Text);
     case NAME:          return narrow;
@@ -1117,7 +1119,7 @@ Tree *Types::JoinedType(Tree *type, Tree *old, Tree *replace)
 
     switch (type->Kind())
     {
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
     case NAME:
@@ -1208,8 +1210,8 @@ Tree *Types::PatternType(Tree *expr)
     Tree *type = expr;
     switch(expr->Kind())
     {
-    case INTEGER:
-        return integer_type;
+    case NATURAL:
+        return natural_type;
     case REAL:
         return real_type;
     case TEXT:
@@ -1288,11 +1290,11 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
 //   Make the types explicit in a tree shape
 // ----------------------------------------------------------------------------
 //   For example, if we have [X,Y], based on current known types, we may
-//   rewrite this as [X:#A, Y:integer].
+//   rewrite this as [X:#A, Y:natural].
 {
     switch(expr->Kind())
     {
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
         return expr;
@@ -1413,7 +1415,7 @@ Tree *Types::IsRewriteType(Tree *type)
 
 Infix *Types::IsUnionType(Tree *type)
 // ----------------------------------------------------------------------------
-//   Check if type is a union type, i.e. something like [integer|real]
+//   Check if type is a union type, i.e. something like [natural|real]
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = type->AsInfix())

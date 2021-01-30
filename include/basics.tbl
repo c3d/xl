@@ -46,7 +46,7 @@
 INIT_GC;
 
 INIT_ALLOCATOR(Tree);
-INIT_ALLOCATOR(Integer);
+INIT_ALLOCATOR(Natural);
 INIT_ALLOCATOR(Real);
 INIT_ALLOCATOR(Text);
 INIT_ALLOCATOR(Name);
@@ -94,14 +94,14 @@ CONVERTIBLE_TYPE(boolean, Name,
                      return value == "true";
                  }
     );
-TYPE(integer, Integer,
-     if (Integer *ival = AsInteger())
-         return (integer_p) ival;
+TYPE(natural, Natural,
+     if (Natural *ival = AsNatural())
+         return (natural_p) ival;
     );
 TYPE(real, Real,
      if (Real *rval = AsReal())
          return (real_r *) rval;
-     if (Integer *ival = AsInteger())
+     if (Natural *ival = AsNatural())
          return (real_p) new Real(ival->value, ival->Position());
     );
 TYPE(text, Text,
@@ -155,50 +155,51 @@ TYPE(block,Block,
          return (block_p) block;
     );
 
+TYPE(integer,natural,
+     if (Natural *ival = AsNatural())
+         return (integer_p) ival;
+    );
 TYPE(integer8,integer,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= -0x80 && ival->value < 0x80)
+     if (Natural *ival = AsNatural())
+         if ((longlong) ival->value >= -0x80 &&
+             (longlong) ival->value  <  0x80)
              return (integer8_p) ival;
     );
-
 TYPE(integer16,integer,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= -0x8000 && ival->value < 0x8000)
+     if (Natural *ival = AsNatural())
+         if ((longlong) ival->value >= -0x8000 &&
+             (longlong) ival->value  <  0x8000)
              return (integer16_p) ival;
     );
 TYPE(integer32,integer,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= -0x80000000LL && ival->value < 0x80000000LL)
+     if (Natural *ival = AsNatural())
+         if ((longlong) ival->value >= -0x80000000 &&
+             (longlong) ival->value  <  0x80000000)
              return (integer32_p) ival;
     );
 TYPE(integer64,integer,
-     if (Integer *ival = AsInteger())
+     if (Natural *ival = AsNatural())
          return (integer64_p) ival;
     );
-TYPE(natural,integer,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= 0)
-             return (natural_p) ival;
-    );
+
 TYPE(natural8,natural,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= 0 && ival->value < 0x100)
+     if (Natural *ival = AsNatural())
+         if (ival->value < 0x100)
              return (natural8_p) ival;
     );
 TYPE(natural16,natural,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= 0 && ival->value < 0x10000)
+     if (Natural *ival = AsNatural())
+         if (ival->value < 0x10000)
              return (natural16_p) ival;
     );
 TYPE(natural32,natural,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= 0 && ival->value < 0x100000000)
+     if (Natural *ival = AsNatural())
+         if (ival->value < 0x100000000ULL)
              return (natural32_p) ival;
     );
 TYPE(natural64,natural,
-     if (Integer *ival = AsInteger())
-         if (ival->value >= 0)
-             return (natural64_p) ival;
+     if (Natural *ival = AsNatural())
+         return (natural64_p) ival;
     );
 TYPE(real16,real,
      if (Real *rval = AsReal())
@@ -233,7 +234,7 @@ INFIX(TextGE, boolean, text, ">=", text, R_BOOL(LEFT >= RIGHT));
 
 PREFIX_SCOPE(quote, tree, "quote", tree,RESULT(xl_parse_tree(scope,leftPtr)));
 PREFIX_FN(parse, tree, text,            RESULT(xl_parse_text(left)));
-PREFIX_FN(exit,  tree, integer,         exit(left); R_INT(0))
+PREFIX_FN(exit,  tree, natural,         exit(left); R_INT(0))
 
 NAME_FN(Version, text, "xl_version",
         R_TEXT(XL::VERSION));

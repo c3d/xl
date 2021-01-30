@@ -37,7 +37,7 @@
 TYPE(text_or_number, text,
      if (Text *tval = this->AsText())
          return (text_or_number_p) tval;
-     if (Integer *ival = this->AsInteger())
+     if (Natural *ival = this->AsNatural())
          return (text_or_number_p) new Text(xl_int2text(ival->value),
                                             this->Position());
      if (Real *rval = this->AsReal())
@@ -45,25 +45,25 @@ TYPE(text_or_number, text,
                                             this->Position());
     );
 
-PREFIX_FN(length, integer, text,
+PREFIX_FN(length, natural, text,
           R_INT (LEFT.size()));
 
 INFIX(ConcatTN, text,   text,           "&",    text_or_number,
       R_TEXT(LEFT + RIGHT));
 INFIX(ConcatNT, text,   text_or_number, "&",    text,
       R_TEXT(LEFT + RIGHT));
-INFIX(RepeatTL, text,   integer,        "*",    text,
+INFIX(RepeatTL, text,   natural,        "*",    text,
       R_TEXT(xl_text_repeat(LEFT, RIGHT)));
-INFIX(RepeatTR, text,   text,           "*",    integer,
+INFIX(RepeatTR, text,   text,           "*",    natural,
       R_TEXT(xl_text_repeat(RIGHT, LEFT)));
 
 INFIX(Contains, boolean, text,          "contains", text,
       R_BOOL(LEFT.find(RIGHT) != text::npos));
 
-FUNCTION(text_index, integer,
+FUNCTION(text_index, natural,
          PARM(left,   text)
          PARM(what,   text)
-         PARM(offset, integer),
+         PARM(offset, natural),
          R_INT(LEFT.find(what, offset)));
 FUNCTION(text_replace, text,
          PARM(left,   text)

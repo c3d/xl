@@ -87,14 +87,14 @@ JIT::Value_p CompilerExpression::Evaluate(Tree *expr, bool force)
 }
 
 
-JIT::Value_p CompilerExpression::Do(Integer *what)
+JIT::Value_p CompilerExpression::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   Compile an integer constant
+//   Compile an natural constant
 // ----------------------------------------------------------------------------
 {
     Compiler &compiler = function.compiler;
     JITBlock &code = function.code;
-    return code.IntegerConstant(compiler.integerTy, int64_t(what->value));
+    return code.IntegerConstant(compiler.naturalTy, int64_t(what->value));
 }
 
 
@@ -534,12 +534,12 @@ JIT::Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
         return value;
     }
 
-    // Comparison of integer values
+    // Comparison of natural values
     if (testType->isIntegerTy())
     {
-        if (valueType == compiler.integerTreePtrTy)
+        if (valueType == compiler.naturalTreePtrTy)
         {
-            value = function.Autobox(valueTree, value, compiler.integerTy);
+            value = function.Autobox(valueTree, value, compiler.naturalTy);
             valueType = code.Type(value);
         }
         if (!valueType->isIntegerTy())
@@ -579,7 +579,7 @@ JIT::Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
 
     // Test our special types
     if (testType == compiler.treePtrTy         ||
-        testType == compiler.integerTreePtrTy  ||
+        testType == compiler.naturalTreePtrTy  ||
         testType == compiler.realTreePtrTy     ||
         testType == compiler.textTreePtrTy     ||
         testType == compiler.nameTreePtrTy     ||
@@ -600,7 +600,7 @@ JIT::Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
             valueType == compiler.charPtrTy             ||
             valueType == compiler.textTy                ||
             valueType == compiler.textPtrTy             ||
-            valueType == compiler.integerTreePtrTy      ||
+            valueType == compiler.naturalTreePtrTy      ||
             valueType == compiler.realTreePtrTy         ||
             valueType == compiler.textTreePtrTy         ||
             valueType == compiler.nameTreePtrTy         ||

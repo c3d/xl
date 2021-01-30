@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-FUNCTION(sleep, integer,
+FUNCTION(sleep, natural,
          PARM(duration, real),
          struct timespec ts;
          ts.tv_sec = (time_t) floor(duration);
@@ -49,14 +49,14 @@ FUNCTION(sleep, integer,
     R_INT(tmfield)
 
 
-NAME_FN(Hours,          integer, "hours",       R_TIME(tm.tm_hour));
-NAME_FN(Minutes,        integer, "minutes",     R_TIME(tm.tm_min));
-NAME_FN(Seconds,        integer, "seconds",     R_TIME(tm.tm_sec));
-NAME_FN(Year,           integer, "year",        R_TIME(tm.tm_year+1900));
-NAME_FN(Month,          integer, "month",       R_TIME(tm.tm_mon));
-NAME_FN(Day,            integer, "day",         R_TIME(tm.tm_mday));
-NAME_FN(WeekDay,        integer, "week_day",    R_TIME(tm.tm_wday));
-NAME_FN(YearDay,        integer, "year_day",    R_TIME(tm.tm_yday));
+NAME_FN(Hours,          natural, "hours",       R_TIME(tm.tm_hour));
+NAME_FN(Minutes,        natural, "minutes",     R_TIME(tm.tm_min));
+NAME_FN(Seconds,        natural, "seconds",     R_TIME(tm.tm_sec));
+NAME_FN(Year,           natural, "year",        R_TIME(tm.tm_year+1900));
+NAME_FN(Month,          natural, "month",       R_TIME(tm.tm_mon));
+NAME_FN(Day,            natural, "day",         R_TIME(tm.tm_mday));
+NAME_FN(WeekDay,        natural, "week_day",    R_TIME(tm.tm_wday));
+NAME_FN(YearDay,        natural, "year_day",    R_TIME(tm.tm_yday));
 
 NAME_FN(Time,           real,   "time",
         struct timeval tv;

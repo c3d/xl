@@ -42,7 +42,7 @@ end           = "// End of automatically generated code" cr
 // Character remapping
 space           = " "
 
-integer         = "tao_integer " self newline
+natural         = "tao_natural " self newline
 real            = "tao_real " self newline
 name            = "tao_name """ self """" newline
 "text "" """    = "tao_text """ quoted_self """" newline

@@ -70,9 +70,9 @@ public:
 
 public:
     // Do interface
-    Tree *Do(Integer *what)
+    Tree *Do(Natural *what)
     {
-        return Adjust(what, new Integer(what->value, what->Position()));
+        return Adjust(what, new Natural(what->value, what->Position()));
     }
     Tree *Do(Real *what)
     {
@@ -197,9 +197,9 @@ template <CopyMode mode> struct TreeCopyTemplate
 
     typedef Tree *value_type;
 
-    Tree *Do(Integer *what)
+    Tree *Do(Natural *what)
     {
-        if (Integer *it = dest->AsInteger())
+        if (Natural *it = dest->AsNatural())
         {
             it->value = what->value;
             it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());

@@ -155,7 +155,7 @@ struct ConstOp : Op
     virtual kstring     OpID()  { return "const"; }
     virtual void        Dump(std::ostream &out)
     {
-        kstring kinds[] = { "integer", "real", "text", "name",
+        kstring kinds[] = { "natural", "real", "text", "name",
                             "block", "prefix", "postfix", "infix" };
         out << OpID() << "\t" << kinds[value->Kind()] << "\t" << value;
     }
@@ -991,23 +991,23 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
 //
 //  Consider the following code:
 //
-//      foo X:integer, Y:integer -> foo1
-//      foo A:integer, B         -> foo2
+//      foo X:natural, Y:natural -> foo1
+//      foo A:natural, B         -> foo2
 //      foo U, V
 //      write "Toto"
 //
 //  The generated code will look like this
 //      ;; Evaluate foo1 candidate
 //
-//      ;; Match U against X:integer
+//      ;; Match U against X:natural
 //      Evaluate U              or goto fail1.1         (EvalOp)
-//      Evaluate integer        or goto fail1.1         (EvalOp)
-//      TypeCheck U : integer   or goto fail1.1         (TypeCheckOp)
+//      Evaluate natural        or goto fail1.1         (EvalOp)
+//      TypeCheck U : natural   or goto fail1.1         (TypeCheckOp)
 //
-//      ;; Match V against Y:integer
+//      ;; Match V against Y:natural
 //      Evaluate V              or goto fail1.1         (EvalOp)
-//      Evaluate integer        or goto fail1.1         (EvalOp - SaveLeft)
-//      TypeCheck V : integer   or goto fail1.1         (TypeCheckOp)
+//      Evaluate natural        or goto fail1.1         (EvalOp - SaveLeft)
+//      TypeCheck V : natural   or goto fail1.1         (TypeCheckOp)
 //
 //      ;; Call foo1
 //      Call foo1 (id(U), id(V)) @ parmSize             (CallOp)
@@ -1017,7 +1017,7 @@ void CodeBuilder::InstructionsSuccess(uint neOld)
 //
 //    fail1.1:                                          (LabelOp)
 //      Evaluate U              or goto fail1.2         (EvalOp)
-//      Evaluate integer        or goto fail1.2         (EvalOp)
+//      Evaluate natural        or goto fail1.2         (EvalOp)
 //      ...
 //      Call foo2                                       (CallOp)
 //      goto success1
@@ -1295,7 +1295,7 @@ bool CodeBuilder::Instructions(Context *ctx, Tree *what)
         kind whatK = what->Kind();
         switch (whatK)
         {
-        case INTEGER:
+        case NATURAL:
         case REAL:
         case TEXT:
         case NAME:
@@ -1688,7 +1688,7 @@ CallOp *CodeBuilder::Call(Context *ctx, Tree *value, Tree *type,
 template<class T>
 struct MatchOp : FailOp
 // ----------------------------------------------------------------------------
-//   Check if the current result matches the integer/real/text value
+//   Check if the current result matches the natural/real/text value
 // ----------------------------------------------------------------------------
 {
     MatchOp(typename T::value_t ref, Op *fail): FailOp(fail), ref(ref) {}
@@ -1710,7 +1710,7 @@ struct MatchOp : FailOp
     }
 };
 
-template<> kstring MatchOp<Integer>::OpID()     { return "match\tinteger"; }
+template<> kstring MatchOp<Natural>::OpID()     { return "match\tnatural"; }
 template<> kstring MatchOp<Real>   ::OpID()     { return "match\treal"; }
 template<> kstring MatchOp<Text>   ::OpID()     { return "match\ttext"; }
 
@@ -1816,17 +1816,17 @@ struct InfixMatchOp : FailOp
 //
 // ============================================================================
 
-CodeBuilder::strength CodeBuilder::Do(Integer *what)
+CodeBuilder::strength CodeBuilder::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   The pattern contains an integer: check we have the same
+//   The pattern contains an natural: check we have the same
 // ----------------------------------------------------------------------------
 {
-    if (Integer *ival = test->AsInteger())
+    if (Natural *ival = test->AsNatural())
         return ival->value == what->value ? ALWAYS : NEVER;
     if (test->IsConstant())
         return NEVER;
     Evaluate(context, test);
-    Add(new MatchOp<Integer>(what->value, failOp));
+    Add(new MatchOp<Natural>(what->value, failOp));
     return SOMETIMES;
 }
 
@@ -1838,7 +1838,7 @@ CodeBuilder::strength CodeBuilder::Do(Real *what)
 {
     if (Real *rval = test->AsReal())
         return rval->value != what->value ? ALWAYS : NEVER;
-    if (Integer *rval = test->AsInteger())
+    if (Natural *rval = test->AsNatural())
         return rval->value != what->value ? ALWAYS : NEVER;
     if (test->IsConstant())
         return NEVER;
@@ -1988,7 +1988,7 @@ CodeBuilder::strength CodeBuilder::Do(Infix *what)
 {
     Save<Context_p> saveContext(context, context);
 
-    // Check if we have typed arguments, e.g. X:integer
+    // Check if we have typed arguments, e.g. X:natural
     if (what->name == ":")
     {
         Name *name = what->left->AsName();
@@ -2034,7 +2034,7 @@ CodeBuilder::strength CodeBuilder::Do(Infix *what)
         return SOMETIMES;
     }
 
-    // Check if we have typed declarations, e.g. X+Y as integer
+    // Check if we have typed declarations, e.g. X+Y as natural
     if (what->name == "as")
     {
         if (resultType)

@@ -198,7 +198,7 @@ public:
     enum strength { NEVER, SOMETIMES, ALWAYS };
     typedef strength value_type;
 
-    strength    Do(Integer *what);
+    strength    Do(Natural *what);
     strength    Do(Real *what);
     strength    Do(Text *what);
     strength    Do(Name *what);

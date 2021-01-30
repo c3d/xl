@@ -157,7 +157,7 @@ XL_END
 extern bool xldebug_verbose;
 XL::Tree *xldebug(XL::Tree *);
 XL::Tree *xldebug(XL::Tree_p);
-XL::Tree *xldebug(XL::Integer_p);
+XL::Tree *xldebug(XL::Natural_p);
 XL::Tree *xldebug(XL::Real_p);
 XL::Tree *xldebug(XL::Text_p);
 XL::Tree *xldebug(XL::Name_p);

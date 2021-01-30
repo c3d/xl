@@ -95,7 +95,7 @@ struct FindParentAction : Action
         return nullptr;
     }
 
-    Tree *Do(Integer *what)
+    Tree *Do(Natural *what)
     {
         if (child == what)
         {
@@ -218,7 +218,7 @@ struct FindChildAction : Action
         return result;
     }
 
-    Tree *Do(Integer *)
+    Tree *Do(Natural *)
     {
         return nullptr;
     }

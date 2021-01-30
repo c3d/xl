@@ -60,7 +60,7 @@ kstring Tree::KindName[KIND_COUNT] =
 //   The names of the tree kinds for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    "INTEGER", "REAL", "TEXT", "NAME",
+    "NATURAL", "REAL", "TEXT", "NAME",
     "BLOCK", "PREFIX", "POSTFIX", "INFIX"
 };
 
@@ -111,10 +111,10 @@ int Tree::Compare(Tree *left, Tree *right, bool recurse)
 
     switch(lk)
     {
-    case INTEGER:
+    case NATURAL:
     {
-        Integer *li = (Integer *) left;
-        Integer *ri = (Integer *) right;
+        Natural *li = (Natural *) left;
+        Natural *ri = (Natural *) right;
         return li->value < ri->value ? -1 : li->value > ri->value ? 1 : 0;
     }
     case REAL:

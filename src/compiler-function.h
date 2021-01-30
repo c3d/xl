@@ -132,7 +132,7 @@ private:
     JIT::Value_p        Known(Tree *tree, uint which = knowAll );
 
     // Creating constants
-    JIT::Value_p        ConstantInteger(Integer *what);
+    JIT::Value_p        ConstantNatural(Natural *what);
     JIT::Value_p        ConstantReal(Real *what);
     JIT::Value_p        ConstantText(Text *what);
     JIT::Value_p        ConstantTree(Tree *what);

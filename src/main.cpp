@@ -100,7 +100,7 @@ BooleanOption   builtins("builtins", "Enable builtins file", true);
 BooleanOption   compile("compile",
                         "Only compile the file without evaluating it");
 
-IntegerOption   optimize("optimize",
+NaturalOption   optimize("optimize",
                          "Select optimization level",
                          0, 0, 3);
 AliasOption     optimizeAlias("O", optimize);
@@ -118,11 +118,11 @@ BooleanOption   parse("parse",
 BooleanOption   remote("remote",
                        "Listen for remote programs");
 
-IntegerOption   remotePort("remote_port",
+NaturalOption   remotePort("remote_port",
                            "Select the port to listen to for remote access",
                            1205, 1000, 32767);
 
-IntegerOption   remoteForks("remote_forks",
+NaturalOption   remoteForks("remote_forks",
                             "Select the number of forks for remote access",
                             20, 0, 1000);
 

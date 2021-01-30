@@ -111,12 +111,12 @@ Tree *Serializer::Do(Tree *what)
 }
 
 
-Tree *Serializer::Do(Integer *what)
+Tree *Serializer::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   Serialize an integer leaf
+//   Serialize an natural leaf
 // ----------------------------------------------------------------------------
 {
-    WriteUnsigned(serialINTEGER);
+    WriteUnsigned(serialNATURAL);
     WriteSigned(what->value);
     return what;
 }
@@ -344,9 +344,9 @@ Tree *Deserializer::ReadTree()
         result = nullptr;
         break;
 
-    case serialINTEGER:
+    case serialNATURAL:
         ivalue = ReadSigned();
-        result = new Integer(ivalue, pos);
+        result = new Natural(ivalue, pos);
         break;
     case serialREAL:
         rvalue = ReadReal();

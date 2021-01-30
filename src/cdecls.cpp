@@ -336,19 +336,19 @@ Name *CDeclaration::NamedType(Name *input, uint &mods)
     static struct { kstring from, to; uint flags; } cvt[] =
     {
         { "bool",         "boolean",      0 },
-        { "int",          "integer32",    0 },
+        { "int",          "natural32",    0 },
         { "char",         "character",    0 },
-        { "short",        "integer16",    SHORT },
-        { "long",         "integer32",    LONG },
-        { "longlong",     "integer64",    LONG },
+        { "short",        "natural16",    SHORT },
+        { "long",         "natural32",    LONG },
+        { "longlong",     "natural64",    LONG },
         { "float",        "real32",       0 },
         { "double",       "real64",       0 },
         { "unsigned",     "unsigned32",   UNSIGNED },
-        { "signed",       "integer32",    SIGNED },
-        { "int8_t",       "integer8",     0 },
-        { "int16_t",      "integer16",    0 },
-        { "int32_t",      "integer32",    0 },
-        { "int64_t",      "integer64",    0 },
+        { "signed",       "natural32",    SIGNED },
+        { "int8_t",       "natural8",     0 },
+        { "int16_t",      "natural16",    0 },
+        { "int32_t",      "natural32",    0 },
+        { "int64_t",      "natural64",    0 },
         { "uint8_t",      "unsigned8",    0 },
         { "uint16_t",     "unsigned16",   0 },
         { "uint32_t",     "unsigned32",   0 },
@@ -387,13 +387,13 @@ Name *CDeclaration::BaroqueTypeMods(Name *first,
 
     static struct { kstring first, second, to; } cvt[] =
     {
-        { "integer16",    "integer32",    "integer16" }, // short int
-        { "integer64",    "integer32",    "integer64" }, // long int
-        { "integer16",    "integer16",    "integer16" }, // short short
-        { "integer64",    "integer64",    "integer64" }, // long long
-        { "integer64",    "real64",       "real80" },    // long double
-        { "integer16",    "unsigned32",    "unsigned16" }, // short unsigned
-        { "integer64",    "unsigned32",    "unsigned64" }, // long unsigned
+        { "natural16",    "natural32",    "natural16" }, // short int
+        { "natural64",    "natural32",    "natural64" }, // long int
+        { "natural16",    "natural16",    "natural16" }, // short short
+        { "natural64",    "natural64",    "natural64" }, // long long
+        { "natural64",    "real64",       "real80" },    // long double
+        { "natural16",    "unsigned32",    "unsigned16" }, // short unsigned
+        { "natural64",    "unsigned32",    "unsigned64" }, // long unsigned
         { "unsigned32",   "unsigned32",    "unsigned32" }  // unsigned unsigned
     };
 

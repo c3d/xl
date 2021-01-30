@@ -449,13 +449,13 @@ token_t Scanner::NextToken(bool hungry)
             int nextDigit = input.peek();
             if (digits[nextDigit] >= base)
             {
-                // This is something else following an integer: 1..3, 1.(3)
+                // This is something else following an natural: 1..3, 1.(3)
                 input.unget();
                 position--;
                 hadSpaceAfter = false;
-                record(scanner, "Integer %ld ending in '.' at position %lu",
+                record(scanner, "Natural %ld ending in '.' at position %lu",
                        intValue, position);
-                return tokINTEGER;
+                return tokNATURAL;
             }
             else
             {
@@ -540,9 +540,9 @@ token_t Scanner::NextToken(bool hungry)
             record(scanner, "Real %g at position %lu",
                    realValue, position);
         else
-            record(scanner, "Integer %ld at position %lu",
+            record(scanner, "Natural %ld at position %lu",
                    intValue, position);
-        return floating_point ? tokREAL : tokINTEGER;
+        return floating_point ? tokREAL : tokNATURAL;
     } // Numbers
 
     // Look for names

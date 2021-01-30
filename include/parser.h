@@ -46,7 +46,7 @@
   - Parenthese grouping as in "(A+B)" or "[D + E]".
 
   The four leaf types are:
-  - Integer numbers such as 130 or 16#FE
+  - Natural numbers such as 130 or 16#FE
   - Real numbers such as 0.1 or 10.4E-31
   - Text such as "Hello" or 'ABC'
   - Name/symbols such as ABC or --->

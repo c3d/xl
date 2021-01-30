@@ -563,7 +563,7 @@ void Renderer::RenderBody(Tree *what)
 //   plug-ins may generate trees which would not be generable from
 //   the parser directly. For instance, you need to write
 //   exp (2*X), but it is possible to generate
-//   prefix(name("exp"), infix("*", integer(2), name("X")))
+//   prefix(name("exp"), infix("*", natural(2), name("X")))
 //   which is the same thing without the parentheses.
 //   We insert the implicit parentheses here (creating blocks on the fly)
 //   They are bracketed between [ and ] in the examples below
@@ -597,10 +597,11 @@ void Renderer::RenderBody(Tree *what)
         }
         else switch (what->Kind())
              {
-             case INTEGER:
-                 toText << what->AsInteger()->value;
+             case NATURAL:
+                 // HACK: For now consider it as natural for printout
+                 toText << (longlong) what->AsNatural()->value;
                  t = toText.str();
-                 RenderFormat (t, t, "integer ");
+                 RenderFormat (t, t, "natural ");
                  break;
              case REAL:
                  toText << what->AsReal()->value;
@@ -871,7 +872,7 @@ XL::Tree *xldebug(XL::Tree *tree)
 //    Emit for debugging purpose
 // ----------------------------------------------------------------------------
 {
-    if (XL::Allocator<XL::Integer>::IsAllocated(tree)   ||
+    if (XL::Allocator<XL::Natural>::IsAllocated(tree)   ||
         XL::Allocator<XL::Real>::IsAllocated(tree)      ||
         XL::Allocator<XL::Text>::IsAllocated(tree)      ||
         XL::Allocator<XL::Name>::IsAllocated(tree)      ||
@@ -900,7 +901,7 @@ XL::Tree *xldebug(XL::Tree *tree)
 }
 
 XL::Tree *xldebug(XL::Tree_p t)         { return xldebug((XL::Tree *) t); }
-XL::Tree *xldebug(XL::Integer_p t)      { return xldebug((XL::Tree *) t); }
+XL::Tree *xldebug(XL::Natural_p t)      { return xldebug((XL::Tree *) t); }
 XL::Tree *xldebug(XL::Real_p t)         { return xldebug((XL::Tree *) t); }
 XL::Tree *xldebug(XL::Text_p t)         { return xldebug((XL::Tree *) t); }
 XL::Tree *xldebug(XL::Name_p t)         { return xldebug((XL::Tree *) t); }

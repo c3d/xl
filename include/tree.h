@@ -58,7 +58,7 @@ XL_BEGIN
 // ============================================================================
 
 struct Tree;                                    // Base tree
-struct Integer;                                 // Integer: 0, 3, 8
+struct Natural;                                 // Natural: 0, 3, 8
 struct Real;                                    // Real: 3.2, 1.6e4
 struct Text;                                    // Text: "ABC"
 struct Name;                                    // Name / symbol: ABC, ++-
@@ -78,7 +78,7 @@ struct Context;                                 // Execution context
 // ============================================================================
 
 typedef GCPtr<Tree>                     Tree_p;
-typedef GCPtr<Integer, longlong>        Integer_p;
+typedef GCPtr<Natural, longlong>        Natural_p;
 typedef GCPtr<Real, double>             Real_p;
 typedef GCPtr<Text, text>               Text_p;
 typedef GCPtr<Name>                     Name_p;
@@ -105,12 +105,12 @@ enum kind
 //   The kinds of tree that compose an XL parse tree
 // ----------------------------------------------------------------------------
 {
-    INTEGER, REAL, TEXT, NAME,                  // Leaf nodes
+    NATURAL, REAL, TEXT, NAME,                  // Leaf nodes
     BLOCK, PREFIX, POSTFIX, INFIX,              // Non-leaf nodes
 
-    KIND_FIRST          = INTEGER,
+    KIND_FIRST          = NATURAL,
     KIND_LAST           = INFIX,
-    KIND_LEAF_FIRST     = INTEGER,
+    KIND_LEAF_FIRST     = NATURAL,
     KIND_LEAF_LAST      = NAME,
     KIND_NLEAF_FIRST    = BLOCK,
     KIND_NLEAF_LAST     = INFIX
@@ -158,7 +158,7 @@ struct Tree
     // Safe cast to an appropriate subclass
     template<class T>
     T *                 As(Scope *context = nullptr);
-    Integer *           AsInteger();
+    Natural *           AsNatural();
     Real *              AsReal();
     Text *              AsText();
     Name *              AsName();
@@ -202,26 +202,26 @@ private:
 
 // ============================================================================
 //
-//   Leaf nodes (integer, real, name, text)
+//   Leaf nodes (natural, real, name, text)
 //
 // ============================================================================
 
-struct Integer : Tree
+struct Natural : Tree
 // ----------------------------------------------------------------------------
-//   Integer constants
+//   Natural constants
 // ----------------------------------------------------------------------------
 {
-    static const kind KIND = INTEGER;
-    typedef Integer  self_t;
-    typedef longlong value_t;
+    static const kind KIND = NATURAL;
+    typedef Natural  self_t;
+    typedef ulonglong value_t;
 
-    Integer(value_t i = 0, TreePosition pos = NOWHERE):
-        Tree(INTEGER, pos), value(i) {}
-    Integer(Integer *i): Tree(INTEGER, i), value(i->value) {}
+    Natural(value_t i = 0, TreePosition pos = NOWHERE):
+        Tree(NATURAL, pos), value(i) {}
+    Natural(Natural *i): Tree(NATURAL, i), value(i->value) {}
     value_t  value;
     operator value_t()         { return value; }
 
-    GARBAGE_COLLECT(Integer);
+    GARBAGE_COLLECT(Natural);
 };
 
 
@@ -434,7 +434,7 @@ inline Tree *Tree::As<Tree>(Scope *)
 }
 
 
-inline Integer *Tree::AsInteger()       { return As<Integer>(); }
+inline Natural *Tree::AsNatural()       { return As<Natural>(); }
 inline Real    *Tree::AsReal()          { return As<Real>(); }
 inline Text    *Tree::AsText()          { return As<Text>(); }
 inline Name    *Tree::AsName()          { return As<Name>(); }
@@ -460,7 +460,7 @@ typename Action::value_type Tree::Do(Action *action)
 {
     switch(Kind())
     {
-    case INTEGER:       return action->Do((Integer *) this);
+    case NATURAL:       return action->Do((Natural *) this);
     case REAL:          return action->Do((Real *) this);
     case TEXT:          return action->Do((Text *) this);
     case NAME:          return action->Do((Name *) this);

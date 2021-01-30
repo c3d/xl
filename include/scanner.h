@@ -39,7 +39,7 @@
 /*
   XL scanning is quite simple. There are only five types of tokens:
 
-  - Integer or real numbers, beginning with a digit
+  - Natural or real numbers, beginning with a digit
   - Names, beginning with a letter
   - Text, enclosed in single or double quotes
   - Symbols, formed by consecutive sequences of punctuation characters
@@ -126,7 +126,7 @@ enum token_t
 
     // Normal conditions
     tokEOF,                     // End of file marker
-    tokINTEGER,                 // Integer number
+    tokNATURAL,                 // Natural number
     tokREAL,                    // Real number,
     tokSTRING,                  // Double-quoted string
     tokQUOTE,                   // Single-quoted string
@@ -196,7 +196,7 @@ public:
     text        NameValue()             { return textValue; }
     text        TextValue()             { return textValue; }
     double      RealValue()             { return realValue; }
-    ulong       IntegerValue()          { return intValue; }
+    ulong       NaturalValue()          { return intValue; }
     uint        Base()                  { return base; }
     void        SetTextValue(text t)    { textValue = t; }
     void        SetTokenText(text t)    { tokenText = t; }

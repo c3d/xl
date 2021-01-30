@@ -137,7 +137,7 @@ struct O1CompileUnit
     JIT::Value_p        Known(Tree *tree, uint which = knowAll );
 
     // Return the address of a pointer to the tree
-    JIT::Constant_p     ConstantInteger(Integer *what);
+    JIT::Constant_p     ConstantNatural(Natural *what);
     JIT::Constant_p     ConstantReal(Real *what);
     JIT::Constant_p     ConstantText(Text *what);
     JIT::Constant_p     ConstantTree(Tree *what);
@@ -157,7 +157,7 @@ struct O1CompileUnit
     JIT::Value_p        CallFillPrefix(Prefix *);
     JIT::Value_p        CallFillPostfix(Postfix *);
     JIT::Value_p        CallFillInfix(Infix *);
-    JIT::Value_p        CallInteger2Real(Tree *cast, Tree *integer);
+    JIT::Value_p        CallNatural2Real(Tree *cast, Tree *natural);
     JIT::Value_p        CallArrayIndex(Tree *self, Tree *l, Tree *r);
     JIT::Value_p        CreateClosure(Tree *callee,
                                       TreeList &parms,
@@ -166,7 +166,7 @@ struct O1CompileUnit
     JIT::Value_p         CallTypeError(Tree *what);
 
     JIT::BasicBlock_p   TagTest(Tree *code, unsigned tag);
-    JIT::BasicBlock_p   IntegerTest(Tree *code, longlong value);
+    JIT::BasicBlock_p   NaturalTest(Tree *code, longlong value);
     JIT::BasicBlock_p   RealTest(Tree *code, double value);
     JIT::BasicBlock_p   TextTest(Tree *code, text value);
     JIT::BasicBlock_p   ShapeTest(Tree *code, Tree *other);
@@ -281,7 +281,7 @@ struct ArgumentMatch
 
     typedef Tree *value_type;
     Tree *      Do(Tree *what);
-    Tree *      Do(Integer *what);
+    Tree *      Do(Natural *what);
     Tree *      Do(Real *what);
     Tree *      Do(Text *what);
     Tree *      Do(Name *what);
@@ -318,7 +318,7 @@ struct CompileAction
 
     typedef Tree *value_type;
     Tree *      Do(Tree *what);
-    Tree *      Do(Integer *what);
+    Tree *      Do(Natural *what);
     Tree *      Do(Real *what);
     Tree *      Do(Text *what);
     Tree *      Do(Name *what);
@@ -380,7 +380,7 @@ struct EvaluateChildren
     ~EvaluateChildren()                         {}
 
     typedef Tree *value_type;
-    Tree *Do(Integer *what);
+    Tree *Do(Natural *what);
     Tree *Do(Real *what);
     Tree *Do(Text *what);
     Tree *Do(Name *what);

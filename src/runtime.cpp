@@ -191,12 +191,12 @@ kstring xl_infix_name(Infix *infix)
 //
 // ========================================================================
 
-Integer *xl_new_integer(TreePosition pos, longlong value)
+Natural *xl_new_natural(TreePosition pos, ulonglong value)
 // ----------------------------------------------------------------------------
-//    Called by generated code to build a new Integer
+//    Called by generated code to build a new Natural
 // ----------------------------------------------------------------------------
 {
-    Integer *result = new Integer(value, pos);
+    Natural *result = new Natural(value, pos);
     return result;
 }
 
@@ -316,7 +316,7 @@ Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
 {
     switch(tree->Kind())
     {
-    case INTEGER:
+    case NATURAL:
     case REAL:
     case TEXT:
     case NAME:
@@ -796,7 +796,7 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
                 longlong l = strtoll(buffer, &ptr2, 10);
                 if (ptr2 == ptr-1)
                 {
-                    child = new Integer(l);
+                    child = new Natural(l);
                 }
                 else
                 {
@@ -893,6 +893,18 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
 
 extern "C"
 {
+
+bool xl_write_natural(ulonglong x)
+// ----------------------------------------------------------------------------
+//   Write a natural value
+// ----------------------------------------------------------------------------
+{
+    // HACK: Until type system is more robust, print as signed value
+    std::cout << (longlong) x;
+    return true;
+}
+XL_NATIVE(write_natural);
+
 
 bool xl_write_integer(longlong x)
 // ----------------------------------------------------------------------------
@@ -1011,14 +1023,14 @@ bool xl_text_ge(kstring x, kstring y)
 }
 
 
-integer_t xl_text2int(kstring tval)
+natural_t xl_text2int(kstring tval)
 // ----------------------------------------------------------------------------
 //   Converts text to a numerical value
 // ----------------------------------------------------------------------------
 {
     text t = tval;
     std::istringstream stream(t);
-    integer_t result = 0.0;
+    natural_t result = 0.0;
     stream >> result;
     return result;
 }
@@ -1037,7 +1049,7 @@ real_t xl_text2real(kstring tval)
 }
 
 
-text xl_int2text(integer_t value)
+text xl_int2text(natural_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -1059,24 +1071,24 @@ text xl_real2text(real_t value)
 }
 
 
-integer_t xl_mod(integer_t x, integer_t y)
+natural_t xl_mod(natural_t x, natural_t y)
 // ----------------------------------------------------------------------------
 //   Compute a mathematical 'mod' from the C99 % operator
 // ----------------------------------------------------------------------------
 {
-    integer_t tmp = x % y;
+    natural_t tmp = x % y;
     if (tmp && (x^y) < 0)
         tmp += y;
     return tmp;
 }
 
 
-integer_t xl_pow(integer_t x, integer_t y)
+natural_t xl_pow(natural_t x, natural_t y)
 // ----------------------------------------------------------------------------
-//   Compute integer power
+//   Compute natural power
 // ----------------------------------------------------------------------------
 {
-    integer_t tmp = 0;
+    natural_t tmp = 0;
     if (y >= 0)
     {
         tmp = 1;
@@ -1104,9 +1116,9 @@ real_t xl_modf(real_t x, real_t y)
 }
 
 
-real_t xl_powf(real_t x, integer_t y)
+real_t xl_powf(real_t x, natural_t y)
 // ----------------------------------------------------------------------------
-//   Compute real power with an integer on the right
+//   Compute real power with an natural on the right
 // ----------------------------------------------------------------------------
 {
     bool     negative = y < 0;
@@ -1186,18 +1198,18 @@ real_t xl_time(real_t delay)
     return tm.tmfield
 
 
-integer_t  xl_seconds()     { XL_TIME(tm_sec,       1.0); }
-integer_t  xl_minutes()     { XL_TIME(tm_min,      60.0); }
-integer_t  xl_hours()       { XL_TIME(tm_hour,    3600.0); }
-integer_t  xl_month_day()   { XL_TIME(tm_mday,   86400.0); }
-integer_t  xl_mon()         { XL_TIME(tm_mon,    86400.0); }
-integer_t  xl_year()        { XL_TIME(tm_year,   86400.0); }
-integer_t  xl_week_day()    { XL_TIME(tm_wday,   86400.0); }
-integer_t  xl_year_day()    { XL_TIME(tm_yday,   86400.0); }
-integer_t  xl_summer_time() { XL_TIME(tm_isdst,  86400.0); }
+natural_t  xl_seconds()     { XL_TIME(tm_sec,       1.0); }
+natural_t  xl_minutes()     { XL_TIME(tm_min,      60.0); }
+natural_t  xl_hours()       { XL_TIME(tm_hour,    3600.0); }
+natural_t  xl_month_day()   { XL_TIME(tm_mday,   86400.0); }
+natural_t  xl_mon()         { XL_TIME(tm_mon,    86400.0); }
+natural_t  xl_year()        { XL_TIME(tm_year,   86400.0); }
+natural_t  xl_week_day()    { XL_TIME(tm_wday,   86400.0); }
+natural_t  xl_year_day()    { XL_TIME(tm_yday,   86400.0); }
+natural_t  xl_summer_time() { XL_TIME(tm_isdst,  86400.0); }
 #ifndef CONFIG_MINGW
 text_t     xl_timezone()    { XL_TIME(tm_zone,   86400.0); }
-integer_t  xl_GMT_offset()  { XL_TIME(tm_gmtoff, 86400.0); }
+natural_t  xl_GMT_offset()  { XL_TIME(tm_gmtoff, 86400.0); }
 #endif // CONFIG_MINGW
 
 

@@ -52,6 +52,7 @@ cr              = "<BR>"
 
 // Colorization of numbers
 integer         = "<FONT color=""#008080"">" self "</FONT>"
+natural         = "<FONT color=""#008080"">" self "</FONT>"
 real            = "<FONT color=""#008000"">" self "</FONT>"
 
 // Basic keywords
@@ -73,6 +74,7 @@ keyword         = "<FONT color=""#000080""><B>" self "</B></FONT>"
 type            = "<FONT color=""#008080""><B>" self "</B></FONT>"
 
 "integer"       = type
+"natural"       = type
 "real"          = type
 
 // Basic function names

@@ -72,7 +72,7 @@ SPECIAL(TreeKind, 1,
         JIT::Value_p tag = code.Load(ptr, "tag");
         JIT::Value_p mask = code.IntegerConstant(code.Type(tag),Tree::KINDMASK);
         JIT::Value_p kind = code.And(tag, mask, "tagAndMask");
-        kind = code.BitCast(kind, compiler.integerTy);
+        kind = code.BitCast(kind, compiler.naturalTy);
         return kind;
     )
 
@@ -201,7 +201,7 @@ SPECIAL(BlockClosing, 1,
 // ============================================================================
 
 //       Name                   Return          Arguments
-EXTERNAL(strcmp,                integerTy,      charPtrTy, charPtrTy)
+EXTERNAL(strcmp,                naturalTy,      charPtrTy, charPtrTy)
 EXTERNAL(xl_evaluate,           treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_same_shape,         booleanTy,      treePtrTy, treePtrTy)
 EXTERNAL(xl_same_text,          booleanTy,      treePtrTy, charPtrTy)
@@ -209,13 +209,13 @@ EXTERNAL(xl_infix_match_check,  treePtrTy,      scopePtrTy, treePtrTy, charPtrTy
 EXTERNAL(xl_typecheck,          treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_form_error,         treePtrTy,      scopePtrTy, treePtrTy)
 EXTERNAL(xl_stack_overflow,     treePtrTy,      treePtrTy)
-EXTERNAL(xl_new_integer,        integerTreePtrTy, ulongTy, ulonglongTy)
+EXTERNAL(xl_new_natural,        naturalTreePtrTy, ulongTy, ulonglongTy)
 EXTERNAL(xl_new_real,           realTreePtrTy,  ulongTy, realTy)
 EXTERNAL(xl_new_character,      textTreePtrTy,  ulongTy, characterTy)
 EXTERNAL(xl_new_text,           textTreePtrTy,  ulongTy, textTy)
 EXTERNAL(xl_new_text_ptr,       textTreePtrTy,  ulongTy, textPtrTy)
 EXTERNAL(xl_new_ctext,          textTreePtrTy,  ulongTy, charPtrTy)
-EXTERNAL(xl_new_xtext,          textTreePtrTy,  charPtrTy, integerTy, charPtrTy, charPtrTy)
+EXTERNAL(xl_new_xtext,          textTreePtrTy,  charPtrTy, naturalTy, charPtrTy, charPtrTy)
 EXTERNAL(xl_new_block,          blockTreePtrTy, blockTreePtrTy,treePtrTy)
 EXTERNAL(xl_new_prefix,         prefixTreePtrTy, prefixTreePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_new_postfix,        postfixTreePtrTy, postfixTreePtrTy, treePtrTy, treePtrTy)
@@ -224,7 +224,7 @@ EXTERNAL(xl_fill_block,         blockTreePtrTy, blockTreePtrTy,treePtrTy)
 EXTERNAL(xl_fill_prefix,        prefixTreePtrTy, prefixTreePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_fill_postfix,       postfixTreePtrTy, postfixTreePtrTy, treePtrTy, treePtrTy)
 EXTERNAL(xl_fill_infix,         infixTreePtrTy, infixTreePtrTy,treePtrTy,treePtrTy)
-EXTERNAL(xl_integer2real,       treePtrTy,      treePtrTy)
+EXTERNAL(xl_natural2real,       treePtrTy,      treePtrTy)
 EXTERNAL(xl_array_index,        treePtrTy,      scopePtrTy, treePtrTy, treePtrTy)
 VA_EXTERNAL(xl_new_closure,     treePtrTy,      evalFnTy, treePtrTy, unsignedTy)
 EXTERNAL(xl_closure_code,       evalFnTy,       treePtrTy)
@@ -241,7 +241,7 @@ EXTERNAL(xl_infix_name,         charPtrTy,      infixTreePtrTy)
 
 SPECIAL(IAbs, 1,
 // ----------------------------------------------------------------------------
-//   Return the absolute value for an integer input
+//   Return the absolute value for an natural input
 // ----------------------------------------------------------------------------
         JIT::Value_p value = args[0];
         JIT::Type_p type = code.Type(value);

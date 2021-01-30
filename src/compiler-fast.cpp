@@ -686,15 +686,15 @@ Tree *ArgumentMatch::Do(Tree *)
 }
 
 
-Tree *ArgumentMatch::Do(Integer *what)
+Tree *ArgumentMatch::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   An integer argument matches the exact value
+//   An natural argument matches the exact value
 // ----------------------------------------------------------------------------
 {
-    // If the tested tree is a constant, it must be an integer with same value
+    // If the tested tree is a constant, it must be an natural with same value
     if (test->IsConstant())
     {
-        Integer *it = test->AsInteger();
+        Natural *it = test->AsNatural();
         if (!it)
             return nullptr;
         if (!compile.keepAlternatives)
@@ -711,7 +711,7 @@ Tree *ArgumentMatch::Do(Integer *what)
         return nullptr;
 
     // Compare at run-time the actual tree value with the test value
-    compile.unit.IntegerTest(compiled, what->value);
+    compile.unit.NaturalTest(compiled, what->value);
     return compiled;
 }
 
@@ -721,7 +721,7 @@ Tree *ArgumentMatch::Do(Real *what)
 //   A real matches the exact value
 // ----------------------------------------------------------------------------
 {
-    // If the tested tree is a constant, it must be an integer with same value
+    // If the tested tree is a constant, it must be an natural with same value
     if (test->IsConstant())
     {
         Real *rt = test->AsReal();
@@ -751,7 +751,7 @@ Tree *ArgumentMatch::Do(Text *what)
 //   A text matches the exact value
 // ----------------------------------------------------------------------------
 {
-    // If the tested tree is a constant, it must be an integer with same value
+    // If the tested tree is a constant, it must be an natural with same value
     if (test->IsConstant())
     {
         Text *tt = test->AsText();
@@ -936,7 +936,7 @@ Tree *ArgumentMatch::Do(Infix *what)
         }
     }
 
-    // Check if we match a type, e.g. 2 vs. 'K : integer'
+    // Check if we match a type, e.g. 2 vs. 'K : natural'
     if (what->name == ":")
     {
         record(statictypes, "Matching %t against %t", test, what);
@@ -966,7 +966,7 @@ Tree *ArgumentMatch::Do(Infix *what)
                     return Do(varName);
 
                 bool isConstantType = (namedType == text_type ||
-                                       namedType == integer_type ||
+                                       namedType == natural_type ||
                                        namedType == real_type);
                 if (isConstantType)
                 {
@@ -977,14 +977,14 @@ Tree *ArgumentMatch::Do(Infix *what)
                 kind tk = test->Kind();
 
                 // Check built-in types against built-in constants
-                if (tk == INTEGER || tk == REAL || tk == TEXT)
+                if (tk == NATURAL || tk == REAL || tk == TEXT)
                 {
                     if (isConstantType)
                     {
                         record(statictypes, "Built-in types and constant");
                         if (namedType == text_type    && tk != TEXT)
                             return nullptr;
-                        if (namedType == integer_type && tk != INTEGER)
+                        if (namedType == natural_type && tk != NATURAL)
                             return nullptr;
                         if (namedType == real_type && tk == TEXT)
                             return nullptr;
@@ -1072,7 +1072,7 @@ Tree *ArgumentMatch::Do(Infix *what)
             }
         }
 
-        // Evaluate type expression, e.g. 'integer' in example above
+        // Evaluate type expression, e.g. 'natural' in example above
         if (needRTTypeTest)
         {
             if (needTypeExprCompilation)
@@ -1112,13 +1112,13 @@ Tree *ArgumentMatch::Do(Infix *what)
             kind tk = compiled->Kind();
             switch(tk)
             {
-            case INTEGER:       exprType = integer_type;
+            case NATURAL:       exprType = natural_type;
                 if (typeExpr == real_type)
                 {
                     record(statictypes, "Promote %t to real", compiled);
                     compiled = new Prefix(real_type, compiled,
                                           compiled->Position());
-                    unit.CallInteger2Real(compiled, test);
+                    unit.CallNatural2Real(compiled, test);
                 }
                 break;
             case REAL:          exprType = real_type;    break;
@@ -1139,12 +1139,12 @@ Tree *ArgumentMatch::Do(Infix *what)
         {
             record(statictypes,
                    "Runtime type check matching %t to %t", exprType, typeExpr);
-            if (typeExpr == real_type && exprType == integer_type)
+            if (typeExpr == real_type && exprType == natural_type)
             {
-                record(statictypes, "Promote integer %t to real", compiled);
+                record(statictypes, "Promote natural %t to real", compiled);
                 compiled = new Prefix(real_type, compiled,
                                       compiled->Position());
-                unit.CallInteger2Real(compiled, test);
+                unit.CallNatural2Real(compiled, test);
             }
             else
             {
@@ -1342,9 +1342,9 @@ Tree *EnvironmentScan::Do(Postfix *what)
 //
 // ============================================================================
 
-Tree *EvaluateChildren::Do(Integer *what)
+Tree *EvaluateChildren::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   Compile integer constants
+//   Compile natural constants
 // ----------------------------------------------------------------------------
 {
     return compile.Do(what);
@@ -1607,12 +1607,12 @@ Tree *CompileAction::Do(Tree *what)
 }
 
 
-Tree *CompileAction::Do(Integer *what)
+Tree *CompileAction::Do(Natural *what)
 // ----------------------------------------------------------------------------
-//   Integers evaluate directly
+//   Naturals evaluate directly
 // ----------------------------------------------------------------------------
 {
-    unit.ConstantInteger(what);
+    unit.ConstantNatural(what);
     return what;
 }
 
@@ -2141,7 +2141,7 @@ O1CompileUnit::O1CompileUnit(FastCompiler &compiler,
 
     // Local copy of the types for the macro below
     JIT::IntegerType_p  booleanTy        = compiler.booleanTy;
-    JIT::IntegerType_p  integerTy        = compiler.integerTy;
+    JIT::IntegerType_p  naturalTy        = compiler.naturalTy;
     JIT::IntegerType_p  unsignedTy       = compiler.unsignedTy;
     JIT::IntegerType_p  ulongTy          = compiler.ulongTy;
     JIT::IntegerType_p  ulonglongTy      = compiler.ulonglongTy;
@@ -2150,7 +2150,7 @@ O1CompileUnit::O1CompileUnit(FastCompiler &compiler,
     JIT::PointerType_p  charPtrTy        = compiler.charPtrTy;
     JIT::StructType_p   textTy           = compiler.textTy;
     JIT::PointerType_p  textPtrTy        = compiler.textPtrTy;
-    JIT::PointerType_p  integerTreePtrTy = compiler.integerTreePtrTy;
+    JIT::PointerType_p  naturalTreePtrTy = compiler.naturalTreePtrTy;
     JIT::PointerType_p  realTreePtrTy    = compiler.realTreePtrTy;
     JIT::PointerType_p  textTreePtrTy    = compiler.textTreePtrTy;
     JIT::PointerType_p  blockTreePtrTy   = compiler.blockTreePtrTy;
@@ -2301,9 +2301,9 @@ JIT::Value_p O1CompileUnit::Known(Tree *tree, uint which)
 }
 
 
-JIT::Constant_p O1CompileUnit::ConstantInteger(Integer *what)
+JIT::Constant_p O1CompileUnit::ConstantNatural(Natural *what)
 // ----------------------------------------------------------------------------
-//    Generate an Integer tree
+//    Generate an Natural tree
 // ----------------------------------------------------------------------------
 {
     return ConstantTree(what);
@@ -2656,13 +2656,13 @@ JIT::Value_p O1CompileUnit::CallFillInfix(Infix *infix)
 }
 
 
-JIT::Value_p O1CompileUnit::CallInteger2Real(Tree *compiled, Tree *value)
+JIT::Value_p O1CompileUnit::CallNatural2Real(Tree *compiled, Tree *value)
 // ----------------------------------------------------------------------------
 //    Compile code generating the children of an infix
 // ----------------------------------------------------------------------------
 {
     JIT::Value_p result = Known(value);
-    result = code.Call(xl_integer2real, result);
+    result = code.Call(xl_natural2real, result);
     NeedStorage(compiled);
     MarkComputed(compiled, result);
     return result;
@@ -2743,13 +2743,13 @@ JIT::Value_p O1CompileUnit::CallTypeError(Tree *what)
 
 JIT::BasicBlock_p O1CompileUnit::TagTest(Tree *tree, unsigned tagValue)
 // ----------------------------------------------------------------------------
-//   Test if the input tree is an integer tree with the given value
+//   Test if the input tree is an natural tree with the given value
 // ----------------------------------------------------------------------------
 {
     // Where we go if the tests fail
     JIT::BasicBlock_p notGood = NeedTest();
 
-    // Check if the tag is INTEGER
+    // Check if the tag is NATURAL
     JIT::Value_p treeValue = Known(tree);
     if (!treeValue)
     {
@@ -2771,25 +2771,25 @@ JIT::BasicBlock_p O1CompileUnit::TagTest(Tree *tree, unsigned tagValue)
 }
 
 
-JIT::BasicBlock_p O1CompileUnit::IntegerTest(Tree *tree, longlong value)
+JIT::BasicBlock_p O1CompileUnit::NaturalTest(Tree *tree, longlong value)
 // ----------------------------------------------------------------------------
-//   Test if the input tree is an integer tree with the given value
+//   Test if the input tree is an natural tree with the given value
 // ----------------------------------------------------------------------------
 {
     // Where we go if the tests fail
     JIT::BasicBlock_p notGood = NeedTest();
 
-    // Check if the tag is INTEGER
-    JIT::BasicBlock_p isIntegerBB = TagTest(tree, INTEGER);
-    if (!isIntegerBB)
-        return isIntegerBB;
+    // Check if the tag is NATURAL
+    JIT::BasicBlock_p isNaturalBB = TagTest(tree, NATURAL);
+    if (!isNaturalBB)
+        return isNaturalBB;
 
     // Check if the value is the same
     JIT::Value_p treeValue = Known(tree);
     assert(treeValue);
-    treeValue = code.BitCast(treeValue, compiler.integerTreePtrTy);
+    treeValue = code.BitCast(treeValue, compiler.naturalTreePtrTy);
     JIT::Value_p valueFieldPtr = code.StructGEP(treeValue,
-                                           INTEGER_VALUE_INDEX,
+                                           NATURAL_VALUE_INDEX,
                                            "valuePtr");
     JIT::Value_p tval = code.Load(valueFieldPtr, "treeValue");
     JIT::Constant_p rval = code.IntegerConstant(tval->getType(),
@@ -2946,7 +2946,7 @@ JIT::BasicBlock_p O1CompileUnit::TypeTest(Tree *value, Tree *type)
     JIT::Value_p kindValue = code.And(tag, mask, "tagAndMask");
 
     uint kind = ~0U;
-    if (type == integer_type)           kind = INTEGER;
+    if (type == natural_type)           kind = NATURAL;
     else if (type == real_type)         kind = REAL;
     else if (type == text_type)         kind = TEXT;
     else if (type == name_type)         kind = NAME;
@@ -2963,18 +2963,18 @@ JIT::BasicBlock_p O1CompileUnit::TypeTest(Tree *value, Tree *type)
     JIT::BasicBlock_p isKindBad = code.NewBlock("isKindBad");
     code.IfBranch(isRightTag, isKindOK, isKindBad);
 
-    // Degraded for integer: may simply need to promote to real
+    // Degraded for natural: may simply need to promote to real
     code.SwitchTo(isKindBad);
     if (type == real_type)
     {
-        JIT::Constant_p intTag = code.IntegerConstant(tagTy, INTEGER);
+        JIT::Constant_p intTag = code.IntegerConstant(tagTy, NATURAL);
         JIT::Value_p isInt = code.ICmpEQ(kindValue, intTag, "isInt");
         JIT::BasicBlock_p isIntOK = code.NewBlock("isIntOK");
         JIT::BasicBlock_p isIntBad = code.NewBlock("isIntBad");
         code.IfBranch(isInt, isIntOK, isIntBad);
 
         code.SwitchTo(isIntOK);
-        JIT::Value_p asReal = code.Call(xl_integer2real, treeValue);
+        JIT::Value_p asReal = code.Call(xl_natural2real, treeValue);
         JIT::Value_p realPtr = NeedStorage(value);
         code.Store(asReal, realPtr);
         code.Branch(isKindOK);

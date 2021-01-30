@@ -42,7 +42,7 @@
 XL_BEGIN
 
 struct Tree;                                    // Base tree
-struct Integer;                                 // Integer: 0, 3, 8
+struct Natural;                                 // Natural: 0, 3, 8
 struct Real;                                    // Real: 3.2, 1.6e4
 struct Text;                                    // Text: "ABC"
 struct Name;                                    // Name / symbol: ABC, ++-
@@ -64,7 +64,7 @@ struct Action
     virtual Tree *Do (Tree *what) = 0;
 
     // Specialization for the canonical nodes, default is to run them
-    virtual Tree *Do(Integer *what);
+    virtual Tree *Do(Natural *what);
     virtual Tree *Do(Real *what);
     virtual Tree *Do(Text *what);
     virtual Tree *Do(Name *what);

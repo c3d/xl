@@ -31,6 +31,6 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-// CMD=%x -optimize -3  %f
+// CMD=%x -stack_depth 10  %f
 // EXIT=1
 1 + 2 + 3

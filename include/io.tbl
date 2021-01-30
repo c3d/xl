@@ -37,6 +37,8 @@
 PREFIX(WriteText,       boolean, "write", text,
        R_BOOL(std::cout << left.value));
 PREFIX(WriteInteger,    boolean, "write", integer,
+       R_BOOL(std::cout << (longlong) left.value));
+PREFIX(WriteNatural,    boolean, "write", natural,
        R_BOOL(std::cout << left.value));
 PREFIX(WriteReal,       boolean, "write", real,
        R_BOOL(std::cout << left.value));

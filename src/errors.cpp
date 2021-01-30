@@ -95,12 +95,12 @@ Error::Error(kstring m, Tree *a, Tree *b, Tree *c)
 }
 
 
-Error &Error::Arg(Integer::value_t value)
+Error &Error::Arg(Natural::value_t value)
 // ----------------------------------------------------------------------------
 //   Add an argument to the message, replacing $1, $2, ...
 // ----------------------------------------------------------------------------
 {
-    arguments.push_back(new Integer(value, position));
+    arguments.push_back(new Natural(value, position));
     return *this;
 }
 
