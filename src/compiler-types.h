@@ -91,6 +91,12 @@ public:
     // Debug utilities
     void        Dump() override;
 
+public:
+    // Type adjusted overrides
+    CompilerRewriteCalls *TreeRewriteCalls(Tree *what, bool recurse = true);
+    void                TreeRewriteCalls(Tree *what, CompilerRewriteCalls *rc);
+
+
 protected:
     CompilerTypes(Scope *scope, CompilerTypes *parent);
 
@@ -123,6 +129,33 @@ struct TypeInfo : Info
     operator             data_t()  { return type; }
     Tree_p               type;
 };
+
+
+
+// ============================================================================
+//
+//   Inline functions
+//
+// ============================================================================
+
+inline CompilerRewriteCalls *
+CompilerTypes::TreeRewriteCalls(Tree *what, bool recurse)
+// ----------------------------------------------------------------------------
+//   Type-adjusted variant
+// ----------------------------------------------------------------------------
+{
+    return (CompilerRewriteCalls *) Types::TreeRewriteCalls(what, recurse);
+}
+
+
+inline void
+CompilerTypes::TreeRewriteCalls(Tree *what, CompilerRewriteCalls *rc)
+// ----------------------------------------------------------------------------
+//   Type-adjusted variant
+// ----------------------------------------------------------------------------
+{
+    Types::TreeRewriteCalls(what, rc);
+}
 
 
 XL_END

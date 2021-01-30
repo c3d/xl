@@ -139,6 +139,7 @@ private:
 
     // Error management
     JIT::Value_p        CallFormError(Tree *what);
+    JIT::Value_p        CallTypeCheck(Tree *type, JIT::Value_p value);
 
 protected:
     // Primitives, i.e. functions generating native LLVM code

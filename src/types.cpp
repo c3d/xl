@@ -804,7 +804,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     context->Lookup(what, lookupRewriteCalls, rc);
 
     // If we have no candidate, this is a failure
-    count = rc->candidates.size();
+    count = rc->Size();
     if (count == 0)
     {
         if (!mayFail)
@@ -816,11 +816,12 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
     errors.Log(Error("The type of $1 is conflicting because", what), true);
 
     // The resulting type is the union of all candidates
-    Tree *type = rc->candidates[0]->type;
+    Tree *type = rc->Candidate(0)->type;
     for (uint i = 1; type && i < count; i++)
     {
-        Tree *ctype = rc->candidates[i]->type;
-        type = Unify(type, ctype, what, rc->candidates[i]->rewrite->left);
+        RewriteCandidate *call = rc->Candidate(i);
+        Tree *ctype = call->type;
+        type = Unify(type, ctype, what, call->rewrite->left);
     }
     type = AssignType(what, type);
     return type;
@@ -1092,7 +1093,7 @@ Tree *Types::Join(Tree *old, Tree *replacement)
 
     // Replace the type in the rewrite calls
     for (auto &r : rcalls)
-        for (RewriteCandidate *rc : r.second->candidates)
+        for (RewriteCandidate *rc : r.second->Candidates())
             if (rc->type == old)
                 rc->type = replace;
 
@@ -1435,7 +1436,7 @@ RewriteCalls *Types::TreeRewriteCalls(Tree *what, bool recurse)
         {
             RewriteCalls *rc = it->second;
             record(types_calls, "In %p calls for %t are %p (%u entries)",
-                   ts, what, rc, rc->candidates.size());
+                   ts, what, rc, rc->Size());
             return rc;
         }
     }

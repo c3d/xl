@@ -40,6 +40,7 @@
 #include "compiler-rewrites.h"
 #include "compiler-types.h"
 #include "save.h"
+#include "basics.h"
 #include "errors.h"
 #include "renderer.h"
 #include "llvm-crap.h"
@@ -263,20 +264,19 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 
     record(compiler_expr, "Call %t", call);
     CompilerTypes *types = function.types;
-    RewriteCalls *rc = types->TreeRewriteCalls(call);
+    CompilerRewriteCalls *rc = types->TreeRewriteCalls(call);
     record(types_calls, "Looking up %t in %p: got %p", call, types, rc);
     if (mayfail && !rc)
         return nullptr;
     XL_ASSERT(rc && "Type analysis botched on expression");
-    RewriteCandidates &calls = rc->candidates;
 
     // Optimize the frequent case where we have a single call candidate
-    uint i, max = calls.size();
+    uint i, max = rc->Size();
     record(compiler_expr, "Call %t has %u candidates", call, max);
     if (max == 1)
     {
         // We now evaluate in that rewrite's type system
-        RewriteCandidate* cand = calls[0];
+        CompilerRewriteCandidate* cand = rc->Candidate(0);
         if (cand->Unconditional())
         {
             result = DoRewrite(call, (CompilerRewriteCandidate *) cand);
@@ -289,7 +289,6 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         result = function.BoxedTree(call);
         return result;
     }
-
     // More general case: we need to generate expression reduction
     JITBlock &code = function.code;
     JITBlock isDone(code, "done");
@@ -300,53 +299,25 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     for (i = 0; i < max; i++)
     {
         // Now evaluate in that candidate's type system
-        RewriteCandidate *cand = calls[i];
+        CompilerRewriteCandidate *cand = rc->Candidate(i);
         Save<value_map> saveComputed(computed, computed);
         JIT::Value_p condition = nullptr;
 
         // Perform tree-kind tests to check if this candidate is valid
-        for (RewriteKind &k : cand->kinds)
+        for (RewriteTypeCheck &tc : cand->typechecks)
         {
-            JIT::Value_p value = Value(k.value);
-            JIT::Type_p type = code.Type(value);
-
-            if (type == compiler.treePtrTy        ||
-                type == compiler.integerTreePtrTy ||
-                type == compiler.realTreePtrTy    ||
-                type == compiler.textTreePtrTy    ||
-                type == compiler.nameTreePtrTy    ||
-                type == compiler.blockTreePtrTy   ||
-                type == compiler.prefixTreePtrTy  ||
-                type == compiler.postfixTreePtrTy ||
-                type == compiler.infixTreePtrTy)
-            {
-                // Unboxed value, check the dynamic kind
-                JIT::Value_p tagPtr = code.StructGEP(value, TAG_INDEX, "tagp");
-                JIT::Value_p tag = code.Load(tagPtr, "tag");
-                JIT::Type_p  tagType = code.Type(tag);
-                JIT::Value_p mask = code.IntegerConstant(tagType, Tree::KINDMASK);
-                JIT::Value_p kindValue = code.And(tag, mask, "kind");
-                JIT::Value_p kindCheck = code.IntegerConstant(tagType, k.test);
-                JIT::Value_p compare = code.ICmpEQ(kindValue, kindCheck);
-                record(compiler_expr, "Kind test for %t candidate %u: %v",
-                       call, i, compare);
-
-                if (condition)
-                    condition = code.And(condition, compare);
-                else
-                    condition = compare;
-            }
+            JIT::Value_p value = Value(tc.value);
+            value = function.Autobox(tc.value, value, compiler.treePtrTy);
+            JIT::Value_p cast = function.CallTypeCheck(tc.type, value);
+            JIT::Value_p zero = code.IntegerConstant(compiler.treePtrTy, 0);
+            JIT::Value_p compare = code.ICmpEQ(cast, zero);
+            record(compiler_expr, "Type test for %t for value %t type %t: %v",
+                   call, tc.value, tc.type, compare);
+            if (condition)
+                condition = code.And(condition, compare);
             else
-            {
-                // If we have boxed values, it was a static check
-                if (!((type->isIntegerTy()        && k.test == INTEGER)   ||
-                      (type->isFloatingPointTy()  && k.test == REAL)      ||
-                      (type == compiler.charPtrTy && k.test == TEXT)))
-                {
-                    Ooops("Invalid type combination in kind for $1", call);
-                }
-            }
-        } // Kinds
+                condition = compare;
+        } // Types
 
         // Perform the tests to check if this candidate is valid
         for (RewriteCondition &t : cand->conditions)

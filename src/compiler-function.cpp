@@ -866,6 +866,19 @@ JIT::Value_p CompilerFunction::CallFormError(Tree *what)
 }
 
 
+JIT::Value_p CompilerFunction::CallTypeCheck(Tree *type, JIT::Value_p value)
+// ----------------------------------------------------------------------------
+//   Report a type error trying to evaluate some argument
+// ----------------------------------------------------------------------------
+{
+    JIT::Value_p typePtr = ConstantTree(type);
+    JIT::Value_p scope = ConstantTree(types->TypesScope());
+    scope = code.BitCast(scope, compiler.scopePtrTy);
+    JIT::Value_p callVal = code.Call(unit.xl_typecheck, scope, typePtr, value);
+    return callVal;
+}
+
+
 JIT::Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
 // ----------------------------------------------------------------------------
 //    Return machine type associated to a type name or expression, if any

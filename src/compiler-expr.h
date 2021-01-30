@@ -42,7 +42,6 @@
 
 XL_BEGIN
 
-struct RewriteCandidate;
 class  JITBlock;
 
 class CompilerExpression

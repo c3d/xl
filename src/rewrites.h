@@ -81,18 +81,18 @@ struct RewriteCondition
 typedef std::vector<RewriteCondition> RewriteConditions;
 
 
-struct RewriteKind
+struct RewriteTypeCheck
 // ----------------------------------------------------------------------------
-//   A kind-based condition for a given rewrite to be valid
+//   A dynamic type check to verify if a value has the expected type
 // ----------------------------------------------------------------------------
 //   For [foo X,Y], the input must be an infix, so when called "ambiguously"
 //   as [foo Z], this will check that [Z] hss an infix kind.
 {
-    RewriteKind(Tree *value, kind test): value(value), test(test) {}
+    RewriteTypeCheck(Tree *value, Tree *type): value(value), type(type) {}
     Tree_p      value;
-    kind        test;
+    Tree_p      type;
 };
-typedef std::vector<RewriteKind> RewriteKinds;
+typedef std::vector<RewriteTypeCheck> RewriteTypeChecks;
 
 
 struct RewriteCandidate
@@ -106,13 +106,16 @@ struct RewriteCandidate
     {
         conditions.push_back(RewriteCondition(value, test));
     }
-    void KindCondition(Tree *value, kind k)
+    void TypeCheck(Tree *value, Tree *type)
     {
-        record(calls, "Check if %t has kind %u", value, (unsigned) k);
-        kinds.push_back(RewriteKind(value, k));
+        record(calls, "Check if %t has type %t", value, type);
+        typechecks.push_back(RewriteTypeCheck(value, type));
     }
 
-    bool Unconditional() { return kinds.size() == 0 && conditions.size() == 0; }
+    bool Unconditional()
+    {
+        return typechecks.size() == 0 && conditions.size() == 0;
+    }
 
     // Argument binding
     Tree *              ValueType(Tree *value);
@@ -134,7 +137,7 @@ public:
     Infix_p             rewrite;
     Scope_p             scope;
     RewriteBindings     bindings;
-    RewriteKinds        kinds;
+    RewriteTypeChecks   typechecks;
     RewriteConditions   conditions;
     Types_p             value_types;
     Types_p             binding_types;
@@ -163,9 +166,18 @@ struct RewriteCalls
     virtual
     RewriteCandidate *  Candidate(Infix *rewrite, Scope *scope, Types *types);
 
-public:
+    // Types
+    Types *             RewriteTypes()          { return types; }
+
+    // Candidates
+    size_t              Size()                  { return candidates.size(); }
+    RewriteCandidate *  Candidate(unsigned i)   { return candidates[i]; }
+    RewriteCandidates & Candidates()            { return candidates; }
+
+private:
     Types_p             types;
     RewriteCandidates   candidates;
+public:
     GARBAGE_COLLECT(RewriteCalls);
 };
 typedef GCPtr<RewriteCalls> RewriteCalls_p;

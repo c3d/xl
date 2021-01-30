@@ -504,23 +504,7 @@ bool RewriteCandidate::Unify(Tree *valueType, Tree *patternType,
     if (refType == tree_type)
     {
         Tree *vrefType = binding_types->BaseType(patternType);
-        kind k = valueType->Kind();
-        if (k == INTEGER || vrefType == integer_type)
-            KindCondition(value, INTEGER);
-        else if (k == REAL || vrefType == real_type)
-            KindCondition(value, REAL);
-        else if (k == TEXT || vrefType == text_type)
-            KindCondition(value, TEXT);
-        else if (vrefType == name_type || vrefType == boolean_type)
-            KindCondition(value, NAME);
-        else if (vrefType == block_type)
-            KindCondition(value, BLOCK);
-        else if (k == INFIX || vrefType == infix_type)
-            KindCondition(value, INFIX);
-        else if (vrefType == prefix_type)
-            KindCondition(value, PREFIX);
-        else if (vrefType == postfix_type)
-            KindCondition(value, POSTFIX);
+        TypeCheck(value, vrefType);
     }
 
     // Otherwise, do type inference

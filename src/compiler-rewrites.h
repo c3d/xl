@@ -95,6 +95,16 @@ struct CompilerRewriteCalls : RewriteCalls
                                         Scope *scope,
                                         Types *types) override;
 
+    // Type-adjusted functions
+    CompilerTypes *RewriteTypes()
+    {
+        return (CompilerTypes *) RewriteCalls::RewriteTypes();
+    }
+    CompilerRewriteCandidate *Candidate(unsigned i)
+    {
+        return (CompilerRewriteCandidate *) RewriteCalls::Candidate(i);
+    }
+
 public:
     GARBAGE_COLLECT(CompilerRewriteCalls);
 };
