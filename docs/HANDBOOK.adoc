@@ -309,7 +309,7 @@ abs X           is      if X < 0 then -X else X
 [source]
 ----
 // Define a not-equal operator using unicode sign
-X ≠ Y           is      (not X = Y)
+X ≠ Y           is      not (X = Y)
 ----
 ====
 
