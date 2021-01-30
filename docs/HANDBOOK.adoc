@@ -863,10 +863,16 @@ to print_in_single_thread Items is
          print Items
 ----
 
-It is extremely difficult, if not impossible, to achieve a similar
-effect with {cpp} `iostream` or, more generally, with I/O facilities that
-perform one call per I/O item. That’s because there is no way for the
-compiler to identify where the "line breaks" are in your code.
+It is extremely difficult, if not impossible, to achieve a similar effect with
+{cpp} `iostream` or, more generally, with I/O facilities that perform one call
+per I/O item. That’s because there is no efficient way for the compiler to
+identify where the "line breaks" are in your code.
+
+Similarly, the C semantics enforce that a line is represented by a
+terminating "new-line" character. This is not the only way to represent
+lines. For example, each line could be a distinct block of memory, or a
+different record on disk. The semantics of XL does not preclude such
+implementations, which can sometimes perform much better.
 
 === Efficient translation
 
