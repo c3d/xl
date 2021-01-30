@@ -635,7 +635,7 @@ X <=> Y     when X = Y  is  0
 X <=> Y     when X > Y  is  1
 ----
 
-Similarly, C++ makes it extremely difficult to optimize(((optimization)))
+Similarly, {cpp} makes it extremely difficult to optimize(((optimization)))
 away an expression like `X*0`, `X*1` or `X+0` using only standard
 programming techniques, whereas XL makes it extremely easy:
 
