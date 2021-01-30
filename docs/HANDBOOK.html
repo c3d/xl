@@ -1082,7 +1082,7 @@ abs X           is      if X &lt; 0 then -X else X</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Define a not-equal operator using unicode sign
-X ≠ Y           is      (not X = Y)</code></pre>
+X ≠ Y           is      not (X = Y)</code></pre>
 </div>
 </div>
 </div>
@@ -1294,19 +1294,13 @@ example if all the indexes are contiguous integers.</p>
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// An (inefficient) implementation of a generic 1-based array type
 
 // array[1] of T, start of the recurrence
-array[1] of T with
-    // Interface exposes A[1] which is a mutable T value
-    1 : T
-is
+array[1] of T is
     // Implementation stores one variable value of type T
-    Value : T
+    Tail : T
     1 is Value
 
 // array[N] of T: defined based on array[N-1] of T
-array[N] of T when N &gt; 1 like Array[N-1] of T with
-    // Unified interface for A[I] which is a mutable T value
-    (lambda I when I in 1..N) : T
-is
+array[N] of T when N &gt; 1 is
     // Implemenation is a two-parter for Head and Tail
     Head  : array[N-1] of T
     Tail  : T
@@ -1327,7 +1321,7 @@ for I in 1..5 loop
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// A general implementation of minimum
-min X, Y    is { Z is min Y; if X &lt; Z then X else Z }
+min X, Y    is { mX is min X; mY is min Y; if mX &lt; mY then mX else mY }
 min X       is X
 
 // Computes 4
@@ -1464,7 +1458,7 @@ X &lt;=&gt; Y     when X &gt; Y  is  1</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Similarly, C++ makes it extremely difficult to optimize
+<p>Similarly, C&#43;&#43; makes it extremely difficult to optimize
 away an expression like <code>X*0</code>, <code>X*1</code> or <code>X+0</code> using only standard
 programming techniques, whereas XL makes it extremely easy:</p>
 </div>
@@ -1559,25 +1553,26 @@ implementation details were elided as <code>&#8230;&#8203;</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write X:text            as ok   is ... <i class="conum" data-value="1"></i><b>(1)</b>
-write X:integer         as ok   is ...
-write X:real            as ok   is ...
-write X:character       as ok   is ...
-write [[true]]          as ok   is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
-write [[false]]         as ok   is { write "false" }
-write Head, Rest        as ok   is { write Head; write Rest }
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to write X:text         is ... <i class="conum" data-value="1"></i><b>(1)</b>
+to write X:integer      is ...
+to write X:real         is ...
+to write X:character    is ...
+to write [[true]]       is { write "true"  } <i class="conum" data-value="2"></i><b>(2)</b>
+to write [[false]]      is { write "false" }
+to write Head, Rest     is { write Head; write Rest }
 
-print                   as ok   is { write SOME_NEWLINE_CHARACTER }
-print Items             as ok   is { write Items; print }</code></pre>
+to print                is { write SOME_NEWLINE_CHARACTER }
+to print Items          is { write Items; print }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <a href="#fallible-types">ok</a> type is used to represent
-the <code>nil or error</code> type, in other words it indicates that the
-function either returns nothing, or returns an error.</td>
+<td>The <code>to</code> that precedes <code>write</code> is <a href="#syntactic-sugar">syntactic sugar</a> for
+procedures named after an English verb. It implicitly marks the procedure as
+having the <code>ok</code> <a href="#fallible-types">fallible type</a>. In other words, it
+indicates that <code>write</code> can return <code>nil</code> or an <code>error</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -1664,19 +1659,19 @@ that looks like:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">print A:text, B:integer, C:text, D:integer is
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to print A:text, B:integer, C:text, D:integer is
     write A, B, C, D
     print
 
-write A:text, B:integer, C:text, D:integer is
+to write A:text, B:integer, C:text, D:integer is
     write A
     write B, C, D
 
-write B:integer, C:text, D:integer is
+to write B:integer, C:text, D:integer is
     write B
     write C, D
 
-write C:text, D:integer is
+to write C:text, D:integer is
     write C
     write D</code></pre>
 </div>
@@ -1703,7 +1698,7 @@ you need for that type to become "writable" is to add a definition of
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">write Z:complex     is write "(", Z.Re, ";", Z.Im, ")"</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to write Z:complex      is write "(", Z.Re, ";", Z.Im, ")"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1721,20 +1716,27 @@ specific features for output lines, for example to ensure that a
 single line is always printed contiguously even in a multi-threaded
 scenario.  Assuming a <code>single_thread</code> facility
 ensuring that the code is executed by at most one thread, creating a
-locked <code>print</code> is nothing more than:</p>
+<code>print</code> that executes only in one thread at a time is nothing more than:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">locked_print Items is
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to print_in_single_thread Items is
     single_thread
          print Items</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>It is extremely difficult, if not impossible, to achieve a similar
-effect with C&#43;&#43; <code>iostream</code> or, more generally, with I/O facilities that
-perform one call per I/O item. That’s because there is no way for the
-compiler to identify where the "line breaks" are in your code.</p>
+<p>It is extremely difficult, if not impossible, to achieve a similar effect with
+C&#43;&#43; <code>iostream</code> or, more generally, with I/O facilities that perform one call
+per I/O item. That’s because there is no efficient way for the compiler to
+identify where the "line breaks" are in your code.</p>
+</div>
+<div class="paragraph">
+<p>Similarly, the C semantics enforce that a line is represented by a
+terminating "new-line" character. This is not the only way to represent
+lines. For example, each line could be a distinct block of memory, or a
+different record on disk. The semantics of XL does not preclude such
+implementations, which can sometimes perform much better.</p>
 </div>
 </div>
 </div>
@@ -13819,7 +13821,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-10-02 11:32:05 +0200
+Last updated 2021-01-30 10:59:13 +0100
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
