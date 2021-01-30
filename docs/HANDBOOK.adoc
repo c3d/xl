@@ -718,21 +718,22 @@ implementation details were elided as `...`:
 
 [source]
 ----
-write X:text            as ok   is ... // <1>
-write X:integer         as ok   is ...
-write X:real            as ok   is ...
-write X:character       as ok   is ...
-write [[true]]          as ok   is { write "true"  } // <2>
-write [[false]]         as ok   is { write "false" }
-write Head, Rest        as ok   is { write Head; write Rest }
+to write X:text         is ... // <1>
+to write X:integer      is ...
+to write X:real         is ...
+to write X:character    is ...
+to write [[true]]       is { write "true"  } // <2>
+to write [[false]]      is { write "false" }
+to write Head, Rest     is { write Head; write Rest }
 
-print                   as ok   is { write SOME_NEWLINE_CHARACTER }
-print Items             as ok   is { write Items; print }
+to print                is { write SOME_NEWLINE_CHARACTER }
+to print Items          is { write Items; print }
 ----
 
-<1> The link:#fallible-types[ok] type is used to represent
-    the `nil or error` type, in other words it indicates that the
-    function either returns nothing, or returns an error.
+<1> The `to` that precedes `write` is link:#syntactic-sugar[syntactic sugar] for
+    procedures named after an English verb. It implicitly marks the procedure as
+    having the `ok` link:#fallible-types[fallible type]. In other words, it
+    indicates that `write` can return `nil` or an `error`.
 
 <2> The `+[[true]]+` notation is called a link:#metabox[metabox],
     and indicates that we must match the value of the expression
@@ -808,19 +809,19 @@ that looks like:
 
 [source]
 ----
-print A:text, B:integer, C:text, D:integer is
+to print A:text, B:integer, C:text, D:integer is
     write A, B, C, D
     print
 
-write A:text, B:integer, C:text, D:integer is
+to write A:text, B:integer, C:text, D:integer is
     write A
     write B, C, D
 
-write B:integer, C:text, D:integer is
+to write B:integer, C:text, D:integer is
     write B
     write C, D
 
-write C:text, D:integer is
+to write C:text, D:integer is
     write C
     write D
 ----
@@ -843,7 +844,7 @@ you need for that type to become "writable" is to add a definition of
 
 [source]
 ----
-write Z:complex     is write "(", Z.Re, ";", Z.Im, ")"
+to write Z:complex      is write "(", Z.Re, ";", Z.Im, ")"
 ----
 
 Unlike the {cpp} `iostream` facility, the XL compiler will naturally emit
@@ -859,11 +860,11 @@ specific features for output lines, for example to ensure that a
 single line is always printed contiguously even in a multi-threaded
 scenario(((thread safety))).  Assuming a `single_thread` facility
 ensuring that the code is executed by at most one thread, creating a
-locked `print` is nothing more than:
+`print` that executes only in one thread at a time is nothing more than:
 
 [source]
 ----
-locked_print Items is
+to print_in_single_thread Items is
     single_thread
          print Items
 ----
