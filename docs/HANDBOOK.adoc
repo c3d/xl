@@ -492,19 +492,13 @@ example if all the indexes are contiguous integers.
 // An (inefficient) implementation of a generic 1-based array type
 
 // array[1] of T, start of the recurrence
-array[1] of T with
-    // Interface exposes A[1] which is a mutable T value
-    1 : T
-is
+array[1] of T is
     // Implementation stores one variable value of type T
-    Value : T
+    Tail : T
     1 is Value
 
 // array[N] of T: defined based on array[N-1] of T
-array[N] of T when N > 1 with
-    // Unified interface for A[I] which is a mutable T value
-    (lambda I when I in 1..N) : T
-is
+array[N] of T when N > 1 is
     // Implemenation is a two-parter for Head and Tail
     Head  : array[N-1] of T
     Tail  : T
@@ -524,7 +518,7 @@ for I in 1..5 loop
 [source]
 ----
 // A general implementation of minimum
-min X, Y    is { Z is min Y; if X < Z then X else Z }
+min X, Y    is { mX is min X; mY is min Y; if mX < mY then mX else mY }
 min X       is X
 
 // Computes 4
