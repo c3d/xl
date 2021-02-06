@@ -108,7 +108,7 @@ Scope *Module::Specification()
 // ----------------------------------------------------------------------------
 {
     if (specification)
-        return specification->Scope();
+        return specification->FileScope();
     return nullptr;
 }
 
@@ -119,7 +119,7 @@ Scope *Module::Implementation()
 // ----------------------------------------------------------------------------
 {
     if (implementation)
-        return implementation->Scope();
+        return implementation->FileScope();
     return nullptr;
 }
 
@@ -328,7 +328,7 @@ Tree_p Module::SourceFile::Source()
 }
 
 
-Scope_p Module::SourceFile::Scope()
+Scope_p Module::SourceFile::FileScope()
 // ----------------------------------------------------------------------------
 //    Return the scope for that module
 // ----------------------------------------------------------------------------
