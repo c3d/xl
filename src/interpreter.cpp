@@ -198,6 +198,7 @@ bool Bindings::Do(Block *what)
     // Deal with the case of a metablock: evaluate expression inside
     if (Tree *expr = what->IsMetaBox())
     {
+        MustEvaluate();
         expr = Evaluate(declContext.Symbols(), expr);
         return Tree::Equal(test, expr);
     }
