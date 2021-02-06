@@ -427,6 +427,25 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
 }
 
 
+Tree *Bindings::EvaluateType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Evaluate a type expression (in declaration context)
+// ----------------------------------------------------------------------------
+{
+    Tree_p result = Evaluate(DeclarationScope(), type);
+    return result;
+}
+
+
+Tree *Bindings::EvaluateGuard(Tree *guard)
+// ----------------------------------------------------------------------------
+//   Evaluate a guard condition (in arguments context)
+// ----------------------------------------------------------------------------
+{
+    return Evaluate(ArgumentsScope(), guard);
+}
+
+
 Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 //   Check if we pass the test for the type
@@ -444,22 +463,33 @@ Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
 }
 
 
-Tree *Bindings::EvaluateType(Tree *type)
+Tree *Bindings::ResultTypeCheck(Tree *result, bool special)
 // ----------------------------------------------------------------------------
-//   Evaluate a type expression (in declaration context)
-// ----------------------------------------------------------------------------
-{
-    Tree_p result = Evaluate(DeclarationScope(), type);
-    return result;
-}
-
-
-Tree *Bindings::EvaluateGuard(Tree *guard)
-// ----------------------------------------------------------------------------
-//   Evaluate a guard condition (in arguments context)
+//   Check the result against the expected type if any
 // ----------------------------------------------------------------------------
 {
-    return Evaluate(ArgumentsScope(), guard);
+    // If no type specified, just return the result as is
+    if (!type)
+        return result;
+
+    // For builtin and C declarations
+    if (special)
+    {
+        // Convert [integer] to [boolean] as needed
+        if (type == boolean_type)
+            if (Natural *ival = result->AsNatural())
+                return (ival->value) ? xl_true : xl_false;
+
+        // Convert null pointers to xl_nil
+        if (!result)
+            result = xl_nil;
+    }
+
+    // Otherwise, insert a type check in the declaration context
+    Tree_p cast = TypeCheck(declContext.Symbols(), type, result);
+    if (!cast)
+        Ooops("The returned value $1 is not a $2", result, type);
+    return cast;
 }
 
 
@@ -516,7 +546,6 @@ static Tree *evalLookup(Scope   *evalScope,
                      decl->left, expr), true);
 
     EvaluationCache &cache = *((EvaluationCache *) ec);
-    Bindings bindings(evalScope, declScope, expr, cache);
     Tree *pattern = decl->Pattern();
 
     // If the pattern is a name, directly return the value or fail
@@ -531,6 +560,8 @@ static Tree *evalLookup(Scope   *evalScope,
         return nullptr;
     }
 
+    // Bind argument to parameters
+    Bindings bindings(evalScope, declScope, expr, cache);
     if (!pattern->Do(bindings))
         return nullptr;
 
@@ -552,7 +583,8 @@ static Tree *evalLookup(Scope   *evalScope,
             // Need to unwrap all arguments
             bindings.Unwrap();
 
-            Tree *result = callee(bindings);
+            Tree_p result = callee(bindings);
+            result = bindings.ResultTypeCheck(result, true);
             return result;
         }
         if (Name *name = IsNative(prefix))
@@ -567,7 +599,8 @@ static Tree *evalLookup(Scope   *evalScope,
             // Need to unwrap all arguments
             bindings.Unwrap();
 
-            Tree *result = native->Call(bindings);
+            Tree_p result = native->Call(bindings);
+            result = bindings.ResultTypeCheck(result, true);
             return result;
         }
     }
