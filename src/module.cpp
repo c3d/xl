@@ -69,6 +69,15 @@ Module *Module::Get(Scope *where, Tree *name, bool evaluate)
 }
 
 
+Module *Module::Get(Scope *where, text name, bool evaluate)
+// ----------------------------------------------------------------------------
+//   Lookup a module by name
+// ----------------------------------------------------------------------------
+{
+    return Get(where, new Text(name, Tree::COMMAND_LINE), evaluate);
+}
+
+
 Tree *Module::Value()
 // ----------------------------------------------------------------------------
 //   Return the evaluated value
@@ -87,8 +96,7 @@ Tree *Module::Value()
         else if (implementation)
             value = implementation->Value();
         else
-            value = Ooops("No specification or implementation for module $1",
-                          name);
+            value = Ooops("Module $1 not found", name);
     }
     return value;
 }
@@ -168,7 +176,7 @@ static text SearchModuleFile(text name, text extension)
     text path = MAIN->SearchFile(name, extension);
     if (path == "")
         path = MAIN->SearchLibFile(name, extension);
-    return "";
+    return path;
 }
 
 
@@ -246,11 +254,18 @@ text Module::Name(Scope *where, Tree *name)
     // Check if we need to evaluate the module name
     if (modname == "")
     {
-        Tree *evaluated = MAIN->Evaluate(where, name);
-        if (Text *text = evaluated->AsText())
+        if (Text *text = name->AsText())
+        {
             modname = text->value;
+        }
         else
-            Ooops("The module name $1 is not valid", name);
+        {
+            Tree *evaluated = MAIN->Evaluate(where, name);
+            if (Text *text = evaluated->AsText())
+                modname = text->value;
+            else
+                Ooops("The module name $1 is not valid", name);
+        }
     }
 
     return modname;

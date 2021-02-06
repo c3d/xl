@@ -60,9 +60,17 @@ int main(int argc, char **argv)
                         XL_LIB,
                         "/usr/local/lib/xl", "/lib/xl", "/usr/lib/xl"  };
     XL::path_list path { };
-    XL::Main main(argc, argv, path, bin, lib,
-                  "xl", "xl.syntax", "xl.stylesheet", "builtins.xl");
-    int rc = main.LoadAndRun();
+    XL::Main main(argc, argv, path, bin, lib, "xl");
+
+    // Load files and run code
+    XL::Tree_p result =main.LoadFiles();
+
+    // Show errors if we had any
+    int rc = main.HadErrors();
+    if (rc)
+        main.errors->Display();
+    else if (result != XL::xl_nil)
+        std::cout << result << "\n";
 
     IFTRACE2(memory, gc_statistics)
         XL::GarbageCollector::GC()->PrintStatistics();

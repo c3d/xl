@@ -45,6 +45,7 @@
 #include "context.h"
 #include "options.h"
 #include "main.h"
+#include "module.h"
 #include "native.h"
 #include "save.h"
 #include "tree-clone.h"
@@ -524,9 +525,7 @@ struct ImportedFileInfo : Info
 //   Information about a file that was imported (save full path)
 // ----------------------------------------------------------------------------
 {
-    ImportedFileInfo(text path, Name_p alias) : path(path), alias(alias) {}
-    text        path;
-    Name_p      alias;
+    ImportedFileInfo() : result() {}
     Tree_p      result;
 };
 
@@ -550,21 +549,21 @@ static Tree *xl_load_file(Scope *scope, Tree *self, bool evaluate)
         }
         return info->result;
     }
+    info = new ImportedFileInfo;
+    self->SetInfo(info);
 
+    // Check that the import "looks good"
     Prefix *prefix = self->AsPrefix();
     if (!prefix)
     {
         Ooops("Malformed import statement $1", self);
         return self;
     }
-
-    Name_p alias = nullptr;
-    text path = "";
-    text modname = "";
-    Tree *module = prefix->right;
+    Tree *modname = prefix->right;
 
     // Check if we have something like [import IO = TEXT.IO]
-    if (Infix *equal = module->AsInfix())
+    Name_p alias = nullptr;
+    if (Infix *equal = modname->AsInfix())
     {
         if (equal->name == "=")
         {
@@ -572,93 +571,17 @@ static Tree *xl_load_file(Scope *scope, Tree *self, bool evaluate)
                 alias = name;
             else
                 Ooops("Alias $1 is not a name", equal->left);
-            module = equal->right;
+            modname = equal->right;
         }
     }
 
-    // Check if the name is something like [XL.TEXT.IO]
-    while (Infix *dot = module->AsInfix())
-    {
-        if (Name *inner = dot->right->AsName())
-            modname = inner->value + "." + modname;
-        else
-            Ooops("Module component $1 is not a name", dot->right);
-        module = dot->left;
-    }
+    // Load the module and compute the module's value
+    Module *module = Module::Get(scope, modname, evaluate);
+    Tree_p result = module->Value();
+    info->result = result;
 
-    // Check trailing name
-    if (Name *base = module->AsName())
-        modname = base->value + "." + modname;
-
-    // Check if we need to evaluate the module name
-    if (!alias && modname == "")
-    {
-        module = xl_evaluate(scope, module);
-        if (Text *text = module->AsText())
-            modname = text->value;
-        else
-            Ooops("The module name $1 is not valid", module);
-    }
-
-    if (path == "")
-    {
-        path = MAIN->SearchFile(modname, "xl");
-        if (path == "")
-            path = MAIN->SearchLibFile(modname, "xl");
-        if (path == "" && !isAbsolute(modname))
-        {
-            // Relative path: look in same directory as parent
-            static Name_p module_dir = new Name(Normalize("module_dir"),
-                                                "module_dir");
-            Context context(scope);
-            if (Tree * dir = context.Bound(module_dir))
-            {
-                if (Text * txt = dir->AsText())
-                {
-                    path = txt->value + "/" + modname;
-                    utf8_filestat_t st;
-                    if (utf8_stat (path.c_str(), &st) < 0)
-                        path = "";
-                }
-            }
-        }
-    }
-    record(imports, "For module name %s, file is %s", modname, path);
-    if (path == "")
-    {
-        Ooops("Source file $2 not found for $1", self).Arg(modname);
-        return XL::xl_false;
-    }
-    info = new ImportedFileInfo(path, alias);
-    self->SetInfo<ImportedFileInfo> (info);
-
-    // Check if the file has already been loaded somehwere.
-    // If so, return the loaded file
-    if (MAIN->files.count(path))
-    {
-        evaluate = false;
-    }
-    else
-    {
-        record(imports, "Loading %s", path.c_str());
-        bool hadError = MAIN->LoadFile(path, alias ? alias->value : "");
-        if (hadError)
-        {
-            Ooops("Unable to load file $2 for $1", self).Arg(path);
-            return XL::xl_false;
-        }
-    }
-
-    SourceFile &sf = MAIN->files[path];
-    Tree *result = sf.tree;
-    if (evaluate)
-    {
-        result = xl_evaluate(scope, result);
-        sf.tree = result;
-        info->result = result;
-    }
-
-    record(imports, "Imported %t is %t", self, result);
+    record(imports, "Imported %t into module %p value %t",
+           prefix->right, module, result);
     return result;
 }
 
