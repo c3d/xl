@@ -541,9 +541,9 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         Prefix *patp = (Prefix *) pat;
 
         // Put lambda behind anything but other lambdas and parameter names
-        if (Name *patn = IsLambda(patp))
+        if (IsLambda(patp))
         {
-            if (Name *valn = IsLambda(val))
+            if (IsLambda(val))
                 return 0;
             if (valk == NAME)
                 return SortNames(mode) ? 1 : 0;
@@ -555,7 +555,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         Prefix *valp = (Prefix *) val;
 
         // Put lambdas last
-        if (Name *valn = IsLambda(valp))
+        if (IsLambda(valp))
         {
             if (patk == NAME)
                 return SortNames(mode) ? -1 : 0;
@@ -1037,7 +1037,7 @@ static Tree *LookupEntry(Scope              *symbols,
         int cmpleft = Sort(left->Pattern(), what, SEARCH);
 
         // If right is a rewrite, test left then right
-        if (Rewrite *right = rewrites->Second())
+        if (rewrites->Second())
         {
             // left <= right, matching left: test left then right
             if (cmpleft == 0)
