@@ -81,7 +81,6 @@ struct Error
                         operator Tree *();
                         operator Tree_p() { return (Tree *) (*this); }
 
-
 public:
     text                message;
     std::vector<Tree_p> arguments;
