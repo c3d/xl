@@ -663,6 +663,11 @@ retry:
         // Filter out declaration such as [extern foo(bar)]
         if (IsDeclaration(prefix))
             return prefix;
+
+        // Filter out import statements (processed during
+        if (Name *import = prefix->left->AsName())
+            if (eval_fn callback = MAIN->Declarator(import->value))
+                return callback(scope, prefix);
     }
 
     // Short-circuit evaluation of sequences and declarations
