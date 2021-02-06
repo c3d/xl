@@ -154,7 +154,7 @@ Renderer::Renderer(std::ostream &out, Renderer *from)
 {}
 
 
-void Renderer::SelectStyleSheet(text styleFile)
+void Renderer::SelectStyleSheet(text styleFile, bool clear)
 // ----------------------------------------------------------------------------
 //   Select an arbitrary style sheet
 // ----------------------------------------------------------------------------
@@ -166,9 +166,12 @@ void Renderer::SelectStyleSheet(text styleFile)
     Parser p(styleFile.c_str(), defaultSyntax, positions, errors);
 
     // Some defaults
-    formats.clear();
-    formats[Block::indent]   = new Name("indent");
-    formats[Block::unindent] = new Name("unindent");
+    if (clear)
+    {
+        formats.clear();
+        formats[Block::indent]   = new Name("indent");
+        formats[Block::unindent] = new Name("unindent");
+    }
 
     Tree *fmts = p.Parse();
     if (fmts)

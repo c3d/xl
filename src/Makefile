@@ -67,6 +67,7 @@ SOURCES_VARIANT_lib     =			\
 	gc.cpp					\
 	interpreter.cpp				\
 	main.cpp				\
+	module.cpp				\
 	native.cpp				\
 	options.cpp				\
 	parser.cpp				\

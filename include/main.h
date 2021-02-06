@@ -159,6 +159,7 @@ extern NaturalOption    remoteForks;
 extern TextOption       stylesheet;
 extern BooleanOption    emitIR;
 extern BooleanOption    caseSensitive;
+extern BooleanOption    showSource;
 
 }
 
