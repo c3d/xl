@@ -524,57 +524,86 @@ struct ImportedFileInfo : Info
 //   Information about a file that was imported (save full path)
 // ----------------------------------------------------------------------------
 {
-    ImportedFileInfo(text path)
-        : path(path) {}
-    text      path;
+    ImportedFileInfo(text path, Name_p alias) : path(path), alias(alias) {}
+    text        path;
+    Name_p      alias;
 };
 
 
-Tree *xl_use(Scope *scope, Tree *self)
+RECORDER(imports, 32, "Import statements");
+
+
+static Tree *xl_load_file(Scope *scope, Tree *self, bool evaluate)
 // ----------------------------------------------------------------------------
 //    Load a file from disk without evaluating it
 // ----------------------------------------------------------------------------
 {
+    record(imports, "Importing %t", self);
     Infix *infix = self->AsInfix();
     if (!infix)
     {
-        Ooops("Unexpected use: $1", self);
+        Ooops("Unexpected import $1", self);
         return self;
     }
-    text modname = "";
-    Name *name = infix->right->AsName();
-    if (name)
-    {
-        modname = name->value;
-    }
-    else
-    {
-        Tree *value = xl_evaluate(scope, infix->right);
-        if (Text *text = value->AsText())
-        {
-            modname = text->value;
-        }
-        else
-        {
-            Ooops("Invalid use name $1", infix->right);
-            return self;
-        }
-    }
 
+    Name_p alias = nullptr;
     text path = "";
     ImportedFileInfo *info = self->GetInfo<ImportedFileInfo>();
     if (info)
     {
         path = info->path;
+        alias = info->alias;
     }
     else
     {
+        text modname = "";
+        Tree *module = infix->right;
+
+        // Check if we have something like [import IO = TEXT.IO]
+        if (Infix *equal = module->AsInfix())
+        {
+            if (equal->name == "=")
+            {
+                if (Name *name = equal->left->AsName())
+                    alias = name;
+                else
+                    Ooops("Alias $1 is not a name", equal->left);
+                module = equal->right;
+            }
+        }
+
+        // Check if the name is something like [XL.TEXT.IO]
+        while (Infix *dot = module->AsInfix())
+        {
+            if (Name *top = dot->left->AsName())
+                modname += top->value;
+            else
+                Ooops("Module component $1 is not a name", top);
+            modname += ".";
+            module = dot->right;
+        }
+
+        // Check trailing name
+        if (Name *base = module->AsName())
+            modname += base->value;
+
+        // Check if we need to evaluate the module name
+        if (!alias && modname == "")
+        {
+            module = xl_evaluate(scope, module);
+            if (Text *text = module->AsText())
+                modname = text->value;
+            else
+                Ooops("The module name $1 is not valid", module);
+        }
+
         if (path == "")
             path = MAIN->SearchFile(modname);
         if (path == "" && !isAbsolute(modname))
         {
             // Relative path: look in same directory as parent
-            static Name_p module_dir = new Name("module_dir");
+            static Name_p module_dir = new Name(Normalize("module_dir"),
+                                                "module_dir");
             Context context(scope);
             if (Tree * dir = context.Bound(module_dir))
             {
@@ -586,23 +615,27 @@ Tree *xl_use(Scope *scope, Tree *self)
                         path = "";
                 }
             }
+            record(imports, "For module name %s, file is %s", modname, path);
         }
         if (path == "")
         {
             Ooops("Source file $2 not found for $1", self).Arg(modname);
             return XL::xl_false;
         }
-        info = new ImportedFileInfo(path);
+        info = new ImportedFileInfo(path, alias);
         self->SetInfo<ImportedFileInfo> (info);
     }
 
     // Check if the file has already been loaded somehwere.
     // If so, return the loaded file
-    bool exists = MAIN->files.count(path);
-    if (!exists)
+    if (MAIN->files.count(path))
     {
-        record(fileload, "Loading %s", path.c_str());
-        bool hadError = MAIN->LoadFile(path);
+        evaluate = false;
+    }
+    else
+    {
+        record(imports, "Loading %s", path.c_str());
+        bool hadError = MAIN->LoadFile(path, alias ? alias->value : "");
         if (hadError)
         {
             Ooops("Unable to load file $2 for $1", self).Arg(path);
@@ -612,16 +645,32 @@ Tree *xl_use(Scope *scope, Tree *self)
 
     SourceFile &sf = MAIN->files[path];
     Tree *result = sf.tree;
+    if (evaluate)
+    {
+        result = xl_evaluate(scope, result);
+        sf.tree = result;
+    }
+
+    record(imports, "Imported %t is %t", self, result);
     return result;
+}
+
+
+Tree *xl_import(Scope *scope, Tree *self)
+// ----------------------------------------------------------------------------
+//    Import a file, which means loading it from disk and evaluating it
+// ----------------------------------------------------------------------------
+{
+    return xl_load_file(scope, self, true);
 }
 
 
 Tree *xl_load(Scope *scope, Tree *self)
 // ----------------------------------------------------------------------------
-//    Load a file from disk
+//    Import a file, which means loading it from disk and evaluating it
 // ----------------------------------------------------------------------------
 {
-    return xl_use(scope, self);
+    return xl_load_file(scope, self, false);
 }
 
 

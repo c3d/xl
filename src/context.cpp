@@ -235,6 +235,11 @@ bool Context::ProcessDeclarations(Tree *what)
                     delete pcd;
                 }
             }
+
+            // Check if this prefix is some [import X.Y.Z] statement
+            if (Name *import = prefix->left->AsName())
+                if (eval_fn callback = MAIN->Declarator(import->value))
+                    callback(symbols, prefix);
         }
 
         // Check if we see instructions

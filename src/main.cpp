@@ -503,15 +503,8 @@ int Main::LoadFile(text file, text modname)
     if (Opt::showSource)
         std::cout << tree << "\n";
 
-    // Create new symbol table for the file
-    context.CreateScope(tree->Position());
-
-    // Set the module path, directory and file
-    context.SetModulePath(file);
-    context.SetModuleDirectory(ModuleDirectory(file));
-    context.SetModuleFile(ModuleBaseName(file));
-
-    // Check if the module name is given
+    // Check if the module name is given, i.e. [import IO = A.B.C]
+    Scope *scope = context.Symbols();
     if (modname != "")
     {
         // If we have an explicit module name (e.g. use),
@@ -521,17 +514,26 @@ int Main::LoadFile(text file, text modname)
     }
     else
     {
+        // Create new symbol table for the file
+        context.CreateScope(tree->Position());
+        scope = context.Symbols();
+
         // No explicit module name: update current context
         modname = ModuleName(file);
         context.SetModuleName(modname);
     }
 
+    // Set the module path, directory and file
+    Context mod(scope);
+    mod.SetModulePath(file);
+    mod.SetModuleDirectory(ModuleDirectory(file));
+    mod.SetModuleFile(ModuleBaseName(file));
+
     // Register the source file we had
-    sf = SourceFile (file, tree, context.Symbols());
+    sf = SourceFile (file, tree, scope);
 
     // Process declarations from the program
-    record(fileload, "File loaded as %t", tree);
-    record(fileload, "File loaded in %t", context.Symbols());
+    record(fileload, "File %s loaded as %t in %t", file, tree, scope);
 
     // We were OK, done
     return false;
@@ -763,8 +765,8 @@ eval_fn Main::Declarator(text name)
 //   Return a declarator for 'use' and 'load'
 // ----------------------------------------------------------------------------
 {
-    if (name == "use")
-        return xl_use;
+    if (name == "use" || name == "import")
+        return xl_import;
     if (name == "load")
         return xl_load;
     return nullptr;
