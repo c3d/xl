@@ -227,7 +227,7 @@ XCODE_WARNINGS=	-Wno-missing-field-initializers		\
 
 # Which kind of test we run for each kind of build
 XL_TESTS_COMPILER_none=interactive
-XL_TESTS_COMPILER_llvm=interactive O3
+XL_TESTS_COMPILER_llvm=interactive
 XL_TESTS_exe=$(XL_TESTS_COMPILER_$(COMPILER):%=.alltests.%)
 .tests: $(XL_TESTS_$(VARIANT))
 
