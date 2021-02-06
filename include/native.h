@@ -86,6 +86,29 @@ struct xl_type
 };
 
 
+template<>
+struct xl_type<void>
+// ----------------------------------------------------------------------------
+//   Provide a common interface to convert an XL type into its
+// ----------------------------------------------------------------------------
+{
+    typedef Tree              BoxType;
+    typedef void              native_type;
+#ifndef INTERPRETER_ONLY
+    static JIT::PointerType_p TreeType(Compiler &c)   { return c.voidTy; }
+    static JIT::PointerType_p NativeType(Compiler &c) { return c.voidTy; }
+#endif
+    static Tree *Shape()
+    {
+        return XL::tree_type;
+    }
+    static native_type Unbox(BoxType *x)
+    {
+        return;
+    }
+};
+
+
 template <typename Num>
 struct xl_type<Num,
                typename std::enable_if<std::is_integral<Num>::value>::type>
@@ -402,6 +425,40 @@ struct function_type<R(*)()>
 };
 
 
+template <>
+struct function_type<void(*)()>
+// ----------------------------------------------------------------------------
+//   Special case for void return type
+// ----------------------------------------------------------------------------
+{
+    typedef void return_type;
+    typedef void (*pointer_type)();
+    typedef typename xl_type<void>::BoxType BoxType;
+    static const unsigned Arity = 0;
+
+#ifndef INTERPRETER_ONLY
+    static void         Args(Compiler &, JIT::Signature &)  {}
+#endif
+    static Tree_p       ParameterShape(uint &index)
+    {
+        record(native, "ParameterShape returns null");
+        return nullptr;
+    }
+    static Tree_p       ReturnShape()
+    {
+        Tree_p ret = xl_type<void>::Shape();
+        record(native, "ReturnShape () = %t", ret);
+        return ret;
+    }
+
+    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    {
+        callee();
+        return xl_nil;
+    }
+};
+
+
 template <typename R, typename T>
 struct function_type<R(*)(T)>
 // ----------------------------------------------------------------------------
@@ -451,6 +508,55 @@ struct function_type<R(*)(T)>
 };
 
 
+template <typename T>
+struct function_type<void(*)(T)>
+// ----------------------------------------------------------------------------
+//   Special case for a function with a single argument
+// ----------------------------------------------------------------------------
+{
+    typedef void return_type;
+    typedef void (*pointer_type)(T);
+    typedef typename xl_type<void>::BoxType BoxType;
+    static const unsigned Arity = 1;
+
+#ifndef INTERPRETER_ONLY
+    static void Args(Compiler &compiler, JIT::Signature &signature)
+    {
+        JIT::Type_p argTy = xl_type<T>::NativeType(compiler);
+        signature.push_back(argTy);
+    }
+#endif
+    static Tree_p ParameterShape(uint &index)
+    {
+        Tree_p type = xl_type<T>::Shape();
+        Name_p name = new Name(text(1, 'a' + index), Tree::BUILTIN);
+        ++index;
+        if (type)
+        {
+            Infix_p infix = new Infix(":", name, type);
+            record(native,
+                   "ParameterShape %u infix %t : %t = %t",
+                   index, type, name, infix);
+            return infix;
+        }
+        record(native, "ParameterShape %u name %t", index, name);
+        return name;
+    }
+    static Tree_p ReturnShape()
+    {
+        Tree_p ret = xl_type<void>::Shape();
+        record(native, "Return shape (one) %t", ret);
+        return ret;
+    }
+
+    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    {
+        callee(xl_type<T>::Unbox(args[0]));
+        return xl_nil;
+    }
+};
+
+
 template <typename R, typename T, typename ... A>
 struct function_type<R(*)(T,A...)>
 // ----------------------------------------------------------------------------
@@ -460,7 +566,7 @@ struct function_type<R(*)(T,A...)>
     typedef R return_type;
     typedef R (*pointer_type)(T, A...);
     typedef typename xl_type<R>::BoxType BoxType;
-    static const unsigned Arity = 1 + function_type<R(*)(A...)>::Arity;
+    static const unsigned Arity = 1 + sizeof...(A);
 
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
@@ -490,6 +596,49 @@ struct function_type<R(*)(T,A...)>
         auto value = callee(xl_type<T>::Unbox(args[0]),
                             xl_type<A>::Unbox(args[1+sizeof...(A)])...);
         return xl_type<R>::Box(value, self->Position());
+    }
+};
+
+
+template <typename T, typename ... A>
+struct function_type<void(*)(T,A...)>
+// ----------------------------------------------------------------------------
+//   Recursive for the rest
+// ----------------------------------------------------------------------------
+{
+    typedef void return_type;
+    typedef void (*pointer_type)(T, A...);
+    typedef typename xl_type<void>::BoxType BoxType;
+    static const unsigned Arity = 1 + sizeof...(A);
+
+#ifndef INTERPRETER_ONLY
+    static void Args(Compiler &compiler, JIT::Signature &signature)
+    {
+        function_type<void(*)(T)>::Args(compiler, signature);
+        function_type<void(*)(A...)>::Args(compiler, signature);
+    }
+#endif
+    static Tree_p ParameterShape(uint &index)
+    {
+        Tree_p left = function_type<void(*)(T)>::ParameterShape(index);
+        Tree_p right = function_type<void(*)(A...)>::ParameterShape(index);
+        Infix_p infix = new Infix(",", left, right);
+        record(native, "ParameterShape %u (...) %t,%t = %t",
+               index, left, right, infix);
+        return infix;
+    }
+    static Tree_p ReturnShape()
+    {
+        Tree_p ret = xl_type<void>::Shape();
+        record(native, "Return shape (...) %t", ret);
+        return ret;
+    }
+
+    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    {
+        callee(xl_type<T>::Unbox(args[0]),
+               xl_type<A>::Unbox(args[1+sizeof...(A)])...);
+        return xl_nil;
     }
 };
 
