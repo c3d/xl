@@ -145,7 +145,7 @@ enum token_t
 
 
 typedef std::vector<uint> indent_list;
-
+typedef ulong TreePosition;
 
 struct Positions
 // ----------------------------------------------------------------------------
@@ -155,12 +155,15 @@ struct Positions
                         Positions(): positions(), current_position(0) {}
                         ~Positions() {}
 
-    ulong               OpenFile(text name);
-    void                CloseFile (ulong pos);
+    TreePosition        OpenFile(text name);
+    void                CloseFile (TreePosition pos);
 
-    void                GetFile(ulong pos, text *file, ulong *offset);
-    void                GetInfo(ulong pos, text *file, ulong *line,
+    void                GetFile(TreePosition pos, text *file, ulong *offset);
+    void                GetInfo(TreePosition pos,
+                                text *file, ulong *line,
                                 ulong *column, text *source);
+
+    TreePosition        CurrentPosition()       { return current_position; }
 
 private:
     struct Range

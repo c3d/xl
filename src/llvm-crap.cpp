@@ -263,11 +263,11 @@ typedef TargetAddress                                JITTargetAddress;
 #endif // LLVM_VERSION
 
 #if LLVM_VERSION < 500
-typedef std::unique_ptr<Module>                      Module_s;
+typedef std::unique_ptr<llvm::Module>                Module_s;
 #elif LLVM_VERSION < 700
-typedef std::shared_ptr<Module>                      Module_s;
+typedef std::shared_ptr<llvm::Module>                Module_s;
 #elif LLVM_VERSION >= 700
-typedef std::unique_ptr<Module>                      Module_s;
+typedef std::unique_ptr<llvm::Module>                Module_s;
 #endif // LLVM_VERSION 700
 
 #if LLVM_VERSION < 500

@@ -148,10 +148,11 @@ struct Scope : Block
 {
     Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE):
         Block(child, "{", "}", pos) {}
-    Tree  *Entries()    { return child; }
-    Scope *Enclosing();
-    Scope *Inner();
+    Tree   *Entries()   { return child; }
+    Scope  *Enclosing();
+    Scope  *Inner();
     Tree_p &Locals();
+    void    Clear();
     GARBAGE_COLLECT(Scope);
 };
 typedef GCPtr<Scope> Scope_p;
@@ -908,6 +909,16 @@ inline Tree_p &Scope::Locals()
 {
     Scope *scope = Inner();
     return scope->child;
+}
+
+
+inline void Scope::Clear()
+// ----------------------------------------------------------------------------
+//  Clear the local symbol table
+// ----------------------------------------------------------------------------
+{
+    Tree_p &locals = Locals();
+    locals = xl_nil;
 }
 
 
