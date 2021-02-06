@@ -86,7 +86,7 @@ private:
         ~SourceFile();
 
         Tree_p  Source();               // Return source code
-        Scope_p Scope();                // Return scope for that file
+        Scope_p FileScope();            // Return scope for that file
         Tree_p  Value();                // What the file evaluated to
         bool    HasChanged();           // Check if source file was modified
         Tree_p  Reload();               // Reload even if it has changed
