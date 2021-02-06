@@ -412,6 +412,17 @@ void TextOption::Process(Options &opts)
 }
 
 
+void TextListOption::Process(Options &opts)
+// ----------------------------------------------------------------------------
+//   Find text value and stores it
+// ----------------------------------------------------------------------------
+{
+    kstring arg = opts.Argument();
+    list.push_back(arg);
+    record(option_value, "List %+s = %s (total %u)", name, arg, list.size());
+}
+
+
 void CodeOption::Process(Options &opts)
 // ----------------------------------------------------------------------------
 //   Pass the arguments to the code

@@ -126,9 +126,27 @@ struct TextOption : Option
     TextOption(kstring name, kstring help, text value = "")
         : Option(name, help), value(value) {}
     virtual void        Process(Options &);
-    operator            text() { return value; }
+    operator            text&()         { return value; }
+    operator            kstring()       { return value.c_str(); }
 public:
     text                value;
+};
+
+
+struct TextListOption : Option
+// ----------------------------------------------------------------------------
+//   An option accepting multiple text values
+// ----------------------------------------------------------------------------
+{
+    typedef std::vector<text>   List;
+    TextListOption(kstring name, kstring help)
+        : Option(name, help), list() {}
+    TextListOption(kstring name, kstring help, const List &list)
+        : Option(name, help), list(list) {}
+    virtual void        Process(Options &);
+    operator            List&()         { return list; }
+public:
+    List                list;
 };
 
 
