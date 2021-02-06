@@ -42,6 +42,7 @@
 #include "parser.h"
 #include "renderer.h"
 #include "errors.h"
+#include "module.h"
 #include "syntax.h"
 #include "context.h"
 #include "options.h"
@@ -62,26 +63,7 @@ struct Serializer;
 struct Deserializer;
 struct Compiler;
 
-
-struct SourceFile
-// ----------------------------------------------------------------------------
-//    A source file and associated data
-// ----------------------------------------------------------------------------
-{
-    SourceFile(text n, Tree *tree, Scope *scope, bool readOnly = false);
-    SourceFile();
-    ~SourceFile();
-
-    text        name;
-    Tree_p      tree;
-    Scope_p     scope;
-    time_t      modified;
-    uint64      hash;
-    bool        changed;
-    bool        readOnly;
-};
-typedef std::map<text, SourceFile> source_files;
-typedef std::vector<text> source_names, path_list;
+typedef std::vector<text>       path_list;
 
 
 struct Main
@@ -94,37 +76,25 @@ struct Main
          const path_list  &paths,
          const path_list  &bin_paths,
          const path_list  &lib_paths,
-         text              compiler_name,
-         text              syntax,
-         text              style,
-         text              builtins);
+         text              compiler_name);
     virtual ~Main();
-
-    // Entry point that does everything
-    int                 LoadAndRun();
 
     // Evaluate a tree in the given context
     Tree *              Evaluate(Scope *scope, Tree *value);
     Tree *              TypeCheck(Scope *scope, Tree *type, Tree *value);
 
-    // Individual phases of the above
+    // Internal procesing
     Errors *            InitMAIN();
-    int                 ParseOptions();
-    int                 LoadFiles();
-    virtual int         LoadFile(text file, text modname="");
-    int                 Run();
-
-    // Error checking
-    void                Log(Error &e)   { errors->Log(e); }
-    uint                HadErrors() { return errors->Count(); }
+    void                ParseOptions();
+    Tree_p              LoadFiles();
+    virtual Tree_p      LoadFile(text file, bool evaluate);
 
     // Hooks for use as a library in an application
+    virtual void        Log(Error &e)   { errors->Log(e); }
+    virtual uint        HadErrors()     { return errors->Count(); }
     virtual text        SearchFile(text input, text ext = "");
     virtual text        SearchLibFile(text input, text ext = "");
     virtual text        SearchFile(text input, path_list &p, text ext="");
-    virtual text        ModuleDirectory(text path);
-    virtual text        ModuleBaseName(text path);
-    virtual text        ModuleName(text path);
     virtual bool        Refresh(double delay);
     virtual text        Decrypt(text input);
     virtual text        Encrypt(text input);
@@ -134,7 +104,6 @@ struct Main
 public:
     int                 argc;
     char **             argv;
-    path_list           paths, bin_paths, lib_paths;
 
     Positions           positions;
     Errors *            errors;
@@ -143,8 +112,7 @@ public:
     Options             options;
     Context             context;
     Renderer            renderer;
-    source_files        files;
-    source_names        file_names;
+    path_list           file_names;
     Deserializer *      reader;
     Serializer   *      writer;
     Evaluator *         evaluator;

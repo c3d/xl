@@ -92,6 +92,8 @@ namespace Opt
 TextOption      builtinsPath("builtins_path",
                              "Set the path for the XL builtins file",
                              "builtins.xl");
+TextListOption  preloads("preload",
+                         "Files to preload as context for the program");
 
 BooleanOption   builtins("builtins", "Enable builtins file", true);
 
@@ -113,6 +115,16 @@ CodeOption      interpreted("interpreted",
 BooleanOption   parse("parse",
                       "Only parse the file without evaluating it");
 
+TextListOption  paths("paths",
+                      "Paths to search for source code files");
+AliasOption     pathsAlias("I", paths);
+
+TextListOption  binPaths("binaries",
+                        "Paths to search for binaries");
+TextListOption  libPaths("libraries",
+                        "Paths to search for libraries");
+AliasOption     libPathsAlias("L", libPaths);
+
 BooleanOption   remote("remote",
                        "Listen for remote programs");
 
@@ -130,6 +142,10 @@ BooleanOption   showSource("show",
 TextOption      stylesheet("stylesheet",
                            "Select the style sheet for rendering XL code",
                            "xl.stylesheet");
+
+TextOption      syntax("syntax",
+                       "Select the syntax file for parsing XL code",
+                       "xl.syntax");
 
 CodeOption      trace("trace",
                       "Activate recorder traces",
@@ -154,45 +170,6 @@ AliasOption     emitIRAlias("B", emitIR);
 
 // ============================================================================
 //
-//    Source file data
-//
-// ============================================================================
-
-SourceFile::SourceFile(text n, Tree *t, Scope *scope, bool ro)
-// ----------------------------------------------------------------------------
-//   Construct a source file given a name
-// ----------------------------------------------------------------------------
-    : name(n), tree(t), scope(scope),
-      modified(0), changed(false), readOnly(ro)
-{
-    utf8_filestat_t st;
-    if (utf8_stat (n.c_str(), &st) < 0)
-        return;
-    modified = st.st_mtime;
-    if (utf8_access (n.c_str(), W_OK) != 0)
-        readOnly = true;
-}
-
-
-SourceFile::SourceFile()
-// ----------------------------------------------------------------------------
-//   Default constructor
-// ----------------------------------------------------------------------------
-    : name(""), tree(nullptr), scope(nullptr),
-      modified(0), changed(false), readOnly(false)
-{}
-
-
-SourceFile::~SourceFile()
-// ----------------------------------------------------------------------------
-//   Delete info
-// ----------------------------------------------------------------------------
-{}
-
-
-
-// ============================================================================
-//
 //     Main
 //
 // ============================================================================
@@ -202,25 +179,19 @@ Main::Main(int inArgc,
            const path_list &paths,
            const path_list &bin_paths,
            const path_list &lib_paths,
-           text compilerName,
-           text syntaxName,
-           text styleSheetName,
-           text builtinsName)
+           text compilerName)
 // ----------------------------------------------------------------------------
 //   Initialization of the globals
 // ----------------------------------------------------------------------------
     : argc(inArgc),
       argv(inArgv),
-      paths(paths),
-      bin_paths(bin_paths),
-      lib_paths(lib_paths),
       positions(),
       errors(InitMAIN()),
       topLevelErrors(),
-      syntax(SearchLibFile(syntaxName).c_str()),
+      syntax(),
       options(inArgc, inArgv),
       context(),
-      renderer(std::cout, SearchLibFile(styleSheetName), syntax),
+      renderer(std::cout, syntax),
       reader(nullptr),
       writer(nullptr),
       evaluator(nullptr)
@@ -232,7 +203,6 @@ Main::Main(int inArgc,
     Renderer::renderer = &renderer;
     Syntax::syntax = &syntax;
     MAIN = this;
-    Opt::builtinsPath.value = SearchLibFile(builtinsName);
     ParseOptions();
 #ifndef INTERPRETER_ONLY
     if (Opt::emitIR && Opt::optimize.value < 2)
@@ -243,9 +213,29 @@ Main::Main(int inArgc,
     }
 #endif // INTERPRETER_ONLY
 
+    // When given paths, add the standard ones at end
+    path_list &plist = Opt::paths;
+    path_list &blist = Opt::binPaths;
+    path_list &llist = Opt::libPaths;
+    plist.insert(plist.end(), paths.begin(), paths.end());
+    blist.insert(blist.end(),bin_paths.begin(),bin_paths.end());
+    llist.insert(llist.end(),lib_paths.begin(),lib_paths.end());
+
+    // Adjust syntax file and renderer based on options
+    text syntaxPath = SearchLibFile(Opt::syntax, "syntax");
+    if (syntaxPath.length())
+        syntax.ReadSyntaxFile(syntaxPath);
+    else
+        Ooops("Syntax file $1 not found").Arg(Opt::syntax);
+    text stylePath = SearchLibFile(Opt::stylesheet, "stylesheet");
+    if (stylePath.length())
+        renderer.SelectStyleSheet(stylePath);
+    else
+        Ooops("Stylesheet file $1 not found").Arg(Opt::stylesheet);
+
     // Once all options have been read, enter symbols and setup compiler
 #ifndef INTERPRETER_ONLY
-    compilerName = SearchFile(compilerName, bin_paths);
+    compilerName = SearchFile(compilerName, Opt::binPaths);
     kstring cname = compilerName.c_str();
     uint opt = Opt::optimize.value;
     if (opt == 1)
@@ -296,30 +286,6 @@ Tree *Main::TypeCheck(Scope *scope, Tree *type, Tree *value)
 }
 
 
-int Main::LoadAndRun()
-// ----------------------------------------------------------------------------
-//   An single entry point for the normal phases
-// ----------------------------------------------------------------------------
-{
-    int rc = LoadFiles();
-    if (!rc && !Opt::parse)
-        rc = Run();
-    if (!rc && HadErrors())
-        rc = 1;
-
-#if 0
-    if (!rc && Opt::remote)
-    {
-        Scope *scope = context.Symbols();
-        return xl_listen(scope, Opt::remoteForks, Opt::remotePort);
-    }
-#endif
-
-    record(main, "LoadAndRun returns %d", rc);
-    return rc;
-}
-
-
 Errors *Main::InitMAIN()
 // ----------------------------------------------------------------------------
 //   Make sure MAIN is set so that its globals can be accessed
@@ -331,7 +297,7 @@ Errors *Main::InitMAIN()
 }
 
 
-int Main::ParseOptions()
+void Main::ParseOptions()
 // ----------------------------------------------------------------------------
 //   Load all files given on the command line and compile them
 // ----------------------------------------------------------------------------
@@ -361,10 +327,6 @@ int Main::ParseOptions()
         ParseOptions();
     }
 
-    // Load builtins before the rest (only after parsing options for builtins)
-    if (Opt::builtins)
-        file_names.insert(file_names.begin(), Opt::builtinsPath);
-
     // Check if there were errors parsing it
     if (topLevelErrors.HadErrors())
     {
@@ -373,218 +335,56 @@ int Main::ParseOptions()
         exit(1);
     }
 
-    // Update style sheet
-    renderer.SelectStyleSheet(SearchLibFile(Opt::stylesheet, ".stylesheet"));
-
     // Force a crash if this is requested
     XL_ASSERT(RECORDER_TWEAK(inject_fault) != 1 && "Running early crash test");
-
-    return false;
 }
 
 
-int Main::LoadFiles()
+Tree_p Main::LoadFiles()
 // ----------------------------------------------------------------------------
-//   Load all files given on the command line and compile them
+//   Process all the files given on the command line, return true on success
 // ----------------------------------------------------------------------------
 {
-    bool hadError = false;
-
     // Loop over files we will process
-    for (auto &file : file_names)
+    bool evaluate = !Opt::parse && !Opt::compile;
+    Tree_p result = xl_nil;
+
+    // Load builtins and preloads first
+    path_list preloads = Opt::preloads;
+    if (Opt::builtins)
+        preloads.insert(preloads.begin(), Opt::builtinsPath);
+    for (auto p : preloads)
     {
-        int rc = LoadFile(file);
-        hadError |= rc;
-        record(fileload,
-               "Load file %s code %d, errors %d", file.c_str(), rc, hadError);
+        text path = SearchLibFile(p);
+        Tree_p result = LoadFile(path, evaluate);
+        if (HadErrors())
+            return result;
+        if (Scope *scope = result->As<Scope>())
+            context.SetSymbols(scope);
     }
 
-    return hadError;
+    // Then process files
+    for (auto &file : file_names)
+    {
+        result = LoadFile(file, evaluate);
+        if (HadErrors())
+            return result;
+    }
+    return result;
 }
 
 
-int Main::LoadFile(text file, text modname)
+Tree_p Main::LoadFile(text file, bool evaluate)
 // ----------------------------------------------------------------------------
 //   Load an individual file
 // ----------------------------------------------------------------------------
 {
-    // Find which source file we are referencing
-    SourceFile         &sf       = files[file];
-    std::istream       *input    = nullptr;
-    Tree_p              tree     = nullptr;
-    utf8_ifstream       inputFile(file.c_str(), std::ios::in|std::ios::binary);
-    std::stringstream   inputStream;
-
-
-    // See if we read from standard input
-    if (file == "-")
-    {
-        record(fileload, "Loading from standard input");
-        input = &std::cin;
-    }
-    else
-    {
-        record(fileload, "Loading from %s", file.c_str());
-        input = &inputFile;
-    }
-
-    // Check if we need to decrypt an input file first
-    if (Opt::writeEncrypted)
-    {
-        inputStream << input->rdbuf();
-        text decrypted = Decrypt(inputStream.str());
-        if (decrypted != "")
-        {
-            record(fileload, "Input was encrypted");
-            inputStream.str(decrypted);
-        }
-        input = &inputStream;
-    }
-
-    // Check if we need to deserialize the input file first
-    if (Opt::writePacked)
-    {
-        Deserializer deserializer(*input);
-        tree = deserializer.ReadTree();
-        if (deserializer.IsValid())
-        {
-            record(fileload, "Input was in serialized format");
-        }
-    }
-
-    // Read in standard format if we could not read it from packed format
-    if (!tree)
-    {
-        // Set the name used for error messages
-        kstring errName = file.c_str();
-        if (file == "-")
-            errName = "<stdin>";
-        Parser parser (*input, syntax, positions, topLevelErrors, errName);
-        tree = parser.Parse();
-    }
-
-    // If at this stage we don't have a tree, this is an error
-    if (!tree)
-    {
-        record(fileload, "File load error for %s", file.c_str());
-        return false;
-    }
-
-    // Output packed if this was requested
-    if (Opt::writePacked)
-    {
-        std::stringstream output;
-        Serializer serialize(output);
-        tree->Do(serialize);
-        text packed = output.str();
-        if (Opt::writeEncrypted)
-        {
-            text crypted = Encrypt(packed);
-            if (crypted == "")
-            {
-                record(fileload, "No encryption, output is packed");
-                std::cout << packed;
-            }
-            else
-            {
-                record(fileload, "Encrypted output");
-                std::cout << crypted;
-            }
-        }
-        else
-        {
-            record(fileload, "Packed output");
-            std::cout << packed;
-        }
-    }
-
-    // Normalize if necessary
-    tree = Normalize(tree);
-
-    // Show source if requested
-    if (Opt::showSource)
-        std::cout << tree << "\n";
-
-    // Check if the module name is given, i.e. [import IO = A.B.C]
-    Scope *scope = context.Symbols();
-    if (modname != "")
-    {
-        // If we have an explicit module name (e.g. use),
-        // we will refer to the content using that name
-        context.SetModuleName(modname);
-        context.Define(modname, tree);
-    }
-    else
-    {
-        // Create new symbol table for the file
-        context.CreateScope(tree->Position());
-        scope = context.Symbols();
-
-        // No explicit module name: update current context
-        modname = ModuleName(file);
-        context.SetModuleName(modname);
-    }
-
-    // Set the module path, directory and file
-    Context mod(scope);
-    mod.SetModulePath(file);
-    mod.SetModuleDirectory(ModuleDirectory(file));
-    mod.SetModuleFile(ModuleBaseName(file));
-
-    // Register the source file we had
-    sf = SourceFile (file, tree, scope);
-
-    // Process declarations from the program
-    record(fileload, "File %s loaded as %t in %t", file, tree, scope);
-
-    // We were OK, done
-    return false;
-}
-
-
-int Main::Run()
-// ----------------------------------------------------------------------------
-//   Run all files given on the command line
-// ----------------------------------------------------------------------------
-{
-    text cmd, end = "";
-    source_names::iterator file;
-    bool hadError = false;
-
-    // If we only parse or compile, return
-    if (Opt::parse || Opt::compile)
-        return -1;
-
-    // Loop over files we will process
-    Tree_p result = xl_nil;
-    for (file = file_names.begin(); file != file_names.end(); file++)
-    {
-        SourceFile &sf = files[*file];
-
-        // Evaluate the given tree
-        Errors errors;
-        if (Tree *tree = sf.tree)
-        {
-            result = Evaluate(sf.scope, tree);
-            if (errors.HadErrors())
-            {
-                errors.Display();
-                errors.Clear();
-            }
-        }
-
-        if (!result)
-        {
-            hadError = true;
-        }
-        record(run_results, "Result of %+s is %t", sf.name, result);
-    }
-
-    // Output the result
-    if (result && !Opt::remote && !Opt::emitIR)
-        std::cout << result << "\n";
-
-    return hadError;
+    record(fileload, "Loading file %s", file);
+    Module *module = Module::Get(context.Symbols(), file, evaluate);
+    Tree_p result = module->Value();
+    record(fileload, "Loaded file %s into module %p value %t",
+           file, module, result);
+    return result;
 }
 
 
@@ -600,7 +400,7 @@ text Main::SearchFile(text file, text extension)
 //   Implement the default search strategy for file in paths
 // ----------------------------------------------------------------------------
 {
-    return SearchFile(file, paths, extension);
+    return SearchFile(file, Opt::paths, extension);
 }
 
 
@@ -609,7 +409,7 @@ text Main::SearchLibFile(text file, text extension)
 //   Implement the default search strategy for file in the library paths
 // ----------------------------------------------------------------------------
 {
-    return SearchFile(file, lib_paths, extension);
+    return SearchFile(file, Opt::libPaths, extension);
 }
 
 
@@ -618,25 +418,35 @@ text Main::SearchFile(text file, path_list &paths, text extension)
 //   Hook to search a file in paths if application sets them up
 // ----------------------------------------------------------------------------
 {
-    utf8_filestat_t st;
-
     record(fileload, "Search file '%s' extension '%s', %u paths",
            file, extension, paths.size());
 
+    // Quick exit for empty file
+    size_t flen = file.length();
+    if (!flen)
+        return "";
+
     // Add extension if needed
     size_t len = extension.length();
-    if (len)
+    if (len && extension[0] != '.')
     {
-        size_t flen = file.length();
-        if (file.rfind(extension) != flen - len)
-            file += extension;
+        extension = "." + extension;
+        len++;
     }
+    if (flen < len || file.compare(flen - len, len, extension))
+        file += extension;
 
     // If the given file is already good, use that
-    if (file.find("/") == 0 || utf8_stat(file.c_str(), &st) == 0)
+    utf8_filestat_t st;
+    if (utf8_stat(file.c_str(), &st) == 0)
     {
         record(fileload, "Quick exit for '%s'", file);
         return file;
+    }
+    if (isDirectorySeparator(file[0]))
+    {
+        record(fileload, "Absolute path '%s' not found", file);
+        return "";
     }
 
     // Search for a possible file in path
@@ -647,81 +457,14 @@ text Main::SearchFile(text file, path_list &paths, text extension)
         text candidate = p + file;
         record(fileload, "Checking candidate '%s' in path '%s'", candidate, p);
         if (utf8_stat (candidate.c_str(), &st) == 0)
+        {
+            record(fileload, "Found candidate '%s'", candidate);
             return candidate;
+        }
     }
 
-    // If we get there, we'll probably have an error downstream
-    return file;
-}
-
-
-static inline kstring endOfPath(kstring path)
-// ----------------------------------------------------------------------------
-//   Find the end of the path
-// ----------------------------------------------------------------------------
-{
-    const char *p = path;
-    while (*p) p++;
-    p--;
-    while (p != path && isDirectorySeparator(*p))
-        p--;
-    while (p != path && !isDirectorySeparator(*p))
-        p--;
-    if (isDirectorySeparator(*p))
-        p++;
-    return p;
-}
-
-
-text Main::ModuleDirectory(text path)
-// ----------------------------------------------------------------------------
-//   Return parent directory for a given file name
-// ----------------------------------------------------------------------------
-{
-    kstring str = path.c_str();
-    kstring dirSep = endOfPath(str);
-    text    result = path.substr(0, dirSep - str);
-    if (result == "")
-        result = "./";
-    return result;
-}
-
-
-text Main::ModuleBaseName(text path)
-// ----------------------------------------------------------------------------
-//   Return the base name for the path
-// ----------------------------------------------------------------------------
-{
-    kstring str = path.c_str();
-    kstring dirSep = endOfPath(str);
-    return text(dirSep);
-}
-
-
-text Main::ModuleName(text path)
-// ----------------------------------------------------------------------------
-//   Return the module name, e.g. turn foo/bar-bi-tu.xl into bar_bi_tu
-// ----------------------------------------------------------------------------
-{
-    text    result = "";
-    bool    hadUnderscore = false;
-    kstring str = path.c_str();
-    kstring p = endOfPath(str);
-    while (char c = *p++)
-    {
-        if (c == '.')
-            break;
-
-        bool punct = ispunct(c);
-        if (!punct)
-            result += c;
-        else if (!hadUnderscore)
-            result += '_';
-
-        hadUnderscore = punct;
-    }
-
-    return result;
+    // We failed to find a candidate
+    return "";
 }
 
 

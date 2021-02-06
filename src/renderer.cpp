@@ -123,7 +123,7 @@ struct EnterFormatsAction
 };
 
 
-Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
+Renderer::Renderer(std::ostream &out, Syntax &stx)
 // ----------------------------------------------------------------------------
 //   Renderer constructor
 // ----------------------------------------------------------------------------
@@ -132,9 +132,7 @@ Renderer::Renderer(std::ostream &out, text styleFile, Syntax &stx)
       priority(0),
       had_space(true), had_newline(false), had_punctuation(false),
       need_separator(false), need_newline(false), no_indents(false)
-{
-    SelectStyleSheet(styleFile);
-}
+{}
 
 
 Renderer::Renderer(std::ostream &out, Renderer *from)
