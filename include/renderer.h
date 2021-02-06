@@ -61,7 +61,7 @@ struct Renderer
 // ----------------------------------------------------------------------------
 {
     // Construction
-    Renderer(std::ostream &out, text styleFile, Syntax &stx);
+    Renderer(std::ostream &out, Syntax &stx);
     Renderer(std::ostream &out, Renderer *from = renderer);
 
     // Selecting the style sheet file

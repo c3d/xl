@@ -58,6 +58,9 @@ struct Module
     static Module *Get(Scope *where,    // Get an existing module if any
                        Tree *name,
                        bool evaluate = true);
+    static Module *Get(Scope *where,
+                       text name,
+                       bool evaluate = true);
 
     Tree *      Value();                // Value of the module from loading
     Scope *     Specification();        // Return specification if any
