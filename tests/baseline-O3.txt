@@ -1,4 +1,6 @@
-O3/fibonacci-type-conflict.xl
-O3/builtin-mod.xl
-O3/builtin-ashr.xl
-O3/library-writeln-list.xl
+O3/builtin-teq.xl
+O3/return-self-tree.xl
+O3/builtin-or.xl
+O3/builtin-kind-postfix.xl
+O3/extern-sqrt.xl
+O3/extern-log1p.xl
