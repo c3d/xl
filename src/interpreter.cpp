@@ -212,6 +212,7 @@ bool Bindings::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 {
     bool retrying = true;
+    Tree_p uneval = test;
 
     while (retrying)
     {
@@ -240,7 +241,7 @@ bool Bindings::Do(Prefix *what)
     }
 
     // Mismatch
-    Ooops("Prefix $1 does not match $2", what, test);
+    Ooops("Prefix $1 does not match $2", what, uneval);
     return false;
 }
 
@@ -251,6 +252,7 @@ bool Bindings::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 {
     bool retrying = true;
+    Tree_p uneval = test;
 
     while (retrying)
     {
@@ -275,7 +277,7 @@ bool Bindings::Do(Postfix *what)
     }
 
     // All other cases are a mismatch
-    Ooops("Postfix $1 does not match $2", what, test);
+    Ooops("Postfix $1 does not match $2", what, uneval);
     return false;
 }
 
@@ -724,7 +726,7 @@ retry:
     if (error)
     {
         Ooops("Nothing matches $1", expr);
-        result = expr;
+        result = nullptr;
     }
     else if (!Errors::Aborting())
     {
