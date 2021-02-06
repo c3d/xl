@@ -95,7 +95,7 @@ struct xl_type<void>
     typedef Tree              BoxType;
     typedef void              native_type;
 #ifndef INTERPRETER_ONLY
-    static JIT::PointerType_p TreeType(Compiler &c)   { return c.voidTy; }
+    static JIT::PointerType_p TreeType(Compiler &c)   { return c.treePtrTy; }
     static JIT::PointerType_p NativeType(Compiler &c) { return c.voidTy; }
 #endif
     static Tree *Shape()
