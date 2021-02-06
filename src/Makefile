@@ -71,6 +71,7 @@ SOURCES_VARIANT_lib     =			\
 	native.cpp				\
 	options.cpp				\
 	parser.cpp				\
+	posix.cpp				\
 	renderer.cpp				\
 	rewrites.cpp				\
 	runtime.cpp				\
