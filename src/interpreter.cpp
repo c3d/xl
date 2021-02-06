@@ -412,6 +412,7 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
         record(bindings, "Evaluating %t in %t", expr, scope);
         result = Interpreter::DoEvaluate(scope,expr,Interpreter::NORMAL,cache);
         cache.Cache(expr, result);
+        cache.Cache(result, result);
         record(bindings, "Evaluate %t = new %t", test, result);
     }
     else
