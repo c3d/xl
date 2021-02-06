@@ -199,6 +199,7 @@ SourceFile::~SourceFile()
 
 Main::Main(int inArgc,
            char **inArgv,
+           const path_list &paths,
            const path_list &bin_paths,
            const path_list &lib_paths,
            text compilerName,
@@ -210,6 +211,7 @@ Main::Main(int inArgc,
 // ----------------------------------------------------------------------------
     : argc(inArgc),
       argv(inArgv),
+      paths(paths),
       bin_paths(bin_paths),
       lib_paths(lib_paths),
       positions(),
@@ -611,7 +613,7 @@ text Main::SearchLibFile(text file, text extension)
 }
 
 
-text Main::SearchFile(text file, const path_list &paths, text extension)
+text Main::SearchFile(text file, path_list &paths, text extension)
 // ----------------------------------------------------------------------------
 //   Hook to search a file in paths if application sets them up
 // ----------------------------------------------------------------------------
@@ -638,8 +640,10 @@ text Main::SearchFile(text file, const path_list &paths, text extension)
     }
 
     // Search for a possible file in path
-    for (auto &p : paths)
+    for (auto &&p : paths)
     {
+        if (p != "" && !isDirectorySeparator(p[p.length() - 1]))
+            p += "/";
         text candidate = p + file;
         record(fileload, "Checking candidate '%s' in path '%s'", candidate, p);
         if (utf8_stat (candidate.c_str(), &st) == 0)
@@ -767,8 +771,8 @@ eval_fn Main::Declarator(text name)
 {
     if (name == "use" || name == "import")
         return xl_import;
-    if (name == "load")
-        return xl_load;
+    if (name == XL::Normalize("parse_file"))
+        return xl_parse_file;
     return nullptr;
 }
 

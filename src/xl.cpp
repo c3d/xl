@@ -55,11 +55,12 @@ int main(int argc, char **argv)
 #endif
 
     XL::path_list bin { XL_BIN,
-                        "/usr/local/bin/", "/bin/", "/usr/bin/" };
-    XL::path_list lib { "../lib/xl/", "../lib/",
+                        "/usr/local/bin", "/bin", "/usr/bin" };
+    XL::path_list lib { "../lib/xl", "../lib",
                         XL_LIB,
-                        "/usr/local/lib/xl/", "/lib/xl/", "/usr/lib/xl/"  };
-    XL::Main main(argc, argv, bin, lib,
+                        "/usr/local/lib/xl", "/lib/xl", "/usr/lib/xl"  };
+    XL::path_list path { };
+    XL::Main main(argc, argv, path, bin, lib,
                   "xl", "xl.syntax", "xl.stylesheet", "builtins.xl");
     int rc = main.LoadAndRun();
 

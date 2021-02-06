@@ -91,6 +91,7 @@ struct Main
 {
     Main(int               argc,
          char            **argv,
+         const path_list  &paths,
          const path_list  &bin_paths,
          const path_list  &lib_paths,
          text              compiler_name,
@@ -120,7 +121,7 @@ struct Main
     // Hooks for use as a library in an application
     virtual text        SearchFile(text input, text ext = "");
     virtual text        SearchLibFile(text input, text ext = "");
-    virtual text        SearchFile(text input, const path_list &p, text ext="");
+    virtual text        SearchFile(text input, path_list &p, text ext="");
     virtual text        ModuleDirectory(text path);
     virtual text        ModuleBaseName(text path);
     virtual text        ModuleName(text path);
@@ -133,7 +134,7 @@ struct Main
 public:
     int                 argc;
     char **             argv;
-    path_list           bin_paths, lib_paths, paths;
+    path_list           paths, bin_paths, lib_paths;
 
     Positions           positions;
     Errors *            errors;
