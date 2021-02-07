@@ -650,14 +650,14 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     if (patk != valk)
     {
         static const unsigned SortRank[KIND_COUNT] = {
-            [INFIX]     = 0,
-            [PREFIX]    = 1,
-            [POSTFIX]   = 2,
-            [NATURAL]   = 3,
+            [NATURAL]   = 3,    // Bogus order due to gcc 'not implemented'
             [REAL]      = 4,
             [TEXT]      = 5,
             [NAME]      = 6,
-            [BLOCK]     = 7
+            [BLOCK]     = 7,
+            [PREFIX]    = 1,
+            [POSTFIX]   = 2,
+            [INFIX]     = 0
         };
 
         return SortRank[patk] < SortRank[valk] ? -1 : 1;
