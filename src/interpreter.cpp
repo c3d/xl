@@ -533,12 +533,12 @@ void Bindings::Unwrap()
 //
 // ============================================================================
 
-static Tree *evalLookup(Scope   *evalScope,
-                        Scope   *declScope,
-                        Tree    *expr,
-                        Rewrite *decl,
-                        void    *ec,
-                        bool     variable)
+static Tree *eval(Scope   *evalScope,
+                  Scope   *declScope,
+                  Tree    *expr,
+                  Rewrite *decl,
+                  void    *ec,
+                  bool     variable)
 // ----------------------------------------------------------------------------
 //   Bind 'self' to the pattern in 'decl', and if successful, evaluate
 // ----------------------------------------------------------------------------
@@ -572,7 +572,7 @@ static Tree *evalLookup(Scope   *evalScope,
 
     // Successfully bound - Return variable declaration in a closure
     if (variable)
-        return new Prefix(bindings.ArgumentsScope(), decl);
+        return bindings.Enclose(decl);
 
     // Evaluate the body in arguments
     Tree *body = decl->right;
@@ -634,7 +634,7 @@ static Tree *variable(Scope   *evalScope,
 //    Lookup a variable - Return the associated rewrite
 // ----------------------------------------------------------------------------
 {
-    return evalLookup(evalScope, declScope, expr, decl, ec, true);
+    return eval(evalScope, declScope, expr, decl, ec, true);
 }
 
 
@@ -647,7 +647,92 @@ static Tree *constant(Scope   *evalScope,
 //    Lookup a constant - Return the associated value
 // ----------------------------------------------------------------------------
 {
-    return evalLookup(evalScope, declScope, expr, decl, ec, false);
+    return eval(evalScope, declScope, expr, decl, ec, false);
+}
+
+
+static inline Tree_p dot(Context &context,
+                         Infix *infix,
+                         EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Process [X.Y]
+// ----------------------------------------------------------------------------
+{
+    Context child(&context);
+    Scope *symbols = child.Symbols();
+    Tree_p name = infix->left;
+    Tree_p value = infix->right;
+    Tree *where = Interpreter::DoEvaluate(symbols, name,
+                                          Interpreter::STATEMENT, cache);
+    if (Scope *scope = where->As<Scope>())
+        return Interpreter::DoEvaluate(scope->Inner(), value,
+                                       Interpreter::LOCAL, cache);
+    else
+        Ooops("No scope in $1 (evaluated as $2)", name, where);
+    return nullptr;
+}
+
+
+static inline Tree_p assignment(Scope *scope,
+                                Infix *infix,
+                                Interpreter::Evaluation mode,
+                                EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Process assignments like [X := Y]
+// ----------------------------------------------------------------------------
+{
+    // Evaluate the target as a variable
+    Tree_p decl = Interpreter::DoEvaluate(scope, infix->left,
+                                          Interpreter::VARIABLE, cache);
+    Tree *to = decl;
+    if (!to)
+    {
+        Ooops("Cannot assign to $1", infix->left);
+        return to;
+    }
+
+    // Strip closure for expressions like [A(1) := 3]
+    while (Closure *closure = to->As<Closure>())
+        to = closure->Value();
+
+    // Get the original definition
+    Rewrite_p rewrite = to->As<Rewrite>();
+    if (!rewrite)
+    {
+        Ooops("Left of assignment, $1, is not a variable", to);
+        return rewrite;
+    }
+
+    // Evaluate the assigned value
+    Tree_p value = Interpreter::DoEvaluate(scope, infix->right,
+                                           Interpreter::EXPRESSION, cache);
+    if (!value)
+        return value;                   // We should already have an error
+
+    // Check the type fo the pattern
+    Tree_p pattern = rewrite->Pattern();
+    Tree_p type = AnnotatedType(pattern);
+    if (!type)
+    {
+        Ooops("Cannot assign to constant $1", rewrite->Pattern());
+        return nullptr;
+    }
+
+    // The type was already evaluated, so can check it right away
+    Tree_p cast = Interpreter::DoTypeCheck(scope, type, value, cache);
+    if (!cast)
+    {
+        Ooops("Assigned value $1 does not match type $2", infix->right, type);
+        if (value != infix->right)
+            Ooops("The assigned value evaluated to $1", value);
+        return nullptr;
+    }
+
+    // We passed all the check: update the value in the symbol table
+    rewrite->right = value;
+
+    // Return the assigned value or the variable
+    return mode == Interpreter::VARIABLE ? decl : value;
 }
 
 
@@ -776,17 +861,13 @@ retry:
         if (IsDefinition(infix))
             return result;
 
-        // Evaluate X.Y
+        // Evaluate [X.Y]
         if (IsDot(infix))
-        {
-            Context child(&context);
-            Scope *symbols = child.Symbols();
-            Tree *where = DoEvaluate(symbols, infix->left, STATEMENT, cache);
-            if (Scope *scope = where->As<Scope>())
-                return DoEvaluate(scope->Inner(), infix->right, LOCAL, cache);
-            else
-                Ooops("No scope in $1 (evaluated as $2)", infix->left, where);
-        }
+            return dot(context, infix, cache);
+
+        // Evaluate assignments such as [X := Y]
+        else if (IsAssignment(infix))
+            return assignment(scope, infix, mode, cache);
     }
 
     // Check stack depth during evaluation
@@ -865,6 +946,10 @@ bool Interpreter::DoInitializers(Scope *scope,
                   typedecl->right, typedecl->left);
             return false;
         }
+        // Only evaluate type once
+        typedecl->right = type;
+
+        // Cast initialized value to this type
         Tree_p cast = DoTypeCheck(scope, type, init, cache);
         if (!cast)
         {
