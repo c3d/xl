@@ -1,0 +1,2 @@
+01.Evaluation/variable-init-with-wrong-type.xl:2:15: Initializer [1 + foo 3] does not match type [text]
+01.Evaluation/variable-init-with-wrong-type.xl:2:15: Initializer [1 + foo 3] does not match type [text]

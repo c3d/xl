@@ -628,7 +628,10 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Rewrite *candidate)
             case Types::Decl::DATA:
                 // Process declarations in the initializer
                 bcontext = binding_types->TypesContext();
-                bcontext->ProcessDeclarations(init);
+                {
+                    RewriteList inits;
+                    bcontext->ProcessDeclarations(init, inits);
+                }
                 type = binding_types->Type(init);
                 if (!type || type == xl_error)
                     binding = FAILED;
