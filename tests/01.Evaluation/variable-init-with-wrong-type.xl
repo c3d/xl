@@ -1,0 +1,4 @@
+// EXIT=1
+X : text := 1 + foo 3
+foo N is N + 1
+X

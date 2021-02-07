@@ -667,8 +667,14 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
 
     // Check if we have instructions to process. If not, return declarations
     if (mode == TOPLEVEL)
-        if (!context.ProcessDeclarations(expr))
+    {
+        RewriteList inits;
+        bool hasInstructions = context.ProcessDeclarations(expr, inits);
+        if (!DoInitializers(scope, inits, cache))
+            return nullptr;
+        if (!hasInstructions)
             return context.Symbols();
+    }
 
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
@@ -687,8 +693,11 @@ retry:
     {
         // Check if the left is a block containing only declarations
         // This deals with [(X is 3) (X + 1)], i.e. closures
-        if (Scope *closure = context.ProcessScope(prefix->left))
+        RewriteList inits;
+        if (Scope *closure = context.ProcessScope(prefix->left, inits))
         {
+            if (!DoInitializers(closure, inits, cache))
+                return nullptr;
             scope = closure;
             expr = prefix->right;
             result = expr;
@@ -721,7 +730,7 @@ retry:
             goto retry;
         }
 
-        // Skip definitions
+        // Skip definitions, initalizer have been done above
         if (IsDefinition(infix))
             return result;
 
@@ -792,6 +801,37 @@ Tree *Interpreter::DoTypeCheck(Scope *scope,
     record(typecheck, "Checked %t against %t in scope %t, got %t",
            value, type, scope, result);
     return result;
+}
+
+
+bool Interpreter::DoInitializers(Scope *scope,
+                                 RewriteList &inits,
+                                 EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Process all initializers in order
+// ----------------------------------------------------------------------------
+{
+    for (auto rw : inits)
+    {
+        Tree_p init = rw->right;
+        Infix_p typedecl = rw->left->AsInfix();
+        Tree_p type = DoEvaluate(scope, typedecl->right, NORMAL, cache);
+        if (!type)
+        {
+            Ooops("Invalid type $1 for declaration of $2",
+                  typedecl->right, typedecl->left);
+            return false;
+        }
+        Tree_p cast = DoTypeCheck(scope, type, init, cache);
+        if (!cast)
+        {
+            Ooops("Initializer $1 does not match type $2",
+                  init, type);
+            return false;
+        }
+        rw->right = init;
+    }
+    return true;
 }
 
 

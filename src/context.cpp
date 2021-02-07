@@ -179,7 +179,7 @@ Context *Context::Parent()
 //
 // ============================================================================
 
-bool Context::ProcessDeclarations(Tree *what)
+bool Context::ProcessDeclarations(Tree *what, RewriteList &inits)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
@@ -199,7 +199,7 @@ bool Context::ProcessDeclarations(Tree *what)
             if (IsDefinition(infix))
             {
                 record(context, "In %p enter declaration %t", this, infix);
-                Enter(infix);
+                Enter(infix, inits);
                 isInstruction = false;
             }
             else if (IsSequence(infix))
@@ -209,9 +209,9 @@ bool Context::ProcessDeclarations(Tree *what)
                 {
                     isInstruction = false;
                     if (IsDefinition(left))
-                        Enter(left);
+                        Enter(left, inits);
                     else
-                        isInstruction = ProcessDeclarations(left);
+                        isInstruction = ProcessDeclarations(left, inits);
                 }
                 next = infix->right;
             }
@@ -255,7 +255,7 @@ bool Context::ProcessDeclarations(Tree *what)
 }
 
 
-Scope *Context::ProcessScope(Tree *declarations)
+Scope *Context::ProcessScope(Tree *declarations, RewriteList &inits)
 // ----------------------------------------------------------------------------
 //   If 'declarations' contains only declarations, return scope for them
 // ----------------------------------------------------------------------------
@@ -268,7 +268,8 @@ Scope *Context::ProcessScope(Tree *declarations)
     if (Block *block = declarations->AsBlock())
     {
         Context child(this);
-        if (!child.ProcessDeclarations(block->child))
+        RewriteList inits;
+        if (!child.ProcessDeclarations(block->child, inits))
             return child.Symbols();
     }
     return nullptr;
@@ -345,7 +346,7 @@ Rewrite *Context::Define(Tree *pattern, Tree *definition, bool overwrite)
 //   Enter a rewrite in the current context
 // ----------------------------------------------------------------------------
 {
-    Rewrite *rewrite = new Rewrite(pattern, definition);
+    Rewrite_p rewrite = new Rewrite(pattern, definition);
     return Enter(rewrite, overwrite);
 }
 
@@ -730,14 +731,17 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
 }
 
 
-Rewrite *Context::Enter(Infix *infix, bool overwrite)
+Rewrite *Context::Enter(Infix *infix, RewriteList &inits)
 // ----------------------------------------------------------------------------
 //   Make sure we produce a real rewrite in the symbol table
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(IsDefinition(infix) && "Context::Enter only accepts definitions");
     Rewrite_p rewrite = new Rewrite(infix);
-    return Enter(rewrite, overwrite);
+    rewrite = Enter(rewrite);
+    if (IsVariableDefinition(infix))
+        inits.push_back(rewrite);
+    return rewrite;
 }
 
 

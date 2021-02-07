@@ -78,6 +78,9 @@ public:
                              Tree *type,
                              Tree *value,
                              EvaluationCache &cache);
+    static bool DoInitializers(Scope *scope,
+                               RewriteList &init,
+                               EvaluationCache &cache);
 
     typedef Tree *(*builtin_fn)(Bindings &bindings);
     static std::map<text, builtin_fn> builtins;
