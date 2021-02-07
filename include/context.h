@@ -146,8 +146,8 @@ struct Scope : Block
 //   A scope is simply an indentation-based block
 // ----------------------------------------------------------------------------
 {
-    Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE):
-        Block(child, "{", "}", pos) {}
+    Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE)
+        : Block(child, "{", "}", pos) {}
     Tree   *Entries()   { return child; }
     Scope  *Enclosing();
     Scope  *Inner();
@@ -163,8 +163,8 @@ struct Scopes : Prefix
 //   A sequence of scopes
 // ----------------------------------------------------------------------------
 {
-    Scopes(Scope *enclosing, Scope *inner, TreePosition pos = NOWHERE):
-        Prefix(enclosing, inner, pos) {}
+    Scopes(Scope *enclosing, Scope *inner, TreePosition pos = NOWHERE)
+        : Prefix(enclosing, inner, pos) {}
     Scope *Enclosing()  { return (Scope *) (Tree *) left; }
     Scope *Inner()      { return (Scope *) (Tree *) right; }
     GARBAGE_COLLECT(Scopes);
@@ -177,8 +177,10 @@ struct Rewrite : Infix
 //   A rewrite is an infix "is"
 // ----------------------------------------------------------------------------
 {
-    Rewrite(Tree *pattern, Tree *definition):
-        Infix("is", pattern, definition, pattern->Position()) {}
+    Rewrite(Tree *pattern, Tree *definition)
+        : Infix("is", pattern, definition, pattern->Position()) {}
+    Rewrite(Infix *infix)
+        : Infix(infix, infix->left, infix->right) {}
     Tree *Pattern() { return left; }
     Tree *BasePattern();
     Tree *Definition()  { return right; }
@@ -192,10 +194,10 @@ struct Rewrites : Infix
 //   Sequence of rewrites are separated by a \n
 // ----------------------------------------------------------------------------
 {
-    Rewrites(Rewrite *left, Rewrite *right):
-        Infix("\n", left, right, left->Position()) {}
-    Rewrites(Rewrite *left, Rewrites *right):
-        Infix("\n", left, right, left->Position()) {}
+    Rewrites(Rewrite *left, Rewrite *right)
+        : Infix("\n", left, right, left->Position()) {}
+    Rewrites(Rewrite *left, Rewrites *right)
+        : Infix("\n", left, right, left->Position()) {}
     Rewrite  *Payload()         { return (Rewrite *) (Tree *) left; }
     Rewrite  *Second();
     Rewrites *Children();
@@ -376,7 +378,7 @@ inline bool IsAssignment(Infix *infix)
 //   Check if an infix is an assignment
 // ----------------------------------------------------------------------------
 {
-    return infix->name == ":=";
+    return infix->name == ":=" || infix->name == ":<" || infix->name == ":+";
 }
 
 
@@ -392,22 +394,64 @@ inline Infix *IsAssignment(Tree *tree)
 }
 
 
-inline bool IsDefinition(Infix *infix)
+inline bool IsConstantDefinition(Infix *infix)
 // ----------------------------------------------------------------------------
-//   Check if an infix is a constant declaration
+//   Check if an infix is a constant definition, i.e. [Pattern is Impl]
 // ----------------------------------------------------------------------------
 {
     return infix->name == "is";
 }
 
 
-inline Infix *IsDefinition(Tree *tree)
+inline Infix *IsConstantDefinition(Tree *tree)
 // ----------------------------------------------------------------------------
-//   Check if a tree is an assignment
+//   Check if a tree is a constant definition
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        if (IsDefinition(infix))
+        if (IsConstantDefinition(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsVariableDefinition(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a variable definition [Name : Type := Init]
+// ----------------------------------------------------------------------------
+{
+    return IsAssignment(infix) && IsTypeAnnotation(infix->left);
+}
+
+
+inline Infix *IsVariableDefinition(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a variable declaration
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsVariableDefinition(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsConstantDeclaration(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a constant declaration [Name as Type]
+// ----------------------------------------------------------------------------
+{
+    return infix->name == "as";
+}
+
+
+inline Infix *IsConstantDeclaration(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a constant declaration
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsConstantDeclaration(infix))
             return infix;
     return nullptr;
 }
@@ -415,10 +459,10 @@ inline Infix *IsDefinition(Tree *tree)
 
 inline bool IsVariableDeclaration(Infix *infix)
 // ----------------------------------------------------------------------------
-//   Check if an infix is a variable declaration [Name : Type := Init]
+//   Check if an infix is a variable declaration [Name : Type]
 // ----------------------------------------------------------------------------
 {
-    return IsAssignment(infix) && IsTypeAnnotation(infix->left);
+    return infix->name == ":";
 }
 
 
@@ -439,20 +483,7 @@ inline bool IsDeclaration(Infix *infix)
 //   Check if an infix is a declaration
 // ----------------------------------------------------------------------------
 {
-    return (IsDefinition(infix) ||
-            IsVariableDeclaration(infix));
-}
-
-
-inline bool IsDeclaration(Prefix *prefix)
-// ----------------------------------------------------------------------------
-//   Check if a prefix is a declaration
-// ----------------------------------------------------------------------------
-{
-    if (Name *name = prefix->left->AsName())
-        if (name->value == "extern")
-            return true;
-    return false;
+    return IsConstantDeclaration(infix) || IsVariableDeclaration(infix);
 }
 
 
@@ -463,6 +494,41 @@ inline Infix *IsDeclaration(Tree *tree)
 {
     if (Infix *infix = tree->AsInfix())
         if (IsDeclaration(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsDefinition(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix is a definition
+// ----------------------------------------------------------------------------
+{
+    return IsConstantDefinition(infix) || IsVariableDefinition(infix);
+}
+
+
+inline bool IsDefinition(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is a definition
+// ----------------------------------------------------------------------------
+//   Something like [extern int foo(bar)] is a definition, since it's
+//   implicitly [foo X:bar as integer is C foo]
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "extern")
+            return true;
+    return false;
+}
+
+
+inline Infix *IsDefinition(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a definition
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsDefinition(infix))
             return infix;
     return nullptr;
 }
