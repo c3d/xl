@@ -1,0 +1,5 @@
+// Check that we cannot assign to a constant
+// EXIT=1
+foo X is
+    X := 0
+foo 3
