@@ -65,10 +65,12 @@ public:
 public:
     enum Evaluation
     {
-        NORMAL,                 // Evaluate in already-populated context
+        STATEMENT,              // Complete statements - Process declarations
+        EXPRESSION,             // Evaluate sub-expressions in a statement
         MAYFAIL,                // Return nullptr on error
-        TOPLEVEL,               // Process declatations before evaluation
-        LOCAL                   // Don't lookup parent scopes
+        VARIABLE,               // Return a variable reference
+        LOCAL,                  // Don't lookup parent scopes
+        EVALUATION_MODES        // Number of evaluations modes
     };
     static Tree *DoEvaluate(Scope *scope,
                             Tree *expr,
