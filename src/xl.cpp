@@ -63,10 +63,10 @@ int main(int argc, char **argv)
     XL::Main main(argc, argv, path, bin, lib, "xl");
 
     // Load files and run code
-    XL::Tree_p result =main.LoadFiles();
+    XL::Tree_p result = main.LoadFiles();
 
     // Show errors if we had any
-    int rc = main.HadErrors();
+    int rc = main.HadErrors() > 0;
     if (rc)
         main.errors->Display();
     else if (result != XL::xl_nil)
