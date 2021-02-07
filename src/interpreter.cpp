@@ -413,7 +413,8 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
     if (!result)
     {
         record(bindings, "Evaluating %t in %t", expr, scope);
-        result = Interpreter::DoEvaluate(scope,expr,Interpreter::NORMAL,cache);
+        result = Interpreter::DoEvaluate(scope, expr,
+                                         Interpreter::EXPRESSION, cache);
         cache.Cache(expr, result);
         cache.Cache(result, result);
         record(bindings, "Evaluate %t = new %t", test, result);
@@ -536,7 +537,8 @@ static Tree *evalLookup(Scope   *evalScope,
                         Scope   *declScope,
                         Tree    *expr,
                         Rewrite *decl,
-                        void    *ec)
+                        void    *ec,
+                        bool     variable)
 // ----------------------------------------------------------------------------
 //   Bind 'self' to the pattern in 'decl', and if successful, evaluate
 // ----------------------------------------------------------------------------
@@ -553,10 +555,13 @@ static Tree *evalLookup(Scope   *evalScope,
     {
         if (Name *xname = expr->AsName())
             if (name->value == xname->value)
-                return IsSelf(decl->right)
+                return
+                    variable
+                    ? decl
+                    : IsSelf(decl->right)
                     ? name
                     : Interpreter::DoEvaluate(evalScope, decl->right,
-                                              Interpreter::TOPLEVEL, cache);
+                                              Interpreter::STATEMENT, cache);
         return nullptr;
     }
 
@@ -565,7 +570,11 @@ static Tree *evalLookup(Scope   *evalScope,
     if (!pattern->Do(bindings))
         return nullptr;
 
-    // Successfully bound: evaluate the body in arguments
+    // Successfully bound - Return variable declaration in a closure
+    if (variable)
+        return new Prefix(bindings.ArgumentsScope(), decl);
+
+    // Evaluate the body in arguments
     Tree *body = decl->right;
 
     // Check if we have a builtin
@@ -612,7 +621,33 @@ static Tree *evalLookup(Scope   *evalScope,
     // Otherwise evaluate the body in the binding arguments scope
     EvaluationCache bodyCache;
     return Interpreter::DoEvaluate(bindings.ArgumentsScope(), body,
-                                   Interpreter::NORMAL, bodyCache);
+                                   Interpreter::EXPRESSION, bodyCache);
+}
+
+
+static Tree *variable(Scope   *evalScope,
+                      Scope   *declScope,
+                      Tree    *expr,
+                      Rewrite *decl,
+                      void    *ec)
+// ----------------------------------------------------------------------------
+//    Lookup a variable - Return the associated rewrite
+// ----------------------------------------------------------------------------
+{
+    return evalLookup(evalScope, declScope, expr, decl, ec, true);
+}
+
+
+static Tree *constant(Scope   *evalScope,
+                      Scope   *declScope,
+                      Tree    *expr,
+                      Rewrite *decl,
+                      void    *ec)
+// ----------------------------------------------------------------------------
+//    Lookup a constant - Return the associated value
+// ----------------------------------------------------------------------------
+{
+    return evalLookup(evalScope, declScope, expr, decl, ec, false);
 }
 
 
@@ -622,7 +657,7 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
 {
     EvaluationCache cache;
-    return DoEvaluate(scope, expr, TOPLEVEL, cache);
+    return DoEvaluate(scope, expr, STATEMENT, cache);
 }
 
 
@@ -655,7 +690,14 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
 // ----------------------------------------------------------------------------
 {
     static uint depth = 0;
-    const char *modename[] = { "normal", "mayfail", "toplevel", "local" };
+    const char *modename[EVALUATION_MODES] =
+    {
+        "statement",
+        "expression",
+        "may fail",
+        "variable",
+        "local",
+    };
     record(eval, "%+s%t %+s in %p", spaces(depth), expr, modename[mode], scope);
 
     // Check if there was some error, if so don't keep looking
@@ -666,7 +708,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
     Context context(scope);
 
     // Check if we have instructions to process. If not, return declarations
-    if (mode == TOPLEVEL)
+    if (mode == STATEMENT)
     {
         RewriteList inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
@@ -721,7 +763,7 @@ retry:
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
-            Tree *left = DoEvaluate(scope, infix->left, NORMAL, cache);
+            Tree *left = DoEvaluate(scope, infix->left, EXPRESSION, cache);
             if (left != infix->left)
                 result = left;
             if (HadErrors() || IsError(left))
@@ -739,7 +781,7 @@ retry:
         {
             Context child(&context);
             Scope *symbols = child.Symbols();
-            Tree *where = DoEvaluate(symbols, infix->left, TOPLEVEL, cache);
+            Tree *where = DoEvaluate(symbols, infix->left, STATEMENT, cache);
             if (Scope *scope = where->As<Scope>())
                 return DoEvaluate(scope->Inner(), infix->right, LOCAL, cache);
             else
@@ -757,7 +799,8 @@ retry:
 
     // All other cases: lookup in symbol table
     bool error = false;
-    if (Tree *found = context.Lookup(expr, evalLookup, &cache, mode != LOCAL))
+    Context::lookup_fn lookup = mode == VARIABLE ? variable : constant;
+    if (Tree *found = context.Lookup(expr, lookup, &cache, mode != LOCAL))
         result = found;
     else if (expr->IsConstant())
         result = expr;
@@ -815,7 +858,7 @@ bool Interpreter::DoInitializers(Scope *scope,
     {
         Tree_p init = rw->right;
         Infix_p typedecl = rw->left->AsInfix();
-        Tree_p type = DoEvaluate(scope, typedecl->right, NORMAL, cache);
+        Tree_p type = DoEvaluate(scope, typedecl->right, EXPRESSION, cache);
         if (!type)
         {
             Ooops("Invalid type $1 for declaration of $2",
