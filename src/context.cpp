@@ -196,7 +196,7 @@ bool Context::ProcessDeclarations(Tree *what)
         bool isInstruction = true;
         if (Infix *infix = what->AsInfix())
         {
-            if (IsDeclaration(infix))
+            if (IsDefinition(infix))
             {
                 record(context, "In %p enter declaration %t", this, infix);
                 Enter(infix);
@@ -208,7 +208,7 @@ bool Context::ProcessDeclarations(Tree *what)
                 if (Infix *left = infix->left->AsInfix())
                 {
                     isInstruction = false;
-                    if (IsDeclaration(left))
+                    if (IsDefinition(left))
                         Enter(left);
                     else
                         isInstruction = ProcessDeclarations(left);
@@ -726,8 +726,9 @@ Rewrite *Context::Enter(Infix *infix, bool overwrite)
 //   Make sure we produce a real rewrite in the symbol table
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(infix->name == "is" && "Context::Enter only accepts 'is'");
-    return Define(infix->left, infix->right, overwrite);
+    XL_ASSERT(IsDefinition(infix) && "Context::Enter only accepts definitions");
+    Rewrite_p rewrite = new Rewrite(infix);
+    return Enter(rewrite, overwrite);
 }
 
 
@@ -747,7 +748,7 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 {
     // If the rewrite is not good, just exit
-    if (!IsDeclaration(rewrite))
+    if (!IsDefinition(rewrite))
     {
         record(symbols_errors, "In %p, malformed rewrite %t", this, rewrite);
         return nullptr;
