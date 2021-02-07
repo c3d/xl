@@ -621,6 +621,11 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             // Same left: if searching, stop here. Otherwise [X when Y] < [X]
             return SortSearching(mode) ? 0 : -1;
         }
+        else if (IsVariableDefinition(pati))
+        {
+            // Treat [X:integer := 1] like [X as integer]
+            return Sort(pati->left, val, mode);
+        }
     }
     if (valk == INFIX)
     {
@@ -645,6 +650,10 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             if (int vals = Sort(val, vali->left, mode))
                 return vals;
             return SortSearching(mode) ? 0 : 1;
+        }
+        else if (SortSearching(mode) && IsVariableDefinition(vali))
+        {
+            return Sort(pat, vali->left, mode);
         }
     }
     if (patk != valk)
