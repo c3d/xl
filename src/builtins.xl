@@ -157,9 +157,9 @@ opening X:block         as text         is builtin BlockOpening
 closing X:block         as text         is builtin BlockClosing
 
 // Min and max functions
-min X, Y is if X < min Y then X else min Y
+min X, Y is { mx is min X; my is min Y; if mx < my then mx else my }
 min Y    is Y
-max X, Y is if X > max Y then X else max Y
+max X, Y is { mx is max X; my is max Y; if mx > my then mx else my }
 max Y    is Y
 
 // Interval test
