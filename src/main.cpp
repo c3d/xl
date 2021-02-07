@@ -356,6 +356,11 @@ Tree_p Main::LoadFiles()
     for (auto p : preloads)
     {
         text path = SearchLibFile(p);
+        if (path == "")
+        {
+            Ooops("File $1 not found").Arg(p);
+            return result;
+        }
         Tree_p result = LoadFile(path, evaluate);
         if (HadErrors())
             return result;
