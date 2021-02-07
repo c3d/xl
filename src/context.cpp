@@ -567,9 +567,8 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     // Check case where kinds are different: use sorting rank described above
     if (mode == SEARCH_BIND || mode == SEARCH_INFIX)
     {
-        // Catch wildcards, and consider that 0 vs "A" is "upper" problem
-        if (patk <= NAME)
-            return 0;
+        // Catch wildcards, and consider that binding is "upper" problem
+        return 0;
     }
     if (patk == INFIX)
     {

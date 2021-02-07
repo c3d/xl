@@ -138,6 +138,9 @@ write [[false]]         is write "false"
 write Head, Rest        is { write Head; write Rest }
 print Items             is { write Items; print }
 
+// Parameter lists must evaluate as is
+X, Y                    is self
+
 // Tree shape and attributes
 kind  X:tree            as natural      is builtin TreeKind
 left  X:prefix          as tree         is builtin PrefixLeft

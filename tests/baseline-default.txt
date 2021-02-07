@@ -25,7 +25,6 @@
 01.Evaluation/08-named-anonymous-function.xl
 01.Evaluation/2422-assign-to-true.xl
 01.Evaluation/12-local-function.xl
-01.Evaluation/02-complex-writeln.xl
 01.Evaluation/22-exceeding-stack-depth.xl
 01.Evaluation/2422-2427-boolean-in-writeln.xl
 01.Evaluation/19-invalid-when-clause.xl
@@ -48,6 +47,5 @@
 00.Parser/preserve_comments.xl
 00.Parser/bug346.xl
 00.Parser/trailing_opcode.xl
-00.Parser/base64.xl
 00.Parser/file-not-found.xl
 00.Parser/C-syntax.xl
