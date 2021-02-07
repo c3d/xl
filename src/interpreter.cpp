@@ -285,7 +285,7 @@ bool Bindings::Do(Postfix *what)
 
 bool Bindings::Do(Infix *what)
 // ----------------------------------------------------------------------------
-//   The complicated case: various declarations
+//   The complicated case: various definitions
 // ----------------------------------------------------------------------------
 {
     // Check if we have a type annotation, like [X:natural]
@@ -697,7 +697,7 @@ retry:
         }
 
         // Filter out declaration such as [extern foo(bar)]
-        if (IsDeclaration(prefix))
+        if (IsDefinition(prefix))
             return prefix;
 
         // Filter out import statements (processed during
@@ -721,8 +721,8 @@ retry:
             goto retry;
         }
 
-        // Skip declarations
-        if (IsDeclaration(infix))
+        // Skip definitions
+        if (IsDefinition(infix))
             return result;
 
         // Evaluate X.Y
