@@ -1,0 +1,10 @@
+X : integer := 42
+
+X := 55
+X := X + 1
+
+X := "Hello"
+
+"Hello" as integer is 33
+
+X
