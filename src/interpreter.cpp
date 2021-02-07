@@ -502,7 +502,7 @@ void Bindings::Bind(Name *name, Tree *value)
 {
     record(bindings, "Binding %t = %t", name, value);
     if (!cache.Cached(value))
-        value = evalContext.Closure(value);
+        value = evalContext.Enclose(value);
     Rewrite *rewrite = argContext.Define(name, value);
     bindings.push_back(rewrite);
     cache.Cache(name, value);

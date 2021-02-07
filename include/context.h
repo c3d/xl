@@ -206,6 +206,20 @@ struct Rewrites : Infix
 typedef GCPtr<Rewrites> Rewrites_p;
 
 
+struct Closure : Prefix
+// ----------------------------------------------------------------------------
+//   An XL closure is represented by a prefix with a scope on the left
+// ----------------------------------------------------------------------------
+{
+    Closure(Scope *scope, Tree *value)
+        : Prefix(scope, value, value->Position()) {}
+    Scope *CapturedScope()      { return (Scope *) (Tree *) left; }
+    Tree  *Value()              { return right; }
+    GARBAGE_COLLECT(Closure);
+};
+typedef GCPtr<Closure> Closure_p;
+
+
 typedef std::vector<Rewrite_p>          RewriteList;
 typedef Tree *                          (*eval_fn) (Scope *, Tree *);
 typedef std::map<Tree_p, eval_fn>       code_map;
@@ -259,7 +273,7 @@ public:
     // Phases of evaluation
     bool                ProcessDeclarations(Tree *what, RewriteList &inits);
     Scope *             ProcessScope(Tree *declarations, RewriteList &inits);
-    Prefix *            Closure(Tree *value);
+    Closure *           Enclose(Tree *value);
     static Scope *      IsClosure(Tree *value);
 
     // Adding definitions to the context
@@ -904,6 +918,19 @@ template<> inline Rewrites *Tree::As<Rewrites>(Scope *)
 }
 
 
+template<> inline Closure *Tree::As<Closure>(Scope *)
+// ----------------------------------------------------------------------------
+//   Check that we have an actual closure
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = AsPrefix())
+        // Check if this was allocated as a closure
+        if (XL::Allocator<XL::Closure>::IsAllocated(this))
+            return (Closure *) prefix;
+    return nullptr;
+}
+
+
 
 // ============================================================================
 //
@@ -1013,12 +1040,12 @@ struct ContextStack
 //
 // ============================================================================
 
-inline Prefix *Context::Closure(Tree *value)
+inline Closure *Context::Enclose(Tree *value)
 // ----------------------------------------------------------------------------
 //   Prefix the value wiht the current symbols - Unwrapped by evaluate()
 // ----------------------------------------------------------------------------
 {
-    return new Prefix(Symbols(), value, value->Position());
+    return new Closure(Symbols(), value);
 }
 
 
@@ -1027,7 +1054,7 @@ inline Scope *Context::IsClosure(Tree *value)
 //   Check if this looks like a closure
 // ----------------------------------------------------------------------------
 {
-    if (Prefix *prefix = value->AsPrefix())
+    if (Closure *prefix = value->As<Closure>())
         if (Scope *scope = prefix->left->As<Scope>())
             return scope;
     return nullptr;
