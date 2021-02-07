@@ -1,0 +1,9 @@
+// EXIT=1
+X : integer := 42
+
+X := 55
+X := X + 1
+
+X := "Hello"
+
+X
