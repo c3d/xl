@@ -159,7 +159,8 @@ Tree *FastCompiler::Compile(Scope         *scope,
     Context context(scope);
 
     // Check if there is any code to execute
-    bool hasInstructions = context.ProcessDeclarations(result);
+    RewriteList inits;
+    bool hasInstructions = context.ProcessDeclarations(result, inits);
     if (hasInstructions)
     {
         // Compile code for that tree

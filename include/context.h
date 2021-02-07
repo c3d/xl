@@ -257,13 +257,13 @@ public:
     Tree *              Call(text prefix, TreeList &args);
 
     // Phases of evaluation
-    bool                ProcessDeclarations(Tree *what);
-    Scope *             ProcessScope(Tree *declarations);
+    bool                ProcessDeclarations(Tree *what, RewriteList &inits);
+    Scope *             ProcessScope(Tree *declarations, RewriteList &inits);
     Prefix *            Closure(Tree *value);
     static Scope *      IsClosure(Tree *value);
 
     // Adding definitions to the context
-    Rewrite *           Enter(Infix *infix, bool overwrite=false);
+    Rewrite *           Enter(Infix *infix, RewriteList &inits);
     Rewrite *           Enter(Rewrite *rewrite, bool overwrite=false);
     Rewrite *           Define(Tree *pattern, Tree *def, bool overwrite=false);
     Rewrite *           Define(text name, Tree *def, bool overwrite=false);
