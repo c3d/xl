@@ -138,7 +138,10 @@ INTEGER_TYPE(integer16, int16_t)
 INTEGER_TYPE(integer32, int32_t)
 INTEGER_TYPE(integer64, int64_t)
 
+REAL_TYPE(real, double)
+#ifdef HAVE_FLOAT16
 REAL_TYPE(real16, _Float16)
+#endif // HAVE_FLOAT16
 REAL_TYPE(real32, float)
 REAL_TYPE(real64, double)
 
