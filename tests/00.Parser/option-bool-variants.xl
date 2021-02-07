@@ -31,5 +31,5 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-// CMD=%x -trecorder_reltime=0 -trecorder_order=0  -toption_value -no-builtins -nobuiltins -with-builtins -without-builtins --enable-builtins --disable-builtins -builtins=yes --builtins=no --builtins=1 --builtins=0 -builtins=true -builtins=false -builtins=TRUE -builtins=FalSE -builtins:no -builtins:yes -O0 -O1 -O2 -O3 -optimize 0 -optimize 1 -optimize 2 -optimize 3 -builtins_path "builtins.xl" --builtins-path "builtins.xl" -builtins_path="builtins.xl" %f
+// CMD=%x -trecorder_reltime=0 -trecorder_order=0  -toption_value -no-builtins -nobuiltins -with-builtins -without-builtins --enable-builtins --disable-builtins -builtins=yes --builtins=no --builtins=1 --builtins=0 -builtins=true -builtins=false -builtins=TRUE -builtins=FalSE -builtins:no -builtins:yes -O0 -O1 -O2 -O3 -optimize 3 -optimize 2 -optimize 1 -optimize 0 -builtins_path "builtins.xl" --builtins-path "builtins.xl" -builtins_path="builtins.xl" %f
 1 + 2 + 3
