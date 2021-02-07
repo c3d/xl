@@ -1012,7 +1012,9 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         STYPE(character);
         CTYPE(text,             charPtr);
         STYPE(real);
+#if HAVE_FLOAT16
         STYPE(real16);
+#endif // HAVE_FLOAT16
         STYPE(real32);
         STYPE(real64);
         CTYPE(tree,             treePtr);

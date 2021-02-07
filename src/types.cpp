@@ -573,13 +573,17 @@ Tree *Types::TypeCoversType(Tree *wideType, Tree *narrowType)
     // Check real types
     wideBits = 0;
     if (wideType == real_type)          wideBits = 64;
+#ifdef HAVE_FLOAT16
     if (wideType == real16_type)        wideBits = 16;
+#endif // HAVE_FLOAT16
     if (wideType == real32_type)        wideBits = 32;
     if (wideType == real64_type)        wideBits = 64;
 
     narrowBits = 0;
     if (narrowType == real_type)        narrowBits = 64;
+#ifdef HAVE_FLOAT16
     if (narrowType == real16_type)      narrowBits = 16;
+#endif // HAVE_FLOAT16
     if (narrowType == real32_type)      narrowBits = 32;
     if (narrowType == real64_type)      narrowBits = 64;
 

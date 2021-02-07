@@ -123,6 +123,7 @@ CONFIG= sigaction                       \
         libregex                        \
         drand48                         \
         glob                            \
+	float16				\
         uchar ushort uint ulong longlong
 
 CXX_STD=$(CXX_STD_$(COMPILER))
@@ -174,8 +175,8 @@ DEFINES_llvm-crap=DISABLE_RTTI
 # Additional dependencies
 MINGW_LIBS_mingw=-lws2_32
 
-CPPFLAGS+=	-DXL_BIN='"'$(PREFIX_BIN)'"'			\
-		-DXL_LIB='"'$(PREFIX_SHR)$(PACKAGE_DIR)'"'
+CPPFLAGS+=	-DXL_BIN='"'$(PREFIX.bin)'"'			\
+		-DXL_LIB='"'$(PREFIX.share)$(PACKAGE_DIR)'"'
 
 XCODE_WARNINGS=	-Wno-missing-field-initializers		\
 		-Wno-missing-prototypes			\
