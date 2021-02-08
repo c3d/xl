@@ -1183,6 +1183,17 @@ text xl_text_replace(text txt, text before, text after)
 NATIVE(xl_text_replace);
 
 
+integer_t xl_text_index(text haystack, text needle, size_t pos)
+// ----------------------------------------------------------------------------
+//   Return a copy of txt with all occurrences of before replaced with after
+// ----------------------------------------------------------------------------
+{
+    return haystack.find(needle, pos);
+}
+NATIVE(xl_text_index);
+
+
+
 text xl_text_concat(text first, text second)
 // ----------------------------------------------------------------------------
 //   Return a concatenation of two strings
