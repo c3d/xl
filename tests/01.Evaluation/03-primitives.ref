@@ -1,4 +1,8 @@
-foo 3
-01.Evaluation/03-primitives.xl:35:47: Invalid builtin name in [builtin Nonexistent]
-01.Evaluation/03-primitives.xl:37:3: No name matches [foo]
-01.Evaluation/03-primitives.xl:37:5: No prefix matches [foo 3]
+01.Evaluation/03-primitives.xl:37:5: Unable to evaluate [foo 3]:
+01.Evaluation/03-primitives.xl:35:5:  Pattern [foo X:integer as integer] does not match [foo 3]:
+01.Evaluation/03-primitives.xl:35:47:   Nonexistent builtin [Nonexistent]
+01.Evaluation/03-primitives.xl:37:5:  Nothing matches [foo 3]
+01.Evaluation/03-primitives.xl:37:5: Unable to evaluate [foo 3]:
+01.Evaluation/03-primitives.xl:35:5:  Pattern [foo X:integer as integer] does not match [foo 3]:
+01.Evaluation/03-primitives.xl:35:47:   Nonexistent builtin [Nonexistent]
+01.Evaluation/03-primitives.xl:37:5:  Nothing matches [foo 3]

@@ -4,7 +4,6 @@
 02.Arithmetic/09-complex-arithmetic.xl
 02.Arithmetic/04-basic-operators-in-function.xl
 02.Arithmetic/08-complex-add.xl
-01.Evaluation/03-primitives.xl
 01.Evaluation/17-returning-inner-functions.xl
 01.Evaluation/18-when-conditions-collatz-syracuse.xl
 01.Evaluation/20-invalid-when-clause-type.xl
@@ -26,13 +25,10 @@
 04.Text/03-contains.xl
 04.Text/01-length.xl
 04.Text/04-replace.xl
-00.Parser/fault-injection-2-post-LLVM.xl
 00.Parser/invalid-character.xl
-00.Parser/fault-injection-1-early.xl
 00.Parser/reject_symbols_in_pattern.xl
 00.Parser/option-nonexistent.xl
 00.Parser/preserve_comments.xl
 00.Parser/bug346.xl
 00.Parser/trailing_opcode.xl
-00.Parser/file-not-found.xl
 00.Parser/C-syntax.xl
