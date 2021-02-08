@@ -1036,7 +1036,7 @@ real_t xl_text2real(kstring tval)
 NATIVE(xl_text2real);
 
 
-text xl_int2text(natural_t value)
+text xl_natural2text(natural_t value)
 // ----------------------------------------------------------------------------
 //   Convert a numerical value to text
 // ----------------------------------------------------------------------------
@@ -1045,7 +1045,19 @@ text xl_int2text(natural_t value)
     out << value;
     return out.str();
 }
-NATIVE(xl_int2text);
+NATIVE(xl_natural2text);
+
+
+text xl_integer2text(integer_t value)
+// ----------------------------------------------------------------------------
+//   Convert an integer value to text
+// ----------------------------------------------------------------------------
+{
+    std::ostringstream out;
+    out << value;
+    return out.str();
+}
+NATIVE(xl_integer2text);
 
 
 text xl_real2text(real_t value)
@@ -1169,6 +1181,16 @@ text xl_text_replace(text txt, text before, text after)
     return txt;
 }
 NATIVE(xl_text_replace);
+
+
+text xl_text_concat(text first, text second)
+// ----------------------------------------------------------------------------
+//   Return a concatenation of two strings
+// ----------------------------------------------------------------------------
+{
+    return first + second;
+}
+NATIVE(xl_text_concat);
 
 
 text xl_text_repeat(uint count, text txt)
