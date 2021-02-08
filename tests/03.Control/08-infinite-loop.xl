@@ -32,7 +32,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 // EXIT=42
-X := 0
+X : integer := 0
 loop
     print "Almost infinite loop"
     X := X + 1
