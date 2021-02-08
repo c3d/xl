@@ -113,9 +113,12 @@ X:boolean or  Y:boolean         as boolean is builtin BOr
 X:boolean xor Y:boolean         as boolean is builtin BXor
 not X:boolean                   as boolean is builtin BNot
 
+// Implicit conversion of integer and natural to real
+X:integer as real               is builtin Integer2Real
+X:natural as real               is builtin Natural2Real
+
 // Basic math functions
-abs X:integer                   as natural is builtin IAbs
-abs X:real                      as real    is builtin FAbs
+abs X is if X < 0 then -X else X
 pi is 3.1415926535897932384626433
 
 // If-then-else statement

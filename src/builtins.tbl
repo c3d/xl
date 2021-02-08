@@ -210,6 +210,16 @@ BINARY_OP(BXor,    Name,    Name,    Name,         R_BOOL(LEFT_B xor RIGHT_B))
 UNARY_OP(BNot,     Name,    Name,                  R_BOOL(not VALUE_B))
 
 
+
+// ============================================================================
+//
+//   Conversion operators
+//
+// ============================================================================
+
+UNARY_OP(Integer2Real, Real,   Natural,            R_REAL(SVALUE))
+UNARY_OP(Natural2Real, Real,   Natural,            R_REAL(VALUE))
+
 // ============================================================================
 //
 //   Special opcodes that perform XL-specific operations
