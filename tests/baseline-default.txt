@@ -25,7 +25,6 @@
 04.Text/03-contains.xl
 04.Text/01-length.xl
 04.Text/04-replace.xl
-00.Parser/invalid-character.xl
 00.Parser/reject_symbols_in_pattern.xl
 00.Parser/option-nonexistent.xl
 00.Parser/preserve_comments.xl

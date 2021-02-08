@@ -4,12 +4,12 @@
 //
 // File description:
 //
-//
-//
-//
-//
-//
-//
+//   Check the various syntaxen for boolean options:
+//   - nofoo
+//   - no-foo
+//   - disable-foo
+//   - foo=0
+//   - foo:no
 //
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3+

@@ -4,8 +4,8 @@
 //
 // File description:
 //
-//
-//
+//    Trigger second fault injection mechanism.
+//    This one happens after LLVM inserted its own stack trace handler.
 //
 //
 //
