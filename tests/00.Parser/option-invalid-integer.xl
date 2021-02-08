@@ -4,8 +4,8 @@
 //
 // File description:
 //
-//
-//
+//   Check that an option expecting a numerical value does not accept
+//   non-numerical values.
 //
 //
 //

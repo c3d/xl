@@ -4,8 +4,8 @@
 //
 // File description:
 //
-//
-//
+//    Check that we detect if an option numerical value is checked against
+//    the minimum value.
 //
 //
 //
