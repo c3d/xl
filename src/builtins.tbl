@@ -59,7 +59,6 @@ NAME(lambda)
 
 TYPE(tree,      return value)
 TYPE(natural,   return value->AsNatural())
-TYPE(real,      return value->AsReal())
 TYPE(text,      return value->AsText())
 TYPE(character,
      if (Text *text = value->AsText())
@@ -115,15 +114,20 @@ TYPE(declaration, return IsDeclaration(value))
                  return nat;                                    \
          return nullptr)
 
-#define REAL_TYPE(Name, CType)                          \
-    TYPE(Name,                                          \
-         if (Real *nat = value->AsReal())               \
-         {                                              \
-             CType tmp = nat->value;                    \
-             if (tmp != nat->value)                     \
-                 return new Real(tmp, nat->Position()); \
-             return nat;                                \
-         }                                              \
+#define REAL_TYPE(Name, CType)                                  \
+    TYPE(Name,                                                  \
+        if (Real *real = value->AsReal())                       \
+         {                                                      \
+             CType tmp = real->value;                           \
+             if (tmp != real->value)                            \
+                 return new Real(tmp, real->Position());        \
+             return real;                                       \
+         }                                                      \
+         if (Natural *nat = value->AsNatural())                 \
+         {                                                      \
+             CType tmp = (long long) nat->value;                \
+             return new Real(tmp, nat->Position());             \
+         }                                                      \
          return nullptr)
 
 
