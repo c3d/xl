@@ -27,7 +27,6 @@
 01.Evaluation/14-type-mismatch.xl
 01.Evaluation/24-array-and-scope-indexing.xl
 04.Text/03-contains.xl
-04.Text/02-concat.xl
 04.Text/01-length.xl
 04.Text/04-replace.xl
 00.Parser/fault-injection-2-post-LLVM.xl
