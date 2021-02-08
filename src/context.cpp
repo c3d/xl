@@ -519,6 +519,8 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         {
             if (SortSearching(mode))
                 return 0;
+            if (SortInserting(mode))
+                return valk == NAME ? -1 : Sort(patm, val, EXPRESSION);
             if (valk == BLOCK)
             {
                 Block *valb = (Block *) val;
@@ -534,8 +536,11 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     if (valk == BLOCK)
     {
         Block *valb = val->AsBlock();
-        if (!valb->IsMetaBox())
-            return Sort(pat, valb->child, mode);
+        // A metabox comes before names, is
+        if (Tree *valm = valb->IsMetaBox())
+            if (SortInserting(mode))
+                return patk == NAME ? 1 : Sort(pat, valm, EXPRESSION);
+        return Sort(pat, valb->child, mode);
     }
     if (patk == PREFIX)
     {
