@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 XL_BEGIN
 
@@ -47,5 +48,43 @@ NATIVE(putchar);
 // Need to eliminate the noreturn attribute which makes instantiation fail
 void exit(int rc) { ::exit(rc); }
 NATIVE(exit);
+
+// <math.h> functions are often overloaded in C++ - Create local copy
+#define MATH(fn)                                \
+namespace                                       \
+{                                               \
+double fn(double x)                             \
+{                                               \
+    return ::fn(x);                             \
+}                                               \
+NATIVE(fn);                                     \
+}
+
+#define MATH2(fn)                               \
+namespace                                       \
+{                                               \
+double fn(double x, double y)                   \
+{                                               \
+    return ::fn(x, y);                          \
+}                                               \
+NATIVE(fn);                                     \
+}
+
+MATH(sin);
+MATH(cos);
+MATH(tan);
+MATH(asin);
+MATH(acos);
+MATH(atan);
+MATH(exp);
+MATH(expm1);
+MATH(exp2);
+MATH(log);
+MATH(log2);
+MATH(log10);
+MATH(log1p);
+MATH(sqrt);
+MATH2(atan2);
+MATH2(pow);
 
 XL_END

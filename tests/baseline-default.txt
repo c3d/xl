@@ -1,4 +1,3 @@
-02.Arithmetic/07-math-functions.xl
 02.Arithmetic/02-basic-operators.xl
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
 02.Arithmetic/08b-complex-add-with-prefix.xl
@@ -6,7 +5,6 @@
 02.Arithmetic/04-basic-operators-in-function.xl
 02.Arithmetic/08-complex-add.xl
 01.Evaluation/03-primitives.xl
-01.Evaluation/bug3327.xl
 01.Evaluation/17-returning-inner-functions.xl
 01.Evaluation/18-when-conditions-collatz-syracuse.xl
 01.Evaluation/20-invalid-when-clause-type.xl
@@ -23,7 +21,6 @@
 01.Evaluation/07-simple-anonymous-function.xl
 01.Evaluation/09-named-array.xl
 01.Evaluation/15-type-dispatch.xl
-01.Evaluation/16-indirect-type-dispatch.xl
 01.Evaluation/14-type-mismatch.xl
 01.Evaluation/24-array-and-scope-indexing.xl
 04.Text/03-contains.xl
