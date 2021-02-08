@@ -591,10 +591,18 @@ struct function_type<R(*)(T,A...)>
         return ret;
     }
 
+    static size_t Next(size_t &index)
+    {
+        // This is to silence the compiler about sequence points, but
+        // this is really playing fast and loose. Works for now.
+        return index++;
+    }
+
     static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
     {
-        auto value = callee(xl_type<T>::Unbox(args[0]),
-                            xl_type<A>::Unbox(args[sizeof...(A)])...);
+        size_t index = 0;
+        auto value = callee(xl_type<T>::Unbox(args[Next(index)]),
+                            xl_type<A>::Unbox(args[Next(index)])...);
         return xl_type<R>::Box(value, self->Position());
     }
 };
@@ -634,10 +642,16 @@ struct function_type<void(*)(T,A...)>
         return ret;
     }
 
+    static size_t Next(size_t &index)
+    {
+        return index++;
+    }
+
     static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
     {
-        callee(xl_type<T>::Unbox(args[0]),
-               xl_type<A>::Unbox(args[sizeof...(A)])...);
+        size_t index = 0;
+        callee(xl_type<T>::Unbox(args[Next(index)]),
+               xl_type<A>::Unbox(args[Next(index)])...);
         return xl_nil;
     }
 };
