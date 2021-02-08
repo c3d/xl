@@ -314,10 +314,6 @@ bool Bindings::Do(Infix *what)
             }
         }
 
-        // Need to match the left part with the test
-        if (!what->left->Do(this))
-            return false;
-
         // Need to evaluate the type on the right
         Tree *want = EvaluateType(what->right);
         if (IsError(want))
@@ -336,7 +332,13 @@ bool Bindings::Do(Infix *what)
                 Ooops("Value $1 does not belong to type $2", test, want);
                 return false;
             }
+            test = checked;
         }
+
+        // Need to match the left part with the converted value
+        if (!what->left->Do(this))
+            return false;
+
         return true;
     }
 
