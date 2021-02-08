@@ -803,9 +803,6 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
             return context.Symbols();
     }
 
-    Errors errors;
-    errors.Log(Error("Unable to evaluate $1:", expr), true);
-
 retry:
     // Short-circuit evaluation of blocks
     if (Block *block = expr->AsBlock())
@@ -881,6 +878,8 @@ retry:
     // All other cases: lookup in symbol table
     bool error = false;
     Context::lookup_fn lookup = mode == VARIABLE ? variable : constant;
+    Errors errors;
+    errors.Log(Error("Unable to evaluate $1:", expr), true);
     if (Tree *found = context.Lookup(expr, lookup, &cache, mode != LOCAL))
         result = found;
     else if (expr->IsConstant())
