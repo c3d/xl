@@ -1,4 +1,3 @@
-11.CommandLine/ambiguous-option.xl
 02.Arithmetic/03-basic-fp.xl
 02.Arithmetic/07-math-functions.xl
 02.Arithmetic/02-basic-operators.xl
