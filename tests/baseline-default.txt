@@ -1,12 +1,9 @@
-02.Arithmetic/03-basic-fp.xl
 02.Arithmetic/07-math-functions.xl
 02.Arithmetic/02-basic-operators.xl
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
-02.Arithmetic/05-basic-fp-operators-in-function.xl
 02.Arithmetic/08b-complex-add-with-prefix.xl
 02.Arithmetic/09-complex-arithmetic.xl
 02.Arithmetic/04-basic-operators-in-function.xl
-02.Arithmetic/06-basic-comparisons.xl
 02.Arithmetic/08-complex-add.xl
 01.Evaluation/03-primitives.xl
 01.Evaluation/bug3327.xl
