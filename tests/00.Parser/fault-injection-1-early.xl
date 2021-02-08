@@ -4,9 +4,9 @@
 //
 // File description:
 //
-//
-//
-//
+//   Trigger the fault injection mechanism to cause a controlled crash.
+//   This will check the stack trace and recorder dump mechanisms.
+//   The output is heavily filtered to remove all the variable parts.
 //
 //
 //
