@@ -594,7 +594,7 @@ struct function_type<R(*)(T,A...)>
     static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
     {
         auto value = callee(xl_type<T>::Unbox(args[0]),
-                            xl_type<A>::Unbox(args[1+sizeof...(A)])...);
+                            xl_type<A>::Unbox(args[sizeof...(A)])...);
         return xl_type<R>::Box(value, self->Position());
     }
 };
@@ -637,7 +637,7 @@ struct function_type<void(*)(T,A...)>
     static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
     {
         callee(xl_type<T>::Unbox(args[0]),
-               xl_type<A>::Unbox(args[1+sizeof...(A)])...);
+               xl_type<A>::Unbox(args[sizeof...(A)])...);
         return xl_nil;
     }
 };
