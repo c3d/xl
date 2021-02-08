@@ -1,6 +1,2 @@
-01.Evaluation/assignment-error.xl:2:3: Unable to evaluate [X:integer := 42|X := 55|X := X + 1|X := "Hello"|X]:
-01.Evaluation/assignment-error.xl:7:1:  Unable to evaluate [X := "Hello"]:
-01.Evaluation/assignment-error.xl:7:12:   Assigned value "Hello" does not match type [integer]
-01.Evaluation/assignment-error.xl:2:3: Unable to evaluate [X:integer := 42|X := 55|X := X + 1|X := "Hello"|X]:
-01.Evaluation/assignment-error.xl:7:1:  Unable to evaluate [X := "Hello"]:
-01.Evaluation/assignment-error.xl:7:12:   Assigned value "Hello" does not match type [integer]
+01.Evaluation/assignment-error.xl:7:12: Assigned value "Hello" does not match type [integer]
+01.Evaluation/assignment-error.xl:7:12: Assigned value "Hello" does not match type [integer]

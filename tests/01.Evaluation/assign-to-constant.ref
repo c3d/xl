@@ -1,10 +1,8 @@
-01.Evaluation/assign-to-constant.xl:3:5: Unable to evaluate [foo X is |    X := 0|foo 3]:
+01.Evaluation/assign-to-constant.xl:5:5: Unable to evaluate [foo 3]:
 01.Evaluation/assign-to-constant.xl:3:5:  Pattern [foo X] does not match [foo 3]:
-01.Evaluation/assign-to-constant.xl:4:4:   Unable to evaluate [|    X := 0]:
-01.Evaluation/assign-to-constant.xl:3:5:    Cannot assign to constant [X]
+01.Evaluation/assign-to-constant.xl:3:5:   Cannot assign to constant [X]
 01.Evaluation/assign-to-constant.xl:5:5:  Nothing matches [foo 3]
-01.Evaluation/assign-to-constant.xl:3:5: Unable to evaluate [foo X is |    X := 0|foo 3]:
+01.Evaluation/assign-to-constant.xl:5:5: Unable to evaluate [foo 3]:
 01.Evaluation/assign-to-constant.xl:3:5:  Pattern [foo X] does not match [foo 3]:
-01.Evaluation/assign-to-constant.xl:4:4:   Unable to evaluate [|    X := 0]:
-01.Evaluation/assign-to-constant.xl:3:5:    Cannot assign to constant [X]
+01.Evaluation/assign-to-constant.xl:3:5:   Cannot assign to constant [X]
 01.Evaluation/assign-to-constant.xl:5:5:  Nothing matches [foo 3]
