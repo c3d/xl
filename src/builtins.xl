@@ -95,13 +95,6 @@ X:real >= Y:real                as boolean is builtin FCmpOGE
 X:real < Y:real                 as boolean is builtin FCmpOLT
 X:real <= Y:real                as boolean is builtin FCmpOLE
 
-X:text = Y:text                 as boolean is C xl_text_eq
-X:text <> Y:text                as boolean is C xl_text_ne
-X:text > Y:text                 as boolean is C xl_text_gt
-X:text >= Y:text                as boolean is C xl_text_ge
-X:text < Y:text                 as boolean is C xl_text_lt
-X:text <= Y:text                as boolean is C xl_text_le
-
 X:boolean = Y:boolean           as boolean is builtin BCmpEQ
 X:boolean <> Y:boolean          as boolean is builtin BCmpNE
 X:boolean > Y:boolean           as boolean is builtin BCmpGT
@@ -116,6 +109,34 @@ not X:boolean                   as boolean is builtin BNot
 // Implicit conversion of integer and natural to real
 X:integer as real               is builtin Integer2Real
 X:natural as real               is builtin Natural2Real
+
+// Text
+X:text = Y:text                 as boolean is C xl_text_eq
+X:text <> Y:text                as boolean is C xl_text_ne
+X:text > Y:text                 as boolean is C xl_text_gt
+X:text >= Y:text                as boolean is C xl_text_ge
+X:text < Y:text                 as boolean is C xl_text_lt
+X:text <= Y:text                as boolean is C xl_text_le
+
+text X:natural                  as text    is C xl_natural2text
+text X:integer                  as text    is C xl_integer2text
+text X:real                     as text    is C xl_real2text
+
+X:text & Y:text                 as text    is C xl_text_concat
+X:text & Y:natural              as text    is (X & text(Y))
+X:text & Y:integer              as text    is (X & text(Y))
+X:text & Y:real                 as text    is (X & text(Y))
+X:natural & Y:text              as text    is (text(X) & Y)
+X:integer & Y:text              as text    is (text(X) & Y)
+X:real & Y:text                 as text    is (text(X) & Y)
+Count:natural * T:text          as text    is C xl_text_repeat
+T:text * Count:natural          as text    is Count * T
+
+
+// A few additional text notations
+Source:text / From:text /  To:text      is text_replace Source, From, To
+Pat:text in Src:text                    is text_index Src, Pat, 0
+Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 
 // Basic math functions
 abs X is if X < 0 then -X else X
@@ -175,11 +196,6 @@ N:natural! is N * (N-1)!
 // Boolean to text conversion
 text [[true]]  is "true"
 text [[false]] is "false"
-
-// A few additional text notations
-Source:text / From:text /  To:text      is text_replace Source, From, To
-Pat:text in Src:text                    is text_index Src, Pat, 0
-Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 
 // A utility function for C-style testing
 good [[false]]  is false
