@@ -36,8 +36,8 @@
 collatz N when N mod 2 = 0      is N/2
 collatz N                       is 3*N + 1
 
-N := 27
-I := 0
+N : natural := 27
+I : natural := 0
 while N <> 1 loop
     print I, ":", N
     I := I + 1
