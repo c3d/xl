@@ -1,9 +1,9 @@
-02.Arithmetic/02-basic-operators.xl
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
 02.Arithmetic/08b-complex-add-with-prefix.xl
 02.Arithmetic/09-complex-arithmetic.xl
 02.Arithmetic/04-basic-operators-in-function.xl
 02.Arithmetic/08-complex-add.xl
+01.Evaluation/03-primitives.xl
 01.Evaluation/17-returning-inner-functions.xl
 01.Evaluation/18-when-conditions-collatz-syracuse.xl
 01.Evaluation/20-invalid-when-clause-type.xl
