@@ -105,8 +105,11 @@ PRODUCTS_lib=xl.dll
 SHR_INSTALL=$(SHR_INSTALL_$(VARIANT))
 SHR_INSTALL_lib=builtins.xl xl.syntax C.syntax $(wildcard *.stylesheet)
 
-DEFINES=	$(DEFINES_$(COMPILER))		\
-		XL_VERSION='"$(git describe --always --tags --dirty=-dirty)"'
+GIT_VERSION=	$(shell git describe --always --tags --dirty=-dirty)
+DEFINES=	$(DEFINES_$(COMPILER))					\
+		XL_VERSION='"$(PACKAGE_VERSION)-$(GIT_VERSION)"'	\
+		XL_COMPATIBLE_VERSION='"$(PACKAGE_VERSION)"'
+
 DEFINES_llvm=	LLVM_VERSION=$(LLVM_VERSION)
 DEFINES_none=	INTERPRETER_ONLY
 

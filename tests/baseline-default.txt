@@ -8,7 +8,6 @@
 01.Evaluation/2422-assign-to-true.xl
 01.Evaluation/22-exceeding-stack-depth.xl
 01.Evaluation/2422-2427-boolean-in-writeln.xl
-01.Evaluation/version.xl
 01.Evaluation/07-simple-anonymous-function.xl
 01.Evaluation/15-type-dispatch.xl
 01.Evaluation/14-type-mismatch.xl
