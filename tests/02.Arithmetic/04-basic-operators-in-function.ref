@@ -1,98 +1,183 @@
-92
-58
-1275
-4
-7
-7
-1
-91
-90
-9830400
-0
--75
--76
-75
----
-58
-92
--1275
-0
-75
-75
-75
--17
--92
--75
--76
-75
----
--92
--58
-1275
-0
--75
--75
--91
--1
-90
-75
-74
--75
----
--58
--92
--1275
-1085102592571150090
-11
-11
-17
--75
--92
-75
-74
--75
----
-1
--1
-0
-0
-0
-0
-0
-1
-1
-0
--1
-0
----
-5
-1
-6
-1
-1
-1
-2
-3
-1
-12
-0
--3
--4
-3
----
-12
-6
-27
-3
-0
-0
-1
-11
-10
-72
-1
--9
--10
-9
----
+5 rem 3=2
+5 mod 3=2
+-5 rem -3=-2
+-5 mod -3=-2
+-5 rem 3=-2
+-5 mod 3=1
+5 rem -3=2
+5 mod -3=-1
+--- With integer x=5 and y=3 ---
+Sum: 8
+Difference: 2
+Product: 15
+Ratio: 1
+Modulo: 2
+Reminder: 2
+And: 1
+Or: 7
+Xor: 6
+Shift left: 40
+Shift right: 0
+Not: -6
+Opposite: -5
+Absolute value: 5
+Power: 125
+--- With integer x=-5 and y=-3 ---
+Sum: -8
+Difference: -2
+Product: 15
+Ratio: 0
+Modulo: -2
+Reminder: -2
+And: -7
+Or: -1
+Xor: 6
+Not: 4
+Opposite: 5
+Absolute value: 5
+Power: 0
+--- With integer x=5 and y=-3 ---
+Sum: 2
+Difference: 8
+Product: -15
+Ratio: 0
+Modulo: -1
+Reminder: 2
+And: 5
+Or: -3
+Xor: -8
+Not: -6
+Opposite: -5
+Absolute value: 5
+Power: 0
+--- With integer x=-5 and y=3 ---
+Sum: -2
+Difference: -8
+Product: -15
+Ratio: 6148914691236517203
+Modulo: 1
+Reminder: -2
+And: 3
+Or: -5
+Xor: -8
+Not: 4
+Opposite: 5
+Absolute value: 5
+Power: -125
+--- With real x=5 and y=3 ---
+Sum: 8
+Difference: 2
+Product: 15
+Ratio: 1.66667
+Modulo: 2
+Reminder: 2
+Opposite: -5
+Absolute value: 5
+Power: 125
+--- With real x=-5 and y=-3 ---
+Sum: -8
+Difference: -2
+Product: 15
+Ratio: 1.66667
+Modulo: -2
+Reminder: -2
+Opposite: 5
+Absolute value: 5
+Power: -0.008
+--- With real x=5 and y=-3 ---
+Sum: 2
+Difference: 8
+Product: -15
+Ratio: -1.66667
+Modulo: -1
+Reminder: 2
+Opposite: -5
+Absolute value: 5
+Power: 0.008
+--- With real x=-5 and y=3 ---
+Sum: -2
+Difference: -8
+Product: -15
+Ratio: -1.66667
+Modulo: 1
+Reminder: -2
+Opposite: 5
+Absolute value: 5
+Power: -125
+--- With integer x=0 and y=1 ---
+Sum: 1
+Difference: -1
+Product: 0
+Ratio: 0
+Modulo: 0
+Reminder: 0
+And: 0
+Or: 1
+Xor: 1
+Not: -1
+Opposite: 0
+Absolute value: 0
+Power: 0
+--- With integer x=3 and y=2 ---
+Sum: 5
+Difference: 1
+Product: 6
+Ratio: 1
+Modulo: 1
+Reminder: 1
+And: 2
+Or: 3
+Xor: 1
+Shift left: 12
+Shift right: 0
+Not: -4
+Opposite: -3
+Absolute value: 3
+Power: 9
+--- With integer x=9 and y=3 ---
+Sum: 12
+Difference: 6
+Product: 27
+Ratio: 3
+Modulo: 0
+Reminder: 0
+And: 1
+Or: 11
+Xor: 10
+Shift left: 72
+Shift right: 1
+Not: -10
+Opposite: -9
+Absolute value: 9
+Power: 729
+--- With real x=0.1 and y=1.2 ---
+Sum: 1.3
+Difference: -1.1
+Product: 0.12
+Ratio: 0.0833333
+Modulo: 0.1
+Reminder: 0.1
+Opposite: -0.1
+Absolute value: 0.1
+Power: 0.0630957
+--- With real x=3.1 and y=2.2 ---
+Sum: 5.3
+Difference: 0.9
+Product: 6.82
+Ratio: 1.40909
+Modulo: 0.9
+Reminder: 0.9
+Opposite: -3.1
+Absolute value: 3.1
+Power: 12.0502
+--- With real x=9.1 and y=3.2 ---
+Sum: 12.3
+Difference: 5.9
+Product: 29.12
+Ratio: 2.84375
+Modulo: 2.7
+Reminder: 2.7
+Opposite: -9.1
+Absolute value: 9.1
+Power: 1172.01
 true

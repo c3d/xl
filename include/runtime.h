@@ -119,10 +119,10 @@ text            xl_int2text(natural_t value);
 text            xl_real2text(real_t value);
 integer_t       xl_integer_mod(integer_t x, integer_t y);
 natural_t       xl_natural_pow(natural_t x, natural_t y);
-integer_t       xl_integer_pow(integer_t x, natural_t y);
+integer_t       xl_integer_pow(integer_t x, integer_t y);
 real_t          xl_real_mod(real_t x, real_t y);
 real_t          xl_real_rem(real_t x, real_t y);
-real_t          xl_real_pow(real_t x, natural_t y);
+real_t          xl_real_pow(real_t x, integer_t y);
 text            xl_text_repolace(text txt, text before, text after);
 text            xl_text_repeat(uint count, text data);
 

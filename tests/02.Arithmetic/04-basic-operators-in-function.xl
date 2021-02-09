@@ -4,9 +4,18 @@
 //
 // File description:
 //
+//   Perform some basic operations on two inputs
 //
+//   Note that the 'mod' and 'rem' operators are defined as in JavaScript:
 //
-//
+//     5 rem  3 = 2
+//     5 mod  3 = 2
+//    -5 rem -3 =-2
+//    -5 mod -3 =-2
+//    -5 rem  3 =-2
+//    -5 mod  3 = 1
+//     5 rem -3 = 2
+//     5 mod -3 =-1
 //
 //
 //
@@ -31,28 +40,61 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-run_test x,y is
-    print x+y
-    print x-y
-    print x*y
-    print x/y
-    print x mod y
-    print x rem y
-    print x and y
-    print x or y
-    print x xor y
-    if x > 0 and y > 0 then
-        print x shl y
-        print x shr y
-    print -x
-    print not x
-    print abs x
-    print "---"
 
-run_test 75,17
-run_test 75,-17
-run_test -75,-17
-run_test -75,17
+is_natural X:integer    is true
+is_natural X            is false
+
+type_name X:natural     is "natural"
+type_name X:integer     is "integer"
+type_name X:real        is "real"
+
+run_test x,y is
+    print "--- With ", type_name x, " x=", x, " and y=", y, " ---"
+    print "Sum: ", x+y
+    print "Difference: ", x-y
+    print "Product: ", x*y
+    print "Ratio: ", x/y
+    print "Modulo: ", x mod y
+    print "Reminder: ", x rem y
+    if is_natural x and is_natural y then
+        print "And: ", x and y
+        print "Or: ", x or y
+        print "Xor: ", x xor y
+        if x > 0 and y > 0 then
+            print "Shift left: ", x shl y
+            print "Shift right: ", x shr y
+        print "Not: ", not x
+    print "Opposite: ", -x
+    print "Absolute value: ", abs x
+    print "Power: ", x^y
+
+// Check that the modulo and reminder operations give the right results
+print "5 rem 3=", 5 rem 3
+print "5 mod 3=", 5 mod 3
+
+print "-5 rem -3=", -5 rem -3
+print "-5 mod -3=", -5 mod -3
+
+print "-5 rem 3=", -5 rem 3
+print "-5 mod 3=", -5 mod 3
+
+print "5 rem -3=", 5 rem -3
+print "5 mod -3=", 5 mod -3
+
+run_test  5,  3
+run_test -5, -3
+run_test  5, -3
+run_test -5,  3
+
+run_test  5.0,  3.0
+run_test -5.0, -3.0
+run_test  5.0, -3.0
+run_test -5.0,  3.0
+
 run_test 0,1
 run_test 3,2
 run_test 9,3
+
+run_test 0.1,1.2
+run_test 3.1,2.2
+run_test 9.1,3.2
