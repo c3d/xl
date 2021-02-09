@@ -1072,19 +1072,6 @@ text xl_real2text(real_t value)
 NATIVE(xl_real2text);
 
 
-integer_t xl_integer_mod(integer_t x, integer_t y)
-// ----------------------------------------------------------------------------
-//   Compute a mathematical 'mod' from the C99 % operator
-// ----------------------------------------------------------------------------
-{
-    integer_t tmp = x % y;
-    if (tmp && (x^y) < 0)
-        tmp += y;
-    return tmp;
-}
-NATIVE(xl_integer_mod);
-
-
 natural_t xl_natural_pow(natural_t x, natural_t y)
 // ----------------------------------------------------------------------------
 //   Compute natural power
@@ -1103,13 +1090,37 @@ natural_t xl_natural_pow(natural_t x, natural_t y)
 NATIVE(xl_natural_pow);
 
 
-integer_t xl_integer_pow(integer_t x, natural_t y)
+integer_t xl_integer_mod(integer_t x, integer_t y)
+// ----------------------------------------------------------------------------
+//   Compute a mathematical 'mod' from the C99 % operator
+// ----------------------------------------------------------------------------
+{
+    integer_t tmp = x % y;
+    if (tmp && (x^y) < 0)
+        tmp += y;
+    return tmp;
+}
+NATIVE(xl_integer_mod);
+
+
+integer_t xl_integer_rem(integer_t x, integer_t y)
+// ----------------------------------------------------------------------------
+//   Compute a mathematical 'rem' from the C99 % operator
+// ----------------------------------------------------------------------------
+{
+    integer_t rem = x % y;
+    return rem;
+}
+NATIVE(xl_integer_rem);
+
+
+integer_t xl_integer_pow(integer_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute natural power
 // ----------------------------------------------------------------------------
 {
-    natural_t tmp = 1;
-    while (y)
+    natural_t tmp = y >= 0 ? 1 : 0;
+    while (y > 0)
     {
         if (y & 1)
             tmp *= x;
@@ -1126,10 +1137,10 @@ real_t xl_real_mod(real_t x, real_t y)
 //   Compute a mathematical 'mod' from fmod
 // ----------------------------------------------------------------------------
 {
-    real_t tmp = fmod(x,y);
-    if (tmp != 0.0 && x*y < 0.0)
-        tmp += y;
-    return tmp;
+    real_t mod = fmod(x,y);
+    if (mod != 0.0 && x*y < 0.0)
+        mod += y;
+    return mod;
 }
 NATIVE(xl_real_mod);
 
@@ -1144,7 +1155,7 @@ real_t xl_real_rem(real_t x, real_t y)
 NATIVE(xl_real_rem);
 
 
-real_t xl_real_pow(real_t x, natural_t y)
+real_t xl_real_pow(real_t x, integer_t y)
 // ----------------------------------------------------------------------------
 //   Compute real power with an natural on the right
 // ----------------------------------------------------------------------------
