@@ -70,6 +70,27 @@
 
 XL_BEGIN
 
+
+text xl_version()
+// ----------------------------------------------------------------------------
+//   Return the current XL version
+// ----------------------------------------------------------------------------
+{
+    return XL_VERSION;
+}
+NATIVE(xl_version);
+
+
+text xl_compatible_version()
+// ----------------------------------------------------------------------------
+//   Return the current XL version
+// ----------------------------------------------------------------------------
+{
+    return XL_COMPATIBLE_VERSION;
+}
+NATIVE(xl_compatible_version);
+
+
 Tree *  xl_evaluate(Scope *scope, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Dispatch evaluation to the main entry point

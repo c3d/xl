@@ -4,7 +4,7 @@
 //
 // File description:
 //
-//
+//    Check the version numbers
 //
 //
 //
@@ -31,5 +31,7 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+
+// FILTER=sed -e 's/-dirty//g' -e 's/-[0-9a-f]*//g'
 print "Version=", xl_version
 print "Compatibility=", xl_compatible_version
