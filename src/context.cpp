@@ -829,20 +829,20 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
         // Check if the right item is a single rewrite: 3 items, reorder
         if (Rewrite *right = rewrites->Second())
         {
-            int cmpleft = Sort(pattern, left->Pattern(), INSERT);
+            int cmpleft = Sort(left->Pattern(), pattern, INSERT);
             if (cmpleft == 0 && !overwrite)
                 Redefined(pattern, left);
-            if (cmpleft < 0)
+            if (cmpleft > 0)
             {
                 // Here pattern < left < right
                 rewrites->right = new Rewrites(rewrite, right);
                 return rewrite;
             }
 
-            int cmpright = Sort(pattern, right->Pattern(), INSERT);
+            int cmpright = Sort(right->Pattern(), pattern, INSERT);
             if (cmpright == 0 && !overwrite)
                 Redefined(pattern, right);
-            if (cmpright < 0)
+            if (cmpright > 0)
             {
                 // Here left <= pattern < right: reorder
                 rewrites->left = rewrite;
@@ -861,8 +861,8 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
         XL_ASSERT(right && "Malformed symbol table: unknown type on the right");
 
         // Compare with current node to decide if we go left or right
-        int cmpleft = Sort(pattern, left->Pattern(), INSERT);
-        entry = cmpleft < 0 ? &right->left : &right->right;
+        int cmpleft = Sort(left->Pattern(), pattern, INSERT);
+        entry = cmpleft > 0 ? &right->left : &right->right;
     }
 
     // Never happens
