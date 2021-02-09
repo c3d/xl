@@ -32,6 +32,12 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 // EXIT=1
+
+// Check that the old syntax is not matched
 foo X:integer as integer is builtin Nonexistent
+
+// Check that we report a non-existent builtin
+foo X:natural as natural is builtin "Nonexistent"
+
 
 foo 3
