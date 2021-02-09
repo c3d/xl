@@ -954,16 +954,17 @@ the definition of integer addition may look like this:
 
 [source]
 ----
-X:integer + Y:integer as integer    is builtin Add
+X:integer + Y:integer as integer    is builtin "Add"
 ----
 
 The left part of `is` here is perfectly standard XL. It tells the
 compiler that an expression like `X+Y` where both `X` and `Y` have the
 `integer` type will result in an `integer` value (that is the meaning of
 `as integer`). The implementation, however, is not given. Instead, the
-`builtin Add` tells the compiler that it has a cheat sheet for that
+`builtin "Add"` tells the compiler that it has a cheat sheet for that
 operations, called `Add`. How this cheat sheet is actually implemented
-is not specified, and depends on the compiler.
+is not specified, and depends on the compiler. The name of builtins is machine
+dependent, and is represented as text so as to allow for arbitrary syntax.
 
 === Adding complex features
 
@@ -2291,7 +2292,7 @@ that looks something like this:
 
 [source]
 ----
-X:integer as real     is builtin IntegerToReal
+X:integer as real     is builtin "IntegerToReal"
 ----
 
 This implicit conversion tells the compiler how to transform an
