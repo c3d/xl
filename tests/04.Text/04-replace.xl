@@ -31,9 +31,5 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-"ABCD" / "BC" / "DE"
-"ABCD" ("BC"=>"DE")
-
-// Another notation that I did not retain ultimately because it slowed down
-// all prefix lookup significantly
-(Source:text) (From:text => To:text)    is text_replace Source, From, To
+print "Replacement: ", "ABCD" / "BC" / "DE"
+print "Replacmenet with text_replace: ", text_replace("Les chaussettes", "es", "as")
