@@ -758,16 +758,6 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 }
 
 
-static inline const char *spaces(unsigned n)
-// ----------------------------------------------------------------------------
-//   Insert spaces for indentation in front of evaluation traces
-// ----------------------------------------------------------------------------
-{
-    const char *indent = "                                ";
-    return indent + (32 - n%32);
-}
-
-
 Tree *Interpreter::DoEvaluate(Scope *scope,
                               Tree *expr,
                               Evaluation mode,
@@ -785,11 +775,14 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         "variable",
         "local",
     };
-    record(eval, "%+s%t %+s in %p", spaces(depth), expr, modename[mode], scope);
+    record(eval, ">%t %+s in %p", expr, modename[mode], scope);
 
     // Check if there was some error, if so don't keep looking
     if (HadErrors())
+    {
+        record(eval, "<Aborting %t", Errors::Aborting());
         return Errors::Aborting();
+    }
 
     Tree_p result = expr;
     Context context(scope);
@@ -800,9 +793,15 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         RewriteList inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
         if (!DoInitializers(scope, inits, cache))
+        {
+            record(eval, "<Initializer failed for %t", expr);
             return nullptr;
+        }
         if (!hasInstructions)
+        {
+            record(eval, "<Return scope %p", context.Symbols());
             return context.Symbols();
+        }
     }
 
 retry:
@@ -823,7 +822,10 @@ retry:
         if (Scope *closure = context.ProcessScope(prefix->left, inits))
         {
             if (!DoInitializers(closure, inits, cache))
+            {
+                record(eval, "<Initializers failed for scope %t", prefix->left);
                 return nullptr;
+            }
             scope = closure;
             expr = prefix->right;
             result = expr;
@@ -833,12 +835,21 @@ retry:
 
         // Filter out declaration such as [extern foo(bar)]
         if (IsDefinition(prefix))
+        {
+            record(eval, "<Prefix %t is a definition", prefix);
             return prefix;
+        }
 
         // Filter out import statements (processed during
         if (Name *import = prefix->left->AsName())
+        {
             if (eval_fn callback = MAIN->Declarator(import->value))
+            {
+                record(eval, "<Import statement %t callback %p",
+                       prefix, callback);
                 return callback(scope, prefix);
+            }
+        }
     }
 
     // Short-circuit evaluation of sequences and declarations
@@ -851,22 +862,37 @@ retry:
             if (left != infix->left)
                 result = left;
             if (HadErrors() || IsError(left))
+            {
+                record(eval, "<Errors evaluating first in sequence %t = %t",
+                       infix->left, left);
                 return left;
+            }
             expr = infix->right;
             goto retry;
         }
 
         // Skip definitions, initalizer have been done above
         if (IsDefinition(infix))
+        {
+            record(eval, "<Infix %t is a definition", infix);
             return result;
+        }
 
         // Evaluate [X.Y]
         if (IsDot(infix))
-            return dot(context, infix, cache);
+        {
+            Tree_p scoped = dot(context, infix, cache);
+            record(eval, "<Scoped %t is %t", infix, scoped);
+            return scoped;
+        }
 
         // Evaluate assignments such as [X := Y]
         else if (IsAssignment(infix))
-            return assignment(scope, infix, mode, cache);
+        {
+            Tree_p assigned = assignment(scope, infix, mode, cache);
+            record(eval, "<Assignment %t is %t", infix, assigned);
+            return assigned;
+        }
     }
 
     // Check stack depth during evaluation
@@ -874,6 +900,7 @@ retry:
     if (depth > Opt::stackDepth)
     {
         Errors::Abort(Ooops("Stack depth exceeded evaluating $1", expr));
+        record(eval, "<Stack depth exceeded evaluating %t", expr);
         return expr;
     }
 
@@ -901,8 +928,8 @@ retry:
         errors.Clear();
     }
 
-    record(eval, "%+s%t %+s result %t",
-           spaces(depth-1), expr, error ? "failed" : "succeeded", result);
+    record(eval, "<%t %+s result %t",
+           expr, error ? "failed" : "succeeded", result);
 
     // Run garbage collector if needed
     GarbageCollector::SafePoint();
