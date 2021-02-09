@@ -29,7 +29,6 @@
 01.Evaluation/22-exceeding-stack-depth.xl
 01.Evaluation/2422-2427-boolean-in-writeln.xl
 01.Evaluation/19-invalid-when-clause.xl
-01.Evaluation/version.xl
 01.Evaluation/07-simple-anonymous-function.xl
 01.Evaluation/09-named-array.xl
 01.Evaluation/15-type-dispatch.xl
