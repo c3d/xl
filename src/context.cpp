@@ -652,7 +652,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         }
         else if (IsPatternCondition(vali))
         {
-            if (int vals = Sort(val, vali->left, mode))
+            if (int vals = Sort(pat, vali->left, mode))
                 return vals;
             return SortSearching(mode) ? 0 : 1;
         }
