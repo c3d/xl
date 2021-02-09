@@ -582,7 +582,7 @@ static Tree *eval(Scope   *evalScope,
     // Check if we have a builtin
     if (Prefix *prefix = body->AsPrefix())
     {
-        if (Name *name = IsBuiltin(prefix))
+        if (Text *name = IsBuiltin(prefix))
         {
             Interpreter::builtin_fn callee = Interpreter::builtins[name->value];
             if (!callee)
@@ -598,7 +598,7 @@ static Tree *eval(Scope   *evalScope,
             result = bindings.ResultTypeCheck(result, true);
             return result;
         }
-        if (Name *name = IsNative(prefix))
+        if (Text *name = IsNative(prefix))
         {
             Native *native = Interpreter::natives[name->value];
             if (!native)
@@ -1133,18 +1133,18 @@ void Interpreter::InitializeContext(Context &context)
 //    the builtins.
 {
 #define UNARY_OP(Name, ReturnType, LeftTYpe, Body)                      \
-    builtins[Normalize(#Name)] = builtin_unary_##Name;
+    builtins[#Name] = builtin_unary_##Name;
 
 #define BINARY_OP(Name, RetTy, LeftTy, RightTy, Body)                   \
-    builtins[Normalize(#Name)] = builtin_binary_##Name;
+    builtins[#Name] = builtin_binary_##Name;
 
 #define NAME(N)                                                         \
-    builtins[Normalize(#N)] = builtin_name_##N;                         \
+    builtins[#N] = builtin_name_##N;                                    \
     context.Define(xl_##N, xl_self);
 
 #define TYPE(N, Body)                                                   \
-    builtins[Normalize(#N)] = builtin_type_##N;                         \
-    builtins[Normalize(#N"_typecheck")] = builtin_typecheck_##N;        \
+    builtins[#N] = builtin_type_##N;                                    \
+    builtins[#N"_typecheck"] = builtin_typecheck_##N;                   \
                                                                         \
     Infix *pattern_##N =                                                \
         new Infix("as",                                                 \
@@ -1153,7 +1153,7 @@ void Interpreter::InitializeContext(Context &context)
                   N##_type);                                            \
     Prefix *value_##N =                                                 \
         new Prefix(xl_builtin,                                          \
-                   new Name(NORM2(#N"_typecheck")));                    \
+                   new Text(#N"_typecheck"));                           \
     context.Define(N##_type, xl_self);                                  \
     context.Define(pattern_##N, value_##N);
 
@@ -1164,9 +1164,9 @@ void Interpreter::InitializeContext(Context &context)
     {
         record(native, "Found %t", native->Shape());
         kstring symbol = native->Symbol();
-        natives[Normalize(symbol)] = native;
+        natives[symbol] = native;
         Tree *shape = native->Shape();
-        Prefix *body = new Prefix(C, new Name(NORM2(symbol)));
+        Prefix *body = new Prefix(C, new Text(symbol));
         context.Define(shape, body);
     }
 

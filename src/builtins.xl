@@ -33,103 +33,103 @@
 // *****************************************************************************
 
 // Binary operations on naturals
-X:natural + Y:natural           as natural is builtin Add
-X:natural - Y:natural           as natural is builtin Sub
-X:natural * Y:natural           as natural is builtin Mul
-X:natural / Y:natural           as natural is builtin UDiv
-X:natural ^ Y:natural           as natural is C xl_natural_pow
-X:natural rem Y:natural         as natural is builtin URem
-X:natural mod Y:natural         as natural is builtin UMod
-X:natural and Y:natural         as natural is builtin And
-X:natural or  Y:natural         as natural is builtin Or
-X:natural xor Y:natural         as natural is builtin Xor
-X:natural shl Y:natural         as natural is builtin Shl
-X:natural shr Y:natural         as natural is builtin LShr
--X:natural                      as integer is builtin Neg
-not X:natural                   as natural is builtin Not
+X:natural + Y:natural           as natural is builtin "Add"
+X:natural - Y:natural           as natural is builtin "Sub"
+X:natural * Y:natural           as natural is builtin "Mul"
+X:natural / Y:natural           as natural is builtin "UDiv"
+X:natural ^ Y:natural           as natural is C "xl_natural_pow"
+X:natural rem Y:natural         as natural is builtin "URem"
+X:natural mod Y:natural         as natural is builtin "UMod"
+X:natural and Y:natural         as natural is builtin "And"
+X:natural or  Y:natural         as natural is builtin "Or"
+X:natural xor Y:natural         as natural is builtin "Xor"
+X:natural shl Y:natural         as natural is builtin "Shl"
+X:natural shr Y:natural         as natural is builtin "LShr"
+-X:natural                      as integer is builtin "Neg"
+not X:natural                   as natural is builtin "Not"
 
 // Binary operations on integers
-X:integer + Y:integer           as integer is builtin Add
-X:integer - Y:integer           as integer is builtin Sub
-X:integer * Y:integer           as integer is builtin Mul
-X:integer / Y:integer           as integer is builtin UDiv
-X:integer ^ Y:natural           as integer is C xl_integer_pow
-X:integer rem Y:integer         as integer is builtin SRem
-X:integer mod Y:integer         as integer is C xl_integer_mod
-X:integer and Y:integer         as integer is builtin And
-X:integer or  Y:integer         as integer is builtin Or
-X:integer xor Y:integer         as integer is builtin Xor
-X:integer shl Y:natural         as integer is builtin Shl
-X:integer shr Y:natural         as integer is builtin AShr
--X:integer                      as integer is builtin Neg
-not X:integer                   as integer is builtin Not
+X:integer + Y:integer           as integer is builtin "Add"
+X:integer - Y:integer           as integer is builtin "Sub"
+X:integer * Y:integer           as integer is builtin "Mul"
+X:integer / Y:integer           as integer is builtin "UDiv"
+X:integer ^ Y:natural           as integer is C "xl_integer_pow"
+X:integer rem Y:integer         as integer is builtin "SRem"
+X:integer mod Y:integer         as integer is C "xl_integer_mod"
+X:integer and Y:integer         as integer is builtin "And"
+X:integer or  Y:integer         as integer is builtin "Or"
+X:integer xor Y:integer         as integer is builtin "Xor"
+X:integer shl Y:natural         as integer is builtin "Shl"
+X:integer shr Y:natural         as integer is builtin "AShr"
+-X:integer                      as integer is builtin "Neg"
+not X:integer                   as integer is builtin "Not"
 
 // Binary operation on real numbers
-X:real + Y:real                 as real is builtin FAdd
-X:real - Y:real                 as real is builtin FSub
-X:real * Y:real                 as real is builtin FMul
-X:real / Y:real                 as real is builtin FDiv
-X:real rem Y:real               as real is C xl_real_rem
-X:real mod Y:real               as real is C xl_real_mod
--X:real                         as real is builtin FNeg
+X:real + Y:real                 as real is builtin "FAdd"
+X:real - Y:real                 as real is builtin "FSub"
+X:real * Y:real                 as real is builtin "FMul"
+X:real / Y:real                 as real is builtin "FDiv"
+X:real rem Y:real               as real is C "xl_real_rem"
+X:real mod Y:real               as real is C "xl_real_mod"
+-X:real                         as real is builtin "FNeg"
 
 // Comparison operators
-X:integer = Y:integer           as boolean is builtin ICmpEQ
-X:integer <> Y:integer          as boolean is builtin ICmpNE
-X:integer > Y:integer           as boolean is builtin ICmpSGT
-X:integer >= Y:integer          as boolean is builtin ICmpSGE
-X:integer < Y:integer           as boolean is builtin ICmpSLT
-X:integer <= Y:integer          as boolean is builtin ICmpSLE
+X:integer = Y:integer           as boolean is builtin "ICmpEQ"
+X:integer <> Y:integer          as boolean is builtin "ICmpNE"
+X:integer > Y:integer           as boolean is builtin "ICmpSGT"
+X:integer >= Y:integer          as boolean is builtin "ICmpSGE"
+X:integer < Y:integer           as boolean is builtin "ICmpSLT"
+X:integer <= Y:integer          as boolean is builtin "ICmpSLE"
 
-X:natural = Y:natural           as boolean is builtin ICmpEQ
-X:natural <> Y:natural          as boolean is builtin ICmpNE
-X:natural > Y:natural           as boolean is builtin ICmpUGT
-X:natural >= Y:natural          as boolean is builtin ICmpUGE
-X:natural < Y:natural           as boolean is builtin ICmpULT
-X:natural <= Y:natural          as boolean is builtin ICmpULE
+X:natural = Y:natural           as boolean is builtin "ICmpEQ"
+X:natural <> Y:natural          as boolean is builtin "ICmpNE"
+X:natural > Y:natural           as boolean is builtin "ICmpUGT"
+X:natural >= Y:natural          as boolean is builtin "ICmpUGE"
+X:natural < Y:natural           as boolean is builtin "ICmpULT"
+X:natural <= Y:natural          as boolean is builtin "ICmpULE"
 
-X:real = Y:real                 as boolean is builtin FCmpOEQ
-X:real <> Y:real                as boolean is builtin FCmpONE
-X:real > Y:real                 as boolean is builtin FCmpOGT
-X:real >= Y:real                as boolean is builtin FCmpOGE
-X:real < Y:real                 as boolean is builtin FCmpOLT
-X:real <= Y:real                as boolean is builtin FCmpOLE
+X:real = Y:real                 as boolean is builtin "FCmpOEQ"
+X:real <> Y:real                as boolean is builtin "FCmpONE"
+X:real > Y:real                 as boolean is builtin "FCmpOGT"
+X:real >= Y:real                as boolean is builtin "FCmpOGE"
+X:real < Y:real                 as boolean is builtin "FCmpOLT"
+X:real <= Y:real                as boolean is builtin "FCmpOLE"
 
-X:boolean = Y:boolean           as boolean is builtin BCmpEQ
-X:boolean <> Y:boolean          as boolean is builtin BCmpNE
-X:boolean > Y:boolean           as boolean is builtin BCmpGT
-X:boolean >= Y:boolean          as boolean is builtin BCmpGE
-X:boolean < Y:boolean           as boolean is builtin BCmpLT
-X:boolean <= Y:boolean          as boolean is builtin BCmpLE
-X:boolean and Y:boolean         as boolean is builtin BAnd
-X:boolean or  Y:boolean         as boolean is builtin BOr
-X:boolean xor Y:boolean         as boolean is builtin BXor
-not X:boolean                   as boolean is builtin BNot
+X:boolean = Y:boolean           as boolean is builtin "BCmpEQ"
+X:boolean <> Y:boolean          as boolean is builtin "BCmpNE"
+X:boolean > Y:boolean           as boolean is builtin "BCmpGT"
+X:boolean >= Y:boolean          as boolean is builtin "BCmpGE"
+X:boolean < Y:boolean           as boolean is builtin "BCmpLT"
+X:boolean <= Y:boolean          as boolean is builtin "BCmpLE"
+X:boolean and Y:boolean         as boolean is builtin "BAnd"
+X:boolean or  Y:boolean         as boolean is builtin "BOr"
+X:boolean xor Y:boolean         as boolean is builtin "BXor"
+not X:boolean                   as boolean is builtin "BNot"
 
 // Implicit conversion of integer and natural to real
-X:integer as real               is builtin Integer2Real
-X:natural as real               is builtin Natural2Real
+X:integer as real               is builtin "Integer2Real"
+X:natural as real               is builtin "Natural2Real"
 
 // Text
-X:text = Y:text                 as boolean is C xl_text_eq
-X:text <> Y:text                as boolean is C xl_text_ne
-X:text > Y:text                 as boolean is C xl_text_gt
-X:text >= Y:text                as boolean is C xl_text_ge
-X:text < Y:text                 as boolean is C xl_text_lt
-X:text <= Y:text                as boolean is C xl_text_le
+X:text = Y:text                 as boolean is C "xl_text_eq"
+X:text <> Y:text                as boolean is C "xl_text_ne"
+X:text > Y:text                 as boolean is C "xl_text_gt"
+X:text >= Y:text                as boolean is C "xl_text_ge"
+X:text < Y:text                 as boolean is C "xl_text_lt"
+X:text <= Y:text                as boolean is C "xl_text_le"
 
-text X:natural                  as text    is C xl_natural2text
-text X:integer                  as text    is C xl_integer2text
-text X:real                     as text    is C xl_real2text
+text X:natural                  as text    is C "xl_natural2text"
+text X:integer                  as text    is C "xl_integer2text"
+text X:real                     as text    is C "xl_real2text"
 
-X:text & Y:text                 as text    is C xl_text_concat
+X:text & Y:text                 as text    is C "xl_text_concat"
 X:text & Y:natural              as text    is (X & text(Y))
 X:text & Y:integer              as text    is (X & text(Y))
 X:text & Y:real                 as text    is (X & text(Y))
 X:natural & Y:text              as text    is (text(X) & Y)
 X:integer & Y:text              as text    is (text(X) & Y)
 X:real & Y:text                 as text    is (text(X) & Y)
-Count:natural * T:text          as text    is C xl_text_repeat
+Count:natural * T:text          as text    is C "xl_text_repeat"
 T:text * Count:natural          as text    is Count * T
 
 
@@ -138,26 +138,26 @@ Source:text / From:text /  To:text      is text_replace Source, From, To
 X:text contains Y:text as boolean       is (text_index(Src,Pat,0) >= 0)
 Pat:text in Src:text                    is text_index Src, Pat, 0
 Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
-text_index Src:text, Pat:text, Idx:natural is C xl_text_index
+text_index Src:text, Pat:text, Idx:natural is C "xl_text_index"
 
 // Basic math functions
 abs X is if X < 0 then -X else X
 pi is 3.1415926535897932384626433
-sin X:real                      as real is C sin
-cos X:real                      as real is C cos
-tan X:real                      as real is C tan
-asin X:real                     as real is C asin
-acos X:real                     as real is C acos
-atan X:real                     as real is C atan
-exp X:real                      as real is C exp
-exp2 X:real                     as real is C exp2
-expm1 X:real                    as real is C expm1
-log X:real                      as real is C log
-log2 X:real                     as real is C log2
-log10 X:real                    as real is C log10
-log1p X:real                    as real is C log1p
-sqrt X:real                     as real is C sqrt
-atan Y:real / X:real            as real is C atan2
+sin X:real                      as real is C "sin"
+cos X:real                      as real is C "cos"
+tan X:real                      as real is C "tan"
+asin X:real                     as real is C "asin"
+acos X:real                     as real is C "acos"
+atan X:real                     as real is C "atan"
+exp X:real                      as real is C "exp"
+exp2 X:real                     as real is C "exp2"
+expm1 X:real                    as real is C "expm1"
+log X:real                      as real is C "log"
+log2 X:real                     as real is C "log2"
+log10 X:real                    as real is C "log10"
+log1p X:real                    as real is C "log1p"
+sqrt X:real                     as real is C "sqrt"
+atan Y:real / X:real            as real is C "atan2"
 
 // If-then-else statement
 if [[true]]  then True else False   is True
@@ -167,12 +167,12 @@ if [[true]]  then True              is True
 if [[false]] then True              is false
 
 // Console / debugging operations
-write X:text            as boolean      is C xl_write_text
-write X:integer         as boolean      is C xl_write_integer
-write X:natural         as boolean      is C xl_write_natural
-write X:real            as boolean      is C xl_write_real
-write X:character       as boolean      is C xl_write_character
-print                   as boolean      is C xl_write_cr
+write X:text            as boolean      is C "xl_write_text"
+write X:integer         as boolean      is C "xl_write_integer"
+write X:natural         as boolean      is C "xl_write_natural"
+write X:real            as boolean      is C "xl_write_real"
+write X:character       as boolean      is C "xl_write_character"
+print                   as boolean      is C "xl_write_cr"
 
 write [[true]]          is write "true"
 write [[false]]         is write "false"
@@ -183,19 +183,19 @@ print Items             is { write Items; print }
 X, Y                    is self
 
 // Tree shape and attributes
-kind  X:tree            as natural      is builtin TreeKind
-left  X:prefix          as tree         is builtin PrefixLeft
-right X:prefix          as tree         is builtin PrefixRight
-left  X:postfix         as tree         is builtin PostfixLeft
-right X:postfix         as tree         is builtin PostfixRight
-left  X:infix           as tree         is builtin InfixLeft
-right X:infix           as tree         is builtin InfixRight
-name  X:infix           as text         is builtin InfixName
-opening X:text          as text         is builtin TextOpening
-closing X:text          as text         is builtin TextClosing
-child X:block           as tree         is builtin BlockChild
-opening X:block         as text         is builtin BlockOpening
-closing X:block         as text         is builtin BlockClosing
+kind  X:tree            as natural      is builtin "TreeKind"
+left  X:prefix          as tree         is builtin "PrefixLeft"
+right X:prefix          as tree         is builtin "PrefixRight"
+left  X:postfix         as tree         is builtin "PostfixLeft"
+right X:postfix         as tree         is builtin "PostfixRight"
+left  X:infix           as tree         is builtin "InfixLeft"
+right X:infix           as tree         is builtin "InfixRight"
+name  X:infix           as text         is builtin "InfixName"
+opening X:text          as text         is builtin "TextOpening"
+closing X:text          as text         is builtin "TextClosing"
+child X:block           as tree         is builtin "BlockChild"
+opening X:block         as text         is builtin "BlockOpening"
+closing X:block         as text         is builtin "BlockClosing"
 
 // Min and max functions
 min X, Y is { mx is min X; my is min Y; if mx < my then mx else my }

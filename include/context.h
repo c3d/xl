@@ -729,51 +729,51 @@ inline Prefix *IsPatternMatchingType(Tree *tree)
 }
 
 
-inline Name *IsBuiltin(Prefix *prefix)
+inline Text *IsBuiltin(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is special (extern, builtin, C)
 // ----------------------------------------------------------------------------
 {
     if (Name *builtin = prefix->left->AsName())
         if (builtin->value == "builtin")
-            if (Name *name = prefix->right->AsName())
+            if (Text *name = prefix->right->AsText())
                 return name;
     return nullptr;
 }
 
 
-inline Name *IsBuiltin(Tree *tree)
+inline Text *IsBuiltin(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Return a builtin prefix if this is one
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = tree->AsPrefix())
-        if (Name *name = IsBuiltin(prefix))
+        if (Text *name = IsBuiltin(prefix))
             return name;
     return nullptr;
 }
 
 
-inline Name *IsNative(Prefix *prefix)
+inline Text *IsNative(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is for a native function, e.g. [C mallloc]
 // ----------------------------------------------------------------------------
 {
     if (Name *C = prefix->left->AsName())
         if (C->value == "C" || C->value == "c")
-            if (Name *name = prefix->right->AsName())
+            if (Text *name = prefix->right->AsText())
                 return name;
     return nullptr;
 }
 
 
-inline Name *IsNative(Tree *tree)
+inline Text *IsNative(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Return a builtin prefix if this is one
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = tree->AsPrefix())
-        if (Name *name = IsNative(prefix))
+        if (Text *name = IsNative(prefix))
             return name;
     return nullptr;
 }
