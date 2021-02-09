@@ -32,22 +32,23 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 run_test x is
-    print abs x
-    print sqrt x
+    print "--- Running tests with ", x, " ---"
+    print "abs ", x, "=", abs x
+    print "sqrt ", x, "=", sqrt x
     // Avoid platform-dependent rounding errors for very small values
-    print 0.25 + sin x
-    print 0.25 + cos x
-    print 0.25 + tan x
-    print asin x
-    print acos x
-    print atan x
-    print exp x
-    print expm1 x
-    print log x
-    print log10 x
-    print log2 x
-    print log1p x
-    print "---"
+    print "sin ", x, "=", 0.25 + sin x
+    print "cos ", x, "=", 0.25 + cos x
+    print "tan ", x, "=", 0.25 + tan x
+    print "asin ", x, "=", asin x
+    print "acos ", x, "=", acos x
+    print "atan ", x, "=", atan x
+    print "exp ", x, "=", exp x
+    print "expm1 ", x, "=", expm1 x
+    print "log ", x, "=", log x
+    print "log10 ", x, "=", log10 x
+    print "log2 ", x, "=", log2 x
+    print "log1p ", x, "=", log1p x
+
 
 run_test 0.13331
 run_test 1.3331
