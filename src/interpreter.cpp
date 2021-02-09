@@ -623,7 +623,7 @@ static Tree *eval(Scope   *evalScope,
     // Otherwise evaluate the body in the binding arguments scope
     EvaluationCache bodyCache;
     return Interpreter::DoEvaluate(bindings.ArgumentsScope(), body,
-                                   Interpreter::EXPRESSION, bodyCache);
+                                   Interpreter::STATEMENT, bodyCache);
 }
 
 
@@ -799,7 +799,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         }
         if (!hasInstructions)
         {
-            record(eval, "<Return scope %p", context.Symbols());
+            record(eval, "<Return scope %t", context.Symbols());
             return context.Symbols();
         }
     }
