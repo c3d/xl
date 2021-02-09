@@ -1194,6 +1194,17 @@ NATIVE(xl_text_index);
 
 
 
+natural_t xl_text_length(text t)
+// ----------------------------------------------------------------------------
+//   Return the length of the text
+// ----------------------------------------------------------------------------
+{
+    return t.length();
+}
+NATIVE(xl_text_length);
+
+
+
 text xl_text_concat(text first, text second)
 // ----------------------------------------------------------------------------
 //   Return a concatenation of two strings
