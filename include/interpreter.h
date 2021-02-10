@@ -180,7 +180,7 @@ struct Bindings
     Scope *DeclarationScope()   { return declContext.Symbols(); }
     Scope *ArgumentsScope()     { return argContext.Symbols(); }
     Tree  *Self()               { return self; }
-    Closure *Enclose(Tree *val) { return argContext.Enclose(val); }
+    Tree  *Enclose(Tree *val)   { return argContext.Enclose(val); }
 
 private:
     Context             evalContext;
