@@ -16,7 +16,7 @@ INFIX
         240     return
         250     and or xor
         260     in at contains
-        271     of to
+        271     of to from
         280     .. by
         290     = < > <= >= <> !=
         300     & |
