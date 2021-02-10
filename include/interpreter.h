@@ -160,6 +160,7 @@ struct Bindings
     bool  Do(Block *what);
 
     // Evaluation and binding of values
+    void  StripBlocks();
     bool  MustEvaluate();
     Tree *Evaluate(Scope *scope, Tree *expr);
     Tree *EvaluateType(Tree *type);
@@ -195,6 +196,16 @@ private:
     Tree_p              type;
     RewriteList         bindings;
 };
+
+
+inline void Bindings::StripBlocks()
+// ----------------------------------------------------------------------------
+//   Strip all blocks in a test value
+// ----------------------------------------------------------------------------
+{
+    while (Block *b = test->AsBlock())
+        test = b->child;
+}
 
 XL_END
 

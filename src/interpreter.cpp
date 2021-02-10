@@ -107,6 +107,7 @@ inline bool Bindings::Do(Natural *what)
 //   The pattern contains an natural: check we have the same
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
     if (test->Kind() != NATURAL)
         MustEvaluate();
     if (Natural *ival = test->AsNatural())
@@ -122,6 +123,7 @@ inline bool Bindings::Do(Real *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
     if (test->Kind() != REAL)
         MustEvaluate();
     if (Real *rval = test->AsReal())
@@ -137,6 +139,7 @@ inline bool Bindings::Do(Text *what)
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
     if (test->Kind() != TEXT)
         MustEvaluate();
     if (Text *tval = test->AsText())
@@ -152,6 +155,8 @@ inline bool Bindings::Do(Name *what)
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
+
     // The test value may have been evaluated. If so, use evaluated value
     if (Tree *cached = cache.Cached(test))
         test = cached;
@@ -195,6 +200,8 @@ bool Bindings::Do(Block *what)
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
+
     // Deal with the case of a metablock: evaluate expression inside
     if (Tree *expr = what->IsMetaBox())
     {
@@ -212,6 +219,8 @@ bool Bindings::Do(Prefix *what)
 //   The pattern contains prefix: check that the left part matches
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
+
     bool retrying = true;
     Tree_p uneval = test;
 
@@ -242,7 +251,7 @@ bool Bindings::Do(Prefix *what)
         if (Prefix *pfx = test->AsPrefix())
         {
             // Case of [until Condition loop Body]: define [until]
-            if (defined->AsInfix())
+            if (defined && defined->AsInfix())
                 defined = nullptr;
 
             // Check prefix left first, which may set 'defined' to name
@@ -271,6 +280,8 @@ bool Bindings::Do(Postfix *what)
 //   The pattern contains posfix: check that the right part matches
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
+
     bool retrying = true;
     Tree_p uneval = test;
 
@@ -307,6 +318,8 @@ bool Bindings::Do(Infix *what)
 //   The complicated case: various definitions
 // ----------------------------------------------------------------------------
 {
+    StripBlocks();
+
     // Check if we have a type annotation, like [X:natural]
     if (IsTypeAnnotation(what))
     {
@@ -355,10 +368,9 @@ bool Bindings::Do(Infix *what)
         }
 
         // Need to match the left part with the converted value
-        if (!what->left->Do(this))
-            return false;
-
-        return true;
+        if (!outermost && !defined)
+            defined = what;
+        return what->left->Do(this);
     }
 
     // If nothing defined yet, we are it
