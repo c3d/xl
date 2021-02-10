@@ -13,4 +13,3 @@
 01.Evaluation/15-type-dispatch.xl
 01.Evaluation/14-type-mismatch.xl
 01.Evaluation/24-array-and-scope-indexing.xl
-04.Text/03-contains.xl
