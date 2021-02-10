@@ -1204,6 +1204,17 @@ integer_t xl_text_index(text haystack, text needle, size_t pos)
 NATIVE(xl_text_index);
 
 
+text_t xl_text_range(text Source, natural_t first, natural_t last)
+// ----------------------------------------------------------------------------
+//   Extract a substring from a string
+// ----------------------------------------------------------------------------
+{
+    if (last < first)
+        return "";
+    return Source.substr(first, last - first);
+}
+NATIVE(xl_text_range);
+
 
 natural_t xl_text_length(text t)
 // ----------------------------------------------------------------------------
