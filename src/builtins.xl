@@ -135,14 +135,16 @@ Count:natural * T:text          as text    is C "xl_text_repeat"
 T:text * Count:natural          as text    is Count * T
 length T:text                   as natural is C "xl_text_length"
 
-
 // A few additional text notations
+text_index Src:text, Pat:text, Idx:natural as integer is C "xl_text_index"
+text_replace Src:text,From:text, To:text as text is C "xl_text_replace"
+text_range Source:text,First:natural,Last:natural as text is C "xl_text_range"
 Source:text / From:text /  To:text      is text_replace Source, From, To
 Src:text contains Pat:text as boolean   is (text_index(Src,Pat,0) >= 0)
 Pat:text in Src:text                    is text_index Src, Pat, 0
 Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
-text_index Src:text, Pat:text, Idx:natural as integer is C "xl_text_index"
-text_replace Src:text,From:text, To:text as text is C "xl_text_replace"
+(Source:text)[First:natural..Last:natural] is text_range(Source, First, Last)
+Source:text from First:natural  as text is text_range(Source, First, not 0)
 
 // Basic math functions
 abs X is if X < 0 then -X else X
