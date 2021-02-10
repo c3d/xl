@@ -154,6 +154,7 @@ struct Scope : Block
     Tree_p &Locals();
     void    Reparent(Scope *enclosing);
     void    Clear();
+    bool    IsEmpty();
     GARBAGE_COLLECT(Scope);
 };
 typedef GCPtr<Scope> Scope_p;
@@ -275,7 +276,7 @@ public:
     // Phases of evaluation
     bool                ProcessDeclarations(Tree *what, RewriteList &inits);
     Scope *             ProcessScope(Tree *declarations, RewriteList &inits);
-    Closure *           Enclose(Tree *value);
+    Tree *              Enclose(Tree *value);
     static Scope *      IsClosure(Tree *value);
 
     // Adding definitions to the context
@@ -1017,6 +1018,16 @@ inline void Scope::Clear()
 }
 
 
+inline bool Scope::IsEmpty()
+// ----------------------------------------------------------------------------
+//   Return true if the scope is empty
+// ----------------------------------------------------------------------------
+{
+    Tree_p &locals = Locals();
+    return locals == xl_nil;
+}
+
+
 inline void Scope::Reparent(Scope *enclosing)
 // ----------------------------------------------------------------------------
 //   Change the enclosing context for this scope
@@ -1052,12 +1063,17 @@ struct ContextStack
 //
 // ============================================================================
 
-inline Closure *Context::Enclose(Tree *value)
+inline Tree *Context::Enclose(Tree *value)
 // ----------------------------------------------------------------------------
 //   Prefix the value wiht the current symbols - Unwrapped by evaluate()
 // ----------------------------------------------------------------------------
 {
-    return new Closure(Symbols(), value);
+    Scope *scope = Symbols();
+    while (scope && scope->IsEmpty())
+        scope = scope->Enclosing();
+    if (scope)
+        return new Closure(scope, value);
+    return value;
 }
 
 
@@ -1070,6 +1086,15 @@ inline Scope *Context::IsClosure(Tree *value)
         if (Scope *scope = prefix->left->As<Scope>())
             return scope;
     return nullptr;
+}
+
+
+inline bool Context::IsEmpty()
+// ----------------------------------------------------------------------------
+//   Return true if the context is empty
+// ----------------------------------------------------------------------------
+{
+    return symbols->IsEmpty();
 }
 
 

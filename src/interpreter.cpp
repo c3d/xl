@@ -641,8 +641,7 @@ static Tree *eval(Scope   *evalScope,
 
     // Otherwise evaluate the body in the binding arguments scope
     EvaluationCache bodyCache;
-    Context context(bindings.ArgumentsScope());
-    Scope *bodyScope = context.CreateScope();
+    Scope *bodyScope = bindings.ArgumentsScope();
     return Interpreter::DoEvaluate(bodyScope, body,
                                    Interpreter::STATEMENT, bodyCache);
 }
@@ -836,8 +835,11 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
     // Check if we have instructions to process. If not, return declarations
     if (mode == STATEMENT)
     {
+        scope = context.CreateScope();
         RewriteList inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
+        if (scope->IsEmpty())
+            scope = scope->Enclosing();
         if (!DoInitializers(scope, inits, cache))
         {
             record(eval, "<Initializer failed for %t", expr);
@@ -845,8 +847,8 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         }
         if (!hasInstructions)
         {
-            record(eval, "<Return scope %t", context.Symbols());
-            return context.Symbols();
+            record(eval, "<Return scope %t", scope);
+            return scope;
         }
     }
 
@@ -854,7 +856,6 @@ retry:
     // Short-circuit evaluation of blocks
     if (Block *block = expr->AsBlock())
     {
-        scope = context.CreateScope();
         expr = block->child;
         result = expr;
         goto retry;
