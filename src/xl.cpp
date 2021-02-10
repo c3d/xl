@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     int rc = main.HadErrors() > 0;
     if (rc)
         main.errors->Display();
-    else if (result != XL::xl_nil)
+    else if (result && result != XL::xl_nil)
         std::cout << result << "\n";
 
     IFTRACE2(memory, gc_statistics)
