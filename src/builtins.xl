@@ -141,7 +141,7 @@ Source:text / From:text /  To:text      is text_replace Source, From, To
 X:text contains Y:text as boolean       is (text_index(Src,Pat,0) >= 0)
 Pat:text in Src:text                    is text_index Src, Pat, 0
 Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
-text_index Src:text, Pat:text, Idx:natural is C "xl_text_index"
+text_index Src:text, Pat:text, Idx:natural as integer is C "xl_text_index"
 text_replace Src:text,From:text, To:text as text is C "xl_text_replace"
 
 // Basic math functions

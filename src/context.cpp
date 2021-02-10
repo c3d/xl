@@ -1224,15 +1224,6 @@ Tree *Context::Named(text name, bool recurse)
 }
 
 
-bool Context::IsEmpty()
-// ----------------------------------------------------------------------------
-//   Return true if the context has no declaration inside
-// ----------------------------------------------------------------------------
-{
-    return symbols->Inner()->child == xl_nil;
-}
-
-
 static ulong listNames(Tree_p *entry, text begin, RewriteList &list, bool pfx)
 // ----------------------------------------------------------------------------
 //   List names in the given tree
