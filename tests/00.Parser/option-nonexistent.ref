@@ -1,4 +1,4 @@
-Usage: ../xl <options> <source_file>
+Usage: ./xl <options> <source_file>
 
 Option names can be shortened if unambiguous.
 

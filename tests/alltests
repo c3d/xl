@@ -37,7 +37,7 @@
 OS=$(uname)
 TESTDIR="$(pwd)"
 SUBDIRS="[0-9]*"
-XL=../xl
+XL=./xl
 LIBPATH=..
 SRC="../src"
 PASS="pass"
@@ -101,6 +101,7 @@ do
         rm -f $F
     fi
 done
+ln -sf ../xl .
 
 SUCCESS="$TESTDIR/success-"$RUNTIME".out"
 FAILURE="$TESTDIR/failure-"$RUNTIME".out"

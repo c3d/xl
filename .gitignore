@@ -22,9 +22,8 @@ tests/opt-builtins.xl
 tests/short.stylesheet
 tests/success.out
 tests/xl
-tests/xl.stylesheet
-tests/xl.syntax
-tests/C.syntax
+tests/*.stylesheet
+tests/*.syntax
 tests/**/*.ref.old
 tests/**/expected-*.out
 tests/**/failure-*.out
@@ -35,7 +34,7 @@ tests/**/*.output
 tests/**/*.result
 tests/**/*.err
 **.dylib
-[a-z].xl
+src/[a-z].xl
 src/[a-z].xl
 src/config.h
 xl2/*/TESTS/**/*.c

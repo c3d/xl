@@ -248,7 +248,8 @@ ALLTESTS_ARG_O1=-O1
 ALLTESTS_ARG_O2=-O2
 ALLTESTS_ARG_O3=-O3
 .alltests.%: .product
-	cd ../tests; $(TEST_ENV) ./alltests $(ALLTESTS_ARG_$*)
+	cd ../tests; make
+#	$(TEST_ENV) ./alltests $(ALLTESTS_ARG_$*)
 
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:
