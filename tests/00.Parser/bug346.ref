@@ -1,2 +1,4 @@
-<<>>>>
-00.Parser/bug346.xl:35:6: No prefix matches [<<>>>>]
+00.Parser/bug346.xl:35:6: Unable to evaluate [<<>>>>]:
+00.Parser/bug346.xl:35:6:  Nothing matches [<<>>>>]
+00.Parser/bug346.xl:35:6: Unable to evaluate [<<>>>>]:
+00.Parser/bug346.xl:35:6:  Nothing matches [<<>>>>]
