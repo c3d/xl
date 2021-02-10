@@ -31,10 +31,10 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-adder X:integer is (Y is Y + X)
+adder X:integer is (lambda Y is Y + X)
 
-add3 := adder 3
-add5 := adder 5
+add3 is adder 3
+add5 is adder 5
 
 print "3+2=", add3 2
 print "3+17=", add3 17
