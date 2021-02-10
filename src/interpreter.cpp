@@ -503,7 +503,7 @@ Tree *Bindings::ResultTypeCheck(Tree *result, bool special)
 // ----------------------------------------------------------------------------
 {
     // If no type specified, just return the result as is
-    if (!type)
+    if (!type || !result)
         return result;
 
     // For builtin and C declarations
@@ -654,8 +654,10 @@ static Tree *eval(Scope   *evalScope,
     // Otherwise evaluate the body in the binding arguments scope
     EvaluationCache bodyCache;
     Scope *bodyScope = bindings.ArgumentsScope();
-    return Interpreter::DoEvaluate(bodyScope, body,
-                                   Interpreter::STATEMENT, bodyCache);
+    Tree_p result = Interpreter::DoEvaluate(bodyScope, body,
+                                            Interpreter::STATEMENT, bodyCache);
+    result = bindings.ResultTypeCheck(result, false);
+    return result;
 }
 
 

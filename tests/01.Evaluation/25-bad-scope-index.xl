@@ -31,6 +31,7 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+// EXIT=1
 A is "Outer A"
 C is "Outer C"
 
@@ -41,16 +42,4 @@ foo is
     "Outer A" is "Indexed by Outer A"
 
 print "foo.A=", foo.A
-print "foo.B=", foo.B
-
-print "foo[A]=", foo[A]
-print "foo[B]=", foo[B]
-print "foo[C]=", foo[C]
-
-print "foo(A)=", foo(A)
-print "foo(B)=", foo(B)
-print "foo(C)=", foo(C)
-
-print "foo A=", foo A
-print "foo B=", foo B
-print "foo C=", foo C
+print "foo.C=", foo.C
