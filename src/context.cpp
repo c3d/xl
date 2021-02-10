@@ -145,7 +145,7 @@ Scope *Context::CreateScope(TreePosition pos)
 }
 
 
-void Context::PopScope()
+Scope *Context::PopScope()
 // ----------------------------------------------------------------------------
 //   Remove the innermost local scope
 // ----------------------------------------------------------------------------
@@ -155,6 +155,7 @@ void Context::PopScope()
            this, symbols, enclosing);
     XL_ASSERT(enclosing && "Context::PopScope called on top scope");
     symbols = enclosing;
+    return enclosing;
 }
 
 
@@ -549,6 +550,8 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         // Put lambda behind anything but other lambdas and parameter names
         if (IsLambda(patp))
         {
+            if (SortSearching(mode))
+                return 0;
             if (IsLambda(val))
                 return 0;
             if (valk == NAME)

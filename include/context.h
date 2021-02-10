@@ -152,6 +152,7 @@ struct Scope : Block
     Scope  *Enclosing();
     Scope  *Inner();
     Tree_p &Locals();
+    void    Reparent(Scope *enclosing);
     void    Clear();
     GARBAGE_COLLECT(Scope);
 };
@@ -167,6 +168,7 @@ struct Scopes : Prefix
         : Prefix(enclosing, inner, pos) {}
     Scope *Enclosing()  { return (Scope *) (Tree *) left; }
     Scope *Inner()      { return (Scope *) (Tree *) right; }
+    void   Reparent(Scope *enclosing)   { left = enclosing; }
     GARBAGE_COLLECT(Scopes);
 };
 typedef GCPtr<Scopes> Scopes_p;
@@ -261,7 +263,7 @@ struct Context
 public:
     // Create and delete a local scope
     Scope *             CreateScope(TreePosition pos = Tree::NOWHERE);
-    void                PopScope();
+    Scope *             PopScope();
     Scope *             Symbols()               { return symbols; }
     void                SetSymbols(Scope *s)    { symbols = s; }
     Context *           Parent();
@@ -1012,6 +1014,16 @@ inline void Scope::Clear()
 {
     Tree_p &locals = Locals();
     locals = xl_nil;
+}
+
+
+inline void Scope::Reparent(Scope *enclosing)
+// ----------------------------------------------------------------------------
+//   Change the enclosing context for this scope
+// ----------------------------------------------------------------------------
+{
+    if (Scopes *scopes = child->As<Scopes>())
+        scopes->Reparent(enclosing);
 }
 
 

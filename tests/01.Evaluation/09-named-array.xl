@@ -36,4 +36,5 @@ foo is
     1 is "B"
     2 is "C"
 
-foo 1
+print "With function notation, foo 1 = ", foo 1, " (should be B)"
+print "With array notation, foo[2] = ", foo[2], " (should be C)"
