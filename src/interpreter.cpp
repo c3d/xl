@@ -219,6 +219,25 @@ bool Bindings::Do(Prefix *what)
     {
         retrying = false;
 
+        // If we have a lambda prefix, match the value
+        if (Name *name = IsLambda(what))
+        {
+            if (defined)
+                Ooops("Lambda form $1 nested inside pattern $2", what, defined);
+            defined = what;
+            cache.Cache(test, test); // Bind value as is
+            bool result = name->Do(this);
+
+            // Since a top-level lambda is a "catch all, evaluate outside
+            if (result)
+            {
+                Scope *evalScope = evalContext.PopScope();
+                Scope *argScope = argContext.Symbols();
+                argScope->Reparent(evalScope);
+            }
+            return result;
+        }
+
         // The test itself should be a prefix
         if (Prefix *pfx = test->AsPrefix())
         {
@@ -622,7 +641,9 @@ static Tree *eval(Scope   *evalScope,
 
     // Otherwise evaluate the body in the binding arguments scope
     EvaluationCache bodyCache;
-    return Interpreter::DoEvaluate(bindings.ArgumentsScope(), body,
+    Context context(bindings.ArgumentsScope());
+    Scope *bodyScope = context.CreateScope();
+    return Interpreter::DoEvaluate(bodyScope, body,
                                    Interpreter::STATEMENT, bodyCache);
 }
 
@@ -653,9 +674,9 @@ static Tree *constant(Scope   *evalScope,
 }
 
 
-static inline Tree_p dot(Context &context,
-                         Infix *infix,
-                         EvaluationCache &cache)
+static Tree_p doDot(Context &context,
+                    Infix *infix,
+                    EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Process [X.Y]
 // ----------------------------------------------------------------------------
@@ -675,10 +696,10 @@ static inline Tree_p dot(Context &context,
 }
 
 
-static inline Tree_p assignment(Scope *scope,
-                                Infix *infix,
-                                Interpreter::Evaluation mode,
-                                EvaluationCache &cache)
+static Tree_p doAssignment(Scope *scope,
+                           Infix *infix,
+                           Interpreter::Evaluation mode,
+                           EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Process assignments like [X := Y]
 // ----------------------------------------------------------------------------
@@ -735,6 +756,31 @@ static inline Tree_p assignment(Scope *scope,
 
     // Return the assigned value or the variable
     return mode == Interpreter::VARIABLE ? decl : value;
+}
+
+
+static Tree_p doLatePrefix(Scope *scope,
+                           Prefix *prefix,
+                           EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Evaluate a prefix if it was not found in the symbol table
+// ----------------------------------------------------------------------------
+{
+    Tree *expr = prefix->left;
+    kind exprk = expr->Kind();
+    if (exprk == NAME || exprk == BLOCK)
+    {
+        record(eval, "Retrying prefix %t", prefix);
+        Tree_p left = Interpreter::DoEvaluate(scope, expr,
+                                              Interpreter::MAYFAIL, cache);
+        if (!left || left == expr)
+            return nullptr;
+        prefix = new Prefix(prefix, left, prefix->right);
+        Tree_p result = Interpreter::DoEvaluate(scope, prefix,
+                                                Interpreter::EXPRESSION, cache);
+        return result;
+    }
+    return nullptr;
 }
 
 
@@ -808,6 +854,7 @@ retry:
     // Short-circuit evaluation of blocks
     if (Block *block = expr->AsBlock())
     {
+        scope = context.CreateScope();
         expr = block->child;
         result = expr;
         goto retry;
@@ -881,7 +928,7 @@ retry:
         // Evaluate [X.Y]
         if (IsDot(infix))
         {
-            Tree_p scoped = dot(context, infix, cache);
+            Tree_p scoped = doDot(context, infix, cache);
             record(eval, "<Scoped %t is %t", infix, scoped);
             return scoped;
         }
@@ -889,7 +936,7 @@ retry:
         // Evaluate assignments such as [X := Y]
         else if (IsAssignment(infix))
         {
-            Tree_p assigned = assignment(scope, infix, mode, cache);
+            Tree_p assigned = doAssignment(scope, infix, mode, cache);
             record(eval, "<Assignment %t is %t", infix, assigned);
             return assigned;
         }
@@ -905,7 +952,6 @@ retry:
     }
 
     // All other cases: lookup in symbol table
-    bool error = false;
     Context::lookup_fn lookup = mode == VARIABLE ? variable : constant;
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
@@ -913,23 +959,19 @@ retry:
         result = found;
     else if (expr->IsConstant())
         result = expr;
-    else if (mode == MAYFAIL)
-        result = nullptr;
+    else if (Prefix *prefix = expr->AsPrefix())
+        result = doLatePrefix(scope, prefix, cache);
     else
-        error = true;
-
-    if (error)
-    {
-        Ooops("Nothing matches $1", expr);
         result = nullptr;
-    }
+
+    // Clear errors if we were successful
+    if (!result && mode != MAYFAIL)
+        Ooops("Nothing matches $1", expr);
     else if (!Errors::Aborting())
-    {
         errors.Clear();
-    }
 
     record(eval, "<%t %+s result %t",
-           expr, error ? "failed" : "succeeded", result);
+           expr, result ? "succeeded" : "failed", result);
 
     // Run garbage collector if needed
     GarbageCollector::SafePoint();
