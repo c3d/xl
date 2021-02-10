@@ -4,8 +4,8 @@
 //
 // File description:
 //
-//
-//
+//   Check that a failure evaluating a pattern condition simply rules out
+//   the pattern, but is not reported as an error.
 //
 //
 //
@@ -31,13 +31,12 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-// Evaluation of the Collatz conjecture sequence
 
 collatz N when N mod 2 = "glop" is N/2
 collatz N                       is 3*N + 1
 
-N := 27
-I := 0
+N : natural := 27
+I : natural := 0
 while I < 10 loop
     print I, ":", N
     I := I + 1

@@ -4,7 +4,7 @@
 //
 // File description:
 //
-//
+//   Check that a pattern condition evaluates as a boolean
 //
 //
 //
@@ -32,7 +32,6 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 // EXIT=1
-// Errors when the
 
 collatz N when "glop"   is 0
 collatz N when "glap"   is 1

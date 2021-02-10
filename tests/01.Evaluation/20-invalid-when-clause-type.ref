@@ -1,5 +1,16 @@
-collatz 10
-01.Evaluation/20-invalid-when-clause-type.xl:37:21: Invalid guard clause, "glop" is not a boolean
-01.Evaluation/20-invalid-when-clause-type.xl:38:21: Invalid guard clause, "glap" is not a boolean
-01.Evaluation/20-invalid-when-clause-type.xl:40:7: No name matches [collatz]
-01.Evaluation/20-invalid-when-clause-type.xl:40:10: No prefix matches [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:39:10: Unable to evaluate [collatz 10]:
+01.Evaluation/20-invalid-when-clause-type.xl:37:9:  Pattern [collatz N when "glap"] does not match [collatz 10]:
+01.Evaluation/20-invalid-when-clause-type.xl:37:21:   Invalid guard clause, "glap" is not a boolean
+01.Evaluation/20-invalid-when-clause-type.xl:37:9:   Prefix [collatz N when "glap"] does not match [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:36:9:  Pattern [collatz N when "glop"] does not match [collatz 10]:
+01.Evaluation/20-invalid-when-clause-type.xl:36:21:   Invalid guard clause, "glop" is not a boolean
+01.Evaluation/20-invalid-when-clause-type.xl:36:9:   Prefix [collatz N when "glop"] does not match [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:39:10:  Nothing matches [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:39:10: Unable to evaluate [collatz 10]:
+01.Evaluation/20-invalid-when-clause-type.xl:37:9:  Pattern [collatz N when "glap"] does not match [collatz 10]:
+01.Evaluation/20-invalid-when-clause-type.xl:37:21:   Invalid guard clause, "glap" is not a boolean
+01.Evaluation/20-invalid-when-clause-type.xl:37:9:   Prefix [collatz N when "glap"] does not match [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:36:9:  Pattern [collatz N when "glop"] does not match [collatz 10]:
+01.Evaluation/20-invalid-when-clause-type.xl:36:21:   Invalid guard clause, "glop" is not a boolean
+01.Evaluation/20-invalid-when-clause-type.xl:36:9:   Prefix [collatz N when "glop"] does not match [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:39:10:  Nothing matches [collatz 10]
