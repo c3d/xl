@@ -138,7 +138,7 @@ length T:text                   as natural is C "xl_text_length"
 
 // A few additional text notations
 Source:text / From:text /  To:text      is text_replace Source, From, To
-X:text contains Y:text as boolean       is (text_index(Src,Pat,0) >= 0)
+Src:text contains Pat:text as boolean   is (text_index(Src,Pat,0) >= 0)
 Pat:text in Src:text                    is text_index Src, Pat, 0
 Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 text_index Src:text, Pat:text, Idx:natural as integer is C "xl_text_index"
