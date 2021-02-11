@@ -41,9 +41,7 @@ TIMEOUT=5
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
-rebase: baseline.txt
-baseline.txt: .ALWAYS
-	$(PRINT_GENERATE) echo > baseline.txt; $(MAKE) REBASE=yes
+base rebase baseline: baseline.txt
 run-%:
 	$(PRINT_COMMAND) $(MAKE) TESTS="$(wildcard */*$**.xl)" .tests
 ref-%:
@@ -130,12 +128,9 @@ endef
 
 .tests: failures.log
 
-UPDATE_REBASE=$(UPDATE_REBASE_$(REBASE))
-UPDATE_REBASE_yes=echo $$F.xl >> baseline.txt;
 GENERATE_FAILURES_LOG=						\
   ( for F in $(^:.diff=); do					\
     if [ "$$(cat $$F.result)" != "OK" ]; then			\
-      $(UPDATE_REBASE)						\
       if ! grep -q "$$F" baseline.txt; then			\
         echo "=== $$F FAILED ===";				\
         cat $$F.diff;						\
@@ -179,11 +174,21 @@ REPORT_FAILURES=						\
   $(INFO) "[SUMMARY]" "  Successful tests:  $$successes";	\
   $(INFO) "[SUMMARY]" "  Failed tests:      $$failures";	\
   $(INFO) "[SUMMARY]" "  Improved tests:    $$improved";	\
-  $(INFO) "[SUMMARY]" "  Expected failures: $$expected")	\
-  $(COLORIZE)
+  $(INFO) "[SUMMARY]" "  Expected failures: $$expected";	\
+  if [ "$$failures" -ne "0" ]; then				\
+    head -20 $@ ;						\
+    exit 41 ;							\
+  fi)
+
+GENERATE_BASELINE=						\
+  grep "=== .* FAILED .* ===" $< |				\
+  sed -e 's/=== \(.*\) FAILED\(.*\) ===/\1.xl/g' > $@
+
 
 failures.log: $(TESTS:%.xl=%.diff)
 	$(PRINT_GENERATE) $(GENERATE_FAILURES_LOG) $(COLORIZE)
+baseline.txt: failures.log
+	$(PRINT_GENERATE) $(GENERATE_BASELINE) $(COLORIZE)
 
 %.xl.mk: %.xl ./alltests-make.awk # Makefile
 	$(PRINT_GENERATE) ./alltests-make.awk $< > $@
