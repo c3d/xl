@@ -43,3 +43,4 @@ foo is
 
 print "foo.A=", foo.A
 print "foo.C=", foo.C
+foo.C
