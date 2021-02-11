@@ -189,6 +189,10 @@ inline bool Bindings::Do(Name *what)
         return result;
     }
 
+    // If some earlier evaluation failure, abort here
+    if (!test)
+        return false;
+
     // Otherwise, bind test value to name
     Bind(what, test);
     return true;
