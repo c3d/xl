@@ -329,11 +329,12 @@ Infix *xl_new_infix(Infix *source, Tree *left, Tree *right)
 //
 // ============================================================================
 
-Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
+static Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
 // ----------------------------------------------------------------------------
 //   Build a parse tree in the current scope
 // ----------------------------------------------------------------------------
 {
+    Tree_p result = tree;
     switch(tree->Kind())
     {
     case NATURAL:
@@ -341,12 +342,14 @@ Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
     case TEXT:
     case NAME:
         return tree;
+
     case INFIX:
     {
         Infix *infix = (Infix *) tree;
         Tree *left = xl_parse_tree_inner(scope, infix->left);
         Tree *right = xl_parse_tree_inner(scope, infix->right);
-        Infix *result = new Infix(infix, left, right);
+        if (left != infix->left || right != infix->right)
+            result = new Infix(infix, left, right);
         return result;
     }
     case PREFIX:
@@ -354,7 +357,8 @@ Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
         Prefix *prefix = (Prefix *) tree;
         Tree *left = xl_parse_tree_inner(scope, prefix->left);
         Tree *right = xl_parse_tree_inner(scope, prefix->right);
-        Prefix *result = new Prefix(prefix, left, right);
+        if (left != prefix->left || right != prefix->right)
+            result = new Prefix(prefix, left, right);
         return result;
     }
     case POSTFIX:
@@ -362,34 +366,29 @@ Tree *xl_parse_tree_inner(Scope *scope, Tree *tree)
         Postfix *postfix = (Postfix *) tree;
         Tree *left = xl_parse_tree_inner(scope, postfix->left);
         Tree *right = xl_parse_tree_inner(scope, postfix->right);
-        Postfix *result = new Postfix(postfix, left, right);
-        return result;
+        if (left != postfix->left || right != postfix->right)
+            result = new Postfix(postfix, left, right);
+        break;
     }
     case BLOCK:
     {
         Block *block = (Block *) tree;
-        Tree *result = block->child;
-        if (block->opening == "{" && block->closing == "}")
+        if (Tree *expr = block->IsMetaBox())
         {
-            Block *child = result->AsBlock();
-            if (child && child->opening == "{" && child->closing == "}")
-            {
-                // Case where we have parse_tree {{x}}: Return {x}
-                result = xl_parse_tree_inner(scope, child->child);
-                result = new Block(block, result);
-                return result;
-            }
-
-            // Name or expression in { }
-            result = xl_evaluate(scope, result);
-            return result;
+            result = xl_evaluate(scope, expr);
+            if (!result)
+                result = LastErrorAsErrorTree();
         }
-        result = xl_parse_tree_inner(scope, result);
-        result = new Block(block, result);
-        return result;
+        else
+        {
+            Tree *child = xl_parse_tree_inner(scope, block->child);
+            if (child != block->child)
+                result = new Block(block, child);
+        }
+        break;
     }
     }
-    return tree;
+    return result;
 }
 
 
@@ -413,6 +412,7 @@ Tree *xl_parse_text(text source)
     Parser parser(input, MAIN->syntax,MAIN->positions,*MAIN->errors, "<text>");
     return parser.Parse();
 }
+NATIVE(xl_parse_text);
 
 
 

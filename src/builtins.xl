@@ -146,6 +146,9 @@ Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 (Source:text)[First:natural..Last:natural] is text_range(Source, First, Last)
 Source:text from First:natural  as text is text_range(Source, First, not 0)
 
+// Parse tree parsing
+parse Source:text                       is C "xl_parse_text"
+
 // Basic math functions
 abs X is if X < 0 then -X else X
 pi is 3.1415926535897932384626433

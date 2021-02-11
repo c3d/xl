@@ -38,11 +38,14 @@ print "A+B*C-D*E+F=", parse "A+B*C-D*E+F"
 print "A+B*C-D*E+=", parse "A+B*C-D*E+"
 print "2__3=", parse "2__3"
 print "16#FF+2#1001+8#7.001e-4=", parse "16#FF+2#1001+8#7.001e-4"
-print "2#1001=", parse "2"
+print "2#1001=", parse "2#1001"
 
 print "foo 3=", foo 3
+print "bar 3=", bar 3
 print "foo 551.3=", foo 551.3
-print "foo Z+1=", foo (Z+1)
-print "bar Z+1=", bar (Z+1)
-foo X is quote(X + 2 * {X+1})
-bar X is quote(X + 2 * ({X}+1))
+print "bar 551.3=", bar 551.3
+print "foo Z+1=", foo quote (Z+1)
+print "bar Z+1=", bar quote (Z+1)
+
+foo X is quote(X + 2 * [[X+1]])
+bar X is quote(X + 3 * ([[X]]+1))

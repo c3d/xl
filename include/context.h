@@ -645,6 +645,30 @@ inline Prefix *IsError(Tree *what)
 }
 
 
+inline Tree *IsQuote(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is a quote form
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "quote")
+            return prefix->right;
+    return nullptr;
+}
+
+
+inline Prefix *IsQuote(Tree *what)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a quote form
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = what->AsPrefix())
+        if (IsQuote(prefix))
+            return prefix;
+    return nullptr;
+}
+
+
 inline bool IsCommaList(Infix *infix)
 // ----------------------------------------------------------------------------
 //    Check if the infix is a comma operator
