@@ -1,11 +1,11 @@
 // *****************************************************************************
-// 07-simple-anonymous-function.xl                                    XL project
+// 08-named-lambda.x l                                               XL project
 // *****************************************************************************
 //
 // File description:
 //
-//
-//
+//   Check the syntax for anonymous functions
+//   Also check that the old syntax is no longer recognized
 //
 //
 //
@@ -31,4 +31,8 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-(X is X+1) 31
+foo is (X is X+1)
+bar is (lambda X is X+1)
+
+print "Without lambda, should be 31: ", foo 31
+print "With lambda, should be 32: ", bar 31
