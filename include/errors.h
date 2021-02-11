@@ -104,6 +104,7 @@ struct Errors
     void                Clear();
     bool                Swallowed();
     void                Display();
+    Tree_p              AsErrorTree();
     Error &             Log(const Error &e, bool context = false);
     Error &             Context(const Error &e) { return Log(e, true); }
     uint                Count()         { return errors.size() + count; }
@@ -127,7 +128,8 @@ Error &Ooops (kstring m, Tree *a, Tree *b, Tree *c);
 
 
 // Check if errors were reported
-bool HadErrors();
+bool   HadErrors();
+Tree_p LastErrorAsErrorTree();
 
 // Formatting a tree for error reporting
 text FormatTreeForError(Tree *tree);

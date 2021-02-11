@@ -330,10 +330,21 @@ void Errors::Display()
     }
     else
     {
-        std::vector<Error>::iterator e;
-        for (e = errors.begin(); e != errors.end(); e++)
-            (*e).Display();
+        for (auto &e  : errors)
+            e.Display();
     }
+}
+
+
+Tree_p Errors::AsErrorTree()
+// ----------------------------------------------------------------------------
+//   Return the last error as an error tree
+// ----------------------------------------------------------------------------
+{
+    if (!HadErrors())
+        return nullptr;
+    Error &error = errors.back();
+    return error;
 }
 
 
@@ -401,6 +412,15 @@ bool HadErrors()
 // ----------------------------------------------------------------------------
 {
     return Errors::Aborting() || MAIN->errors->HadErrors();
+}
+
+
+Tree_p LastErrorAsErrorTree()
+// ----------------------------------------------------------------------------
+//   Return the last error as an error tree
+// ----------------------------------------------------------------------------
+{
+    return MAIN->errors->AsErrorTree();
 }
 
 

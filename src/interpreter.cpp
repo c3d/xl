@@ -558,6 +558,8 @@ void Bindings::Unwrap()
         {
             Prefix *closure = (Prefix *) (Tree *) value;
             value = Evaluate(scope, closure->right);
+            if (!value)
+                value = LastErrorAsErrorTree();
         }
     }
 }
