@@ -908,6 +908,14 @@ retry:
             return prefix;
         }
 
+        // Process quote X
+        if (Tree *quoted = IsQuote(prefix))
+        {
+            Tree_p result = xl_parse_tree(scope, quoted);
+            record(eval, "<Quote %t", result);
+            return result;
+        }
+
         // Filter out import statements (processed during
         if (Name *import = prefix->left->AsName())
         {
