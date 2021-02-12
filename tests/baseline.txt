@@ -1,4 +1,3 @@
-01.Evaluation/2422-assign-to-true.xl
 02.Arithmetic/08-complex-add.xl
 02.Arithmetic/08b-complex-add-with-prefix.xl
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
