@@ -6560,9 +6560,66 @@ X:integer := Y:real is
 ==== Mutability
 
 A value is said to be _mutable_ if it can change during its lifetime. A
-value that is not mutable is said to be _constant_. A mutable named
-entity is called a _variable_. An immutable named entity is called a
-_named constant_.
+value that is not mutable is said to be _constant_.
+
+You create a mutable entity with the notation: `Name:Type := Init`, where `Name`
+is the name you give to the entity, `Type` is the type it must have over its
+lifetime, and `Init` is its initial value.
+
+A mutable value can be referenced at most in one place at a time in the
+program. That place is called the _owner_ of the mutable value.
+A _((mutable binding))_ is a binding that transfers a mutable value. While the
+mutable binding is active, the mutable value is owned by the mutable binding.
+A mutable binding is marked by the `out` or `inout` marker.
+
+Consider for example a `Swap` function that swaps its parameters. Since it needs
+to modify both parameters, both are marked as `inout`, meaning that they are
+both mutable.
+
+[source]
+----
+to Swap(inout A, inout B) is
+    Tmp is A
+    A := B
+    B := Tmp
+----
+
+The following code shows an example of valid use of `Swap`:
+
+[source]
+----
+X : integer := 35
+Y : integer := 42
+Swap X, Y
+----
+
+However, the statement `Swap X, X` is not valid, because `X` is passed to two
+distinct mutable bindings.
+
+Consider the following more subtle example:
+
+[source]
+----
+X : array[1..5] of real
+Y : array[2..7] of real
+Swap X[2], Y[3]         // OK
+Swap X[2], X[3]         // Not OK
+----
+
+The second example is not valid, because for `A[I]` to be mutable, `A` needs to
+be mutable itself, so for `X[2], X[3]`, we need to hold two mutable bindings
+to `X` at the same time.
+
+Note that you can implement `Swap` for an array by swapping its elements,
+because if `Swap` receives two mutable bindings, they are necesary to two
+different mutable arrays.
+
+[source]
+----
+to Swap(inout X:array, inout Y:array) is
+    for I in array.index_range loop
+        Swap X[I], Y[I]
+----
 
 The `X:T` type annotations indicates that `X` is a mutable value of type
 `T`, unless type `T` is explicitly marked as constant. When `X` is a
