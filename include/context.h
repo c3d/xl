@@ -732,26 +732,28 @@ inline Infix *IsPatternCondition(Tree *tree)
 }
 
 
-inline bool IsPatternMatchingType(Prefix *prefix)
+inline Tree *IsPatternMatchingType(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is [matching Pattern]
 // ----------------------------------------------------------------------------
 {
+    if (prefix->left == xl_matching)
+        return prefix->right;
     if (Name *matching = prefix->left->AsName())
         if (matching->value == "matching")
-            return true;
-    return false;
+            return prefix->right;
+    return nullptr;
 }
 
 
-inline Prefix *IsPatternMatchingType(Tree *tree)
+inline Tree *IsPatternMatchingType(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Check if a tree is a [matching Pattern] prefix
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = tree->AsPrefix())
-        if (IsPatternMatchingType(prefix))
-            return prefix;
+        if (Tree *pattern = IsPatternMatchingType(prefix))
+            return pattern;
     return nullptr;
 }
 
@@ -806,12 +808,12 @@ inline Text *IsNative(Tree *tree)
 }
 
 
-inline bool IsSelf(Name *name)
+inline Name *IsSelf(Name *name)
 // ----------------------------------------------------------------------------
 //   Return true if this is a [self] name
 // ----------------------------------------------------------------------------
 {
-    return name->value == "self";
+    return name->value == "self" ? xl_self : nullptr;
 }
 
 
@@ -820,9 +822,32 @@ inline Name *IsSelf(Tree *tree)
 //   Check if a definition is the 'self' tree
 // ----------------------------------------------------------------------------
 {
+    if (tree == xl_self)
+        return xl_self;
     if (Name *name = tree->AsName())
-        if (IsSelf(name))
-            return name;
+        if (Name *self = IsSelf(name))
+            return self;
+    return nullptr;
+}
+
+
+inline Name *IsMatching(Name *name)
+// ----------------------------------------------------------------------------
+//   Return true if this is a [self] name
+// ----------------------------------------------------------------------------
+{
+    return name->value == "matching" ? xl_matching : nullptr;
+}
+
+
+inline Name *IsMatching(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a definition is the 'self' tree
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = tree->AsName())
+        if (Name *matching = IsMatching(name))
+            return matching;
     return nullptr;
 }
 
