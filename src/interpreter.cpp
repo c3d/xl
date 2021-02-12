@@ -52,7 +52,6 @@ RECORDER(eval,          32, "Primary evaluation entry point");
 RECORDER(bindings,      32, "Bindings");
 RECORDER(typecheck,     32, "Type checks");
 
-
 XL_BEGIN
 // ============================================================================
 //
@@ -336,6 +335,9 @@ bool Bindings::Do(Infix *what)
                 defined = what;
                 return declared->Do(this);
             }
+
+            // Not a type cast - Give up
+            return false;
         }
 
         // Need to evaluate the type on the right

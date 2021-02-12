@@ -67,13 +67,16 @@ TYPE(declaration,       return IsDeclaration(TYPE_TREE))
 #define MATCH_OR_EVAL(TypeName, TypeClass, TypeCondition)               \
     TYPE(TypeName,                                                      \
          Tree *tree = TYPE_TREE;                                        \
+         record(typecheck, "Builtin " #TypeName " %t", tree);           \
          if (TypeClass *value = tree->As##TypeClass())                  \
              if (TypeCondition)                                         \
                  return value;                                          \
+         record(typecheck, "Evaluate %t as " #TypeName, tree);          \
          if (Name *name = tree->AsName())                               \
              if (TypeClass *value = TYPE_NAMED->As##TypeClass())        \
                  if (TypeCondition)                                     \
                      return value;                                      \
+         record(typecheck, "No " #TypeName " for %t", tree);            \
          return nullptr)
 MATCH_OR_EVAL(block,    Block,  true)
 MATCH_OR_EVAL(infix,    Infix,  true)
