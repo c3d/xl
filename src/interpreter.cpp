@@ -228,7 +228,7 @@ Tree *Bindings::Do(Prefix *what)
             Ooops("Lambda form $1 nested inside pattern $2", what, defined);
         defined = what;
         cache.Cache(test, test); // Bind value as is
-        Tree_p result = name->Do(this);
+        Tree *result = name->Do(this) ? what : nullptr;
 
         // Since a top-level lambda is a "catch all, evaluate outside
         if (result)
@@ -342,7 +342,8 @@ Tree *Bindings::Do(Infix *what)
 
                 // Process the lambda name
                 defined = what;
-                return declared->Do(this);
+                if (declared->Do(this))
+                    return what;
             }
 
             // Not a type cast - Give up
@@ -641,7 +642,8 @@ static Tree *eval(Scope   *evalScope,
 
     // Bind argument to parameters
     Bindings bindings(evalScope, declScope, expr, cache);
-    if (!pattern->Do(bindings))
+    Tree_p matched = pattern->Do(bindings);
+    if (!matched)
         return nullptr;
 
     // Successfully bound - Return variable declaration in a closure
@@ -760,7 +762,13 @@ static Tree_p doDot(Context &context,
     Tree_p value = infix->right;
     Tree *where = Interpreter::DoEvaluate(symbols, name,
                                           Interpreter::STATEMENT, cache);
-    if (Scope *scope = where->As<Scope>())
+    if (!where)
+        return nullptr;
+    Scope *scope = where->As<Scope>();
+    if (!scope)
+        if (Closure *closure = where->As<Closure>())
+            scope = closure->CapturedScope();
+    if (scope)
         return Interpreter::DoEvaluate(scope->Inner(), value,
                                        Interpreter::LOCAL, cache);
     else
@@ -857,13 +865,37 @@ static Tree_p doLatePrefix(Scope *scope,
 }
 
 
+static Tree_p doPatternMatch(Scope *scope,
+                             Tree *pattern,
+                             Tree *expr,
+                             EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Match the pattern in a scope
+// ----------------------------------------------------------------------------
+{
+    Tree_p cast;
+    Bindings bindings(scope, scope, expr, cache);
+    Tree *matched = pattern->Do(bindings);
+    if (matched)
+    {
+        Context args(bindings.ArgumentsScope());
+        cast = bindings.Enclose(expr);
+        args.Define(pattern, xl_self);
+    }
+    record(typecheck, "Expression %t as matching %t is %t matched %t",
+           expr, pattern, cast, matched);
+    return cast;
+}
+
+
 Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
 //    Evaluate 'what', finding the final, non-closure result
 // ----------------------------------------------------------------------------
 {
     EvaluationCache cache;
-    return DoEvaluate(scope, expr, STATEMENT, cache);
+    Tree_p result = DoEvaluate(scope, expr, STATEMENT, cache);
+    return result;
 }
 
 
@@ -957,6 +989,23 @@ retry:
             goto retry;
         }
 
+        // Check if we are evaluating a pattern matching type
+        if (Tree *matching = IsPatternMatchingType(prefix))
+        {
+            Tree_p result = xl_parse_tree(scope, matching);
+            if (result == matching)
+            {
+                prefix->left = xl_matching;
+                result = prefix;
+            }
+            else
+            {
+                result = new Prefix(prefix, xl_matching, result);
+            }
+            record(eval, "<Type matching %t", result);
+            return result;
+        }
+
         // Filter out declaration such as [extern foo(bar)]
         if (IsDefinition(prefix))
         {
@@ -1018,8 +1067,25 @@ retry:
             return scoped;
         }
 
+        // Check [X as matching(P)]
+        if (IsTypeCast(infix))
+        {
+            Tree *want = DoEvaluate(scope, infix->right, EXPRESSION, cache);
+            if (!want)
+                return nullptr;
+            infix->right = want;
+            if (Tree *pattern = IsPatternMatchingType(want))
+            {
+                Tree_p cast = doPatternMatch(context, pattern,
+                                             infix->left, cache);
+                record(eval, "<Pattern match %t matching %t = %t",
+                       infix->left, pattern, cast);
+                return cast;
+            }
+        }
+
         // Evaluate assignments such as [X := Y]
-        else if (IsAssignment(infix))
+        if (IsAssignment(infix))
         {
             Tree_p assigned = doAssignment(scope, infix, mode, cache);
             record(eval, "<Assignment %t is %t", infix, assigned);
@@ -1118,7 +1184,7 @@ bool Interpreter::DoInitializers(Scope *scope,
                   init, type);
             return false;
         }
-        rw->right = init;
+        rw->right = cast;
     }
     return true;
 }
