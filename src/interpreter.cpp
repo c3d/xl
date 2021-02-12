@@ -155,15 +155,10 @@ inline bool Bindings::Do(Name *what)
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
 {
-    StripBlocks();
-
-    // The test value may have been evaluated. If so, use evaluated value
-    if (Tree *cached = cache.Cached(test))
-        test = cached;
-
     // Check if we are testing e.g. [getpid as integer32] vs. [getpid]
     if (!defined)
     {
+        StripBlocks();
         if (Name *name = test->AsName())
         {
             if (name->value == what->value)
@@ -193,6 +188,10 @@ inline bool Bindings::Do(Name *what)
     if (!test)
         return false;
 
+    // The test value may have been evaluated. If so, use evaluated value
+    if (Tree *cached = cache.Cached(test))
+        test = cached;
+
     // Otherwise, bind test value to name
     Bind(what, test);
     return true;
@@ -204,8 +203,6 @@ bool Bindings::Do(Block *what)
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
 {
-    StripBlocks();
-
     // Deal with the case of a metablock: evaluate expression inside
     if (Tree *expr = what->IsMetaBox())
     {
@@ -322,8 +319,6 @@ bool Bindings::Do(Infix *what)
 //   The complicated case: various definitions
 // ----------------------------------------------------------------------------
 {
-    StripBlocks();
-
     // Check if we have a type annotation, like [X:natural]
     if (IsTypeAnnotation(what))
     {
@@ -400,6 +395,7 @@ bool Bindings::Do(Infix *what)
     }
 
     // In all other cases, we need an infix with matching name
+    StripBlocks();
     Infix *ifx = test->AsInfix();
     if (!ifx || ifx->name != what->name)
     {
@@ -546,22 +542,24 @@ void Bindings::Bind(Name *name, Tree *value)
 }
 
 
-void Bindings::Unwrap()
+Tree *Bindings::Argument(unsigned n, bool unwrap)
 // ----------------------------------------------------------------------------
 //   Unwrap all arguments before calling a builtin or native function
 // ----------------------------------------------------------------------------
 {
-    for (auto &rewrite : Rewrites())
+    Tree *value = Binding(n)->right;
+    while (Scope *scope = Context::IsClosure(value))
     {
-        Tree_p &value = rewrite->right;
-        while (Scope *scope = Context::IsClosure(value))
+        Prefix *closure = (Prefix *) (Tree *) value;
+        value = closure->right;
+        if (unwrap)
         {
-            Prefix *closure = (Prefix *) (Tree *) value;
-            value = Evaluate(scope, closure->right);
+            value = Evaluate(scope, value);
             if (!value)
                 value = LastErrorAsErrorTree();
         }
     }
+    return value;
 }
 
 
@@ -628,9 +626,6 @@ static Tree *eval(Scope   *evalScope,
                 return nullptr;
             }
 
-            // Need to unwrap all arguments
-            bindings.Unwrap();
-
             Tree_p result = callee(bindings);
             result = bindings.ResultTypeCheck(result, true);
             return result;
@@ -643,9 +638,6 @@ static Tree *eval(Scope   *evalScope,
                 Ooops("Nonexistent native function $1", name);
                 return nullptr;
             }
-
-            // Need to unwrap all arguments
-            bindings.Unwrap();
 
             Tree_p result = native->Call(bindings);
             result = bindings.ResultTypeCheck(result, true);
@@ -1153,10 +1145,14 @@ static Tree *builtin_typecheck_##N(Bindings &args)              \
         return Ooops("Invalid number of arguments "             \
                      "for " #N " typecheck"                     \
                      " in $1", args.Self());                    \
-    Tree *value = args[0]; (value);                             \
-    Tree *type  = N##_type; (type);                             \
+    Tree_p type  = N##_type; (type);                            \
     Body;                                                       \
 }
+
+#define TYPE_VALUE      (args[0])
+#define TYPE_TREE       (args.Unevaluated(0))
+#define TYPE_CLOSURE    (args.Binding(0)->right)
+#define TYPE_VARIABLE   (args.Binding(0))
 
 #include "builtins.tbl"
 
@@ -1175,8 +1171,8 @@ void Interpreter::InitializeBuiltins()
 //    This has to be done before the first context is created, because
 //    scopes are initialized with xl_nil
 {
-#define NAME(N)                 xl_##N = new Name(#N);
-#define TYPE(N, Body)           N##_type = new Name(#N);
+#define NAME(N)         xl_##N = new Name(#N);
+#define TYPE(N, Body)   N##_type = new Name(#N);
 #define UNARY_OP(Name, ReturnType, LeftTYpe, Body)
 #define BINARY_OP(Name, ReturnType, LeftTYpe, RightType, Body)
 

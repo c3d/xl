@@ -57,36 +57,41 @@ NAME(lambda)
 //
 // ============================================================================
 
-TYPE(tree,      return value)
-TYPE(natural,   return value->AsNatural())
-TYPE(text,      return value->AsText())
-TYPE(character,
-     if (Text *text = value->AsText())
-         if (text->IsCharacter())
-             return text;
-     return nullptr)
-TYPE(symbol,    return value->AsName())
+// Unevaluated types do not cause evaluation
+TYPE(tree,              return TYPE_TREE)
+TYPE(block,             return TYPE_TREE->AsBlock())
+TYPE(infix,             return TYPE_TREE->AsInfix())
+TYPE(prefix,            return TYPE_TREE->AsPrefix())
+TYPE(postfix,           return TYPE_TREE->AsPostfix())
+TYPE(scope,             return TYPE_TREE->As<Scope>())
+TYPE(closure,           return TYPE_CLOSURE)
+TYPE(declaration,       return IsDeclaration(TYPE_TREE))
+TYPE(symbol,            return TYPE_TREE->AsName())
 TYPE(name,
-     if (Name *name = value->AsName())
+     if (Name *name = TYPE_TREE->AsName())
          if (name->IsName())
              return name;
      return nullptr)
 TYPE(operator,
-     if (Name *name = value->AsName())
+     if (Name *name = TYPE_TREE->AsName())
          if (name->IsOperator())
              return name;
      return nullptr)
+
+// Other types need to evaluate their arugment
+TYPE(value,     return TYPE_VALUE)
+TYPE(natural,   return TYPE_VALUE->AsNatural())
+TYPE(text,      return TYPE_VALUE->AsText())
+TYPE(character,
+     if (Text *text = TYPE_VALUE->AsText())
+         if (text->IsCharacter())
+             return text;
+     return nullptr)
 TYPE(boolean,
-     if (Name *name = value->AsName())
+     if (Name *name = TYPE_VALUE->AsName())
          if (name->IsBoolean())
              return name->value == "true" ? xl_true : xl_false;
      return nullptr)
-TYPE(block,     return value->AsBlock())
-TYPE(infix,     return value->AsInfix())
-TYPE(prefix,    return value->AsPrefix())
-TYPE(postfix,   return value->AsPostfix())
-TYPE(scope,     return value->As<Scope>())
-TYPE(declaration, return IsDeclaration(value))
 
 
 
@@ -100,23 +105,24 @@ TYPE(declaration, return IsDeclaration(value))
         ((X) >= std::numeric_limits<CType>::min() &&    \
          (X) <= std::numeric_limits<CType>::max())
 
-#define NATURAL_TYPE(Name, CType)               \
-    TYPE(Name,                                  \
-         if (Natural *nat = value->AsNatural()) \
-             if (IN_RANGE(nat->value, CType))   \
-                 return nat;                    \
+#define NATURAL_TYPE(Name, CType)                       \
+    TYPE(Name,                                          \
+         if (Natural *nat = TYPE_VALUE->AsNatural())    \
+             if (IN_RANGE(nat->value, CType))           \
+                 return nat;                            \
          return nullptr)
 
 #define INTEGER_TYPE(Name, CType)                               \
     TYPE(Name,                                                  \
-         if (Natural *nat = value->AsNatural())                 \
+         if (Natural *nat = TYPE_VALUE->AsNatural())            \
              if (IN_RANGE((longlong) nat->value, CType))        \
                  return nat;                                    \
          return nullptr)
 
 #define REAL_TYPE(Name, CType)                                  \
     TYPE(Name,                                                  \
-        if (Real *real = value->AsReal())                       \
+         Tree *value = TYPE_VALUE;                              \
+         if (Real *real = value->AsReal())                      \
          {                                                      \
              CType tmp = real->value;                           \
              if (tmp != real->value)                            \
@@ -130,13 +136,12 @@ TYPE(declaration, return IsDeclaration(value))
          }                                                      \
          return nullptr)
 
-
 NATURAL_TYPE(natural8,  uint8_t)
 NATURAL_TYPE(natural16, uint16_t)
 NATURAL_TYPE(natural32, uint32_t)
 NATURAL_TYPE(natural64, uint64_t)
 
-TYPE(integer, return value->AsNatural())
+TYPE(integer, return TYPE_VALUE->AsNatural())
 INTEGER_TYPE(integer8,  int8_t)
 INTEGER_TYPE(integer16, int16_t)
 INTEGER_TYPE(integer32, int32_t)
@@ -252,8 +257,8 @@ UNARY_OP(BlockClosing,     Text,    Block,         R_TEXT(value->closing))
 
 #undef UNARY_OP
 #undef BINARY_OP
-#undef TYPE
 #undef NAME
+#undef TYPE
 #undef NATURAL_TYPE
 #undef INTEGER_TYPE
 #undef REAL_TYPE

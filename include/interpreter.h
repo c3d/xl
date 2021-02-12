@@ -100,9 +100,16 @@ struct EvaluationCache
 {
     Tree *Cached(Tree *expr)
     {
-        auto found = values.find(expr);
-        if (found != values.end())
-            return (*found).second;
+        while (expr)
+        {
+            auto found = values.find(expr);
+            if (found != values.end())
+                return (*found).second;
+            if (Block *block = expr->AsBlock())
+                expr = block->child;
+            else
+                expr = nullptr;
+        }
         return nullptr;
     }
 
@@ -169,19 +176,19 @@ struct Bindings
     Tree *ResultTypeCheck(Tree *result, bool special = false);
 
     void  Bind(Name *name, Tree *value);
-    Rewrite *Binding(unsigned n){ return bindings[n]; }
-    Tree *Argument(unsigned n)  { return Binding(n)->right; }
-    RewriteList &Rewrites()     { return bindings; }
-    size_t Size()               { return bindings.size(); }
-    Tree *operator[](unsigned n){ return Argument(n); }
-    void Unwrap();
+    Rewrite *Binding(unsigned n)        { return bindings[n]; }
+    Tree *Argument(unsigned n, bool unwrap = true);
+    Tree *Unevaluated(unsigned n)       { return Argument(n, false); }
+    RewriteList &Rewrites()             { return bindings; }
+    size_t Size()                       { return bindings.size(); }
+    Tree *operator[](unsigned n)        { return Argument(n); }
 
     // Return the local bindings
-    Scope *EvaluationScope()    { return evalContext.Symbols(); }
-    Scope *DeclarationScope()   { return declContext.Symbols(); }
-    Scope *ArgumentsScope()     { return argContext.Symbols(); }
-    Tree  *Self()               { return self; }
-    Tree  *Enclose(Tree *val)   { return argContext.Enclose(val); }
+    Scope *EvaluationScope()            { return evalContext.Symbols(); }
+    Scope *DeclarationScope()           { return declContext.Symbols(); }
+    Scope *ArgumentsScope()             { return argContext.Symbols(); }
+    Tree  *Self()                       { return self; }
+    Tree  *Enclose(Tree *val)           { return argContext.Enclose(val); }
 
 private:
     Context             evalContext;
