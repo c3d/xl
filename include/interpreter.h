@@ -70,6 +70,7 @@ public:
         MAYFAIL,                // Return nullptr on error
         VARIABLE,               // Return a variable reference
         LOCAL,                  // Don't lookup parent scopes
+        NAMED,                  // Only lookup names
         EVALUATION_MODES        // Number of evaluations modes
     };
     static Tree *DoEvaluate(Scope *scope,
@@ -168,8 +169,8 @@ struct Bindings
 
     // Evaluation and binding of values
     void  StripBlocks();
-    bool  MustEvaluate();
-    Tree *Evaluate(Scope *scope, Tree *expr);
+    bool  MustEvaluate(bool named = false);
+    Tree *Evaluate(Scope *scope, Tree *expr, bool named = false);
     Tree *EvaluateType(Tree *type);
     Tree *EvaluateGuard(Tree *guard);
     Tree *TypeCheck(Scope *scope, Tree *type, Tree *expr);

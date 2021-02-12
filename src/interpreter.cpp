@@ -221,57 +221,52 @@ bool Bindings::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
+    Tree *input = test;
 
-    bool retrying = true;
-    Tree_p uneval = test;
-
-    while (retrying)
+    // If we have a lambda prefix, match the value
+    if (Name *name = IsLambda(what))
     {
-        retrying = false;
+        if (defined)
+            Ooops("Lambda form $1 nested inside pattern $2", what, defined);
+        defined = what;
+        cache.Cache(test, test); // Bind value as is
+        bool result = name->Do(this);
 
-        // If we have a lambda prefix, match the value
-        if (Name *name = IsLambda(what))
+        // Since a top-level lambda is a "catch all, evaluate outside
+        if (result)
         {
-            if (defined)
-                Ooops("Lambda form $1 nested inside pattern $2", what, defined);
-            defined = what;
-            cache.Cache(test, test); // Bind value as is
-            bool result = name->Do(this);
-
-            // Since a top-level lambda is a "catch all, evaluate outside
-            if (result)
-            {
-                Scope *evalScope = evalContext.PopScope();
-                Scope *argScope = argContext.Symbols();
-                argScope->Reparent(evalScope);
-            }
-            return result;
+            Scope *evalScope = evalContext.PopScope();
+            Scope *argScope = argContext.Symbols();
+            argScope->Reparent(evalScope);
         }
+        return result;
+    }
 
-        // The test itself should be a prefix
-        if (Prefix *pfx = test->AsPrefix())
-        {
-            // Case of [until Condition loop Body]: define [until]
-            if (defined && defined->AsInfix())
-                defined = nullptr;
+    // The test itself should be a prefix, otherwise evaluate
+    Prefix *pfx = test->AsPrefix();
+    if (!pfx)
+    {
+        MustEvaluate(true);
+        pfx = test->AsPrefix();
+    }
 
-            // Check prefix left first, which may set 'defined' to name
-            test = pfx->left;
-            if (!what->left->Do(this))
-                return false;
-            test = pfx->right;
-            if (what->right->Do(this))
-                return true;
-        }
+    if (Prefix *pfx = test->AsPrefix())
+    {
+        // Case of [until Condition loop Body]: define [until]
+        if (defined && defined->AsInfix())
+            defined = nullptr;
 
-        // Normal prefix matching failed: try to evaluate test
-        if (MustEvaluate())
-            if (test->AsPrefix())
-                retrying = true;
+        // Check prefix left first, which may set 'defined' to name
+        test = pfx->left;
+        if (!what->left->Do(this))
+            return false;
+        test = pfx->right;
+        if (what->right->Do(this))
+            return true;
     }
 
     // Mismatch
-    Ooops("Prefix $1 does not match $2", what, uneval);
+    Ooops("Prefix $1 does not match $2", what, input);
     return false;
 }
 
@@ -282,34 +277,30 @@ bool Bindings::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
+    Tree *input = test;
 
-    bool retrying = true;
-    Tree_p uneval = test;
-
-    while (retrying)
+    // The test itself should be a postfix, otherwise evaluate
+    Postfix *pfx = test->AsPostfix();
+    if (!pfx)
     {
-        retrying = false;
+        MustEvaluate(true);
+        pfx = test->AsPostfix();
+    }
 
-        // The test itself should be a postfix
-        if (Postfix *pfx = test->AsPostfix())
-        {
-            // Check postfix right first, which maye set 'defined' to name
-            test = pfx->right;
-            if (!what->right->Do(this))
-                return false;
-            test = pfx->left;
-            if (what->left->Do(this))
-                return true;
-        }
-
-        // Normal postfix matching failed: try to evaluate test
-        if (MustEvaluate())
-            if (test->AsPostfix())
-                retrying = true;
+    // The test itself should be a postfix
+    if (Postfix *pfx = test->AsPostfix())
+    {
+        // Check postfix right first, which maye set 'defined' to name
+        test = pfx->right;
+        if (!what->right->Do(this))
+            return false;
+        test = pfx->left;
+        if (what->left->Do(this))
+            return true;
     }
 
     // All other cases are a mismatch
-    Ooops("Postfix $1 does not match $2", what, uneval);
+    Ooops("Postfix $1 does not match $2", what, input);
     return false;
 }
 
@@ -319,6 +310,8 @@ bool Bindings::Do(Infix *what)
 //   The complicated case: various definitions
 // ----------------------------------------------------------------------------
 {
+    Tree *input = test;
+
     // Check if we have a type annotation, like [X:natural]
     if (IsTypeAnnotation(what))
     {
@@ -420,24 +413,24 @@ bool Bindings::Do(Infix *what)
     }
 
     // Mismatch
-    Ooops("Infix $1 does not match $2", what, test);
+    Ooops("Infix $1 does not match $2", what, input);
     return false;
 }
 
 
-bool Bindings::MustEvaluate()
+bool Bindings::MustEvaluate(bool named)
 // ----------------------------------------------------------------------------
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree *evaluated = Evaluate(EvaluationScope(), test);
+    Tree *evaluated = Evaluate(EvaluationScope(), test, named);
     bool changed = test != evaluated;
     test = evaluated;
     return changed;
 }
 
 
-Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
+Tree *Bindings::Evaluate(Scope *scope, Tree *expr, bool named)
 // ----------------------------------------------------------------------------
 //   Helper evaluation function for recursive evaluation
 // ----------------------------------------------------------------------------
@@ -445,9 +438,12 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr)
     Tree_p result = cache.Cached(expr);
     if (!result)
     {
-        record(bindings, "Evaluating %t in %t", expr, scope);
-        result = Interpreter::DoEvaluate(scope, expr,
-                                         Interpreter::EXPRESSION, cache);
+        Interpreter::Evaluation mode = named
+            ? Interpreter::NAMED
+            : Interpreter::EXPRESSION;
+        record(bindings, "Evaluating %+s %t in %t",
+               named ? "normal" : "named", expr, scope);
+        result = Interpreter::DoEvaluate(scope, expr, mode, cache);
         cache.Cache(expr, result);
         cache.Cache(result, result);
         record(bindings, "Evaluate %t = new %t", test, result);
@@ -575,7 +571,8 @@ static Tree *eval(Scope   *evalScope,
                   Tree    *expr,
                   Rewrite *decl,
                   void    *ec,
-                  bool     variable)
+                  bool     variable,
+                  bool     unref)
 // ----------------------------------------------------------------------------
 //   Bind 'self' to the pattern in 'decl', and if successful, evaluate
 // ----------------------------------------------------------------------------
@@ -597,6 +594,8 @@ static Tree *eval(Scope   *evalScope,
                     ? decl
                     : IsSelf(decl->right)
                     ? name
+                    : unref
+                    ? (Tree *) decl->right
                     : Interpreter::DoEvaluate(evalScope, decl->right,
                                               Interpreter::STATEMENT, cache);
         return nullptr;
@@ -646,15 +645,27 @@ static Tree *eval(Scope   *evalScope,
     }
 
     // Check if we evaluate as self
+    Tree_p result;
     if (IsSelf(body))
-        return expr;
+    {
+        result = expr;
+    }
+
+    // Check if we are simply trying to lookup
+    else if (unref)
+    {
+        result = body;
+    }
 
     // Otherwise evaluate the body in the binding arguments scope
-    EvaluationCache bodyCache;
-    Scope *bodyScope = bindings.ArgumentsScope();
-    Tree_p result = Interpreter::DoEvaluate(bodyScope, body,
-                                            Interpreter::STATEMENT, bodyCache);
-    result = bindings.ResultTypeCheck(result, false);
+    else
+    {
+        EvaluationCache bodyCache;
+        Scope *bodyScope = bindings.ArgumentsScope();
+        result = Interpreter::DoEvaluate(bodyScope, body,
+                                         Interpreter::STATEMENT, bodyCache);
+        result = bindings.ResultTypeCheck(result, false);
+    }
     return result;
 }
 
@@ -668,7 +679,7 @@ static Tree *variable(Scope   *evalScope,
 //    Lookup a variable - Return the associated rewrite
 // ----------------------------------------------------------------------------
 {
-    return eval(evalScope, declScope, expr, decl, ec, true);
+    return eval(evalScope, declScope, expr, decl, ec, true, false);
 }
 
 
@@ -681,7 +692,20 @@ static Tree *constant(Scope   *evalScope,
 //    Lookup a constant - Return the associated value
 // ----------------------------------------------------------------------------
 {
-    return eval(evalScope, declScope, expr, decl, ec, false);
+    return eval(evalScope, declScope, expr, decl, ec, false, false);
+}
+
+
+static Tree *named(Scope   *evalScope,
+                   Scope   *declScope,
+                   Tree    *expr,
+                   Rewrite *decl,
+                   void    *ec)
+// ----------------------------------------------------------------------------
+//    Lookup a named value without evaluating its body
+// ----------------------------------------------------------------------------
+{
+    return eval(evalScope, declScope, expr, decl, ec, false, true);
 }
 
 
@@ -831,6 +855,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         "may fail",
         "variable",
         "local",
+        "named"
     };
     record(eval, ">%t %+s in %p", expr, modename[mode], scope);
 
@@ -973,10 +998,16 @@ retry:
     }
 
     // All other cases: lookup in symbol table
-    Context::lookup_fn lookup = mode == VARIABLE ? variable : constant;
+    Context::lookup_fn lookup =
+          mode == NAMED
+        ? named
+        : mode == VARIABLE
+        ? variable
+        : constant;
+    bool recurse = mode != LOCAL;
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
-    if (Tree *found = context.Lookup(expr, lookup, &cache, mode != LOCAL))
+    if (Tree *found = context.Lookup(expr, lookup, &cache, recurse))
         result = found;
     else if (expr->IsConstant())
         result = expr;
