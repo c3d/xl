@@ -6,7 +6,7 @@
 -5 mod 3=1
 5 rem -3=2
 5 mod -3=-1
---- With integer x=5 and y=3 ---
+--- With natural x=5 and y=3 ---
 Sum: 8
 Difference: 2
 Product: 15
@@ -22,7 +22,7 @@ Not: -6
 Opposite: -5
 Absolute value: 5
 Power: 125
---- With integer x=-5 and y=-3 ---
+--- With natural x=-5 and y=-3 ---
 Sum: -8
 Difference: -2
 Product: 15
@@ -36,7 +36,7 @@ Not: 4
 Opposite: 5
 Absolute value: 5
 Power: 0
---- With integer x=5 and y=-3 ---
+--- With natural x=5 and y=-3 ---
 Sum: 2
 Difference: 8
 Product: -15
@@ -50,7 +50,7 @@ Not: -6
 Opposite: -5
 Absolute value: 5
 Power: 0
---- With integer x=-5 and y=3 ---
+--- With natural x=-5 and y=3 ---
 Sum: -2
 Difference: -8
 Product: -15
@@ -104,7 +104,7 @@ Reminder: -2
 Opposite: 5
 Absolute value: 5
 Power: -125
---- With integer x=0 and y=1 ---
+--- With natural x=0 and y=1 ---
 Sum: 1
 Difference: -1
 Product: 0
@@ -118,7 +118,7 @@ Not: -1
 Opposite: 0
 Absolute value: 0
 Power: 0
---- With integer x=3 and y=2 ---
+--- With natural x=3 and y=2 ---
 Sum: 5
 Difference: 1
 Product: 6
@@ -134,7 +134,7 @@ Not: -4
 Opposite: -3
 Absolute value: 3
 Power: 9
---- With integer x=9 and y=3 ---
+--- With natural x=9 and y=3 ---
 Sum: 12
 Difference: 6
 Product: 27
