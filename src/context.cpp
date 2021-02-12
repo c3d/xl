@@ -590,7 +590,9 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                 {
                     if (int pats = Sort(pati->left, vali->left, mode))
                         return pats;
-                    return Sort(pati->right, vali->right, TYPE);
+                    return mode == INSERT_BIND
+                        ? -1
+                        : Sort(pati->right, vali->right, TYPE);
                 }
             }
             else if (mode == SEARCH &&
