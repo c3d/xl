@@ -1,4 +1,3 @@
-01.Evaluation/21-invalid-type-declaration.xl
 01.Evaluation/22-exceeding-stack-depth.xl
 01.Evaluation/2422-2427-boolean-in-writeln.xl
 01.Evaluation/2422-assign-to-true.xl
