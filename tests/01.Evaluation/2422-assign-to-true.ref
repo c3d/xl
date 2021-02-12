@@ -1,4 +1,2 @@
-A (true)=true
-A (false)=false
-A (true)=true
-true
+01.Evaluation/2422-assign-to-true.xl:36:1: Cannot assign to constant [A]
+01.Evaluation/2422-assign-to-true.xl:36:1: Cannot assign to constant [A]

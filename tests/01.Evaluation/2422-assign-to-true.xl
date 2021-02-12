@@ -31,11 +31,7 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+// EXIT=1
 
 A is true
 A := true
-print "A (true)=", A
-A := not A
-print "A (false)=", A
-A := not A
-print "A (true)=", A
