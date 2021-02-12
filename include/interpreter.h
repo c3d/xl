@@ -180,6 +180,7 @@ struct Bindings
     Rewrite *Binding(unsigned n)        { return bindings[n]; }
     Tree *Argument(unsigned n, bool unwrap = true);
     Tree *Unevaluated(unsigned n)       { return Argument(n, false); }
+    Tree *NamedTree(unsigned n);
     RewriteList &Rewrites()             { return bindings; }
     size_t Size()                       { return bindings.size(); }
     Tree *operator[](unsigned n)        { return Argument(n); }
