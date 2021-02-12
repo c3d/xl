@@ -559,6 +559,23 @@ Tree *Bindings::Argument(unsigned n, bool unwrap)
 }
 
 
+Tree *Bindings::NamedTree(unsigned n)
+// ----------------------------------------------------------------------------
+//    Evaluate the given argument without evaluting bodies
+// ----------------------------------------------------------------------------
+{
+    Tree *value = Binding(n)->right;
+    while (Scope *scope = Context::IsClosure(value))
+    {
+        Prefix *closure = (Prefix *) (Tree *) value;
+        value = Evaluate(scope, closure->right, true);
+        if (!value)
+            value = LastErrorAsErrorTree();
+    }
+    return value;
+}
+
+
 
 // ============================================================================
 //
@@ -1183,6 +1200,7 @@ static Tree *builtin_typecheck_##N(Bindings &args)              \
 #define TYPE_VALUE      (args[0])
 #define TYPE_TREE       (args.Unevaluated(0))
 #define TYPE_CLOSURE    (args.Binding(0)->right)
+#define TYPE_NAMED      (args.NamedTree(0))
 #define TYPE_VARIABLE   (args.Binding(0))
 
 #include "builtins.tbl"

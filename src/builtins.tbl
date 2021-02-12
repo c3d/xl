@@ -59,24 +59,29 @@ NAME(lambda)
 
 // Unevaluated types do not cause evaluation
 TYPE(tree,              return TYPE_TREE)
-TYPE(block,             return TYPE_TREE->AsBlock())
-TYPE(infix,             return TYPE_TREE->AsInfix())
-TYPE(prefix,            return TYPE_TREE->AsPrefix())
-TYPE(postfix,           return TYPE_TREE->AsPostfix())
 TYPE(scope,             return TYPE_TREE->As<Scope>())
 TYPE(closure,           return TYPE_CLOSURE)
 TYPE(declaration,       return IsDeclaration(TYPE_TREE))
-TYPE(symbol,            return TYPE_TREE->AsName())
-TYPE(name,
-     if (Name *name = TYPE_TREE->AsName())
-         if (name->IsName())
-             return name;
-     return nullptr)
-TYPE(operator,
-     if (Name *name = TYPE_TREE->AsName())
-         if (name->IsOperator())
-             return name;
-     return nullptr)
+
+// Types that evaluate only if they don't initially match
+#define MATCH_OR_EVAL(TypeName, TypeClass, TypeCondition)               \
+    TYPE(TypeName,                                                      \
+         Tree *tree = TYPE_TREE;                                        \
+         if (TypeClass *value = tree->As##TypeClass())                  \
+             if (TypeCondition)                                         \
+                 return value;                                          \
+         if (Name *name = tree->AsName())                               \
+             if (TypeClass *value = TYPE_NAMED->As##TypeClass())        \
+                 if (TypeCondition)                                     \
+                     return value;                                      \
+         return nullptr)
+MATCH_OR_EVAL(block,    Block,  true)
+MATCH_OR_EVAL(infix,    Infix,  true)
+MATCH_OR_EVAL(prefix,   Prefix, true)
+MATCH_OR_EVAL(postfix,  Postfix,true)
+MATCH_OR_EVAL(symbol,   Name,   true)
+MATCH_OR_EVAL(name,     Name,   value->IsName())
+MATCH_OR_EVAL(operator, Name,   value->IsOperator())
 
 // Other types need to evaluate their arugment
 TYPE(value,     return TYPE_VALUE)
