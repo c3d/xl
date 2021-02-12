@@ -262,3 +262,4 @@ UNARY_OP(BlockClosing,     Text,    Block,         R_TEXT(value->closing))
 #undef NATURAL_TYPE
 #undef INTEGER_TYPE
 #undef REAL_TYPE
+#undef IN_RANGE
