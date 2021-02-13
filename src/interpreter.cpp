@@ -775,6 +775,25 @@ static Tree_p doDot(Context &context,
                 scope = closure->CapturedScope();
         }
     }
+    if (!scope)
+    {
+        Context context(scope);
+        scope = context.CreateScope();
+        RewriteList inits;
+        bool hasInstructions = context.ProcessDeclarations(where, inits);
+        if (scope->IsEmpty())
+            scope = scope->Enclosing();
+        if (hasInstructions)
+        {
+            record(eval, "Scoped value %t has instructions", where);
+            scope = nullptr;
+        }
+        else if (!Interpreter::DoInitializers(scope, inits, cache))
+        {
+            record(eval, "Initializer failed in dot for %t", where);
+            scope = nullptr;
+        }
+    }
     if (scope)
         return Interpreter::DoEvaluate(scope->Inner(), value,
                                        Interpreter::LOCAL, cache);
