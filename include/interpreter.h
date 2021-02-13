@@ -143,7 +143,7 @@ struct Bindings
 //   Structure used to record bindings
 // ----------------------------------------------------------------------------
 {
-    typedef bool value_type;
+    typedef Tree *value_type;
 
     Bindings(Scope *evalScope, Scope *declScope,
              Tree *expr, EvaluationCache &cache)
@@ -158,14 +158,14 @@ struct Bindings
     {}
 
     // Tree::Do interface
-    bool  Do(Natural *what);
-    bool  Do(Real *what);
-    bool  Do(Text *what);
-    bool  Do(Name *what);
-    bool  Do(Prefix *what);
-    bool  Do(Postfix *what);
-    bool  Do(Infix *what);
-    bool  Do(Block *what);
+    Tree *Do(Natural *what);
+    Tree *Do(Real *what);
+    Tree *Do(Text *what);
+    Tree *Do(Name *what);
+    Tree *Do(Prefix *what);
+    Tree *Do(Postfix *what);
+    Tree *Do(Infix *what);
+    Tree *Do(Block *what);
 
     // Evaluation and binding of values
     void  StripBlocks();
