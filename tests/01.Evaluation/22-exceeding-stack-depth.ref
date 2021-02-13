@@ -7,9 +7,9 @@ builtins.xl:52:11:    Pattern [X:integer + Y:integer as integer] does not match 
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:       Unable to evaluate [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:5:        Pattern [foo N] does not match [foo (N - 1)]:
 builtins.xl:52:42:         Stack depth exceeded evaluating [integer]
+builtins.xl:52:11:         Infix [X:integer + Y:integer] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:         Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:         Value [foo (N - 1)] does not belong to type [integer]
-builtins.xl:52:11:         Infix [X:integer + Y:integer] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:37:6: Unable to evaluate [foo 10]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:5:  Pattern [foo N] does not match [foo 10]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:   Unable to evaluate [1 + foo (N - 1)]:
@@ -19,6 +19,6 @@ builtins.xl:52:11:    Pattern [X:integer + Y:integer as integer] does not match 
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:       Unable to evaluate [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:5:        Pattern [foo N] does not match [foo (N - 1)]:
 builtins.xl:52:42:         Stack depth exceeded evaluating [integer]
+builtins.xl:52:11:         Infix [X:integer + Y:integer] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:         Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:         Value [foo (N - 1)] does not belong to type [integer]
-builtins.xl:52:11:         Infix [X:integer + Y:integer] does not match [1 + foo (N - 1)]

@@ -101,7 +101,7 @@ Interpreter::~Interpreter()
 //
 // ============================================================================
 
-inline bool Bindings::Do(Natural *what)
+Tree *Bindings::Do(Natural *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains an natural: check we have the same
 // ----------------------------------------------------------------------------
@@ -111,13 +111,13 @@ inline bool Bindings::Do(Natural *what)
         MustEvaluate();
     if (Natural *ival = test->AsNatural())
         if (ival->value == what->value)
-            return true;
+            return what;
     Ooops("Value $1 does not match pattern value $2", test, what);
-    return false;
+    return nullptr;
 }
 
 
-inline bool Bindings::Do(Real *what)
+Tree *Bindings::Do(Real *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
@@ -127,13 +127,13 @@ inline bool Bindings::Do(Real *what)
         MustEvaluate();
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
-            return true;
+            return what;
     Ooops("Value $1 does not match pattern value $2", test, what);
-    return false;
+    return nullptr;
 }
 
 
-inline bool Bindings::Do(Text *what)
+Tree *Bindings::Do(Text *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a real: check we have the same
 // ----------------------------------------------------------------------------
@@ -143,13 +143,13 @@ inline bool Bindings::Do(Text *what)
         MustEvaluate();
     if (Text *tval = test->AsText())
         if (tval->value == what->value)         // Do delimiters matter?
-            return true;
+            return what;
     Ooops("Value $1 does not match pattern value $2", test, what);
-    return false;
+    return nullptr;
 }
 
 
-inline bool Bindings::Do(Name *what)
+Tree *Bindings::Do(Name *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a name: bind it as a closure, no evaluation
 // ----------------------------------------------------------------------------
@@ -163,11 +163,11 @@ inline bool Bindings::Do(Name *what)
             if (name->value == what->value)
             {
                 defined = what;
-                return true;
+                return what;
             }
         }
         Ooops("Value $1 does not match name $2", test, what);
-        return false;
+        return nullptr;
     }
 
     // If there is already a binding for that name, value must match
@@ -175,9 +175,8 @@ inline bool Bindings::Do(Name *what)
     if (Tree *bound = argContext.Bound(what, false))
     {
         MustEvaluate();
-        bool result = Tree::Equal(bound, test);
-        record(bindings, "Arg check %t vs %t: %+s",
-               test, bound, result ? "match" : "failed");
+        Tree_p result = Tree::Equal(bound, test) ? what : nullptr;
+        record(bindings, "Arg check %t vs %t: %t", test, bound, result);
         if (!result)
             Ooops("Value $1 does not match named value $2", test, what);
         return result;
@@ -185,7 +184,7 @@ inline bool Bindings::Do(Name *what)
 
     // If some earlier evaluation failure, abort here
     if (!test)
-        return false;
+        return nullptr;
 
     // The test value may have been evaluated. If so, use evaluated value
     if (Tree *cached = cache.Cached(test))
@@ -193,11 +192,11 @@ inline bool Bindings::Do(Name *what)
 
     // Otherwise, bind test value to name
     Bind(what, test);
-    return true;
+    return what;
 }
 
 
-bool Bindings::Do(Block *what)
+Tree *Bindings::Do(Block *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains a block: look inside
 // ----------------------------------------------------------------------------
@@ -207,14 +206,14 @@ bool Bindings::Do(Block *what)
     {
         MustEvaluate();
         expr = Evaluate(declContext.Symbols(), expr);
-        return Tree::Equal(test, expr);
+        return Tree::Equal(test, expr) ? what : nullptr;
     }
 
     return what->child->Do(this);
 }
 
 
-bool Bindings::Do(Prefix *what)
+Tree *Bindings::Do(Prefix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains prefix: check that the left part matches
 // ----------------------------------------------------------------------------
@@ -229,7 +228,7 @@ bool Bindings::Do(Prefix *what)
             Ooops("Lambda form $1 nested inside pattern $2", what, defined);
         defined = what;
         cache.Cache(test, test); // Bind value as is
-        bool result = name->Do(this);
+        Tree_p result = name->Do(this);
 
         // Since a top-level lambda is a "catch all, evaluate outside
         if (result)
@@ -257,20 +256,25 @@ bool Bindings::Do(Prefix *what)
 
         // Check prefix left first, which may set 'defined' to name
         test = pfx->left;
-        if (!what->left->Do(this))
-            return false;
-        test = pfx->right;
-        if (what->right->Do(this))
-            return true;
+        if (Tree *left = what->left->Do(this))
+        {
+            test = pfx->right;
+            if (Tree *right = what->right->Do(this))
+            {
+                if (left != what->left || right != what->right)
+                    what = new Prefix(what, left, right);
+                return what;
+            }
+        }
     }
 
     // Mismatch
     Ooops("Prefix $1 does not match $2", what, input);
-    return false;
+    return nullptr;
 }
 
 
-bool Bindings::Do(Postfix *what)
+Tree *Bindings::Do(Postfix *what)
 // ----------------------------------------------------------------------------
 //   The pattern contains posfix: check that the right part matches
 // ----------------------------------------------------------------------------
@@ -291,20 +295,25 @@ bool Bindings::Do(Postfix *what)
     {
         // Check postfix right first, which maye set 'defined' to name
         test = pfx->right;
-        if (!what->right->Do(this))
-            return false;
-        test = pfx->left;
-        if (what->left->Do(this))
-            return true;
+        if (Tree *right = what->right->Do(this))
+        {
+            test = pfx->left;
+            if (Tree *left = what->left->Do(this))
+            {
+                if (left != what->left || right != what->right)
+                    what = new Postfix(what, left, right);
+                return what;
+            }
+        }
     }
 
     // All other cases are a mismatch
     Ooops("Postfix $1 does not match $2", what, input);
-    return false;
+    return nullptr;
 }
 
 
-bool Bindings::Do(Infix *what)
+Tree *Bindings::Do(Infix *what)
 // ----------------------------------------------------------------------------
 //   The complicated case: various definitions
 // ----------------------------------------------------------------------------
@@ -328,7 +337,7 @@ bool Bindings::Do(Infix *what)
                 {
                     Ooops("Type $2 of $1", cast->right, cast);
                     Ooops("does not match type $2 of $1", what->right, what);
-                    return false;
+                    return nullptr;
                 }
 
                 // Process the lambda name
@@ -337,13 +346,14 @@ bool Bindings::Do(Infix *what)
             }
 
             // Not a type cast - Give up
-            return false;
+            Ooops("Cannot match type cast $1 against $2", what, input);
+            return nullptr;
         }
 
         // Need to evaluate the type on the right
         Tree *want = EvaluateType(what->right);
         if (IsError(want))
-            return false;
+            return nullptr;
 
         // Type check value against type
         if (outermost)
@@ -356,7 +366,7 @@ bool Bindings::Do(Infix *what)
             if (!checked)
             {
                 Ooops("Value $1 does not belong to type $2", test, want);
-                return false;
+                return nullptr;
             }
             test = checked;
         }
@@ -375,18 +385,19 @@ bool Bindings::Do(Infix *what)
     if (IsPatternCondition(what))
     {
         // It must pass the rest (need to bind values first)
-        if (!what->left->Do(this))
-            return false;
+        Tree_p left = what->left->Do(this);
+        if (!left)
+            return nullptr;
 
         // Here, we need to evaluate in the local context, not eval one
         Tree *check = EvaluateGuard(what->right);
         if (check == xl_true)
-            return true;
+            return left;
         else if (check != xl_false)
             Ooops ("Invalid guard clause, $1 is not a boolean", check);
         else
             Ooops("Guard clause $1 is not verified", what->right);
-        return false;
+        return nullptr;
     }
 
     // In all other cases, we need an infix with matching name
@@ -403,20 +414,25 @@ bool Bindings::Do(Infix *what)
         if (ifx->name != what->name)
         {
             Ooops("Infix names for $1 and $2 don't match", what, ifx);
-            return false;
+            return nullptr;
         }
 
         test = ifx->left;
-        if (!what->left->Do(this))
-            return false;
-        test = ifx->right;
-        if (what->right->Do(this))
-            return true;
+        if (Tree *left = what->left->Do(this))
+        {
+            test = ifx->right;
+            if (Tree *right = what->right->Do(this))
+            {
+                if (left != what->left || right != what->right)
+                    what = new Infix(what, left, right);
+                return what;
+            }
+        }
     }
 
     // Mismatch
     Ooops("Infix $1 does not match $2", what, input);
-    return false;
+    return nullptr;
 }
 
 
