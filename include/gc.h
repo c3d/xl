@@ -605,6 +605,12 @@ bool Allocator<Object>::IsAllocated(void *ptr)
         if ((uintptr_t) ptr & CHUNKALIGN_MASK)
             return false;
 
+        // If you get this assert, this means that the Allocator singleton
+        // was not initialized properly. If you added a class, you need to
+        // add some INIT_ALLOCATOR for the class. Another possible cause is
+        // mistakenly instantiating an allocator from outside the XL library
+        // (e.g. doing something like foo->As<Closure>() from your main).
+        XL_ASSERT(allocator && "Allocator not initialized, use INIT_ALLOCATOR");
         Chunk_vp chunk = (Chunk_vp) ptr - 1;
         TypeAllocator *alloc = AllocatorPointer(chunk->allocator);
         if (alloc == allocator)
