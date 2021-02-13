@@ -100,6 +100,7 @@ struct Main
     virtual text        Encrypt(text input);
     virtual Tree*       Normalize(Tree *input);
     virtual eval_fn     Declarator(text name);
+    virtual Tree *      Show(std::ostream &, Tree *);
 
 public:
     int                 argc;

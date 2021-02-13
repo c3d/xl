@@ -7,6 +7,7 @@ Option names can be shortened if unambiguous.
 -builtins         : Enable builtins file
 -builtins_path    : Set the path for the XL builtins file
 -case_sensitive   : Distinguish names based on case and underscores
+-closures         : Show the closures in the output
 -compile          : Only compile the file without evaluating it
 -emit_ir          : Generate LLVM IR suitable for llvmc
 -encrypted_writes : Encrypt files as they are written

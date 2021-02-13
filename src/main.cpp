@@ -139,6 +139,9 @@ NaturalOption   remoteForks("remote_forks",
 BooleanOption   showSource("show",
                            "Show the source code");
 
+BooleanOption   showClosures("closures",
+                             "Show the closures in the output");
+
 TextOption      stylesheet("stylesheet",
                            "Select the style sheet for rendering XL code",
                            "xl.stylesheet");
@@ -283,6 +286,30 @@ Tree *Main::TypeCheck(Scope *scope, Tree *type, Tree *value)
 // ----------------------------------------------------------------------------
 {
     return evaluator->TypeCheck(scope, type, value);
+}
+
+
+XL::Tree *Main::Show(std::ostream &out, XL::Tree *tree)
+// ----------------------------------------------------------------------------
+//   Show the output we got from evaluation
+// ----------------------------------------------------------------------------
+{
+    if (tree && tree != XL::xl_nil)
+    {
+        while (Closure *closure = tree->As<Closure>())
+        {
+            if (Opt::showClosures)
+            {
+                std::cout << "// In closure:\n{\n";
+                Scope *scope = closure->CapturedScope();
+                Context::Dump(out, scope, false);
+                out << "}\n";
+            }
+            tree = closure->Value();
+        }
+        out << tree << "\n";
+    }
+    return tree;
 }
 
 
