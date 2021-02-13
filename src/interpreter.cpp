@@ -623,16 +623,19 @@ static Tree *eval(Scope   *evalScope,
     if (Name *name = pattern->AsName())
     {
         if (Name *xname = expr->AsName())
+        {
             if (name->value == xname->value)
-                return
-                    variable
-                    ? decl
-                    : IsSelf(decl->right)
-                    ? name
-                    : unref
-                    ? (Tree *) decl->right
-                    : Interpreter::DoEvaluate(evalScope, decl->right,
-                                              Interpreter::STATEMENT, cache);
+            {
+                if (variable)
+                    return decl;
+                if (IsSelf(decl->right))
+                    return name;
+                if (unref)
+                    return decl->right;
+                return Interpreter::DoEvaluate(evalScope, decl->right,
+                                               Interpreter::STATEMENT, cache);
+            }
+        }
         return nullptr;
     }
 
