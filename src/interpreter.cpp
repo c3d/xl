@@ -534,8 +534,8 @@ Tree *Bindings::ResultTypeCheck(Tree *result, bool special)
             result = xl_nil;
     }
 
-    // Otherwise, insert a type check in the declaration context
-    Tree_p cast = TypeCheck(declContext.Symbols(), type, result);
+    // Otherwise, insert a type check in the bound arguments context
+    Tree_p cast = TypeCheck(ArgumentsScope(), type, result);
     if (!cast)
         Ooops("The returned value $1 is not a $2", result, type);
     return cast;
