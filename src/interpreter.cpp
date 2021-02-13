@@ -175,7 +175,7 @@ Tree *Bindings::Do(Name *what)
     if (Tree *bound = argContext.Bound(what, false))
     {
         MustEvaluate();
-        Tree_p result = Tree::Equal(bound, test) ? what : nullptr;
+        Tree_p result = Tree::Equal(bound, test) ? bound : nullptr;
         record(bindings, "Arg check %t vs %t: %t", test, bound, result);
         if (!result)
             Ooops("Value $1 does not match named value $2", test, what);
@@ -192,7 +192,7 @@ Tree *Bindings::Do(Name *what)
 
     // Otherwise, bind test value to name
     Bind(what, test);
-    return what;
+    return test;
 }
 
 
@@ -206,7 +206,7 @@ Tree *Bindings::Do(Block *what)
     {
         MustEvaluate();
         expr = Evaluate(declContext.Symbols(), expr);
-        return Tree::Equal(test, expr) ? what : nullptr;
+        return Tree::Equal(test, expr) ? expr : nullptr;
     }
 
     return what->child->Do(this);
@@ -228,7 +228,7 @@ Tree *Bindings::Do(Prefix *what)
             Ooops("Lambda form $1 nested inside pattern $2", what, defined);
         defined = what;
         cache.Cache(test, test); // Bind value as is
-        Tree *result = name->Do(this) ? what : nullptr;
+        Tree *result = name->Do(this);
 
         // Since a top-level lambda is a "catch all, evaluate outside
         if (result)
@@ -261,9 +261,9 @@ Tree *Bindings::Do(Prefix *what)
             test = pfx->right;
             if (Tree *right = what->right->Do(this))
             {
-                if (left != what->left || right != what->right)
-                    what = new Prefix(what, left, right);
-                return what;
+                if (left != pfx->left || right != pfx->right)
+                    pfx = new Prefix(pfx, left, right);
+                return pfx;
             }
         }
     }
@@ -300,9 +300,9 @@ Tree *Bindings::Do(Postfix *what)
             test = pfx->left;
             if (Tree *left = what->left->Do(this))
             {
-                if (left != what->left || right != what->right)
-                    what = new Postfix(what, left, right);
-                return what;
+                if (left != pfx->left || right != pfx->right)
+                    pfx = new Postfix(pfx, left, right);
+                return pfx;
             }
         }
     }
@@ -342,8 +342,8 @@ Tree *Bindings::Do(Infix *what)
 
                 // Process the lambda name
                 defined = what;
-                if (declared->Do(this))
-                    return what;
+                if (Tree *result = declared->Do(this))
+                    return result;
             }
 
             // Not a type cast - Give up
@@ -424,9 +424,9 @@ Tree *Bindings::Do(Infix *what)
             test = ifx->right;
             if (Tree *right = what->right->Do(this))
             {
-                if (left != what->left || right != what->right)
-                    what = new Infix(what, left, right);
-                return what;
+                if (left != ifx->left || right != ifx->right)
+                    ifx = new Infix(ifx, left, right);
+                return ifx;
             }
         }
     }
@@ -688,7 +688,7 @@ static Tree *eval(Scope   *evalScope,
     Tree_p result;
     if (IsSelf(body))
     {
-        result = expr;
+        result = matched;
     }
 
     // Check if we are simply trying to lookup
@@ -761,13 +761,20 @@ static Tree_p doDot(Context &context,
     Tree_p name = infix->left;
     Tree_p value = infix->right;
     Tree *where = Interpreter::DoEvaluate(symbols, name,
-                                          Interpreter::STATEMENT, cache);
+                                          Interpreter::NAMED, cache);
     if (!where)
         return nullptr;
     Scope *scope = where->As<Scope>();
     if (!scope)
+    {
         if (Closure *closure = where->As<Closure>())
-            scope = closure->CapturedScope();
+        {
+            if (Closure *inner = closure->Value()->As<Closure>())
+                scope = inner->CapturedScope();
+            else
+                scope = closure->CapturedScope();
+        }
+    }
     if (scope)
         return Interpreter::DoEvaluate(scope->Inner(), value,
                                        Interpreter::LOCAL, cache);
@@ -879,7 +886,7 @@ static Tree_p doPatternMatch(Scope *scope,
     if (matched)
     {
         Context args(bindings.ArgumentsScope());
-        cast = bindings.Enclose(expr);
+        cast = bindings.Enclose(matched);
         args.Define(pattern, xl_self);
     }
     record(typecheck, "Expression %t as matching %t is %t matched %t",

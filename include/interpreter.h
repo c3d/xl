@@ -157,7 +157,7 @@ struct Bindings
           bindings()
     {}
 
-    // Tree::Do interface, build the matching pattern
+    // Tree::Do interface, build the matched value
     Tree *Do(Natural *what);
     Tree *Do(Real *what);
     Tree *Do(Text *what);
