@@ -68,19 +68,22 @@ define command
   )
 endef
 
+TEST_OK=[ "$$(cat $1.result)" == "OK" ]
+
 # Set the result based on whether files are identical
 # $1 = target
 define diff
-  $(UPDATE_CMD)$(call result,$1,diff $1.ref $1.output > $1.diff 2>&1)
+  if $(TEST_OK); then						\
+  $(UPDATE_CMD)							\
+  $(call result,$1,diff $1.ref $1.output > $1.diff 2>&1)	\
+  fi
 endef
 
 UPDATE_CMD=$(UPDATE_CMD_$(UPDATE_REFS))
 UPDATE_CMD_yes=					\
-  if [ "$$(cat $1.result)" == "OK" ]; then	\
-    cp $1.output $1.ref;			\
-    grep -v $1 baseline.txt > baseline-new.txt;	\
-    mv baseline-new.txt baseline.txt;		\
-  fi ;
+  cp $1.output $1.ref;				\
+  grep -v $1 baseline.txt > baseline-new.txt;	\
+  mv baseline-new.txt baseline.txt ;
 
 # Run a command with a timeout
 # $1 = timeout
