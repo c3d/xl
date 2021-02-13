@@ -36,7 +36,7 @@
 XL=./xl
 TESTS=$(wildcard */*.xl)
 RUN_TESTS=yes
-TIMEOUT=5
+TIMEOUT=30
 
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
@@ -86,25 +86,11 @@ UPDATE_CMD_yes=					\
 # $1 = timeout
 # $2 = pattern
 # $3 = command
+TIMEOUT_CMD:=$(shell which timeout > /dev/null 2>&1 && echo "timeout $(TIMEOUT) ")
 define timeout
   (					\
     echo "TIMEOUT" > $2.result;		\
-    $(call command,$2,$3)		\
-  )
-endef
-define timeout_one
-  (					\
-    echo "TIMEOUT" > $2.result;		\
-    $(call command,$2,$3) &		\
-    child=$$! ;				\
-    trap -- "" SIGTERM ;		\
-    (					\
-      sleep $1;				\
-      kill $$child 2> /dev/null		\
-    ) & 				\
-    monitor=$$!;			\
-    wait $$child ;			\
-    kill $$monitor 2> /dev/null ;	\
+    $(call command,$2,$(TIMEOUT_CMD)$3)	\
   )
 endef
 
