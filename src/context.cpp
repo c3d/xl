@@ -1374,6 +1374,29 @@ XL::Scope *xldebug(XL::Scope *scope)
 }
 
 
+XL::Scope *xldebug(XL::Closure *closure)
+// ----------------------------------------------------------------------------
+//    Helper to show a global scope in a symbol table
+// ----------------------------------------------------------------------------
+{
+    if (XL::Allocator<XL::Closure>::IsAllocated(closure))
+    {
+        XL::Scope *scope = closure->CapturedScope();
+        std::cerr << "Closure scope " << (void *) scope << ":\n";
+        XL::Context::Dump(std::cerr, scope, false);
+
+        std::cerr << "Closure value: " << closure->Value() << "\n";
+        return scope->Enclosing();
+    }
+    else
+    {
+        std::cerr << "Cowardly refusing to render unknown closure pointer "
+                  << (void *) closure << "\n";
+    }
+    return nullptr;
+}
+
+
 XL::Scopes *xldebug(XL::Scopes *scopes)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scopes in a symbol table

@@ -916,6 +916,11 @@ XL::Tree *xldebug(XL::Tree *tree)
         extern XL::Scope *xldebug(XL::Scope *scope);
         return xldebug((XL::Scope *) tree);
     }
+    else if (XL::Allocator<XL::Closure>::IsAllocated(tree))
+    {
+        extern XL::Scope *xldebug(XL::Closure *closure);
+        return xldebug((XL::Closure *) tree);
+    }
     else
     {
         std::cerr << "Cowardly refusing to render unknown pointer "
