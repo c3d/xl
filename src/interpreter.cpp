@@ -885,6 +885,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         return Errors::Aborting();
     }
 
+    Tree_p input = expr;
     Tree_p result = expr;
     Context context(scope);
 

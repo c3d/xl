@@ -80,6 +80,7 @@ struct Error
     // Converting to a prefix form for error evaluation
                         operator Tree *();
                         operator Tree_p() { return (Tree *) (*this); }
+    bool                operator ==(const Error &other) const;
 
 public:
     text                message;
