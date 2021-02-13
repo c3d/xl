@@ -210,6 +210,25 @@ Error::operator Tree *()
 }
 
 
+bool Error::operator==(const Error &other) const
+// ----------------------------------------------------------------------------
+//   Return true if same error message and trees have the same shape
+// ----------------------------------------------------------------------------
+{
+    if (position != other.position)
+        return false;
+    size_t count = arguments.size();
+    if (count != other.arguments.size())
+        return false;
+    if (message != other.message)
+        return false;
+    for (size_t a = 0; a < count; a++)
+        if (!Tree::Equal(arguments[a], other.arguments[a]))
+            return false;
+    return true;
+}
+
+
 
 // ============================================================================
 //
@@ -353,6 +372,12 @@ Error &Errors::Log(const Error &e, bool isContext)
 //   Log an error
 // ----------------------------------------------------------------------------
 {
+    // Check if we already logged that error
+    for (Errors *errs = this; errs; errs = errs->parent)
+        for (auto &other : errs->errors)
+            if (e == other)
+                return other;
+
     errors.push_back(e);
     if (isContext)
         context++;
