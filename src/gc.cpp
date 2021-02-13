@@ -56,6 +56,7 @@
 
 
 RECORDER(memory, 256, "Memory related events and garbage collection");
+RECORDER(gc, 32, "Garbage collection events");
 
 XL_BEGIN
 
@@ -525,7 +526,7 @@ bool GarbageCollector::Collect()
     // Only one thread enters collecting, the others spin and wait
     if (Atomic<pthread_t>::SetQ(collecting, PTHREAD_NULL, self))
     {
-        record(memory, "Garbage collection in thread %p", self);
+        record(gc, "Garbage collection in thread %p", self);
 
         Allocators::iterator a;
         Listeners listeners;
@@ -565,10 +566,10 @@ bool GarbageCollector::Collect()
             XL_ASSERT(!"Someone else stole the collection lock?");
         }
 
-        record(memory, "Finished garbage collection in thread %p", self);
+        record(gc, "Finished garbage collection in thread %p", self);
         return true;
     }
-    record(memory, "Garbage collection for thread %p was blocked", self);
+    record(gc, "Garbage collection for thread %p was blocked", self);
     return false;
 }
 
