@@ -199,12 +199,14 @@ XL_NOREF=							\
 %.ref:
 	$(PRINT_COMMAND) $(XL_NOREF) $(COLORIZE)
 
-.products:	$(XL_BINARIES) $(XL_FILES)
+xl.exe=		$(PFX.exe)xl$(EXT.exe)
+xl.dll=		$(PFX.dll)xl$(EXT.dll)
+recorder.dll=	$(PFX.dll)recorder$(EXT.dll)
 
 XL_BINARIES=				\
-	$(PFX.exe)xl$(EXT.exe) 		\
-	$(PFX.dll)xl$(EXT.dll)		\
-	$(PFX.dll)recorder$(EXT.dll)	\
+	$(xl.exe)			\
+	$(xl.dll)			\
+	$(recorder.dll)
 
 XL_FILES=				\
 	xl.syntax 			\
@@ -215,16 +217,22 @@ XL_FILES=				\
 	debug.stylesheet		\
 	dbghtml.stylesheet
 
-$(PFX.exe)xl$(EXT.exe): ../$(PFX.exe)xl$(EXT.exe)
-	$(PRINT_COPY) ln -f $< $@
-$(PFX.dll)%$(EXT.dll): ../$(PFX.dll)%$(EXT.dll)
-	$(PRINT_COPY) ln -f $< $@
-$(XL_FILES): $(XL_FILES:%=../src/%)
-	$(PRINT_COPY) ln -f $< $@
+.products:	$(XL_BINARIES) $(XL_FILES)
 
-../$(PFX.dll)%$(EXT.dll): ../$(PFX.exe)xl$(EXT.exe)
-../$(PFX.exe)xl$(EXT.exe):
-	$(PRINT_BUILD) cd ../src && make
+define link
+
+$1: $2/$1
+	$$(PRINT_COPY)	ln -sf $$< $$@
+
+endef
+
+$(eval $(foreach b,$(XL_BINARIES),$(call link,$b,..)))
+$(eval $(foreach f,$(XL_FILES),$(call link,$f,../src)))
+
+../$(xl.dll)		: ../$(xl.exe)
+../$(recorder.dll)	: ../$(xl.exe)
+../$(xl.exe):
+	$(PRINT_BUILD) cd .. && make
 
 .PRECIOUS: %.diff %.output %.ref
 .PHONY: %.xl.test
