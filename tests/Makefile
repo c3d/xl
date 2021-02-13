@@ -55,7 +55,7 @@ export DYLD_LIBRARY_PATH=..
 # $1 = pattern
 # $2 = command
 define result
-( $2 && ( echo "OK" > $1.result )|| ( echo "NO" > $1.result ) )
+( $2 && ( echo "OK" > $1.result )|| ( echo "NO" > $1.result) )
 endef
 
 # Check a command, and set the result accordingly
@@ -188,8 +188,9 @@ baseline.txt: failures.log
 %.output: %.xl .products
 	$(PRINT_COMMAND) $(call test,$*)
 
+XL_NOREF_MSG=$(if $(UPDATE_REFS),"OK","REF?")
 XL_NOREF=							\
-	echo "REF?" > $*.result	;				\
+	echo $(XL_NOREF_MSG) > $*.result	;		\
 	$(INFO) "[WARNING]" "No reference for $*" "[REF?]"
 
 %.ref:
@@ -222,5 +223,5 @@ $(XL_FILES): $(XL_FILES:%=../src/%)
 ../$(PFX.exe)xl$(EXT.exe):
 	$(PRINT_BUILD) cd ../src && make
 
-.PRECIOUS: %.diff %.output
+.PRECIOUS: %.diff %.output %.ref
 .PHONY: %.xl.test
