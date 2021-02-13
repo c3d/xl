@@ -970,6 +970,66 @@ retry:
     }
 
     // Short-circuit evaluation of sequences and declarations
+    if (Infix *infix = expr->AsInfix())
+    {
+        // Process sequences, trying to avoid deep recursion
+        if (IsSequence(infix))
+        {
+            Tree *left = DoEvaluate(scope, infix->left, EXPRESSION, cache);
+            if (left != infix->left)
+                result = left;
+            if (HadErrors() || IsError(left))
+            {
+                record(eval, "<Errors evaluating first in sequence %t = %t",
+                       infix->left, left);
+                return left;
+            }
+            expr = infix->right;
+            goto retry;
+        }
+
+        // Skip definitions, initalizer have been done above
+        if (IsDefinition(infix))
+        {
+            record(eval, "<Infix %t is a definition", infix);
+            return result;
+        }
+
+        // Evaluate [X.Y]
+        if (IsDot(infix))
+        {
+            Tree_p scoped = doDot(context, infix, cache);
+            record(eval, "<Scoped %t is %t", infix, scoped);
+            return scoped;
+        }
+
+        // Check [X as matching(P)]
+        if (IsTypeCast(infix))
+        {
+            Tree *want = DoEvaluate(scope, infix->right, EXPRESSION, cache);
+            if (!want)
+                return nullptr;
+            infix->right = want;
+            if (Tree *pattern = IsPatternMatchingType(want))
+            {
+                Tree_p cast = doPatternMatch(context, pattern,
+                                             infix->left, cache);
+                record(eval, "<Pattern match %t matching %t = %t",
+                       infix->left, pattern, cast);
+                return cast;
+            }
+        }
+
+        // Evaluate assignments such as [X := Y]
+        if (IsAssignment(infix))
+        {
+            Tree_p assigned = doAssignment(scope, infix, mode, cache);
+            record(eval, "<Assignment %t is %t", infix, assigned);
+            return assigned;
+        }
+    }
+
+    // Short-circuit evaluation of scope, quotes and [matching X]
     if (Prefix *prefix = expr->AsPrefix())
     {
         // Check if the left is a block containing only declarations
@@ -1030,66 +1090,6 @@ retry:
                        prefix, callback);
                 return callback(scope, prefix);
             }
-        }
-    }
-
-    // Short-circuit evaluation of sequences and declarations
-    if (Infix *infix = expr->AsInfix())
-    {
-        // Process sequences, trying to avoid deep recursion
-        if (IsSequence(infix))
-        {
-            Tree *left = DoEvaluate(scope, infix->left, EXPRESSION, cache);
-            if (left != infix->left)
-                result = left;
-            if (HadErrors() || IsError(left))
-            {
-                record(eval, "<Errors evaluating first in sequence %t = %t",
-                       infix->left, left);
-                return left;
-            }
-            expr = infix->right;
-            goto retry;
-        }
-
-        // Skip definitions, initalizer have been done above
-        if (IsDefinition(infix))
-        {
-            record(eval, "<Infix %t is a definition", infix);
-            return result;
-        }
-
-        // Evaluate [X.Y]
-        if (IsDot(infix))
-        {
-            Tree_p scoped = doDot(context, infix, cache);
-            record(eval, "<Scoped %t is %t", infix, scoped);
-            return scoped;
-        }
-
-        // Check [X as matching(P)]
-        if (IsTypeCast(infix))
-        {
-            Tree *want = DoEvaluate(scope, infix->right, EXPRESSION, cache);
-            if (!want)
-                return nullptr;
-            infix->right = want;
-            if (Tree *pattern = IsPatternMatchingType(want))
-            {
-                Tree_p cast = doPatternMatch(context, pattern,
-                                             infix->left, cache);
-                record(eval, "<Pattern match %t matching %t = %t",
-                       infix->left, pattern, cast);
-                return cast;
-            }
-        }
-
-        // Evaluate assignments such as [X := Y]
-        if (IsAssignment(infix))
-        {
-            Tree_p assigned = doAssignment(scope, infix, mode, cache);
-            record(eval, "<Assignment %t is %t", infix, assigned);
-            return assigned;
         }
     }
 
