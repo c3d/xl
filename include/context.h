@@ -1117,11 +1117,14 @@ inline Tree *Context::Enclose(Tree *value)
 //   Prefix the value wiht the current symbols - Unwrapped by evaluate()
 // ----------------------------------------------------------------------------
 {
-    Scope *scope = Symbols();
-    while (scope && scope->IsEmpty())
-        scope = scope->Enclosing();
-    if (scope)
-        return new Closure(scope, value);
+    if (!IsClosure(value))
+    {
+        Scope *scope = Symbols();
+        while (scope && scope->IsEmpty())
+            scope = scope->Enclosing();
+        if (scope)
+            value = new Closure(scope, value);
+    }
     return value;
 }
 
