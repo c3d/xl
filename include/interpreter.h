@@ -62,6 +62,9 @@ public:
     Tree *Evaluate(Scope *, Tree *source) override;
     Tree *TypeCheck(Scope *, Tree *type, Tree *value) override;
 
+    // Evaluate all closures to get the final result
+    static Tree *Unwrap(Tree *tree, EvaluationCache &cache);
+
 public:
     enum Evaluation
     {
