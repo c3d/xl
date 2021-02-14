@@ -75,13 +75,12 @@ NaturalOption   stackDepth("stack_depth",
 //
 // ============================================================================
 
-Interpreter::Interpreter(Context &context)
+Interpreter::Interpreter()
 // ----------------------------------------------------------------------------
 //   Constructor for interpreter
 // ----------------------------------------------------------------------------
 {
     record(interpreter, "Created interpreter %p", this);
-    InitializeContext(context);
 }
 
 
