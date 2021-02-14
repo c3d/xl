@@ -175,6 +175,7 @@ struct Bindings
     Tree *EvaluateGuard(Tree *guard);
     Tree *TypeCheck(Scope *scope, Tree *type, Tree *expr);
     Tree *ResultTypeCheck(Tree *result, bool special = false);
+    Tree *ResultType()                  { return type; }
 
     void  Bind(Name *name, Tree *value);
     Rewrite *Binding(unsigned n)        { return bindings[n]; }
