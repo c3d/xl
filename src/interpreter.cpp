@@ -459,7 +459,7 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr, bool named)
     {
         Interpreter::Evaluation mode = named
             ? Interpreter::NAMED
-            : Interpreter::EXPRESSION;
+            : Interpreter::STATEMENT;
         record(bindings, "Evaluating %+s %t in %t",
                named ? "normal" : "named", expr, scope);
         result = Interpreter::DoEvaluate(scope, expr, mode, cache);
