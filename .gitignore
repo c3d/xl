@@ -3,13 +3,14 @@ xl
 *.o
 *.log
 *~
-.DS_Store
+**/.build
+**/.objects
+**/.logs
+**/.DS_Store
 src/cscope.files
 src/cscope.out
 src/*_module.cpp
 src/*_module.h
-.objects
-.logs
 tests/builtins.xl
 tests/bytecode.stylesheet
 tests/comments.stylesheet
