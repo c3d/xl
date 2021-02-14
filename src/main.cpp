@@ -237,6 +237,7 @@ Main::Main(int inArgc,
         Ooops("Stylesheet file $1 not found").Arg(Opt::stylesheet);
 
     // Once all options have been read, enter symbols and setup compiler
+    Interpreter::InitializeContext(context);
 #ifndef INTERPRETER_ONLY
     compilerName = SearchFile(compilerName, Opt::binPaths);
     kstring cname = compilerName.c_str();
@@ -247,7 +248,7 @@ Main::Main(int inArgc,
         evaluator = new Compiler(cname, opt, inArgc, inArgv);
     else
 #endif // INTERPRETER_ONLY
-        evaluator = new Interpreter(context);
+        evaluator = new Interpreter();
 
     // Force a crash if this is requested
     XL_ASSERT(RECORDER_TWEAK(inject_fault) != 2 && "Running late crash test");

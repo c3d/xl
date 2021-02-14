@@ -56,7 +56,7 @@ class Interpreter : public Evaluator
 // ----------------------------------------------------------------------------
 {
 public:
-    Interpreter(Context &context);
+    Interpreter();
     virtual ~Interpreter();
 
     Tree *Evaluate(Scope *, Tree *source) override;
