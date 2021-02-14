@@ -191,8 +191,7 @@ Tree *Bindings::Do(Name *what)
         test = cached;
 
     // Otherwise, bind test value to name
-    Bind(what, test);
-    return test;
+    return Bind(what, test);
 }
 
 
@@ -553,7 +552,7 @@ Tree *Bindings::ResultTypeCheck(Tree *result, bool special)
 }
 
 
-void Bindings::Bind(Name *name, Tree *value)
+Tree *Bindings::Bind(Name *name, Tree *value)
 // ----------------------------------------------------------------------------
 //   Enter a new binding in the current context, remember left and right
 // ----------------------------------------------------------------------------
@@ -565,6 +564,7 @@ void Bindings::Bind(Name *name, Tree *value)
     Rewrite *rewrite = argContext.Define(name, value);
     bindings.push_back(rewrite);
     cache.Cache(name, value);
+    return value;
 }
 
 
