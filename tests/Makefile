@@ -68,12 +68,13 @@ define command
   )
 endef
 
-TEST_OK=[ "$$(cat $1.result)" == "OK" ]
+TEST_OK=-f "$1.result" -a "$$($(CAT) $1.result)" == "OK"
+TEST_KO=! \( $(TEST_OK) \)
 
 # Set the result based on whether files are identical
 # $1 = target
 define diff
-  if $(TEST_OK); then						\
+  if [ $(TEST_OK) ]; then					\
   $(UPDATE_CMD)							\
   $(call result,$1,diff $1.ref $1.output > $1.diff 2>&1)	\
   fi
@@ -119,24 +120,27 @@ endef
 
 GENERATE_FAILURES_LOG=						\
   ( for F in $(^:.diff=); do					\
-    if [ "$$(cat $$F.result)" != "OK" ]; then			\
+    if [ $(call TEST_KO,$$F) ] ; then				\
       if ! grep -q "$$F" baseline.txt; then			\
-        echo "=== $$F FAILED ===";				\
-        cat $$F.diff;						\
-	(cat $$F.diff ; echo "==="; cat $$F.output) > $$F.err;  \
+	echo "=== $$F FAILED ===";				\
+	[ -f "$$F.diff" ] && $(CAT) "$$F.diff";			\
+	( [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
+	  echo "===";						\
+	  [ -f "$$F.output" ] && $(CAT) "$$F.output"		\
+	) > "$$F.err";						\
       fi;							\
     fi;								\
   done;								\
   for F in $(^:.diff=); do					\
-    if [ "$$(cat $$F.result)" != "OK" ]; then			\
+    if [ $(call TEST_KO,$$F) ]; then				\
       if grep -q "$$F" baseline.txt; then			\
-        echo "=== $$F FAILED (EXPECTED) ===";			\
-        cat $$F.diff;						\
+	echo "=== $$F FAILED (EXPECTED) ===";			\
+	[ -f "$$F.diff" ] &&  $(CAT) "$$F.diff";		\
       fi;							\
     fi;								\
   done;								\
   for F in $(^:.diff=); do					\
-    if [ "$$(cat $$F.result)" == "OK" ]; then			\
+    if [ $(call TEST_OK,$$F) ]; then				\
       if grep -q "$$F" baseline.txt; then			\
 	echo "=== $$F IMPROVED ===";				\
       else							\
