@@ -612,13 +612,12 @@ static Tree_p doPatternMatch(Scope *scope,
 {
     Tree_p cast;
     Bindings bindings(scope, scope, expr, cache);
+    Context args(bindings.ArgumentsScope());
+    args.Define(pattern, xl_self);
+
     Tree *matched = pattern->Do(bindings);
     if (matched)
-    {
-        Context args(bindings.ArgumentsScope());
         cast = bindings.Enclose(matched);
-        args.Define(pattern, xl_self);
-    }
     record(typecheck, "Expression %t as matching %t is %t matched %t",
            expr, pattern, cast, matched);
     return cast;
