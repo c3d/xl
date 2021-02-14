@@ -125,7 +125,7 @@ GENERATE_FAILURES_LOG=						\
 	echo "=== $$F FAILED ===";				\
 	[ -f "$$F.diff" ] && $(CAT) "$$F.diff";			\
 	( [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
-	  echo "===";						\
+	  echo "--- $$F OUTPUT ---";				\
 	  [ -f "$$F.output" ] && $(CAT) "$$F.output"		\
 	) > "$$F.err";						\
       fi;							\
@@ -136,6 +136,10 @@ GENERATE_FAILURES_LOG=						\
       if grep -q "$$F" baseline.txt; then			\
 	echo "=== $$F FAILED (EXPECTED) ===";			\
 	[ -f "$$F.diff" ] &&  $(CAT) "$$F.diff";		\
+	( [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
+	  echo "--- $$F OUTPUT ---";				\
+	  [ -f "$$F.output" ] && $(CAT) "$$F.output"		\
+	) > "$$F.err";						\
       fi;							\
     fi;								\
   done;								\
@@ -145,6 +149,7 @@ GENERATE_FAILURES_LOG=						\
 	echo "=== $$F IMPROVED ===";				\
       else							\
 	echo "=== $$F SUCCEEDED ===";				\
+      rm -f "$$F.err";						\
       fi;							\
     fi;								\
   done ) > $@ ;							\
