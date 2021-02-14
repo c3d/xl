@@ -1,0 +1,49 @@
+// ****************************************************************************
+//  09a-complex-division.xl                                          XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     This checks that we can correctly evaluate a body with multiple
+//     statements, and have local declarations
+//
+//     The case is "simplified" by having return types to direct evaluation.
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2021 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+
+complex is matching(re:real, im:real)
+Z1:complex + Z2:complex as complex is (Z1.re + Z2.re, Z1.im + Z2.im)
+Z1:complex + Z2:real    as complex is (Z1.re + Z2, Z1.im)
+Z1:complex - Z2:complex as complex is (Z1.re - Z2.re, Z1.im - Z2.im)
+Z1:complex + Z2:real    as complex is (Z1.re - Z2, Z1.im)
+Z1:complex * Z2:real    as complex is (Z1.re * Z2, Z1.im * Z2)
+Z1:complex * Z2:complex as complex is (Z1.re * Z2.re - Z1.im * Z2.im, Z1.re * Z2.im + Z1.im * Z2.re)
+Z1:complex / Z2:real    as complex is (Z1.re / Z2, Z1.im / Z2)
+Z1:complex / Z2:complex as complex is
+    numer as complex is (Z1.re*Z2.re + Z1.im*Z2.im, Z1.im*Z2.re - Z1.re*Z2.im)
+    denom as real is Z2.re^2 + Z2.im^2
+    numer / denom
+
+(3,4) / (5,6)
