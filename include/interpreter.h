@@ -177,7 +177,7 @@ struct Bindings
     Tree *ResultTypeCheck(Tree *result, bool special = false);
     Tree *ResultType()                  { return type; }
 
-    void  Bind(Name *name, Tree *value);
+    Tree *Bind(Name *name, Tree *value);
     Rewrite *Binding(unsigned n)        { return bindings[n]; }
     Tree *Argument(unsigned n, bool unwrap = true);
     Tree *Unevaluated(unsigned n)       { return Argument(n, false); }
