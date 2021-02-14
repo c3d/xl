@@ -31,7 +31,7 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
-complex is type(C(re:real, im:real))
+complex is matching C(re:real, im:real)
 Z1:complex + Z2:complex as complex is C(Z1.re + Z2.re, Z1.im + Z2.im)
 
 (C(3,4) + C(5, 6))

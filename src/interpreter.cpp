@@ -602,6 +602,29 @@ Tree *Bindings::NamedTree(unsigned n)
 //
 // ============================================================================
 
+static Tree_p doPatternMatch(Scope *scope,
+                             Tree *pattern,
+                             Tree *expr,
+                             EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Match the pattern in a scope
+// ----------------------------------------------------------------------------
+{
+    Tree_p cast;
+    Bindings bindings(scope, scope, expr, cache);
+    Tree *matched = pattern->Do(bindings);
+    if (matched)
+    {
+        Context args(bindings.ArgumentsScope());
+        cast = bindings.Enclose(matched);
+        args.Define(pattern, xl_self);
+    }
+    record(typecheck, "Expression %t as matching %t is %t matched %t",
+           expr, pattern, cast, matched);
+    return cast;
+}
+
+
 static Tree *eval(Scope   *evalScope,
                   Scope   *declScope,
                   Tree    *expr,
@@ -702,6 +725,15 @@ static Tree *eval(Scope   *evalScope,
     {
         EvaluationCache bodyCache;
         Scope *bodyScope = bindings.ArgumentsScope();
+
+        // Check if the body returns a matching type
+        // If so, we need to evaluate in a scope where that pattern is defined
+        if (Tree *type = bindings.ResultType())
+            if (Tree *pattern = IsPatternMatchingType(type))
+                return doPatternMatch(bodyScope, pattern,
+                                      body, bodyCache);
+
+        // Otherwise simply evaluate the body and check the type afterwards
         result = Interpreter::DoEvaluate(bodyScope, body,
                                          Interpreter::STATEMENT, bodyCache);
         result = bindings.ResultTypeCheck(result, false);
@@ -888,29 +920,6 @@ static Tree_p doLatePrefix(Scope *scope,
         return result;
     }
     return nullptr;
-}
-
-
-static Tree_p doPatternMatch(Scope *scope,
-                             Tree *pattern,
-                             Tree *expr,
-                             EvaluationCache &cache)
-// ----------------------------------------------------------------------------
-//   Match the pattern in a scope
-// ----------------------------------------------------------------------------
-{
-    Tree_p cast;
-    Bindings bindings(scope, scope, expr, cache);
-    Tree *matched = pattern->Do(bindings);
-    if (matched)
-    {
-        Context args(bindings.ArgumentsScope());
-        cast = bindings.Enclose(matched);
-        args.Define(pattern, xl_self);
-    }
-    record(typecheck, "Expression %t as matching %t is %t matched %t",
-           expr, pattern, cast, matched);
-    return cast;
 }
 
 
