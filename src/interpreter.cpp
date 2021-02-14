@@ -447,7 +447,7 @@ bool Bindings::MustEvaluate(bool named)
     while (Scope *scope = Context::IsClosure(evaluated))
     {
         Prefix *closure = (Prefix *) (Tree *) evaluated;
-        evaluated = Evaluate(scope, closure->right, true);
+        evaluated = Evaluate(scope, closure->right, named);
         if (!evaluated)
             evaluated = LastErrorAsErrorTree();
     }
