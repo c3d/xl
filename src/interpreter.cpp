@@ -940,6 +940,7 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 {
     EvaluationCache cache;
     Tree_p result = DoEvaluate(scope, expr, STATEMENT, cache);
+    result = Unwrap(result, cache);
     return result;
 }
 
@@ -951,6 +952,66 @@ Tree *Interpreter::TypeCheck(Scope *scope, Tree *type, Tree *value)
 {
     EvaluationCache cache;
     return DoTypeCheck(scope, type, value, cache);
+}
+
+
+Tree *Interpreter::Unwrap(Tree *expr, EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Evaluate all closures inside a tree
+// ----------------------------------------------------------------------------
+{
+    while (expr)
+    {
+        switch(expr->Kind())
+        {
+        case NATURAL:
+        case REAL:
+        case TEXT:
+        case NAME:
+            return expr;
+        case INFIX:
+        {
+            Infix *infix = (Infix *) expr;
+            Tree *left = Unwrap(infix->left, cache);
+            Tree *right = Unwrap(infix->right, cache);
+            if (left != infix->left || right != infix->right)
+                infix = new Infix(infix, left, right);
+            return infix;
+        }
+        case PREFIX:
+        {
+            Prefix *prefix = (Prefix *) expr;
+            if (Scope *scope = Context::IsClosure(expr))
+            {
+                Prefix *closure = (Prefix *) (Tree *) expr;
+                expr = DoEvaluate(scope, closure->right, STATEMENT, cache);
+                continue;
+            }
+            Tree *left = Unwrap(prefix->left, cache);
+            Tree *right = Unwrap(prefix->right, cache);
+            if (left != prefix->left || right != prefix->right)
+                prefix = new Prefix(left, right);
+            return prefix;
+        }
+        case POSTFIX:
+        {
+            Postfix *postfix = (Postfix *) expr;
+            Tree *left = Unwrap(postfix->left, cache);
+            Tree *right = Unwrap(postfix->right, cache);
+            if (left != postfix->left || right != postfix->right)
+                postfix = new Postfix(left, right);
+            return postfix;
+        }
+        case BLOCK:
+        {
+            Block *block = (Block *) expr;
+            if (Scope *scope = expr->As<Scope>())
+                return expr;
+            expr = block->child;
+        }
+        }
+    }
+    return expr;
 }
 
 
