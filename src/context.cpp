@@ -1168,6 +1168,8 @@ static Tree *findValue(Scope *, Scope *, Tree *what, Rewrite *decl, void *info)
     if (what->IsLeaf())
         if (!Tree::Equal(what, PatternBase(decl->left)))
             return nullptr;
+    if (IsSelf(decl->right))
+        return PatternBase(decl->left);
     return decl->right;
 }
 
