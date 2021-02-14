@@ -443,8 +443,19 @@ bool Bindings::MustEvaluate(bool named)
 // ----------------------------------------------------------------------------
 {
     Tree *evaluated = Evaluate(EvaluationScope(), test, named);
+
+    // For matching purpose, we need the value inside closures
+    while (Scope *scope = Context::IsClosure(evaluated))
+    {
+        Prefix *closure = (Prefix *) (Tree *) evaluated;
+        evaluated = Evaluate(scope, closure->right, true);
+        if (!evaluated)
+            evaluated = LastErrorAsErrorTree();
+    }
+
     bool changed = test != evaluated;
     test = evaluated;
+
     return changed;
 }
 
