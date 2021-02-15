@@ -87,9 +87,10 @@ struct Main
     Errors *            InitMAIN();
     void                ParseOptions();
     Tree_p              LoadFiles();
-    virtual Tree_p      LoadFile(text file, bool evaluate);
+    eval_fn             Importer(text name);
 
     // Hooks for use as a library in an application
+    virtual Tree_p      LoadFile(text file, bool evaluate);
     virtual void        Log(Error &e)   { errors->Log(e); }
     virtual uint        HadErrors()     { return errors->Count(); }
     virtual text        SearchFile(text input, text ext = "");
@@ -99,8 +100,8 @@ struct Main
     virtual text        Decrypt(text input);
     virtual text        Encrypt(text input);
     virtual Tree*       Normalize(Tree *input);
-    virtual eval_fn     Declarator(text name);
     virtual Tree *      Show(std::ostream &, Tree *);
+    virtual void        AddImporters();
 
 public:
     int                 argc;
