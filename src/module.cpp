@@ -213,6 +213,11 @@ Module::Module(Scope *where, Tree *modname, text key)
     text specPath = SearchModuleFile(key, "xs");
     text implPath = SearchModuleFile(key, "xl");
 
+    record(modules,
+           "Module %t key '%s' "
+           "syntax '%s' style '%s' spec '%s' impl '%s'",
+           modname, key, syntax, stylesheet, specPath, implPath);
+
     // Load the syntax file first if it exists (will need to reload everything)
     bool hasSyntax = syntax.length();
     if (hasSyntax)
