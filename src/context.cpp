@@ -185,16 +185,32 @@ bool Context::ProcessDeclarations(Tree *what, RewriteList &inits)
 //   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
 {
-    Tree_p next   = nullptr;
+    Tree_p next   = what;
     bool   result = false;
 
     record(context, "In %p process declarations for %t", this, what);
-    while (Block *block = what->AsBlock())
-        what = block->child;
-
-    while (what)
+    while (next)
     {
+        // By default, everything is an instruction
         bool isInstruction = true;
+        what = next;
+        next = nullptr;
+
+        // Strip blocks
+        while (Block *block = what->AsBlock())
+            what = block->child;
+
+        // Instruction to analyze
+        if (Infix *infix = what->AsInfix())
+        {
+            if (IsSequence(infix))
+            {
+                // Chain of declarations, avoiding recursing if possible.
+                what = infix->left;
+                next = infix->right;
+            }
+        }
+
         if (Infix *infix = what->AsInfix())
         {
             if (IsDefinition(infix))
@@ -202,19 +218,6 @@ bool Context::ProcessDeclarations(Tree *what, RewriteList &inits)
                 record(context, "In %p enter declaration %t", this, infix);
                 Enter(infix, inits);
                 isInstruction = false;
-            }
-            else if (IsSequence(infix))
-            {
-                // Chain of declarations, avoiding recursing if possible.
-                if (Infix *left = infix->left->AsInfix())
-                {
-                    isInstruction = false;
-                    if (IsDefinition(left))
-                        Enter(left, inits);
-                    else
-                        isInstruction = ProcessDeclarations(left, inits);
-                }
-                next = infix->right;
             }
         }
         else if (Prefix *prefix = what->AsPrefix())
@@ -239,16 +242,17 @@ bool Context::ProcessDeclarations(Tree *what, RewriteList &inits)
 
             // Check if this prefix is some [import X.Y.Z] statement
             if (Name *import = prefix->left->AsName())
+            {
                 if (eval_fn callback = MAIN->Importer(import->value))
+                {
                     callback(symbols, prefix);
+                    isInstruction = false;
+                }
+            }
         }
 
         // Check if we see instructions
         result |= isInstruction;
-
-        // Consider next in chain
-        what = next;
-        next = nullptr;
     }
     if (RECORDER_TRACE(symbols_sort))
         Dump(std::cerr, symbols, false);
