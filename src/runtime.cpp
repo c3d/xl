@@ -541,36 +541,33 @@ bool xl_file_exists(Scope *scope, Tree_p self, text path)
 //
 // ============================================================================
 
-struct ImportedFileInfo : Info
+struct ModuleInfo : Info
 // ----------------------------------------------------------------------------
 //   Information about a file that was imported (save full path)
 // ----------------------------------------------------------------------------
 {
-    ImportedFileInfo() : result() {}
-    Tree_p      result;
+    ModuleInfo(Tree *import) : import(import), value() {}
+    Tree_p      import;
+    Tree_p      value;
+    Module *    module;
 };
 
 
 RECORDER(imports, 32, "Import statements");
 
 
-static Tree *xl_load_file(Scope *scope, Tree *self, bool evaluate)
+static ModuleInfo *xl_load_file(Scope *scope, Tree *self)
 // ----------------------------------------------------------------------------
 //    Load a file from disk, may evaluate it or not
 // ----------------------------------------------------------------------------
 {
     record(imports, "Importing %t", self);
-    ImportedFileInfo *info = self->GetInfo<ImportedFileInfo>();
+    ModuleInfo *info = self->GetInfo<ModuleInfo>();
     if (info)
-    {
-        if (!info->result)
-        {
-            Ooops("Import recursion for $1", self);
-            return XL::xl_false;
-        }
-        return info->result;
-    }
-    info = new ImportedFileInfo;
+        return info;
+
+    // Create
+    info = new ModuleInfo(self);
     self->SetInfo(info);
 
     // Check that the import "looks good"
@@ -578,7 +575,7 @@ static Tree *xl_load_file(Scope *scope, Tree *self, bool evaluate)
     if (!prefix)
     {
         Ooops("Malformed import statement $1", self);
-        return self;
+        return info;
     }
     Tree *modname = prefix->right;
 
@@ -597,13 +594,11 @@ static Tree *xl_load_file(Scope *scope, Tree *self, bool evaluate)
     }
 
     // Load the module and compute the module's value
-    Module *module = Module::Get(scope, modname, evaluate);
-    Tree_p result = module->Value();
-    info->result = result;
-
-    record(imports, "Imported %t into module %p value %t",
-           prefix->right, module, result);
-    return result;
+    Module *module = Module::Get(scope, modname);
+    info->module = module;
+    record(imports, "Imported %t into module %p info %p",
+           prefix->right, module, info);
+    return info;
 }
 
 
@@ -612,7 +607,20 @@ Tree *xl_import(Scope *scope, Tree *self)
 //    Import a file, which means loading it from disk and evaluating it
 // ----------------------------------------------------------------------------
 {
-    return xl_load_file(scope, self, true);
+    ModuleInfo *info = xl_load_file(scope, self);
+    if (scope)
+    {
+        if (!info->value)
+        {
+            Module *module = info->module;
+            if (!module)
+                return self;
+            info->value = module->Value();
+        }
+        return info->value;
+    }
+    return self;
+
 }
 
 
@@ -621,7 +629,15 @@ Tree *xl_parse_file(Scope *scope, Tree *self)
 //    Import a file, which means loading it from disk and evaluating it
 // ----------------------------------------------------------------------------
 {
-    return xl_load_file(scope, self, false);
+    ModuleInfo *info = xl_load_file(scope, self);
+    if (scope)
+    {
+        if (info->module)
+            return info->module->Source();
+        else
+            return xl_nil;
+    }
+    return self;
 }
 
 

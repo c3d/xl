@@ -1475,8 +1475,8 @@ Tree *DeclarationAction::Do(Prefix *what)
     {
         // Check if there is some stuff that needs to be done at decl time
         // This is used for 'load' and 'use'
-        if (eval_fn declarator = MAIN->Declarator(name->value))
-            if (Tree *result = declarator(symbols, what))
+        if (eval_fn importer = MAIN->Importer(name->value))
+            if (Tree *result = importer(symbols, what))
                 return result;
 
         if (name->value == "data")

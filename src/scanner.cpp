@@ -775,7 +775,9 @@ ulong Positions::OpenFile(text name)
 //    Open a new file
 // ----------------------------------------------------------------------------
 {
-    positions.push_back(Range(current_position, name));
+    Range here(current_position, name);
+    positions.push_back(here);
+    files.push_back(here);
     return current_position;
 }
 
@@ -785,6 +787,13 @@ void Positions::CloseFile (ulong pos)
 //    Remember the end position for a file
 // ----------------------------------------------------------------------------
 {
+    files.pop_back();
+    if (files.size())
+    {
+        Range last = files.back();
+        last.start += pos - current_position;
+        positions.push_back(last);
+    }
     current_position = pos;
 }
 
@@ -794,17 +803,18 @@ void Positions::GetFile(ulong pos, text *file, ulong *offset)
 //    Return the file and the offset in the file
 // ----------------------------------------------------------------------------
 {
-    std::vector<Range>::iterator i;
-    for (i = positions.begin(); i != positions.end(); i++)
-        if (pos < (*i).start)
-            break;
-    if (i != positions.begin())
+    size_t i = positions.size();
+    bool found = false;
+    while (!found && i --> 0)
+        if (positions[i].start <= pos)
+            found = true;
+    if (found)
     {
-        i--;
+        Range &r = positions[i];
         if (file)
-            *file = (*i).file;
+            *file = r.file;
         if (offset)
-            *offset = pos - (*i).start;
+            *offset = pos - r.start;
     }
     else
     {

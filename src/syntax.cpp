@@ -179,6 +179,27 @@ bool Syntax::KnownPrefix(text n)
 }
 
 
+eval_fn Syntax::KnownImporter(text n)
+// ----------------------------------------------------------------------------
+//   Check if the given symbol is a known importer
+// ----------------------------------------------------------------------------
+{
+    auto found = known_importers.find(n);
+    if (found != known_importers.end())
+        return (*found).second;
+    return nullptr;
+}
+
+
+void Syntax::AddImporter(text n, eval_fn callback)
+// ----------------------------------------------------------------------------
+//   Check if the given symbol is a known importer
+// ----------------------------------------------------------------------------
+{
+    known_importers[n] = callback;
+}
+
+
 void Syntax::CommentDelimiter(text Begin, text End)
 // ----------------------------------------------------------------------------
 //   Define comment syntax

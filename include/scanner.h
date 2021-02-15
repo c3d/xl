@@ -163,7 +163,7 @@ struct Positions
                                 text *file, ulong *line,
                                 ulong *column, text *source);
 
-    TreePosition        CurrentPosition()       { return current_position; }
+    TreePosition        Here()  { return current_position; }
 
 private:
     struct Range
@@ -173,6 +173,7 @@ private:
         text    file;
     };
     std::vector<Range>  positions;
+    std::vector<Range>  files;
     ulong               current_position;
 };
 
@@ -207,6 +208,7 @@ public:
     // Access to location information
     uint        Indent()                { return indent; }
     void        SetPosition(ulong pos)  { position = pos; }
+    void        SynchronizePosition()   { position = positions.Here(); }
     ulong       Position()              { return position; }
     bool        HadSpaceBefore()        { return hadSpaceBefore; }
     bool        HadSpaceAfter()         { return hadSpaceAfter; }

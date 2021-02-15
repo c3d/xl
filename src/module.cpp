@@ -53,28 +53,46 @@ XL_BEGIN
 //
 // ============================================================================
 
-Module *Module::Get(Scope *where, Tree *name, bool evaluate)
+Module *Module::Get(Scope *where, Tree *name)
 // ----------------------------------------------------------------------------
 //   Lookup a module, or load it
 // ----------------------------------------------------------------------------
 {
     text key = Name(where, name);
+
+    // Silently fail to load the module at syntax loading time
+    if (key == "" && where == nullptr)
+        return nullptr;
+
     Module *module = modules[key];
     if (!module)
     {
-        module = new Module(where, name, key, evaluate);
+        module = new Module(where, name, key);
         modules[key] = module;
     }
     return module;
 }
 
 
-Module *Module::Get(Scope *where, text name, bool evaluate)
+Module *Module::Get(Scope *where, text name)
 // ----------------------------------------------------------------------------
 //   Lookup a module by name
 // ----------------------------------------------------------------------------
 {
-    return Get(where, new Text(name, Tree::COMMAND_LINE), evaluate);
+    return Get(where, new Text(name, Tree::COMMAND_LINE));
+}
+
+
+Tree *Module::Source()
+// ----------------------------------------------------------------------------
+//   Return the source of the implementation first, or specification
+// ----------------------------------------------------------------------------
+{
+    if (implementation)
+        return implementation->Source();
+    if (specification)
+        return specification->Source();
+    return xl_nil;
 }
 
 
@@ -180,7 +198,7 @@ static text SearchModuleFile(text name, text extension)
 }
 
 
-Module::Module(Scope *where, Tree *modname, text key, bool evaluate)
+Module::Module(Scope *where, Tree *modname, text key)
 // ----------------------------------------------------------------------------
 //   Create a new module
 // ----------------------------------------------------------------------------
@@ -206,16 +224,9 @@ Module::Module(Scope *where, Tree *modname, text key, bool evaluate)
 
     // Load specification then implementation
     if (specPath.length())
-        specification = new SourceFile(where, specPath, evaluate);
+        specification = new SourceFile(where, specPath);
     if (implPath.length())
-        implementation = new SourceFile(where, implPath, evaluate);
-
-    // If we have a custom syntax, we need to reload existing modules
-    // REVISIT - This happens during 'import',
-    // i.e. Context::ProcessDeclarations() - How do we restart there?
-    if (hasSyntax)
-        for (auto mod : modules)
-            mod.second->Reload();
+        implementation = new SourceFile(where, implPath);
 }
 
 
@@ -258,7 +269,7 @@ text Module::Name(Scope *where, Tree *name)
         {
             modname = text->value;
         }
-        else
+        else if (where)
         {
             Tree *evaluated = MAIN->Evaluate(where, name);
             if (Text *text = evaluated->AsText())
@@ -292,7 +303,7 @@ static inline time_t FileModifiedTimeStamp(text path)
 }
 
 
-Module::SourceFile::SourceFile(XL::Scope *where, text path, bool evaluate)
+Module::SourceFile::SourceFile(XL::Scope *where, text path)
 // ----------------------------------------------------------------------------
 //   Load a source file
 // ----------------------------------------------------------------------------
@@ -300,11 +311,10 @@ Module::SourceFile::SourceFile(XL::Scope *where, text path, bool evaluate)
       source(),
       scope(),
       value(),
-      modified(FileModifiedTimeStamp(path)),
-      evaluate(evaluate)
+      modified(FileModifiedTimeStamp(path))
 {
     Context context(where);
-    context.CreateScope(MAIN->positions.CurrentPosition());
+    context.CreateScope(MAIN->positions.Here());
     scope = context.Symbols();
     Reload();
 }
@@ -342,7 +352,7 @@ Tree_p Module::SourceFile::Value()
 //   Return the value for the module
 // ----------------------------------------------------------------------------
 {
-    if (!value && evaluate)
+    if (!value)
         if (Tree *source = Source())
             value = MAIN->Evaluate(scope, source);
     return value;
@@ -385,7 +395,7 @@ Tree_p Module::SourceFile::Reload()
     // If we had a parse error, return an error
     if (!source)
         source =
-            Ooops("Failed to load module $1", positions.CurrentPosition())
+            Ooops("Failed to load module $1", positions.Here())
             .Arg(path);
 
     // Normalize source if necessary (used in Tao3D)
@@ -399,7 +409,7 @@ Tree_p Module::SourceFile::Reload()
     Context context(scope);
     context.SetModulePath(path);
 
-    return Value();
+    return Source();
 }
 
 

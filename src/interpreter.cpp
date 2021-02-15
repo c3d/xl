@@ -1189,7 +1189,7 @@ retry:
         // Filter out import statements (processed during
         if (Name *import = prefix->left->AsName())
         {
-            if (eval_fn callback = MAIN->Declarator(import->value))
+            if (eval_fn callback = MAIN->Importer(import->value))
             {
                 record(eval, "<Import statement %t callback %p",
                        prefix, callback);

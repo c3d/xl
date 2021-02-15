@@ -144,6 +144,9 @@ private:
     CommentsList        comments;
     Tree *              commented;
     bool                hadSpaceBefore, hadSpaceAfter, beginningLine;
+
+private:
+    Tree *              CreatePrefix(Tree *left, Tree *right, TreePosition pos);
 };
 
 
