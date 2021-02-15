@@ -44,6 +44,7 @@
 XL_BEGIN
 
 struct Tree;
+struct Scope;
 struct Scanner;
 struct ChildSyntax;
 
@@ -52,6 +53,8 @@ typedef std::map<text, text>            delimiter_table;
 typedef std::map<text, ChildSyntax *>   subsyntax_table;
 typedef std::set<text>                  token_set;
 
+typedef Tree *(*eval_fn) (Scope *, Tree *);
+typedef std::map<text, eval_fn>         importer_map;
 
 struct Syntax
 // ----------------------------------------------------------------------------
@@ -88,6 +91,8 @@ public:
     bool                KnownToken(text n);
     bool                KnownPrefix(text n);
     bool                KnownBinary(text n);
+    eval_fn             KnownImporter(text n);
+    void                AddImporter(text n, eval_fn fn);
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
@@ -116,6 +121,7 @@ public:
     token_set           known_tokens;
     token_set           known_prefixes;
     token_set           known_binary_prefixes;
+    importer_map        known_importers;
     int                 priority;
 
     int                 default_priority;

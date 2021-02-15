@@ -56,12 +56,11 @@ struct Module
 //    A module can
 {
     static Module *Get(Scope *where,    // Get an existing module if any
-                       Tree *name,
-                       bool evaluate = true);
+                       Tree *name);
     static Module *Get(Scope *where,
-                       text name,
-                       bool evaluate = true);
+                       text name);
 
+    Tree *      Source();               // Source code for the module
     Tree *      Value();                // Value of the module from loading
     Scope *     Specification();        // Return specification if any
     Scope *     Implementation();       // Return implementation if any
@@ -71,7 +70,7 @@ struct Module
     Tree_p      Reload();               // Reload sources if changed
 
 private:
-    Module(Scope *where, Tree *name, text key, bool evaluate = true);
+    Module(Scope *where, Tree *name, text key);
     ~Module();
     static text    Name(Scope * scope,  // Get the file name for [A.B.C]
                         Tree *name);
@@ -82,7 +81,7 @@ private:
     //   Representation of an XL source file
     // ------------------------------------------------------------------------
     {
-        SourceFile(Scope *where, text path, bool evaluate);
+        SourceFile(Scope *where, text path);
         ~SourceFile();
 
         Tree_p  Source();               // Return source code
@@ -97,7 +96,6 @@ private:
         Scope_p scope;                  // Scope created for that file
         Tree_p  value;                  // What this evaluated to
         time_t  modified;               // Last known modification date
-        bool    evaluate;               // Need to evaluate it
     };
 
 private:

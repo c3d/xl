@@ -270,7 +270,7 @@ void Parser::AddComments(Tree *what, bool before)
 }
 
 
-static inline Tree *CreatePrefix(Tree *left, Tree *right, TreePosition pos)
+Tree *Parser::CreatePrefix(Tree *left, Tree *right, TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Create a prefix, special-case unary minus with constants (feature #1580)
 // ----------------------------------------------------------------------------
@@ -294,7 +294,20 @@ static inline Tree *CreatePrefix(Tree *left, Tree *right, TreePosition pos)
             }
         }
     }
-    return new Prefix(left, right, pos);
+    Tree_p result = new Prefix(left, right, pos);
+
+    // Check if we are dealing with an 'import' statement
+    if (Name *name = left->AsName())
+    {
+        if (eval_fn importer = syntax.KnownImporter(name->value))
+        {
+            // Run the importer, which may update the position
+            importer(nullptr, result);
+            scanner.SynchronizePosition();
+        }
+    }
+
+    return result;
 }
 
 

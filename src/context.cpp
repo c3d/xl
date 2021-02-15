@@ -239,7 +239,7 @@ bool Context::ProcessDeclarations(Tree *what, RewriteList &inits)
 
             // Check if this prefix is some [import X.Y.Z] statement
             if (Name *import = prefix->left->AsName())
-                if (eval_fn callback = MAIN->Declarator(import->value))
+                if (eval_fn callback = MAIN->Importer(import->value))
                     callback(symbols, prefix);
         }
 

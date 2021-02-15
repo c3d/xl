@@ -224,6 +224,9 @@ Main::Main(int inArgc,
     blist.insert(blist.end(),bin_paths.begin(),bin_paths.end());
     llist.insert(llist.end(),lib_paths.begin(),lib_paths.end());
 
+    // Put the name of the default importers
+    AddImporters();
+
     // Adjust syntax file and renderer based on options
     text syntaxPath = SearchLibFile(Opt::syntax, "syntax");
     if (syntaxPath.length())
@@ -413,8 +416,8 @@ Tree_p Main::LoadFile(text file, bool evaluate)
 // ----------------------------------------------------------------------------
 {
     record(fileload, "Loading file %s", file);
-    Module *module = Module::Get(context.Symbols(), file, evaluate);
-    Tree_p result = module->Value();
+    Module *module = Module::Get(context.Symbols(), file);
+    Tree_p result = evaluate ? module->Value() : nullptr;
     record(fileload, "Loaded file %s into module %p value %t",
            file, module, result);
     return result;
@@ -540,16 +543,23 @@ Tree *Main::Normalize(Tree *input)
 }
 
 
-eval_fn Main::Declarator(text name)
+eval_fn Main::Importer(text name)
 // ----------------------------------------------------------------------------
-//   Return a declarator for 'use' and 'load'
+//   Return an evaluation function for 'import', 'use' or 'parse_file'
 // ----------------------------------------------------------------------------
 {
-    if (name == "use" || name == "import")
-        return xl_import;
-    if (name == XL::Normalize("parse_file"))
-        return xl_parse_file;
-    return nullptr;
+    return syntax.KnownImporter(name);
+}
+
+
+void Main::AddImporters()
+// ----------------------------------------------------------------------------
+//   Add the default importers for the language
+// ----------------------------------------------------------------------------
+{
+    syntax.AddImporter("use", xl_import);
+    syntax.AddImporter("import", xl_import);
+    syntax.AddImporter(XL::Normalize("parse_file"), xl_parse_file);
 }
 
 XL_END
