@@ -470,7 +470,17 @@ text Main::SearchFile(text file, path_list &paths, text extension)
         len++;
     }
     if (flen < len || file.compare(flen - len, len, extension))
-        file += extension;
+    {
+        // Replace existing extension if any
+        size_t pos = flen;
+        bool found = false;
+        while (!found && pos-->0)
+            found = file[pos] == '.' || isDirectorySeparator(file[pos]);
+        if (found && pos > 0 && file[pos] == '.')
+            file = file.substr(0, pos) + extension;
+        else
+            file += extension;
+    }
 
     // If the given file is already good, use that
     utf8_filestat_t st;

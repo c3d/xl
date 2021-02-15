@@ -260,7 +260,9 @@ text Module::Name(Scope *where, Tree *name)
 
     // Check trailing name
     if (XL::Name *base = name->AsName())
-        modname = base->value + "." + modname;
+        modname = modname.length()
+            ? (base->value + "." + modname)
+            : base->value;
 
     // Check if we need to evaluate the module name
     if (modname == "")
