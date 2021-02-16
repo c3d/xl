@@ -180,36 +180,19 @@ Context *Context::Parent()
 //
 // ============================================================================
 
-bool Context::ProcessDeclarations(Tree *what, RewriteList &inits)
+bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
 {
-    Tree_p next   = what;
-    bool   result = false;
+    Tree::Iterator next   = source;
+    bool           result = false;
 
-    record(context, "In %p process declarations for %t", this, what);
-    while (next)
+    record(context, "In %p process declarations for %t", this, source);
+    while (Tree *what = next())
     {
         // By default, everything is an instruction
         bool isInstruction = true;
-        what = next;
-        next = nullptr;
-
-        // Strip blocks
-        while (Block *block = what->AsBlock())
-            what = block->child;
-
-        // Instruction to analyze
-        if (Infix *infix = what->AsInfix())
-        {
-            if (IsSequence(infix))
-            {
-                // Chain of declarations, avoiding recursing if possible.
-                what = infix->left;
-                next = infix->right;
-            }
-        }
 
         if (Infix *infix = what->AsInfix())
         {
