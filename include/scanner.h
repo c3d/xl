@@ -168,9 +168,10 @@ struct Positions
 private:
     struct Range
     {
-        Range(ulong s, text f): start(s), file(f) {}
-        ulong   start;
+        Range(text f, ulong s, ulong o = 0): file(f), start(s), offset(o) {}
         text    file;
+        ulong   start;
+        ulong   offset;
     };
     std::vector<Range>  positions;
     std::vector<Range>  files;
@@ -224,6 +225,7 @@ public:
     Syntax       & InputSyntax()        { return syntax; }
 
 private:
+    text           name;
     Syntax &       syntax;
     std::istream & input;
     text           tokenText;
