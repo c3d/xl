@@ -140,7 +140,8 @@ Scanner::Scanner(kstring name, Syntax &stx, Positions &pos, Errors &err)
 // ----------------------------------------------------------------------------
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
-    : syntax(stx),
+    : name(name),
+      syntax(stx),
       input(*new utf8_ifstream(name)),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0), base(10),
@@ -173,7 +174,8 @@ Scanner::Scanner(std::istream &input,
 // ----------------------------------------------------------------------------
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
-    : syntax(stx),
+    : name(fileName),
+      syntax(stx),
       input(input),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0), base(10),
@@ -197,7 +199,8 @@ Scanner::Scanner(const Scanner &parent)
 // ----------------------------------------------------------------------------
 //   Open the file and make sure it's readable
 // ----------------------------------------------------------------------------
-    : syntax(parent.syntax),
+    : name(parent.name),
+      syntax(parent.syntax),
       input(parent.input),
       tokenText(""),
       textValue(""), realValue(0.0), intValue(0), base(10),
@@ -210,7 +213,9 @@ Scanner::Scanner(const Scanner &parent)
       hadSpaceBefore(parent.hadSpaceBefore),
       hadSpaceAfter(parent.hadSpaceAfter),
       mustDeleteInput(false)
-{}
+{
+    position = positions.OpenFile(name);
+}
 
 
 Scanner::~Scanner()
@@ -848,7 +853,7 @@ ulong Positions::OpenFile(text name)
 //    Open a new file
 // ----------------------------------------------------------------------------
 {
-    Range here(current_position, name);
+    Range here(name, current_position);
     positions.push_back(here);
     files.push_back(here);
     return current_position;
@@ -864,7 +869,8 @@ void Positions::CloseFile (ulong pos)
     if (files.size())
     {
         Range last = files.back();
-        last.start += pos - current_position;
+        last.offset = pos - last.start;
+        last.start = pos;
         positions.push_back(last);
     }
     current_position = pos;
@@ -887,7 +893,7 @@ void Positions::GetFile(ulong pos, text *file, ulong *offset)
         if (file)
             *file = r.file;
         if (offset)
-            *offset = pos - r.start;
+            *offset = pos - r.start + r.offset;
     }
     else
     {
