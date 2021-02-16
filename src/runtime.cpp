@@ -546,14 +546,15 @@ struct ModuleInfo : Info
 //   Information about a file that was imported (save full path)
 // ----------------------------------------------------------------------------
 {
-    ModuleInfo(Tree *import) : import(import), value() {}
+    ModuleInfo(Tree *import) : import(import), value(), alias(), module() {}
     Tree_p      import;
     Tree_p      value;
+    Tree_p      alias;
     Module *    module;
 };
 
 
-RECORDER(imports, 32, "Import statements");
+RECORDER(import, 32, "Import statements");
 
 
 static ModuleInfo *xl_load_file(Scope *scope, Tree *self)
@@ -561,12 +562,12 @@ static ModuleInfo *xl_load_file(Scope *scope, Tree *self)
 //    Load a file from disk, may evaluate it or not
 // ----------------------------------------------------------------------------
 {
-    record(imports, "Importing %t", self);
+    record(import, "Importing %t", self);
     ModuleInfo *info = self->GetInfo<ModuleInfo>();
     if (info)
         return info;
 
-    // Create
+    // Create the info about the module
     info = new ModuleInfo(self);
     self->SetInfo(info);
 
@@ -592,11 +593,12 @@ static ModuleInfo *xl_load_file(Scope *scope, Tree *self)
             modname = equal->right;
         }
     }
+    info->alias = alias;
 
     // Load the module and compute the module's value
     Module *module = Module::Get(scope, modname);
     info->module = module;
-    record(imports, "Imported %t into module %p info %p",
+    record(import, "Imported %t into module %p info %p",
            prefix->right, module, info);
     return info;
 }
