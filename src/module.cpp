@@ -182,7 +182,7 @@ Tree_p Module::Reload()
         specification->Reload();
     if (implementation)
         implementation->Reload();
-    return Value();
+    return Source();
 }
 
 
@@ -218,7 +218,7 @@ Module::Module(Scope *where, Tree *modname, text key)
            "syntax '%s' style '%s' spec '%s' impl '%s'",
            modname, key, syntax, stylesheet, specPath, implPath);
 
-    // Load the syntax file first if it exists (will need to reload everything)
+    // Load the syntax file first if it exists
     bool hasSyntax = syntax.length();
     if (hasSyntax)
         Syntax::syntax->ReadSyntaxFile(syntax.c_str());
@@ -232,6 +232,10 @@ Module::Module(Scope *where, Tree *modname, text key)
         specification = new SourceFile(where, specPath);
     if (implPath.length())
         implementation = new SourceFile(where, implPath);
+
+    // Emit error message if we did not find anything
+    if (!specPath.length() && !implPath.length())
+        Ooops("Module $1 not found", modname);
 }
 
 
@@ -323,7 +327,6 @@ Module::SourceFile::SourceFile(XL::Scope *where, text path)
     Context context(where);
     context.CreateScope(MAIN->positions.Here());
     scope = context.Symbols();
-    Reload();
 }
 
 
