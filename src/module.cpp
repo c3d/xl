@@ -83,20 +83,40 @@ Module *Module::Get(Scope *where, text name)
 }
 
 
-Tree *Module::Source()
+inline Module::SourceFile *Module::File(Part part)
+// ----------------------------------------------------------------------------
+//   Select which component we look at
+// ----------------------------------------------------------------------------
+{
+    if ((part & IMPLEMENTATION) && implementation)
+        return implementation;
+    if ((part & SPECIFICATION) && specification)
+        return specification;
+    return nullptr;
+}
+
+
+bool Module::IsValid(Part part)
+// ----------------------------------------------------------------------------
+//   Check if we have a source for specification or implementation
+// ----------------------------------------------------------------------------
+{
+    return File(part) != nullptr;
+}
+
+
+Tree *Module::Source(Part part)
 // ----------------------------------------------------------------------------
 //   Return the source of the implementation first, or specification
 // ----------------------------------------------------------------------------
 {
-    if (implementation)
-        return implementation->Source();
-    if (specification)
-        return specification->Source();
-    return xl_nil;
+    if (SourceFile *file = File(part))
+        return file->Source();
+    return nullptr;
 }
 
 
-Tree *Module::Value()
+Tree *Module::Value(Part part)
 // ----------------------------------------------------------------------------
 //   Return the evaluated value
 // ----------------------------------------------------------------------------
@@ -107,37 +127,19 @@ Tree *Module::Value()
 //   Most modules are expected to not evaluate at top-level, but return a scope
 //   however, this is not mandated by the language
 {
-    if (!value)
-    {
-        if (specification)
-            value = specification->Value();
-        else if (implementation)
-            value = implementation->Value();
-        else
-            value = Ooops("Module $1 not found", name);
-    }
-    return value;
-}
-
-
-Scope *Module::Specification()
-// ----------------------------------------------------------------------------
-//    Return the specification scope
-// ----------------------------------------------------------------------------
-{
-    if (specification)
-        return specification->FileScope();
+    if (SourceFile *file = File(part))
+        return file->Value();
     return nullptr;
 }
 
 
-Scope *Module::Implementation()
+Scope *Module::FileScope(Part part)
 // ----------------------------------------------------------------------------
-//    Return the implementation scope
+//   Scope in which we search for the module symbols
 // ----------------------------------------------------------------------------
 {
-    if (implementation)
-        return implementation->FileScope();
+    if (SourceFile *file = File(part))
+        return file->FileScope();
     return nullptr;
 }
 
@@ -204,7 +206,6 @@ Module::Module(Scope *where, Tree *modname, text key)
 // ----------------------------------------------------------------------------
     : name(modname),
       key(key),
-      value(),
       specification(),
       implementation(),
       syntax(SearchModuleFile(key, "syntax")),

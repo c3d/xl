@@ -60,10 +60,13 @@ struct Module
     static Module *Get(Scope *where,
                        text name);
 
-    Tree *      Source();               // Source code for the module
-    Tree *      Value();                // Value of the module from loading
-    Scope *     Specification();        // Return specification if any
-    Scope *     Implementation();       // Return implementation if any
+    enum Part { SPECIFICATION = 1, IMPLEMENTATION = 2, BOTH = 3 };
+
+    bool        IsValid(Part part = BOTH);
+
+    Tree *      Source(Part part = BOTH);
+    Tree *      Value(Part part = BOTH);
+    Scope *     FileScope(Part part = BOTH);
     text        Syntax();               // Return custom syntax file if any
     text        StyleSheet();           // Return specific style sheet or ""
     bool        HasChanged();           // Check if file changed on disk
@@ -97,11 +100,11 @@ private:
         Tree_p  value;                  // What this evaluated to
         time_t  modified;               // Last known modification date
     };
+    SourceFile *File(Part part = BOTH);
 
 private:
     Tree_p      name;                   // Can be an infix, e.g. [A.B.C]
     text        key;                    // Key for that module
-    Tree_p      value;                  // Value from loading module (or error)
     SourceFile *specification;          // Specification if any
     SourceFile *implementation;         // Implementation if any
     text        syntax;                 // Custom syntax file if any
