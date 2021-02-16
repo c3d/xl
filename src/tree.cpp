@@ -253,6 +253,46 @@ text Text::charQuote = "'";
 
 // ============================================================================
 //
+//   Recursion-free tree iterator
+//
+// ============================================================================
+
+Tree *Tree::Iterator::operator()()
+// ----------------------------------------------------------------------------
+//    Return the next tree, following a normal program structure
+// ----------------------------------------------------------------------------
+{
+    while (current)
+    {
+        while (Block *block = current->AsBlock())
+            current = block->child;
+        if (Infix *seq = IsSequence(current))
+        {
+            current = seq->left;
+            next.push_back(seq->right);
+        }
+        else
+        {
+            Tree *result = current;
+            if (next.size())
+            {
+                current = next.back();
+                next.pop_back();
+            }
+            else
+            {
+                current = nullptr;
+            }
+            return result;
+        }
+    }
+    return current;
+}
+
+
+
+// ============================================================================
+//
 //   Case / underscore normalization
 //
 // ============================================================================

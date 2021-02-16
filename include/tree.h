@@ -182,6 +182,21 @@ struct Tree
     // Conversion to text
                         operator text();
 
+    struct Iterator
+    // ------------------------------------------------------------------------
+    //   Iterate on a tree without recursion
+    // ------------------------------------------------------------------------
+    {
+        Iterator(Tree *tree): tree(tree), current(tree), next() {}
+        Tree *operator()();
+
+    private:
+        Tree_p              tree;
+        Tree_p              current;
+        std::vector<Tree_p> next;
+    };
+
+
 public:
     static int          Compare(Tree *t1, Tree *t2, bool recurse = true);
     static bool         Equal(Tree *t1, Tree *t2, bool recurse = true);
@@ -484,6 +499,13 @@ typename Action::value_type Tree::Do(Action *action)
     return typename Action::value_type();
 }
 
+
+
+// ============================================================================
+//
+//   Sequence iterator - Iterate without deep recursion
+//
+// ============================================================================
 
 inline bool Tree::Equal(Tree *t1, Tree *t2, bool recurse)
 // ----------------------------------------------------------------------------
