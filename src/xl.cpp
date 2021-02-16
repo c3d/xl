@@ -69,9 +69,14 @@ int main(int argc, char **argv)
     // Show errors if we had any
     int rc = main.HadErrors() > 0;
     if (rc)
+    {
         main.errors->Display();
+        main.errors->Clear();
+    }
     else
+    {
         result = main.Show(std::cout, result);
+    }
 
     IFTRACE2(memory, gc_statistics)
         XL::GarbageCollector::GC()->PrintStatistics();
