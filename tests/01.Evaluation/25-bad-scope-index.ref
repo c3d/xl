@@ -2,5 +2,3 @@ foo.A=Inner A
 foo.C=?null?
 01.Evaluation/25-bad-scope-index.xl:46:5: Unable to evaluate [C]:
 01.Evaluation/25-bad-scope-index.xl:46:5:  Nothing matches [C]
-01.Evaluation/25-bad-scope-index.xl:46:5: Unable to evaluate [C]:
-01.Evaluation/25-bad-scope-index.xl:46:5:  Nothing matches [C]

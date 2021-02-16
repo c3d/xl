@@ -32,6 +32,6 @@
 //   You should have received a copy of the GNU General Public License
 //   along with XL.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
-// OPT=-parse %f -style debug -show
+// CMD=%x -nobuiltins -parse %f -style debug -show
 
 A <--> B

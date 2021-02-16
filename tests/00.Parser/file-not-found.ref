@@ -1,3 +1,2 @@
 print "This file is OK, the other one does not exist"
 <Command line>: Module "some-random-nonexistent-file.xl" not found
-<Command line>: Module "some-random-nonexistent-file.xl" not found
