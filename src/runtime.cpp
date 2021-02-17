@@ -541,34 +541,21 @@ bool xl_file_exists(Scope *scope, Tree_p self, text path)
 //
 // ============================================================================
 
-struct ModuleInfo : Info
-// ----------------------------------------------------------------------------
-//   Information about a file that was imported (save full path)
-// ----------------------------------------------------------------------------
-{
-    ModuleInfo(Tree *import) : import(import), value(), alias(), module() {}
-    Tree_p      import;
-    Tree_p      value;
-    Tree_p      alias;
-    Module *    module;
-};
-
-
 RECORDER(import, 32, "Import statements");
 
 
-static ModuleInfo *xl_load_file(Scope *scope, Tree *self)
+static Module::Info *xl_load_file(Scope *scope, Tree *self)
 // ----------------------------------------------------------------------------
 //    Load a file from disk, may evaluate it or not
 // ----------------------------------------------------------------------------
 {
     record(import, "Importing %t", self);
-    ModuleInfo *info = self->GetInfo<ModuleInfo>();
+    Module::Info *info = self->GetInfo<Module::Info>();
     if (info)
         return info;
 
     // Create the info about the module
-    info = new ModuleInfo(self);
+    info = new Module::Info(self);
     self->SetInfo(info);
 
     // Check that the import "looks good"
@@ -609,18 +596,7 @@ Tree *xl_import(Scope *scope, Tree *self)
 //    Import a file, which means loading it from disk and evaluating it
 // ----------------------------------------------------------------------------
 {
-    ModuleInfo *info = xl_load_file(scope, self);
-    if (scope)
-    {
-        if (!info->value)
-        {
-            Module *module = info->module;
-            if (!module)
-                return self;
-            info->value = module->Value();
-        }
-        return info->value;
-    }
+    Module::Info *info = xl_load_file(scope, self);
     return self;
 
 }
@@ -631,7 +607,7 @@ Tree *xl_parse_file(Scope *scope, Tree *self)
 //    Import a file, which means loading it from disk and evaluating it
 // ----------------------------------------------------------------------------
 {
-    ModuleInfo *info = xl_load_file(scope, self);
+    Module::Info *info = xl_load_file(scope, self);
     if (scope)
     {
         if (info->module)
