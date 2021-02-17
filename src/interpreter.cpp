@@ -1052,7 +1052,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
         RewriteList inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
         if (scope->IsEmpty())
-            scope = scope->Enclosing();
+            scope = context.PopScope();
         if (!DoInitializers(scope, inits, cache))
         {
             record(eval, "<Initializer failed for %t", expr);
