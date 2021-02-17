@@ -227,14 +227,6 @@ Tree *Bindings::Do(Prefix *what)
         defined = what;
         cache.Cache(test, test); // Bind value as is
         Tree *result = name->Do(this);
-
-        // Since a top-level lambda is a "catch all, evaluate outside
-        if (result)
-        {
-            Scope *evalScope = evalContext.PopScope();
-            Scope *argScope = argContext.Symbols();
-            argScope->Reparent(evalScope);
-        }
         return result;
     }
 
@@ -735,6 +727,11 @@ static Tree *eval(Scope   *evalScope,
         EvaluationCache bodyCache;
         Scope *bodyScope = bindings.ArgumentsScope();
 
+        // Since lambdas are catch-all, we need to evaluate their bodies
+        // in a context where the lambda is not visible
+        if (IsLambda(pattern))
+            bodyScope->Reparent(declScope->Enclosing());
+
         // Check if the body returns a matching type
         // If so, we need to evaluate in a scope where that pattern is defined
         if (Tree *type = bindings.ResultType())
@@ -1034,6 +1031,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
     };
     record(eval, ">%t %+s in %p", expr, modename[mode], scope);
 
+reenter:
     // Check if there was some error, if so don't keep looking
     if (HadErrors())
     {
@@ -1135,7 +1133,7 @@ retry:
     }
 
     // Short-circuit evaluation of scope, quotes and [matching X]
-    if (Prefix *prefix = expr->AsPrefix())
+    else if (Prefix *prefix = expr->AsPrefix())
     {
         // Check if the left is a block containing only declarations
         // This deals with [(X is 3) (X + 1)], i.e. closures
@@ -1150,8 +1148,8 @@ retry:
             scope = closure;
             expr = prefix->right;
             result = expr;
-            context.SetSymbols(scope);
-            goto retry;
+            mode = STATEMENT;
+            goto reenter;
         }
 
         // Check if we are evaluating a pattern matching type
