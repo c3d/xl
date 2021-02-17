@@ -228,7 +228,21 @@ bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
             {
                 if (eval_fn callback = MAIN->Importer(import->value))
                 {
-                    callback(symbols, prefix);
+                    Tree_p self = callback(symbols, prefix);
+                    if (Module::Info *info = self->GetInfo<Module::Info>())
+                    {
+                        Module *module = info->module;
+                        if (info->alias)
+                        {
+                            // Case of [import IO = XL.TEXT_IO]: define IO
+                            Define(info->alias, module->FileScope());
+                        }
+                        else
+                        {
+                            XL_ASSERT(prefix == self && "Bad import");
+                            symbols->Import(prefix);
+                        }
+                    }
                     isInstruction = false;
                 }
             }
@@ -1094,13 +1108,22 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 //   Lookup a tree using the given lookup function
 // ----------------------------------------------------------------------------
 {
-    Scope * scope = symbols;
+    Scope *scope = symbols;
     record(symbols_lookup, "Looking up %t in %t", what, scope);
+
     while (scope)
     {
+        Scope *search = scope;
+        if (Prefix *import = search->Import())
+        {
+            Module::Info *info = import->GetInfo<Module::Info>();
+            Module *module = info->module;
+            search = module->FileScope();
+        }
+
         // Initialize local scope
-        Tree_p &locals = scope->Locals();
-        if (Tree *result = LookupEntry(symbols, scope,
+        Tree_p &locals = search->Locals();
+        if (Tree *result = LookupEntry(symbols, search,
                                        &locals, what, lookup, info))
             return result;
 
