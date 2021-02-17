@@ -72,6 +72,19 @@ struct Module
     bool        HasChanged();           // Check if file changed on disk
     Tree_p      Reload();               // Reload sources if changed
 
+public:
+    struct Info : XL::Info
+    // ------------------------------------------------------------------------
+    //   Information about a file that was imported (attached to import)
+    // ------------------------------------------------------------------------
+    {
+        Info(Tree *import) : import(import), value(), alias(), module() {}
+        Tree_p      import;
+        Tree_p      value;
+        Tree_p      alias;
+        Module *    module;
+    };
+
 private:
     Module(Scope *where, Tree *name, text key);
     ~Module();

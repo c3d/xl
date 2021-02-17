@@ -143,8 +143,14 @@ struct Rewrites;
 
 struct Scope : Block
 // ----------------------------------------------------------------------------
-//   A scope is simply an indentation-based block
+//   A scope is simply a {} block
 // ----------------------------------------------------------------------------
+//   It contains either
+//   - xl_nil for an empty scope,
+//   - A declaration tree made of Rewrites/Rewrites for a top-level scope
+//   - A Scopes giving access to the enclosing scopes
+//   This corresponds to a source structure like [{X is 0; Y is 1}], except
+//   that the entries are sorted, larger and more specialized first
 {
     Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE)
         : Block(child, "{", "}", pos) {}
@@ -155,6 +161,8 @@ struct Scope : Block
     void    Reparent(Scope *enclosing);
     void    Clear();
     bool    IsEmpty();
+    void    Import(Prefix *import);
+    Prefix *Import();
     GARBAGE_COLLECT(Scope);
 };
 typedef GCPtr<Scope> Scope_p;
@@ -164,12 +172,18 @@ struct Scopes : Prefix
 // ----------------------------------------------------------------------------
 //   A sequence of scopes
 // ----------------------------------------------------------------------------
+//   This is used to represent a hierarchy of scopes.
+//   The enclosing scope is on the left, the child scope on the right
+//   This corresponds to the source structure [(X is 1) (Y is 2)]
+//   Import statements are inserted at the end of the enclosing list
 {
     Scopes(Scope *enclosing, Scope *inner, TreePosition pos = NOWHERE)
         : Prefix(enclosing, inner, pos) {}
     Scope *Enclosing()  { return (Scope *) (Tree *) left; }
     Scope *Inner()      { return (Scope *) (Tree *) right; }
     void   Reparent(Scope *enclosing)   { left = enclosing; }
+    void   Import(Prefix *import)       { left = new Prefix(left, import); }
+    Prefix *Import();
     GARBAGE_COLLECT(Scopes);
 };
 typedef GCPtr<Scopes> Scopes_p;
@@ -179,6 +193,7 @@ struct Rewrite : Infix
 // ----------------------------------------------------------------------------
 //   A rewrite is an infix "is"
 // ----------------------------------------------------------------------------
+//   This corresponds to a source structure like [X is 1]
 {
     Rewrite(Tree *pattern, Tree *definition)
         : Infix("is", pattern, definition, pattern->Position()) {}
@@ -196,6 +211,12 @@ struct Rewrites : Infix
 // ----------------------------------------------------------------------------
 //   Sequence of rewrites are separated by a \n
 // ----------------------------------------------------------------------------
+//   This corresponds to a source structure like [X is 1 \n Y is 2]
+//   It is sorted as follows:
+//   - Payload on the left, which is always a Rewrite
+//   - Rewrite or Rewrites on the right
+//   - The Rewrites form a sorted tree of declarations
+//   - The payload can be an import statement
 {
     Rewrites(Rewrite *left, Rewrite *right)
         : Infix("\n", left, right, left->Position()) {}
@@ -213,6 +234,7 @@ struct Closure : Prefix
 // ----------------------------------------------------------------------------
 //   An XL closure is represented by a prefix with a scope on the left
 // ----------------------------------------------------------------------------
+//   This corresponds to the source structure [(X is 1) X]
 {
     Closure(Scope *scope, Tree *value)
         : Prefix(scope, value, value->Position()) {}
@@ -1024,6 +1046,18 @@ inline Tree *Rewrite::BasePattern()
 //
 // ============================================================================
 
+inline Prefix *Scopes::Import()
+// ----------------------------------------------------------------------------
+//   Return the last import
+// ----------------------------------------------------------------------------
+{
+    if (!left->As<Scope>())
+        if (Prefix *prefix = left->AsPrefix())
+            return prefix->right->AsPrefix();
+    return nullptr;
+}
+
+
 inline Scope *Scope::Enclosing()
 // ----------------------------------------------------------------------------
 //   Find parent for a given scope
@@ -1057,6 +1091,16 @@ inline Tree_p &Scope::Locals()
 }
 
 
+inline void Scope::Reparent(Scope *enclosing)
+// ----------------------------------------------------------------------------
+//   Change the enclosing context for this scope
+// ----------------------------------------------------------------------------
+{
+    if (Scopes *scopes = child->As<Scopes>())
+        scopes->Reparent(enclosing);
+}
+
+
 inline void Scope::Clear()
 // ----------------------------------------------------------------------------
 //  Clear the local symbol table
@@ -1077,13 +1121,30 @@ inline bool Scope::IsEmpty()
 }
 
 
-inline void Scope::Reparent(Scope *enclosing)
+inline void Scope::Import(Prefix *import)
 // ----------------------------------------------------------------------------
-//   Change the enclosing context for this scope
+//   Add an import to the current scope
+// ----------------------------------------------------------------------------
+{
+    Scopes *scopes = child->As<Scopes>();
+    if (!scopes)
+    {
+        // Import into top-level scope
+        scopes = new Scopes(new Scope(), new Scope(child));
+        child = scopes;
+    }
+    scopes->Import(import);
+}
+
+
+inline Prefix *Scope::Import()
+// ----------------------------------------------------------------------------
+//   Return last import, or null
 // ----------------------------------------------------------------------------
 {
     if (Scopes *scopes = child->As<Scopes>())
-        scopes->Reparent(enclosing);
+        return scopes->Import();
+    return nullptr;
 }
 
 
