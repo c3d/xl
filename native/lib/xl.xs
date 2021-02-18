@@ -34,22 +34,17 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module XL with
-// ----------------------------------------------------------------------------
-//   Top-level XL module
-// ----------------------------------------------------------------------------
+Version         is 0.0.1
+URL             is "http://github.com/c3d/xl"
+License         is "GPL v3"
+Creator         is "Christophe de Dinechin <christophe@dinechin.org>"
+Email           is "xl-devel@lists.sourceforge.net"
 
-    Version         is 0.0.1
-    URL             is "http://github.com/c3d/xl"
-    License         is "GPL v3"
-    Creator         is "Christophe de Dinechin <christophe@dinechin.org>"
-    Email           is "xl-devel@lists.sourceforge.net"
-
-    module TYPES                // Basic data types (integer, boolean, ...)
-    module OPERATIONS           // Elementary operations (arithmetic, ...)
-    module DATA                 // Data structures (arrays, lists, ...)
-    module PROGRAM              // Program structures (loop, tests, ...)
-    module ALGORITHMS           // General algorithms (sort, find, ...)
-    module MATH                 // Mathematics (functions, types, ...)
-    module SYSTEM               // System (memory, files, ...)
-    module COMPILER             // Compiler (scanner, parser, ...)
+module TYPES                // Basic data types (integer, boolean, ...)
+module OPERATIONS           // Elementary operations (arithmetic, ...)
+module DATA                 // Data structures (arrays, lists, ...)
+module PROGRAM              // Program structures (loop, tests, ...)
+module ALGORITHMS           // General algorithms (sort, find, ...)
+module MATH                 // Mathematics (functions, types, ...)
+module SYSTEM               // System (memory, files, ...)
+module COMPILER             // Compiler (scanner, parser, ...)
