@@ -180,6 +180,41 @@ Context *Context::Parent()
 //
 // ============================================================================
 
+static void processModule(Context *context, Prefix *import)
+// ----------------------------------------------------------------------------
+//   Process module interface and implementation
+// ----------------------------------------------------------------------------
+{
+    if (Module::Info *info = import->GetInfo<Module::Info>())
+    {
+        Module *module = info->module;
+        for (int i = 0; i < 2; i++)
+        {
+            auto part = i ? Module::IMPLEMENTATION : Module::SPECIFICATION;
+            if (Scope *modscope = module->FileScope(part))
+            {
+                if (Tree *modsource = module->Source(part))
+                {
+                    RewriteList modinits;
+                    Context modctx(modscope);
+                    modctx.ProcessDeclarations(modsource, modinits);
+                }
+            }
+        }
+
+        if (info->alias)
+        {
+            // Case of [import IO = XL.TEXT_IO]: define IO
+            context->Define(info->alias, module->FileScope());
+        }
+        else
+        {
+            context->symbols->Import(import);
+        }
+    }
+}
+
+
 bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return true if there are instructions
@@ -229,20 +264,8 @@ bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
                 if (eval_fn callback = MAIN->Importer(import->value))
                 {
                     Tree_p self = callback(symbols, prefix);
-                    if (Module::Info *info = self->GetInfo<Module::Info>())
-                    {
-                        Module *module = info->module;
-                        if (info->alias)
-                        {
-                            // Case of [import IO = XL.TEXT_IO]: define IO
-                            Define(info->alias, module->FileScope());
-                        }
-                        else
-                        {
-                            XL_ASSERT(prefix == self && "Bad import");
-                            symbols->Import(prefix);
-                        }
-                    }
+                    XL_ASSERT(prefix == self && "Import callback error");
+                    processModule(this, prefix);
                     isInstruction = false;
                 }
             }
