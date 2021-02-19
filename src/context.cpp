@@ -1342,8 +1342,15 @@ void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
     while (scope)
     {
         Scope *parent = scope->Enclosing();
-        Tree_p &locals = scope->Locals();
-        Dump(out, &locals);
+        if (Prefix *import = scope->Import())
+        {
+            out << import << "\n";
+        }
+        else
+        {
+            Tree_p &locals = scope->Locals();
+            Dump(out, &locals);
+        }
         if (parent)
             out << "// Parent " << (void *) parent << "\n";
         scope = recurse ? parent : nullptr;
@@ -1432,24 +1439,23 @@ XL::Scope *xldebug(XL::Closure *closure)
 }
 
 
-XL::Scopes *xldebug(XL::Scopes *scopes)
+XL::Scope *xldebug(XL::Scopes *scopes)
 // ----------------------------------------------------------------------------
 //    Helper to show a global scopes in a symbol table
 // ----------------------------------------------------------------------------
 {
     if (XL::Allocator<XL::Scopes>::IsAllocated(scopes))
     {
-        std::cerr << "Enclosing:\n";
-        XL::Context::Dump(std::cerr, scopes->left->As<XL::Scope>(), true);
-        std::cerr << "Current:\n";
         XL::Context::Dump(std::cerr, scopes->right->As<XL::Scope>(), true);
+        std::cerr << "Enclosing: " <<  (void *) scopes->left << "\n";
+        return scopes->left->As<XL::Scope>();
     }
     else
     {
         std::cerr << "Cowardly refusing to render unknown scopes pointer "
                   << (void *) scopes << "\n";
     }
-    return scopes;
+    return nullptr;
 }
 
 
