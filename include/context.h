@@ -179,11 +179,13 @@ struct Scopes : Prefix
 {
     Scopes(Scope *enclosing, Scope *inner, TreePosition pos = NOWHERE)
         : Prefix(enclosing, inner, pos) {}
+    Scopes(Scope *enclosing, Prefix *import, TreePosition pos = NOWHERE)
+        : Prefix(enclosing, import, pos) {}
     Scope *Enclosing()  { return (Scope *) (Tree *) left; }
-    Scope *Inner()      { return (Scope *) (Tree *) right; }
     void   Reparent(Scope *enclosing)   { left = enclosing; }
-    void   Import(Prefix *import)       { left = new Prefix(left, import); }
+    void   Import(Prefix *import);
     Prefix *Import();
+    Scope *Inner();
     GARBAGE_COLLECT(Scopes);
 };
 typedef GCPtr<Scopes> Scopes_p;
@@ -1048,14 +1050,33 @@ inline Tree *Rewrite::BasePattern()
 //
 // ============================================================================
 
+inline Scope *Scopes::Inner()
+// ----------------------------------------------------------------------------
+//   Return the inner scope
+// ----------------------------------------------------------------------------
+//   This should not be called when there is an import
+{
+    return right->As<Scope>();
+}
+
+
+inline void Scopes::Import(Prefix *import)
+// ----------------------------------------------------------------------------
+//   Add an import statement to the scopes
+// ----------------------------------------------------------------------------
+{
+    left = new Scopes(Enclosing(), import);
+}
+
+
 inline Prefix *Scopes::Import()
 // ----------------------------------------------------------------------------
 //   Return the last import
 // ----------------------------------------------------------------------------
 {
-    if (!left->As<Scope>())
-        if (Prefix *prefix = left->AsPrefix())
-            return prefix->right->AsPrefix();
+    if (Scopes *scopes = left->As<Scopes>())
+        if (Prefix *prefix = scopes->right->AsPrefix())
+            return prefix;
     return nullptr;
 }
 
