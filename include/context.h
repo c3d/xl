@@ -965,7 +965,9 @@ template<> inline Scopes *Tree::As<Scopes>(Scope *)
 // ----------------------------------------------------------------------------
 {
     if (Prefix *prefix = AsPrefix())
-        return (Scopes *) prefix;
+        // Check if this was allocated as a scope - Then it's a scope
+        if (XL::Allocator<XL::Scopes>::IsAllocated(this))
+            return (Scopes *) prefix;
     return nullptr;
 }
 
