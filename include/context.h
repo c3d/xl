@@ -181,8 +181,8 @@ struct Scopes : Prefix
         : Prefix(enclosing, inner, pos) {}
     Scopes(Scope *enclosing, Prefix *import, TreePosition pos = NOWHERE)
         : Prefix(enclosing, import, pos) {}
-    Scope *Enclosing()  { return (Scope *) (Tree *) left; }
-    void   Reparent(Scope *enclosing)   { left = enclosing; }
+    Scope *Enclosing();
+    void   Reparent(Scope *enclosing);
     void   Import(Prefix *import);
     Prefix *Import();
     Scope *Inner();
@@ -1049,6 +1049,33 @@ inline Tree *Rewrite::BasePattern()
 //    Meaning adapters - Make it more explicit what happens in code
 //
 // ============================================================================
+
+inline Scope *Scopes::Enclosing()
+// ----------------------------------------------------------------------------
+//   Return the enclosing scope
+// ----------------------------------------------------------------------------
+{
+    // Normal case: left is a Scope
+    if (Scope *scope = left->As<Scope>())
+        return scope;
+
+    // Import case: left is a Scopes
+    if (Scopes *scopes = left->As<Scopes>())
+        return scopes->Enclosing();
+
+    // Unexpected
+    return nullptr;
+}
+
+
+inline void Scopes::Reparent(Scope *enclosing)
+// ----------------------------------------------------------------------------
+//   Change the enclosing scope
+// ----------------------------------------------------------------------------
+{
+    left = enclosing;
+}
+
 
 inline Scope *Scopes::Inner()
 // ----------------------------------------------------------------------------
