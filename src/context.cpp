@@ -1437,14 +1437,16 @@ XL::Scopes *xldebug(XL::Scopes *scopes)
 //    Helper to show a global scopes in a symbol table
 // ----------------------------------------------------------------------------
 {
-    if (XL::Allocator<XL::Scope>::IsAllocated(scopes))
+    if (XL::Allocator<XL::Scopes>::IsAllocated(scopes))
     {
+        std::cerr << "Enclosing:\n";
         XL::Context::Dump(std::cerr, scopes->left->As<XL::Scope>(), true);
+        std::cerr << "Current:\n";
         XL::Context::Dump(std::cerr, scopes->right->As<XL::Scope>(), true);
     }
     else
     {
-        std::cerr << "Cowardly refusing to render unknown scope pointer "
+        std::cerr << "Cowardly refusing to render unknown scopes pointer "
                   << (void *) scopes << "\n";
     }
     return scopes;
