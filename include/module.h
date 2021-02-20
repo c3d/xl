@@ -55,10 +55,8 @@ struct Module
 //    - A stylesheet for rendering, from a file with a '.stylesheet' extension
 //    A module can
 {
-    static Module *Get(Scope *where,    // Get an existing module if any
-                       Tree *name);
-    static Module *Get(Scope *where,
-                       text name);
+    static Module *Get(Tree *name);
+    static Module *Get(text name);
 
     enum Part { SPECIFICATION = 1, IMPLEMENTATION = 2, BOTH = 3 };
 
@@ -67,6 +65,7 @@ struct Module
     Tree *      Source(Part part = BOTH);
     Tree *      Value(Part part = BOTH);
     Scope *     FileScope(Part part = BOTH);
+    Scope *     FileScope(Scope *where);
     text        Syntax();               // Return custom syntax file if any
     text        StyleSheet();           // Return specific style sheet or ""
     bool        HasChanged();           // Check if file changed on disk
@@ -86,10 +85,9 @@ public:
     };
 
 private:
-    Module(Scope *where, Tree *name, text key);
+    Module(Tree *name, text key);
     ~Module();
-    static text    Name(Scope * scope,  // Get the file name for [A.B.C]
-                        Tree *name);
+    static text    Name(Tree *name); // Get the file name for A.B.C
 
 private:
     struct SourceFile
@@ -97,14 +95,14 @@ private:
     //   Representation of an XL source file
     // ------------------------------------------------------------------------
     {
-        SourceFile(Scope *where, text path);
+        SourceFile(text path);
         ~SourceFile();
 
-        Tree_p  Source();               // Return source code
-        Scope_p FileScope();            // Return scope for that file
-        Tree_p  Value();                // What the file evaluated to
+        Tree*   Source();               // Return source code
+        Scope*  FileScope();            // Return scope for that file
+        Tree *  Value();                // What the file evaluated to
         bool    HasChanged();           // Check if source file was modified
-        Tree_p  Reload();               // Reload even if it has changed
+        Tree *  Reload();               // Reload even if it has changed
 
     private:
         text    path;                   // Path to the source file

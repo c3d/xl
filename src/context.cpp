@@ -191,9 +191,9 @@ static void processModule(Context *context, Prefix *import)
         for (int i = 0; i < 2; i++)
         {
             auto part = i ? Module::IMPLEMENTATION : Module::SPECIFICATION;
-            if (Scope *modscope = module->FileScope(part))
+            if (Tree *modsource = module->Source(part))
             {
-                if (Tree *modsource = module->Source(part))
+                if (Scope *modscope = module->FileScope(part))
                 {
                     RewriteList modinits;
                     Context modctx(modscope);

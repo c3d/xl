@@ -53,33 +53,34 @@ XL_BEGIN
 //
 // ============================================================================
 
-Module *Module::Get(Scope *where, Tree *name)
+Module *Module::Get(Tree *name)
 // ----------------------------------------------------------------------------
 //   Lookup a module, or load it
 // ----------------------------------------------------------------------------
 {
-    text key = Name(where, name);
+    text key = Name(name);
 
     // Silently fail to load the module at syntax loading time
-    if (key == "" && where == nullptr)
+    if (key == "")
         return nullptr;
 
     Module *module = modules[key];
     if (!module)
     {
-        module = new Module(where, name, key);
+        module = new Module(name, key);
         modules[key] = module;
     }
+
     return module;
 }
 
 
-Module *Module::Get(Scope *where, text name)
+Module *Module::Get(text name)
 // ----------------------------------------------------------------------------
 //   Lookup a module by name
 // ----------------------------------------------------------------------------
 {
-    return Get(where, new Text(name, Tree::COMMAND_LINE));
+    return Get(new Text(name, Tree::COMMAND_LINE));
 }
 
 
@@ -200,7 +201,7 @@ static text SearchModuleFile(text name, text extension)
 }
 
 
-Module::Module(Scope *where, Tree *modname, text key)
+Module::Module(Tree *modname, text key)
 // ----------------------------------------------------------------------------
 //   Create a new module
 // ----------------------------------------------------------------------------
@@ -220,19 +221,18 @@ Module::Module(Scope *where, Tree *modname, text key)
            modname, key, syntax, stylesheet, specPath, implPath);
 
     // Load the syntax file first if it exists
-    bool hasSyntax = syntax.length();
-    if (hasSyntax)
+    if (syntax != "")
         Syntax::syntax->ReadSyntaxFile(syntax.c_str());
 
     // Once we have the syntax, we can render using it. Useful for debugging
-    if (stylesheet.length())
+    if (stylesheet != "")
         Renderer::renderer->SelectStyleSheet(stylesheet, false);
 
     // Load specification then implementation
-    if (specPath.length())
-        specification = new SourceFile(where, specPath);
-    if (implPath.length())
-        implementation = new SourceFile(where, implPath);
+    if (specPath != "")
+        specification = new SourceFile(specPath);
+    if (implPath != "")
+        implementation = new SourceFile(implPath);
 
     // Emit error message if we did not find anything
     if (!specPath.length() && !implPath.length())
@@ -251,7 +251,7 @@ Module::~Module()
 }
 
 
-text Module::Name(Scope *where, Tree *name)
+text Module::Name(Tree *name)
 // ----------------------------------------------------------------------------
 //    Return the module name for a specification like [A.B.C]
 // ----------------------------------------------------------------------------
@@ -276,20 +276,11 @@ text Module::Name(Scope *where, Tree *name)
 
     // Check if we need to evaluate the module name
     if (modname == "")
-    {
         if (Text *text = name->AsText())
-        {
             modname = text->value;
-        }
-        else if (where)
-        {
-            Tree *evaluated = MAIN->Evaluate(where, name);
-            if (Text *text = evaluated->AsText())
-                modname = text->value;
-            else
-                Ooops("The module name $1 is not valid", name);
-        }
-    }
+
+    if (modname == "")
+        Ooops("The module name $1 is not valid", name);
 
     return modname;
 }
@@ -315,7 +306,7 @@ static inline time_t FileModifiedTimeStamp(text path)
 }
 
 
-Module::SourceFile::SourceFile(XL::Scope *where, text path)
+Module::SourceFile::SourceFile(text path)
 // ----------------------------------------------------------------------------
 //   Load a source file
 // ----------------------------------------------------------------------------
@@ -324,11 +315,7 @@ Module::SourceFile::SourceFile(XL::Scope *where, text path)
       scope(),
       value(),
       modified(FileModifiedTimeStamp(path))
-{
-    Context context(where);
-    context.CreateScope(MAIN->positions.Here());
-    scope = context.Symbols();
-}
+{}
 
 
 Module::SourceFile::~SourceFile()
@@ -338,7 +325,7 @@ Module::SourceFile::~SourceFile()
 {}
 
 
-Tree_p Module::SourceFile::Source()
+Tree *Module::SourceFile::Source()
 // ----------------------------------------------------------------------------
 //   Return the source code
 // ----------------------------------------------------------------------------
@@ -349,23 +336,33 @@ Tree_p Module::SourceFile::Source()
 }
 
 
-Scope_p Module::SourceFile::FileScope()
+Scope *Module::SourceFile::FileScope()
 // ----------------------------------------------------------------------------
 //    Return the scope for that module
 // ----------------------------------------------------------------------------
 {
+    if (!scope)
+    {
+        Context context(MAIN->context);
+        context.CreateScope(MAIN->positions.Here());
+        scope = context.Symbols();
+
+        // Enter module name, path in the scope
+        context.SetModulePath(path);
+    }
     return scope;
 }
 
 
-Tree_p Module::SourceFile::Value()
+Tree *Module::SourceFile::Value()
 // ----------------------------------------------------------------------------
 //   Return the value for the module
 // ----------------------------------------------------------------------------
 {
     if (!value)
         if (Tree *source = Source())
-            value = MAIN->Evaluate(scope, source);
+            if (Scope *scope = FileScope())
+                value = MAIN->Evaluate(scope, source);
     return value;
 }
 
@@ -383,7 +380,7 @@ bool Module::SourceFile::HasChanged()
 }
 
 
-Tree_p Module::SourceFile::Reload()
+Tree *Module::SourceFile::Reload()
 // ----------------------------------------------------------------------------
 //   Reload the source file and recompute the value
 // ----------------------------------------------------------------------------
@@ -392,7 +389,7 @@ Tree_p Module::SourceFile::Reload()
 
     // Clear value and scope
     value = nullptr;
-    scope->Clear();
+    scope = nullptr;
 
     XL::Syntax  &syntax = MAIN->syntax;
     Positions   &positions = MAIN->positions;
@@ -408,17 +405,13 @@ Tree_p Module::SourceFile::Reload()
         source =
             Ooops("Failed to load module $1", positions.Here())
             .Arg(path);
-
-    // Normalize source if necessary (used in Tao3D)
-    source = MAIN->Normalize(source);
+    else
+        // Normalize source if necessary (used in Tao3D)
+        source = MAIN->Normalize(source);
 
     // Show source if requested
     if (Opt::showSource)
         std::cout << source << "\n";
-
-    // Enter module name, path in the scope
-    Context context(scope);
-    context.SetModulePath(path);
 
     return Source();
 }

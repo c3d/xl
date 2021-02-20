@@ -416,8 +416,11 @@ Tree_p Main::LoadFile(text file, bool evaluate)
 // ----------------------------------------------------------------------------
 {
     record(fileload, "Loading file %s", file);
-    Module *module = Module::Get(context.Symbols(), file);
-    Tree_p result = evaluate ? module->Value() : (module->Reload(), nullptr);
+    Module *module = Module::Get(file);
+    module->Reload();
+    Tree_p result;
+    if (evaluate)
+        result = module->Value();
     record(fileload, "Loaded file %s into module %p value %t",
            file, module, result);
     return result;
