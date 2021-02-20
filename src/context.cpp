@@ -1136,19 +1136,24 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 
     while (scope)
     {
-        Scope *search = scope;
-        if (Prefix *import = search->Import())
-        {
-            Module::Info *info = import->GetInfo<Module::Info>();
-            Module *module = info->module;
-            search = module->FileScope();
-        }
-
-        // Initialize local scope
-        Tree_p &locals = search->Locals();
-        if (Tree *result = LookupEntry(symbols, search,
+        // Look in local scope
+        Tree_p &locals = scope->Locals();
+        if (Tree *result = LookupEntry(symbols, scope,
                                        &locals, what, lookup, info))
             return result;
+
+        // Look in innermost import if any
+        if (Prefix *import = scope->Import())
+        {
+            Module::Info *modinfo = import->GetInfo<Module::Info>();
+            Module *module = modinfo->module;
+            Scope *imported = module->FileScope();
+
+            Tree_p &ilocals = imported->Locals();
+            if (Tree *result = LookupEntry(symbols, imported,
+                                           &ilocals, what, lookup, info))
+                return result;
+        }
 
         // Not found in this scope. Keep going with next scope if recursing
         // The last top-level global will be nil, so we will end with scope=NULL
