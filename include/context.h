@@ -153,7 +153,7 @@ struct Scope : Block
 //   that the entries are sorted, larger and more specialized first
 {
     Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE)
-        : Block(child, "{", "}", pos) {}
+        : Block(child, "{", "}", pos) { XL_ASSERT(child); }
     Tree   *Entries()   { return child; }
     Scope  *Enclosing();
     Scope  *Inner();
@@ -178,9 +178,9 @@ struct Scopes : Prefix
 //   Import statements are inserted at the end of the enclosing list
 {
     Scopes(Scope *enclosing, Scope *inner, TreePosition pos = NOWHERE)
-        : Prefix(enclosing, inner, pos) {}
+        : Prefix(enclosing, inner, pos) { XL_ASSERT(enclosing); }
     Scopes(Scope *enclosing, Prefix *import, TreePosition pos = NOWHERE)
-        : Prefix(enclosing, import, pos) {}
+        : Prefix(enclosing, import, pos) { XL_ASSERT(enclosing); }
     Scope *Enclosing();
     void   Reparent(Scope *enclosing);
     void   Import(Prefix *import);
@@ -1064,6 +1064,7 @@ inline Scope *Scopes::Enclosing()
         return scopes->Enclosing();
 
     // Unexpected
+    XL_ASSERT(!"Malformed scope");
     return nullptr;
 }
 
