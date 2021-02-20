@@ -1343,14 +1343,9 @@ void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
     {
         Scope *parent = scope->Enclosing();
         if (Prefix *import = scope->Import())
-        {
             out << import << "\n";
-        }
-        else
-        {
-            Tree_p &locals = scope->Locals();
-            Dump(out, &locals);
-        }
+        Tree_p &locals = scope->Locals();
+        Dump(out, &locals);
         if (parent)
             out << "// Parent " << (void *) parent << "\n";
         scope = recurse ? parent : nullptr;
