@@ -123,11 +123,12 @@ GENERATE_FAILURES_LOG=						\
     if [ $(call TEST_KO,$$F) ] ; then				\
       if ! grep -q "$$F" baseline.txt; then			\
 	echo "=== $$F FAILED ===";				\
-	[ -f "$$F.diff" ] && $(CAT) "$$F.diff";			\
-	( [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
+	( echo "--- $$F DIFF ---";				\
+	  [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
 	  echo "--- $$F OUTPUT ---";				\
 	  [ -f "$$F.output" ] && $(CAT) "$$F.output"		\
 	) > "$$F.err";						\
+	$(CAT) "$$F.err";					\
       fi;							\
     fi;								\
   done;								\
@@ -135,11 +136,12 @@ GENERATE_FAILURES_LOG=						\
     if [ $(call TEST_KO,$$F) ]; then				\
       if grep -q "$$F" baseline.txt; then			\
 	echo "=== $$F FAILED (EXPECTED) ===";			\
-	[ -f "$$F.diff" ] &&  $(CAT) "$$F.diff";		\
-	( [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
+	( echo "--- $$F DIFF ---";				\
+	  [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
 	  echo "--- $$F OUTPUT ---";				\
 	  [ -f "$$F.output" ] && $(CAT) "$$F.output"		\
 	) > "$$F.err";						\
+	$(CAT) "$$F.err";					\
       fi;							\
     fi;								\
   done;								\
