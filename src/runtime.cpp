@@ -583,7 +583,7 @@ static Module::Info *xl_load_file(Scope *scope, Tree *self)
     info->alias = alias;
 
     // Load the module and compute the module's value
-    Module *module = Module::Get(scope, modname);
+    Module *module = Module::Get(modname);
     info->module = module;
     record(import, "Imported %t into module %p info %p",
            prefix->right, module, info);
@@ -596,7 +596,7 @@ Tree *xl_import(Scope *scope, Tree *self)
 //    Import a file, which means loading it from disk and evaluating it
 // ----------------------------------------------------------------------------
 {
-    Module::Info *info = xl_load_file(scope, self);
+    xl_load_file(scope, self);
     return self;
 
 }
