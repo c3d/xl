@@ -99,7 +99,7 @@ define timeout
 endef
 
 XL_CMD= $(if $($1.CMD),$($1.CMD),$(XL) $($1.OPT) $1.xl)
-XL_FILT=$(if $($1.FILTER),| $($1.FILTER))
+XL_FILT=$(if $($1.FILTER),| ($($1.FILTER) || true))
 
 # Run a simple test
 # $1 = pattern
