@@ -815,7 +815,7 @@ static Tree_p doDot(Context &context,
     }
     if (!scope)
     {
-        Context context(scope);
+        Context context;
         scope = context.CreateScope();
         RewriteList inits;
         bool hasInstructions = context.ProcessDeclarations(where, inits);
