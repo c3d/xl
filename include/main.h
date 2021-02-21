@@ -63,7 +63,8 @@ struct Serializer;
 struct Deserializer;
 struct Compiler;
 
-typedef std::vector<text>       path_list;
+typedef std::vector<text>               path_list;
+typedef std::map<text,Module *>         module_map;
 
 
 struct Main
@@ -115,6 +116,7 @@ public:
     Context             context;
     Renderer            renderer;
     path_list           file_names;
+    module_map          modules;
     Deserializer *      reader;
     Serializer   *      writer;
     Evaluator *         evaluator;
