@@ -120,8 +120,6 @@ private:
     SourceFile *implementation;         // Implementation if any
     text        syntax;                 // Custom syntax file if any
     text        stylesheet;             // Custom stylesheet if any was found
-
-    static std::map<text, Module *> modules;
 };
 
 XL_END

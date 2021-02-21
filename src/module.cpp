@@ -64,11 +64,11 @@ Module *Module::Get(Tree *name)
     if (key == "")
         return nullptr;
 
-    Module *module = modules[key];
+    Module *module = MAIN->modules[key];
     if (!module)
     {
         module = new Module(name, key);
-        modules[key] = module;
+        MAIN->modules[key] = module;
     }
 
     return module;
@@ -245,7 +245,7 @@ Module::~Module()
 //   Deleting a module
 // ----------------------------------------------------------------------------
 {
-    modules.erase(key);
+    MAIN->modules.erase(key);
     delete specification;
     delete implementation;
 }
@@ -415,9 +415,5 @@ Tree *Module::SourceFile::Reload()
 
     return Source();
 }
-
-
-std::map<text, Module *> XL::Module::modules;
-
 
 XL_END

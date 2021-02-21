@@ -195,6 +195,8 @@ Main::Main(int inArgc,
       options(inArgc, inArgv),
       context(),
       renderer(std::cout, syntax),
+      file_names(),
+      modules(),
       reader(nullptr),
       writer(nullptr),
       evaluator(nullptr)
