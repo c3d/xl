@@ -833,7 +833,7 @@ static Tree_p doDot(Context &context,
         }
     }
     if (scope)
-        return Interpreter::DoEvaluate(scope->Inner(), value,
+        return Interpreter::DoEvaluate(scope, value,
                                        Interpreter::LOCAL, cache);
     else
         Ooops("No scope in $1 (evaluated as $2)", name, where);
