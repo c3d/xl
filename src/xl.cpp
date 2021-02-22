@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     XL::path_list lib { "../lib/xl", "../lib",
                         XL_LIB,
                         "/usr/local/lib/xl", "/lib/xl", "/usr/lib/xl"  };
-    XL::path_list path { };
+    XL::path_list path { "." };
     XL::Main main(argc, argv, path, bin, lib, "xl");
 
     // Load files and run code
