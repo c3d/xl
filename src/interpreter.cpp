@@ -1049,7 +1049,7 @@ reenter:
         scope = context.CreateScope();
         RewriteList inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
-        if (scope->IsEmpty())
+        if (scope->IsEmpty() && !scope->Import())
             scope = context.PopScope();
         if (!DoInitializers(scope, inits, cache))
         {

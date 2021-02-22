@@ -10,8 +10,8 @@ BEGIN {
     subdir=file;
     sub("/[^/]*$", "", subdir);
 }
-/\/\/ [A-Z]+=/ {
-    name=substr($1, 4);
+/\/\/ +[A-Z]+=/ {
+    name=substr($1, match($1, "[A-Z]"));
     value=substr($0, index($0, "=") + 1);
     gsub("%x", xl, value);
     gsub("%f", file, value);

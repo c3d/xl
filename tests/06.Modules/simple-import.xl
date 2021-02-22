@@ -1,0 +1,7 @@
+print "Hello"
+
+import mySuperModule
+
+A <=> (B + C)
+
+foo "BarGlop"
