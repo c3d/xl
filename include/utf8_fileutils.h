@@ -76,8 +76,8 @@ protected:
 };
 
 
-extern int      utf8_stat(const char *path, struct _stat *buffer);
-extern int      utf8_access(const char *path, int mode);
+extern int              utf8_stat(const char *path, struct _stat *buffer);
+extern int              utf8_access(const char *path, int mode);
 
 
 inline bool isDirectorySeparator(int c)
@@ -105,5 +105,8 @@ inline bool isDirectorySeparator(int c)
 }
 
 #endif // HAVE_STRUCT_STAT
+
+// Find the file part of a path
+extern const char *     utf8_filename(const char *path);
 
 #endif // UTF8_FILEUTILS_H
