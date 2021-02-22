@@ -527,7 +527,7 @@ text Main::SearchFile(text file, path_list &paths, text extension)
         text pathpat = p + pattern;
         glob(pathpat.c_str(), GLOB_MARK, nullptr, &files);
         text match;
-        record(fileload_xl, "Looking for pattern %s for %s, found %u",
+        record(fileload_xl, "Looking for pattern %s for %s, found %u files",
                pathpat, file, files.gl_pathc);
         for (uint i = 0; i < files.gl_pathc; i++)
         {
@@ -548,7 +548,7 @@ text Main::SearchFile(text file, path_list &paths, text extension)
         }
         globfree(&files);
         if (match != "")
-            return match;
+            return p + match;
     }
 
     // We failed to find a candidate
