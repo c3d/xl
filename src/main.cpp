@@ -64,10 +64,12 @@
 #include <sstream>
 #include <stdio.h>
 #include <ctype.h>
+#include <glob.h>
 #include <sys/stat.h>
 
 
 RECORDER(fileload,                      16, "Files being loaded");
+RECORDER(fileload_xl,                   16, "Finding XL-like file names");
 RECORDER(main,                          16, "Compiler main entry point");
 RECORDER(run_results,                   16, "Show run results");
 RECORDER(fault_injection,                4, "Fault injection");
@@ -485,6 +487,7 @@ text Main::SearchFile(text file, path_list &paths, text extension)
             file = file.substr(0, pos) + extension;
         else
             file += extension;
+        flen = file.length();
     }
 
     // If the given file is already good, use that
@@ -501,6 +504,12 @@ text Main::SearchFile(text file, path_list &paths, text extension)
     }
 
     // Search for a possible file in path
+    text normalized = XL::Normalize(file);
+    text pattern = "*";
+    for (uint i = 0; i < flen; i++)
+        if (isDirectorySeparator(normalized[i]))
+            pattern += "/*";
+    pattern += extension;
     for (auto &&p : paths)
     {
         if (p != "" && !isDirectorySeparator(p[p.length() - 1]))
@@ -512,6 +521,34 @@ text Main::SearchFile(text file, path_list &paths, text extension)
             record(fileload, "Found candidate '%s'", candidate);
             return candidate;
         }
+
+        // Try ignoring case
+        glob_t files;
+        text pathpat = p + pattern;
+        glob(pathpat.c_str(), GLOB_MARK, nullptr, &files);
+        text match;
+        record(fileload_xl, "Looking for pattern %s for %s, found %u",
+               pathpat, file, files.gl_pathc);
+        for (uint i = 0; i < files.gl_pathc; i++)
+        {
+            text entry = utf8_filename(files.gl_pathv[i]);
+            text ne = XL::Normalize(entry);
+            if (normalized == ne)
+            {
+                record(fileload_xl, "Found match #%u %s for %s",
+                       i, entry, file);
+                if (match != "")
+                    Ooops("Warning: Both $1 and $2 match $3, picking first one")
+                        .Arg(entry)
+                        .Arg(match)
+                        .Arg(file);
+                else
+                    match = entry;
+            }
+        }
+        globfree(&files);
+        if (match != "")
+            return match;
     }
 
     // We failed to find a candidate

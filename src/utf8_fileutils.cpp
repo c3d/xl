@@ -36,9 +36,10 @@
 // *****************************************************************************
 
 #include "config.h"
+#include "utf8_fileutils.h"
+#include "utf8.h"
 
 #ifndef HAVE_STRUCT_STAT
-#include "utf8_fileutils.h"
 
 #include <windows.h>
 #include <fcntl.h>
@@ -128,5 +129,22 @@ int utf8_access(const char *path, int mode)
     return _waccess(wpath.c_str(), mode);
 }
 
-
 #endif // HAVE_STRUCT_STAT
+
+
+const char *utf8_filename(const char *path)
+// ----------------------------------------------------------------------------
+//   Find the file part of a filename
+// ----------------------------------------------------------------------------
+{
+    const char *result = path;
+    bool wasDirSep = false;
+    while (char c = *path)
+    {
+        if (wasDirSep)
+            result = path;
+        wasDirSep = isDirectorySeparator(c);
+        path++;
+    }
+    return result;
+}

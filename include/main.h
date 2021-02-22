@@ -66,7 +66,6 @@ struct Compiler;
 typedef std::vector<text>               path_list;
 typedef std::map<text,Module *>         module_map;
 
-
 struct Main
 // ----------------------------------------------------------------------------
 //    The main entry point and associated data
@@ -132,7 +131,6 @@ extern TextOption       stylesheet;
 extern BooleanOption    emitIR;
 extern BooleanOption    caseSensitive;
 extern BooleanOption    showSource;
-
 }
 
 XL_END
