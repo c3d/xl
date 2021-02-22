@@ -68,7 +68,8 @@ public:
 public:
     enum Evaluation
     {
-        STATEMENT,              // Complete statements - Process declarations
+        SEQUENCE,               // Sequence of statements - Process declarations
+        STATEMENT,              // Statements in a sequence
         EXPRESSION,             // Evaluate sub-expressions in a statement
         MAYFAIL,                // Return nullptr on error
         VARIABLE,               // Return a variable reference

@@ -460,7 +460,7 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr, bool named)
     {
         Interpreter::Evaluation mode = named
             ? Interpreter::NAMED
-            : Interpreter::STATEMENT;
+            : Interpreter::SEQUENCE;
         record(bindings, "Evaluating %+s %t in %t",
                named ? "normal" : "named", expr, scope);
         result = Interpreter::DoEvaluate(scope, expr, mode, cache);
@@ -658,7 +658,7 @@ static Tree *eval(Scope   *evalScope,
                 if (unref)
                     return decl->right;
                 return Interpreter::DoEvaluate(evalScope, decl->right,
-                                               Interpreter::STATEMENT, cache);
+                                               Interpreter::SEQUENCE, cache);
             }
         }
         return nullptr;
@@ -741,7 +741,7 @@ static Tree *eval(Scope   *evalScope,
 
         // Otherwise simply evaluate the body and check the type afterwards
         result = Interpreter::DoEvaluate(bodyScope, body,
-                                         Interpreter::STATEMENT, bodyCache);
+                                         Interpreter::SEQUENCE, bodyCache);
         result = bindings.ResultTypeCheck(result, false);
     }
     return result;
@@ -935,7 +935,7 @@ Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
 {
     EvaluationCache cache;
-    Tree_p result = DoEvaluate(scope, expr, STATEMENT, cache);
+    Tree_p result = DoEvaluate(scope, expr, SEQUENCE, cache);
     result = Unwrap(result, cache);
     return result;
 }
@@ -980,7 +980,7 @@ Tree *Interpreter::Unwrap(Tree *expr, EvaluationCache &cache)
             if (Scope *scope = Context::IsClosure(expr))
             {
                 Prefix *closure = (Prefix *) (Tree *) expr;
-                expr = DoEvaluate(scope, closure->right, STATEMENT, cache);
+                expr = DoEvaluate(scope, closure->right, SEQUENCE, cache);
                 continue;
             }
             Tree *left = Unwrap(prefix->left, cache);
@@ -1022,6 +1022,7 @@ Tree *Interpreter::DoEvaluate(Scope *scope,
     static uint depth = 0;
     const char *modename[EVALUATION_MODES] =
     {
+        "sequence",
         "statement",
         "expression",
         "may fail",
@@ -1044,7 +1045,7 @@ reenter:
     Context context(scope);
 
     // Check if we have instructions to process. If not, return declarations
-    if (mode == STATEMENT)
+    if (mode == SEQUENCE)
     {
         scope = context.CreateScope();
         RewriteList inits;
@@ -1078,7 +1079,7 @@ retry:
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
-            Tree *left = DoEvaluate(scope, infix->left, EXPRESSION, cache);
+            Tree *left = DoEvaluate(scope, infix->left, STATEMENT, cache);
             if (left != infix->left)
                 result = left;
             if (HadErrors() || IsError(left))
@@ -1088,6 +1089,7 @@ retry:
                 return left;
             }
             expr = infix->right;
+            mode = STATEMENT;
             goto retry;
         }
 
@@ -1148,7 +1150,7 @@ retry:
             scope = closure;
             expr = prefix->right;
             result = expr;
-            mode = STATEMENT;
+            mode = SEQUENCE;
             goto reenter;
         }
 
@@ -1192,6 +1194,23 @@ retry:
                 record(eval, "<Import statement %t callback %p",
                        prefix, callback);
                 return callback(scope, prefix);
+            }
+        }
+
+        // Check if the left is a qualified scope
+        // This turns statement [IO.print "Hello"] into [IO.{print "Hello"}]
+        if (mode == STATEMENT || mode == SEQUENCE)
+        {
+            if (Infix *qualified = IsDot(prefix->left))
+            {
+                Tree *qualifier = qualified->left;
+                Tree *name = qualified->right;
+                Tree *args = prefix->right;
+                Prefix *inner = new Prefix(prefix, name, args);
+                Infix *outer = new Infix(qualified, qualifier, inner);
+                Tree_p scoped = doDot(context, outer, cache);
+                record(eval, "<Scoped statement %t is %t", outer, scoped);
+                return scoped;
             }
         }
     }
