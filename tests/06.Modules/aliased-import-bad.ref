@@ -1,0 +1,3 @@
+Hello
+06.Modules/aliased-import-bad.xl:1:16: Unable to evaluate [A<=spaceship=>( B + C)]:
+06.Modules/aliased-import-bad.xl:1:16:  Nothing matches [A<=spaceship=>( B + C)]
