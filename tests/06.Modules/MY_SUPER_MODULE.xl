@@ -1,0 +1,3 @@
+A <=> B is print "World"
+
+foo T is print "Foo says ", T
