@@ -1,12 +1,12 @@
 // ****************************************************************************
-//  MY_SUPER_MODULE.xl                                              XL project
+//  aliased-import.xl                                                XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//    This is a simple module being used in simple-import.xl
+//     This tests the use of import at the beginning of a file
 //
-//
+//     Not that it should matter, but worth testing.
 //
 //
 //
@@ -32,8 +32,15 @@
 //   You should have received a copy of the GNU General Public License
 //   along with XL.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
-//  CMD=%x -parse %f
+//   OPT=-path 06.Modules
 
-A <=> B is print "World"
+import mySuperModule
 
-foo T is print "Foo says ", T
+print "Hello"
+
+
+A <=> (B + C)
+
+foo "BarGlop"
+
+print "Style sheet shows: ", quote ("ABC" <=> 2)
