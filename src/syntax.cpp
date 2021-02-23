@@ -66,6 +66,8 @@ Syntax::Syntax(const Syntax &other)
       subsyntax(other.subsyntax),
       known_tokens(other.known_tokens),
       known_prefixes(other.known_prefixes),
+      known_importers(other.known_importers),
+      known_sugar(other.known_sugar),
       priority(other.priority),
       default_priority(other.default_priority),
       statement_priority(other.statement_priority),
@@ -183,6 +185,8 @@ eval_fn Syntax::KnownImporter(text n)
 // ----------------------------------------------------------------------------
 //   Check if the given symbol is a known importer
 // ----------------------------------------------------------------------------
+//   An importer is a prefix like [import] or [use] that must be processed
+//   during parsing, declaration scanning and evaluation.
 {
     auto found = known_importers.find(n);
     if (found != known_importers.end())
@@ -193,10 +197,42 @@ eval_fn Syntax::KnownImporter(text n)
 
 void Syntax::AddImporter(text n, eval_fn callback)
 // ----------------------------------------------------------------------------
-//   Check if the given symbol is a known importer
+//    Add an importer prefix
 // ----------------------------------------------------------------------------
 {
     known_importers[n] = callback;
+}
+
+
+eval_fn Syntax::KnownSugar(text n)
+// ----------------------------------------------------------------------------
+//   Check if the given symbol is a known sugar prefix
+// ----------------------------------------------------------------------------
+//   A sugar is a quasi-no-op prefix that can be put in patterns.
+//   For example, [to Copy is ...] being the same as [Copy is ...]
+{
+    auto found = known_sugar.find(n);
+    if (found != known_sugar.end())
+        return (*found).second;
+    return nullptr;
+}
+
+
+void Syntax::AddSugar(text n, eval_fn callback)
+// ----------------------------------------------------------------------------
+//   Add a sugar prefix
+// ----------------------------------------------------------------------------
+{
+    known_sugar[n] = callback;
+}
+
+
+void Syntax::SetDefaultSugar(eval_fn sugar)
+// ----------------------------------------------------------------------------
+//   Set the defaut sugar evaluation function
+// ----------------------------------------------------------------------------
+{
+    default_sugar = sugar;
 }
 
 
@@ -314,11 +350,11 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
 {
     enum State
     {
-        inUnknown, inPrefix, inInfix, inPostfix,
+        inUnknown, inSugar, inPrefix, inInfix, inPostfix,
         inComment, inCommentDef,
         inText, inTextDef,
         inBlock, inBlockDef,
-        inSyntaxName, inSyntax, inSyntaxDef
+        inSyntaxName, inSyntax, inSyntaxDef,
     };
 
     State       state = inUnknown;
@@ -376,6 +412,8 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
 
             if (txt == "INFIX")
                 state = inInfix;
+            else if (txt == "SUGAR")
+                state = inSugar;
             else if (txt == "PREFIX")
                 state = inPrefix;
             else if (txt == "POSTFIX")
@@ -400,6 +438,9 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
             {
             case inUnknown:
                 break;
+            case inSugar:
+                known_sugar[txt] = default_sugar;
+                // Fallthrough on purpose
             case inPrefix:
                 prefix_priority[txt] = priority;
                 break;
