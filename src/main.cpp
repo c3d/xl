@@ -334,7 +334,10 @@ XL::Tree *Main::Show(std::ostream &out, XL::Tree *tree)
             }
             tree = closure->Value();
         }
-        out << tree << "\n";
+        if (Scope *scope = tree->As<Scope>())
+            Context::Dump(out, scope, -1);
+        else
+            out << tree << "\n";
     }
     return tree;
 }

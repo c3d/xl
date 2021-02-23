@@ -1442,7 +1442,7 @@ void Context::Clear()
 }
 
 
-void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
+void Context::Dump(std::ostream &out, Scope *scope, int recurse)
 // ----------------------------------------------------------------------------
 //   Dump the symbol table to the given stream
 // ----------------------------------------------------------------------------
@@ -1454,6 +1454,8 @@ void Context::Dump(std::ostream &out, Scope *scope, bool recurse)
             out << import << "\n";
         Tree_p &locals = scope->Locals();
         Dump(out, &locals);
+        if (recurse < 0)
+            break;
         if (parent)
             out << "// Parent " << (void *) parent << "\n";
         scope = recurse ? parent : nullptr;
