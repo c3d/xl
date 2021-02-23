@@ -817,16 +817,16 @@ static Tree_p doDot(Context &context,
     {
         Context context;
         scope = context.CreateScope();
-        RewriteList inits;
+        Initializers inits;
         bool hasInstructions = context.ProcessDeclarations(where, inits);
-        if (scope->IsEmpty())
+        if (scope->IsEmpty() && !scope->Import())
             scope = scope->Enclosing();
         if (hasInstructions)
         {
             record(eval, "Scoped value %t has instructions", where);
             scope = nullptr;
         }
-        else if (!Interpreter::DoInitializers(scope, inits, cache))
+        else if (!Interpreter::DoInitializers(inits, cache))
         {
             record(eval, "Initializer failed in dot for %t", where);
             scope = nullptr;
@@ -1048,11 +1048,11 @@ reenter:
     if (mode == SEQUENCE)
     {
         scope = context.CreateScope();
-        RewriteList inits;
+        Initializers inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
         if (scope->IsEmpty() && !scope->Import())
             scope = context.PopScope();
-        if (!DoInitializers(scope, inits, cache))
+        if (!DoInitializers(inits, cache))
         {
             record(eval, "<Initializer failed for %t", expr);
             return nullptr;
@@ -1139,10 +1139,10 @@ retry:
     {
         // Check if the left is a block containing only declarations
         // This deals with [(X is 3) (X + 1)], i.e. closures
-        RewriteList inits;
+        Initializers inits;
         if (Scope *closure = context.ProcessScope(prefix->left, inits))
         {
-            if (!DoInitializers(closure, inits, cache))
+            if (!DoInitializers(inits, cache))
             {
                 record(eval, "<Initializers failed for scope %t", prefix->left);
                 return nullptr;
@@ -1277,15 +1277,16 @@ Tree *Interpreter::DoTypeCheck(Scope *scope,
 }
 
 
-bool Interpreter::DoInitializers(Scope *scope,
-                                 RewriteList &inits,
+bool Interpreter::DoInitializers(Initializers &inits,
                                  EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Process all initializers in order
 // ----------------------------------------------------------------------------
 {
-    for (auto rw : inits)
+    for (auto &i : inits)
     {
+        Scope *scope = i.scope;
+        Rewrite_p &rw = i.rewrite;
         Tree_p init = rw->right;
         Infix_p typedecl = rw->left->AsInfix();
         Tree_p type = DoEvaluate(scope, typedecl->right, EXPRESSION, cache);
