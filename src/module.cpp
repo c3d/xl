@@ -84,15 +84,17 @@ Module *Module::Get(text name)
 }
 
 
-inline Module::SourceFile *Module::File(Part part)
+inline Module::SourceFile *Module::File(Part first, Part part)
 // ----------------------------------------------------------------------------
 //   Select which component we look at
 // ----------------------------------------------------------------------------
 {
-    if ((part & SPECIFICATION) && specification)
+    if (first == SPECIFICATION && (part & SPECIFICATION) && specification)
         return specification;
     if ((part & IMPLEMENTATION) && implementation)
         return implementation;
+    if (first == IMPLEMENTATION && (part & SPECIFICATION) && specification)
+        return specification;
     return nullptr;
 }
 
@@ -102,7 +104,7 @@ bool Module::IsValid(Part part)
 //   Check if we have a source for specification or implementation
 // ----------------------------------------------------------------------------
 {
-    return File(part) != nullptr;
+    return File(SPECIFICATION, part) != nullptr;
 }
 
 
@@ -111,7 +113,7 @@ Tree *Module::Source(Part part)
 //   Return the source of the implementation first, or specification
 // ----------------------------------------------------------------------------
 {
-    if (SourceFile *file = File(part))
+    if (SourceFile *file = File(IMPLEMENTATION, part))
         return file->Source();
     return nullptr;
 }
@@ -128,7 +130,7 @@ Tree *Module::Value(Part part)
 //   Most modules are expected to not evaluate at top-level, but return a scope
 //   however, this is not mandated by the language
 {
-    if (SourceFile *file = File(part))
+    if (SourceFile *file = File(IMPLEMENTATION, part))
         return file->Value();
     return nullptr;
 }
@@ -139,7 +141,7 @@ Scope *Module::FileScope(Scope *where, Part part)
 //   Scope in which we search for the module symbols
 // ----------------------------------------------------------------------------
 {
-    if (SourceFile *file = File(part))
+    if (SourceFile *file = File(SPECIFICATION, part))
         return file->FileScope(where);
     return nullptr;
 }
