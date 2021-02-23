@@ -159,7 +159,7 @@ Tree *FastCompiler::Compile(Scope         *scope,
     Context context(scope);
 
     // Check if there is any code to execute
-    RewriteList inits;
+    Initializers inits;
     bool hasInstructions = context.ProcessDeclarations(result, inits);
     if (hasInstructions)
     {

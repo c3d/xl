@@ -89,7 +89,7 @@ Tree *Types::TypeAnalysis(Tree *program)
 {
     // Once this is done, record all type information for the program
     record(types, "Type analysis for %t in %p", program, this);
-    RewriteList inits;
+    Initializers inits;
     bool hasInstructions = context->ProcessDeclarations(program, inits);
     Tree *result = hasInstructions ? Type(program) : declaration_type;
     record(types, "Type for %t in %p is %t", program, this, result);

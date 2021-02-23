@@ -180,7 +180,9 @@ Context *Context::Parent()
 //
 // ============================================================================
 
-static void processModule(Context *context, Prefix *import)
+static void processModule(Context *context,
+                          Prefix *import,
+                          Initializers &inits)
 // ----------------------------------------------------------------------------
 //   Process module interface and implementation
 // ----------------------------------------------------------------------------
@@ -188,20 +190,33 @@ static void processModule(Context *context, Prefix *import)
     if (Module::Info *info = import->GetInfo<Module::Info>())
     {
         Module *module = info->module;
-        for (int i = 0; i < 2; i++)
+
+        // Process module implementation first
+        Scope *base = MAIN->context;
+        if (Tree *implSrc = module->Source(Module::IMPLEMENTATION))
         {
-            auto part = i ? Module::IMPLEMENTATION : Module::SPECIFICATION;
-            if (Tree *modsource = module->Source(part))
+            if (Scope *implScope = module->FileScope(base,
+                                                     Module::IMPLEMENTATION))
             {
-                if (Scope *modscope = module->FileScope(part))
-                {
-                    RewriteList modinits;
-                    Context modctx(modscope);
-                    modctx.ProcessDeclarations(modsource, modinits);
-                }
+                Context implCtx(implScope);
+                implCtx.ProcessDeclarations(implSrc, inits);
+                base = implCtx.Symbols();
             }
         }
 
+        // Process module specification and check it against ipmlementation
+        if (Tree *specSrc = module->Source(Module::SPECIFICATION))
+        {
+            if (Scope *specScope = module->FileScope(base,
+                                                     Module::SPECIFICATION))
+            {
+                Context specCtx(specScope);
+                Context implCtx(base);
+                specCtx.ProcessSpecifications(implCtx, specSrc, inits);
+            }
+        }
+
+        // Check how to enter the module into the lookup table
         if (info->alias)
         {
             // Case of [import IO = XL.TEXT_IO]: define IO
@@ -215,7 +230,7 @@ static void processModule(Context *context, Prefix *import)
 }
 
 
-bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
+bool Context::ProcessDeclarations(Tree *source, Initializers &inits)
 // ----------------------------------------------------------------------------
 //   Process all declarations, return true if there are instructions
 // ----------------------------------------------------------------------------
@@ -265,7 +280,7 @@ bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
                 {
                     Tree_p self = callback(symbols, prefix);
                     XL_ASSERT(prefix == self && "Import callback error");
-                    processModule(this, prefix);
+                    processModule(this, prefix, inits);
                     isInstruction = false;
                 }
             }
@@ -280,7 +295,91 @@ bool Context::ProcessDeclarations(Tree *source, RewriteList &inits)
 }
 
 
-Scope *Context::ProcessScope(Tree *declarations, RewriteList &inits)
+bool Context::ProcessSpecifications(Context &implementation,
+                                    Tree *source,
+                                    Initializers &inits)
+// ----------------------------------------------------------------------------
+//   Process specifications from a module interface
+// ----------------------------------------------------------------------------
+{
+    Tree::Iterator next   = source;
+    bool           result = false;
+
+    record(context, "In %p process specifications for %t", this, source);
+    while (Tree *what = next())
+    {
+        // By default, anything is a specification
+        bool isSpecification = true;
+
+        if (Infix *infix = what->AsInfix())
+        {
+            if (IsDefinition(infix))
+            {
+                record(context, "In %p enter definition %t", this, infix);
+                Enter(infix, inits);
+                isSpecification = false;
+            }
+        }
+        else if (Prefix *prefix = what->AsPrefix())
+        {
+            if (IsDeclaration(prefix))
+            {
+                CDeclaration *pcd = new CDeclaration;
+                Infix *normalForm = pcd->Declaration(prefix->right);
+                record(context, "C: %t is XL: %t", prefix, normalForm);
+                if (normalForm)
+                {
+                    // Process C declarations only in optimized mode
+                    Define(normalForm->left, normalForm->right);
+                    prefix->SetInfo<CDeclaration>(pcd);
+                    isSpecification = false;
+                }
+                else
+                {
+                    delete pcd;
+                }
+            }
+
+            // Check if this prefix is some [import X.Y.Z] statement
+            if (Name *import = prefix->left->AsName())
+            {
+                if (eval_fn callback = MAIN->Importer(import->value))
+                {
+                    Tree_p self = callback(symbols, prefix);
+                    XL_ASSERT(prefix == self && "Import callback error");
+                    processModule(this, prefix, inits);
+                    isSpecification = false;
+                }
+            }
+        }
+
+        if (isSpecification)
+        {
+            // Take the pattern and enter it as is
+            Tree *pattern = what;
+
+            // Find the corresponding implementation
+            Rewrite *rewrite = implementation.Reference(pattern, false);
+            if (!rewrite)
+            {
+                Ooops("No implementation matches $1", pattern);
+            }
+            else
+            {
+                Define(pattern, rewrite->Definition());
+            }
+        }
+
+        // Check if we see instructions
+        result |= isSpecification;
+    }
+    if (RECORDER_TRACE(symbols_sort))
+        Dump(std::cerr, symbols, false);
+    return result;
+}
+
+
+Scope *Context::ProcessScope(Tree *declarations, Initializers &inits)
 // ----------------------------------------------------------------------------
 //   If 'declarations' contains only declarations, return scope for them
 // ----------------------------------------------------------------------------
@@ -293,7 +392,6 @@ Scope *Context::ProcessScope(Tree *declarations, RewriteList &inits)
     if (Block *block = declarations->AsBlock())
     {
         Context child(this);
-        RewriteList inits;
         if (!child.ProcessDeclarations(block->child, inits))
             return child.Symbols();
     }
@@ -764,7 +862,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
 }
 
 
-Rewrite *Context::Enter(Infix *infix, RewriteList &inits)
+Rewrite *Context::Enter(Infix *infix, Initializers &inits)
 // ----------------------------------------------------------------------------
 //   Make sure we produce a real rewrite in the symbol table
 // ----------------------------------------------------------------------------
@@ -773,7 +871,7 @@ Rewrite *Context::Enter(Infix *infix, RewriteList &inits)
     Rewrite_p rewrite = new Rewrite(infix);
     rewrite = Enter(rewrite);
     if (IsVariableDefinition(infix))
-        inits.push_back(rewrite);
+        inits.push_back(Initializer(symbols, rewrite));
     return rewrite;
 }
 
@@ -1173,7 +1271,9 @@ static Tree *findReference(Scope *, Scope *, Tree *what, Rewrite *decl, void *)
 //   Return the reference we found
 // ----------------------------------------------------------------------------
 {
-    return decl;
+    if (Tree::Equal(what, decl->Pattern()))
+        return decl;
+    return nullptr;
 }
 
 

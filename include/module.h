@@ -64,8 +64,7 @@ struct Module
 
     Tree *      Source(Part part = BOTH);
     Tree *      Value(Part part = BOTH);
-    Scope *     FileScope(Part part = BOTH);
-    Scope *     FileScope(Scope *where);
+    Scope *     FileScope(Scope *where = nullptr, Part part = BOTH);
     text        Syntax();               // Return custom syntax file if any
     text        StyleSheet();           // Return specific style sheet or ""
     bool        HasChanged();           // Check if file changed on disk
@@ -99,7 +98,7 @@ private:
         ~SourceFile();
 
         Tree*   Source();               // Return source code
-        Scope*  FileScope();            // Return scope for that file
+        Scope*  FileScope(Scope *where);// Return scope for that file
         Tree *  Value();                // What the file evaluated to
         bool    HasChanged();           // Check if source file was modified
         Tree *  Reload();               // Reload even if it has changed

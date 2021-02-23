@@ -133,6 +133,8 @@ XL_BEGIN
 struct Context;                                 // Execution context
 typedef GCPtr<Context>                  Context_p;
 struct Rewrites;
+struct Module;
+
 
 
 // ============================================================================
@@ -251,6 +253,18 @@ typedef std::vector<Rewrite_p>          RewriteList;
 typedef Tree *                          (*eval_fn) (Scope *, Tree *);
 typedef std::map<Tree_p, eval_fn>       code_map;
 
+struct Initializer
+// ----------------------------------------------------------------------------
+//    Record information to initialize a variable
+// ----------------------------------------------------------------------------
+{
+    Initializer(Scope *scope, Rewrite *rewrite)
+        : scope(scope), rewrite(rewrite) {}
+    Scope_p     scope;
+    Rewrite_p   rewrite;
+};
+typedef std::vector<Initializer>        Initializers;
+
 
 
 // ============================================================================
@@ -298,13 +312,15 @@ public:
     Tree *              Call(text prefix, TreeList &args);
 
     // Phases of evaluation
-    bool                ProcessDeclarations(Tree *what, RewriteList &inits);
-    Scope *             ProcessScope(Tree *declarations, RewriteList &inits);
+    bool                ProcessDeclarations(Tree *what, Initializers &inits);
+    bool                ProcessSpecifications(Context &implementation,
+                                              Tree *what, Initializers &inits);
+    Scope *             ProcessScope(Tree *declarations, Initializers &inits);
     Tree *              Enclose(Tree *value);
     static Scope *      IsClosure(Tree *value);
 
     // Adding definitions to the context
-    Rewrite *           Enter(Infix *infix, RewriteList &inits);
+    Rewrite *           Enter(Infix *infix, Initializers &inits);
     Rewrite *           Enter(Rewrite *rewrite, bool overwrite=false);
     Rewrite *           Define(Tree *pattern, Tree *def, bool overwrite=false);
     Rewrite *           Define(text name, Tree *def, bool overwrite=false);
