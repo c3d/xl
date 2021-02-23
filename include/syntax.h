@@ -55,6 +55,8 @@ typedef std::set<text>                  token_set;
 
 typedef Tree *(*eval_fn) (Scope *, Tree *);
 typedef std::map<text, eval_fn>         importer_map;
+typedef std::map<text, eval_fn>         sugar_map;
+
 
 struct Syntax
 // ----------------------------------------------------------------------------
@@ -92,6 +94,9 @@ public:
     bool                KnownPrefix(text n);
     eval_fn             KnownImporter(text n);
     void                AddImporter(text n, eval_fn fn);
+    eval_fn             KnownSugar(text n);
+    void                AddSugar(text n, eval_fn fn);
+    void                SetDefaultSugar(eval_fn sugar);
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
@@ -120,6 +125,8 @@ public:
     token_set           known_tokens;
     token_set           known_prefixes;
     importer_map        known_importers;
+    sugar_map           known_sugar;
+    eval_fn             default_sugar;
     int                 priority;
 
     int                 default_priority;

@@ -803,6 +803,9 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
     // Find pattern from the rewrite
     Tree *pattern = rewrite->Pattern();
 
+    // Strip pattern of any sugar
+    rewrite->left = pattern = MAIN->StripSugar(symbols, pattern);
+
     // Validate form names, replace metaboxes, emit errors in case of problem.
     pattern = ValidatePattern(pattern);
 
