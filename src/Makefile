@@ -102,8 +102,8 @@ PRODUCTS=$(PRODUCTS_$(VARIANT))
 PRODUCTS_exe=xl.exe
 PRODUCTS_lib=xl.dll
 
-SHR_INSTALL=$(SHR_INSTALL_$(VARIANT))
-SHR_INSTALL_lib=builtins.xl xl.syntax C.syntax $(wildcard *.stylesheet)
+WARE.share=$(WARE.share_$(VARIANT))
+WARE.share_lib=builtins.xl xl.syntax C.syntax $(wildcard *.stylesheet)
 
 GIT_VERSION=	$(shell git describe --always --tags --dirty=-dirty)
 DEFINES=	$(DEFINES_$(COMPILER))					\
