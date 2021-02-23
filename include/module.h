@@ -111,7 +111,7 @@ private:
         Tree_p  value;                  // What this evaluated to
         time_t  modified;               // Last known modification date
     };
-    SourceFile *File(Part part = BOTH);
+    SourceFile *File(Part first, Part part = BOTH);
 
 private:
     Tree_p      name;                   // Can be an infix, e.g. [A.B.C]
