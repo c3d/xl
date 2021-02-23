@@ -175,6 +175,24 @@ AliasOption     emitIRAlias("B", emitIR);
 
 // ============================================================================
 //
+//    Helper function to strip sugar prefix
+//
+// ============================================================================
+
+static Tree *stripSugar(Scope *scope, Tree *sugar)
+// ----------------------------------------------------------------------------
+//   Strip a sugar prefix
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = sugar->AsPrefix())
+        sugar = prefix->right;
+    return sugar;
+}
+
+
+
+// ============================================================================
+//
 //     Main
 //
 // ============================================================================
@@ -233,6 +251,7 @@ Main::Main(int inArgc,
 
     // Adjust syntax file and renderer based on options
     text syntaxPath = SearchLibFile(Opt::syntax, "syntax");
+    syntax.SetDefaultSugar(stripSugar);
     if (syntaxPath.length())
         syntax.ReadSyntaxFile(syntaxPath);
     else
@@ -612,6 +631,24 @@ void Main::AddImporters()
     syntax.AddImporter("use", xl_import);
     syntax.AddImporter("import", xl_import);
     syntax.AddImporter(XL::Normalize("parse_file"), xl_parse_file);
+}
+
+
+Tree *Main::StripSugar(Scope *scope, Tree *input)
+// ----------------------------------------------------------------------------
+//   Strip any sugar from a pattern
+// ----------------------------------------------------------------------------
+{
+    Tree_p result;
+    do
+    {
+        result = input;
+        if (Prefix *prefix = input->AsPrefix())
+            if (Name *name = prefix->left->AsName())
+                if (eval_fn callback = syntax.KnownSugar(name->value))
+                    input = callback(scope, input);
+    } while (result != input);
+    return result;
 }
 
 XL_END

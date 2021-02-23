@@ -102,6 +102,7 @@ struct Main
     virtual Tree*       Normalize(Tree *input);
     virtual Tree *      Show(std::ostream &, Tree *);
     virtual void        AddImporters();
+    virtual Tree *      StripSugar(Scope *scope, Tree *pattern);
 
 public:
     int                 argc;
