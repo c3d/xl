@@ -190,31 +190,7 @@ static void processModule(Context *context,
     if (Module::Info *info = import->GetInfo<Module::Info>())
     {
         Module *module = info->module;
-
-        // Process module implementation first
-        Scope *base = MAIN->context;
-        if (Tree *implSrc = module->Source(Module::IMPLEMENTATION))
-        {
-            if (Scope *implScope = module->FileScope(base,
-                                                     Module::IMPLEMENTATION))
-            {
-                Context implCtx(implScope);
-                implCtx.ProcessDeclarations(implSrc, inits);
-                base = implCtx.Symbols();
-            }
-        }
-
-        // Process module specification and check it against ipmlementation
-        if (Tree *specSrc = module->Source(Module::SPECIFICATION))
-        {
-            if (Scope *specScope = module->FileScope(base,
-                                                     Module::SPECIFICATION))
-            {
-                Context specCtx(specScope);
-                Context implCtx(base);
-                specCtx.ProcessSpecifications(implCtx, specSrc, inits);
-            }
-        }
+        module->Process(inits);
 
         // Check how to enter the module into the lookup table
         if (info->alias)
