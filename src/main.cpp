@@ -443,7 +443,7 @@ Tree_p Main::LoadFile(text file, bool evaluate)
     module->Reload();
     Tree_p result;
     if (evaluate)
-        result = module->Value();
+        result = module->Value(Module::IMPLEMENTATION);
     record(fileload, "Loaded file %s into module %p value %t",
            file, module, result);
     return result;
