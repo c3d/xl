@@ -29,10 +29,10 @@ INFIX
 
 SUGAR
         30      type module function procedure to
-        30      variable var
 
 PREFIX
         20      matching
+        30      variable var
         40      loop while until
         121     case if return yield transform
         350     not
