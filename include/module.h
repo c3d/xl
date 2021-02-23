@@ -69,6 +69,7 @@ struct Module
     text        StyleSheet();           // Return specific style sheet or ""
     bool        HasChanged();           // Check if file changed on disk
     Tree_p      Reload();               // Reload sources if changed
+    Scope *     Process(Initializers &);// Process a module, fill initializers
 
 public:
     struct Info : XL::Info
