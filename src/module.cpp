@@ -189,6 +189,40 @@ Tree_p Module::Reload()
 }
 
 
+Scope *Module::Process(Initializers &inits)
+// ----------------------------------------------------------------------------
+//   Process module specification and implementation, fill inits
+// ----------------------------------------------------------------------------
+{
+    // Process module implementation first
+    Scope *base = MAIN->context;
+    if (Tree *implSrc = Source(IMPLEMENTATION))
+    {
+        if (Scope *implScope = FileScope(base, IMPLEMENTATION))
+        {
+            Context implCtx(implScope);
+            implCtx.ProcessDeclarations(implSrc, inits);
+            base = implCtx.Symbols();
+        }
+    }
+
+    // Process module specification and check it against ipmlementation
+    if (Tree *specSrc = Source(SPECIFICATION))
+    {
+        if (Scope *specScope = FileScope(base, SPECIFICATION))
+        {
+            Context specCtx(specScope);
+            Context implCtx(base);
+            specCtx.ProcessSpecifications(implCtx, specSrc, inits);
+            base = specCtx.Symbols();
+        }
+    }
+
+    // Return the scope to use for lookup
+    return base;
+}
+
+
 static text SearchModuleFile(text name, text extension)
 // ----------------------------------------------------------------------------
 //    Search a module file with the given extension
