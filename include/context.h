@@ -372,7 +372,7 @@ public:
     void                Clear();
 
     // Dump symbol tables
-    static void         Dump(std::ostream &out, Scope *symbols, bool recurse);
+    static void         Dump(std::ostream &out, Scope *symbols, int recurse);
     static void         Dump(std::ostream &out, Tree_p *locals);
     void                Dump(std::ostream &out) { Dump(out, symbols, true); }
 
