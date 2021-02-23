@@ -89,10 +89,10 @@ inline Module::SourceFile *Module::File(Part part)
 //   Select which component we look at
 // ----------------------------------------------------------------------------
 {
-    if ((part & IMPLEMENTATION) && implementation)
-        return implementation;
     if ((part & SPECIFICATION) && specification)
         return specification;
+    if ((part & IMPLEMENTATION) && implementation)
+        return implementation;
     return nullptr;
 }
 
@@ -134,13 +134,13 @@ Tree *Module::Value(Part part)
 }
 
 
-Scope *Module::FileScope(Part part)
+Scope *Module::FileScope(Scope *where, Part part)
 // ----------------------------------------------------------------------------
 //   Scope in which we search for the module symbols
 // ----------------------------------------------------------------------------
 {
     if (SourceFile *file = File(part))
-        return file->FileScope();
+        return file->FileScope(where);
     return nullptr;
 }
 
@@ -336,15 +336,15 @@ Tree *Module::SourceFile::Source()
 }
 
 
-Scope *Module::SourceFile::FileScope()
+Scope *Module::SourceFile::FileScope(Scope *where)
 // ----------------------------------------------------------------------------
 //    Return the scope for that module
 // ----------------------------------------------------------------------------
 {
-    if (!scope)
+    if (!scope && where)
     {
-        Context context(MAIN->context);
-        context.CreateScope(MAIN->positions.Here());
+        Context context(where);
+        context.CreateScope(where->Position());
         scope = context.Symbols();
 
         // Enter module name, path in the scope
@@ -361,7 +361,7 @@ Tree *Module::SourceFile::Value()
 {
     if (!value)
         if (Tree *source = Source())
-            if (Scope *scope = FileScope())
+            if (Scope *scope = FileScope(MAIN->context))
                 value = MAIN->Evaluate(scope, source);
     return value;
 }

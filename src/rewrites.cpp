@@ -629,7 +629,7 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Rewrite *candidate)
                 // Process declarations in the initializer
                 bcontext = binding_types->TypesContext();
                 {
-                    RewriteList inits;
+                    Initializers inits;
                     bcontext->ProcessDeclarations(init, inits);
                 }
                 type = binding_types->Type(init);
