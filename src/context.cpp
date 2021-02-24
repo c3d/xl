@@ -231,7 +231,7 @@ bool Context::ProcessDeclarations(Tree *source, Initializers &inits)
         }
         else if (Prefix *prefix = what->AsPrefix())
         {
-            if (IsDeclaration(prefix))
+            if (IsExternDeclaration(prefix))
             {
                 CDeclaration *pcd = new CDeclaration;
                 Infix *normalForm = pcd->Declaration(prefix->right);
@@ -298,7 +298,7 @@ bool Context::ProcessSpecifications(Context &implementation,
         }
         else if (Prefix *prefix = what->AsPrefix())
         {
-            if (IsDeclaration(prefix))
+            if (IsExternDeclaration(prefix))
             {
                 CDeclaration *pcd = new CDeclaration;
                 Infix *normalForm = pcd->Declaration(prefix->right);

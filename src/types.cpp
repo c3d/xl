@@ -91,7 +91,7 @@ Tree *Types::TypeAnalysis(Tree *program)
     record(types, "Type analysis for %t in %p", program, this);
     Initializers inits;
     bool hasInstructions = context->ProcessDeclarations(program, inits);
-    Tree *result = hasInstructions ? Type(program) : declaration_type;
+    Tree *result = hasInstructions ? Type(program) : definition_type;
     record(types, "Type for %t in %p is %t", program, this, result);
 
     // Dump debug information if approriate
@@ -415,7 +415,7 @@ Tree *Types::DoStatements(Tree *expr, Tree *left, Tree *right)
         return lt;
 
     // If both left and right are rewrites, this is a declaration too
-    return declaration_type;
+    return definition_type;
 }
 
 
@@ -431,7 +431,7 @@ Tree *Types::DoTypeAnnotation(Infix *rewrite)
     Tree *base = PatternBase(value);
     if (base != value)
         AssignType(base, type);
-    return declaration_type;
+    return definition_type;
 }
 
 
@@ -441,7 +441,7 @@ Tree *Types::DoRewrite(Infix *rewrite)
 // ----------------------------------------------------------------------------
 {
     record(types, "Rewrite %t evaluates as declaration", rewrite);
-    return declaration_type;
+    return definition_type;
 }
 
 
@@ -1405,7 +1405,7 @@ Tree *Types::IsRewriteType(Tree *type)
 //   Check if type is a rewrite type, i.e. something like [X => Y]
 // ----------------------------------------------------------------------------
 {
-    if (type == declaration_type)
+    if (type == definition_type)
         return type;
     return nullptr;
 }
