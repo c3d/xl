@@ -482,7 +482,7 @@ enum SortMode
     SEARCH_BIND,                // Sort for search, all names identical
     SEARCH_INFIX,               // Sort for search, matched top infix
     TYPE,                       // Sort for type annotations
-    EXPRESSION                  // Sort for expression (when clauses)
+    CONDITIONAL                 // Sort for expression (when clauses)
 };
 
 
@@ -575,7 +575,7 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
         "SEARCH_BIND",
         "SEARCH_INFIX",
         "TYPE",
-        "EXPRESSION"
+        "CONDITIONAL"
     };
     record(symbols_sort, "%+12s %t %+s %t",
            modename[mode], pat, result<0 ? "<" : result>0 ? ">" : "=", val);
@@ -619,12 +619,12 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             if (SortSearching(mode))
                 return 0;
             if (SortInserting(mode))
-                return valk == NAME ? -1 : Sort(patm, val, EXPRESSION);
+                return valk == NAME ? -1 : Sort(patm, val, CONDITIONAL);
             if (valk == BLOCK)
             {
                 Block *valb = (Block *) val;
                 if (Tree *valm = valb->IsMetaBox())
-                    return Sort(patm, valm, EXPRESSION);
+                    return Sort(patm, valm, CONDITIONAL);
             }
         }
         else
@@ -638,7 +638,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         // A metabox comes before names, is
         if (Tree *valm = valb->IsMetaBox())
             if (SortInserting(mode))
-                return patk == NAME ? 1 : Sort(pat, valm, EXPRESSION);
+                return patk == NAME ? 1 : Sort(pat, valm, CONDITIONAL);
         return Sort(pat, valb->child, mode);
     }
     if (patk == PREFIX)
@@ -718,7 +718,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                 {
                     if (int pats = Sort(pati->left, vali->left, mode))
                         return pats;
-                    return Sort(pati->right, vali->right, EXPRESSION);
+                    return Sort(pati->right, vali->right, CONDITIONAL);
                 }
             }
 

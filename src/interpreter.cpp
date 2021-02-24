@@ -450,7 +450,7 @@ bool Bindings::MustEvaluate()
 }
 
 
-Tree *Bindings::Evaluate(Scope *scope, Tree *expr, bool named)
+Tree *Bindings::Evaluate(Scope *scope, Tree *expr, EvaluationMode mode)
 // ----------------------------------------------------------------------------
 //   Helper evaluation function for recursive evaluation
 // ----------------------------------------------------------------------------
@@ -458,11 +458,8 @@ Tree *Bindings::Evaluate(Scope *scope, Tree *expr, bool named)
     Tree_p result = cache.Cached(expr);
     if (!result)
     {
-        Interpreter::Evaluation mode = named
-            ? Interpreter::NAMED
-            : Interpreter::SEQUENCE;
-        record(bindings, "Evaluating %+s %t in %t",
-               named ? "normal" : "named", expr, scope);
+        record(bindings, "Evaluating %t in %t mode %u",
+               expr, scope, mode);
         result = Interpreter::DoEvaluate(scope, expr, mode, cache);
         cache.Cache(expr, result);
         cache.Cache(result, result);
@@ -589,7 +586,7 @@ Tree *Bindings::NamedTree(unsigned n)
     while (Scope *scope = Context::IsClosure(value))
     {
         Prefix *closure = (Prefix *) (Tree *) value;
-        value = Evaluate(scope, closure->right, true);
+        value = Evaluate(scope, closure->right, NAMED);
         if (!value)
             value = LastErrorAsErrorTree();
     }
@@ -640,7 +637,7 @@ static Tree *eval(Scope   *evalScope,
                      decl->left, expr), true);
 
     EvaluationCache &cache = *((EvaluationCache *) ec);
-    Interpreter::Evaluation mode = cache.mode;
+    EvaluationMode mode = cache.mode;
 
     Tree *pattern = decl->Pattern();
 
@@ -651,14 +648,14 @@ static Tree *eval(Scope   *evalScope,
         {
             if (name->value == xname->value)
             {
-                if (mode == Interpreter::VARIABLE)
+                if (mode == VARIABLE)
                     return decl;
                 if (IsSelf(decl->right))
                     return name;
-                if (mode == Interpreter::NAMED)
+                if (mode == NAMED)
                     return decl->right;
                 return Interpreter::DoEvaluate(evalScope, decl->right,
-                                               Interpreter::SEQUENCE, cache);
+                                               SEQUENCE, cache);
             }
         }
         return nullptr;
@@ -671,7 +668,7 @@ static Tree *eval(Scope   *evalScope,
         return nullptr;
 
     // Successfully bound - Return variable declaration in a closure
-    if (mode == Interpreter::VARIABLE)
+    if (mode == VARIABLE)
         return bindings.Enclose(decl);
 
     // Evaluate the body in arguments
@@ -716,7 +713,7 @@ static Tree *eval(Scope   *evalScope,
     }
 
     // Check if we are simply trying to lookup
-    else if (mode == Interpreter::NAMED)
+    else if (mode == NAMED)
     {
         result = body;
     }
@@ -741,7 +738,7 @@ static Tree *eval(Scope   *evalScope,
 
         // Otherwise simply evaluate the body and check the type afterwards
         result = Interpreter::DoEvaluate(bodyScope, body,
-                                         Interpreter::SEQUENCE, bodyCache);
+                                         SEQUENCE, bodyCache);
         result = bindings.ResultTypeCheck(result, false);
     }
     return result;
@@ -759,8 +756,7 @@ static Tree_p doDot(Context &context,
     Scope *symbols = child.Symbols();
     Tree_p name = infix->left;
     Tree_p value = infix->right;
-    Tree *where = Interpreter::DoEvaluate(symbols, name,
-                                          Interpreter::NAMED, cache);
+    Tree *where = Interpreter::DoEvaluate(symbols, name, NAMED, cache);
     if (!where)
         return nullptr;
     Scope *scope = where->As<Scope>();
@@ -794,8 +790,7 @@ static Tree_p doDot(Context &context,
         }
     }
     if (scope)
-        return Interpreter::DoEvaluate(scope, value,
-                                       Interpreter::LOCAL, cache);
+        return Interpreter::DoEvaluate(scope, value, LOCAL, cache);
     else
         Ooops("No scope in $1 (evaluated as $2)", name, where);
     return nullptr;
@@ -804,15 +799,14 @@ static Tree_p doDot(Context &context,
 
 static Tree_p doAssignment(Scope *scope,
                            Infix *infix,
-                           Interpreter::Evaluation mode,
+                           EvaluationMode mode,
                            EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Process assignments like [X := Y]
 // ----------------------------------------------------------------------------
 {
     // Evaluate the target as a variable
-    Tree_p decl = Interpreter::DoEvaluate(scope, infix->left,
-                                          Interpreter::VARIABLE, cache);
+    Tree_p decl = Interpreter::DoEvaluate(scope, infix->left, VARIABLE, cache);
     Tree *to = decl;
     if (!to)
     {
@@ -833,8 +827,8 @@ static Tree_p doAssignment(Scope *scope,
     }
 
     // Evaluate the assigned value
-    Tree_p value = Interpreter::DoEvaluate(scope, infix->right,
-                                           Interpreter::EXPRESSION, cache);
+    Tree_p value = infix->right;
+    value = Interpreter::DoEvaluate(scope, value, EXPRESSION, cache);
     if (!value)
         return value;                   // We should already have an error
 
@@ -861,7 +855,7 @@ static Tree_p doAssignment(Scope *scope,
     rewrite->right = value;
 
     // Return the assigned value or the variable
-    return mode == Interpreter::VARIABLE ? decl : value;
+    return mode == VARIABLE ? decl : value;
 }
 
 
@@ -877,13 +871,11 @@ static Tree_p doLatePrefix(Scope *scope,
     if (exprk == NAME || exprk == BLOCK)
     {
         record(eval, "Retrying prefix %t", prefix);
-        Tree_p left = Interpreter::DoEvaluate(scope, expr,
-                                              Interpreter::MAYFAIL, cache);
+        Tree_p left = Interpreter::DoEvaluate(scope, expr, MAYFAIL, cache);
         if (!left || left == expr)
             return nullptr;
         prefix = new Prefix(prefix, left, prefix->right);
-        Tree_p result = Interpreter::DoEvaluate(scope, prefix,
-                                                Interpreter::EXPRESSION, cache);
+        Tree_p result = Interpreter::DoEvaluate(scope,prefix,EXPRESSION,cache);
         return result;
     }
     return nullptr;
@@ -974,7 +966,7 @@ Tree *Interpreter::Unwrap(Tree *expr, EvaluationCache &cache)
 
 Tree *Interpreter::DoEvaluate(Scope *scope,
                               Tree *expr,
-                              Evaluation mode,
+                              EvaluationMode mode,
                               EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Internal evaluator - Short circuits a few common expressions
@@ -1186,7 +1178,7 @@ retry:
     }
 
     // All other cases: lookup in symbol table
-    Save<Evaluation> saveMode(cache.mode, mode);
+    Save<EvaluationMode> saveMode(cache.mode, mode);
     bool recurse = mode != LOCAL;
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
