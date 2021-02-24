@@ -135,6 +135,9 @@ struct EvaluationCache
         types[std::make_pair(type,expr)] = cast;
     }
 
+public:
+    Interpreter::Evaluation                     mode;
+
 private:
     std::map<Tree_p, Tree_p>                    values;
     std::map<std::pair<Tree_p,Tree_p>, Tree_p>  types;

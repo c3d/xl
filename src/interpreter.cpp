@@ -630,9 +630,7 @@ static Tree *eval(Scope   *evalScope,
                   Scope   *declScope,
                   Tree    *expr,
                   Rewrite *decl,
-                  void    *ec,
-                  bool     variable,
-                  bool     unref)
+                  void    *ec)
 // ----------------------------------------------------------------------------
 //   Bind 'self' to the pattern in 'decl', and if successful, evaluate
 // ----------------------------------------------------------------------------
@@ -642,6 +640,8 @@ static Tree *eval(Scope   *evalScope,
                      decl->left, expr), true);
 
     EvaluationCache &cache = *((EvaluationCache *) ec);
+    Interpreter::Evaluation mode = cache.mode;
+
     Tree *pattern = decl->Pattern();
 
     // If the pattern is a name, directly return the value or fail
@@ -651,11 +651,11 @@ static Tree *eval(Scope   *evalScope,
         {
             if (name->value == xname->value)
             {
-                if (variable)
+                if (mode == Interpreter::VARIABLE)
                     return decl;
                 if (IsSelf(decl->right))
                     return name;
-                if (unref)
+                if (mode == Interpreter::NAMED)
                     return decl->right;
                 return Interpreter::DoEvaluate(evalScope, decl->right,
                                                Interpreter::SEQUENCE, cache);
@@ -671,7 +671,7 @@ static Tree *eval(Scope   *evalScope,
         return nullptr;
 
     // Successfully bound - Return variable declaration in a closure
-    if (variable)
+    if (mode == Interpreter::VARIABLE)
         return bindings.Enclose(decl);
 
     // Evaluate the body in arguments
@@ -716,7 +716,7 @@ static Tree *eval(Scope   *evalScope,
     }
 
     // Check if we are simply trying to lookup
-    else if (unref)
+    else if (mode == Interpreter::NAMED)
     {
         result = body;
     }
@@ -745,45 +745,6 @@ static Tree *eval(Scope   *evalScope,
         result = bindings.ResultTypeCheck(result, false);
     }
     return result;
-}
-
-
-static Tree *variable(Scope   *evalScope,
-                      Scope   *declScope,
-                      Tree    *expr,
-                      Rewrite *decl,
-                      void    *ec)
-// ----------------------------------------------------------------------------
-//    Lookup a variable - Return the associated rewrite
-// ----------------------------------------------------------------------------
-{
-    return eval(evalScope, declScope, expr, decl, ec, true, false);
-}
-
-
-static Tree *constant(Scope   *evalScope,
-                      Scope   *declScope,
-                      Tree    *expr,
-                      Rewrite *decl,
-                      void    *ec)
-// ----------------------------------------------------------------------------
-//    Lookup a constant - Return the associated value
-// ----------------------------------------------------------------------------
-{
-    return eval(evalScope, declScope, expr, decl, ec, false, false);
-}
-
-
-static Tree *named(Scope   *evalScope,
-                   Scope   *declScope,
-                   Tree    *expr,
-                   Rewrite *decl,
-                   void    *ec)
-// ----------------------------------------------------------------------------
-//    Lookup a named value without evaluating its body
-// ----------------------------------------------------------------------------
-{
-    return eval(evalScope, declScope, expr, decl, ec, false, true);
 }
 
 
@@ -1225,16 +1186,11 @@ retry:
     }
 
     // All other cases: lookup in symbol table
-    Context::lookup_fn lookup =
-          mode == NAMED
-        ? named
-        : mode == VARIABLE
-        ? variable
-        : constant;
+    Save<Evaluation> saveMode(cache.mode, mode);
     bool recurse = mode != LOCAL;
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
-    if (Tree *found = context.Lookup(expr, lookup, &cache, recurse))
+    if (Tree *found = context.Lookup(expr, eval, &cache, recurse))
         result = found;
     else if (expr->IsConstant())
         result = expr;
