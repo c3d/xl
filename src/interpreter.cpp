@@ -230,6 +230,13 @@ Tree *Bindings::Do(Prefix *what)
         return result;
     }
 
+    // Check if we have a variable binding
+    if (Name *name = IsVariableBinding(what))
+    {
+        Tree *bound = Evaluate(EvaluationScope(), test, VARIABLE);
+        return Bind(name, bound);
+    }
+
     // The test itself should be a prefix, otherwise evaluate
     Prefix *pfx = test->AsPrefix();
     if (!pfx)
