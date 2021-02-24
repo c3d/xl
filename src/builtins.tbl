@@ -61,7 +61,7 @@ NAME(lambda)
 TYPE(tree,              return TYPE_TREE)
 TYPE(scope,             return TYPE_TREE->As<Scope>())
 TYPE(closure,           return TYPE_CLOSURE)
-TYPE(declaration,       return IsDeclaration(TYPE_TREE))
+TYPE(definition,        return IsDefinition(TYPE_TREE))
 
 // Types that evaluate only if they don't initially match
 #define MATCH_OR_EVAL(TypeName, TypeClass, TypeCondition)               \

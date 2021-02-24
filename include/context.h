@@ -435,7 +435,7 @@ inline bool IsAssignment(Infix *infix)
 //   Check if an infix is an assignment
 // ----------------------------------------------------------------------------
 {
-    return infix->name == ":=" || infix->name == ":<" || infix->name == ":+";
+    return infix->name == ":=";
 }
 
 
@@ -483,74 +483,11 @@ inline bool IsVariableDefinition(Infix *infix)
 
 inline Infix *IsVariableDefinition(Tree *tree)
 // ----------------------------------------------------------------------------
-//   Check if a tree is a variable declaration
+//   Check if a tree is a variable definition
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
         if (IsVariableDefinition(infix))
-            return infix;
-    return nullptr;
-}
-
-
-inline bool IsConstantDeclaration(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if an infix is a constant declaration [Name as Type]
-// ----------------------------------------------------------------------------
-{
-    return infix->name == "as";
-}
-
-
-inline Infix *IsConstantDeclaration(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Check if a tree is a constant declaration
-// ----------------------------------------------------------------------------
-{
-    if (Infix *infix = tree->AsInfix())
-        if (IsConstantDeclaration(infix))
-            return infix;
-    return nullptr;
-}
-
-
-inline bool IsVariableDeclaration(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if an infix is a variable declaration [Name : Type]
-// ----------------------------------------------------------------------------
-{
-    return infix->name == ":";
-}
-
-
-inline Infix *IsVariableDeclaration(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Check if a tree is a variable declaration
-// ----------------------------------------------------------------------------
-{
-    if (Infix *infix = tree->AsInfix())
-        if (IsVariableDeclaration(infix))
-            return infix;
-    return nullptr;
-}
-
-
-inline bool IsDeclaration(Infix *infix)
-// ----------------------------------------------------------------------------
-//   Check if an infix is a declaration
-// ----------------------------------------------------------------------------
-{
-    return IsConstantDeclaration(infix) || IsVariableDeclaration(infix);
-}
-
-
-inline Infix *IsDeclaration(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Check if a tree is a declaration
-// ----------------------------------------------------------------------------
-{
-    if (Infix *infix = tree->AsInfix())
-        if (IsDeclaration(infix))
             return infix;
     return nullptr;
 }
@@ -565,7 +502,19 @@ inline bool IsDefinition(Infix *infix)
 }
 
 
-inline bool IsDefinition(Prefix *prefix)
+inline Infix *IsDefinition(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree is a definition
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsDefinition(infix))
+            return infix;
+    return nullptr;
+}
+
+
+inline bool IsExternDeclaration(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is a definition
 // ----------------------------------------------------------------------------
@@ -576,18 +525,6 @@ inline bool IsDefinition(Prefix *prefix)
         if (name->value == "extern")
             return true;
     return false;
-}
-
-
-inline Infix *IsDefinition(Tree *tree)
-// ----------------------------------------------------------------------------
-//   Check if a tree is a definition
-// ----------------------------------------------------------------------------
-{
-    if (Infix *infix = tree->AsInfix())
-        if (IsDefinition(infix))
-            return infix;
-    return nullptr;
 }
 
 
