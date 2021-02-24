@@ -661,6 +661,11 @@ static Tree *eval(Scope   *evalScope,
                     return name;
                 if (mode == NAMED)
                     return decl->right;
+                expr = decl->right;
+                while (Closure *closure = expr->As<Closure>())
+                    expr = closure->Value();
+                if (Infix *variable = IsVariableDefinition(expr))
+                    return variable->right;
                 return Interpreter::DoEvaluate(evalScope, decl->right,
                                                SEQUENCE, cache);
             }
@@ -821,9 +826,21 @@ static Tree_p doAssignment(Scope *scope,
         return to;
     }
 
-    // Strip closure for expressions like [A(1) := 3]
-    while (Closure *closure = to->As<Closure>())
-        to = closure->Value();
+    // Check if this is a variable binding
+    if (Infix *definition = IsConstantDefinition(to))
+    {
+        Tree *variable = definition->right;
+        while (Closure *closure = variable->As<Closure>())
+            variable = closure->Value();
+        if (Rewrite *rewrite = variable->As<Rewrite>())
+            to = rewrite;
+    }
+    else
+    {
+        // Strip closure for expressions like [A(1) := 3]
+        while (Closure *closure = to->As<Closure>())
+            to = closure->Value();
+    }
 
     // Get the original definition
     Rewrite_p rewrite = to->As<Rewrite>();
@@ -832,6 +849,8 @@ static Tree_p doAssignment(Scope *scope,
         Ooops("Left of assignment, $1, is not a variable", to);
         return rewrite;
     }
+
+
 
     // Evaluate the assigned value
     Tree_p value = infix->right;
