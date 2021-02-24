@@ -1006,7 +1006,7 @@ reenter:
     Context context(scope);
 
     // Check if we have instructions to process. If not, return declarations
-    if (mode == SEQUENCE)
+    if (mode == SEQUENCE || mode == VARIABLE)
     {
         scope = context.CreateScope();
         Initializers inits;
