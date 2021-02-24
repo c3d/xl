@@ -234,7 +234,7 @@ Tree *Bindings::Do(Prefix *what)
     Prefix *pfx = test->AsPrefix();
     if (!pfx)
     {
-        MustEvaluate(true);
+        MustEvaluate();
         pfx = test->AsPrefix();
     }
 
@@ -276,7 +276,7 @@ Tree *Bindings::Do(Postfix *what)
     Postfix *pfx = test->AsPostfix();
     if (!pfx)
     {
-        MustEvaluate(true);
+        MustEvaluate();
         pfx = test->AsPostfix();
     }
 
@@ -427,18 +427,18 @@ Tree *Bindings::Do(Infix *what)
 }
 
 
-bool Bindings::MustEvaluate(bool named)
+bool Bindings::MustEvaluate()
 // ----------------------------------------------------------------------------
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree *evaluated = Evaluate(EvaluationScope(), test, named);
+    Tree *evaluated = Evaluate(EvaluationScope(), test);
 
     // For matching purpose, we need the value inside closures
     while (Scope *scope = Context::IsClosure(evaluated))
     {
         Prefix *closure = (Prefix *) (Tree *) evaluated;
-        evaluated = Evaluate(scope, closure->right, named);
+        evaluated = Evaluate(scope, closure->right);
         if (!evaluated)
             evaluated = LastErrorAsErrorTree();
     }
