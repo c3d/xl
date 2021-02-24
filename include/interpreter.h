@@ -50,6 +50,22 @@ struct EvaluationCache;
 typedef std::vector<Rewrite_p>          RewriteList;
 
 
+enum EvaluationMode
+// ----------------------------------------------------------------------------
+//   Evaluation mode
+// ----------------------------------------------------------------------------
+{
+    SEQUENCE,               // Sequence of statements - Process declarations
+    STATEMENT,              // Statements in a sequence
+    EXPRESSION,             // Evaluate sub-expressions in a statement
+    MAYFAIL,                // Return nullptr on error
+    VARIABLE,               // Return a variable reference (a Rewrite)
+    LOCAL,                  // Don't lookup parent scopes
+    NAMED,                  // Return value named by expression
+    EVALUATION_MODES        // Number of evaluations modes
+};
+
+
 class Interpreter : public Evaluator
 // ----------------------------------------------------------------------------
 //   Base class for all ways to evaluate an XL tree
@@ -66,20 +82,9 @@ public:
     static Tree *Unwrap(Tree *tree, EvaluationCache &cache);
 
 public:
-    enum Evaluation
-    {
-        SEQUENCE,               // Sequence of statements - Process declarations
-        STATEMENT,              // Statements in a sequence
-        EXPRESSION,             // Evaluate sub-expressions in a statement
-        MAYFAIL,                // Return nullptr on error
-        VARIABLE,               // Return a variable reference (a Rewrite)
-        LOCAL,                  // Don't lookup parent scopes
-        NAMED,                  // Return value named by expression
-        EVALUATION_MODES        // Number of evaluations modes
-    };
     static Tree *DoEvaluate(Scope *scope,
                             Tree *expr,
-                            Evaluation mode,
+                            EvaluationMode mode,
                             EvaluationCache &cache);
     static Tree *DoTypeCheck(Scope *scope,
                              Tree *type,
@@ -136,7 +141,7 @@ struct EvaluationCache
     }
 
 public:
-    Interpreter::Evaluation                     mode;
+    EvaluationMode                              mode;
 
 private:
     std::map<Tree_p, Tree_p>                    values;
@@ -176,7 +181,7 @@ struct Bindings
     // Evaluation and binding of values
     void  StripBlocks();
     bool  MustEvaluate();
-    Tree *Evaluate(Scope *scope, Tree *expr, bool named = false);
+    Tree *Evaluate(Scope *scope, Tree *expr, EvaluationMode mode = SEQUENCE);
     Tree *EvaluateType(Tree *type);
     Tree *EvaluateGuard(Tree *guard);
     Tree *TypeCheck(Scope *scope, Tree *type, Tree *expr);
