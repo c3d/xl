@@ -551,6 +551,30 @@ inline Tree *IsVariableType(Tree *type)
 }
 
 
+inline Name *IsVariableBinding(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a type is a variable binding
+// ----------------------------------------------------------------------------
+{
+    if (Name *qualifier = prefix->left->AsName())
+        if (qualifier->value == "variable" || qualifier->value == "var")
+            if (Name *name = prefix->right->AsName())
+                return name;
+    return nullptr;
+}
+
+
+inline Name *IsVariableBinding(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if we have something like [variable integeer]
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = type->AsPrefix())
+        return IsVariableBinding(prefix);
+    return nullptr;
+}
+
+
 inline Name *IsLambda(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is a lambda form
