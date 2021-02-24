@@ -32,9 +32,9 @@ SUGAR
 
 PREFIX
         20      matching
-        30      variable var
         40      loop while until
         121     case if return yield transform
+        180     variable var
         350     not
         360     ! ~
         370     - + * /
