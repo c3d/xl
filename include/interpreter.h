@@ -172,7 +172,7 @@ struct Bindings
 
     // Evaluation and binding of values
     void  StripBlocks();
-    bool  MustEvaluate(bool named = false);
+    bool  MustEvaluate();
     Tree *Evaluate(Scope *scope, Tree *expr, bool named = false);
     Tree *EvaluateType(Tree *type);
     Tree *EvaluateGuard(Tree *guard);
