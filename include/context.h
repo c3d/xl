@@ -528,6 +528,29 @@ inline bool IsExternDeclaration(Prefix *prefix)
 }
 
 
+inline Tree *IsVariableType(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a type is a variable type
+// ----------------------------------------------------------------------------
+{
+    if (Name *qualifier = prefix->left->AsName())
+        if (qualifier->value == "variable" || qualifier->value == "var")
+            return prefix->right;
+    return nullptr;
+}
+
+
+inline Tree *IsVariableType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if we have something like [variable integeer]
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = type->AsPrefix())
+        return IsVariableType(prefix);
+    return nullptr;
+}
+
+
 inline Name *IsLambda(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is a lambda form
