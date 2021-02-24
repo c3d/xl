@@ -7,8 +7,8 @@
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as character] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as closure] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as closure] against [0:27]
-01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as declaration] does not match [0:27]:
-01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as declaration] against [0:27]
+01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as definition] does not match [0:27]:
+01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as definition] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as infix] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as infix] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as integer] does not match [0:27]:

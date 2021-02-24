@@ -164,7 +164,7 @@ eval_fn CompilerUnit::Compile()
         record(compiler_unit, "Type analysis for %t failed", source);
         return xl_identity;
     }
-    if (type == declaration_type)
+    if (type == definition_type)
     {
         // No instruction in input source, return as is
         record(compiler_unit, "No instructions in %t, identity", source);

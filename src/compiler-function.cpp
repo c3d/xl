@@ -1022,7 +1022,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         CTYPE(symbol,           nameTreePtr);
         CTYPE(operator,         nameTreePtr);
         TTYPE(infix);
-        CTYPE(declaration,      infixTreePtr);
+        CTYPE(definition,       infixTreePtr);
         TTYPE(prefix);
         TTYPE(postfix);
         TTYPE(block);
