@@ -763,6 +763,27 @@ inline Infix *IsPatternCondition(Tree *tree)
 }
 
 
+inline bool IsPatternWrittenForm(Infix *infix)
+// ----------------------------------------------------------------------------
+//   Check if an infix marks an additional written form
+// ----------------------------------------------------------------------------
+{
+    return infix->name == "written";
+}
+
+
+inline Infix *IsPatternWrittenForm(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree marks a written form
+// ----------------------------------------------------------------------------
+{
+    if (Infix *infix = tree->AsInfix())
+        if (IsPatternWrittenForm(infix))
+            return infix;
+    return nullptr;
+}
+
+
 inline Tree *IsPatternMatchingType(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is [matching Pattern]
