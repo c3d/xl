@@ -862,6 +862,185 @@ static inline void Redefined(Tree *pattern, Rewrite *old)
 }
 
 
+static void ExtractParameters(Tree *pattern,
+                              TreeList &parameters,
+                              Tree_p &condition)
+// ----------------------------------------------------------------------------
+//   Extract all the parameters from a pattern
+// ----------------------------------------------------------------------------
+{
+    switch(pattern->Kind())
+    {
+    case NATURAL:
+    case REAL:
+    case TEXT:
+        parameters.push_back(pattern);
+        break;
+    case NAME:
+        parameters.push_back(pattern);
+        break;
+    case INFIX:
+    {
+        Infix *infix = (Infix *) pattern;
+        if (IsTypeAnnotation(infix))
+        {
+            parameters.push_back(infix);
+            break;
+        }
+        if (IsPatternCondition(infix))
+        {
+            if (condition)
+            {
+                Ooops("Second condition $1 in pattern", infix->right);
+                Ooops("Already had condition $1", condition);
+            }
+            condition = infix->right;
+            ExtractParameters(infix->left, parameters, condition);
+            break;
+        }
+        ExtractParameters(infix->left, parameters, condition);
+        ExtractParameters(infix->right, parameters, condition);
+        break;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) pattern;
+        if (IsVariableBinding(prefix))
+        {
+            parameters.push_back(prefix);
+            break;
+        }
+        if (parameters.size() || !prefix->left->AsName())
+            ExtractParameters(prefix->left, parameters, condition);
+        ExtractParameters(prefix->right, parameters, condition);
+        break;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) pattern;
+        if (parameters.size() || !postfix->right->AsName())
+            ExtractParameters(postfix->right, parameters, condition);
+        ExtractParameters(postfix->left, parameters, condition);
+        break;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) pattern;
+        if (block->IsMetaBox())
+            Ooops("Cannot have a metabox $1 and a written form", block);
+        ExtractParameters(block->child, parameters, condition);
+        break;
+    }
+    }
+}
+
+
+static Tree *MatchParameters(Tree *pattern,
+                             TreeList &parameters,
+                             Tree_p &defined)
+// ----------------------------------------------------------------------------
+//   Extract all the parameters from a pattern
+// ----------------------------------------------------------------------------
+{
+    switch(pattern->Kind())
+    {
+    case NATURAL:
+    case REAL:
+    case TEXT:
+        for (auto it = parameters.begin(); it != parameters.end(); it++)
+        {
+            if (Tree::Equal(*it, pattern))
+            {
+                parameters.erase(it);
+                return pattern;
+            }
+        }
+        Ooops("No constant in original pattern to match $1 in written form",
+              pattern);
+        return pattern;
+    case NAME:
+        if (defined)
+        {
+            for (auto it = parameters.begin(); it != parameters.end(); it++)
+            {
+                Tree *match = *it;
+                Tree *expr = match;
+                if (Tree *binding = IsVariableBinding(expr))
+                    expr = binding;
+                Name *name = expr->AsName();
+                if (!name)
+                    if (Infix *infix = IsTypeAnnotation(expr))
+                        name = infix->left->AsName();
+                if (name && name->value == ((Name *) pattern)->value)
+                {
+                    parameters.erase(it);
+                    return match;
+                }
+            }
+            Ooops("No name in original pattern to match $1 in written form",
+                  pattern);
+        }
+        else
+        {
+            defined = pattern;
+        }
+        return pattern;
+    case INFIX:
+    {
+        Infix *infix = (Infix *) pattern;
+        if (IsTypeAnnotation(infix))
+        {
+            Ooops("Type annotation $1 in a written form", infix);
+            return pattern;
+        }
+        if (IsPatternCondition(infix))
+        {
+            Ooops("Pattern condition $1 in a written form", infix);
+            return pattern;
+        }
+        if (!defined)
+            defined = pattern;
+        Tree *left = MatchParameters(infix->left, parameters, defined);
+        Tree *right = MatchParameters(infix->right, parameters, defined);
+        if (left != infix->left || right != infix->right)
+            infix = new Infix(infix, left, right);
+        return infix;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) pattern;
+        Tree *left = MatchParameters(prefix->left, parameters, defined);
+        Tree *right = MatchParameters(prefix->right, parameters, defined);
+        if (left != prefix->left || right != prefix->right)
+            prefix = new Prefix(prefix, left, right);
+        return prefix;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) pattern;
+        Tree *left = MatchParameters(postfix->left, parameters, defined);
+        Tree *right = MatchParameters(postfix->right, parameters, defined);
+        if (left != postfix->left || right != postfix->right)
+            postfix = new Postfix(postfix, left, right);
+        return postfix;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) pattern;
+        if (block->IsMetaBox())
+        {
+            Ooops("Cannot have a metabox $1 in a written form", block);
+            return block;
+        }
+        Tree *child = MatchParameters(block->child, parameters, defined);
+        if (child != block->child)
+            block = new Block(block, child);
+        return block;
+    }
+    }
+}
+
+
 Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
@@ -877,8 +1056,17 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
     // Find pattern from the rewrite
     Tree *pattern = rewrite->Pattern();
 
+    // Check if there is any written form
+    TreeList writtenForms;
+    while (Infix *written = IsPatternWrittenForm(pattern))
+    {
+        writtenForms.push_back(written->right);
+        pattern = written->left;
+    }
+
     // Strip pattern of any sugar
-    rewrite->left = pattern = MAIN->StripSugar(symbols, pattern);
+    pattern = MAIN->StripSugar(symbols, pattern);
+    rewrite->left = pattern;
 
     // Validate form names, replace metaboxes, emit errors in case of problem.
     pattern = ValidatePattern(pattern);
@@ -886,17 +1074,17 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
     // Find locals symbol table, populate it
     Scope   *scope  = symbols;
     Tree_p  &locals = scope->Locals();
+    Tree_p  *entry = &locals;
 
     // If empty scope, insert the rewrite
     if (locals == xl_nil)
     {
         record(symbols, "In %p insert top-level rewrite %t", this, rewrite);
         locals = rewrite;
-        return rewrite;
+        goto done;
     }
 
     // Now we process multiple rewrites
-    Tree_p  *entry = &locals;
     while (true)
     {
         // Reached single rewrite: decide if we add new one left or right
@@ -921,7 +1109,7 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
             {
                 Redefined(pattern, old);
             }
-            return rewrite;
+            goto done;
         }
 
         // If multiple rewrites, select if we move left or right
@@ -942,7 +1130,7 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
             {
                 // Here pattern < left < right
                 rewrites->right = new Rewrites(rewrite, right);
-                return rewrite;
+                goto done;
             }
 
             int cmpright = Sort(right->Pattern(), pattern, INSERT);
@@ -953,13 +1141,13 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
                 // Here left <= pattern < right: reorder
                 rewrites->left = rewrite;
                 rewrites->right = new Rewrites(left, right);
-                return rewrite;
+                goto done;
             }
 
             // Here, left <= right <= pattern: reorder
             rewrites->left = right;
             rewrites->right = new Rewrites(left, rewrite);
-            return rewrite;
+            goto done;
         }
 
         // The right should be a Rewrites as well
@@ -971,8 +1159,34 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
         entry = cmpleft > 0 ? &right->left : &right->right;
     }
 
-    // Never happens
-    return nullptr;
+done:
+    if (writtenForms.size())
+    {
+        TreeList parameters;
+        Tree_p condition;
+        ExtractParameters(pattern, parameters, condition);
+        Tree_p definition = rewrite->Definition();
+        for (auto pat : writtenForms)
+        {
+            TreeList rewrittenParms = parameters;
+            Tree_p defined;
+            Tree *altpat = MatchParameters(pat, rewrittenParms, defined);
+            if (rewrittenParms.size())
+            {
+                Ooops("Nothing in written form matches $1", rewrittenParms[0]);
+                break;
+            }
+            if (altpat->AsName() || IsTypeAnnotation(altpat))
+                altpat = new Prefix(xl_lambda, altpat, altpat->Position());
+            if (condition)
+                altpat = new Infix("when", altpat, condition,
+                                   altpat->Position());
+            Rewrite_p rewrite = new Rewrite(altpat, definition);
+            Enter(rewrite);
+        }
+    }
+
+    return rewrite;
 }
 
 

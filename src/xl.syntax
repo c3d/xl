@@ -1,6 +1,7 @@
 INFIX
         11      NEWLINE ;
         21      -> is has
+        30      written
         31      else into
         40      loop while until
         50      then require ensure
@@ -9,7 +10,6 @@ INFIX
         100     STATEMENT
         105     ,
         110     =>
-        120     written
         130     where
         200     DEFAULT
         211     when
