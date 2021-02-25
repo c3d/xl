@@ -1,0 +1,12 @@
+01.Evaluation/swap-typed-fail.xl:55:6: Unable to evaluate [Swap X, Foo]:
+01.Evaluation/swap-typed-fail.xl:37:8:  Pattern [Swap (var X:integer, var Y:integer)] does not match [Swap X, Foo]:
+01.Evaluation/swap-typed-fail.xl:37:28:   Parameter Type [integer] for [var Y:integer] does not match
+01.Evaluation/swap-typed-fail.xl:52:3:   argument type [real] for [Foo]
+01.Evaluation/swap-typed-fail.xl:37:22:   Infix [var X:integer, var Y:integer] does not match [X, Foo]
+01.Evaluation/swap-typed-fail.xl:37:8:   Prefix [Swap (var X:integer, var Y:integer)] does not match [Swap X, Foo]
+01.Evaluation/swap-typed-fail.xl:43:8:  Pattern [Swap (var X:real, var Y:real)] does not match [Swap X, Foo]:
+01.Evaluation/swap-typed-fail.xl:43:13:   Parameter Type [real] for [var X:real] does not match
+01.Evaluation/swap-typed-fail.xl:49:1:   argument type [integer] for [X]
+01.Evaluation/swap-typed-fail.xl:43:19:   Infix [var X:real, var Y:real] does not match [X, Foo]
+01.Evaluation/swap-typed-fail.xl:43:8:   Prefix [Swap (var X:real, var Y:real)] does not match [Swap X, Foo]
+01.Evaluation/swap-typed-fail.xl:55:6:  Nothing matches [Swap X, Foo]

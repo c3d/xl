@@ -551,20 +551,27 @@ inline Tree *IsVariableType(Tree *type)
 }
 
 
-inline Name *IsVariableBinding(Prefix *prefix)
+inline Tree *IsVariableBinding(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a type is a variable binding
 // ----------------------------------------------------------------------------
 {
     if (Name *qualifier = prefix->left->AsName())
+    {
         if (qualifier->value == "variable" || qualifier->value == "var")
+        {
             if (Name *name = prefix->right->AsName())
                 return name;
+            if (Infix *cast = IsTypeAnnotation(prefix->right))
+                if (cast->left->AsName())
+                    return cast;
+        }
+    }
     return nullptr;
 }
 
 
-inline Name *IsVariableBinding(Tree *type)
+inline Tree *IsVariableBinding(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if we have something like [variable integeer]
 // ----------------------------------------------------------------------------
