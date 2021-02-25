@@ -231,10 +231,39 @@ Tree *Bindings::Do(Prefix *what)
     }
 
     // Check if we have a variable binding
-    if (Name *name = IsVariableBinding(what))
+    if (Tree *binding = IsVariableBinding(what))
     {
         Tree *bound = Evaluate(EvaluationScope(), test, VARIABLE);
-        return Bind(name, bound);
+        if (!bound)
+        {
+            Ooops("Unable to bind variable $1 to $2", what, test);
+           return nullptr;
+        }
+        Tree *decl = bound;
+        while (Closure *closure = decl->As<Closure>())
+            decl = closure->Value();
+        Infix *rewrite = IsVariableDefinition(decl);
+        if (!rewrite)
+        {
+            Ooops("Binding variable $1 to non-variable $2", what, bound);
+            return nullptr;
+        }
+        if (Name *name = binding->AsName())
+            return Bind(name, bound);
+        if (Infix *typecast = binding->AsInfix())
+        {
+            Tree *want = EvaluateType(typecast->right);
+            Infix *vartype = IsTypeAnnotation(rewrite->left);
+            Tree *have = EvaluateType(vartype->right);
+            Name *name = vartype->left->AsName();
+            if (!Tree::Equal(want, have))
+            {
+                Ooops("Parameter Type $2 for $1 does not match", what, want);
+                Ooops("argument type $2 for $1", name, have);
+                return nullptr;
+            }
+            return Bind(name, bound);
+        }
     }
 
     // The test itself should be a prefix, otherwise evaluate
