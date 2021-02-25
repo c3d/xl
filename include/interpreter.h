@@ -48,6 +48,7 @@ struct Bindings;
 struct Native;
 struct EvaluationCache;
 typedef std::vector<Rewrite_p>          RewriteList;
+typedef std::vector<Infix_p>            BorrowList;
 
 
 enum EvaluationMode
@@ -157,16 +158,8 @@ struct Bindings
     typedef Tree *value_type;
 
     Bindings(Scope *evalScope, Scope *declScope,
-             Tree *expr, EvaluationCache &cache)
-        : evalContext(evalScope),
-          declContext(declScope),
-          argContext(&declContext, expr->Position()),
-          self(expr),
-          test(expr),
-          cache(cache),
-          type(nullptr),
-          bindings()
-    {}
+             Tree *expr, EvaluationCache &cache);
+    ~Bindings();
 
     // Tree::Do interface, build the matched value
     Tree *Do(Natural *what);
@@ -196,6 +189,8 @@ struct Bindings
     RewriteList &Rewrites()             { return bindings; }
     size_t Size()                       { return bindings.size(); }
     Tree *operator[](unsigned n)        { return Argument(n); }
+    void  Borrow(Name *name, Infix *rewrite);
+    Name *Borrowed(Infix *rewrite);
 
     // Return the local bindings
     Scope *EvaluationScope()            { return evalContext.Symbols(); }
@@ -216,6 +211,7 @@ private:
     Tree_p              defined;
     Tree_p              type;
     RewriteList         bindings;
+    BorrowList          borrowed;
 };
 
 

@@ -1,0 +1,7 @@
+01.Evaluation/swap-borrow.xl:44:6: Unable to evaluate [Swap X, X]:
+01.Evaluation/swap-borrow.xl:37:8:  Pattern [Swap (var X, var Y)] does not match [Swap X, X]:
+01.Evaluation/swap-borrow.xl:37:20:   Cannot bind [X:integer] to variable [Y]
+01.Evaluation/swap-borrow.xl:37:13:   Already bound as variable to [X]
+01.Evaluation/swap-borrow.xl:37:14:   Infix [var X, var Y] does not match [X, X]
+01.Evaluation/swap-borrow.xl:37:8:   Prefix [Swap (var X, var Y)] does not match [Swap X, X]
+01.Evaluation/swap-borrow.xl:44:6:  Nothing matches [Swap X, X]
