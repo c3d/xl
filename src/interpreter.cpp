@@ -850,8 +850,6 @@ static Tree_p doAssignment(Scope *scope,
         return rewrite;
     }
 
-
-
     // Evaluate the assigned value
     Tree_p value = infix->right;
     value = Interpreter::DoEvaluate(scope, value, EXPRESSION, cache);
@@ -1075,6 +1073,19 @@ retry:
         // Skip definitions, initalizer have been done above
         if (IsDefinition(infix))
         {
+            if (Name *name = infix->left->AsName())
+            {
+                if (!IsSelf(infix->right))
+                {
+                    Context bodyCtx(&context);
+                    Tree_p value = DoEvaluate(bodyCtx.Symbols(),
+                                              infix->right, SEQUENCE, cache);
+                    Rewrite *rewrite = context.Reference(name, false);
+                    rewrite->right = value;
+                    record(eval, "Evaluated name %t as %t", name, value);
+                }
+            }
+
             record(eval, "<Infix %t is a definition", infix);
             return result;
         }

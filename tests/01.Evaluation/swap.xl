@@ -1,11 +1,11 @@
 // ****************************************************************************
-//  lambda-with-locals.xl                                            XL project
+//  swap.xl                                                          XL project
 // ****************************************************************************
 //
 //   File Description:
 //
-//     Check that we use the correct scope when processing lambdas with
-//     local declarations.
+//    Check a simple implementation of a Swap function
+//
 //
 //
 //
@@ -33,6 +33,24 @@
 //   along with XL.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
 
-// This is, counter-intuitively, 33, because the value 31 of Y is evaluated
-// in the context of the lambda declaration, so Y is 32 when evaluated
-(lambda X is X+1) (Y is 31; Y)
+to Swap(var X, var Y) is
+    Tmp is X
+    X := Y
+    Y := Tmp
+
+X : integer := 42
+Y : integer := 1968
+
+ShowXY
+Swap X, Y
+ShowXY
+
+ShowFooBar
+Swap Foo, Bar
+ShowFooBar
+Foo : real := 42.42
+Bar : real := 1968.1968
+
+
+to ShowXY is print "X=", X, " Y=", Y
+to ShowFooBar is print "Foo=", Foo, " Bar=", Bar
