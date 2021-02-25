@@ -248,8 +248,17 @@ Tree *Bindings::Do(Prefix *what)
             Ooops("Binding variable $1 to non-variable $2", what, bound);
             return nullptr;
         }
+        if (Name *borrowed = Borrowed(rewrite))
+        {
+            Ooops("Cannot bind $2 to variable $1", binding, rewrite->left);
+            Ooops("Already bound as variable to $1", borrowed);
+            return nullptr;
+        }
         if (Name *name = binding->AsName())
+        {
+            Borrow(name, rewrite);
             return Bind(name, bound);
+        }
         if (Infix *typecast = binding->AsInfix())
         {
             Tree *want = EvaluateType(typecast->right);
@@ -262,6 +271,7 @@ Tree *Bindings::Do(Prefix *what)
                 Ooops("argument type $2 for $1", name, have);
                 return nullptr;
             }
+            Borrow(name, rewrite);
             return Bind(name, bound);
         }
     }
@@ -627,6 +637,73 @@ Tree *Bindings::NamedTree(unsigned n)
             value = LastErrorAsErrorTree();
     }
     return value;
+}
+
+
+struct BorrowedInfo : Info
+// ----------------------------------------------------------------------------
+//   Marker that there is a variabe binding
+// ----------------------------------------------------------------------------
+{
+    BorrowedInfo(Name *name): name(name) {}
+    Name_p name;
+};
+
+
+void Bindings::Borrow(Name *name, Infix *rewrite)
+// ----------------------------------------------------------------------------
+//   Mark a variable as borrowed
+// ----------------------------------------------------------------------------
+{
+    BorrowedInfo *info = new BorrowedInfo(name);
+    rewrite->SetInfo(info);
+    borrowed.push_back(rewrite);
+    record(bindings, "Borrow %t as %t", rewrite, name);
+}
+
+
+Name *Bindings::Borrowed(Infix *rewrite)
+// ----------------------------------------------------------------------------
+//   Check if we already borrowed that variable
+// ----------------------------------------------------------------------------
+{
+    BorrowedInfo *info = rewrite->GetInfo<BorrowedInfo>();
+    record(bindings, "Borrowed %t is %t", rewrite, info ? info->name : nullptr);
+    if (info)
+        return info->name;
+    return nullptr;
+}
+
+
+Bindings::Bindings(Scope *evalScope, Scope *declScope,
+                   Tree *expr, EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Bindings constructor
+// ----------------------------------------------------------------------------
+    : evalContext(evalScope),
+      declContext(declScope),
+      argContext(&declContext, expr->Position()),
+      self(expr),
+      test(expr),
+      cache(cache),
+      type(nullptr),
+      bindings()
+{
+    record(bindings, ">Created bindings %p for %t", this, expr);
+}
+
+
+Bindings::~Bindings()
+// ----------------------------------------------------------------------------
+//   When removing bindings, unmark all the borrowed items
+// ----------------------------------------------------------------------------
+{
+    for (auto b : borrowed)
+    {
+        bool purged = b->Purge<BorrowedInfo>();
+        record(bindings, "Purging %t %+s", b, purged ? "succeeded" : "failed");
+    }
+    record(bindings, "<Destroyed bindings %p", this);
 }
 
 

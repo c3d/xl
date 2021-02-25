@@ -1,0 +1,6 @@
+01.Evaluation/swap-constants.xl:45:6: Unable to evaluate [Swap X, 1]:
+01.Evaluation/swap-constants.xl:37:8:  Pattern [Swap (var X, var Y)] does not match [Swap X, 1]:
+01.Evaluation/swap-constants.xl:37:20:   Binding variable [var Y] to non-variable 1
+01.Evaluation/swap-constants.xl:37:14:   Infix [var X, var Y] does not match [X, 1]
+01.Evaluation/swap-constants.xl:37:8:   Prefix [Swap (var X, var Y)] does not match [Swap X, 1]
+01.Evaluation/swap-constants.xl:45:6:  Nothing matches [Swap X, 1]
