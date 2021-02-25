@@ -1,5 +1,5 @@
 // ****************************************************************************
-//  lambda-with-locals.xl                                            XL project
+//  lambda-with-locals-function.xl                                 XL project
 // ****************************************************************************
 //
 //   File Description:
@@ -33,6 +33,5 @@
 //   along with XL.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
 
-// This is, counter-intuitively, 33, because the value 31 of Y is evaluated
-// in the context of the lambda declaration, so Y is 32 when evaluated
-(lambda X is X+1) (Y is 31; Y)
+// This is 32 and not 33 because the function is not evaluated
+(lambda X is X+1) (function Y is 31; Y)
