@@ -723,6 +723,8 @@ static Tree_p doPatternMatch(Scope *scope,
 // ----------------------------------------------------------------------------
 {
     Tree_p cast;
+    while (Closure *closure = expr->As<Closure>())
+        expr = closure->Value();
     Bindings bindings(scope, scope, expr, cache);
     Context args(bindings.ArgumentsScope());
     args.Define(pattern, xl_self);
@@ -854,11 +856,13 @@ static Tree *eval(Scope   *evalScope,
                 return doPatternMatch(bodyScope, pattern,
                                       body, bodyCache);
 
-        // Otherwise simply evaluate the body and check the type afterwards
+        // Otherwise simply evaluate the body
         result = Interpreter::DoEvaluate(bodyScope, body,
                                          SEQUENCE, bodyCache);
-        result = bindings.ResultTypeCheck(result, false);
     }
+
+    // Check the return type if necessary
+    result = bindings.ResultTypeCheck(result, false);
     return result;
 }
 
