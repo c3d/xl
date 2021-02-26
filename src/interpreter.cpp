@@ -239,10 +239,7 @@ Tree *Bindings::Do(Prefix *what)
             Ooops("Unable to bind variable $1 to $2", what, test);
            return nullptr;
         }
-        Tree *decl = bound;
-        while (Closure *closure = decl->As<Closure>())
-            decl = closure->Value();
-        Infix *rewrite = IsVariableDefinition(decl);
+        Infix *rewrite = IsVariableDefinition(bound);
         if (!rewrite)
         {
             Ooops("Binding variable $1 to non-variable $2", what, bound);
@@ -754,45 +751,24 @@ static Tree *eval(Scope   *evalScope,
     EvaluationCache &cache = *((EvaluationCache *) ec);
     EvaluationMode mode = cache.mode;
 
-    Tree *pattern = decl->Pattern();
-
-    // If the pattern is a name, directly return the value or fail
-    if (Name *name = pattern->AsName())
-    {
-        if (Name *xname = expr->AsName())
-        {
-            if (name->value == xname->value)
-            {
-                if (mode == VARIABLE)
-                    return decl;
-                if (IsSelf(decl->right))
-                    return name;
-                if (mode == NAMED)
-                    return decl->right;
-                expr = decl->right;
-                while (Closure *closure = expr->As<Closure>())
-                    expr = closure->Value();
-                if (Infix *variable = IsVariableDefinition(expr))
-                    return variable->right;
-                return Interpreter::DoEvaluate(evalScope, decl->right,
-                                               SEQUENCE, cache);
-            }
-        }
-        return nullptr;
-    }
-
     // Bind argument to parameters
+    Tree *pattern = decl->Pattern();
     Bindings bindings(evalScope, declScope, expr, cache);
     Tree_p matched = pattern->Do(bindings);
     if (!matched)
         return nullptr;
 
-    // Successfully bound - Return variable declaration in a closure
-    if (mode == VARIABLE)
-        return bindings.Enclose(decl);
-
     // Evaluate the body in arguments
     Tree *body = decl->right;
+
+    // Successfully bound - Return variable declaration in a closure
+    if (mode == VARIABLE)
+    {
+        if (IsVariableDefinition(decl))
+            return decl;
+        if (IsVariableDefinition(body))
+            return body;
+    }
 
     // Check if we have a builtin
     if (Prefix *prefix = body->AsPrefix())
@@ -855,6 +831,11 @@ static Tree *eval(Scope   *evalScope,
             if (Tree *pattern = IsPatternMatchingType(type))
                 return doPatternMatch(bodyScope, pattern,
                                       body, bodyCache);
+
+        // Check if we returned a variable
+        if (Rewrite *vardef = body->As<Rewrite>())
+            if (IsVariableDefinition(vardef))
+                return (mode == VARIABLE) ? vardef : vardef->right;
 
         // Otherwise simply evaluate the body
         result = Interpreter::DoEvaluate(bodyScope, body,
@@ -934,22 +915,6 @@ static Tree_p doAssignment(Scope *scope,
     {
         Ooops("Cannot assign to $1", infix->left);
         return to;
-    }
-
-    // Check if this is a variable binding
-    if (Infix *definition = IsConstantDefinition(to))
-    {
-        Tree *variable = definition->right;
-        while (Closure *closure = variable->As<Closure>())
-            variable = closure->Value();
-        if (Rewrite *rewrite = variable->As<Rewrite>())
-            to = rewrite;
-    }
-    else
-    {
-        // Strip closure for expressions like [A(1) := 3]
-        while (Closure *closure = to->As<Closure>())
-            to = closure->Value();
     }
 
     // Get the original definition
@@ -1350,6 +1315,11 @@ retry:
         Ooops("Nothing matches $1", expr);
     else if (!Errors::Aborting())
         errors.Clear();
+
+    // Check if we need to get the value from a variable
+    if (mode != VARIABLE && result)
+        if (Infix *def = IsVariableDefinition(result))
+                result = def->right;
 
     record(eval, "<%t %+s result %t",
            expr, result ? "succeeded" : "failed", result);

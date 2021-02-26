@@ -1,4 +1,4 @@
 01.Evaluation/assign-to-constant.xl:5:5: Unable to evaluate [foo 3]:
 01.Evaluation/assign-to-constant.xl:3:5:  Pattern [foo X] does not match [foo 3]:
-01.Evaluation/assign-to-constant.xl:3:5:   Cannot assign to constant [X]
+01.Evaluation/assign-to-constant.xl:5:5:   Left of assignment, 3, is not a variable
 01.Evaluation/assign-to-constant.xl:5:5:  Nothing matches [foo 3]
