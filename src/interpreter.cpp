@@ -1267,6 +1267,13 @@ retry:
             return result;
         }
 
+        // Check 'with' type declarations
+        if (IsWithDeclaration(prefix))
+        {
+            record(eval, "<Prefix %t is a with type clause", prefix);
+            return xl_nil;
+        }
+
         // Filter out declaration such as [extern foo(bar)]
         if (IsDefinition(prefix))
         {

@@ -176,6 +176,246 @@ Context *Context::Parent()
 
 // ============================================================================
 //
+//    Matching declarations types based on names
+//
+// ============================================================================
+// There are two contexts where we do this kind of matching:
+// - For a written form, [Add X:integer, Y:integer written X+Y], we will
+//   rewrite [X+Y] as [X:integer+Y:integer]
+// - When there is a "with" declaration, we rewrite other patterns using
+//   what is the with declaration.
+
+static void ExtractParameters(Tree *pattern,
+                              TreeList &parameters,
+                              Tree_p &condition,
+                              bool written)
+// ----------------------------------------------------------------------------
+//   Extract all the parameters from a pattern
+// ----------------------------------------------------------------------------
+{
+    switch(pattern->Kind())
+    {
+    case NATURAL:
+    case REAL:
+    case TEXT:
+        parameters.push_back(pattern);
+        break;
+    case NAME:
+        parameters.push_back(pattern);
+        break;
+    case INFIX:
+    {
+        Infix *infix = (Infix *) pattern;
+        if (IsTypeAnnotation(infix))
+        {
+            parameters.push_back(infix);
+            break;
+        }
+        if (IsPatternCondition(infix))
+        {
+            if (!written)
+            {
+                Ooops("Cannot have a pattern condition in a 'with' clause",
+                      infix->right);
+            }
+            else if (condition)
+            {
+                Ooops("Second condition $1 in pattern", infix->right);
+                Ooops("Already had condition $1", condition);
+            }
+            condition = infix->right;
+            ExtractParameters(infix->left, parameters, condition, written);
+            break;
+        }
+        ExtractParameters(infix->left, parameters, condition, written);
+        ExtractParameters(infix->right, parameters, condition, written);
+        break;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) pattern;
+        if (IsVariableBinding(prefix))
+        {
+            parameters.push_back(prefix);
+            break;
+        }
+        if (parameters.size() || !prefix->left->AsName())
+            ExtractParameters(prefix->left, parameters, condition, written);
+        ExtractParameters(prefix->right, parameters, condition, written);
+        break;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) pattern;
+        if (parameters.size() || !postfix->right->AsName())
+            ExtractParameters(postfix->right, parameters, condition, written);
+        ExtractParameters(postfix->left, parameters, condition, written);
+        break;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) pattern;
+        if (block->IsMetaBox())
+            Ooops("Cannot have a metabox $1 and a written form", block);
+        ExtractParameters(block->child, parameters, condition, written);
+        break;
+    }
+    }
+}
+
+
+static Tree *MatchParameters(Tree *pattern,
+                             TreeList &parameters,
+                             Tree_p &defined,
+                             bool written)
+// ----------------------------------------------------------------------------
+//   Rewrite the pattern to match type declarations in the parameters
+// ----------------------------------------------------------------------------
+{
+    switch(pattern->Kind())
+    {
+    case NATURAL:
+    case REAL:
+    case TEXT:
+        for (auto it = parameters.begin(); it != parameters.end(); it++)
+        {
+            if (Tree::Equal(*it, pattern))
+            {
+                if (written)
+                    parameters.erase(it);
+                return pattern;
+            }
+        }
+        if (written)
+            Ooops("No constant in original pattern to match $1 in written form",
+                  pattern);
+        return pattern;
+    case NAME:
+        if (defined)
+        {
+            for (auto it = parameters.begin(); it != parameters.end(); it++)
+            {
+                Tree *match = *it;
+                Tree *expr = match;
+                if (Tree *binding = IsVariableBinding(expr))
+                    expr = binding;
+                Name *name = expr->AsName();
+                if (!name)
+                    if (Infix *infix = IsTypeAnnotation(expr))
+                        name = infix->left->AsName();
+                if (name && name->value == ((Name *) pattern)->value)
+                {
+                    if (written)
+                        parameters.erase(it);
+                    return match;
+                }
+            }
+            if (written)
+                Ooops("No name in original pattern to match $1 in written form",
+                      pattern);
+        }
+        else
+        {
+            defined = pattern;
+        }
+        return pattern;
+    case INFIX:
+    {
+        Infix *infix = (Infix *) pattern;
+        if (IsTypeAnnotation(infix))
+        {
+            if (written)
+                Ooops("Type annotation $1 in a written form", infix);
+            return pattern;
+        }
+        if (IsPatternCondition(infix))
+        {
+            if (written)
+                Ooops("Pattern condition $1 in a written form", infix);
+            return pattern;
+        }
+        if (!defined)
+            defined = pattern;
+        Tree *left = MatchParameters(infix->left, parameters,defined,written);
+        Tree *right = MatchParameters(infix->right, parameters,defined,written);
+        if (left != infix->left || right != infix->right)
+            infix = new Infix(infix, left, right);
+        return infix;
+    }
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) pattern;
+        Tree *left = MatchParameters(prefix->left, parameters,defined,written);
+        Tree *right = MatchParameters(prefix->right,parameters,defined,written);
+        if (left != prefix->left || right != prefix->right)
+            prefix = new Prefix(prefix, left, right);
+        return prefix;
+    }
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) pattern;
+        Tree *left = MatchParameters(postfix->left,parameters,defined,written);
+        Tree *right=MatchParameters(postfix->right,parameters,defined,written);
+        if (left != postfix->left || right != postfix->right)
+            postfix = new Postfix(postfix, left, right);
+        return postfix;
+    }
+    case BLOCK:
+    {
+        Block *block = (Block *) pattern;
+        if (block->IsMetaBox())
+        {
+            if (written)
+                Ooops("Cannot have a metabox $1 in a written form", block);
+            return block;
+        }
+        Tree *child = MatchParameters(block->child, parameters,defined,written);
+        if (child != block->child)
+            block = new Block(block, child);
+        return block;
+    }
+    }
+}
+
+
+inline static Tree *MatchParameters(Tree *pattern, TreeList &parameters)
+// ----------------------------------------------------------------------------
+//   Case for the non-written form
+// ----------------------------------------------------------------------------
+{
+    if (parameters.size())
+    {
+        Tree_p defined;
+        pattern = MatchParameters(pattern, parameters, defined, false);
+    }
+    return pattern;
+}
+
+
+inline static void ExtractParameters(Tree *pattern, TreeList &types)
+// ----------------------------------------------------------------------------
+//    Case for the non-written form
+// ----------------------------------------------------------------------------
+{
+    Tree::Iterator next = pattern;
+    while (Tree *what = next())
+    {
+        if (IsTypeAnnotation(what))
+        {
+            Tree_p condition;
+            ExtractParameters(what, types, condition, false);
+        }
+        else
+        {
+            Ooops("Inside 'with' clause, $1 is not a type annotation", what);
+        }
+    }
+}
+
+
+
+// ============================================================================
+//
 //    Entering symbols
 //
 // ============================================================================
@@ -213,6 +453,7 @@ bool Context::ProcessDeclarations(Tree *source, Initializers &inits)
 {
     Tree::Iterator next   = source;
     bool           result = false;
+    TreeList       types;
 
     record(context, "In %p process declarations for %t", this, source);
     while (Tree *what = next())
@@ -225,6 +466,7 @@ bool Context::ProcessDeclarations(Tree *source, Initializers &inits)
             if (IsDefinition(infix))
             {
                 record(context, "In %p enter declaration %t", this, infix);
+                infix->left = MatchParameters(infix->left, types);
                 Enter(infix, inits);
                 isInstruction = false;
             }
@@ -248,6 +490,8 @@ bool Context::ProcessDeclarations(Tree *source, Initializers &inits)
                     delete pcd;
                 }
             }
+            if (IsWithDeclaration(prefix))
+                ExtractParameters(prefix->right, types);
 
             // Check if this prefix is some [import X.Y.Z] statement
             if (Name *import = prefix->left->AsName())
@@ -280,6 +524,7 @@ bool Context::ProcessSpecifications(Context &implementation,
 {
     Tree::Iterator next   = source;
     bool           result = false;
+    TreeList       types;
 
     record(context, "In %p process specifications for %t", this, source);
     while (Tree *what = next())
@@ -292,6 +537,7 @@ bool Context::ProcessSpecifications(Context &implementation,
             if (IsDefinition(infix))
             {
                 record(context, "In %p enter definition %t", this, infix);
+                infix->left = MatchParameters(infix->left, types);
                 Enter(infix, inits);
                 isSpecification = false;
             }
@@ -315,6 +561,8 @@ bool Context::ProcessSpecifications(Context &implementation,
                     delete pcd;
                 }
             }
+            if (IsWithDeclaration(prefix))
+                ExtractParameters(prefix->right, types);
 
             // Check if this prefix is some [import X.Y.Z] statement
             if (Name *import = prefix->left->AsName())
@@ -332,7 +580,7 @@ bool Context::ProcessSpecifications(Context &implementation,
         if (isSpecification)
         {
             // Take the pattern and enter it as is
-            Tree *pattern = what;
+            Tree *pattern = MatchParameters(what, types);
 
             // Find the corresponding implementation
             Rewrite *rewrite = implementation.Reference(pattern, false);
@@ -862,185 +1110,6 @@ static inline void Redefined(Tree *pattern, Rewrite *old)
 }
 
 
-static void ExtractParameters(Tree *pattern,
-                              TreeList &parameters,
-                              Tree_p &condition)
-// ----------------------------------------------------------------------------
-//   Extract all the parameters from a pattern
-// ----------------------------------------------------------------------------
-{
-    switch(pattern->Kind())
-    {
-    case NATURAL:
-    case REAL:
-    case TEXT:
-        parameters.push_back(pattern);
-        break;
-    case NAME:
-        parameters.push_back(pattern);
-        break;
-    case INFIX:
-    {
-        Infix *infix = (Infix *) pattern;
-        if (IsTypeAnnotation(infix))
-        {
-            parameters.push_back(infix);
-            break;
-        }
-        if (IsPatternCondition(infix))
-        {
-            if (condition)
-            {
-                Ooops("Second condition $1 in pattern", infix->right);
-                Ooops("Already had condition $1", condition);
-            }
-            condition = infix->right;
-            ExtractParameters(infix->left, parameters, condition);
-            break;
-        }
-        ExtractParameters(infix->left, parameters, condition);
-        ExtractParameters(infix->right, parameters, condition);
-        break;
-    }
-    case PREFIX:
-    {
-        Prefix *prefix = (Prefix *) pattern;
-        if (IsVariableBinding(prefix))
-        {
-            parameters.push_back(prefix);
-            break;
-        }
-        if (parameters.size() || !prefix->left->AsName())
-            ExtractParameters(prefix->left, parameters, condition);
-        ExtractParameters(prefix->right, parameters, condition);
-        break;
-    }
-    case POSTFIX:
-    {
-        Postfix *postfix = (Postfix *) pattern;
-        if (parameters.size() || !postfix->right->AsName())
-            ExtractParameters(postfix->right, parameters, condition);
-        ExtractParameters(postfix->left, parameters, condition);
-        break;
-    }
-    case BLOCK:
-    {
-        Block *block = (Block *) pattern;
-        if (block->IsMetaBox())
-            Ooops("Cannot have a metabox $1 and a written form", block);
-        ExtractParameters(block->child, parameters, condition);
-        break;
-    }
-    }
-}
-
-
-static Tree *MatchParameters(Tree *pattern,
-                             TreeList &parameters,
-                             Tree_p &defined)
-// ----------------------------------------------------------------------------
-//   Extract all the parameters from a pattern
-// ----------------------------------------------------------------------------
-{
-    switch(pattern->Kind())
-    {
-    case NATURAL:
-    case REAL:
-    case TEXT:
-        for (auto it = parameters.begin(); it != parameters.end(); it++)
-        {
-            if (Tree::Equal(*it, pattern))
-            {
-                parameters.erase(it);
-                return pattern;
-            }
-        }
-        Ooops("No constant in original pattern to match $1 in written form",
-              pattern);
-        return pattern;
-    case NAME:
-        if (defined)
-        {
-            for (auto it = parameters.begin(); it != parameters.end(); it++)
-            {
-                Tree *match = *it;
-                Tree *expr = match;
-                if (Tree *binding = IsVariableBinding(expr))
-                    expr = binding;
-                Name *name = expr->AsName();
-                if (!name)
-                    if (Infix *infix = IsTypeAnnotation(expr))
-                        name = infix->left->AsName();
-                if (name && name->value == ((Name *) pattern)->value)
-                {
-                    parameters.erase(it);
-                    return match;
-                }
-            }
-            Ooops("No name in original pattern to match $1 in written form",
-                  pattern);
-        }
-        else
-        {
-            defined = pattern;
-        }
-        return pattern;
-    case INFIX:
-    {
-        Infix *infix = (Infix *) pattern;
-        if (IsTypeAnnotation(infix))
-        {
-            Ooops("Type annotation $1 in a written form", infix);
-            return pattern;
-        }
-        if (IsPatternCondition(infix))
-        {
-            Ooops("Pattern condition $1 in a written form", infix);
-            return pattern;
-        }
-        if (!defined)
-            defined = pattern;
-        Tree *left = MatchParameters(infix->left, parameters, defined);
-        Tree *right = MatchParameters(infix->right, parameters, defined);
-        if (left != infix->left || right != infix->right)
-            infix = new Infix(infix, left, right);
-        return infix;
-    }
-    case PREFIX:
-    {
-        Prefix *prefix = (Prefix *) pattern;
-        Tree *left = MatchParameters(prefix->left, parameters, defined);
-        Tree *right = MatchParameters(prefix->right, parameters, defined);
-        if (left != prefix->left || right != prefix->right)
-            prefix = new Prefix(prefix, left, right);
-        return prefix;
-    }
-    case POSTFIX:
-    {
-        Postfix *postfix = (Postfix *) pattern;
-        Tree *left = MatchParameters(postfix->left, parameters, defined);
-        Tree *right = MatchParameters(postfix->right, parameters, defined);
-        if (left != postfix->left || right != postfix->right)
-            postfix = new Postfix(postfix, left, right);
-        return postfix;
-    }
-    case BLOCK:
-    {
-        Block *block = (Block *) pattern;
-        if (block->IsMetaBox())
-        {
-            Ooops("Cannot have a metabox $1 in a written form", block);
-            return block;
-        }
-        Tree *child = MatchParameters(block->child, parameters, defined);
-        if (child != block->child)
-            block = new Block(block, child);
-        return block;
-    }
-    }
-}
-
-
 Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
 // ----------------------------------------------------------------------------
 //   Enter a known declaration
@@ -1164,13 +1233,13 @@ done:
     {
         TreeList parameters;
         Tree_p condition;
-        ExtractParameters(pattern, parameters, condition);
+        ExtractParameters(pattern, parameters, condition, true);
         Tree_p definition = rewrite->Definition();
         for (auto pat : writtenForms)
         {
             TreeList rewrittenParms = parameters;
             Tree_p defined;
-            Tree *altpat = MatchParameters(pat, rewrittenParms, defined);
+            Tree *altpat = MatchParameters(pat, rewrittenParms, defined, true);
             if (rewrittenParms.size())
             {
                 Ooops("Nothing in written form matches $1", rewrittenParms[0]);

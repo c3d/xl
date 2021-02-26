@@ -810,6 +810,30 @@ inline Tree *IsPatternMatchingType(Tree *tree)
 }
 
 
+inline bool IsWithDeclaration(Prefix *prefix)
+// ----------------------------------------------------------------------------
+//   Check if a prefix is a "with" declaration
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "with")
+            return true;
+    return false;
+}
+
+
+inline Tree *IsWithDeclaration(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a tree marks a written form
+// ----------------------------------------------------------------------------
+{
+    if (Prefix *prefix = tree->AsPrefix())
+        if (IsWithDeclaration(prefix))
+            return prefix->right;
+    return nullptr;
+}
+
+
 inline Text *IsBuiltin(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is special (extern, builtin, C)
