@@ -1,6 +1,8 @@
 01.Evaluation/03-primitives.xl:43:5: Unable to evaluate [foo 3]:
 01.Evaluation/03-primitives.xl:37:5:  Pattern [foo X:integer as integer] does not match [foo 3]:
 01.Evaluation/03-primitives.xl:37:47:   Unable to evaluate [builtin Nonexistent]:
+01.Evaluation/03-primitives.xl:37:47:    Unable to evaluate [builtin Nonexistent]:
+01.Evaluation/03-primitives.xl:37:47:     Nothing matches [builtin Nonexistent]
 01.Evaluation/03-primitives.xl:37:47:    Nothing matches [builtin Nonexistent]
 01.Evaluation/03-primitives.xl:40:5:  Pattern [foo X:natural as natural] does not match [foo 3]:
 01.Evaluation/03-primitives.xl:40:49:   Nonexistent builtin "Nonexistent"
