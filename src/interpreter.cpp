@@ -541,6 +541,18 @@ Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
 //   Check if we pass the test for the type
 // ----------------------------------------------------------------------------
 {
+    if (Tree *base = IsVariableType(type))
+    {
+        if (Rewrite *rewrite = value->As<Rewrite>())
+        {
+            if (Infix *vardef = IsTypeAnnotation(rewrite->left))
+            {
+                if (Tree::Equal(base, vardef->right))
+                    return rewrite;
+            }
+        }
+        return nullptr;
+    }
     Tree *cast = cache.CachedTypeCheck(type, value);
     if (!cast)
     {
@@ -827,10 +839,17 @@ static Tree *eval(Scope   *evalScope,
 
         // Check if the body returns a matching type
         // If so, we need to evaluate in a scope where that pattern is defined
-        if (Tree *type = bindings.ResultType())
+        Tree *type = bindings.ResultType();
+        if (mode != VARIABLE)
+            mode = SEQUENCE;
+        if (type)
+        {
             if (Tree *pattern = IsPatternMatchingType(type))
                 return doPatternMatch(bodyScope, pattern,
                                       body, bodyCache);
+            if (IsVariableType(type))
+                mode = VARIABLE;
+        }
 
         // Check if we returned a variable
         if (Rewrite *vardef = body->As<Rewrite>())
@@ -838,8 +857,7 @@ static Tree *eval(Scope   *evalScope,
                 return (mode == VARIABLE) ? vardef : vardef->right;
 
         // Otherwise simply evaluate the body
-        result = Interpreter::DoEvaluate(bodyScope, body,
-                                         SEQUENCE, bodyCache);
+        result = Interpreter::DoEvaluate(bodyScope, body, mode, bodyCache);
     }
 
     // Check the return type if necessary
@@ -1141,7 +1159,8 @@ retry:
                 return left;
             }
             expr = infix->right;
-            mode = STATEMENT;
+            if (mode != VARIABLE)
+                mode = STATEMENT;
             goto retry;
         }
 
@@ -1215,8 +1234,16 @@ retry:
             scope = closure;
             expr = prefix->right;
             result = expr;
-            mode = SEQUENCE;
+            if (mode != VARIABLE)
+                mode = SEQUENCE;
             goto reenter;
+        }
+
+        // Check if we have variable type
+        if (IsVariableType(prefix))
+        {
+            prefix->right = DoEvaluate(scope, prefix->right, EXPRESSION, cache);
+            return prefix;
         }
 
         // Check if we are evaluating a pattern matching type
@@ -1349,8 +1376,7 @@ Tree *Interpreter::DoTypeCheck(Scope *scope,
 }
 
 
-bool Interpreter::DoInitializers(Initializers &inits,
-                                 EvaluationCache &cache)
+bool Interpreter::DoInitializers(Initializers &inits, EvaluationCache &cache)
 // ----------------------------------------------------------------------------
 //   Process all initializers in order
 // ----------------------------------------------------------------------------
