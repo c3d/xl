@@ -1,0 +1,2 @@
+A=error "Nothing matches $1", Rest
+true

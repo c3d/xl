@@ -372,12 +372,6 @@ Error &Errors::Log(const Error &e, bool isContext)
 //   Log an error
 // ----------------------------------------------------------------------------
 {
-    // Check if we already logged that error
-    for (Errors *errs = this; errs; errs = errs->parent)
-        for (auto &other : errs->errors)
-            if (e == other)
-                return other;
-
     errors.push_back(e);
     if (isContext)
         context++;
