@@ -1,0 +1,21 @@
+A=17 B=2 C=1969
+Index(A)=17
+Index(B)=2
+Index(C)=1969
+A=5 B=2 C=1969
+Index(A)=5
+Index(B)=2
+Index(C)=1969
+A=5 B=12 C=1969
+Index(A)=5
+Index(B)=12
+Index(C)=1969
+A=5 B=12 C=1968
+Index(A)=5
+Index(B)=12
+Index(C)=1968
+A=5 B=12 C=1968
+Index(A)=5
+Index(B)=12
+Index(C)=1968
+true
