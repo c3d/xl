@@ -882,9 +882,6 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
 //
 // ============================================================================
 
-extern "C"
-{
-
 bool xl_write_natural(ulonglong x)
 // ----------------------------------------------------------------------------
 //   Write a natural value
@@ -1356,7 +1353,6 @@ bool xl_random_seed(int seed)
 }
 NATIVE(xl_random_seed);
 
-} // extern "C"
 
 
 // ============================================================================
