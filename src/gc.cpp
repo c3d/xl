@@ -17,7 +17,7 @@
 //
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3+
-// (C) 2010-2012,2015-2020, Christophe de Dinechin <cdedinechin@dxo.com>
+// (C) 2010-2012,2015-2021, Christophe de Dinechin <cdedinechin@dxo.com>
 // (C) 2011-2012, Jérôme Forissier <jerome@taodyne.com>
 // (C) 0,
 // *****************************************************************************
