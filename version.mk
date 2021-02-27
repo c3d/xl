@@ -1,10 +1,10 @@
 #******************************************************************************
-# Makefil                                                            XL project
+# version.mk                                                         XL project
 #******************************************************************************
 #
 #  File Description:
 #
-#    Makefile for the XL documentation
+#    Describe the package version information
 #
 #
 #
@@ -33,26 +33,9 @@
 #  along with XL.  If not, see <https://www.gnu.org/licenses/>.
 #******************************************************************************
 
-include ../version.mk
-DOCS=HANDBOOK.pdf HANDBOOK.html
-
-WARE.doc=HANDBOOK.adoc $(DOCS)
-
-MIQ=../make-it-quick/
-include $(MIQ)rules.mk
-
-all: $(DOCS)
-
-open: $(DOCS:%=open-%)
-open-%: %
-	open $*
-linux: $(DOCS:%=linux-%)
-linux-HANDBOOK.pdf: HANDBOOK.pdf
-	okular HANDBOOK.pdf
-linux-HANDBOOK.html: HANDBOOK.html
-	firefox HANDBOOK.html
-
-%.html: %.adoc
-	asciidoctor -d book $< -o $@
-%.pdf: %.adoc
-	asciidoctor-pdf -d book $< -o $@
+# For pkg-config generation
+PACKAGE_NAME=xl
+PACKAGE_VERSION=0.0.1
+PACKAGE_DESCRIPTION=An extensible programming language
+PACKAGE_URL="http://github.com/c3d/xl"
+PACKAGE_REQUIRES=
