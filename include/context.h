@@ -347,13 +347,15 @@ public:
     Rewrite *           SetAttribute(text attr, text value, bool ow=false);
 
     // Looking up definitions in a context
+    enum LookupMode { RECURSIVE, SINGLE_SCOPE, REFERENCE, REFERENCE_SCOPE };
     typedef Tree *      (*lookup_fn)(Scope *evalContext, Scope *declContext,
                                      Tree *form, Rewrite *decl, void *info);
     Tree *              Lookup(Tree *what,
                                lookup_fn lookup, void *info,
-                               bool recurse=true);
+                               LookupMode mode = RECURSIVE);
     Rewrite *           Reference(Tree *form, bool recurse=true);
-    Tree *              DeclaredPattern(Tree *form);
+    Rewrite *           Declared(Tree *form, LookupMode mode=RECURSIVE);
+    Tree *              DeclaredPattern(Tree *form, LookupMode mode=RECURSIVE);
     Tree *              Bound(Tree *form,bool recurse=true);
     Tree *              Bound(Tree *form, bool rec, Rewrite_p *rw,Scope_p *ctx);
     Tree *              Named(text name, bool recurse=true);

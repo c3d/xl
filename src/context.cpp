@@ -322,25 +322,24 @@ static Tree *MatchParameters(Tree *pattern,
     case INFIX:
     {
         Infix *infix = (Infix *) pattern;
-        Tree *left = MatchParameters(infix->left, parameters,defined,written);
-        if (IsTypeAnnotation(infix))
+        if (IsTypeAnnotation(infix) || IsPatternCondition(infix))
         {
             if (written)
-                Ooops("Type annotation $1 in a written form", infix);
-            if (left != infix->left)
-                infix = new Infix(infix, left, infix->right);
-            return infix;
-        }
-        if (IsPatternCondition(infix))
-        {
-            if (written)
-                Ooops("Pattern condition $1 in a written form", infix);
+            {
+                if (IsPatternCondition(infix))
+                    Ooops("Pattern condition $1 in a written form", infix);
+                else
+                    Ooops("Type annotation $1 in a written form", infix);
+            }
+            Tree *left = MatchParameters(infix->left, parameters,
+                                         defined, written);
             if (left != infix->left)
                 infix = new Infix(infix, left, infix->right);
             return infix;
         }
         if (!defined)
             defined = pattern;
+        Tree *left = MatchParameters(infix->left, parameters,defined,written);
         Tree *right = MatchParameters(infix->right, parameters,defined,written);
         if (left != infix->left || right != infix->right)
             infix = new Infix(infix, left, right);
@@ -594,7 +593,7 @@ bool Context::ProcessSpecifications(Context &implementation,
             Tree *pattern = MatchParameters(what, types);
 
             // Find the corresponding implementation
-            Rewrite *rewrite = implementation.Reference(pattern, false);
+            Rewrite *rewrite = implementation.Declared(pattern,REFERENCE_SCOPE);
             if (!rewrite)
             {
                 Ooops("No implementation matches $1", pattern);
@@ -740,6 +739,9 @@ enum SortMode
     SEARCH,                     // Sort for search of top pattern
     SEARCH_BIND,                // Sort for search, all names identical
     SEARCH_INFIX,               // Sort for search, matched top infix
+    REFSEARCH,                  // Sort for reference search
+    REFSEARCH_BIND,             // Sort for reference search, identical names
+    REFSEARCH_INFIX,            // Sort for reference, matched top infix
     TYPE,                       // Sort for type annotations
     CONDITIONAL                 // Sort for expression (when clauses)
 };
@@ -751,10 +753,13 @@ inline SortMode SortIgnoreNames(SortMode mode)
 // ----------------------------------------------------------------------------
 //   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
 {
-    if (mode == INSERT)
-        mode = INSERT_BIND;
-    else if (mode == SEARCH)
-        mode = SEARCH_BIND;
+    switch(mode)
+    {
+    case INSERT:        mode = INSERT_BIND;     break;
+    case SEARCH:        mode = SEARCH_BIND;     break;
+    case REFSEARCH:     mode = REFSEARCH_BIND;  break;
+    default:                                    break;
+    }
     return mode;
 }
 
@@ -765,10 +770,13 @@ inline SortMode SortIgnoreNamesInInfix(SortMode mode)
 // ----------------------------------------------------------------------------
 //   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
 {
-    if (mode == INSERT)
-        mode = INSERT_INFIX;
-    else if (mode == SEARCH)
-        mode = SEARCH_INFIX;
+    switch(mode)
+    {
+    case INSERT:        mode = INSERT_INFIX;    break;
+    case SEARCH:        mode = SEARCH_INFIX;    break;
+    case REFSEARCH:     mode = REFSEARCH_INFIX; break;
+    default:                                    break;
+    }
     return mode;
 }
 
@@ -779,10 +787,13 @@ inline SortMode SortCheckNamesInInfix(SortMode mode)
 // ----------------------------------------------------------------------------
 //   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
 {
-    if (mode == INSERT_INFIX)
-        mode = INSERT;
-    else if (mode == SEARCH_INFIX)
-        mode = SEARCH;
+    switch(mode)
+    {
+    case INSERT_INFIX:          mode = INSERT;          break;
+    case SEARCH_INFIX:          mode = SEARCH;          break;
+    case REFSEARCH_INFIX:       mode = REFSEARCH;       break;
+    default:                                            break;
+    }
     return mode;
 }
 
@@ -792,11 +803,8 @@ inline bool SortNames(SortMode mode)
 //   Return true if we want to sort names in this mode
 // ----------------------------------------------------------------------------
 {
-    return
-        mode != INSERT_BIND &&
-        mode != INSERT_INFIX &&
-        mode != SEARCH_BIND &&
-        mode != SEARCH_INFIX;
+    static char sort[] = { 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1 };
+    return sort[mode];
 }
 
 
@@ -805,7 +813,7 @@ inline bool SortInserting(SortMode mode)
 //   Return true if we are inserting
 // ----------------------------------------------------------------------------
 {
-    return mode == INSERT || mode == INSERT_BIND || mode == INSERT_INFIX;
+    return mode <= INSERT_INFIX;
 }
 
 
@@ -814,7 +822,25 @@ inline bool SortSearching(SortMode mode)
 //   Return true if we are searching
 // ----------------------------------------------------------------------------
 {
-    return mode == SEARCH || mode == SEARCH_BIND || mode == SEARCH_INFIX;
+    return mode >= SEARCH && mode <= SEARCH_INFIX;
+}
+
+
+inline bool SortRefSearching(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Return true if we are searching
+// ----------------------------------------------------------------------------
+{
+    return mode >= REFSEARCH && mode <= REFSEARCH_INFIX;
+}
+
+
+inline bool SortSearchingOrRefSearching(SortMode mode)
+// ----------------------------------------------------------------------------
+//   Return true if we are searching
+// ----------------------------------------------------------------------------
+{
+    return mode >= SEARCH && mode <= REFSEARCH_INFIX;
 }
 
 
@@ -833,6 +859,9 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
         "SEARCH",
         "SEARCH_BIND",
         "SEARCH_INFIX",
+        "REFSEARCH",
+        "REFSEARCH_BIND",
+        "REFSEARCH_INFIX",
         "TYPE",
         "CONDITIONAL"
     };
@@ -877,6 +906,8 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         {
             if (SortSearching(mode))
                 return 0;
+            if (SortRefSearching(mode))
+                return Sort(patm, val, CONDITIONAL);
             if (SortInserting(mode))
                 return valk == NAME ? -1 : Sort(patm, val, CONDITIONAL);
             if (valk == BLOCK)
@@ -940,7 +971,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         Infix *pati = (Infix *) pat;
         if (IsTypeAnnotation(pati))
         {
-            if (SortInserting(mode))
+            if (SortInserting(mode) || SortRefSearching(mode))
             {
                 // Inserting [X + Y as integer] vs. [X * Y as integer]
                 if (Infix *vali = IsTypeAnnotation(val))
@@ -970,7 +1001,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
         }
         else if (IsPatternCondition(pati))
         {
-            if (SortInserting(mode))
+            if (SortInserting(mode) || SortRefSearching(mode))
             {
                 // When inserting, compare guard clauses as well
                 if (Infix *vali = IsPatternCondition(val))
@@ -982,8 +1013,9 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             }
 
             // For expressions and types, sort left first, then right
-            if (int pats = Sort(pati->left, val, mode))
-                return pats;
+            if (!SortRefSearching(mode))
+                if (int pats = Sort(pati->left, val, mode))
+                    return pats;
 
             // Same left: if searching, stop here. Otherwise [X when Y] < [X]
             return SortSearching(mode) ? 0 : -1;
@@ -1010,7 +1042,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
 
             if (int vals = Sort(pat, vali->left, mode))
                 return vals;
-            return SortSearching(mode) ? 0 : 1;
+            return 0;
         }
         else if (IsPatternCondition(vali))
         {
@@ -1410,7 +1442,8 @@ static Tree *LookupEntry(Scope              *symbols,
                          Tree_p             *entry,
                          Tree               *what,
                          Context::lookup_fn  lookup,
-                         void               *info)
+                         void               *info,
+                         Context::LookupMode mode)
 // ----------------------------------------------------------------------------
 //   Internal lookup helper
 // ----------------------------------------------------------------------------
@@ -1421,6 +1454,7 @@ static Tree *LookupEntry(Scope              *symbols,
     if (Name *name = (*entry)->AsName())
         if (name->value == "")
             return nullptr;
+    SortMode sorting = mode >= Context::REFERENCE ? REFSEARCH : SEARCH;
 
     while (true)
     {
@@ -1431,7 +1465,7 @@ static Tree *LookupEntry(Scope              *symbols,
         // If we have a definition in this entry, check it
         if (Rewrite *rewrite = (*entry)->As<Rewrite>())
         {
-            int cmp = Sort(rewrite->Pattern(), what, SEARCH);
+            int cmp = Sort(rewrite->Pattern(), what, sorting);
             if (cmp == 0)
             {
                 Tree *result = lookup(symbols, scope, what, rewrite, info);
@@ -1452,7 +1486,7 @@ static Tree *LookupEntry(Scope              *symbols,
         XL_ASSERT(left && "Missing Rewrite payload during lookup");
 
         // Check how we compare to the current entry
-        int cmpleft = Sort(left->Pattern(), what, SEARCH);
+        int cmpleft = Sort(left->Pattern(), what, sorting);
 
         // If right is a rewrite, test left then right
         if (rewrites->Second())
@@ -1482,7 +1516,7 @@ static Tree *LookupEntry(Scope              *symbols,
 
         // Need to explore left branch first
         if (Tree *result = LookupEntry(symbols, scope,
-                                       &right->left, what, lookup, info))
+                                       &right->left, what, lookup, info, mode))
             return result;
 
         // Since payload matches, need to check it too
@@ -1497,20 +1531,23 @@ static Tree *LookupEntry(Scope              *symbols,
 }
 
 
-Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
+Tree *Context::Lookup(Tree *what,
+                      lookup_fn lookup, void *info,
+                      LookupMode mode)
 // ----------------------------------------------------------------------------
 //   Lookup a tree using the given lookup function
 // ----------------------------------------------------------------------------
 {
     Scope *scope = symbols;
     record(symbols_lookup, "Looking up %t in %t", what, scope);
+    bool recursive = mode == RECURSIVE || mode == REFERENCE;
 
     while (scope)
     {
         // Look in local scope
         Tree_p &locals = scope->Locals();
         if (Tree *result = LookupEntry(symbols, scope,
-                                       &locals, what, lookup, info))
+                                       &locals, what, lookup, info, mode))
             return result;
 
         // Look in innermost import if any
@@ -1522,13 +1559,13 @@ Tree *Context::Lookup(Tree *what, lookup_fn lookup, void *info, bool recurse)
 
             Tree_p &ilocals = imported->Locals();
             if (Tree *result = LookupEntry(symbols, imported,
-                                           &ilocals, what, lookup, info))
+                                           &ilocals, what, lookup, info, mode))
                 return result;
         }
 
         // Not found in this scope. Keep going with next scope if recursing
         // The last top-level global will be nil, so we will end with scope=NULL
-        scope = recurse ? scope->Enclosing() : nullptr;
+        scope = recursive ? scope->Enclosing() : nullptr;
     }
 
     // Return NULL if all evaluations failed
@@ -1552,21 +1589,33 @@ Rewrite *Context::Reference(Tree *pattern, bool recurse)
 //   Find an existing definition in the symbol table that matches the pattern
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(pattern, findReference, nullptr, recurse))
+    LookupMode mode = recurse ? RECURSIVE : SINGLE_SCOPE;
+    if (Tree *result = Lookup(pattern, findReference, nullptr, mode))
         if (Rewrite *decl = result->As<Rewrite>())
             return decl;
     return nullptr;
 }
 
 
-Tree *Context::DeclaredPattern(Tree *pattern)
+Rewrite *Context::Declared(Tree *pattern, LookupMode mode)
 // ----------------------------------------------------------------------------
 //   Find the original declaration associated to a given form
 // ----------------------------------------------------------------------------
 {
-    if (Tree *result = Lookup(pattern, findReference, nullptr, true))
+    if (Tree *result = Lookup(pattern, findReference, nullptr, mode))
         if (Rewrite *decl = result->As<Rewrite>())
-            return PatternBase(decl->left);
+            return decl;
+    return nullptr;
+}
+
+
+Tree *Context::DeclaredPattern(Tree *pattern, LookupMode mode)
+// ----------------------------------------------------------------------------
+//   Find the original declaration associated to a given form
+// ----------------------------------------------------------------------------
+{
+    if (Rewrite *rewrite = Declared(pattern, mode))
+        return PatternBase(rewrite->left);
     return nullptr;
 }
 
@@ -1606,7 +1655,8 @@ Tree *Context::Bound(Tree *pattern, bool recurse)
 //   Return the value bound to a given declaration
 // ----------------------------------------------------------------------------
 {
-    Tree *result = Lookup(pattern, findValue, nullptr, recurse);
+    LookupMode mode = recurse ? RECURSIVE : SINGLE_SCOPE;
+    Tree *result = Lookup(pattern, findValue, nullptr, mode);
     return result;
 }
 
@@ -1620,7 +1670,8 @@ Tree *Context::Bound(Tree *pattern,
 // ----------------------------------------------------------------------------
 {
     Prefix info(nullptr, nullptr);
-    Tree *result = Lookup(pattern, findValueX, &info, recurse);
+    LookupMode mode = recurse ? RECURSIVE : SINGLE_SCOPE;
+    Tree *result = Lookup(pattern, findValueX, &info, mode);
     if (ctx)
         *ctx = info.left->As<Scope>();
     if (rewrite)
