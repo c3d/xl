@@ -127,6 +127,9 @@ Tree *Bindings::Do(Real *what)
     if (Real *rval = test->AsReal())
         if (rval->value == what->value)
             return what;
+    if (Natural *nval = test->AsNatural())
+        if (nval->value == what->value)
+            return what;
     Ooops("Value $1 does not match pattern value $2", test, what);
     return nullptr;
 }
