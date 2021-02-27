@@ -6,9 +6,9 @@
 //
 //    The specification of the top-level XL modules
 //
-//   The XL module contains all the standard XL capabilities.
-//   It is pre-loaded by any XL program, so that its content can be
-//   used without any `use` statement.
+//    The XL module contains all the standard XL capabilities.
+//    It is pre-loaded by any XL program, so that its content can be
+//    used without any `use` statement.
 //
 //
 //

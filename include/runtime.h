@@ -74,8 +74,7 @@ typedef Text::value_t           text_t;
 //
 // ============================================================================
 
-extern "C"
-{
+extern "C" {
 Tree *  xl_evaluate(Scope *c, Tree *tree);
 Tree *  xl_identity(Scope *c, Tree *tree);
 Tree *  xl_typecheck(Scope *c, Tree *type, Tree *value);
@@ -97,9 +96,11 @@ Block   *xl_new_block(Block *source, Tree *child);
 Prefix  *xl_new_prefix(Prefix *source, Tree *left, Tree *right);
 Postfix *xl_new_postfix(Postfix *source, Tree *left, Tree *right);
 Infix   *xl_new_infix(Infix *source, Tree *left, Tree *right);
+
 Tree *   xl_array_index(Scope *, Tree *data, Tree *index);
 Tree     *xl_new_closure(eval_fn toCall, Tree *expr, size_t ntrees, ...);
 kstring xl_infix_name(Infix *infix);
+}
 
 
 
@@ -142,7 +143,7 @@ natural_t       xl_GMT_offset();
 real_t          xl_random();
 bool            xl_random_seed(int seed);
 #pragma GCC diagnostic pop
-}
+
 
 template<typename number>
 inline number   xl_random(number low, number high)
@@ -161,16 +162,13 @@ inline number   xl_random(number low, number high)
 //
 // ============================================================================
 
-extern "C"
-{
-    bool      xl_write_natural(ulonglong);
-    bool      xl_write_integer(longlong);
-    bool      xl_write_real(double);
-    bool      xl_write_text(kstring);
-    bool      xl_write_character(char c);
-    bool      xl_write_tree(XL::Tree *t);
-    bool      xl_write_cr(void);
-}
+bool      xl_write_natural(ulonglong);
+bool      xl_write_integer(longlong);
+bool      xl_write_real(double);
+bool      xl_write_text(kstring);
+bool      xl_write_character(char c);
+bool      xl_write_tree(XL::Tree *t);
+bool      xl_write_cr(void);
 
 
 
