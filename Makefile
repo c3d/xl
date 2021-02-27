@@ -34,10 +34,8 @@
 # If not, see <https://www.gnu.org/licenses/>.
 # ******************************************************************************
 
-SUBDIRS=	recorder src native
-
-# Disable generation of .pc file at top-level
-PACKAGE_NAME=
+include version.mk
+SUBDIRS=	recorder src native docs
 
 MIQ=make-it-quick/
 include $(MIQ)rules.mk

@@ -34,13 +34,8 @@
 # If not, see <https://www.gnu.org/licenses/>.
 # ******************************************************************************
 
-# For pkg-config generation
-PACKAGE_NAME=xl
-PACKAGE_VERSION=0.0.1
-PACKAGE_DESCRIPTION=An extensible programming language
-PACKAGE_URL="http://github.com/c3d/xl"
-PACKAGE_REQUIRES=
-
+include ../version.mk
 WARE.share=$(wildcard lib/*.xs lib/*.xl)
+
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
