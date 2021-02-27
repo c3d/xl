@@ -85,7 +85,7 @@ public:
     };
 
 private:
-    Module(Tree *name, text key);
+    Module(Scope *scope, Tree *name, text key);
     ~Module();
     static text    Name(Tree *name); // Get the file name for A.B.C
 
@@ -114,6 +114,7 @@ private:
     SourceFile *File(Part first, Part part = BOTH);
 
 private:
+    Scope_p     scope;                  // Parent scope
     Tree_p      name;                   // Can be an infix, e.g. [A.B.C]
     text        key;                    // Key for that module
     SourceFile *specification;          // Specification if any
