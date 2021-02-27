@@ -873,8 +873,7 @@ static Tree_p doDot(Context &context,
 //   Process [X.Y]
 // ----------------------------------------------------------------------------
 {
-    Context child(&context);
-    Scope *symbols = child.Symbols();
+    Scope *symbols = context.Symbols();
     Tree_p name = infix->left;
     Tree_p value = infix->right;
     Tree *where = Interpreter::DoEvaluate(symbols, name, NAMED, cache);
@@ -1135,17 +1134,22 @@ reenter:
     }
 
 retry:
-    // Short-circuit evaluation of blocks
-    if (Block *block = expr->AsBlock())
+    switch (expr->Kind())
     {
+    case BLOCK:
+    {
+        // Short-circuit evaluation of blocks
+        Block *block = (Block *) expr;
         expr = block->child;
         result = expr;
         goto retry;
     }
 
     // Short-circuit evaluation of sequences and declarations
-    if (Infix *infix = expr->AsInfix())
+    case INFIX:
     {
+        Infix *infix = (Infix *) expr;
+
         // Process sequences, trying to avoid deep recursion
         if (IsSequence(infix))
         {
@@ -1216,11 +1220,13 @@ retry:
             record(eval, "<Assignment %t is %t", infix, assigned);
             return assigned;
         }
+        break;
     }
 
     // Short-circuit evaluation of scope, quotes and [matching X]
-    else if (Prefix *prefix = expr->AsPrefix())
+    case PREFIX:
     {
+        Prefix *prefix = (Prefix *) expr;
         // Check if the left is a block containing only declarations
         // This deals with [(X is 3) (X + 1)], i.e. closures
         Initializers inits;
@@ -1312,7 +1318,18 @@ retry:
                 return scoped;
             }
         }
+        break;
     }
+    case NAME:
+    {
+        Name *name = (Name *) expr;
+        if (IsSuper(name))
+            return scope->Enclosing();
+        break;
+    }
+
+    default: break;
+    } // switch(Kind())
 
     // Check stack depth during evaluation
     Save<uint>  save(depth, depth+1);
