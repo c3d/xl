@@ -34,64 +34,99 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module ARBITRARY_PRECISION
+with
+    X:real
+    Y:real
+    Z:real
+    N:natural
+    I:integer
+    Base:real
 
-module COMPLEX
-module QUATERNION
-module VECTOR
-module MATRIX
-module STATISTICS
+// Functions on integer values
+abs I           as integer
+sign I          as integer
 
+// Functions on real values
+abs X           as real
+sign X          as real
+ceil X          as real
+floor X         as real
+sqrt X          as real
+exp X           as real
+exp2 X          as real
+log X           as real
+ln X            as real
+log10 X         as real
+log2 X          as real
+logb X          as integer
+log(Base,X)     as real
+hypot(X,Y)      as real
+hypothenuse(X,Y)as real is hypot(X,Y)
+cbrt X          as real
+CubeRoot X      as real is cbrt X
+erf X           as real
+ErrorFunction X as real is erf X
+lgamma X        as real
+LogGamma X      as real is lgamma X
+fma X,Y,Z       as real
+X*Y+Z           as real is fma X,Y,Z
+Z+X*Y           as real is fma X,Y,Z
 
-// Using the `MATH` module by default uses `real` functions and constants
-use REAL
-use MATH[real].FUNCTIONS
-use MATH[real].CONSTANTS
+// Circular trigonometry
+sin X           as real
+cos X           as real
+tan X           as real
+asin X          as real
+acos X          as real
+atan X          as real
+atan Y/X        as real
 
+// Hyperbolic trigonometry
+sinh X          as real
+cosh X          as real
+tanh X          as real
+asinh X         as real
+acosh X         as real
+atanh X         as real
 
-module MATH[type number] with
-// ----------------------------------------------------------------------------
-//  Interface of the math module for a given number type
-// ----------------------------------------------------------------------------
+// Bessel functions
+j0 X            as real
+j1 X            as real
+jn I, X         as real
+J 0, X          as real is j0 X
+J 1, X          as real is j1 X
+J I, X          as real is jn I,X
+y0 X            as real
+y1 X            as real
+yn I, X         as real
+Y 0, X          as real is y0 X
+Y 1, X          as real is y1 X
+Y I, X          as real is yn I, X
 
-    module FUNCTIONS with
-    // ------------------------------------------------------------------------
-    //    Interface for basic math functions
-    // ------------------------------------------------------------------------
+// Optimized forms
+(exp X) - 1.0   as real
+log (1.0+X)     as real
+log (X+1.0)     as real
+2.0^X           as real
 
-        Abs     X:number                as number
-        Sign    X:number                as integer
-        Sqrt    X:number                as number
+// Constants
+pi
+e
 
-        Sin     X:number                as number
-        Cos     X:number                as number
-        Tan     X:number                as number
-        ArcSin  X:number                as number
-        ArcCos  X:number                as number
-        ArcTan  X:number                as number
-        ArcTan  Y:number, X:number      as number
-
-        SinH    X:number                as number
-        CosH    X:number                as number
-        TanH    X:number                as number
-        ArcSinH X:number                as number
-        ArcCosH X:number                as number
-        ArcTanH X:number                as number
-
-        Exp     X:number                as number
-        Exp     X:number - 1            as number
-        Log     X:number                as number
-        Log10   X:number                as number
-        Log2    X:number                as number
-        Log2i   X:number                as integer
-        Log     (1 + X:number)          as number
-
-
-    module CONSTANTS is
-    // ------------------------------------------------------------------------
-    //    Interface for math constants
-    // ------------------------------------------------------------------------
-        ZERO                            is number 0
-        ONE                             is number 1
-        TWO                             is number 2
-        PI                              is number 3.1415926535897932384626433
+// Optimized expressions
+// constant (log2  [[e]])
+// constant (log10 [[e]])
+// constant (log   2.0)
+// constant (pi/2.0)
+// constant (pi/4.0)
+// constant (pi*0.5)
+// constant (pi*0.25)
+// constant (1.0/[[pi]])
+// constant (2.0/[[pi]])
+// constant (2.0/sqrt [[pi]])
+// constant (1.0/[[pi]])
+// constant (2.0/[[pi]])
+// constant (2.0/sqrt [[pi]])
+// constant (sqrt 2.0)
+// constant (1.0/sqrt 2.0)
+// constant (sqrt 2.0/2.0)

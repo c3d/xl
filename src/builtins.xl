@@ -150,23 +150,8 @@ Source:text from First:natural  as text is text_range(Source, First, not 0)
 parse Source:text                       is C "xl_parse_text"
 
 // Basic math functions
-abs X is if X < 0 then -X else X
-pi is 3.1415926535897932384626433
-sin X:real                      as real is C "sin"
-cos X:real                      as real is C "cos"
-tan X:real                      as real is C "tan"
-asin X:real                     as real is C "asin"
-acos X:real                     as real is C "acos"
-atan X:real                     as real is C "atan"
-exp X:real                      as real is C "exp"
-exp2 X:real                     as real is C "exp2"
-expm1 X:real                    as real is C "expm1"
-log X:real                      as real is C "log"
-log2 X:real                     as real is C "log2"
-log10 X:real                    as real is C "log10"
-log1p X:real                    as real is C "log1p"
-sqrt X:real                     as real is C "sqrt"
-atan Y:real / X:real            as real is C "atan2"
+abs X   is if X < 0 then -X else X
+sign X  is if X < 0 then -1 else if X > 0 then 1 else 0
 
 // If-then-else statement
 if [[true]]  then True else False   is True
