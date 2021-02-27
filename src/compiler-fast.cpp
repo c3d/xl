@@ -1930,7 +1930,7 @@ Tree *CompileAction::Rewrites(Tree *what)
            what, symbols.Symbols());
     ExpressionReduction reduction(*this, what);
     Context context(symbols);
-    Tree *result = context.Lookup(what, lookupRewrite, &reduction, true);
+    Tree *result = context.Lookup(what, lookupRewrite, &reduction);
 
     // If we didn't find anything, report it
     if (!result)

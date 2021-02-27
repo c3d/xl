@@ -1351,10 +1351,12 @@ retry:
 
     // All other cases: lookup in symbol table
     Save<EvaluationMode> saveMode(cache.mode, mode);
-    bool recurse = mode != LOCAL;
+    Context::LookupMode lm = mode!=LOCAL
+        ? Context::RECURSIVE
+        : Context::SINGLE_SCOPE;
     Errors errors;
     errors.Log(Error("Unable to evaluate $1:", expr), true);
-    if (Tree *found = context.Lookup(expr, eval, &cache, recurse))
+    if (Tree *found = context.Lookup(expr, eval, &cache, lm))
         result = found;
     else if (expr->IsConstant())
         result = expr;
