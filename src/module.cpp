@@ -58,6 +58,13 @@ Module *Module::Get(Tree *name)
 //   Lookup a module, or load it
 // ----------------------------------------------------------------------------
 {
+    Scope *scope = MAIN->context;
+    if (Infix *nested = name->AsInfix())
+    {
+        Module *parent = Get(nested->left);
+        scope = parent->FileScope(scope);
+    }
+
     text key = Name(name);
 
     // Silently fail to load the module at syntax loading time
@@ -66,10 +73,7 @@ Module *Module::Get(Tree *name)
 
     Module *module = MAIN->modules[key];
     if (!module)
-    {
-        module = new Module(name, key);
-        MAIN->modules[key] = module;
-    }
+        module = new Module(scope, name, key);
 
     return module;
 }
@@ -197,7 +201,7 @@ Scope *Module::Process(Initializers &inits)
 // ----------------------------------------------------------------------------
 {
     // Process module implementation first
-    Scope *base = MAIN->context;
+    Scope *base = scope;
     if (Tree *implSrc = Source(IMPLEMENTATION))
     {
         if (Scope *implScope = FileScope(base, IMPLEMENTATION))
@@ -237,11 +241,12 @@ static text SearchModuleFile(text name, text extension)
 }
 
 
-Module::Module(Tree *modname, text key)
+Module::Module(Scope *scope, Tree *modname, text key)
 // ----------------------------------------------------------------------------
 //   Create a new module
 // ----------------------------------------------------------------------------
-    : name(modname),
+    : scope(scope),
+      name(modname),
       key(key),
       specification(),
       implementation(),
@@ -273,6 +278,9 @@ Module::Module(Tree *modname, text key)
     // Emit error message if we did not find anything
     if (!specPath.length() && !implPath.length())
         Ooops("Module $1 not found", modname);
+
+    // Insert in the list of modules
+    MAIN->modules[key] = this;
 }
 
 
