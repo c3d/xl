@@ -998,6 +998,19 @@ static Tree_p doLatePrefix(Scope *scope,
 }
 
 
+static Tree_p doLateName(Scope *scope, Name *name, EvaluationCache &cache)
+// ----------------------------------------------------------------------------
+//   Process late names like 'super' and 'context'
+// ----------------------------------------------------------------------------
+{
+    if (IsSuper(name))
+        return scope->Enclosing();
+    if (IsContext(name))
+        return scope;
+    return nullptr;
+}
+
+
 Tree *Interpreter::Evaluate(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
 //    Evaluate 'what', finding the final, non-closure result
@@ -1320,13 +1333,6 @@ retry:
         }
         break;
     }
-    case NAME:
-    {
-        Name *name = (Name *) expr;
-        if (IsSuper(name))
-            return scope->Enclosing();
-        break;
-    }
 
     default: break;
     } // switch(Kind())
@@ -1351,6 +1357,8 @@ retry:
         result = expr;
     else if (Prefix *prefix = expr->AsPrefix())
         result = doLatePrefix(scope, prefix, cache);
+    else if (Name *name = expr->AsName())
+        result = doLateName(scope, name, cache);
     else
         result = nullptr;
 

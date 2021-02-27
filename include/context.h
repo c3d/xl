@@ -912,7 +912,7 @@ inline Name *IsSuper(Name *name)
 //   Return true if this is a [super] name
 // ----------------------------------------------------------------------------
 {
-    return name->value == "super" ? xl_super : nullptr;
+    return name->value == "super" ? name : nullptr;
 }
 
 
@@ -921,11 +921,30 @@ inline Name *IsSuper(Tree *tree)
 //   Check if a definition is the 'super' tree
 // ----------------------------------------------------------------------------
 {
-    if (tree == xl_super)
-        return xl_super;
     if (Name *name = tree->AsName())
         if (Name *super = IsSuper(name))
             return super;
+    return nullptr;
+}
+
+
+inline Name *IsContext(Name *name)
+// ----------------------------------------------------------------------------
+//   Return true if this is a [context] name
+// ----------------------------------------------------------------------------
+{
+    return name->value == "context" ? name : nullptr;
+}
+
+
+inline Name *IsContext(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a definition is the 'context' tree
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = tree->AsName())
+        if (Name *context = IsContext(name))
+            return context;
     return nullptr;
 }
 
