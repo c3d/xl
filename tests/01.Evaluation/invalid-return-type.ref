@@ -1,5 +1,5 @@
-01.Evaluation/invalid-return-type.xl:40:6: Unable to evaluate [Index ("A")]:
-01.Evaluation/invalid-return-type.xl:37:15:  Pattern [Index (I:text) as toto] does not match [Index ("A")]:
-01.Evaluation/invalid-return-type.xl:37:30:   Unable to evaluate [toto]:
-01.Evaluation/invalid-return-type.xl:37:30:    Nothing matches [toto]
-01.Evaluation/invalid-return-type.xl:40:6:  Nothing matches [Index ("A")]
+01.Evaluation/invalid-return-type.xl:41:6: Unable to evaluate [Index ("A")]:
+01.Evaluation/invalid-return-type.xl:38:15:  Pattern [Index (I:text) as toto] does not match [Index ("A")]:
+01.Evaluation/invalid-return-type.xl:38:30:   Unable to evaluate [toto]:
+01.Evaluation/invalid-return-type.xl:38:30:    Nothing matches [toto]
+01.Evaluation/invalid-return-type.xl:41:6:  Nothing matches [Index ("A")]

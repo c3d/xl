@@ -1,5 +1,5 @@
 // *****************************************************************************
-// xl.operations.arithmetic.xs                                      XL project
+// xl.operations.arithmetic.xs                                        XL project
 // *****************************************************************************
 //
 // File description:
