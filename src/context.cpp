@@ -375,6 +375,7 @@ static Tree *MatchParameters(Tree *pattern,
         return block;
     }
     }
+    return pattern;
 }
 
 
