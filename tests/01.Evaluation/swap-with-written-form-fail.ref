@@ -1,4 +1,4 @@
-01.Evaluation/swap-with-written-form-fail.xl:39:31: No name in original pattern to match [A] in written form
-01.Evaluation/swap-with-written-form-fail.xl:39:36: No name in original pattern to match [B] in written form
-01.Evaluation/swap-with-written-form-fail.xl:39:13: Nothing in written form matches [var X]
-01.Evaluation/swap-with-written-form-fail.xl:44:11: Invalid type [integer] for declaration of [X]
+01.Evaluation/swap-with-written-form-fail.xl:38:31: No name in original pattern to match [A] in written form
+01.Evaluation/swap-with-written-form-fail.xl:38:36: No name in original pattern to match [B] in written form
+01.Evaluation/swap-with-written-form-fail.xl:38:13: Nothing in written form matches [var X]
+01.Evaluation/swap-with-written-form-fail.xl:43:11: Invalid type [integer] for declaration of [X]
