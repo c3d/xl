@@ -1,5 +1,5 @@
-01.Evaluation/with-clause-error.xl:38:5: Inside 'with' clause, [A] is not a type annotation
-01.Evaluation/with-clause-error.xl:39:5: Inside 'with' clause, [B is 3] is not a type annotation
-01.Evaluation/with-clause-error.xl:40:6: Inside 'with' clause, 42 is not a type annotation
-01.Evaluation/with-clause-error.xl:43:6: Redefinition of [Show C, D]
-01.Evaluation/with-clause-error.xl:42:6: Previous definition is [Show A, B]
+01.Evaluation/with-clause-error.xl:39:5: Inside 'with' clause, [A] is not a type annotation
+01.Evaluation/with-clause-error.xl:40:5: Inside 'with' clause, [B is 3] is not a type annotation
+01.Evaluation/with-clause-error.xl:41:6: Inside 'with' clause, 42 is not a type annotation
+01.Evaluation/with-clause-error.xl:44:6: Redefinition of [Show C, D]
+01.Evaluation/with-clause-error.xl:43:6: Previous definition is [Show A, B]

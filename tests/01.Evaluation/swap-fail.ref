@@ -2,8 +2,8 @@ X=42 Y=1968
 X=1968 Y=42
 Foo=42.42 Bar=1968.2
 Foo=1968.2 Bar=42.42
-01.Evaluation/swap-fail.xl:56:6: Unable to evaluate [Swap X, Foo]:
-01.Evaluation/swap-fail.xl:38:8:  Pattern [Swap (var X, var Y)] does not match [Swap X, Foo]:
-01.Evaluation/swap-fail.xl:40:10:   Assigned value [Y] does not match type [integer]
-01.Evaluation/swap-fail.xl:54:23:   The assigned value evaluated to 1968.2
-01.Evaluation/swap-fail.xl:56:6:  Nothing matches [Swap X, Foo]
+01.Evaluation/swap-fail.xl:57:6: Unable to evaluate [Swap X, Foo]:
+01.Evaluation/swap-fail.xl:39:8:  Pattern [Swap (var X, var Y)] does not match [Swap X, Foo]:
+01.Evaluation/swap-fail.xl:41:10:   Assigned value [Y] does not match type [integer]
+01.Evaluation/swap-fail.xl:55:23:   The assigned value evaluated to 1968.2
+01.Evaluation/swap-fail.xl:57:6:  Nothing matches [Swap X, Foo]

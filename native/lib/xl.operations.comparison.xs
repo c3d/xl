@@ -1,5 +1,5 @@
 // *****************************************************************************
-// xl.operations.comparison.xs                                      XL project
+// xl.operations.comparison.xs                                        XL project
 // *****************************************************************************
 //
 // File description:

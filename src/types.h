@@ -1,10 +1,10 @@
 #ifndef TYPES_H
 #define TYPES_H
-// ****************************************************************************
-//  types.h                                                          XL project
-// ****************************************************************************
+// *****************************************************************************
+// types.h                                                            XL project
+// *****************************************************************************
 //
-//   File Description:
+// File description:
 //
 //    Common type analysis for XL programs
 //
@@ -15,25 +15,26 @@
 //
 //
 //
-// ****************************************************************************
-//   (C) 2020 Christophe de Dinechin <christophe@dinechin.org>
-//   This software is licensed under the GNU General Public License v3
-// ****************************************************************************
-//   This file is part of XL.
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3+
+// (C) 2020-2021, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
 //
-//   XL is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
+// XL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
 //
-//   XL is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//   GNU General Public License for more details.
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//   You should have received a copy of the GNU General Public License
-//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
-// ****************************************************************************
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
 
 #include "tree.h"
 #include "context.h"

@@ -1,5 +1,5 @@
 // *****************************************************************************
-// list.xs                                                            XL project
+// xl.data.collections.list.xs                                        XL project
 // *****************************************************************************
 //
 // File description:
@@ -15,7 +15,7 @@
 //
 // *****************************************************************************
 // This software is licensed under the GNU General Public License v3+
-// (C) 2018-2019, Christophe de Dinechin <christophe@dinechin.org>
+// (C) 2018-2020, Christophe de Dinechin <christophe@dinechin.org>
 // *****************************************************************************
 // This file is part of XL
 //
