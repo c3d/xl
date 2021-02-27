@@ -907,9 +907,32 @@ inline Name *IsSelf(Tree *tree)
 }
 
 
+inline Name *IsSuper(Name *name)
+// ----------------------------------------------------------------------------
+//   Return true if this is a [super] name
+// ----------------------------------------------------------------------------
+{
+    return name->value == "super" ? xl_super : nullptr;
+}
+
+
+inline Name *IsSuper(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a definition is the 'super' tree
+// ----------------------------------------------------------------------------
+{
+    if (tree == xl_super)
+        return xl_super;
+    if (Name *name = tree->AsName())
+        if (Name *super = IsSuper(name))
+            return super;
+    return nullptr;
+}
+
+
 inline Name *IsMatching(Name *name)
 // ----------------------------------------------------------------------------
-//   Return true if this is a [self] name
+//   Return true if this is a [matching] name
 // ----------------------------------------------------------------------------
 {
     return name->value == "matching" ? xl_matching : nullptr;
@@ -918,7 +941,7 @@ inline Name *IsMatching(Name *name)
 
 inline Name *IsMatching(Tree *tree)
 // ----------------------------------------------------------------------------
-//   Check if a definition is the 'self' tree
+//   Check if a definition is the 'matching' tree
 // ----------------------------------------------------------------------------
 {
     if (Name *name = tree->AsName())
