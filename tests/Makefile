@@ -39,6 +39,12 @@ RUN_TESTS=yes
 TIMEOUT=30
 
 MIQ=../make-it-quick/
+
+# Make sure we don't get "WARNING: Cannot set locale" messages polluting tests
+export LANG=C
+export LC_ALL=C
+export LC_CTYPE=C
+
 include $(MIQ)rules.mk
 
 base rebase baseline: baseline.txt
