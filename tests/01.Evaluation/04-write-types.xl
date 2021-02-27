@@ -31,6 +31,8 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+import XL.MATH
+
 print "Hello"
 print 'C'
 print 12

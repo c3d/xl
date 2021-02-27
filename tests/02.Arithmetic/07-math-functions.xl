@@ -31,25 +31,58 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+
+import XL.MATH
+
 run_test x is
     print "--- Running tests with ", x, " ---"
     print "abs ", x, "=", abs x
+    print "sign ", x, "=", sign x
+
+    print "ceil ", x, "=", ceil x
+    print "floor ", x, "=", floor x
     print "sqrt ", x, "=", sqrt x
-    // Avoid platform-dependent rounding errors for very small values
-    print "sin ", x, "=", 0.25 + sin x
-    print "cos ", x, "=", 0.25 + cos x
-    print "tan ", x, "=", 0.25 + tan x
+
+    print "exp ", x, "=", exp x
+    print "exp2 ", x, "=", exp2 x
+    print "expm1 ", x, "=", exp x - 1
+    print "log ", x, "=", log x
+    print "log10 ", x, "=", log10 x, "=", log(10,x)
+    print "log2 ", x, "=", log2 x
+    print "log1p ", x, "=", log(1+x), "=", log(x+1)
+
+    print "hypot ", x, "=", hypot(x, x+1), "=", hypothenuse(x, x+1)
+    print "cbrt ", x, "=", cbrt(x), "=", CubeRoot(x)
+    print "erf ", x, "=", erf(x), "=", ErrorFunction(x)
+    print "lgamma ", x, "=", lgamma(x), "=", LogGamma(x)
+    print "fma ", x, "=", fma(x, x+1, x+2), "=", x * (x+1) + (x+2)
+
+    // Trig functions - Avoid platform-dependent rounding for small values
+    print "0.25+sin ", x, "=", 0.25 + sin x
+    print "0.25+cos ", x, "=", 0.25 + cos x
+    print "0.25+tan ", x, "=", 0.25 + tan x
     print "asin ", x, "=", asin x
     print "acos ", x, "=", acos x
     print "atan ", x, "=", atan x
-    print "exp ", x, "=", exp x
-    print "expm1 ", x, "=", expm1 x
-    print "log ", x, "=", log x
-    print "log10 ", x, "=", log10 x
-    print "log2 ", x, "=", log2 x
-    print "log1p ", x, "=", log1p x
+
+    // Hyperbolic functions
+    print "0.25+sinh ", x, "=", 0.25 + sinh x
+    print "0.25+cosh ", x, "=", 0.25 + cosh x
+    print "0.25+tanh ", x, "=", 0.25 + tanh x
+    print "asinh ", x, "=", asinh x
+    print "acosh ", x, "=", acosh x
+    print "atanh ", x, "=", atanh x
+
+    // Bessel functions
+    print "j0 ", x, "=", j0(x), "=", j(0,x)
+    print "j1 ", x, "=", j1(x), "=", j(1,x)
+    print "j3 ", x, "=", jn(3, x), "=", j(3, x)
+    print "y0 ", x, "=", y0(x), "=", y(0,x)
+    print "y1 ", x, "=", y1(x), "=", y(1,x)
+    print "y3 ", x, "=", yn(3, x), "=", y(3, x)
 
 
+run_test 1.13331e-7
 run_test 0.13331
 run_test 1.3331
 run_test pi

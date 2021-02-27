@@ -71,21 +71,62 @@ double fn(double x, double y)                   \
 NATIVE(fn);                                     \
 }
 
+#define MATH2I(fn)                              \
+namespace                                       \
+{                                               \
+double fn(int x, double y)                      \
+{                                               \
+    return ::fn(x, y);                          \
+}                                               \
+NATIVE(fn);                                     \
+}
+
+#define MATH3(fn)                               \
+namespace                                       \
+{                                               \
+double fn(double x, double y, double z)         \
+{                                               \
+    return ::fn(x, y, z);                       \
+}                                               \
+NATIVE(fn);                                     \
+}
+
+MATH(ceil);
+MATH(floor);
+MATH(sqrt);
+MATH(exp);
+MATH(exp2);
+MATH(expm1);
+MATH(log);
+MATH(log2);
+MATH(log10);
+MATH(log1p);
+MATH(logb);
+MATH2(hypot);
+MATH(cbrt);
+MATH(erf);
+MATH(lgamma);
+MATH3(fma);
+MATH2(pow);
+
 MATH(sin);
 MATH(cos);
 MATH(tan);
 MATH(asin);
 MATH(acos);
 MATH(atan);
-MATH(exp);
-MATH(expm1);
-MATH(exp2);
-MATH(log);
-MATH(log2);
-MATH(log10);
-MATH(log1p);
-MATH(sqrt);
 MATH2(atan2);
-MATH2(pow);
+MATH(sinh);
+MATH(cosh);
+MATH(tanh);
+MATH(asinh);
+MATH(acosh);
+MATH(atanh);
+MATH(j0);
+MATH(j1);
+MATH2I(jn);
+MATH(y0);
+MATH(y1);
+MATH2I(yn);
 
 XL_END

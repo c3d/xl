@@ -34,34 +34,89 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-MATH is
-// ----------------------------------------------------------------------------
-//   Implementation of the math module
-// ----------------------------------------------------------------------------
+with
+    X:real
+    Y:real
+    Z:real
+    N:natural
+    I:integer
+    Base:real
 
-    // Basic math functions
-    abs   X:integer             as integer      is builtin IAbs
-    abs   X:real                as real         is builtin FAbs
-    sqrt  X:real                as real         is C sqrt
+// Generic implementation of abs and sign
+generic_abs T   is (if T < 0 then -T else T)
+generic_sign T  is (if T < 0 then -1 else if T > 0 then 1 else 0)
 
-    sin   X:real                as real         is C sin
-    cos   X:real                as real         is C cos
-    tan   X:real                as real         is C tan
-    asin  X:real                as real         is C asin
-    acos  X:real                as real         is C acos
-    atan  X:real                as real         is C atan
-    atan  Y:real, X:real        as real         is C atan2
+abs I           as integer is generic_abs I
+sign I          as integer is generic_sign I
+abs X           as real is generic_abs X
+sign X          as real is generic_sign X
 
-    sinh  X:real                as real         is C sinh
-    cosh  X:real                as real         is C cosh
-    tanh  X:real                as real         is C tanh
-    asinh X:real                as real         is C asinh
-    acosh X:real                as real         is C acosh
-    atanh X:real                as real         is C atanh
+// Nearest integer
+ceil X          as real is C "ceil"
+floor X         as real is C "floor"
 
-    exp   X:real                as real         is C exp
-    expm1 X:real                as real         is C expm1
-    log   X:real                as real         is C log
-    log10 X:real                as real         is C log10
-    log2  X:real                as real         is C log2
-    log1p X:real                as real         is C log1p
+// C interface for base functions
+sqrt X          as real is C "sqrt"
+exp X           as real is C "exp"
+exp2 X          as real is C "exp2"
+log X           as real is C "log"
+ln X            as real is log X
+log10 X         as real is C "log10"
+log2 X          as real is C "log2"
+logb X          as integer is C "logb"
+log(Base,X)     as real is (log X / log Base)
+hypot(X,Y)      as real is C "hypot"
+cbrt X          as real is C "cbrt"
+erf X           as real is C "erf"
+lgamma X        as real is C "lgamma"
+fma X,Y,Z       as real is C "fma"
+
+// Circular trigonometry
+sin X           as real is C "sin"
+cos X           as real is C "cos"
+tan X           as real is C "tan"
+asin X          as real is C "asin"
+acos X          as real is C "acos"
+atan X          as real is C "atan"
+atan Y/X        as real is C "atan2"
+
+// Hyperbolic trigonometry
+sinh X          as real is C "sinh"
+cosh X          as real is C "cosh"
+tanh X          as real is C "tanh"
+asinh X         as real is C "asinh"
+acosh X         as real is C "acosh"
+atanh X         as real is C "atanh"
+
+// Bessel functions
+j0 X            as real is C "j0"
+j1 X            as real is C "j1"
+jn I, X         as real is C "jn"
+y0 X            as real is C "y0"
+y1 X            as real is C "y1"
+yn I, X         as real is C "yn"
+
+// Optimized forms
+(exp X)-1.0     as real is C "expm1"
+log (1.0+X)     as real is C "log1p"
+log (X+1.0)     as real is C "log1p"
+2.0^X           as real is C "exp2"
+
+// Constants
+pi is 3.1415926535897932384626433
+e  is 2.7182818284590452353602875
+
+// Optimized expressions
+// constant (log2  [[e]])          is 1.442695040888963407359924681001892137
+// constant (log10 [[e]])          is 0.434294481903251827651128918916605082
+// constant (log   2.0)            is 0.693147180559945309417232121458176568
+// constant (pi/2.0)               is 1.570796326794896619231321691639751442
+// constant (pi/4.0)               is 0.785398163397448309615660845819875721
+// constant (pi*0.5)               is constant(pi/2.0)
+// constant (pi*0.25)              is constant(pi/4.0)
+// constant (1.0/[[pi]])           is 0.318309886183790671537767526745028724
+// constant (2.0/[[pi]])           is 0.636619772367581343075535053490057448
+// constant (2.0/sqrt [[pi]])      is 1.128379167095512573896158903121545172
+// constant (sqrt 2.0)             is 1.414213562373095048801688724209698079
+// constant (1.0/sqrt 2.0)         is 0.707106781186547524400844362104849039
+// constant (sqrt 2.0/2.0)         is 0.707106781186547524400844362104849039
