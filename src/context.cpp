@@ -322,21 +322,25 @@ static Tree *MatchParameters(Tree *pattern,
     case INFIX:
     {
         Infix *infix = (Infix *) pattern;
+        Tree *left = MatchParameters(infix->left, parameters,defined,written);
         if (IsTypeAnnotation(infix))
         {
             if (written)
                 Ooops("Type annotation $1 in a written form", infix);
-            return pattern;
+            if (left != infix->left)
+                infix = new Infix(infix, left, infix->right);
+            return infix;
         }
         if (IsPatternCondition(infix))
         {
             if (written)
                 Ooops("Pattern condition $1 in a written form", infix);
-            return pattern;
+            if (left != infix->left)
+                infix = new Infix(infix, left, infix->right);
+            return infix;
         }
         if (!defined)
             defined = pattern;
-        Tree *left = MatchParameters(infix->left, parameters,defined,written);
         Tree *right = MatchParameters(infix->right, parameters,defined,written);
         if (left != infix->left || right != infix->right)
             infix = new Infix(infix, left, right);
@@ -492,7 +496,10 @@ bool Context::ProcessDeclarations(Tree *source, Initializers &inits)
                 }
             }
             if (IsWithDeclaration(prefix))
+            {
                 ExtractParameters(prefix->right, types);
+                isInstruction = false;
+            }
 
             // Check if this prefix is some [import X.Y.Z] statement
             if (Name *import = prefix->left->AsName())
@@ -563,7 +570,10 @@ bool Context::ProcessSpecifications(Context &implementation,
                 }
             }
             if (IsWithDeclaration(prefix))
+            {
                 ExtractParameters(prefix->right, types);
+                isSpecification = false;
+            }
 
             // Check if this prefix is some [import X.Y.Z] statement
             if (Name *import = prefix->left->AsName())
