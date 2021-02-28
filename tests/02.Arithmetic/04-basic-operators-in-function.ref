@@ -22,7 +22,7 @@ Not: -6
 Opposite: -5
 Absolute value: 5
 Power: 125
---- With natural x=-5 and y=-3 ---
+--- With integer x=-5 and y=-3 ---
 Sum: -8
 Difference: -2
 Product: 15
@@ -50,7 +50,7 @@ Not: -6
 Opposite: -5
 Absolute value: 5
 Power: 0
---- With natural x=-5 and y=3 ---
+--- With integer x=-5 and y=3 ---
 Sum: -2
 Difference: -8
 Product: -15

@@ -215,7 +215,7 @@ void Tree::SetPosition(TreePosition pos, bool recurse)
     do
     {
         ulong kind = tree->Kind();
-        tree->tag = (pos << KINDBITS) | kind;
+        tree->tag = (pos << POSBITS) | kind;
         if (recurse)
         {
             switch(kind)

@@ -42,12 +42,14 @@
 #include "base.h"
 #include "gc.h"
 #include "info.h"
-#include <map>
+#include "recorder/recorder.h"
 
+#include <map>
 #include <vector>
 #include <cassert>
 #include <iostream>
 #include <cctype>
+
 
 XL_BEGIN
 
@@ -88,7 +90,7 @@ typedef GCPtr<Postfix>                  Postfix_p;
 typedef GCPtr<Infix>                    Infix_p;
 struct Scope;
 
-typedef ulong TreePosition;                     // Position in source files
+typedef uintptr_t TreePosition;                 // Position in source files
 typedef std::vector<Tree_p> TreeList;           // A list of trees
 typedef Tree *(*eval_fn) (Scope *, Tree *);     // Compiled evaluation code
 
@@ -126,14 +128,14 @@ struct Tree
 //   The base class for all XL trees
 // ----------------------------------------------------------------------------
 {
-    enum { KINDBITS = 3, KINDMASK=7 };
+    enum { KINDBITS = 3, SIGNBIT = 3, POSBITS = 4, KINDMASK=7 };
     enum { UNKNOWN_POSITION = ~0UL, COMMAND_LINE=~1UL, BUILTIN=~2UL };
     typedef Tree        self_t;
     typedef Tree *      value_t;
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
-        tag((pos<<KINDBITS) | k), info(nullptr) {}
+        tag((pos<<POSBITS) | k), info(nullptr) {}
     Tree(kind k, Tree *from):
         tag(from->tag), info(nullptr)
     {
@@ -149,7 +151,7 @@ struct Tree
 
     // Attributes
     kind                Kind()                { return kind(tag & KINDMASK); }
-    TreePosition        Position()            { return (long) tag>>KINDBITS; }
+    TreePosition        Position()            { return (long) tag>>POSBITS; }
     bool                IsValid()             { return IsNull(this); }
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
@@ -202,7 +204,7 @@ public:
     static bool         Equal(Tree *t1, Tree *t2, bool recurse = true);
 
 public:
-    ulong               tag;                            // Position + kind
+    uintptr_t           tag;                            // Position + kind
     Atomic<Info *>      info;                           // Information for tree
 
     static TreePosition NOWHERE;
@@ -234,7 +236,11 @@ struct Natural : Tree
         Tree(NATURAL, pos), value(i) {}
     Natural(Natural *i): Tree(NATURAL, i), value(i->value) {}
     value_t  value;
-    operator value_t()         { return value; }
+    operator value_t()          { return value; }
+
+    bool        IsSigned()      { return tag & (1 << SIGNBIT); }
+    Natural *   MakeSigned();
+    Natural *   MakeUnsigned();
 
     GARBAGE_COLLECT(Natural);
 };
@@ -443,7 +449,7 @@ inline T * Tree::As(Scope *)
 // ----------------------------------------------------------------------------
 //   Return a pointer to the given class
 // ----------------------------------------------------------------------------
-//   By default, we only check the kind, see opcode.h for specializations
+//   By default, we only check the kind
 {
     if (IsNotNull(this) && Kind() == T::KIND)
         return (T *) this;
@@ -530,6 +536,43 @@ inline Infix *Infix::LastStatement(text sep1, text sep2)
             break;
     }
     return last;
+}
+
+
+
+// ============================================================================
+//
+//   Conversion between signed and unsigned integers
+//
+// ============================================================================
+
+inline Natural *Natural::MakeSigned()
+// ----------------------------------------------------------------------------
+//   If the number is not signed, make a new signed version of it
+// ----------------------------------------------------------------------------
+//   We need to create a copy so that the original number is immutable, as
+//   it may have been cached e.g. during evaluation.
+{
+    if (IsSigned())
+        return this;
+    Natural *snat = new Natural(this);
+    snat->tag |= 1 << SIGNBIT;
+    return snat;
+}
+
+
+inline Natural *Natural::MakeUnsigned()
+// ----------------------------------------------------------------------------
+//   If the number is not unsigned, make a new unsigned version of it
+// ----------------------------------------------------------------------------
+//   We need to create a copy so that the original number is immutable, as
+//   it may have been cached e.g. during evaluation.
+{
+    if (!IsSigned())
+        return this;
+    Natural *snat = new Natural(this);
+    snat->tag &= ~(1 << SIGNBIT);
+    return snat;
 }
 
 

@@ -85,7 +85,7 @@ struct Error
 public:
     text                message;
     std::vector<Tree_p> arguments;
-    ulong               position;
+    TreePosition        position;
     ulong               indent;
 };
 
