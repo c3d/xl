@@ -1,0 +1,47 @@
+// ****************************************************************************
+//  multi-level-pfix.xl                                              XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Check that we can evaluate multiple levels of prefix and postfix
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2021 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+
+foo X is X + 1
+foo foo X is X + 42
+
+X! is X - 1
+X!! is X - 42
+
+print "foo 2=", foo 2, " foo foo 2=", foo foo 2
+print "3!=", 3!, " 25!!=", 25!!
+
+thing X - 1 + thought Y% is print "Wow, X=", X, " Y=", Y
+
+thing 2 - 1 + thought 3%

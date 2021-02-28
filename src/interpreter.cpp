@@ -286,14 +286,13 @@ Tree *Bindings::Do(Prefix *what)
 
     if (Prefix *pfx = test->AsPrefix())
     {
-        // Case of [until Condition loop Body]: define [until]
-        if (defined && defined->AsInfix())
-            defined = nullptr;
 
         // Check prefix left first, which may set 'defined' to name
+        defined = nullptr;
         test = pfx->left;
         if (Tree_p left = what->left->Do(this))
         {
+            defined = what;
             test = pfx->right;
             if (Tree_p right = what->right->Do(this))
             {
@@ -330,9 +329,11 @@ Tree *Bindings::Do(Postfix *what)
     if (Postfix *pfx = test->AsPostfix())
     {
         // Check postfix right first, which maye set 'defined' to name
+        defined = nullptr;
         test = pfx->right;
         if (Tree_p right = what->right->Do(this))
         {
+            defined = what;
             test = pfx->left;
             if (Tree_p left = what->left->Do(this))
             {
@@ -415,8 +416,7 @@ Tree *Bindings::Do(Infix *what)
     }
 
     // If nothing defined yet, we are it
-    if (!defined)
-        defined = what;
+    defined = what;
 
     // Check if we have a guard clause
     if (IsPatternCondition(what))
