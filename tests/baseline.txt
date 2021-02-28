@@ -1,3 +1,5 @@
+02.Arithmetic/04-basic-operators-in-function.xl
+01.Evaluation/minus-five-as-natural.xl
 O3/add.xl
 O3/builtin-add.xl
 O3/builtin-and.xl

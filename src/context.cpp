@@ -735,13 +735,10 @@ enum SortMode
 {
     INSERT,                     // Sort for insertion of a pattern
     INSERT_BIND,                // Sort for insertion, all names identical
-    INSERT_INFIX,               // Sort for insertion, matched infix
     SEARCH,                     // Sort for search of top pattern
     SEARCH_BIND,                // Sort for search, all names identical
-    SEARCH_INFIX,               // Sort for search, matched top infix
     REFSEARCH,                  // Sort for reference search
     REFSEARCH_BIND,             // Sort for reference search, identical names
-    REFSEARCH_INFIX,            // Sort for reference, matched top infix
     TYPE,                       // Sort for type annotations
     CONDITIONAL                 // Sort for expression (when clauses)
 };
@@ -749,7 +746,7 @@ enum SortMode
 
 inline SortMode SortIgnoreNames(SortMode mode)
 // ----------------------------------------------------------------------------
-//   Once we have recognized a top-level name, ignore other names
+//   Ignore the names for parameters
 // ----------------------------------------------------------------------------
 //   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
 {
@@ -764,35 +761,18 @@ inline SortMode SortIgnoreNames(SortMode mode)
 }
 
 
-inline SortMode SortIgnoreNamesInInfix(SortMode mode)
+inline SortMode SortCheckNames(SortMode mode)
 // ----------------------------------------------------------------------------
-//   Once we have recognized a top-level name, ignore other names
+//   Match the names for prefix or postfix
 // ----------------------------------------------------------------------------
-//   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
+//   This is so that [cos X] = [cos T] but [cos cos X] < [cos sin Y]
 {
     switch(mode)
     {
-    case INSERT:        mode = INSERT_INFIX;    break;
-    case SEARCH:        mode = SEARCH_INFIX;    break;
-    case REFSEARCH:     mode = REFSEARCH_INFIX; break;
+    case INSERT_BIND:        mode = INSERT;     break;
+    case SEARCH_BIND:        mode = SEARCH;     break;
+    case REFSEARCH_BIND:     mode = REFSEARCH;  break;
     default:                                    break;
-    }
-    return mode;
-}
-
-
-inline SortMode SortCheckNamesInInfix(SortMode mode)
-// ----------------------------------------------------------------------------
-//   Once we have recognized a top-level name, ignore other names
-// ----------------------------------------------------------------------------
-//   This is so that [cos X] < [sin X] but [cos X] = [cos Y]
-{
-    switch(mode)
-    {
-    case INSERT_INFIX:          mode = INSERT;          break;
-    case SEARCH_INFIX:          mode = SEARCH;          break;
-    case REFSEARCH_INFIX:       mode = REFSEARCH;       break;
-    default:                                            break;
     }
     return mode;
 }
@@ -803,7 +783,7 @@ inline bool SortNames(SortMode mode)
 //   Return true if we want to sort names in this mode
 // ----------------------------------------------------------------------------
 {
-    static char sort[] = { 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1 };
+    static char sort[] = { 1, 0, 1, 0, 1, 0, 1, 1 };
     return sort[mode];
 }
 
@@ -813,7 +793,7 @@ inline bool SortInserting(SortMode mode)
 //   Return true if we are inserting
 // ----------------------------------------------------------------------------
 {
-    return mode <= INSERT_INFIX;
+    return mode <= INSERT_BIND;
 }
 
 
@@ -822,7 +802,7 @@ inline bool SortSearching(SortMode mode)
 //   Return true if we are searching
 // ----------------------------------------------------------------------------
 {
-    return mode >= SEARCH && mode <= SEARCH_INFIX;
+    return mode >= SEARCH && mode <= SEARCH_BIND;
 }
 
 
@@ -831,7 +811,7 @@ inline bool SortRefSearching(SortMode mode)
 //   Return true if we are searching
 // ----------------------------------------------------------------------------
 {
-    return mode >= REFSEARCH && mode <= REFSEARCH_INFIX;
+    return mode >= REFSEARCH && mode <= REFSEARCH_BIND;
 }
 
 
@@ -840,7 +820,7 @@ inline bool SortSearchingOrRefSearching(SortMode mode)
 //   Return true if we are searching
 // ----------------------------------------------------------------------------
 {
-    return mode >= SEARCH && mode <= REFSEARCH_INFIX;
+    return mode >= SEARCH && mode <= REFSEARCH_BIND;
 }
 
 
@@ -855,13 +835,10 @@ static int Sort(Tree *pat, Tree *val, SortMode mode)
     {
         "INSERT",
         "INSERT_BIND",
-        "INSERT_INFIX",
         "SEARCH",
         "SEARCH_BIND",
-        "SEARCH_INFIX",
         "REFSEARCH",
         "REFSEARCH_BIND",
-        "REFSEARCH_INFIX",
         "TYPE",
         "CONDITIONAL"
     };
@@ -961,7 +938,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     }
 
     // Check case where kinds are different: use sorting rank described above
-    if (mode == SEARCH_BIND || mode == SEARCH_INFIX)
+    if (mode == SEARCH_BIND)
     {
         // Catch wildcards, and consider that binding is "upper" problem
         return 0;
@@ -978,9 +955,12 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                 {
                     if (int pats = Sort(pati->left, vali->left, mode))
                         return pats;
-                    return mode == INSERT_BIND
-                        ? -1
-                        : Sort(pati->right, vali->right, TYPE);
+                    int types = Sort(pati->right, vali->right, TYPE);
+                    if (!types)
+                        return 0;
+                    if (mode == INSERT_BIND)
+                        return -1;
+                    return types;
                 }
             }
             else if (mode == SEARCH &&
@@ -1094,10 +1074,9 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
                     ((Block *) val)->child,
                     mode);
     case PREFIX:
-        mode = SortCheckNamesInInfix(mode);
         if (int pats = Sort(((Prefix *) pat)->left,
                             ((Prefix *) val)->left,
-                            mode))
+                            SortCheckNames(mode)))
             return pats;
         return Sort(((Prefix *) pat)->right,
                     ((Prefix *) val)->right,
@@ -1105,7 +1084,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
     case POSTFIX:
         if (int vals = Sort(((Postfix *) pat)->right,
                             ((Postfix *) val)->right,
-                            mode))
+                            SortCheckNames(mode)))
             return vals;
         return Sort(((Postfix *) pat)->left,
                     ((Postfix *) val)->left,
@@ -1117,7 +1096,7 @@ static int ISort(Tree *pat, Tree *val, SortMode mode)
             return ns;
         if (int pats = Sort(((Infix *) pat)->left,
                             ((Infix *) val)->left,
-                            SortIgnoreNamesInInfix(mode)))
+                            SortIgnoreNames(mode)))
             return pats;
         return Sort(((Infix *) pat)->right,
                     ((Infix *) val)->right,
