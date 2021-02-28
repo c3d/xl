@@ -261,9 +261,9 @@ Tree *Bindings::Do(Prefix *what)
         }
         if (Infix *typecast = binding->AsInfix())
         {
-            Tree *want = EvaluateType(typecast->right);
+            Tree_p want = EvaluateType(typecast->right);
             Infix *vartype = IsTypeAnnotation(rewrite->left);
-            Tree *have = EvaluateType(vartype->right);
+            Tree_p have = EvaluateType(vartype->right);
             Name *name = vartype->left->AsName();
             if (!Tree::Equal(want, have))
             {
@@ -292,10 +292,10 @@ Tree *Bindings::Do(Prefix *what)
 
         // Check prefix left first, which may set 'defined' to name
         test = pfx->left;
-        if (Tree *left = what->left->Do(this))
+        if (Tree_p left = what->left->Do(this))
         {
             test = pfx->right;
-            if (Tree *right = what->right->Do(this))
+            if (Tree_p right = what->right->Do(this))
             {
                 if (left != pfx->left || right != pfx->right)
                     pfx = new Prefix(pfx, left, right);
@@ -331,10 +331,10 @@ Tree *Bindings::Do(Postfix *what)
     {
         // Check postfix right first, which maye set 'defined' to name
         test = pfx->right;
-        if (Tree *right = what->right->Do(this))
+        if (Tree_p right = what->right->Do(this))
         {
             test = pfx->left;
-            if (Tree *left = what->left->Do(this))
+            if (Tree_p left = what->left->Do(this))
             {
                 if (left != pfx->left || right != pfx->right)
                     pfx = new Postfix(pfx, left, right);
@@ -367,8 +367,8 @@ Tree *Bindings::Do(Infix *what)
             if (Infix *cast = IsTypeCast(test))
             {
                 test = cast->left;
-                Tree *wtype = EvaluateType(what->right);
-                Tree *ttype = EvaluateType(cast->right);
+                Tree_p wtype = EvaluateType(what->right);
+                Tree_p ttype = EvaluateType(cast->right);
                 if (wtype != ttype || HadErrors())
                 {
                     Ooops("Type $2 of $1", cast->right, cast);
@@ -378,7 +378,7 @@ Tree *Bindings::Do(Infix *what)
 
                 // Process the lambda name
                 defined = what;
-                if (Tree *result = declared->Do(this))
+                if (Tree_p result = declared->Do(this))
                     return result;
             }
 
@@ -388,7 +388,7 @@ Tree *Bindings::Do(Infix *what)
         }
 
         // Need to evaluate the type on the right
-        Tree *want = EvaluateType(what->right);
+        Tree_p want = EvaluateType(what->right);
         if (!want || HadErrors() || IsError(want))
             return nullptr;
 
@@ -399,7 +399,7 @@ Tree *Bindings::Do(Infix *what)
         }
         else
         {
-            Tree *checked = TypeCheck(EvaluationScope(), want, test);
+            Tree_p checked = TypeCheck(EvaluationScope(), want, test);
             if (!checked)
             {
                 Ooops("Value $1 does not belong to type $2", test, want);
@@ -427,7 +427,7 @@ Tree *Bindings::Do(Infix *what)
             return nullptr;
 
         // Here, we need to evaluate in the local context, not eval one
-        Tree *check = EvaluateGuard(what->right);
+        Tree_p check = EvaluateGuard(what->right);
         if (check == xl_true)
             return left;
         else if (check != xl_false)
@@ -455,10 +455,10 @@ Tree *Bindings::Do(Infix *what)
         }
 
         test = ifx->left;
-        if (Tree *left = what->left->Do(this))
+        if (Tree_p left = what->left->Do(this))
         {
             test = ifx->right;
-            if (Tree *right = what->right->Do(this))
+            if (Tree_p right = what->right->Do(this))
             {
                 if (left != ifx->left || right != ifx->right)
                     ifx = new Infix(ifx, left, right);
@@ -478,7 +478,7 @@ bool Bindings::MustEvaluate()
 //   Evaluate 'test', ensuring that each bound arg is evaluated at most once
 // ----------------------------------------------------------------------------
 {
-    Tree *evaluated = Evaluate(EvaluationScope(), test);
+    Tree_p evaluated = Evaluate(EvaluationScope(), test);
 
     // For matching purpose, we need the value inside closures
     while (Scope *scope = Context::IsClosure(evaluated))
@@ -556,7 +556,7 @@ Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
         }
         return nullptr;
     }
-    Tree *cast = cache.CachedTypeCheck(type, value);
+    Tree_p cast = cache.CachedTypeCheck(type, value);
     if (!cast)
     {
         cast = Interpreter::DoTypeCheck(scope, type, value, cache);
@@ -607,7 +607,7 @@ Tree *Bindings::Bind(Name *name, Tree *value)
     record(bindings, "Binding %t = %t", name, value);
     if (!cache.Cached(value))
         value = evalContext.Enclose(value);
-    Rewrite *rewrite = argContext.Define(name, value);
+    Rewrite_p rewrite = argContext.Define(name, value);
     bindings.push_back(rewrite);
     cache.Cache(name, value);
     return value;
@@ -619,7 +619,7 @@ Tree *Bindings::Argument(unsigned n, bool unwrap)
 //   Unwrap all arguments before calling a builtin or native function
 // ----------------------------------------------------------------------------
 {
-    Tree *value = Binding(n)->right;
+    Tree_p value = Binding(n)->right;
     while (Scope *scope = Context::IsClosure(value))
     {
         Prefix *closure = (Prefix *) (Tree *) value;
@@ -640,7 +640,7 @@ Tree *Bindings::NamedTree(unsigned n)
 //    Evaluate the given argument without evaluting bodies
 // ----------------------------------------------------------------------------
 {
-    Tree *value = Binding(n)->right;
+    Tree_p value = Binding(n)->right;
     while (Scope *scope = Context::IsClosure(value))
     {
         Prefix *closure = (Prefix *) (Tree *) value;
