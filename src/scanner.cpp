@@ -775,7 +775,7 @@ void Scanner::CloseParen(uint oldIndent)
 //
 // ============================================================================
 
-ulong Positions::OpenFile(text name)
+TreePosition Positions::OpenFile(text name)
 // ----------------------------------------------------------------------------
 //    Open a new file
 // ----------------------------------------------------------------------------
@@ -787,7 +787,7 @@ ulong Positions::OpenFile(text name)
 }
 
 
-void Positions::CloseFile (ulong pos)
+void Positions::CloseFile (TreePosition pos)
 // ----------------------------------------------------------------------------
 //    Remember the end position for a file
 // ----------------------------------------------------------------------------
@@ -804,7 +804,7 @@ void Positions::CloseFile (ulong pos)
 }
 
 
-void Positions::GetFile(ulong pos, text *file, ulong *offset)
+void Positions::GetFile(TreePosition pos, text *file, ulong *offset)
 // ----------------------------------------------------------------------------
 //    Return the file and the offset in the file
 // ----------------------------------------------------------------------------
@@ -832,8 +832,11 @@ void Positions::GetFile(ulong pos, text *file, ulong *offset)
 }
 
 
-void Positions::GetInfo(ulong pos, text *out_file, ulong *out_line,
-                        ulong *out_column, text *out_source)
+void Positions::GetInfo(TreePosition pos,
+                        text *out_file,
+                        ulong *out_line,
+                        ulong *out_column,
+                        text *out_source)
 // ----------------------------------------------------------------------------
 //   Scan the input files to find the location of the error
 // ----------------------------------------------------------------------------

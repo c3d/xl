@@ -88,7 +88,14 @@ MATCH_OR_EVAL(operator, Name,   value->IsOperator())
 
 // Other types need to evaluate their arugment
 TYPE(value,     return TYPE_VALUE)
-TYPE(natural,   return TYPE_VALUE->AsNatural())
+TYPE(natural,                                                   \
+     if (Natural *nat = TYPE_VALUE->AsNatural())                \
+     {                                                          \
+         if (nat->IsSigned() && (longlong) nat->value < 0)      \
+             return nullptr;                                    \
+         return nat->MakeUnsigned();                            \
+     }                                                          \
+     return nullptr)
 TYPE(text,      return TYPE_VALUE->AsText())
 TYPE(character,
      if (Text *text = TYPE_VALUE->AsText())
@@ -110,21 +117,21 @@ TYPE(boolean,
 // ============================================================================
 
 #define IN_RANGE(X, CType)                              \
-        ((X) >= std::numeric_limits<CType>::min() &&    \
-         (X) <= std::numeric_limits<CType>::max())
+    ((X) >= std::numeric_limits<CType>::min() &&        \
+     (X) <= std::numeric_limits<CType>::max())
 
-#define NATURAL_TYPE(Name, CType)                       \
-    TYPE(Name,                                          \
-         if (Natural *nat = TYPE_VALUE->AsNatural())    \
-             if (IN_RANGE(nat->value, CType))           \
-                 return nat;                            \
+#define NATURAL_TYPE(Name, CType)                               \
+    TYPE(Name,                                                  \
+         if (Natural *nat = TYPE_VALUE->AsNatural())            \
+             if (IN_RANGE(nat->value, CType))                   \
+                 return nat->MakeUnsigned();                    \
          return nullptr)
 
 #define INTEGER_TYPE(Name, CType)                               \
     TYPE(Name,                                                  \
          if (Natural *nat = TYPE_VALUE->AsNatural())            \
              if (IN_RANGE((longlong) nat->value, CType))        \
-                 return nat;                                    \
+                 return nat->MakeSigned();                      \
          return nullptr)
 
 #define REAL_TYPE(Name, CType)                                  \
@@ -149,7 +156,14 @@ NATURAL_TYPE(natural16, uint16_t)
 NATURAL_TYPE(natural32, uint32_t)
 NATURAL_TYPE(natural64, uint64_t)
 
-TYPE(integer, return TYPE_VALUE->AsNatural())
+TYPE(integer,                                                           \
+     if (Natural *nat = TYPE_VALUE->AsNatural())                        \
+     {                                                                  \
+         if (!nat->IsSigned() && (longlong) nat->value < 0)             \
+             return nullptr;                                            \
+         return nat->MakeSigned();                                      \
+     }                                                                  \
+     return nullptr)
 INTEGER_TYPE(integer8,  int8_t)
 INTEGER_TYPE(integer16, int16_t)
 INTEGER_TYPE(integer32, int32_t)
