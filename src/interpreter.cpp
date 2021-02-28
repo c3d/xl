@@ -899,7 +899,7 @@ static Tree_p doDot(Context &context,
         scope = context.CreateScope();
         Initializers inits;
         bool hasInstructions = context.ProcessDeclarations(where, inits);
-        if (scope->IsEmpty() && !scope->Import())
+        if (scope->IsEmpty())
             scope = scope->Enclosing();
         if (hasInstructions)
         {
@@ -1135,7 +1135,7 @@ reenter:
         scope = context.CreateScope();
         Initializers inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
-        if (scope->IsEmpty() && !scope->Import())
+        if (scope->IsEmpty())
             scope = context.PopScope();
         if (!DoInitializers(inits, cache))
         {
