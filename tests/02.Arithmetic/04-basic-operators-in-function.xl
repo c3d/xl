@@ -41,8 +41,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-is_natural X:integer    is true
-is_natural X            is false
+is_integer X:integer    is true
+is_integer X            is false
 
 type_name X:natural     is "natural"
 type_name X:integer     is "integer"
@@ -56,7 +56,7 @@ run_test x,y is
     print "Ratio: ", x/y
     print "Modulo: ", x mod y
     print "Reminder: ", x rem y
-    if is_natural x and is_natural y then
+    if is_integer x and is_integer y then
         print "And: ", x and y
         print "Or: ", x or y
         print "Xor: ", x xor y
