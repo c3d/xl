@@ -1256,16 +1256,6 @@ inline void Scope::Clear()
 }
 
 
-inline bool Scope::IsEmpty()
-// ----------------------------------------------------------------------------
-//   Return true if the scope is empty
-// ----------------------------------------------------------------------------
-{
-    Tree_p &locals = Locals();
-    return locals == xl_nil;
-}
-
-
 inline void Scope::Import(Prefix *import)
 // ----------------------------------------------------------------------------
 //   Add an import to the current scope
@@ -1290,6 +1280,16 @@ inline Prefix *Scope::Import()
     if (Scopes *scopes = child->As<Scopes>())
         return scopes->Import();
     return nullptr;
+}
+
+
+inline bool Scope::IsEmpty()
+// ----------------------------------------------------------------------------
+//   Return true if the scope is empty
+// ----------------------------------------------------------------------------
+{
+    Tree_p &locals = Locals();
+    return locals == xl_nil && !Import();
 }
 
 
