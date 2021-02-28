@@ -202,7 +202,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         if (Natural *it = dest->AsNatural())
         {
             it->value = what->value;
-            it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
+            it->tag = ((what->Position()<<Tree::POSBITS) | it->Kind());
             return what;
         }
         return nullptr;
@@ -212,7 +212,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         if (Real *rt = dest->AsReal())
         {
             rt->value = what->value;
-            rt->tag = ((what->Position()<<Tree::KINDBITS) | rt->Kind());
+            rt->tag = ((what->Position()<<Tree::POSBITS) | rt->Kind());
             return what;
         }
         return nullptr;
@@ -222,7 +222,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         if (Text *tt = dest->AsText())
         {
             tt->value = what->value;
-            tt->tag = ((what->Position()<<Tree::KINDBITS) | tt->Kind());
+            tt->tag = ((what->Position()<<Tree::POSBITS) | tt->Kind());
             return what;
         }
         return nullptr;
@@ -232,7 +232,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         if (Name *nt = dest->AsName())
         {
             nt->value = what->value;
-            nt->tag = ((what->Position()<<Tree::KINDBITS) | nt->Kind());
+            nt->tag = ((what->Position()<<Tree::POSBITS) | nt->Kind());
             return what;
         }
         return nullptr;
@@ -244,7 +244,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         {
             bt->opening = what->opening;
             bt->closing = what->closing;
-            bt->tag = ((what->Position()<<Tree::KINDBITS) | bt->Kind());
+            bt->tag = ((what->Position()<<Tree::POSBITS) | bt->Kind());
             if (mode == CM_RECURSIVE)
             {
                 dest = bt->child;
@@ -261,7 +261,7 @@ template <CopyMode mode> struct TreeCopyTemplate
         if (Infix *it = dest->AsInfix())
         {
             it->name = what->name;
-            it->tag = ((what->Position()<<Tree::KINDBITS) | it->Kind());
+            it->tag = ((what->Position()<<Tree::POSBITS) | it->Kind());
             if (mode == CM_RECURSIVE)
             {
                 dest = it->left;
@@ -283,7 +283,7 @@ template <CopyMode mode> struct TreeCopyTemplate
     {
         if (Prefix *pt = dest->AsPrefix())
         {
-            pt->tag = ((what->Position()<<Tree::KINDBITS) | pt->Kind());
+            pt->tag = ((what->Position()<<Tree::POSBITS) | pt->Kind());
             if (mode == CM_RECURSIVE)
             {
                 dest = pt->left;
@@ -305,7 +305,7 @@ template <CopyMode mode> struct TreeCopyTemplate
     {
         if (Postfix *pt = dest->AsPostfix())
         {
-            pt->tag = ((what->Position()<<Tree::KINDBITS) | pt->Kind());
+            pt->tag = ((what->Position()<<Tree::POSBITS) | pt->Kind());
             if (mode == CM_RECURSIVE)
             {
                 dest = pt->left;

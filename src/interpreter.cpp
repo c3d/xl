@@ -1448,7 +1448,12 @@ bool Interpreter::DoInitializers(Initializers &inits, EvaluationCache &cache)
 //
 // ============================================================================
 
-#define R_INT(x)        return new Natural((x), self->Position())
+#define R_INT(x)                                                        \
+        {                                                               \
+            Natural *result = new Natural((x), self->Position());       \
+            result->tag |= signbit;                                     \
+            return result;                                              \
+        }
 #define R_REAL(x)       return new Real((x), self->Position())
 #define R_TEXT(x)       return new Text((x), self->Position())
 #define R_BOOL(x)       return (x) ? xl_true : xl_false
@@ -1478,7 +1483,8 @@ static Tree *builtin_unary_##Name(Bindings &args)               \
                      "for unary builtin " #Name                 \
                      " in $1", result);                         \
     ArgType *value  = args[0]->As<ArgType>();                   \
-    if (!value)                                                 \
+    ulong signbit = value->tag & (1 << Tree::SIGNBIT);          \
+    if (!value && signbit == signbit)                           \
         return Ooops("Argument $1 is not a " #ArgType           \
                      " in builtin " #Name, args[0]);            \
     Body;                                                       \
@@ -1494,7 +1500,8 @@ static Tree *builtin_binary_##Name(Bindings &args)              \
                      "for binary builtin " #Name                \
                      " in $1", self);                           \
     LeftType *left  = args[0]->As<LeftType>();                  \
-    if (!left)                                                  \
+    ulong signbit = left->tag & (1 << Tree::SIGNBIT);           \
+    if (!left && signbit == signbit)                            \
         return Ooops("First argument $1 is not a " #LeftType    \
                      " in builtin " #Name, args[0]);            \
     RightType *right = args[1]->As<RightType>();                \

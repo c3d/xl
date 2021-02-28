@@ -147,7 +147,7 @@ enum token_t
 
 
 typedef std::vector<uint> indent_list;
-typedef ulong TreePosition;
+typedef uintptr_t TreePosition;
 
 struct Positions
 // ----------------------------------------------------------------------------

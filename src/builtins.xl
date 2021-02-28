@@ -45,7 +45,6 @@ X:natural or  Y:natural         as natural is builtin "Or"
 X:natural xor Y:natural         as natural is builtin "Xor"
 X:natural shl Y:natural         as natural is builtin "Shl"
 X:natural shr Y:natural         as natural is builtin "LShr"
--X:natural                      as integer is builtin "Neg"
 not X:natural                   as natural is builtin "Not"
 
 // Binary operations on integers

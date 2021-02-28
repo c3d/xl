@@ -137,7 +137,10 @@ struct xl_type<Num,
     }
     static BoxType *Box(native_type x, TreePosition pos)
     {
-        return new BoxType(x, pos);
+        BoxType *result = new BoxType(x, pos);
+        if (std::numeric_limits<Num>::is_signed)
+            result = result->MakeSigned();
+        return result;
     }
     static native_type Unbox(BoxType *x)
     {

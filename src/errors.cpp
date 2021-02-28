@@ -57,7 +57,7 @@ XL_BEGIN
 //
 // ============================================================================
 
-Error::Error(kstring m, ulong p)
+Error::Error(kstring m, TreePosition p)
 // ----------------------------------------------------------------------------
 //   Error without arguments
 // ----------------------------------------------------------------------------
@@ -251,7 +251,7 @@ Errors::Errors()
     Log(e, context);
 
 
-Errors::Errors (kstring m, ulong pos)
+Errors::Errors (kstring m, TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Save errors from the top-level error handler
 // ----------------------------------------------------------------------------
@@ -389,7 +389,7 @@ Tree_p Errors::aborting;
 //
 // ============================================================================
 
-Error &Ooops (kstring m, ulong pos)
+Error &Ooops (kstring m, TreePosition pos)
 // ----------------------------------------------------------------------------
 //   Report an error message without arguments
 // ----------------------------------------------------------------------------
