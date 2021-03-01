@@ -562,7 +562,7 @@ Tree *Bindings::TypeCheck(Scope *scope, Tree *type, Tree *value)
         cast = Interpreter::DoTypeCheck(scope, type, value, cache);
         cache.TypeCheck(type, value, cast);
     }
-    if (IsError(cast))
+    if (type != XL::value_type && IsError(cast))
         cast = nullptr;
     return cast;
 }
@@ -1376,7 +1376,7 @@ retry:
     // Check if we need to get the value from a variable
     if (mode != VARIABLE && result)
         if (Infix *def = IsVariableDefinition(result))
-                result = def->right;
+            result = def->right;
 
     record(eval, "<%t %+s result %t",
            expr, result ? "succeeded" : "failed", result);
