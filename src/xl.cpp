@@ -66,6 +66,10 @@ int main(int argc, char **argv)
     // Load files and run code
     XL::Tree_p result = main.LoadFiles();
 
+    // Enter server mode if requested
+    if (!main.HadErrors() && main.ServerMode())
+            result = main.EnterServerMode();
+
     // Show errors if we had any
     int rc = main.HadErrors() > 0;
     if (rc)

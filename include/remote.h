@@ -50,7 +50,7 @@ Tree_p  xl_invoke(Scope *, text host, Tree *body);
 int     xl_reply(Scope *, Tree *body);
 Tree_p  xl_listen_received();
 Tree_p  xl_listen_hook(Tree *body);
-int     xl_listen(Scope *, uint forking, uint port = XL_DEFAULT_PORT);
+Tree_p  xl_listen(Scope *, uint forking, uint port = XL_DEFAULT_PORT);
 
 XL_END
 

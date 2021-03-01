@@ -90,6 +90,8 @@ struct Main
     eval_fn             Importer(text name);
 
     // Hooks for use as a library in an application
+    virtual bool        ServerMode();
+    virtual Tree_p      EnterServerMode();
     virtual Tree_p      LoadFile(text file, bool evaluate);
     virtual void        Log(Error &e)   { errors->Log(e); }
     virtual uint        HadErrors()     { return errors->Count(); }
