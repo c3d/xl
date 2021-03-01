@@ -739,7 +739,7 @@ struct NativeImplementation : NativeInterface
 
     static Tree *Call(ptype function, Bindings &bindings)
     {
-        unsigned max = bindings.Size();
+        size_t max = bindings.Size();
         if (max != ftype::Arity)
         {
             Ooops("Wrong number of arguments for native $1 ($2 instead of $3)")
@@ -748,7 +748,7 @@ struct NativeImplementation : NativeInterface
         }
 
         TreeList args;
-        for (unsigned a = 0; a < bindings.Size(); a++)
+        for (size_t a = 0; a < bindings.Size(); a++)
             args.push_back(bindings.Argument(a));
         return ftype::Call(function, bindings.Self(), &args[0]);
     }
