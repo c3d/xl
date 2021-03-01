@@ -65,8 +65,9 @@ struct xl_type
 //   Provide a common interface to convert an XL type into its
 // ----------------------------------------------------------------------------
 {
-    typedef Tree              BoxType;
-    typedef T                 native_type;
+    typedef Tree BoxType;
+    typedef T    native_type;
+
 #ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)   { return c.treePtrTy; }
     static JIT::PointerType_p NativeType(Compiler &c) { return c.treePtrTy; }
@@ -92,8 +93,9 @@ struct xl_type<void>
 //   Provide a common interface to convert an XL type into its
 // ----------------------------------------------------------------------------
 {
-    typedef Tree              BoxType;
-    typedef void              native_type;
+    typedef Tree BoxType;
+    typedef void native_type;
+
 #ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)   { return c.treePtrTy; }
     static JIT::Type_p        NativeType(Compiler &c) { return c.voidTy; }
@@ -116,8 +118,8 @@ struct xl_type<Num,
 //   Specialization for natural types
 // ----------------------------------------------------------------------------
 {
-    typedef Natural      BoxType;
-    typedef Num          native_type;
+    typedef Natural BoxType;
+    typedef Num     native_type;
 
 #ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
@@ -173,8 +175,8 @@ struct xl_type<Num,
 //   Specialization for floating-point types
 // ----------------------------------------------------------------------------
 {
-    typedef Real         BoxType;
-    typedef Num          native_type;
+    typedef Real BoxType;
+    typedef Num  native_type;
 
 #ifndef INTERPRETER_ONLY
     static JIT::PointerType_p TreeType(Compiler &c)
@@ -389,6 +391,20 @@ struct xl_type<Scope *>
 
 // ============================================================================
 //
+//    Check if a type is a scope
+//
+// ============================================================================
+
+template <typename T>
+struct xl_is_scope              { static const bool is_scope = false; };
+
+template<>
+struct xl_is_scope<Scope *>     { static const bool is_scope = true; };
+
+
+
+// ============================================================================
+//
 //    Extracting information about a function type
 //
 // ============================================================================
@@ -405,6 +421,7 @@ struct function_type<R(*)()>
     typedef R (*pointer_type)();
     typedef typename xl_type<R>::BoxType BoxType;
     static const unsigned Arity = 0;
+    static const bool IsXLFunction = false;
 
 #ifndef INTERPRETER_ONLY
     static void         Args(Compiler &, JIT::Signature &)  {}
@@ -438,6 +455,7 @@ struct function_type<void(*)()>
     typedef void (*pointer_type)();
     typedef typename xl_type<void>::BoxType BoxType;
     static const unsigned Arity = 0;
+    static const bool IsXLFunction = false;
 
 #ifndef INTERPRETER_ONLY
     static void         Args(Compiler &, JIT::Signature &)  {}
@@ -472,6 +490,7 @@ struct function_type<R(*)(T)>
     typedef R (*pointer_type)(T);
     typedef typename xl_type<R>::BoxType BoxType;
     static const unsigned Arity = 1;
+    static const bool IsXLFunction = xl_is_scope<T>::is_scope;
 
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
@@ -521,6 +540,7 @@ struct function_type<void(*)(T)>
     typedef void (*pointer_type)(T);
     typedef typename xl_type<void>::BoxType BoxType;
     static const unsigned Arity = 1;
+    static const bool IsXLFunction = xl_is_scope<T>::is_scope;
 
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
@@ -570,6 +590,7 @@ struct function_type<R(*)(T,A...)>
     typedef R (*pointer_type)(T, A...);
     typedef typename xl_type<R>::BoxType BoxType;
     static const unsigned Arity = 1 + sizeof...(A);
+    static const bool IsXLFunction = xl_is_scope<T>::is_scope;
 
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
@@ -621,6 +642,7 @@ struct function_type<void(*)(T,A...)>
     typedef void (*pointer_type)(T, A...);
     typedef typename xl_type<void>::BoxType BoxType;
     static const unsigned Arity = 1 + sizeof...(A);
+    static const bool IsXLFunction = xl_is_scope<T>::is_scope;
 
 #ifndef INTERPRETER_ONLY
     static void Args(Compiler &compiler, JIT::Signature &signature)
@@ -740,6 +762,8 @@ struct NativeImplementation : NativeInterface
     static Tree *Call(ptype function, Bindings &bindings)
     {
         size_t max = bindings.Size();
+        if (ftype::IsXLFunction)
+            max++;
         if (max != ftype::Arity)
         {
             Ooops("Wrong number of arguments for native $1 ($2 instead of $3)")
@@ -748,6 +772,8 @@ struct NativeImplementation : NativeInterface
         }
 
         TreeList args;
+        if (ftype::IsXLFunction)
+            args.push_back(bindings.EvaluationScope());
         for (size_t a = 0; a < bindings.Size(); a++)
             args.push_back(bindings.Argument(a));
         return ftype::Call(function, bindings.Self(), &args[0]);
