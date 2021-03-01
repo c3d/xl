@@ -127,14 +127,14 @@ TextListOption  libPaths("libraries",
                         "Paths to search for libraries");
 AliasOption     libPathsAlias("L", libPaths);
 
-BooleanOption   remote("remote",
-                       "Listen for remote programs");
+BooleanOption   server("server",
+                       "Server mode (listen for remote programs)");
 
-NaturalOption   remotePort("remote_port",
-                           "Select the port to listen to for remote access",
-                           1205, 1000, 32767);
+NaturalOption   remotePort("port",
+                           "Select the port for remote access",
+                           XL_DEFAULT_PORT, 1000, 32767);
 
-NaturalOption   remoteForks("remote_forks",
+NaturalOption   remoteForks("forks",
                             "Select the number of forks for remote access",
                             20, 0, 1000);
 
