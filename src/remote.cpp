@@ -41,6 +41,7 @@
 #include "main.h"
 #include "save.h"
 #include "tree-clone.h"
+#include "native.h"
 #include "fdstream.hpp"
 
 #include <sys/types.h>
@@ -123,9 +124,9 @@ static void xl_write_tree(int sock, Tree *tree)
 //
 // ============================================================================
 
-struct StopAtGlobalsCloneMode
+struct PartialCloneMode
 // ----------------------------------------------------------------------------
-//   Clone mode where all the children nodes are copied (default)
+//   Clone mode where we stop cloning at a specific cutpoint
 // ----------------------------------------------------------------------------
 {
     Tree_p cutpoint;
@@ -134,7 +135,7 @@ struct StopAtGlobalsCloneMode
     Tree *Clone(Tree *t, CloneClass *clone)
     {
         if (t == cutpoint)
-            return xl_nil;
+            return new Scope();
         return t->Do(clone);
     }
 
@@ -144,96 +145,139 @@ struct StopAtGlobalsCloneMode
         return to;
     }
 };
-typedef TreeCloneTemplate<StopAtGlobalsCloneMode> StopAtGlobalsClone;
+typedef TreeCloneTemplate<PartialCloneMode> PartialClone;
 
 
-static Tree_p xl_attach_context(Context &context, Tree *code)
+static Tree_p xl_attach_context(Scope *symbols, Tree *code)
 // ----------------------------------------------------------------------------
-//   Attach the scope for the given code
+//   Attach the scope for the given code, stopping at the global context
 // ----------------------------------------------------------------------------
 {
-    // Find first enclosing scope containing a "module_path"
-    Scope_p globals;
-    Rewrite_p rewrite;
-    Name *module_path = new Name("module_path", code->Position());
-    Tree *found = context.Bound(module_path, true, &rewrite, &globals);
-
-    // Do a clone of the symbol table up to that point
-    StopAtGlobalsClone partialClone;
-    if (found)
-        partialClone.cutpoint = globals->Enclosing();
-    Scope_p symbols = context.Symbols();
+    // Do a clone of the symbol table up to the main global context
+    PartialClone partialClone;
+    partialClone.cutpoint = MAIN->context.Symbols();
     Tree_p symbolsToSend = partialClone.Clone(symbols);
-
-    record(remote, "Sending context %t", symbolsToSend.Pointer());
-
-    return new Prefix(symbolsToSend, code, code->Position());
+    record(remote, "Sending context %t", symbolsToSend);
+    return new Prefix(symbolsToSend, code);
 }
 
 
-static Tree *xl_restore_nil(Tree *tree)
+static Tree *xl_restore_context(Tree *tree)
 // ----------------------------------------------------------------------------
-//   Restore 'nil' names in the symbol tables
+//   Restore the special context classes in a symbol table
 // ----------------------------------------------------------------------------
+//   The serializer does not know about things like Rewrite, Scope, etc.
+//   So we reconstruct them after receiving them from the remote side.
 {
-    if (Name *name = tree->AsName())
+    switch(tree->Kind())
     {
+    case NAME:
+    {
+        // Reconnect builtin names (matters primariliy for xl_nil)
+        Name *name = (Name *) tree;
         if (name->value == "nil")
             return xl_nil;
+        record(remote_error, "Context contains unexpected name %t", name);
+        return name;
     }
-    else if (Infix *infix = tree->AsInfix())
+    case INFIX:
     {
-        infix->left  = xl_restore_nil(infix->left);
-        infix->right = xl_restore_nil(infix->right);
+        Infix *infix = (Infix *) tree;
+        if (infix->name == "is" || infix->name == ":=")
+            return new Rewrite(infix);
+        if (infix->name == "\n")
+        {
+            Tree *left  = xl_restore_context(infix->left);
+            Tree *right = xl_restore_context(infix->right);
+            Rewrite *payload = left->As<Rewrite>();
+            if (!payload)
+                record(remote_error, "No payload for Rewrites %t", infix);
+            Rewrite *rewrite = right->As<Rewrite>();
+            if (rewrite)
+                return new Rewrites(payload, rewrite);
+            Rewrites *rewrites = right->As<Rewrites>();
+            if (rewrites)
+                return new Rewrites(payload, rewrites);
+        }
+        record(remote_error, "Context contains unexpected infix %t", infix);
+        return infix;
     }
-    else if (Prefix *prefix = tree->AsPrefix())
+    case PREFIX:
     {
-        prefix->left  = xl_restore_nil(prefix->left);
-        prefix->right = xl_restore_nil(prefix->right);
+        Prefix *prefix = (Prefix *) tree;
+        Tree *left = xl_restore_context(prefix->left);
+        Scope *enclosing = left->As<Scope>();
+        if (enclosing)
+        {
+            if (Prefix *import = prefix->right->AsPrefix())
+                return new Scopes(enclosing, import);
+            Tree *right = xl_restore_context(prefix->right);
+            if (Scope *inner = right->As<Scope>())
+                return new Scopes(enclosing, inner);
+        }
+        record(remote_error, "Context contains unexpected prefix %t", prefix);
+        return prefix;
     }
-    else if (Postfix *postfix = tree->AsPostfix())
+    case BLOCK:
     {
-        postfix->left  = xl_restore_nil(postfix->left);
-        postfix->right = xl_restore_nil(postfix->right);
+        Block *block = (Block *) tree;
+        if (block->IsBraces())
+        {
+            Tree *child = xl_restore_context(block->child);
+            return new Scope(child);
+        }
+        record(remote_error, "Context contains unexpected block %t", block);
+        return block;
     }
-    else if (Block *block = tree->AsBlock())
-    {
-        block->child = xl_restore_nil(block->child);
+    default:
+        record(remote_error, "Context contains unexpected tree %t", tree);
+        break;
     }
+
     return tree;
 }
 
 
-static Tree_p xl_merge_context(Context &context, Tree *code)
+static Tree_p xl_merge_context(Scope *environment, Tree_p code)
 // ----------------------------------------------------------------------------
-//    Merge the code into the current running context
+//    Merge code we received into the current running context
 // ----------------------------------------------------------------------------
+//    The serializer is going to lower context-specific classes such as
+//    Scope, Rewrite, etc into their base class, but the evaluation should
+//    be able to deal with that and simply run through ProcessDeclarations
+//    again (e.g. through ProcessScope).
 {
     if (code)
     {
+        // We receive the symbol table as a prefix, not a closure
         if (Prefix *prefix = code->AsPrefix())
         {
-            Scope *scope = prefix->left->As<Scope>();
-            code = prefix->right;
-
-            // Walk up the chain for incoming symbols, stop at end
-            Context *codeCtx = &context;
-            if (scope)
+            if (Block *block = prefix->left->AsBlock())
             {
-                scope = xl_restore_nil(scope)->As<Scope>();
-                codeCtx = new Context(scope);
-                while (Scope *parent = scope->Enclosing())
-                    scope = parent;
+                Tree_p restored = xl_restore_context(block);
+                Scope *scope = restored->As<Scope>();
+                if (!scope)
+                {
+                    record(remote_error, "Context %t is invalid", restored);
+                    return code;
+                }
 
-                // Reattach that end to current scope
-                scope = context.Symbols();
+                // Find the top scope, and re-attach it to the current context
+                Scope_p where = scope;
+                while (Scope *enclosing = where->Enclosing())
+                {
+                    if (enclosing->IsEmpty())
+                        break;
+                    else
+                        where = enclosing;
+                }
+                where->Reparent(environment);
+
+                // Return a closure with that reconstructed scope
+                code = new Closure(scope, prefix->right);
             }
-
-            // And make the resulting code a closure at that location
-            code = Interpreter::MakeClosure(codeCtx, code);
         }
     }
-
     return code;
 }
 
@@ -245,13 +289,13 @@ static Tree_p xl_merge_context(Context &context, Tree *code)
 //
 // ============================================================================
 
-static int xl_send(Context &context, text host, Tree *code)
+static int xl_send(Scope *scope, text host, Tree *code)
 // ----------------------------------------------------------------------------
 //   Send the text for the given body to the target host, return open fd
 // ----------------------------------------------------------------------------
 {
     // Compute port number
-    int port = XL_DEFAULT_PORT;
+    int port = Opt::remotePort;
     size_t found = host.rfind(':');
     if (found != std::string::npos)
     {
@@ -260,8 +304,8 @@ static int xl_send(Context &context, text host, Tree *code)
         if (!port)
         {
             record(remote_error, "Port %s is invalid, using %d",
-                   portText.c_str(), XL_DEFAULT_PORT);
-            port = XL_DEFAULT_PORT;
+                   portText.c_str(), Opt::remotePort);
+            port = Opt::remotePort;
         }
         host = host.substr(0, found);
     }
@@ -301,7 +345,7 @@ static int xl_send(Context &context, text host, Tree *code)
     }
 
     // Attach the running context, i.e. all symbols we might need
-    code = xl_attach_context(context, code);
+    code = xl_attach_context(scope, code);
 
     // Write program to socket
     xl_write_tree(sock, code);
@@ -315,14 +359,14 @@ int xl_tell(Scope *scope, text host, Tree *code)
 //   Send the text for the given body to the target host
 // ----------------------------------------------------------------------------
 {
-    Context context(scope);
     record(remote_tell, "Telling %s: %t", host.c_str(), code);
-    int sock = xl_send(context, host, code);
+    int sock = xl_send(scope, host, code);
     if (sock < 0)
         return sock;
     close(sock);
     return 0;
 }
+NATIVE(xl_tell);
 
 
 Tree_p xl_ask(Scope *scope, text host, Tree *code)
@@ -330,20 +374,20 @@ Tree_p xl_ask(Scope *scope, text host, Tree *code)
 //   Send code to the target, wait for reply
 // ----------------------------------------------------------------------------
 {
-    Context context(scope);
     record(remote_ask, "Asking %s: %t", host.c_str(), code);
-    int sock = xl_send(context, host, code);
+    int sock = xl_send(scope, host, code);
     if (sock < 0)
         return xl_nil;
 
     Tree_p result = xl_read_tree(sock);
-    result = xl_merge_context(context, result);
+    result = xl_merge_context(scope, result);
     record(remote_ask, "Response from %s was %t", host.c_str(), result);
 
     close(sock);
 
     return result;
 }
+NATIVE(xl_ask);
 
 
 Tree_p xl_invoke(Scope *scope, text host, Tree *code)
@@ -351,9 +395,8 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
 //   Send code to the target, wait for multiple replies
 // ----------------------------------------------------------------------------
 {
-    Context context(scope);
     record(remote_invoke, "Invoking %s: %t", host.c_str(), code);
-    int sock = xl_send(context, host, code);
+    int sock = xl_send(scope, host, code);
     if (sock < 0)
         return xl_nil;
 
@@ -366,9 +409,9 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
 
         record(remote_invoke, "Response from %s was %t",
                host.c_str(), response);
-        response = xl_merge_context(context, response);
+        response = xl_merge_context(scope, response);
         record(remote_invoke, "After merge, response was %t", response);
-        result = xl_evaluate(context.Symbols(), response);
+        result = xl_evaluate(scope, response);
         record(remote_invoke, "After eval, was %t", result);
         if (result == xl_nil)
             break;
@@ -377,6 +420,7 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
 
     return result;
 }
+NATIVE(xl_invoke);
 
 
 
@@ -442,6 +486,7 @@ Tree_p  xl_listen_received()
 {
     return received;
 }
+NATIVE(xl_listen_received);
 
 
 Tree_p xl_listen_hook(Tree *newHook)
@@ -454,9 +499,10 @@ Tree_p xl_listen_hook(Tree *newHook)
         hook = newHook;
     return result;
 }
+NATIVE(xl_listen_hook);
 
 
-int xl_listen(Scope *scope, uint forking, uint port)
+Tree_p xl_listen(Scope *scope, uint forking, uint port)
 // ----------------------------------------------------------------------------
 //    Listen on the given port for sockets, evaluate programs when received
 // ----------------------------------------------------------------------------
@@ -465,28 +511,21 @@ int xl_listen(Scope *scope, uint forking, uint port)
     Context context(scope);
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
-    {
-        std::cerr << "xl_listen: Error opening socket: "
-                  << strerror(errno) << "\n";
-        return -1;
-    }
+        return Ooops("Error opening socket: $1").Arg(strerror(errno));
 
     int option = 1;
     if (setsockopt (sock, SOL_SOCKET, SO_REUSEADDR,
                     (char *)&option, sizeof (option)) < 0)
-        std::cerr << "xl_listen: Error setting SO_REUSEADDR: "
-                  << strerror(errno) << "\n";
+        return Ooops("Error setting SO_REUSEADDR: $1").Arg(strerror(errno));
 
     struct sockaddr_in address = { 0 };
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(port);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) < 0)
-    {
-        record(remote_error, "Error binding to port %d: %s (%d)",
-               port, strerror(errno), errno);
-        return -1;
-    }
+        return Ooops("Error binding to port $1: $2")
+            .Arg(port)
+            .Arg(strerror(errno));
 
     // Listen to socket
     listen(sock, 5);
@@ -496,6 +535,7 @@ int xl_listen(Scope *scope, uint forking, uint port)
 
     // Accept client
     listening = true;
+    Tree_p hookResult;
     while (listening)
     {
         // Block until we can accept more connexions (avoid fork bombs)
@@ -542,13 +582,19 @@ int xl_listen(Scope *scope, uint forking, uint port)
             {
                 record(remote_listen, "Received code: %t", code);
                 received = code;
-                Tree_p hookResult = xl_evaluate(scope, hook);
+                hookResult = xl_evaluate(scope, hook);
                 if (hookResult != xl_nil)
                 {
                     Save<int> saveReply(reply_socket, insock);
-                    code = xl_merge_context(context, code);
+                    code = xl_merge_context(scope, code);
                     Tree_p result = xl_evaluate(scope, code);
                     record(remote_listen, "Evaluated as %t", result);
+                    if (!result)
+                    {
+                        result = LastErrorAsErrorTree();
+                        if (!result)
+                            result = Ooops("Evaluation of $1 failed", code);
+                    }
                     xl_write_tree(insock, result);
                     record(remote_listen, "Response sent");
                 }
@@ -568,7 +614,7 @@ int xl_listen(Scope *scope, uint forking, uint port)
     }
 
     close(sock);
-    return 0;
+    return hookResult;
 }
 
 
@@ -585,11 +631,12 @@ int xl_reply(Scope *scope, Tree *code)
     }
 
     record(remote_reply, "Replying: %t", code);
-    code = xl_attach_context(context, code);
+    code = xl_attach_context(scope, code);
     record(remote_reply, "After replacement: %t", code);
     xl_write_tree(reply_socket, code);
     return 0;
 }
+NATIVE(xl_reply);
 
 
 XL_END

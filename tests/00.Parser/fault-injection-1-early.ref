@@ -1,4 +1,4 @@
-xl_assert_error: assertion ((recorder_info_ptr_for_inject_fault)->trace) != 1 && "Running early crash test" failed (main.cpp:396)
+xl_assert_error: assertion ((recorder_info_ptr_for_inject_fault)->trace) != 1 && "Running early crash test" failed (main.cpp:398)
 recorder_signals: Recorder dump handler HEX for signal 3, old flags=HEX action=HEX
 recorder_signals: Recorder dump handler HEX for signal 4, old flags=HEX action=HEX
 recorder_signals: Recorder dump handler HEX for signal 6, old flags=HEX action=HEX
@@ -23,6 +23,6 @@ recorder_signals: No change for HEX (24) flag HEX address HEX
 recorder_signals: No change for HEX (25) flag HEX address HEX
 recorder_signals: No change for HEX (30) flag HEX address HEX
 recorder_signals: No change for HEX (31) flag HEX address HEX
-xl_assert_error: assertion ((recorder_info_ptr_for_inject_fault)->trace) != 1 && "Running early crash test" failed (main.cpp:396)
+xl_assert_error: assertion ((recorder_info_ptr_for_inject_fault)->trace) != 1 && "Running early crash test" failed (main.cpp:398)
 recorder_signals: Received signal HEX, dumping recorder
 recorder_signals: Received signal Abort trap: 6 (6) si_addr=HEX, ucontext HEX, dumping recorder

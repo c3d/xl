@@ -67,6 +67,7 @@ SOURCES_VARIANT_lib     =			\
 	parser.cpp				\
 	posix.cpp				\
 	renderer.cpp				\
+	remote.cpp				\
 	rewrites.cpp				\
 	runtime.cpp				\
 	scanner.cpp				\
