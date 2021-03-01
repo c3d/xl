@@ -128,6 +128,7 @@ namespace Opt
 {
 extern NaturalOption    optimize;
 extern NaturalOption    remoteForks;
+extern NaturalOption    remotePort;
 extern TextOption       stylesheet;
 extern BooleanOption    emitIR;
 extern BooleanOption    caseSensitive;

@@ -11,6 +11,7 @@ Option names can be shortened if unambiguous.
 -compile          : Only compile the file without evaluating it
 -emit_ir          : Generate LLVM IR suitable for llvmc
 -encrypted_writes : Encrypt files as they are written
+-forks            : Select the number of forks for remote access
 -help             : Show usage for the program and list available options
 -I                : Alias for paths
 -interpreted      : Interpreted mode (same as -O0)
@@ -21,10 +22,9 @@ Option names can be shortened if unambiguous.
 -packed_writes    : Pack files as they are written
 -parse            : Only parse the file without evaluating it
 -paths            : Paths to search for source code files
+-port             : Select the port for remote access
 -preload          : Files to preload as context for the program
--remote           : Listen for remote programs
--remote_forks     : Select the number of forks for remote access
--remote_port      : Select the port to listen to for remote access
+-server           : Server mode (listen for remote programs)
 -show             : Show the source code
 -signed_constants : Allow negative values in constants
 -spelling         : Show the original spelling when rendering
