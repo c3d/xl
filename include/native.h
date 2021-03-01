@@ -80,9 +80,9 @@ struct xl_type
     {
         return x;
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x;
+        return bindings.Argument(index++, false);
     }
 };
 
@@ -104,7 +104,7 @@ struct xl_type<void>
     {
         return XL::tree_type;
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
         return;
     }
@@ -144,15 +144,12 @@ struct xl_type<Num,
             result = result->MakeSigned();
         return result;
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x->value;
-    }
-    static native_type Unbox(Tree *x)
-    {
-        if (BoxType *check = x->As<BoxType>())
-            return Unbox(check);
-        Ooops("Expected a natural value, got $1", x);
+        Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value;
+        Ooops("Expected a natural value, got $1", boxed);
         return 0;
     }
 };
@@ -198,16 +195,13 @@ struct xl_type<Num,
     {
         return new BoxType(x, pos);
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x->value;
-    }
-    static native_type Unbox(Tree *x)
-    {
-        if (BoxType *check = x->As<BoxType>())
-            return Unbox(check);
-        Ooops("Expected a real value, got $1", x);
-        return 0;
+        Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value;
+        Ooops("Expected a real value, got $1", boxed);
+        return 0.0;
     }
 };
 
@@ -244,16 +238,13 @@ struct xl_type<kstring>
     {
         return new BoxType(x, pos);
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x->value.c_str();
-    }
-    static native_type Unbox(Tree *x)
-    {
-        if (BoxType *check = x->As<BoxType>())
-            return Unbox(check);
-        Ooops("Expected a text value, got $1", x);
-        return 0;
+        Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value.c_str();
+        Ooops("Expected a text value, got $1", boxed);
+        return "";
     }
 };
 
@@ -287,16 +278,13 @@ struct xl_type<text>
     {
         return new BoxType(x, pos);
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x->value;
-    }
-    static native_type Unbox(Tree *x)
-    {
-        if (BoxType *check = x->As<BoxType>())
-            return Unbox(check);
-        Ooops("Expected a text value, got $1", x);
-        return 0;
+        Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value;
+        Ooops("Expected a text value, got $1", boxed);
+        return "";
     }
 };
 
@@ -330,16 +318,13 @@ struct xl_type<char>
     {
         return new BoxType(text(x, 1), "'", "'", pos);
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x->value[0];
-    }
-    static native_type Unbox(Tree *x)
-    {
-        if (BoxType *check = x->As<BoxType>())
+        Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
             if (check->IsCharacter())
-                return Unbox(check);
-        Ooops("Expected a character value, got $1", x);
+                return check->value[0];
+        Ooops("Expected a character value, got $1", boxed);
         return 0;
     }
 };
@@ -374,16 +359,15 @@ struct xl_type<Scope *>
     {
         return x;
     }
-    static native_type Unbox(BoxType *x)
+    static native_type Arg(size_t &index, Bindings &bindings)
     {
-        return x;
-    }
-    static native_type Unbox(Tree *x)
-    {
-        if (BoxType *check = x->As<BoxType>())
-            return Unbox(check);
-        Ooops("Expected a scope, got $1", x);
-        return 0;
+        if (index == 0)
+            return bindings.EvaluationScope();
+        Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check;
+        Ooops("Expected a scope, got $1", boxed);
+        return new Scope();
     }
 };
 
@@ -438,9 +422,9 @@ struct function_type<R(*)()>
         return ret;
     }
 
-    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
-        return xl_type<R>::Box(callee(), self->Position());
+        return xl_type<R>::Box(callee(), bindings.Self()->Position());
     }
 };
 
@@ -472,7 +456,7 @@ struct function_type<void(*)()>
         return ret;
     }
 
-    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
         callee();
         return xl_nil;
@@ -522,10 +506,11 @@ struct function_type<R(*)(T)>
         return ret;
     }
 
-    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
-        return xl_type<R>::Box(callee(xl_type<T>::Unbox(args[0])),
-                               self->Position());
+        size_t index = 0;
+        return xl_type<R>::Box(callee(xl_type<T>::Arg(index, bindings)),
+                               bindings.Self()->Position());
     }
 };
 
@@ -572,9 +557,10 @@ struct function_type<void(*)(T)>
         return ret;
     }
 
-    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
-        callee(xl_type<T>::Unbox(args[0]));
+        size_t index = 0;
+        callee(xl_type<T>::Arg(index, bindings));
         return xl_nil;
     }
 };
@@ -622,12 +608,12 @@ struct function_type<R(*)(T,A...)>
         return index++;
     }
 
-    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
         size_t index = 0;
-        auto value = callee(xl_type<T>::Unbox(args[Next(index)]),
-                            xl_type<A>::Unbox(args[Next(index)])...);
-        return xl_type<R>::Box(value, self->Position());
+        auto value = callee(xl_type<T>::Arg(index, bindings),
+                            xl_type<A>::Arg(index, bindings)...);
+        return xl_type<R>::Box(value, bindings.Self()->Position());
     }
 };
 
@@ -672,11 +658,11 @@ struct function_type<void(*)(T,A...)>
         return index++;
     }
 
-    static BoxType *Call(pointer_type callee, Tree *self, Tree_p *args)
+    static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
         size_t index = 0;
-        callee(xl_type<T>::Unbox(args[Next(index)]),
-               xl_type<A>::Unbox(args[Next(index)])...);
+        callee(xl_type<T>::Arg(index, bindings),
+               xl_type<A>::Arg(index, bindings)...);
         return xl_nil;
     }
 };
@@ -759,7 +745,7 @@ struct NativeImplementation : NativeInterface
         return shape;
     }
 
-    static Tree *Call(ptype function, Bindings &bindings)
+    virtual Tree_p Call(Bindings &bindings) override
     {
         size_t max = bindings.Size();
         if (ftype::IsXLFunction)
@@ -771,17 +757,7 @@ struct NativeImplementation : NativeInterface
             return nullptr;
         }
 
-        TreeList args;
-        if (ftype::IsXLFunction)
-            args.push_back(bindings.EvaluationScope());
-        for (size_t a = 0; a < bindings.Size(); a++)
-            args.push_back(bindings.Argument(a));
-        return ftype::Call(function, bindings.Self(), &args[0]);
-    }
-
-    virtual Tree_p Call(Bindings &bindings) override
-    {
-        return Call(function, bindings);
+        return ftype::Call(function, bindings);
     }
 
     ptype       function;
