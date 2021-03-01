@@ -165,7 +165,7 @@ write X:integer         as boolean      is C "xl_write_integer"
 write X:natural         as boolean      is C "xl_write_natural"
 write X:real            as boolean      is C "xl_write_real"
 write X:character       as boolean      is C "xl_write_character"
-write X                 as boolean      is C "xl_write_tree"
+write X:value           as boolean      is C "xl_write_tree"
 print                   as boolean      is C "xl_write_cr"
 
 write [[true]]          is write "true"
@@ -236,3 +236,12 @@ Duration:real h  is Duration * 3600
 Duration:real m  is Duration * 60
 Duration:real s  is Duration
 Duration:real ms is Duration * 0.001
+
+// Remote interface
+tell            Remote:text, Body       as integer  is C "xl_tell"
+ask             Remote:text, Body       as tree     is C "xl_ask"
+invoke          Remote:text, Body       as tree     is C "xl_invoke"
+reply           Body                    as integer  is C "xl_reply"
+listen_received                         as tree     is C "xl_listen_received"
+listen_hook     Hook                    as tree     is C "xl_listen_hook"
+listen Forks:natural, Port:natural      as tree     is C "xl_listen"

@@ -65,6 +65,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <glob.h>
+#include <signal.h>
 #include <sys/stat.h>
 
 
@@ -77,6 +78,7 @@ RECORDER_TWEAK_DEFINE(gc_statistics,     0, "Display garbage collector stats");
 RECORDER_TWEAK_DEFINE(dump_on_exit,  false, "Dump the recorder on exit");
 RECORDER_TWEAK_DEFINE(inject_fault,  false, "Test fault handler "
                       "(1 pre-LLVM, 2 post-LLVM 3 stack overflow)");
+RECORDER_TWEAK_DECLARE(recorder_signals_mask);
 
 XL_BEGIN
 
@@ -450,6 +452,25 @@ Tree_p Main::LoadFile(text file, bool evaluate)
     record(fileload, "Loaded file %s into module %p value %t",
            file, module, result);
     return result;
+}
+
+
+bool Main::ServerMode()
+// ----------------------------------------------------------------------------
+//   Return true if we want server mode
+// ----------------------------------------------------------------------------
+{
+    return Opt::server;
+}
+
+
+Tree_p Main::EnterServerMode()
+// ----------------------------------------------------------------------------
+//   Enter server mode, and return result of last evaluation
+// ----------------------------------------------------------------------------
+{
+    RECORDER_TWEAK(recorder_signals_mask) &= ~(1U<<SIGPIPE);
+    return xl_listen(context.Symbols(), Opt::remoteForks, Opt::remotePort);
 }
 
 
