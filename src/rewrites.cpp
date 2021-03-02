@@ -640,7 +640,7 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Rewrite *candidate)
             case Types::Decl::BUILTIN:
                 // For builtins, use the declared type, or nil if none given
                 if (!declaredType)
-                    type = declaredType = xl_nil;
+                    type = declaredType;
                 type = binding_types->Unify(type, declaredType,
                                             what, defined);
                 break;

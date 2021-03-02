@@ -83,7 +83,7 @@ XL_BEGIN
 
 static uint        active_children = 0;
 static int         reply_socket    = 0;
-static Tree_p      received        = xl_nil;
+static Tree_p      received        = nullptr;
 static Tree_p      hook            = xl_true;
 static bool        listening       = true;
 
@@ -171,15 +171,6 @@ static Tree *xl_restore_context(Tree *tree)
 {
     switch(tree->Kind())
     {
-    case NAME:
-    {
-        // Reconnect builtin names (matters primariliy for xl_nil)
-        Name *name = (Name *) tree;
-        if (name->value == "nil")
-            return xl_nil;
-        record(remote_error, "Context contains unexpected name %t", name);
-        return name;
-    }
     case INFIX:
     {
         Infix *infix = (Infix *) tree;
@@ -377,7 +368,7 @@ Tree_p xl_ask(Scope *scope, text host, Tree *code)
     record(remote_ask, "Asking %s: %t", host.c_str(), code);
     int sock = xl_send(scope, host, code);
     if (sock < 0)
-        return xl_nil;
+        return nullptr;
 
     Tree_p result = xl_read_tree(sock);
     result = xl_merge_context(scope, result);
@@ -398,9 +389,9 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
     record(remote_invoke, "Invoking %s: %t", host.c_str(), code);
     int sock = xl_send(scope, host, code);
     if (sock < 0)
-        return xl_nil;
+        return nullptr;
 
-    Tree_p result = xl_nil;
+    Tree_p result;
     while (true)
     {
         Tree_p response = xl_read_tree(sock);
@@ -413,8 +404,6 @@ Tree_p xl_invoke(Scope *scope, text host, Tree *code)
         record(remote_invoke, "After merge, response was %t", response);
         result = xl_evaluate(scope, response);
         record(remote_invoke, "After eval, was %t", result);
-        if (result == xl_nil)
-            break;
     }
     close(sock);
 
@@ -495,8 +484,7 @@ Tree_p xl_listen_hook(Tree *newHook)
 // ----------------------------------------------------------------------------
 {
     Tree_p result = hook;
-    if (newHook != xl_nil)
-        hook = newHook;
+    hook = newHook;
     return result;
 }
 NATIVE(xl_listen_hook);
@@ -583,7 +571,7 @@ Tree_p xl_listen(Scope *scope, uint forking, uint port)
                 record(remote_listen, "Received code: %t", code);
                 received = code;
                 hookResult = xl_evaluate(scope, hook);
-                if (hookResult != xl_nil)
+                if (hookResult)
                 {
                     Save<int> saveReply(reply_socket, insock);
                     code = xl_merge_context(scope, code);
@@ -598,7 +586,7 @@ Tree_p xl_listen(Scope *scope, uint forking, uint port)
                     xl_write_tree(insock, result);
                     record(remote_listen, "Response sent");
                 }
-                if (hookResult == xl_false || hookResult == xl_nil)
+                if (hookResult == xl_false || hookResult == nullptr)
                 {
                     listening = false;
                 }

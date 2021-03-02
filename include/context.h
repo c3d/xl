@@ -148,14 +148,14 @@ struct Scope : Block
 //   A scope is simply a {} block
 // ----------------------------------------------------------------------------
 //   It contains either
-//   - xl_nil for an empty scope,
+//   - nullptr for an empty scope,
 //   - A declaration tree made of Rewrites/Rewrites for a top-level scope
 //   - A Scopes giving access to the enclosing scopes
 //   This corresponds to a source structure like [{X is 0; Y is 1}], except
 //   that the entries are sorted, larger and more specialized first
 {
-    Scope(Tree *child = xl_nil, TreePosition pos = NOWHERE)
-        : Block(child, "{", "}", pos) { XL_ASSERT(child); }
+    Scope(Tree *child = nullptr, TreePosition pos = NOWHERE)
+        : Block(child, "{", "}", pos) { }
     Tree   *Entries()   { return child; }
     Scope  *Enclosing();
     Scope  *Inner();
@@ -886,6 +886,27 @@ inline Text *IsNative(Tree *tree)
 }
 
 
+inline Name *IsNil(Name *name)
+// ----------------------------------------------------------------------------
+//   Return true if this is a [nil] name
+// ----------------------------------------------------------------------------
+{
+    return name->value == "nil" ? name : nullptr;
+}
+
+
+inline Name *IsNil(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Check if a definition is the 'nil' tree
+// ----------------------------------------------------------------------------
+{
+    if (Name *name = tree->AsName())
+        if (Name *nil = IsNil(name))
+            return nil;
+    return nullptr;
+}
+
+
 inline Name *IsSelf(Name *name)
 // ----------------------------------------------------------------------------
 //   Return true if this is a [self] name
@@ -1254,7 +1275,7 @@ inline void Scope::Clear()
 // ----------------------------------------------------------------------------
 {
     Tree_p &locals = Locals();
-    locals = xl_nil;
+    locals = nullptr;
 }
 
 
@@ -1291,7 +1312,7 @@ inline bool Scope::IsEmpty()
 // ----------------------------------------------------------------------------
 {
     Tree_p &locals = Locals();
-    return locals == xl_nil && !Import();
+    return !locals && !Import();
 }
 
 

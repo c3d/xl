@@ -323,7 +323,7 @@ XL::Tree *Main::Show(std::ostream &out, XL::Tree *tree)
 //   Show the output we got from evaluation
 // ----------------------------------------------------------------------------
 {
-    if (tree && tree != XL::xl_nil)
+    if (tree)
     {
         while (Closure *closure = tree->As<Closure>())
         {
@@ -406,7 +406,7 @@ Tree_p Main::LoadFiles()
 {
     // Loop over files we will process
     bool evaluate = !Opt::parse && !Opt::compile;
-    Tree_p result = xl_nil;
+    Tree_p result;
 
     // Load builtins and preloads first
     path_list preloads = Opt::preloads;

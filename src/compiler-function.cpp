@@ -600,7 +600,7 @@ JIT::Value_p CompilerFunction::Autobox(Tree *source,
             result = code.BitCast(result, req);
         else
             // If there was some inconsistency, return an error
-            result = ConstantTree(xl_nil);
+            result = ConstantTree(nullptr);
     }
 
     // Return what we built if anything
@@ -994,7 +994,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
             mtype = compiler.booleanTy;
             base = boolean_type;
         }
-        if (base == xl_nil)
+        if (base == nullptr)
             mtype = compiler.voidTy;
         if (base == xl_error)
             mtype = compiler.treePtrTy;

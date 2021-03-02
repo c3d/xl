@@ -55,7 +55,7 @@ Types::Types(Scope *scope)
       declaration(false)
 {
     // Pre-assign some types
-    types[xl_nil] = xl_nil;
+    types[nullptr] = nullptr;
     types[xl_true] = boolean_type;
     types[xl_false] = boolean_type;
     record(types, "Created Types %p for scope %t", this, scope);

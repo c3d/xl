@@ -504,8 +504,6 @@ Tree *xl_list_files(Scope *scope, Tree *patterns)
     Tree_p result = nullptr;
     Tree_p *parent = &result;
     xl_list_files(scope, patterns, parent);
-    if (!result)
-        result = xl_nil;
     return result;
 }
 
@@ -613,7 +611,7 @@ Tree *xl_parse_file(Scope *scope, Tree *self)
         if (info->module)
             return info->module->Source();
         else
-            return xl_nil;
+            return nullptr;
     }
     return self;
 }
@@ -662,7 +660,7 @@ Tree *xl_load_data(Scope *scope, Tree *self,
         Ooops("Unable to load data for $1.\n"
                      "(Accessing $2 resulted in the following error: $3)",
               self).Arg(path).Arg(strerror(errno));
-        return XL::xl_nil;
+        return nullptr;
     }
 
     return xl_load_data(scope, self, path,
@@ -1423,7 +1421,7 @@ Tree *XLCall::operator() (Scope *scope)
 //    Perform the given call in the given context
 // ----------------------------------------------------------------------------
 {
-    Tree *result = xl_nil;
+    Tree_p result;
     if (Analyze(scope))
         result = MAIN->Evaluate(scope, call);
     return result;

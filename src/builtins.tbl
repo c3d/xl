@@ -39,9 +39,10 @@
 //   Reserved names
 //
 // ============================================================================
+//   The order below matters. 'self' must come first, because other names
+//   are defined as [foo is self]
 
 NAME(self)                      // Must come first, used in Define(...)
-NAME(nil)
 NAME(true)
 NAME(false)
 NAME(error)
