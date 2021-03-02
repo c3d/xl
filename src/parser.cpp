@@ -562,8 +562,6 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             right = Parse(blk_closing, blk_opening, pos);
             if (tok == tokPAROPEN)
                 scanner.CloseParen(old_indent);
-            if (!right)
-                right = new Name("", pos); // Case where we have ()
             right = new Block(right, blk_opening, blk_closing, pos);
             comments.insert(comments.end(),
                             pendingComments.begin(), pendingComments.end());

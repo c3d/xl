@@ -459,7 +459,7 @@ struct function_type<void(*)()>
     static BoxType *Call(pointer_type callee, Bindings &bindings)
     {
         callee();
-        return xl_nil;
+        return nullptr;
     }
 };
 
@@ -561,7 +561,7 @@ struct function_type<void(*)(T)>
     {
         size_t index = 0;
         callee(xl_type<T>::Arg(index, bindings));
-        return xl_nil;
+        return nullptr;
     }
 };
 
@@ -663,7 +663,7 @@ struct function_type<void(*)(T,A...)>
         size_t index = 0;
         callee(xl_type<T>::Arg(index, bindings),
                xl_type<A>::Arg(index, bindings)...);
-        return xl_nil;
+        return nullptr;
     }
 };
 

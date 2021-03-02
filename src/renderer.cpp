@@ -52,6 +52,8 @@
 #include <cctype>
 
 RECORDER(renderer, 16, "Rendering parse trees as source code");
+RECORDER_TWEAK_DEFINE(renderer_maxdepth,
+                      300, "Max recursion depth for the renderer");
 
 XL_BEGIN
 
@@ -359,13 +361,18 @@ void Renderer::RenderFormat(Tree *format)
             Save<bool> saveNoIndents(no_indents, true);
             RenderText(self);
         }
-        else if (n ==  "left" || n == "child")
+        else if (n ==  "left")
         {
             Render(left);
         }
         else if (n == "right")
         {
             Render(right);
+        }
+        else if (n == "child")
+        {
+            if (left)
+                Render(left);
         }
         else if (n == "opening")
         {
@@ -606,11 +613,11 @@ void Renderer::RenderBody(Tree *what)
     static uint recursionCount = 0;
 
     recursionCount++;
-    if (recursionCount < 300)
+    if (recursionCount < RECORDER_TWEAK(renderer_maxdepth))
     {
         if (!what)
         {
-            RenderFormat("?null?", "?null?", "error ");
+            RenderFormat("nil", "nil", "error ");
         }
         else switch (what->Kind())
              {
@@ -811,7 +818,8 @@ void Renderer::RenderBody(Tree *what)
                  else
                  {
                      RenderFormat (w->opening, w->opening, "opening ");
-                     Render (w->child);
+                     if (w->child)
+                         Render (w->child);
                      RenderFormat (w->closing, w->closing, "closing ");
                  }
              }   break;
