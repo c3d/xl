@@ -1087,7 +1087,7 @@ Tree *Interpreter::Unwrap(Tree *expr, EvaluationCache &cache)
         {
             Block *block = (Block *) expr;
             if (Scope *scope = expr->As<Scope>())
-                return expr;
+                return scope;
             expr = block->child;
         }
         }
@@ -1539,7 +1539,9 @@ static Tree *builtin_typecheck_##N(Bindings &args)              \
         return Ooops("Invalid number of arguments "             \
                      "for " #N " typecheck"                     \
                      " in $1", args.Self());                    \
-    Tree_p type  = N##_type; (type);                            \
+    Tree_p type  = N##_type;                                    \
+    record(typecheck, "Builtin typecheck %t as %t = " #N,       \
+           args.Unevaluated(0), type);                          \
     Body;                                                       \
 }
 
