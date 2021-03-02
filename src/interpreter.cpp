@@ -206,6 +206,8 @@ Tree *Bindings::Do(Block *what)
     if (Tree *expr = what->IsMetaBox())
     {
         MustEvaluate();
+        if (IsNil(expr))
+            return test ? nullptr : expr;
         expr = Evaluate(declContext.Symbols(), expr);
         return Tree::Equal(test, expr) ? expr : nullptr;
     }
@@ -584,10 +586,6 @@ Tree *Bindings::ResultTypeCheck(Tree *result, bool special)
         if (type == boolean_type)
             if (Natural *ival = result->AsNatural())
                 return (ival->value) ? xl_true : xl_false;
-
-        // Convert null pointers to xl_nil
-        if (!result)
-            result = xl_nil;
     }
 
     // Otherwise, insert a type check in the bound arguments context
@@ -1161,6 +1159,17 @@ retry:
         goto retry;
     }
 
+    case NAME:
+    {
+        // Special-case nil
+        Name *name = (Name *) expr;
+        if (name->value == "nil")
+        {
+            record(eval, "<Evaluated nil");
+            return nullptr;
+        }
+    }
+
     // Short-circuit evaluation of sequences and declarations
     case INFIX:
     {
@@ -1289,7 +1298,7 @@ retry:
         if (IsWithDeclaration(prefix))
         {
             record(eval, "<Prefix %t is a with type clause", prefix);
-            return xl_nil;
+            return nullptr;
         }
 
         // Filter out declaration such as [extern foo(bar)]
@@ -1557,16 +1566,16 @@ static Tree *builtin_typecheck_##N(Bindings &args)              \
 
 // ============================================================================
 //
-//   Initialize names and types like xl_nil or natural_type
+//   Initialize names and types like xl_self or natural_type
 //
 // ============================================================================
 
 void Interpreter::InitializeBuiltins()
 // ----------------------------------------------------------------------------
-//    Initialize all the names, e.g. xl_nil, and all builtins
+//    Initialize all the names, e.g. xl_self, and all builtins
 // ----------------------------------------------------------------------------
 //    This has to be done before the first context is created, because
-//    scopes are initialized with xl_nil
+//    scopes are initialized with xl_self
 {
 #define NAME(N)         xl_##N = new Name(#N);
 #define TYPE(N, Body)   N##_type = new Name(#N);
@@ -1591,7 +1600,7 @@ std::map<text, Native *> Interpreter::natives;
 
 void Interpreter::InitializeContext(Context &context)
 // ----------------------------------------------------------------------------
-//    Initialize all the names, e.g. xl_nil, and all builtins
+//    Initialize all the names, e.g. xl_self, and all builtins
 // ----------------------------------------------------------------------------
 //    Load the outer context with the type check operators referring to
 //    the builtins.

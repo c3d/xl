@@ -175,7 +175,7 @@ JIT::Value_p CompilerExpression::Do(Infix *infix)
             return right;
         if (left)
             return left;
-        return function.ConstantTree(xl_nil);
+        return function.ConstantTree(nullptr);
     }
 
     // Type casts - REVISIT: may need to do some actual conversion

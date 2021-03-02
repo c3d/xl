@@ -638,6 +638,9 @@ Tree *Context::ValidatePattern(Tree *pattern)
 //   Check that we have only valid names in the pattern, evaluate metaboxen
 // ----------------------------------------------------------------------------
 {
+    if (!pattern)
+        return pattern;
+
     switch(pattern->Kind())
     {
     case NATURAL:
@@ -1168,7 +1171,7 @@ Rewrite *Context::Enter(Rewrite *rewrite, bool overwrite)
     Tree_p  *entry = &locals;
 
     // If empty scope, insert the rewrite
-    if (locals == xl_nil)
+    if (!locals)
     {
         record(symbols, "In %p insert top-level rewrite %t", this, rewrite);
         locals = rewrite;
@@ -1428,7 +1431,7 @@ static Tree *LookupEntry(Scope              *symbols,
 // ----------------------------------------------------------------------------
 {
     // If we have found a nil or empty spot, done with current scope
-    if (*entry == xl_nil)
+    if (*entry == nullptr)
         return nullptr;
     if (Name *name = (*entry)->AsName())
         if (name->value == "")
@@ -1738,7 +1741,7 @@ void Context::Clear()
 //   Clear the symbol table
 // ----------------------------------------------------------------------------
 {
-    symbols->child = xl_nil;
+    symbols->child = nullptr;
 }
 
 
