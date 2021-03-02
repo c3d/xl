@@ -74,7 +74,7 @@ TYPE(definition,        return IsDefinition(TYPE_TREE))
          record(typecheck, "Evaluate %t as " #TypeName, tree);          \
          if (Name *name = tree->AsName())                               \
              if (TypeClass *value = TYPE_NAMED->As##TypeClass())        \
-                 if (TypeCondition)                                     \
+                 if ((TypeCondition) && name == name)                   \
                      return value;                                      \
          record(typecheck, "No " #TypeName " for %t", tree);            \
          return nullptr)
