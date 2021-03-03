@@ -55,8 +55,11 @@
 #endif // HAVE_POSIX_MEMALIGN
 
 
-RECORDER(memory, 256, "Memory related events and garbage collection");
-RECORDER(gc, 32, "Garbage collection events");
+RECORDER(memory,        256, "Memory related events and garbage collection");
+RECORDER(gc,             32, "Garbage collection events");
+RECORDER(gc_stats,       32, "Global garbage collection statistics");
+RECORDER(gc_typestats,   32, "Per-type  garbage collection statistics");
+RECORDER_TWEAK_DEFINE(gc_types, ~0LL, "Types to show in type statistics");
 RECORDER_TWEAK_DEFINE(gc_ratio, 10,
                       "Percentage of free space triggering collection");
 
@@ -574,21 +577,30 @@ bool GarbageCollector::Collect()
             XL_ASSERT(!"Someone else stole the collection lock?");
         }
 
-        for (a = allocators.begin(); a != allocators.end(); a++)
+        uint aid = 0;
+        uint tot = 0, alloc = 0, avail = 0, freed = 0, scan = 0, collect = 0;
+        for (a = allocators.begin(); a != allocators.end(); a++, aid++)
         {
             TypeAllocator *ta = *a;
+            tot     += ta->totalCount     * ta->alignedSize;
+            alloc   += ta->allocatedCount * ta->alignedSize;
+            avail   += ta->available      * ta->alignedSize;
+            freed   += ta->freedCount     * ta->alignedSize;
+            scan    += ta->scannedCount   * ta->alignedSize;
+            collect += ta->collectedCount * ta->alignedSize;
             if (ta->allocatedCount || ta->collectedCount || ta->freedCount)
             {
-                record(gc,
-                       "%s: collected %u freed %u out of %u, "
-                       "allocated %u, scanned %u, %u available",
-                       ta->name,
-                       ta->collectedCount,
-                       ta->freedCount,
-                       ta->totalCount,
-                       ta->allocatedCount,
-                       ta->scannedCount,
-                       ta->available);
+                if (RECORDER_TWEAK(gc_types) & (1LL<<aid))
+                    record(gc_typestats,
+                           "%s (%llu): collected %u freed %u out of %u, "
+                           "allocated %u, scanned %u, %u available",
+                           ta->name, 1ULL<<aid,
+                           ta->collectedCount,
+                           ta->freedCount,
+                           ta->totalCount,
+                           ta->allocatedCount,
+                           ta->scannedCount,
+                           ta->available);
                 ta->freedCount = 0;
                 ta->collectedCount = 0;
                 ta->allocatedCount = 0;
@@ -596,6 +608,10 @@ bool GarbageCollector::Collect()
             ta->totalCount = 0;
             ta->scannedCount = 0;
         }
+        record(gc_stats,
+               "Collected %u freed %u out of %u, "
+               "allocated %u, scanned %u, %u available",
+               collect, freed, tot, alloc, scan, avail);
         record(gc, "<Done in thread %p", self);
         return true;
     }
