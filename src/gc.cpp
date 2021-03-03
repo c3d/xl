@@ -209,8 +209,14 @@ void *TypeAllocator::Allocate()
     result->count = 0;
     UpdateInUseRange(result);
     allocatedCount++;
-    if (--available < chunkSize * 0.9)
+    if (--available < chunkSize * 3/4)
+    {
+        // If we had to allocate more, time to garbage collect
+        if (!gc->WillRun())
+            record(gc, "Must run: %s has %u available out of %u",
+                   this->name, available, chunkSize);
         gc->MustRun();
+    }
 
     void *ret =  (void *) &result[1];
     VALGRIND_MEMPOOL_ALLOC(this, ret, objectSize);
@@ -526,7 +532,7 @@ bool GarbageCollector::Collect()
     // Only one thread enters collecting, the others spin and wait
     if (Atomic<pthread_t>::SetQ(collecting, PTHREAD_NULL, self))
     {
-        record(gc, "Garbage collection in thread %p", self);
+        record(gc, ">Garbage collection in thread %p", self);
 
         Allocators::iterator a;
         Listeners listeners;
@@ -566,7 +572,29 @@ bool GarbageCollector::Collect()
             XL_ASSERT(!"Someone else stole the collection lock?");
         }
 
-        record(gc, "Finished garbage collection in thread %p", self);
+        for (a = allocators.begin(); a != allocators.end(); a++)
+        {
+            TypeAllocator *ta = *a;
+            if (ta->allocatedCount || ta->collectedCount || ta->freedCount)
+            {
+                record(gc,
+                       "%s: collected %u freed %u out of %u, "
+                       "allocated %u, scanned %u, %u available",
+                       ta->name,
+                       ta->collectedCount,
+                       ta->freedCount,
+                       ta->totalCount,
+                       ta->allocatedCount,
+                       ta->scannedCount,
+                       ta->available);
+                ta->freedCount = 0;
+                ta->collectedCount = 0;
+                ta->allocatedCount = 0;
+            }
+            ta->totalCount = 0;
+            ta->scannedCount = 0;
+        }
+        record(gc, "<Done in thread %p", self);
         return true;
     }
     record(gc, "Garbage collection for thread %p was blocked", self);
