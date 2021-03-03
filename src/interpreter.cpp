@@ -1115,20 +1115,23 @@ rescope:
     Context context(scope);
     if (mode == SEQUENCE || mode == VARIABLE)
     {
-        scope = context.CreateScope();
-        Initializers inits;
-        bool hasInstructions = context.ProcessDeclarations(expr, inits);
-        if (scope->IsEmpty())
-            scope = context.PopScope();
-        if (!DoInitializers(inits, cache))
+        if (expr->AsBlock() || IsSequence(expr))
         {
-            record(eval, "<Initializer failed for %t", expr);
-            return nullptr;
-        }
-        if (!hasInstructions)
-        {
-            record(eval, "<Return scope %t", scope);
-            return scope;
+            scope = context.CreateScope();
+            Initializers inits;
+            bool hasInstructions = context.ProcessDeclarations(expr, inits);
+            if (scope->IsEmpty())
+                scope = context.PopScope();
+            if (!DoInitializers(inits, cache))
+            {
+                record(eval, "<Initializer failed for %t", expr);
+                return nullptr;
+            }
+            if (!hasInstructions)
+            {
+                record(eval, "<Return scope %t", scope);
+                return scope;
+            }
         }
     }
 
