@@ -161,8 +161,8 @@ if [[false]] then True              is false
 
 // Console / debugging operations
 write X:text            as boolean      is C "xl_write_text"
-write X:integer         as boolean      is C "xl_write_integer"
 write X:natural         as boolean      is C "xl_write_natural"
+write X:integer         as boolean      is C "xl_write_integer"
 write X:real            as boolean      is C "xl_write_real"
 write X:character       as boolean      is C "xl_write_character"
 write X:value           as boolean      is C "xl_write_tree"

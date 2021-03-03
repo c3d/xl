@@ -108,6 +108,12 @@ struct EvaluationCache
 //   Ensure that a given expression is only evaluated once for a given pattern
 // ----------------------------------------------------------------------------
 {
+    void Clear()
+    {
+        values.clear();
+        types.clear();
+    }
+
     Tree *Cached(Tree *expr)
     {
         while (expr)
@@ -141,9 +147,6 @@ struct EvaluationCache
         types[std::make_pair(type,expr)] = cast;
     }
 
-public:
-    EvaluationMode                              mode;
-
 private:
     std::map<Tree_p, Tree_p>                    values;
     std::map<std::pair<Tree_p,Tree_p>, Tree_p>  types;
@@ -157,9 +160,11 @@ struct Bindings
 {
     typedef Tree *value_type;
 
-    Bindings(Scope *evalScope, Scope *declScope,
-             Tree *expr, EvaluationCache &cache);
+    Bindings(Tree *expr, EvaluationCache &cache);
     ~Bindings();
+
+    void Set(Rewrite *decl, Scope *evalScope, Scope *declScope);
+    void Unborrow();
 
     // Tree::Do interface, build the matched value
     Tree *Do(Natural *what);
@@ -198,6 +203,8 @@ struct Bindings
     Scope *ArgumentsScope()             { return argContext.Symbols(); }
     Tree  *Self()                       { return self; }
     Tree  *Enclose(Tree *val)           { return argContext.Enclose(val); }
+    EvaluationCache &Cache()            { return cache; }
+    Rewrite* Declaration()              { return rewrite; }
 
 private:
     Context             evalContext;
@@ -208,6 +215,7 @@ private:
     EvaluationCache &   cache;
 
     // Output of the process
+    Rewrite_p           rewrite;
     Tree_p              defined;
     Tree_p              type;
     RewriteList         bindings;
