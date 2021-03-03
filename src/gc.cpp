@@ -57,6 +57,8 @@
 
 RECORDER(memory, 256, "Memory related events and garbage collection");
 RECORDER(gc, 32, "Garbage collection events");
+RECORDER_TWEAK_DEFINE(gc_ratio, 10,
+                      "Percentage of free space triggering collection");
 
 XL_BEGIN
 
@@ -209,7 +211,7 @@ void *TypeAllocator::Allocate()
     result->count = 0;
     UpdateInUseRange(result);
     allocatedCount++;
-    if (--available < chunkSize * 3/4)
+    if (--available < chunkSize * RECORDER_TWEAK(gc_ratio) / 100)
     {
         // If we had to allocate more, time to garbage collect
         if (!gc->WillRun())
