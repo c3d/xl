@@ -539,6 +539,7 @@ bool GarbageCollector::Collect()
     // Only one thread enters collecting, the others spin and wait
     if (Atomic<pthread_t>::SetQ(collecting, PTHREAD_NULL, self))
     {
+        uintptr_t start = recorder_tick();
         record(gc, ">Garbage collection in thread %p", self);
 
         Allocators::iterator a;
@@ -610,10 +611,21 @@ bool GarbageCollector::Collect()
             ta->totalCount = 0;
             ta->scannedCount = 0;
         }
+
+#if RECORDER_HZ == 1000000
+#  define RECORDER_TICK_NAME    "us"
+#elif RECORDER_HZ == 1000
+#  define RECORDER_TICK_NAME    "ms"
+#else
+#  define RECORDER_TICK_NAME    "ticks"
+#endif
+
+        uintptr_t duration = recorder_tick() - start;
         record(gc_stats,
+               "In %llu " RECORDER_TICK_NAME
                "Collected %u freed %u out of %u, "
                "allocated %u, scanned %u, %u available",
-               collect, freed, tot, alloc, scan, avail);
+               duration, collect, freed, tot, alloc, scan, avail);
         record(gc, "<Done in thread %p", self);
         return true;
     }
