@@ -321,6 +321,7 @@ struct GarbageCollector
     static void                 Delete();
 
     static void                 MustRun()       { gc->mustRun |= 1U; }
+    static bool                 WillRun()       { return gc->mustRun; }
     static bool                 Running()       { return gc->running; }
     static bool                 SafePoint();
     static bool                 Sweep();
