@@ -60,8 +60,9 @@ RECORDER(gc,             32, "Garbage collection events");
 RECORDER(gc_stats,       32, "Global garbage collection statistics");
 RECORDER(gc_typestats,   32, "Per-type  garbage collection statistics");
 RECORDER_TWEAK_DEFINE(gc_types, ~0LL, "Types to show in type statistics");
-RECORDER_TWEAK_DEFINE(gc_ratio, 10,
-                      "Percentage of free space triggering collection");
+RECORDER_TWEAK_DEFINE(gc_chunksize, 1022, "Number of items allocated at once");
+RECORDER_TWEAK_DEFINE(gc_trigger, 10,
+                      "Number of free items below which we trigger collection");
 
 XL_BEGIN
 
@@ -91,7 +92,8 @@ TypeAllocator::TypeAllocator(kstring tn, uint os)
     : gc(nullptr), name(tn), locked(0), lowestInUse(~0UL), highestInUse(0),
       chunks(), freeList(nullptr), toDelete(nullptr),
       available(0), freedCount(0),
-      chunkSize(1022), objectSize(os), alignedSize(os),
+      chunkSize(RECORDER_TWEAK(gc_chunksize)),
+      objectSize(os), alignedSize(os),
       allocatedCount(0), scannedCount(0), collectedCount(0), totalCount(0)
 {
     record(memory, "New type allocator %p name '%s' object size %u",
@@ -214,7 +216,7 @@ void *TypeAllocator::Allocate()
     result->count = 0;
     UpdateInUseRange(result);
     allocatedCount++;
-    if (--available < chunkSize * RECORDER_TWEAK(gc_ratio) / 100)
+    if (--available <= RECORDER_TWEAK(gc_trigger))
     {
         // If we had to allocate more, time to garbage collect
         if (!gc->WillRun())
