@@ -1348,6 +1348,16 @@ inline Tree *Context::Enclose(Tree *value)
 {
     if (!IsClosure(value))
     {
+        // Strip blocks (if-then-else common optimization)
+        while (Block *block = value->AsBlock())
+            value = block->child;
+
+        // Check if pass an existing parameter around (while loop optimization)
+        if (Name *name = value->AsName())
+            if (Tree *bound = Bound(name, false))
+                if (IsClosure(bound))
+                    return bound;
+
         Scope *scope = Symbols();
         while (scope && scope->IsEmpty())
             scope = scope->Enclosing();
