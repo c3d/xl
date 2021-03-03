@@ -442,7 +442,8 @@ inline void TypeAllocator::Acquire(void *pointer)
     if (IsGarbageCollected(pointer))
     {
         XL_ASSERT (((intptr_t) pointer & CHUNKALIGN_MASK) == 0);
-        XL_ASSERT (IsAllocated(pointer));
+        XL_ASSERT (IsAllocated(pointer) ||
+                   (GarbageCollector::DebugPointer(pointer), false));
 
         Chunk_vp chunk = ((Chunk_vp) pointer) - 1;
         ++chunk->count;
