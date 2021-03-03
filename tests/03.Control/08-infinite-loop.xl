@@ -4,11 +4,11 @@
 //
 // File description:
 //
+//    This is a loop that is supposed to last a while
 //
-//
-//
-//
-//
+//    This tests the "tail recursion" optimizations in the interpreter
+//    and compiler, since the assumption is that if they don't work, the
+//    test will run out of stack space.
 //
 //
 // *****************************************************************************
@@ -32,9 +32,11 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 // EXIT=42
-X : integer := 0
+// OPT=-stack_depth 50
+X : integer := 1000
 loop
-    print "Almost infinite loop"
-    X := X + 1
-    if X > 41 then
+    if X mod 100 = 0 then
+        print "Almost infinite loop: ", X
+    X := X - 1
+    if X < 43 then
         exit X

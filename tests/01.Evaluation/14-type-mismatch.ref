@@ -1,4 +1,1 @@
-01.Evaluation/14-type-mismatch.xl:37:5: Unable to evaluate [foo 3]:
-01.Evaluation/14-type-mismatch.xl:35:5:  Pattern [foo X:integer as integer] does not match [foo 3]:
-01.Evaluation/14-type-mismatch.xl:35:32:   The returned value 1.55 is not a [integer]
-01.Evaluation/14-type-mismatch.xl:37:5:  Nothing matches [foo 3]
+01.Evaluation/14-type-mismatch.xl:35:32: The returned value 1.55 is not a [integer]

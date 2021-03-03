@@ -625,8 +625,15 @@ Tree *Bindings::Argument(unsigned n, bool unwrap)
         if (unwrap)
         {
             value = Evaluate(scope, value);
-            if (!value)
+            if (value)
+            {
+                if (Infix *vardef = IsVariableDefinition(value))
+                    value = vardef->right;
+            }
+            else
+            {
                 value = LastErrorAsErrorTree();
+            }
         }
     }
     return value;
@@ -840,11 +847,11 @@ Tree *Interpreter::Unwrap(Tree *expr, EvaluationCache &cache)
 //
 // ============================================================================
 
-static Tree *typeCheck(Scope *scope,
-                       Tree *result,
-                       Tree *type,
-                       EvaluationCache &cache,
-                       bool special)
+static inline Tree *typecheck(Scope *scope,
+                              Tree *result,
+                              Tree *type,
+                              EvaluationCache &cache,
+                              bool special = false)
 // ----------------------------------------------------------------------------
 //   Check the result against the expected type if any
 // ----------------------------------------------------------------------------
@@ -882,9 +889,10 @@ static Tree_p doPatternMatch(Scope *scope,
     while (Closure *closure = expr->As<Closure>())
         expr = closure->Value();
     Bindings bindings(expr, cache);
-    Context args(bindings.ArgumentsScope());
-    Rewrite *rewrite = args.Define(pattern, xl_self);
+    Rewrite_p rewrite = new Rewrite(pattern, xl_self);
     bindings.Set(rewrite, scope, scope);
+    Context args(bindings.ArgumentsScope());
+    args.Enter(rewrite);
     Tree *matched = pattern->Do(bindings);
     if (matched)
         cast = bindings.Enclose(matched);
@@ -1097,7 +1105,9 @@ Tree *Interpreter::DoEvaluate(Scope *inputScope,
         "local",
         "named"
     };
-    Tree_p type;
+
+    bool special = false;
+    TreeList types;
     Scope_p scope = inputScope;
     Tree_p expr = inputExpr;
     Tree_p result;
@@ -1125,12 +1135,13 @@ rescope:
             if (!DoInitializers(inits, cache))
             {
                 record(eval, "<Initializer failed for %t", expr);
-                return nullptr;
+                goto done;
             }
             if (!hasInstructions)
             {
                 record(eval, "<Return scope %t", scope);
-                return scope;
+                result = scope;
+                goto done;
             }
         }
     }
@@ -1138,6 +1149,17 @@ rescope:
 next:
     switch (expr->Kind())
     {
+    done:
+        // Check against the various types we accumulated during evaluation
+        for (auto type : types)
+        {
+            expr = result;
+            result = typecheck(scope, result, type, cache, special);
+            record(eval, "Checking %t matches type %t, result is %t",
+                   expr, type, result);
+        }
+        return result;
+
     case BLOCK:
     {
         // Short-circuit evaluation of blocks
@@ -1153,7 +1175,7 @@ next:
         if (name->value == "nil")
         {
             record(eval, "<Evaluated nil");
-            return nullptr;
+            goto done;
         }
         break;
     }
@@ -1174,7 +1196,7 @@ next:
             {
                 record(eval, "<Errors evaluating first in sequence %t = %t",
                        infix->left, left);
-                return left;
+                goto done;
             }
             expr = infix->right;
             if (mode != VARIABLE)
@@ -1201,43 +1223,43 @@ next:
 
             record(eval, "<Infix %t is a definition, returning %t",
                    infix, result);
-            return result;
+            goto done;
         }
 
         // Evaluate [X.Y]
         if (IsDot(infix))
         {
-            Tree_p scoped = doDot(context, infix, cache);
-            record(eval, "<Scoped %t is %t", infix, scoped);
-            return scoped;
+            result = doDot(context, infix, cache);
+            record(eval, "<Scoped %t is %t", infix, result);
+            goto done;
         }
 
         // Check [X as matching(P)]
         if (IsTypeCast(infix))
         {
             Tree_p want = DoEvaluate(scope, infix->right, EXPRESSION, cache);
-            if (!want)
+            if (want)
             {
-                record(eval, "<Matching type: no type for %t", infix->right);
-                return nullptr;
+                if (want != infix->right)
+                    infix->right = want;
+                if (Tree *matching = IsPatternMatchingType(want))
+                {
+                    expr = infix->left;
+                    result = doPatternMatch(scope, matching, expr, cache);
+                    record(eval, "Pattern match %t matching %t is %t",
+                           expr, matching, result);
+                    goto done;
+                }
             }
-            infix->right = want;
-            if (Tree *matching = IsPatternMatchingType(want))
-            {
-                Tree_p cast = doPatternMatch(context, matching,
-                                             infix->left, cache);
-                record(eval, "<Pattern match %t matching %t = %t",
-                       infix->left, matching, cast);
-                return cast;
-            }
+            // Other type casts need to be looked up
         }
 
         // Evaluate assignments such as [X := Y]
         if (IsAssignment(infix))
         {
-            Tree_p assigned = doAssignment(scope, infix, mode, cache);
-            record(eval, "<Assignment %t is %t", infix, assigned);
-            return assigned;
+            result = doAssignment(scope, infix, mode, cache);
+            record(eval, "<Assignment %t is %t", infix, result);
+            goto done;
         }
         break;
     }
@@ -1254,7 +1276,7 @@ next:
             if (!DoInitializers(inits, cache))
             {
                 record(eval, "<Initializers failed for scope %t", prefix->left);
-                return nullptr; // REVISIT: Should be an error?
+                goto done;
             }
             scope = closure;
             expr = prefix->right;
@@ -1267,8 +1289,9 @@ next:
         if (IsVariableType(prefix))
         {
             prefix->right = DoEvaluate(scope, prefix->right, EXPRESSION, cache);
+            result = prefix;
             record(eval, "<Variable type %t", prefix);
-            return prefix;
+            goto done;
         }
 
         // Check if we are evaluating a pattern matching type
@@ -1276,30 +1299,26 @@ next:
         {
             result = xl_parse_tree(scope, matching);
             if (result == matching)
-            {
                 prefix->left = xl_matching;
-                result = prefix;
-            }
             else
-            {
-                result = new Prefix(prefix, xl_matching, result);
-            }
+                prefix = new Prefix(prefix, xl_matching, result);
+            result = prefix;
             record(eval, "<Type matching %t", result);
-            return result;
+            goto done;
         }
 
         // Check 'with' type declarations
         if (IsWithDeclaration(prefix))
         {
             record(eval, "<Prefix %t is a with type clause", prefix);
-            return nullptr;
+            goto done;
         }
 
         // Filter out declaration such as [extern foo(bar)]
         if (IsDefinition(prefix))
         {
             record(eval, "<Prefix %t is a definition", prefix);
-            return prefix;
+            goto done;
         }
 
         // Process [quote X] - REVISIT: Should just be a C function now?
@@ -1307,7 +1326,7 @@ next:
         {
             result = xl_parse_tree(scope, quoted);
             record(eval, "<Quote %t", result);
-            return result;
+            goto done;
         }
 
         // Filter out import statements (processed also during parsing)
@@ -1317,7 +1336,8 @@ next:
             {
                 record(eval, "<Import statement %t callback %p",
                        prefix, callback);
-                return callback(scope, prefix);
+                result = callback(scope, prefix);
+                goto done;
             }
         }
 
@@ -1332,9 +1352,9 @@ next:
                 Tree *args = prefix->right;
                 Prefix_p inner = new Prefix(prefix, name, args);
                 Infix_p outer = new Infix(qualified, qualifier, inner);
-                Tree_p scoped = doDot(context, outer, cache);
-                record(eval, "<Scoped statement %t is %t", outer, scoped);
-                return scoped;
+                result = doDot(context, outer, cache);
+                record(eval, "<Scoped statement %t is %t", outer, result);
+                goto done;
             }
         }
         break;
@@ -1346,7 +1366,7 @@ next:
 
     // Here, we have eliminated all the special cases, and must lookup
     Errors errors;
-    errors.Log(Error("Unable to evaluate $1:", inputExpr), true);
+    errors.Log(Error("Unable to evaluate $1:", expr), true);
     Context::LookupMode lm = Context::RECURSIVE;
     if (mode == LOCAL)
         lm = Context::SINGLE_SCOPE;
@@ -1354,13 +1374,33 @@ next:
     Bindings bindings(expr, lookupCache);
     result = context.Lookup(expr, eval, &bindings, lm);
 
-    // If we could not find the result with direct lookup, check backups
+    // If result was successful, remove transient errors generated in lookup
+    Tree_p patternMatchingType;
     if (result)
     {
         errors.Clear();
+        if (Tree *want = bindings.ResultType())
+        {
+            Tree *matching = want;
+            if (Tree *base = IsVariableType(matching))
+            {
+                mode = VARIABLE;
+                matching = base;
+            }
+            if (IsPatternMatchingType(matching))
+            {
+                patternMatchingType = matching;
+            }
+            else
+            {
+                if (!types.size() || want != types.back())
+                    types.push_back(want);
+            }
+        }
     }
     else
     {
+        // If we could not find the result with direct lookup, check backups
         if (Tree *error = Errors::Aborting())
         {
             record(eval, "<Aborting %t evaluating %t", error, expr);
@@ -1377,7 +1417,7 @@ next:
         if (result)
         {
             record(eval, "<Special case %t", expr);
-            return result;
+            goto done;
         }
 
        if (mode == MAYFAIL)
@@ -1390,14 +1430,8 @@ next:
         return nullptr;
     }
 
-    // Check if we need to get the value from a variable value
-    if (mode != VARIABLE)
-        if (Infix *def = IsVariableDefinition(result))
-            result = def->right;
-
+    // Get the declaration and its body - We will evaluate that next
     Rewrite *decl = bindings.Declaration();
-
-    // Evaluate the body in arguments
     Tree *body = decl->right;
 
     // Successfully bound - Return variable declaration in a closure
@@ -1414,9 +1448,41 @@ next:
             return body;
         }
     }
+    else if (mode == NAMED)
+    {
+        result = body;
+        record(eval, "<Named %t", result);
+        return result;
+    }
+    else
+    {
+        if (Infix *def = IsVariableDefinition(result))
+        {
+            result = def->right;
+            record(eval, "<Declaration is a variable definition %t, value %t",
+                   def->left, result);
+            goto done;
+        }
 
-    // Check if we have a builtin
-    bool special = false;
+        // Check if we returned a variable
+        if (Infix *def = IsVariableDefinition(body))
+        {
+            result = def->right;
+            record(eval, "<Body is a variable definition %t, value %t",
+                   def->left, result);
+            goto done;
+        }
+    }
+
+    // Check if we evaluate as self
+    if (IsSelf(body))
+    {
+        // Pattern lookup already put the matched expression in 'result'
+        record(eval, "<Self %t", result);
+        goto done;
+    }
+
+    // Check if we have a builtin or a native function
     if (Prefix *prefix = body->AsPrefix())
     {
         if (Text *name = IsBuiltin(prefix))
@@ -1430,7 +1496,9 @@ next:
             }
 
             result = callee(bindings);
+            record(eval, "<Builtin %t = %t", name, result);
             special = true;
+            goto done;
         }
         else if (Text *name = IsNative(prefix))
         {
@@ -1443,31 +1511,12 @@ next:
             }
 
             result = native->Call(bindings);
+            record(eval, "<Native %t = %t", name, result);
             special = true;
-        }
-        if (special)
-        {
-            result = bindings.ResultTypeCheck(result, special);
-            record(eval, "<Special %t", result);
-            return result;
+            goto done;
         }
     }
 
-    // Check if we evaluate as self
-    if (IsSelf(body))
-    {
-        result = bindings.ResultTypeCheck(result);
-        record(eval, "<Self %t", result);
-        return result;
-    }
-
-    // Check if we are simply trying to lookup
-    else if (mode == NAMED)
-    {
-        result = body;
-        record(eval, "<Named %t", result);
-        return result;
-    }
 
     // Otherwise evaluate the body in the binding arguments scope
     scope = bindings.ArgumentsScope();
@@ -1481,31 +1530,13 @@ next:
 
     // Check if the body returns a matching type
     // If so, we need to evaluate in a scope where that pattern is defined
-    type = bindings.ResultType();
     if (mode != VARIABLE)
         mode = SEQUENCE;
-    if (type)
-    {
-        if (Tree *matching = IsPatternMatchingType(type))
-        {
-            result = doPatternMatch(scope, matching, body, cache);
-            record(eval, "<Pattern matching cast to %t is %t", type, result);
-            return result;
-        }
-        if (IsVariableType(type))
-            mode = VARIABLE;
-    }
 
-    // Check if we returned a variable
-    if (Rewrite *vardef = body->As<Rewrite>())
-    {
-        if (IsVariableDefinition(vardef))
-        {
-            result = (mode == VARIABLE) ? vardef : vardef->right;
-            record(eval, "<Variable definition %t is %t", vardef->left, result);
-            return result;
-        }
-    }
+    // If we have a matching type, we need to evaluate in a context where
+    // the pattern is declared. This is done in doPatternMatch
+    if (patternMatchingType)
+        body = new Infix("as", body, patternMatchingType, body->Position());
 
     // Loop and try again
     cache.Clear();

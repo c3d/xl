@@ -1,2 +1,2 @@
-A=error "Nothing matches $1", Rest
+A=error "Nothing matches $1", Index ("A")
 true
