@@ -186,9 +186,9 @@ struct Allocator : TypeAllocator
     typedef Object *ptr_t;
 
 public:
-    Allocator();
+    Allocator(kstring name);
 
-    static Allocator *  CreateSingleton();
+    static Allocator *  CreateSingleton(kstring name);
     static Allocator *  Singleton()             { return allocator; }
     static Object *     Allocate(size_t size) NEW_THROW;
     static void         Delete(Object *);
@@ -528,26 +528,24 @@ Allocator<Object> *Allocator<Object>::allocator;
 #endif
 
 
-#ifndef DISABLE_RTTI
 template<class Object> inline
-Allocator<Object>::Allocator()
+Allocator<Object>::Allocator(kstring name)
 // ----------------------------------------------------------------------------
 //   Create an allocator for the given size
 // ----------------------------------------------------------------------------
-    : TypeAllocator(typeid(Object).name(), sizeof (Object))
+    : TypeAllocator(name, sizeof (Object))
 {}
-#endif
 
 
 template<class Object> inline
-Allocator<Object> * Allocator<Object>::CreateSingleton()
+Allocator<Object> * Allocator<Object>::CreateSingleton(kstring name)
 // ----------------------------------------------------------------------------
 //    Return a singleton for the allocation class
 // ----------------------------------------------------------------------------
 {
     if (!allocator)
         // Create the singleton
-        allocator = new Allocator;
+        allocator = new Allocator(name);
 
     return allocator;
 }
@@ -666,7 +664,7 @@ inline bool GarbageCollector::SafePoint()
 /* ------------------------------------------------------------ */      \
     template<>                                                          \
     Allocator<type> *Allocator<type>::allocator =                       \
-               Allocator<type>::CreateSingleton();
+               Allocator<type>::CreateSingleton(#type);
 
 
 XL_END
