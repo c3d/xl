@@ -1,150 +1,101 @@
-01.Evaluation/22-exceeding-stack-depth.xl:37:6: Unable to evaluate [foo 10]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:  Pattern [foo N] does not match [foo 10]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12: Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:  Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:   Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:    Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:      Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:       Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:        Pattern [foo N] does not match [foo (N - 1)]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:     Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:      Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:       Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:        Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:         Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:          Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:           Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:            Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:             Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:              Pattern [foo N] does not match [foo (N - 1)]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:           Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:            Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:             Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:              Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:               Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                 Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                  Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                   Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                    Pattern [foo N] does not match [foo (N - 1)]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:                 Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:                  Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:                   Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:                    Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Pattern [lambda Value as natural] does not match [foo (N - 1) as natural]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Unable to evaluate [foo (N - 1)]:
-01.Evaluation/22-exceeding-stack-depth.xl:36:5:                     Pattern [foo N] does not match [foo (N - 1)]:
 01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
 builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
-builtins.xl:36:42:                     Stack depth exceeded evaluating [natural]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Unable to evaluate [1 + foo (N - 1)]:
+builtins.xl:36:11:                     Pattern [X:natural + Y:natural as natural] does not match [1 + foo (N - 1)]:
+<Unknown position>:                     Stack depth exceeded evaluating [natural]
+01.Evaluation/22-exceeding-stack-depth.xl:36:10:                     Value 1 does not belong to type [natural]
+builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                     Nothing matches [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:                     Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:                     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:                   Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:                   Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:                 Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:                 Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:                Nothing matches [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:               Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:               Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:             Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:             Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:           Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:           Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:          Nothing matches [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:         Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:         Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:       Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:       Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
 01.Evaluation/22-exceeding-stack-depth.xl:36:17:     Value [foo (N - 1)] does not belong to type [natural]
 builtins.xl:36:11:     Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]
-01.Evaluation/22-exceeding-stack-depth.xl:36:12:    Nothing matches [1 + foo (N - 1)]
+01.Evaluation/22-exceeding-stack-depth.xl:36:17:   Value [foo (N - 1)] does not belong to type [natural]
+builtins.xl:36:11:   Infix [X:natural + Y:natural] does not match [1 + foo (N - 1)]

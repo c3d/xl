@@ -6,7 +6,7 @@
 //
 //     Check that -5 is not considered as a valid natural number
 //
-//
+//     By using the cast expression, we get a `nil` result.
 //
 //
 //
@@ -32,6 +32,6 @@
 //   You should have received a copy of the GNU General Public License
 //   along with XL.  If not, see <https://www.gnu.org/licenses/>.
 // ****************************************************************************
-//   EXIT=1
 
+// This will evaluate as nil, which is fine in this context
 -5 as natural
