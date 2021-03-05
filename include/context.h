@@ -317,7 +317,6 @@ public:
                                               Tree *what, Initializers &inits);
     Scope *             ProcessScope(Tree *declarations, Initializers &inits);
     Tree *              Enclose(Tree *value);
-    static Scope *      IsClosure(Tree *value);
 
     // Adding definitions to the context
     Rewrite *           Enter(Infix *infix, Initializers &inits);
@@ -1346,7 +1345,7 @@ inline Tree *Context::Enclose(Tree *value)
 //   Prefix the value wiht the current symbols - Unwrapped by evaluate()
 // ----------------------------------------------------------------------------
 {
-    if (!IsClosure(value))
+    if (!value->As<Closure>())
     {
         // Strip blocks (if-then-else common optimization)
         Tree *expr = value;
@@ -1356,7 +1355,7 @@ inline Tree *Context::Enclose(Tree *value)
         // Check if pass an existing parameter around (while loop optimization)
         if (Name *name = expr->AsName())
             if (Tree *bound = Bound(name, false))
-                if (IsClosure(bound))
+                if (bound->As<Closure>())
                     return bound;
 
         Scope *scope = Symbols();
@@ -1366,18 +1365,6 @@ inline Tree *Context::Enclose(Tree *value)
             value = new Closure(scope, value);
     }
     return value;
-}
-
-
-inline Scope *Context::IsClosure(Tree *value)
-// ----------------------------------------------------------------------------
-//   Check if this looks like a closure
-// ----------------------------------------------------------------------------
-{
-    if (Closure *prefix = value->As<Closure>())
-        if (Scope *scope = prefix->left->As<Scope>())
-            return scope;
-    return nullptr;
 }
 
 
