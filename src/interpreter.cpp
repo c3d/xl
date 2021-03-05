@@ -483,10 +483,10 @@ bool Bindings::MustEvaluate()
     Tree_p evaluated = Evaluate(EvaluationScope(), test);
 
     // For matching purpose, we need the value inside closures
-    while (Scope *scope = Context::IsClosure(evaluated))
+    while (Closure *closure = evaluated->As<Closure>())
     {
-        Prefix *closure = (Prefix *) (Tree *) evaluated;
-        evaluated = Evaluate(scope, closure->right);
+        Scope *scope = closure->CapturedScope();
+        evaluated = Evaluate(scope, closure->Value());
         if (!evaluated)
             evaluated = LastErrorAsErrorTree();
     }
@@ -618,10 +618,10 @@ Tree *Bindings::Argument(unsigned n, bool unwrap)
 // ----------------------------------------------------------------------------
 {
     Tree_p value = Binding(n)->right;
-    while (Scope *scope = Context::IsClosure(value))
+    while (Closure *closure = value->As<Closure>())
     {
-        Prefix *closure = (Prefix *) (Tree *) value;
-        value = closure->right;
+        Scope *scope = closure->CapturedScope();
+        value = closure->Value();
         if (unwrap)
         {
             value = Evaluate(scope, value);
@@ -646,10 +646,11 @@ Tree *Bindings::NamedTree(unsigned n)
 // ----------------------------------------------------------------------------
 {
     Tree_p value = Binding(n)->right;
-    while (Scope *scope = Context::IsClosure(value))
+    while (Closure *closure = value->As<Closure>())
     {
-        Prefix *closure = (Prefix *) (Tree *) value;
-        value = Evaluate(scope, closure->right, NAMED);
+        Scope *scope = closure->CapturedScope();
+        value = closure->Value();
+        value = Evaluate(scope, value, NAMED);
         if (!value)
             value = LastErrorAsErrorTree();
     }
@@ -807,10 +808,10 @@ Tree *Interpreter::Unwrap(Tree *expr, EvaluationCache &cache)
         case PREFIX:
         {
             Prefix *prefix = (Prefix *) expr;
-            if (Scope *scope = Context::IsClosure(expr))
+            if (Closure *closure = expr->As<Closure>())
             {
-                Prefix *closure = (Prefix *) (Tree *) expr;
-                expr = DoEvaluate(scope, closure->right, SEQUENCE, cache);
+                Scope *scope = closure->CapturedScope();
+                expr = DoEvaluate(scope, closure->Value(), SEQUENCE, cache);
                 continue;
             }
             Tree *left = Unwrap(prefix->left, cache);
