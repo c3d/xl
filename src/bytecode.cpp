@@ -1534,8 +1534,8 @@ static bool doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
             // Compile the initialization and initialize the constant
             compile(scope, infix->right, bytecode);
             OPCST(init_constant, rewrite);
-            return true;
         }
+        return true;
     }
 
     // Evaluate [X.Y]
@@ -1570,6 +1570,7 @@ static bool doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
         compile(scope, infix->left, bytecode);
         OPCHKCST(cast, want,
                  "Value $1 does not match type $2", infix->left, infix->right);
+        return true;
     }
 
     // Evaluate assignments such as [X := Y]
