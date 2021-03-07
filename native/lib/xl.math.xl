@@ -52,55 +52,55 @@ abs X           as real is generic_abs X
 sign X          as real is generic_sign X
 
 // Nearest integer
-ceil X          as real is C "ceil"
-floor X         as real is C "floor"
+ceil X          as real is native "ceil"
+floor X         as real is native "floor"
 
-// C interface for base functions
-sqrt X          as real is C "sqrt"
-exp X           as real is C "exp"
-exp2 X          as real is C "exp2"
-log X           as real is C "log"
+// Base functions
+sqrt X          as real is native "sqrt"
+exp X           as real is native "exp"
+exp2 X          as real is native "exp2"
+log X           as real is native "log"
 ln X            as real is log X
-log10 X         as real is C "log10"
-log2 X          as real is C "log2"
-logb X          as integer is C "logb"
+log10 X         as real is native "log10"
+log2 X          as real is native "log2"
+logb X          as integer is native "logb"
 log(Base,X)     as real is (log X / log Base)
-hypot(X,Y)      as real is C "hypot"
-cbrt X          as real is C "cbrt"
-erf X           as real is C "erf"
-lgamma X        as real is C "lgamma"
-fma X,Y,Z       as real is C "fma"
+hypot(X,Y)      as real is native "hypot"
+cbrt X          as real is native "cbrt"
+erf X           as real is native "erf"
+lgamma X        as real is native "lgamma"
+fma X,Y,Z       as real is native "fma"
 
 // Circular trigonometry
-sin X           as real is C "sin"
-cos X           as real is C "cos"
-tan X           as real is C "tan"
-asin X          as real is C "asin"
-acos X          as real is C "acos"
-atan X          as real is C "atan"
-atan Y/X        as real is C "atan2"
+sin X           as real is native "sin"
+cos X           as real is native "cos"
+tan X           as real is native "tan"
+asin X          as real is native "asin"
+acos X          as real is native "acos"
+atan X          as real is native "atan"
+atan Y/X        as real is native "atan2"
 
 // Hyperbolic trigonometry
-sinh X          as real is C "sinh"
-cosh X          as real is C "cosh"
-tanh X          as real is C "tanh"
-asinh X         as real is C "asinh"
-acosh X         as real is C "acosh"
-atanh X         as real is C "atanh"
+sinh X          as real is native "sinh"
+cosh X          as real is native "cosh"
+tanh X          as real is native "tanh"
+asinh X         as real is native "asinh"
+acosh X         as real is native "acosh"
+atanh X         as real is native "atanh"
 
 // Bessel functions
-j0 X            as real is C "j0"
-j1 X            as real is C "j1"
-jn I, X         as real is C "jn"
-y0 X            as real is C "y0"
-y1 X            as real is C "y1"
-yn I, X         as real is C "yn"
+j0 X            as real is native "j0"
+j1 X            as real is native "j1"
+jn I, X         as real is native "jn"
+y0 X            as real is native "y0"
+y1 X            as real is native "y1"
+yn I, X         as real is native "yn"
 
 // Optimized forms
-(exp X)-1.0     as real is C "expm1"
-log (1.0+X)     as real is C "log1p"
-log (X+1.0)     as real is C "log1p"
-2.0^X           as real is C "exp2"
+(exp X)-1.0     as real is native "expm1"
+log (1.0+X)     as real is native "log1p"
+log (X+1.0)     as real is native "log1p"
+2.0^X           as real is native "exp2"
 
 // Constants
 pi is 3.1415926535897932384626433

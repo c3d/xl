@@ -37,7 +37,7 @@ X:natural + Y:natural           as natural is builtin "Add"
 X:natural - Y:natural           as natural is builtin "Sub"
 X:natural * Y:natural           as natural is builtin "Mul"
 X:natural / Y:natural           as natural is builtin "UDiv"
-X:natural ^ Y:natural           as natural is C "xl_natural_pow"
+X:natural ^ Y:natural           as natural is native "xl_natural_pow"
 X:natural rem Y:natural         as natural is builtin "UMod"
 X:natural mod Y:natural         as natural is builtin "UMod"
 X:natural and Y:natural         as natural is builtin "And"
@@ -52,9 +52,9 @@ X:integer + Y:integer           as integer is builtin "Add"
 X:integer - Y:integer           as integer is builtin "Sub"
 X:integer * Y:integer           as integer is builtin "Mul"
 X:integer / Y:integer           as integer is builtin "UDiv"
-X:integer ^ Y:integer           as integer is C "xl_integer_pow"
-X:integer rem Y:integer         as integer is C "xl_integer_rem"
-X:integer mod Y:integer         as integer is C "xl_integer_mod"
+X:integer ^ Y:integer           as integer is native "xl_integer_pow"
+X:integer rem Y:integer         as integer is native "xl_integer_rem"
+X:integer mod Y:integer         as integer is native "xl_integer_mod"
 X:integer and Y:integer         as integer is builtin "And"
 X:integer or  Y:integer         as integer is builtin "Or"
 X:integer xor Y:integer         as integer is builtin "Xor"
@@ -68,10 +68,10 @@ X:real + Y:real                 as real is builtin "FAdd"
 X:real - Y:real                 as real is builtin "FSub"
 X:real * Y:real                 as real is builtin "FMul"
 X:real / Y:real                 as real is builtin "FDiv"
-X:real ^ Y:integer              as real is C "xl_real_pow"
-X:real ^ Y:real                 as real is C "pow"
-X:real rem Y:real               as real is C "xl_real_rem"
-X:real mod Y:real               as real is C "xl_real_mod"
+X:real ^ Y:integer              as real is native "xl_real_pow"
+X:real ^ Y:real                 as real is native "pow"
+X:real rem Y:real               as real is native "xl_real_rem"
+X:real mod Y:real               as real is native "xl_real_mod"
 -X:real                         as real is builtin "FNeg"
 
 // Comparison operators
@@ -112,32 +112,32 @@ X:integer as real               is builtin "Integer2Real"
 X:natural as real               is builtin "Natural2Real"
 
 // Text
-X:text = Y:text                 as boolean is C "xl_text_eq"
-X:text <> Y:text                as boolean is C "xl_text_ne"
-X:text > Y:text                 as boolean is C "xl_text_gt"
-X:text >= Y:text                as boolean is C "xl_text_ge"
-X:text < Y:text                 as boolean is C "xl_text_lt"
-X:text <= Y:text                as boolean is C "xl_text_le"
+X:text = Y:text                 as boolean is native "xl_text_eq"
+X:text <> Y:text                as boolean is native "xl_text_ne"
+X:text > Y:text                 as boolean is native "xl_text_gt"
+X:text >= Y:text                as boolean is native "xl_text_ge"
+X:text < Y:text                 as boolean is native "xl_text_lt"
+X:text <= Y:text                as boolean is native "xl_text_le"
 
-text X:natural                  as text    is C "xl_natural2text"
-text X:integer                  as text    is C "xl_integer2text"
-text X:real                     as text    is C "xl_real2text"
+text X:natural                  as text    is native "xl_natural2text"
+text X:integer                  as text    is native "xl_integer2text"
+text X:real                     as text    is native "xl_real2text"
 
-X:text & Y:text                 as text    is C "xl_text_concat"
+X:text & Y:text                 as text    is native "xl_text_concat"
 X:text & Y:natural              as text    is (X & text(Y))
 X:text & Y:integer              as text    is (X & text(Y))
 X:text & Y:real                 as text    is (X & text(Y))
 X:natural & Y:text              as text    is (text(X) & Y)
 X:integer & Y:text              as text    is (text(X) & Y)
 X:real & Y:text                 as text    is (text(X) & Y)
-Count:natural * T:text          as text    is C "xl_text_repeat"
+Count:natural * T:text          as text    is native "xl_text_repeat"
 T:text * Count:natural          as text    is Count * T
-length T:text                   as natural is C "xl_text_length"
+length T:text                   as natural is native "xl_text_length"
 
 // A few additional text notations
-text_index Src:text, Pat:text, Idx:natural as integer is C "xl_text_index"
-text_replace Src:text,From:text, To:text as text is C "xl_text_replace"
-text_range Source:text,First:natural,Last:natural as text is C "xl_text_range"
+text_index Src:text, Pat:text, Idx:natural as integer is native "xl_text_index"
+text_replace Src:text,From:text, To:text as text is native "xl_text_replace"
+text_range Source:text,First:natural,Last:natural as text is native "xl_text_range"
 Source:text / From:text /  To:text      is text_replace Source, From, To
 Src:text contains Pat:text as boolean   is (text_index(Src,Pat,0) >= 0)
 Pat:text in Src:text                    is text_index Src, Pat, 0
@@ -146,7 +146,7 @@ Pat:text in Src:text from Idx:natural   is text_index Src, Pat, Idx
 Source:text from First:natural  as text is text_range(Source, First, not 0)
 
 // Parse tree parsing
-parse Source:text                       is C "xl_parse_text"
+parse Source:text                       is native "xl_parse_text"
 
 // Basic math functions
 abs X   is if X < 0 then -X else X
@@ -160,13 +160,13 @@ if [[true]]  then True              is True
 if [[false]] then True              is false
 
 // Console / debugging operations
-write X:text            as boolean      is C "xl_write_text"
-write X:natural         as boolean      is C "xl_write_natural"
-write X:integer         as boolean      is C "xl_write_integer"
-write X:real            as boolean      is C "xl_write_real"
-write X:character       as boolean      is C "xl_write_character"
-write X:value           as boolean      is C "xl_write_tree"
-print                   as boolean      is C "xl_write_cr"
+write X:text            as boolean      is native "xl_write_text"
+write X:natural         as boolean      is native "xl_write_natural"
+write X:integer         as boolean      is native "xl_write_integer"
+write X:real            as boolean      is native "xl_write_real"
+write X:character       as boolean      is native "xl_write_character"
+write X:value           as boolean      is native "xl_write_tree"
+print                   as boolean      is native "xl_write_cr"
 
 write [[true]]          is write "true"
 write [[false]]         is write "false"
@@ -238,10 +238,10 @@ Duration:real s  is Duration
 Duration:real ms is Duration * 0.001
 
 // Remote interface
-tell            Remote:text, Body       as integer  is C "xl_tell"
-ask             Remote:text, Body       as tree     is C "xl_ask"
-invoke          Remote:text, Body       as tree     is C "xl_invoke"
-reply           Body                    as integer  is C "xl_reply"
-listen_received                         as tree     is C "xl_listen_received"
-listen_hook     Hook                    as tree     is C "xl_listen_hook"
-listen Forks:natural, Port:natural      as tree     is C "xl_listen"
+tell            Remote:text, Body       as integer  is native "xl_tell"
+ask             Remote:text, Body       as tree     is native "xl_ask"
+invoke          Remote:text, Body       as tree     is native "xl_invoke"
+reply           Body                    as integer  is native "xl_reply"
+listen_received                         as tree     is native "xl_listen_received"
+listen_hook     Hook                    as tree     is native "xl_listen_hook"
+listen Forks:natural, Port:natural      as tree     is native "xl_listen"
