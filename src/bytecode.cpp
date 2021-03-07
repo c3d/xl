@@ -482,11 +482,12 @@ void Bytecode::RemoveLastDefinition()
 // ----------------------------------------------------------------------------
 //   Remove definitions inserted in sequences
 // ----------------------------------------------------------------------------
-//   A definition adds an OPCST(constant, rewrite), so need to remove both
+//   A definition adds:
+//   - An OPCST(constant, expr) for the initial (unevaluated) value
+//   - An OPCST(constant, rewrite) for the rewrite
+//  Each of these occupies two opcodes, so we need to remove 4 opcodes
 {
-    code.pop_back();
-    XL_ASSERT(code.back() == (opcode_fn) constant);
-    code.pop_back();
+    code.erase(code.end() - 4, code.end());
 }
 
 
@@ -1448,7 +1449,10 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
 }
 
 
-static bool doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
+const int IS_DEFINITION = 2;
+
+
+static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
 // ----------------------------------------------------------------------------
 //   Deal with special prefixen
 // ----------------------------------------------------------------------------
@@ -1506,7 +1510,8 @@ static bool doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
         {
             // Process the import statement
             callback(scope, prefix);
-            return true;
+            OPCST(constant, import);
+            return IS_DEFINITION;
         }
     }
 
@@ -1560,9 +1565,6 @@ static bool doPostfix(Scope *scope, Postfix *postfix, Bytecode *bytecode)
     // There shall be only none.
     return false;
 }
-
-
-const int IS_DEFINITION = 2;
 
 
 static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
