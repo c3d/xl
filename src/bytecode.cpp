@@ -295,9 +295,10 @@ void Bytecode::Run(RunState &state)
         opaddr_t max = bc->code.size();
         state.pc = 0;
         state.bytecode = bc;
+        state.transfer = nullptr;
         while (state.pc < max)
             bc->code[state.pc++](state);
-        bc = state.bytecode;
+        bc = state.transfer;
     }
 }
 
