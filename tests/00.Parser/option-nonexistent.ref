@@ -28,7 +28,7 @@ Option names can be shortened if unambiguous.
 -show             : Show the source code
 -signed_constants : Allow negative values in constants
 -spelling         : Show the original spelling when rendering
--stack_depth      : Maximum stack depth for interpreter
+-stack_depth      : Maximum stack depth for recursive evaluation
 -stylesheet       : Select the style sheet for rendering XL code
 -syntax           : Select the syntax file for parsing XL code
 -t                : Alias for trace

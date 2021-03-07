@@ -50,6 +50,7 @@
 #include "utf8_fileutils.h"
 #include "remote.h"
 #include "interpreter.h"
+#include "bytecode.h"
 #ifndef INTERPRETER_ONLY
 #include "compiler.h"
 #include "compiler-fast.h"
@@ -266,17 +267,27 @@ Main::Main(int inArgc,
 
     // Once all options have been read, enter symbols and setup compiler
     Interpreter::InitializeContext(context);
-#ifndef INTERPRETER_ONLY
     compilerName = SearchFile(compilerName, Opt::binPaths);
     kstring cname = compilerName.c_str();
     uint opt = Opt::optimize.value;
-    if (opt == 1)
-        evaluator = new FastCompiler(cname, opt, inArgc, inArgv);
-    else if (opt >= 2)
-        evaluator = new Compiler(cname, opt, inArgc, inArgv);
-    else
-#endif // INTERPRETER_ONLY
+    switch(opt)
+    {
+    case 0:
+    default:
         evaluator = new Interpreter();
+        break;
+    case 1:
+        evaluator = new BytecodeEvaluator();
+        break;
+#ifndef INTERPRETER_ONLY
+    case 2:
+        evaluator = new FastCompiler(cname, opt, inArgc, inArgv);
+        break;
+    case 3:
+        evaluator = new Compiler(cname, opt, inArgc, inArgv);
+        break;
+#endif // INTERPRETER_ONLY
+    };
 
     // Force a crash if this is requested
     XL_ASSERT(RECORDER_TWEAK(inject_fault) != 2 && "Running late crash test");

@@ -129,6 +129,7 @@ extern Main *MAIN;
 namespace Opt
 {
 extern NaturalOption    optimize;
+extern NaturalOption    stackDepth;
 extern NaturalOption    remoteForks;
 extern NaturalOption    remotePort;
 extern TextOption       stylesheet;
