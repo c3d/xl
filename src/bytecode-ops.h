@@ -379,8 +379,8 @@ static void make_postfix(RunState &state)
 //   Check if left and right are both non-null, if so reconstruct a postfix
 // ----------------------------------------------------------------------------
 {
-    Tree_p right = state.Pop();
     Tree_p left = state.Pop();
+    Tree_p right = state.Pop();
     Postfix_p postfix = new Postfix(left, right, left->Position());
     state.Push(postfix);
 }
