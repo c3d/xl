@@ -1702,6 +1702,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         }
 
         // Lookup expression
+        OPCST(constant, expr);
         Context::LookupMode mode = lookupMode(bytecode);
         BytecodeBindings bindings(expr, bytecode);
         context.Lookup(expr, lookupCandidate, &bindings, mode);
