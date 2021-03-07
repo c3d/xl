@@ -1782,14 +1782,14 @@ void Interpreter::InitializeContext(Context &context)
 
 #include "builtins.tbl"
 
-    Name_p C = new Name(NORM2("C"));
+    Name_p native_prefix = new Name(NORM2("native"));
     for (Native *native = Native::First(); native; native = native->Next())
     {
         record(native, "Found %t", native->Shape());
         kstring symbol = native->Symbol();
         natives[symbol] = native;
         Tree *shape = native->Shape();
-        Prefix *body = new Prefix(C, new Text(symbol));
+        Prefix *body = new Prefix(native_prefix, new Text(symbol));
         context.Define(shape, body);
     }
 

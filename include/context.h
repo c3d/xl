@@ -866,7 +866,7 @@ inline Text *IsNative(Prefix *prefix)
 // ----------------------------------------------------------------------------
 {
     if (Name *C = prefix->left->AsName())
-        if (C->value == "C" || C->value == "c")
+        if (C->value == "native")
             if (Text *name = prefix->right->AsText())
                 return name;
     return nullptr;
