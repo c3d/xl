@@ -653,15 +653,15 @@ inline Infix *IsSequence(Tree *tree)
 }
 
 
-inline bool IsError(Prefix *prefix)
+inline Tree *IsError(Prefix *prefix)
 // ----------------------------------------------------------------------------
 //   Check if a prefix is an error form
 // ----------------------------------------------------------------------------
 {
     if (Name *name = prefix->left->AsName())
         if (name->value == "error")
-            return true;
-    return false;
+            return prefix->right;
+    return nullptr;
 }
 
 

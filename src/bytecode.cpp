@@ -1553,6 +1553,27 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
         return true;
     }
 
+    // Check if we have a compile-time error
+    if (Tree *message = IsError(prefix))
+    {
+        TreeList args;
+        while (Infix *infix = message->AsInfix())
+        {
+            if (infix->name != ",")
+                break;
+            args.push_back(infix->left);
+            message = infix->right;
+        }
+        args.push_back(message);
+        Text *text = args[0]->AsText();
+        Error error(text->value.c_str());
+        for (uint i = 1; i < args.size(); i++)
+            error.Arg(args[i]);
+        error.Display();
+        std::exit(1);
+        return true;
+    }
+
     return false;
 }
 
