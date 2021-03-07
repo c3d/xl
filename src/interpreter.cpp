@@ -53,21 +53,6 @@ RECORDER(bindings,      32, "Bindings");
 RECORDER(typecheck,     32, "Type checks");
 
 XL_BEGIN
-// ============================================================================
-//
-//   Options
-//
-// ============================================================================
-
-namespace Opt
-{
-NaturalOption   stackDepth("stack_depth",
-                           "Maximum stack depth for interpreter",
-                           1000, 25, 25000);
-}
-
-
-
 
 // ============================================================================
 //
@@ -1640,6 +1625,7 @@ bool Interpreter::DoInitializers(Initializers &inits, EvaluationCache &cache)
 #define R_REAL(x)       return new Real((x), self->Position())
 #define R_TEXT(x)       return new Text((x), self->Position())
 #define R_BOOL(x)       return (x) ? xl_true : xl_false
+#define R_TYPE(x)       return (x)
 #define x               (x_tree->value)
 #define y               (y_tree->value)
 #define x_boolean       (x == "true")

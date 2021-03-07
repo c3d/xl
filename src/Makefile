@@ -55,6 +55,7 @@ SOURCES_VARIANT_lib     =			\
 	$(SOURCES_$(COMPILER))			\
 	action.cpp				\
 	builtins.cpp				\
+	bytecode.cpp				\
 	cdecls.cpp				\
 	context.cpp				\
 	errors.cpp				\

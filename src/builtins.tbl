@@ -49,6 +49,7 @@ NAME(error)
 NAME(matching)
 NAME(builtin)
 NAME(lambda)
+NAME(variable)
 
 
 
@@ -59,55 +60,55 @@ NAME(lambda)
 // ============================================================================
 
 // Unevaluated types do not cause evaluation
-TYPE(tree,              return TYPE_TREE)
-TYPE(scope,             return TYPE_TREE->As<Scope>())
-TYPE(closure,           return TYPE_CLOSURE)
-TYPE(definition,        return IsDefinition(TYPE_TREE))
+TYPE(tree,              R_TYPE(TYPE_TREE))
+TYPE(scope,             R_TYPE(TYPE_TREE->As<Scope>()))
+TYPE(closure,           R_TYPE(TYPE_CLOSURE))
+TYPE(definition,        R_TYPE(IsDefinition(TYPE_TREE)))
 
 // Types that evaluate only if they don't initially match
 #define MATCH_OR_EVAL(TypeName, TypeClass, TypeCondition)               \
     TYPE(TypeName,                                                      \
          Tree *tree = TYPE_TREE;                                        \
          record(typecheck, "Builtin " #TypeName " %t", tree);           \
-         if (TypeClass *value = tree->As##TypeClass())                  \
+         if (TypeClass *typed = tree->As##TypeClass())                  \
              if (TypeCondition)                                         \
-                 return value;                                          \
+                 R_TYPE(typed);                                         \
          record(typecheck, "Evaluate %t as " #TypeName, tree);          \
          if (Name *name = tree->AsName())                               \
-             if (TypeClass *value = TYPE_NAMED->As##TypeClass())        \
+             if (TypeClass *typed = TYPE_NAMED->As##TypeClass())        \
                  if ((TypeCondition) && name == name)                   \
-                     return value;                                      \
+                     R_TYPE(typed);                                     \
          record(typecheck, "No " #TypeName " for %t", tree);            \
-         return nullptr)
+         R_TYPE(nullptr))
 MATCH_OR_EVAL(block,    Block,  true)
 MATCH_OR_EVAL(infix,    Infix,  true)
 MATCH_OR_EVAL(prefix,   Prefix, true)
 MATCH_OR_EVAL(postfix,  Postfix,true)
 MATCH_OR_EVAL(symbol,   Name,   true)
-MATCH_OR_EVAL(name,     Name,   value->IsName())
-MATCH_OR_EVAL(operator, Name,   value->IsOperator())
+MATCH_OR_EVAL(name,     Name,   typed->IsName())
+MATCH_OR_EVAL(operator, Name,   typed->IsOperator())
 
 // Other types need to evaluate their arugment
-TYPE(value,     return TYPE_VALUE)
+TYPE(value,     R_TYPE(TYPE_VALUE))
 TYPE(natural,                                                   \
      if (Natural *nat = TYPE_VALUE->AsNatural())                \
      {                                                          \
          if (nat->IsSigned() && (longlong) nat->value < 0)      \
-             return nullptr;                                    \
-         return nat->MakeUnsigned();                            \
+             R_TYPE(nullptr);                                   \
+         R_TYPE(nat->MakeUnsigned());                           \
      }                                                          \
-     return nullptr)
-TYPE(text,      return TYPE_VALUE->AsText())
+     R_TYPE(nullptr))
+TYPE(text,      R_TYPE(TYPE_VALUE->AsText()))
 TYPE(character,
      if (Text *text = TYPE_VALUE->AsText())
          if (text->IsCharacter())
-             return text;
-     return nullptr)
+             R_TYPE(text);
+     R_TYPE(nullptr))
 TYPE(boolean,
      if (Name *name = TYPE_VALUE->AsName())
          if (name->IsBoolean())
-             return name->value == "true" ? xl_true : xl_false;
-     return nullptr)
+             R_TYPE(name->value == "true" ? xl_true : xl_false);
+     R_TYPE(nullptr))
 
 
 
@@ -125,32 +126,32 @@ TYPE(boolean,
     TYPE(Name,                                                  \
          if (Natural *nat = TYPE_VALUE->AsNatural())            \
              if (IN_RANGE(nat->value, CType))                   \
-                 return nat->MakeUnsigned();                    \
-         return nullptr)
+                 R_TYPE(nat->MakeUnsigned());                   \
+         R_TYPE(nullptr))
 
 #define INTEGER_TYPE(Name, CType)                               \
     TYPE(Name,                                                  \
          if (Natural *nat = TYPE_VALUE->AsNatural())            \
              if (IN_RANGE((longlong) nat->value, CType))        \
-                 return nat->MakeSigned();                      \
-         return nullptr)
+                 R_TYPE(nat->MakeSigned());                     \
+         R_TYPE(nullptr))
 
 #define REAL_TYPE(Name, CType)                                  \
     TYPE(Name,                                                  \
-         Tree *value = TYPE_VALUE;                              \
-         if (Real *real = value->AsReal())                      \
+         Tree *typed = TYPE_VALUE;                              \
+         if (Real *real = typed->AsReal())                      \
          {                                                      \
              CType tmp = real->value;                           \
              if (tmp != real->value)                            \
-                 return new Real(tmp, real->Position());        \
-             return real;                                       \
+                 R_TYPE(new Real(tmp, real->Position()));       \
+             R_TYPE(real);                                      \
          }                                                      \
-         if (Natural *nat = value->AsNatural())                 \
+         if (Natural *nat = typed->AsNatural())                 \
          {                                                      \
              CType tmp = (long long) nat->value;                \
-             return new Real(tmp, nat->Position());             \
+             R_TYPE(new Real(tmp, nat->Position()));            \
          }                                                      \
-         return nullptr)
+         R_TYPE(nullptr))
 
 NATURAL_TYPE(natural8,  uint8_t)
 NATURAL_TYPE(natural16, uint16_t)
@@ -161,10 +162,10 @@ TYPE(integer,                                                           \
      if (Natural *nat = TYPE_VALUE->AsNatural())                        \
      {                                                                  \
          if (!nat->IsSigned() && (longlong) nat->value < 0)             \
-             return nullptr;                                            \
-         return nat->MakeSigned();                                      \
+             R_TYPE(nullptr);                                           \
+         R_TYPE(nat->MakeSigned());                                     \
      }                                                                  \
-     return nullptr)
+     R_TYPE(nullptr))
 INTEGER_TYPE(integer8,  int8_t)
 INTEGER_TYPE(integer16, int16_t)
 INTEGER_TYPE(integer32, int32_t)
@@ -280,16 +281,16 @@ UNARY(Natural2Real, Real,   Natural,            R_REAL(x_real))
 // ============================================================================
 
 UNARY(TreeKind,         Natural, Tree,          R_INT (x_tree->Kind()))
-UNARY(PrefixLeft,       Tree,    Prefix,        return x_tree->left)
-UNARY(PrefixRight,      Tree,    Prefix,        return x_tree->right)
-UNARY(PostfixLeft,      Tree,    Postfix,       return x_tree->left)
-UNARY(PostfixRight,     Tree,    Postfix,       return x_tree->right)
-UNARY(InfixLeft,        Tree,    Infix,         return x_tree->left)
-UNARY(InfixRight,       Tree,    Infix,         return x_tree->right)
+UNARY(PrefixLeft,       Tree,    Prefix,        R_TYPE(x_tree->left))
+UNARY(PrefixRight,      Tree,    Prefix,        R_TYPE(x_tree->right))
+UNARY(PostfixLeft,      Tree,    Postfix,       R_TYPE(x_tree->left))
+UNARY(PostfixRight,     Tree,    Postfix,       R_TYPE(x_tree->right))
+UNARY(InfixLeft,        Tree,    Infix,         R_TYPE(x_tree->left))
+UNARY(InfixRight,       Tree,    Infix,         R_TYPE(x_tree->right))
 UNARY(InfixName,        Text,    Infix,         R_TEXT(x_tree->name))
 UNARY(TextOpening,      Text,    Text,          R_TEXT(x_tree->opening))
 UNARY(TextClosing,      Text,    Text,          R_TEXT(x_tree->closing))
-UNARY(BlockChild,       Tree,    Block,         return x_tree->child)
+UNARY(BlockChild,       Tree,    Block,         R_TYPE(x_tree->child))
 UNARY(BlockOpening,     Text,    Block,         R_TEXT(x_tree->opening))
 UNARY(BlockClosing,     Text,    Block,         R_TEXT(x_tree->closing))
 

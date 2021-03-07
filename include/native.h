@@ -39,6 +39,7 @@
 #include "tree.h"
 #include "builtins.h"
 #include "interpreter.h"
+#include "bytecode.h"
 #include "errors.h"
 
 #ifndef INTERPRETER_ONLY
@@ -84,6 +85,10 @@ struct xl_type
     {
         return bindings.Argument(index++, false);
     }
+    static native_type Arg(RunState &stack)
+    {
+        return stack.Pop();
+    }
 };
 
 
@@ -105,6 +110,10 @@ struct xl_type<void>
         return XL::tree_type;
     }
     static native_type Arg(size_t &index, Bindings &bindings)
+    {
+        return;
+    }
+    static native_type Arg(RunState &stack)
     {
         return;
     }
@@ -148,6 +157,16 @@ struct xl_type<bool>
         Ooops("Expected a boolean value, got $1", boxed);
         return false;
     }
+    static native_type Arg(RunState &stack)
+    {
+        Tree_p value = stack.Pop();
+        if (value == xl_true)
+            return true;
+        else if (value == xl_false)
+            return false;
+        Ooops("Expected a boolean value, got $1", value);
+        return false;
+    }
 };
 
 
@@ -187,6 +206,14 @@ struct xl_type<Num,
     static native_type Arg(size_t &index, Bindings &bindings)
     {
         Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value;
+        Ooops("Expected a natural value, got $1", boxed);
+        return 0;
+    }
+    static native_type Arg(RunState &stack)
+    {
+        Tree *boxed = stack.Pop();
         if (BoxType *check = boxed->As<BoxType>())
             return check->value;
         Ooops("Expected a natural value, got $1", boxed);
@@ -242,6 +269,14 @@ struct xl_type<Num,
         Ooops("Expected a real value, got $1", boxed);
         return 0.0;
     }
+    static native_type Arg(RunState &stack)
+    {
+        Tree *boxed = stack.Pop();
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value;
+        Ooops("Expected a real value, got $1", boxed);
+        return 0.0;
+    }
 };
 
 
@@ -280,6 +315,14 @@ struct xl_type<kstring>
     static native_type Arg(size_t &index, Bindings &bindings)
     {
         Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value.c_str();
+        Ooops("Expected a text value, got $1", boxed);
+        return "";
+    }
+    static native_type Arg(RunState &stack)
+    {
+        Tree *boxed = stack.Pop();
         if (BoxType *check = boxed->As<BoxType>())
             return check->value.c_str();
         Ooops("Expected a text value, got $1", boxed);
@@ -325,6 +368,14 @@ struct xl_type<text>
         Ooops("Expected a text value, got $1", boxed);
         return "";
     }
+    static native_type Arg(RunState &stack)
+    {
+        Tree *boxed = stack.Pop();
+        if (BoxType *check = boxed->As<BoxType>())
+            return check->value;
+        Ooops("Expected a text value, got $1", boxed);
+        return "";
+    }
 };
 
 
@@ -360,6 +411,15 @@ struct xl_type<char>
     static native_type Arg(size_t &index, Bindings &bindings)
     {
         Tree *boxed = bindings.Argument(index++);
+        if (BoxType *check = boxed->As<BoxType>())
+            if (check->IsCharacter())
+                return check->value[0];
+        Ooops("Expected a character value, got $1", boxed);
+        return 0;
+    }
+    static native_type Arg(RunState &stack)
+    {
+        Tree *boxed = stack.Pop();
         if (BoxType *check = boxed->As<BoxType>())
             if (check->IsCharacter())
                 return check->value[0];
@@ -408,6 +468,12 @@ struct xl_type<Scope *>
         Ooops("Expected a scope, got $1", boxed);
         return new Scope();
     }
+
+    static native_type Arg(RunState &stack)
+    {
+        return stack.EvaluationScope();
+    }
+
 };
 
 
@@ -465,6 +531,13 @@ struct function_type<R(*)()>
     {
         return xl_type<R>::Box(callee(), bindings.Self()->Position());
     }
+
+    static inline void Run(pointer_type callee, RunState &stack)
+    {
+        auto value = callee();
+        auto boxed = xl_type<R>::Box(value, stack.Self()->Position());
+        stack.Push(boxed);
+    }
 };
 
 
@@ -499,6 +572,12 @@ struct function_type<void(*)()>
     {
         callee();
         return nullptr;
+    }
+
+    static inline void Run(pointer_type callee, RunState &stack)
+    {
+        callee();
+        stack.Push(nullptr);
     }
 };
 
@@ -551,6 +630,14 @@ struct function_type<R(*)(T)>
         return xl_type<R>::Box(callee(xl_type<T>::Arg(index, bindings)),
                                bindings.Self()->Position());
     }
+
+    static inline void Run(pointer_type callee, RunState &stack)
+    {
+        auto value = callee(xl_type<T>::Arg(stack));
+        auto boxed = xl_type<R>::Box(value, stack.Self()->Position());
+        stack.Push(boxed);
+    }
+
 };
 
 
@@ -601,6 +688,12 @@ struct function_type<void(*)(T)>
         size_t index = 0;
         callee(xl_type<T>::Arg(index, bindings));
         return nullptr;
+    }
+
+    static inline void Run(pointer_type callee, RunState &stack)
+    {
+        callee(xl_type<T>::Arg(stack));
+        stack.Push(nullptr);
     }
 };
 
@@ -654,6 +747,14 @@ struct function_type<R(*)(T,A...)>
                             xl_type<A>::Arg(index, bindings)...);
         return xl_type<R>::Box(value, bindings.Self()->Position());
     }
+
+    static inline void Run(pointer_type callee, RunState &stack)
+    {
+        auto value = callee(xl_type<T>::Arg(stack),
+                            xl_type<A>::Arg(stack)...);
+        auto boxed = xl_type<R>::Box(value, stack.Self()->Position());
+        stack.Push(boxed);
+    }
 };
 
 
@@ -704,6 +805,12 @@ struct function_type<void(*)(T,A...)>
                xl_type<A>::Arg(index, bindings)...);
         return nullptr;
     }
+    static inline void Run(pointer_type callee, RunState &stack)
+    {
+        callee(xl_type<T>::Arg(stack),
+               xl_type<A>::Arg(stack)...);
+        stack.Push(nullptr);
+    }
 };
 
 
@@ -721,6 +828,7 @@ struct NativeInterface
 {
     typedef Interpreter::builtin_fn builtin_fn;
 
+    NativeInterface(kstring symbol): symbol(symbol) {}
     virtual     ~NativeInterface() {}
 #ifndef INTERPRETER_ONLY
     virtual     JIT::Type_p          ReturnType(Compiler &)              = 0;
@@ -729,6 +837,8 @@ struct NativeInterface
 #endif
     virtual     Tree_p               Shape(Name_p, uint &index)          = 0;
     virtual     Tree_p               Call(Bindings &bindings)            = 0;
+
+    kstring     symbol;
 };
 
 
@@ -743,7 +853,8 @@ struct NativeImplementation : NativeInterface
     typedef typename ftype::pointer_type     ptype;
     typedef typename xl_type<rtype>::BoxType BoxType;
 
-    NativeImplementation(ptype function): function(function) {}
+    NativeImplementation(kstring symbol, ptype function)
+        : NativeInterface(symbol), function(function) {}
 
 #ifndef INTERPRETER_ONLY
     virtual JIT::Type_p ReturnType(Compiler &compiler) override
@@ -803,6 +914,16 @@ struct NativeImplementation : NativeInterface
 };
 
 
+template<typename FType>
+inline void NativeOpcodeAdapter(FType function, RunState &state)
+// ----------------------------------------------------------------------------
+//    An adapater to create opcodes from native functions
+// ----------------------------------------------------------------------------
+{
+    function_type<FType>::Run(function, state);
+}
+
+
 
 // ============================================================================
 //
@@ -818,9 +939,10 @@ struct Native
     typedef Interpreter::builtin_fn builtin_fn;
 
     template<typename fntype>
-    Native(fntype function, kstring name)
+    Native(fntype function, opcode_fn opcode, kstring name)
         : symbol(name),
-          implementation(new NativeImplementation<fntype>(function)),
+          implementation(new NativeImplementation<fntype>(name, function)),
+          opcode(opcode),
           shape(nullptr),
           next(list)
     {
@@ -845,6 +967,7 @@ struct Native
 public:
     kstring             symbol;
     NativeInterface *   implementation;
+    opcode_fn           opcode;
     Tree_p              shape;
 
 private:
@@ -905,8 +1028,15 @@ inline Tree_p Native::Call(Bindings &bindings)
     return implementation->Call(bindings);
 }
 
+
 } // namespace XL
 
-#define NATIVE(Name)    static Native xl_##Name##_native(Name, #Name);
+#define NATIVE(Name)                                            \
+static void Name##_opcode(RunState &state)                      \
+{                                                               \
+    NativeOpcodeAdapter(Name, state);                           \
+}                                                               \
+                                                                \
+static Native xl_##Name##_native(Name, Name##_opcode, #Name);
 
 #endif // NATIVE_H
