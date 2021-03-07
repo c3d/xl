@@ -266,7 +266,6 @@ Main::Main(int inArgc,
         Ooops("Stylesheet file $1 not found").Arg(Opt::stylesheet);
 
     // Once all options have been read, enter symbols and setup compiler
-    Interpreter::InitializeContext(context);
     compilerName = SearchFile(compilerName, Opt::binPaths);
     kstring cname = compilerName.c_str();
     uint opt = Opt::optimize.value;
@@ -274,9 +273,11 @@ Main::Main(int inArgc,
     {
     case 0:
     default:
+        Interpreter::InitializeContext(context);
         evaluator = new Interpreter();
         break;
     case 1:
+        BytecodeEvaluator::InitializeContext(context);
         evaluator = new BytecodeEvaluator();
         break;
 #ifndef INTERPRETER_ONLY
