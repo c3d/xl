@@ -1795,7 +1795,7 @@ static Tree *typecheck(Scope_p scope, Tree_p type, Tree_p value)
 #define DIV0            if (y == 0) Ooops("Divide $1 by zero", self)
 
 #define UNARY(Name, ReturnType, ArgType, Body)                  \
-static void Name##_unary(RunState &state)                       \
+static void unary_##Name(RunState &state)                       \
 {                                                               \
     Tree *self = state.Self();                                  \
     Tree_p result = self;                                       \
@@ -1811,7 +1811,7 @@ static void Name##_unary(RunState &state)                       \
 
 
 #define BINARY(Name, ReturnType, XType, YType, Body)            \
-static void Name##_binary(RunState &state)                      \
+static void binary_##Name(RunState &state)                      \
 {                                                               \
     Tree *self = state.Self();                                  \
     Tree_p result = self;                                       \
@@ -1903,10 +1903,10 @@ void BytecodeEvaluator::InitializeContext(Context &context)
 //    the builtins.
 {
 #define UNARY(Name, ReturnType, XType, Body)                            \
-    builtins[#Name] = Name##_unary;
+    builtins[#Name] = unary_##Name;
 
 #define BINARY(Name, RetTy, XType, YType, Body)                         \
-    builtins[#Name] = Name##_binary;
+    builtins[#Name] = binary_##Name;
 
 #define NAME(N)                                                         \
     context.Define(xl_##N, xl_self);
