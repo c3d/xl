@@ -1728,6 +1728,7 @@ Tree *evaluate(Scope_p scope, Tree_p expr)
 
     // Result is on top of stack
     Tree_p result = state.Pop();
+    GarbageCollector::SafePoint();
     return result;
 }
 
