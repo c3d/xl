@@ -1650,6 +1650,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
     // Check if we are recursively compiling this expression
     if (compiled == bytecode && !toplevel)
     {
+        OPCST(constant, expr);
         OP(transfer);
         return;
     }
@@ -1663,6 +1664,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         compile(scope, expr, compiled);
 
         // Transfer to that bytecode from the old invokation point
+        OPCST(constant, expr);
         OP(transfer);
         return;
     }
