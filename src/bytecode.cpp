@@ -1621,7 +1621,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         Initializers inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
         bool hasLocals = !scope->IsEmpty();
-        if (hasLocals)
+        if (hasLocals && hasInstructions)
             OP(enter);
         else
             scope = context.PopScope();
