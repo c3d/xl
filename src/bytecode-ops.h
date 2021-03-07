@@ -59,7 +59,7 @@ static void transfer(RunState &state)
 {
     Tree_p target = state.Top();
     Bytecode *bytecode = target ? target->GetInfo<Bytecode>() : nullptr;
-    state.bytecode = bytecode;
+    state.transfer = bytecode;
     state.pc = ~0U;
 };
 

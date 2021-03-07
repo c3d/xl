@@ -95,7 +95,7 @@ struct RunState
 // ----------------------------------------------------------------------------
 {
     RunState(Scope *scope, Tree *expr)
-        : stack(), scope(scope), bytecode(),
+        : stack(), scope(scope), bytecode(), transfer(),
           pc(0), args(0), error()
     {
         Push(expr);
@@ -119,6 +119,7 @@ struct RunState
     TreeList    stack;                  // Evaluation stack and parameters
     Scope_p     scope;                  // Current evaluation scope
     Bytecode *  bytecode;               // Bytecode currently executing
+    Bytecode *  transfer;               // Bytecode to transfer to
     opaddr_t    pc;                     // Program counter in the bytcode
     opaddr_t    args;                   // Number of arguments and variables
     Tree_p      error;                  // Error messages
