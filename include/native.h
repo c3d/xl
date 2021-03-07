@@ -111,6 +111,46 @@ struct xl_type<void>
 };
 
 
+template<>
+struct xl_type<bool>
+// ----------------------------------------------------------------------------
+//   The boolean type is somewhat special in how we box it
+// ----------------------------------------------------------------------------
+{
+    typedef Name BoxType;
+    typedef bool native_type;
+
+#ifndef INTERPRETER_ONLY
+    static JIT::PointerType_p TreeType(Compiler &c)
+    {
+        return c.nameTreePtrTy;
+    }
+    static JIT::Type_p        NativeType(Compiler &c)
+    {
+        return c.jit.IntegerType<bool>();
+    }
+#endif
+    static Tree *Shape()
+    {
+        return XL::boolean_type;
+    }
+    static BoxType *Box(native_type x, TreePosition pos)
+    {
+        return x ? xl_true : xl_false;
+    }
+    static native_type Arg(size_t &index, Bindings &bindings)
+    {
+        Tree *boxed = bindings.Argument(index++);
+        if (boxed == xl_true)
+            return true;
+        else if (boxed == xl_false)
+            return false;
+        Ooops("Expected a boolean value, got $1", boxed);
+        return false;
+    }
+};
+
+
 template <typename Num>
 struct xl_type<Num,
                typename std::enable_if<std::is_integral<Num>::value>::type>
@@ -155,7 +195,6 @@ struct xl_type<Num,
 };
 
 
-template <> inline Tree *xl_type<bool>  ::Shape() { return boolean_type; }
 template <> inline Tree *xl_type<int8>  ::Shape() { return integer8_type; }
 template <> inline Tree *xl_type<int16> ::Shape() { return integer16_type; }
 template <> inline Tree *xl_type<int32> ::Shape() { return integer32_type; }
