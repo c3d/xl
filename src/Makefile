@@ -279,3 +279,12 @@ $(MIQ)rules.mk:
 	$(PRINT_COMMAND) cd .. && git submodule update --init --recursive
 $(MIQ_DEPENDENCIES): 	$(MODULES_HEADERS) 	\
 			../recorder/recorder.h ../recorder/recorder_ring.h
+
+# Generation of bytecode names map
+GENERATE_BYTECODE_NAMES=						\
+	grep 'static void' $< |						\
+	sed -e 's/^static void \([a-zA-Z_0-9]*\).*$$/BC_NAME(\1)/g'	\
+	> $@
+.prebuild: bytecode-names.h
+bytecode-names.h: bytecode-ops.h
+	$(PRINT_GENERATE) $(GENERATE_BYTECODE_NAMES)

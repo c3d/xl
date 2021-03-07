@@ -221,6 +221,7 @@ struct Bytecode : Info
     NameList *  Parameters(NameList *parameters);
     NameList *  Parameters();
     opaddr_t    Parameter(Name *name);
+    void        Dump(std::ostream &out);
 
     typedef std::vector<opaddr_t>       Patches;
     typedef std::vector<opcode_fn>      Opcodes;
@@ -255,17 +256,14 @@ public:
         Attempt(Bytecode *bytecode)
             : bytecode(bytecode),
               cutpoint(bytecode->Size()),
-              checks(bytecode->checks),
-              successes(bytecode->successes)
+              checks(bytecode->checks)
         {
             bytecode->checks.clear();
-            bytecode->successes.clear();
         }
         ~Attempt()
         {
             bytecode->PatchChecks();
             bytecode->checks = checks;
-            bytecode->successes = successes;
         }
         void Fail()
         {
@@ -278,6 +276,9 @@ public:
         Patches   checks;
         Patches   successes;
     };
+
+    // Names for debugging purpose
+    static std::map<opcode_fn, kstring> names;
 };
 
 
@@ -300,6 +301,35 @@ void Bytecode::Run(RunState &state)
         while (state.pc < max)
             bc->code[state.pc++](state);
         bc = state.transfer;
+    }
+}
+
+
+void Bytecode::Dump(std::ostream &out)
+// ----------------------------------------------------------------------------
+//   Dump the bytecocde
+// ----------------------------------------------------------------------------
+{
+    opaddr_t max = code.size();
+    for (opaddr_t pc = 0; pc < max; pc++)
+    {
+        opcode_fn opcode = code[pc];
+        auto found = names.find(opcode);
+        if (found != names.end())
+        {
+            out << pc << ":\t" << (*found).second << "\n";
+        }
+        else
+        {
+            opaddr_t index = (opaddr_t) opcode;
+            out << pc << ":\t#" << index << "\n";
+            if (index < constants.size())
+                out << "\tCST\t" << constants[index] << "\n";
+            if (index < rewrites.size())
+                out << "\tRWR\t" << rewrites[index] << "\n";
+            if (parameters && index < parameters->size())
+                out << "\tPAR\t" << (*parameters)[index] << "\n";
+        }
     }
 }
 
@@ -1739,6 +1769,12 @@ Tree *evaluate(Scope_p scope, Tree_p expr)
         expr->SetInfo<Bytecode>(bytecode);
         compile(scope, expr, bytecode);
         bytecode->Validate();
+        if (RECORDER_TRACE(opcode))
+        {
+            std::cerr << "Compiled " << expr << " as\n";
+            bytecode->Dump(std::cerr);
+            std::cerr << "\n";
+        }
     }
     else if (!bytecode->IsValid())
     {
@@ -1918,6 +1954,7 @@ void BytecodeEvaluator::InitializeBuiltins()
 std::map<text, opcode_fn> BytecodeEvaluator::builtins;
 std::map<text, opcode_fn> BytecodeEvaluator::natives;
 std::map<text, opcode_fn> BytecodeEvaluator::types;
+std::map<opcode_fn, kstring> Bytecode::names;
 
 
 #define NORM2(x) Normalize(x), x
@@ -1930,10 +1967,12 @@ void BytecodeEvaluator::InitializeContext(Context &context)
 //    the builtins.
 {
 #define UNARY(Name, ReturnType, XType, Body)                            \
-    builtins[#Name] = unary_##Name;
+    builtins[#Name] = unary_##Name;                                     \
+    Bytecode::names[unary_##Name] = "unary_" #Name;
 
 #define BINARY(Name, RetTy, XType, YType, Body)                         \
-    builtins[#Name] = binary_##Name;
+    builtins[#Name] = binary_##Name;                                    \
+    Bytecode::names[binary_##Name] = "binary_" #Name;
 
 #define NAME(N)                                                         \
     context.Define(xl_##N, xl_self);
@@ -1941,6 +1980,7 @@ void BytecodeEvaluator::InitializeContext(Context &context)
 #define TYPE(N, Body)                                                   \
     types[#N] = N##_typecheck;                                          \
     builtins[#N"_typecheck"] = N##_typecheck;                           \
+    Bytecode::names[N##_typecheck] = #N "_typecheck";                   \
                                                                         \
     Infix *pattern_##N =                                                \
         new Infix("as",                                                 \
@@ -1961,13 +2001,28 @@ void BytecodeEvaluator::InitializeContext(Context &context)
         record(native, "Found %t", native->Shape());
         kstring symbol = native->Symbol();
         natives[symbol] = native->opcode;
+        Bytecode::names[native->opcode] = symbol;
         Tree *shape = native->Shape();
         Prefix *body = new Prefix(C, new Text(symbol));
         context.Define(shape, body);
     }
+
+#define BC_NAME(N)      Bytecode::names[N] = #N;
+#include "bytecode-names.h"
 
     if (RECORDER_TRACE(symbols_sort))
         context.Dump(std::cerr, context.Symbols(), false);
 }
 
 XL_END
+
+XL::Bytecode *xldebug(XL::Bytecode *bytecode)
+// ----------------------------------------------------------------------------
+//   Dump the bytecode for debug
+// ----------------------------------------------------------------------------
+{
+    std::cout << "Bytecode " << (void *) bytecode << "\n";
+    if (bytecode)
+        bytecode->Dump(std::cout);
+    return bytecode;
+}
