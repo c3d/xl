@@ -98,7 +98,6 @@ static void error(RunState &state)
 // ----------------------------------------------------------------------------
 {
     Tree_p error = state.Constant();
-    error = new Prefix(xl_error, error);
     state.Push(error);
     evaluate(state);
 }
