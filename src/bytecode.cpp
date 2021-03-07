@@ -202,6 +202,7 @@ struct Bytecode : Info
     void        ErrorExit(Tree *msg);   // Emit an error with msg and exit
     void        Patch();
     void        Clear();
+    void        RemoveLastDefinition();
 
     size_t      Size();
     Scope *     EvaluationScope();
@@ -444,6 +445,18 @@ void Bytecode::Clear()
     validated = 0;
     local = false;
     variable = false;
+}
+
+
+void Bytecode::RemoveLastDefinition()
+// ----------------------------------------------------------------------------
+//   Remove definitions inserted in sequences
+// ----------------------------------------------------------------------------
+//   A definition adds an OPCST(constant, rewrite), so need to remove both
+{
+    code.pop_back();
+    XL_ASSERT(code.back() == (opcode_fn) constant);
+    code.pop_back();
 }
 
 
@@ -1272,11 +1285,13 @@ static Tree *lookupCandidate(Scope   *evalScope,
     Tree *pattern = decl->Pattern();
     XL_ASSERT(bindings.Self() == expr);
 
+    // Add bytecode to check argument against parameters and create locals
+    Bytecode::Attempt attempt(bytecode);
+
     // Save the top of stack before this candidate attempts to analyze it
     OP(dup);
 
-    // Add bytecode to check argument against parameters and create locals
-    Bytecode::Attempt attempt(bytecode);
+    // Match the pattern or fail
     bindings.Candidate(decl, evalScope, declScope);
     strength matched = pattern->Do(bindings);
 
@@ -1517,7 +1532,10 @@ static bool doPostfix(Scope *scope, Postfix *postfix, Bytecode *bytecode)
 }
 
 
-static bool doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
+const int IS_DEFINITION = 2;
+
+
+static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
 // ----------------------------------------------------------------------------
 //   Deal with all forms of special infix
 // ----------------------------------------------------------------------------
@@ -1525,17 +1543,19 @@ static bool doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
     // For [Name is Expr], compute [Expr] at the time we hit the definition
     if (IsDefinition(infix))
     {
-        if (Name *name = infix->left->AsName())
+        // Find the corresponding declaration
+        Context context(scope);
+        Tree *pattern = infix->left;
+        Rewrite *rewrite = context.Declared(pattern, Context::REFERENCE_SCOPE);
+        if (Name *name = pattern->AsName())
         {
-            // Find the index for the corresponding declaration
-            Context context(scope);
-            Rewrite *rewrite = context.Declared(name, Context::REFERENCE_SCOPE);
-
             // Compile the initialization and initialize the constant
             compile(scope, infix->right, bytecode);
             OPCST(init_constant, rewrite);
         }
-        return true;
+        // Return the definition
+        OPCST(constant, rewrite);
+        return IS_DEFINITION;
     }
 
     // Evaluate [X.Y]
@@ -1639,11 +1659,17 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
 
     Tree::Iterator next(expr);
     bool first = true;
+    bool definition = false;
     while ((expr = next()))
     {
         // If not the first statement, check result of previous statement
         if (!first)
-            OP(check_statement);
+        {
+            if (definition)
+                bytecode->RemoveLastDefinition();
+            else
+                OP(check_statement);
+        }
 
         // Lookup expression
         Context::LookupMode mode = lookupMode(bytecode);
@@ -1652,7 +1678,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         bytecode->Patch();
 
         // If we did not find a matching form, check standard evaluation
-        bool done = bindings.Strength() != BytecodeBindings::FAILED;
+        int done = bindings.Strength() != BytecodeBindings::FAILED;
         if (!done) switch(expr->Kind())
         {
         case NATURAL:
@@ -1683,6 +1709,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
             bytecode->ErrorExit(msg);
             return;
         }
+        definition = done == IS_DEFINITION;
         first = false;
     }
 }
