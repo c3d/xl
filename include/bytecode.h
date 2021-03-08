@@ -93,10 +93,20 @@ struct RunState
 // ----------------------------------------------------------------------------
 //   The state of the program during evaluation
 // ----------------------------------------------------------------------------
+//   During evaluation, the stack looks like this:
+//   - caller's stack
+//   - arg 0            <--- locals
+//   - arg 1
+//   - ...
+//   - local temp 1     <--- frame
+//   - local temp 2
+//   - ...
+//   The difference between locals and frame is the number of formal parameters
+//   bound for the current code.
 {
     RunState(Scope *scope, Tree *expr)
         : stack(), scope(scope), bytecode(), transfer(),
-          pc(0), args(0), error()
+          pc(0), frame(0), locals(0), error()
     {
         Push(expr);
     }
@@ -110,6 +120,7 @@ struct RunState
     Scope_p     EvaluationScope()       { return scope; }
     Scope_p     DeclarationScope();
     opaddr_t    Jump();
+    opaddr_t    FrameSize();
     Tree *      Local();
     Tree *      Constant();
     Rewrite *   Rewrite();
@@ -123,7 +134,8 @@ struct RunState
     Bytecode *  bytecode;               // Bytecode currently executing
     Bytecode *  transfer;               // Bytecode to transfer to
     opaddr_t    pc;                     // Program counter in the bytcode
-    opaddr_t    args;                   // Number of arguments and variables
+    opaddr_t    frame;                  // Base of current frame on the stack
+    opaddr_t    locals;                 // Base of locals (inputs) on stack
     Tree_p      error;                  // Error messages
 };
 
