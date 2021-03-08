@@ -236,7 +236,6 @@ static void match_natural(RunState &state)
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
 {
-    evaluate(state);
     Tree *top = state.Top();
     Natural *natural = top->AsNatural();
     Natural *match = state.Constant()->AsNatural();
@@ -251,7 +250,6 @@ static void match_real(RunState &state)
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
 {
-    evaluate(state);
     Tree *top = state.Top();
     Real *real = top->AsReal();
     Real *match = state.Constant()->AsReal();
@@ -272,7 +270,6 @@ static void match_text(RunState &state)
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
 {
-    evaluate(state);
     Tree *top = state.Top();
     Text *text = top->AsText();
     Text *match = state.Constant()->AsText();
@@ -289,99 +286,11 @@ static void match_infix(RunState &state)
 //   We have [infix], we will have either [right, left], or [nullptr]
 {
     Infix *reference = state.Constant()->AsInfix();
-    for (int eval = 0; eval < 2; eval++)
-    {
-        Tree_p top = state.Pop();
-        Infix *infix = top->AsInfix();
-        if (infix && infix->name == reference->name)
-        {
-            state.Push(infix->left);
-            state.Push(infix->right);
-            return;
-        }
-        evaluate(state);
-    }
+    Tree_p top = state.Pop();
+    Infix *infix = top->AsInfix();
+    if (infix && infix->name == reference->name)
+        return;
     state.Push(nullptr);
-}
-
-
-static void match_prefix(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if we have a prefix, and if so, split it into two components
-// ----------------------------------------------------------------------------
-//   We have [prefix], we will have either [right, left] or [nullptr]
-{
-    for (int eval = 0; eval < 2; eval++)
-    {
-        Tree_p top = state.Pop();
-        if (Prefix *prefix = top->AsPrefix())
-        {
-            state.Push(prefix->right);
-            state.Push(prefix->left);
-            return;
-        }
-        evaluate(state);
-    }
-    state.Push(nullptr);
-};
-
-
-static void match_postfix(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if we have a postfix, and if so, split it into two components
-// ----------------------------------------------------------------------------
-//   We have [postfix], we will have either [right, left] or [nullptr]
-{
-    for (int eval = 0; eval < 2; eval++)
-    {
-        Tree_p top = state.Pop();
-        if (Postfix *postfix = top->AsPostfix())
-        {
-            state.Push(postfix->left);
-            state.Push(postfix->right);
-            return;
-        }
-        evaluate(state);
-    }
-    state.Push(nullptr);
-};
-
-
-static void make_infix(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if left and right are both non-null, if so reconstruct an infix
-// ----------------------------------------------------------------------------
-//   We end up with either [infix] or [nullptr]
-{
-    Infix *reference = state.Constant()->AsInfix();
-    Tree_p right = state.Pop();
-    Tree_p left = state.Pop();
-    Infix_p infix = new Infix(reference, left, right);
-    state.Push(infix);
-};
-
-
-static void make_prefix(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if left and right are both non-null, if so reconstruct a prefix
-// ----------------------------------------------------------------------------
-{
-    Tree_p right = state.Pop();
-    Tree_p left = state.Pop();
-    Prefix_p prefix = new Prefix(left, right, left->Position());
-    state.Push(prefix);
-}
-
-
-static void make_postfix(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if left and right are both non-null, if so reconstruct a postfix
-// ----------------------------------------------------------------------------
-{
-    Tree_p left = state.Pop();
-    Tree_p right = state.Pop();
-    Postfix_p postfix = new Postfix(left, right, left->Position());
-    state.Push(postfix);
 }
 
 
@@ -455,22 +364,53 @@ static void set_scope(RunState &state)
 
 static void enter(RunState &state)
 // ----------------------------------------------------------------------------
-//    Create a new scope from the current scope and enter it
+//   Enter a new frame for a call
 // ----------------------------------------------------------------------------
 {
     Context context(state.scope);
-    state.scope = context.CreateScope(state.Self()->Position());
+    state.scope = context.CreateScope();
+    state.locals = state.frame;
+}
+
+
+static void call(RunState &state)
+// ----------------------------------------------------------------------------
+//    Call the top of stack
+// ----------------------------------------------------------------------------
+{
+    // Save bytecode, program counter and current frame
+    Bytecode *saveBC = state.bytecode;
+    opaddr_t  savePC = state.pc;
+    opaddr_t  frame  = state.locals;
+
+    // Get bytecode for what we want to call
+    Tree_p callee = state.Pop();
+    Bytecode *bytecode = compile(state.EvaluationScope(), callee);
+
+    // Run the target code
+    bytecode->Run(state);
+
+    // Restore caller's state
+    state.pc = savePC;
+    state.bytecode = saveBC;
+    state.locals = frame;
+    state.frame = frame;
+
+    // Pop the input arguments, leaving result on top of stack
+    Tree_p result = state.Pop();
+    auto &stack = state.stack;
+    stack.erase(stack.begin() + frame, stack.end());
+    state.Push(result);
 }
 
 
 static void bind(RunState &state)
 // ----------------------------------------------------------------------------
-//   Bind the value on the stack to a local
+//   Bind the top value on the stack to a formal parameter
 // ----------------------------------------------------------------------------
 {
-    auto &stack = state.stack;
-    Tree_p value = state.Top();
-    stack.insert(stack.begin() + state.args++, value);
+    state.frame++;
+    XL_ASSERT(state.frame == state.stack.size());
 }
 
 

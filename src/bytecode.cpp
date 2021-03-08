@@ -76,6 +76,7 @@ NaturalOption   stackDepth("stack_depth",
 
 static Tree *evaluate(Scope_p scope, Tree_p expr);
 static Tree *typecheck(Scope_p scope, Tree_p type, Tree_p value);
+static Bytecode *compile(Scope *scope, Tree *expr);
 static void compile(Scope *scope, Tree *expr, Bytecode *bytecode);
 static Tree *unwrap(Tree *expr);
 
@@ -801,6 +802,18 @@ opaddr_t RunState::Jump()
 }
 
 
+opaddr_t RunState::FrameSize()
+// ----------------------------------------------------------------------------
+//   Get the framesize for a call
+// ----------------------------------------------------------------------------
+{
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::LOCAL);
+    opaddr_t size = data >> Bytecode::OPSHIFT;
+    return size;
+}
+
+
 Tree *RunState::Local()
 // ----------------------------------------------------------------------------
 //   Get a local binding from the bytecode
@@ -809,8 +822,8 @@ Tree *RunState::Local()
     opaddr_t data = (opaddr_t) bytecode->code[pc++];
     XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::LOCAL);
     opaddr_t index = data >> Bytecode::OPSHIFT;
-    XL_ASSERT(index < args);
-    return stack[index];
+    XL_ASSERT(locals + index < frame);
+    return stack[locals + index];
 }
 
 
@@ -875,7 +888,8 @@ struct BytecodeBindings
     Scope *     ArgumentsScope()        { return arguments; }
     Tree  *     Self()                  { return self; }
     Tree  *     ResultType()            { return type; }
-    NameList    Parameters()            { return parameters; }
+    NameList &  Parameters()            { return parameters; }
+    size_t      ParameterCount()        { return parameters.size(); }
     Bytecode *  Code()                  { return bytecode; }
     strength    Strength()              { return match; }
 
@@ -892,6 +906,11 @@ private:
         if (match==PERFECT)
             match = POSSIBLE;
         return match;
+    }
+
+    void        MustEvaluate()
+    {
+        compile(evaluation, test, bytecode);
     }
 
     Tree_p      Evaluate(Tree *expr)
@@ -1004,6 +1023,7 @@ strength BytecodeBindings::Do(Natural *what)
     }
 
     // Otherwise, we need to evaluate and check at runtime
+    MustEvaluate();
     OPCHKCST(match_natural, what, "Argument $1 does not match $2", test, what);
     return Possible();
 }
@@ -1035,6 +1055,7 @@ strength BytecodeBindings::Do(Real *what)
     }
 
     // Otherwise, we need to evaluate and check at runtime
+    MustEvaluate();
     OPCHKCST(match_real, what, "Argument $1 does not match $2", test, what);
     return Possible();
 }
@@ -1056,6 +1077,7 @@ strength BytecodeBindings::Do(Text *what)
     }
 
     // Otherwise, we need to evaluate and check at runtime
+    MustEvaluate();
     OPCHKCST(match_text, what, "Argument $1 does not match $2", test, what);
     return Possible();
 }
@@ -1092,6 +1114,7 @@ strength BytecodeBindings::Do(Name *what)
     }
 
     // Otherwise, bind test value to name
+    compile(evaluation, test, bytecode);
     Bind(what);
     return Perfect();
 }
@@ -1107,6 +1130,7 @@ strength BytecodeBindings::Do(Block *what)
     {
         // Evaluate metabox at "compile time"
         Tree_p meta = EvaluateInDeclaration(expr);
+        MustEvaluate();
         OPCST(constant, meta);
         OPCHK(match_same, "The argument $1 does not match $2", meta, what);
         return Possible();
@@ -1136,6 +1160,7 @@ strength BytecodeBindings::Do(Prefix *what)
     {
         if (Name *name = binding->AsName())
         {
+            compile(evaluation, test, bytecode);
             OPCHK(borrow, "The argument for $1 is not a variable", name);
             Bind(name);
             return Possible();
@@ -1143,6 +1168,7 @@ strength BytecodeBindings::Do(Prefix *what)
         else if (Infix *typecast = binding->AsInfix())
         {
             Tree_p type = EvaluateType(typecast->right);
+            compile(evaluation, test, bytecode);
             OPCHKCST(typed_borrow, type,
                      "The argument for $1 is not a variable of type $2",
                      typecast, type);
@@ -1152,20 +1178,18 @@ strength BytecodeBindings::Do(Prefix *what)
         return Failed();
     }
 
-    // The test itself should be a prefix
+    // If the test itself is already a prefix, match directly
     if (Prefix *pfx = test->AsPrefix())
     {
         // Check prefix left first, which may set 'defined' to name
-        OPCHK(match_prefix,
-              "The argument $1 does not match prefix $2", test, what);
         defined = nullptr;
         test = pfx->left;
         what->left->Do(this);
-        OP(swap);
+
+        // Check prefix argument, which typically binds values
         defined = what;
         test = pfx->right;
         what->right->Do(this);
-        OP(make_prefix);
         return Perfect();
     }
 
@@ -1183,16 +1207,12 @@ strength BytecodeBindings::Do(Postfix *what)
     if (Postfix *pfx = test->AsPostfix())
     {
         // Check postfix left first, which may set 'defined' to name
-        OPCHK(match_postfix,
-              "The argument $1 does not match postfix $2", test, what);
         defined = nullptr;
         test = pfx->right;
         what->right->Do(this);
-        OP(swap);
         defined = what;
         test = pfx->left;
         what->left->Do(this);
-        OP(make_postfix);
         return Perfect();
     }
 
@@ -1272,15 +1292,21 @@ strength BytecodeBindings::Do(Infix *what)
     // The test itself should be an infix with a matching name
     if (Infix *ifx = test->AsInfix())
     {
+        if (ifx->name == what->name)
+        {
+            test = ifx->left;
+            what->left->Do(this);
+            test = ifx->right;
+            what->right->Do(this);
+            return Perfect();
+        }
+    }
+    else if (Name *name = test->AsName())
+    {
+        MustEvaluate();
         OPCHKCST(match_infix, what,
                  "Argument $1 does not match $2", ifx, what);
-        test = ifx->left;
-        what->left->Do(this);
-        OP(swap);
-        test = ifx->right;
-        what->right->Do(this);
-        OPCST(make_infix, what);
-        return Perfect();
+        return Possible();
     }
 
     // Otherwise, it's a mismatch
@@ -1414,6 +1440,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
 
     // Add bytecode to check argument against parameters and create locals
     Bytecode::Attempt attempt(bytecode);
+    OP(enter);
     bindings.Candidate(decl, evalScope, declScope);
     strength matched = pattern->Do(bindings);
 
@@ -1435,11 +1462,13 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 opaddr_t index = bytecode->Parameter(name);
                 if (index)
                 {
+                    attempt.Fail();     // Cut any generated code
                     OPCST(local, index);
                     done = true;
                 }
                 else if (IsSelf(decl->Definition()))
                 {
+                    attempt.Fail();     // Cut any generated code
                     OPCST(constant, pattern);
                     done = true;
                 }
@@ -1449,15 +1478,18 @@ static Tree *lookupCandidate(Scope   *evalScope,
         // Insert code to evaluate the body
         if (!done)
         {
-            compile(bindings.ArgumentsScope(), decl->Definition(), bytecode);
+            Tree  *body = decl->Definition();
+            Scope *locals = bindings.ArgumentsScope();
+            compile(locals, body);
+
+            // Transfer evaluation to the body
+            OPCST(constant, body);
+            OP(call);
 
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
                 OPCHKCST(cast, type, "Returned value does not match $1", type);
         }
-
-        // On success, remove the value that we duplicated
-        OP(swap_drop);
 
         bytecode->Success();
     }
@@ -1749,54 +1781,52 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
 }
 
 
-static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
+static Bytecode *compile(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
-//   Compile an expression in the bytecode
+//   Compile a definition or module and create its bytecode
 // ----------------------------------------------------------------------------
 {
-    Bytecode *compiled = expr->GetInfo<Bytecode>();
-    bool toplevel = bytecode->Size() == 0;
-
-    // Check if we are recursively compiling this expression
-    if (compiled == bytecode && !toplevel)
+    Bytecode *bytecode = expr->GetInfo<Bytecode>();
+    if (!bytecode)
     {
-        OPCST(constant, expr);
-        OP(transfer);
-        return;
-    }
+        // We need to create the bytecode for this expression
+        bytecode = new Bytecode(scope, expr);
+        expr->SetInfo<Bytecode>(bytecode);
 
-    // If we are calling a new expression...
-    if (!compiled)
-    {
-        // Create its own bytecode
-        compiled = new Bytecode(scope, expr);
-        expr->SetInfo<Bytecode>(compiled);
-        compile(scope, expr, compiled);
-        OPCST(constant, expr);
-        OP(evaluate);
-        return;
-    }
+        // Check if we have instructions to process. If not, return declarations
+        Context context(scope);
+        bool hasInstructions = true;
+        if (expr->AsBlock() || IsSequence(expr))
+        {
+            Initializers inits;
+            hasInstructions = context.ProcessDeclarations(expr, inits);
+            if (!scope->IsEmpty())
+                doInitializers(inits, bytecode);
+            if (!hasInstructions)
+                OP(get_scope);
+        }
 
-    // Check if we have instructions to process. If not, return declarations
-    Context context(scope);
-    if (expr->AsBlock() || IsSequence(expr))
-    {
-        Initializers inits;
-        bool hasInstructions = context.ProcessDeclarations(expr, inits);
-        bool hasLocals = !scope->IsEmpty();
-        if (hasLocals)
-            doInitializers(inits, bytecode);
         if (hasInstructions)
+            compile(scope, expr, bytecode);
+        bytecode->Validate();
+        if (RECORDER_TRACE(opcode))
         {
-            OP(enter);
+            std::cerr << "Compiled " << expr << " as\n";
+            bytecode->Dump(std::cerr);
+            std::cerr << "\n";
         }
-        else
-        {
-            OP(get_scope);
-            return;
-        }
-    }
+}
 
+    return bytecode;
+}
+
+
+static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
+// ----------------------------------------------------------------------------
+//   Compile an expression in the given bytecode
+// ----------------------------------------------------------------------------
+{
+    Context context(scope);
     Tree::Iterator next(expr);
     bool first = true;
     bool definition = false;
@@ -1871,30 +1901,8 @@ Tree *evaluate(Scope_p scope, Tree_p expr)
     }
 
     // Check if already have bytecode for this
-    Bytecode *bytecode = expr->GetInfo<Bytecode>();
-    if (!bytecode)
-    {
-        // We need to create the bytecode for this expression
-        bytecode = new Bytecode(scope, expr);
-        expr->SetInfo<Bytecode>(bytecode);
-        compile(scope, expr, bytecode);
-        bytecode->Validate();
-        if (RECORDER_TRACE(opcode))
-        {
-            std::cerr << "Compiled " << expr << " as\n";
-            bytecode->Dump(std::cerr);
-            std::cerr << "\n";
-        }
-    }
-    else if (!bytecode->IsValid())
-    {
-        // Recursive evaluation during compilation (unexpected)
-        record(opcode_error, "Unexpectd recursive compilation of %t", expr);
-        compile(scope, expr, bytecode);
-
-        // Force validation of what we have
-        bytecode->Validate();
-    }
+    Bytecode *bytecode = compile(scope, expr);
+    XL_ASSERT(bytecode->IsValid() && "Cannot evaluate before code is compiled");
 
     // Run the bytecode in the scope
     RunState state(scope, expr);
