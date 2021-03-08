@@ -221,6 +221,8 @@ struct Bytecode : Info
     NameList *  Parameters(NameList *parameters);
     NameList *  Parameters();
     opaddr_t    Parameter(Name *name);
+    static
+    opaddr_t    Parameter(Name *name, NameList &parameters);
     void        Dump(std::ostream &out);
 
     typedef std::vector<opaddr_t>       Patches;
@@ -245,6 +247,21 @@ private:
     opaddr_t    validated;      // Number of bytecode entries validated
     bool        local;          // Non-recursive lookup
     bool        variable;       // Evaluate as variable
+
+    enum OpcodeKind
+    {
+        OPCODE,                 // Regular opcode (function pointer)
+        UNPATCHED,              // Unpatched jump
+        JUMP,                   // New value for PC
+        LOCAL,                  // Index of a local variable
+        CONSTANT,               // Index of a constant
+        REWRITE,                // Index of a rewrite
+        PARAMETER,              // Index of a parameter
+        INVALID,                // Invalid
+
+        OPSHIFT = 3,            // Shift value for constants
+        OPMASK = 7              // Mask to get the kind
+    };
 
 public:
     friend struct Attempt;
@@ -314,21 +331,54 @@ void Bytecode::Dump(std::ostream &out)
     for (opaddr_t pc = 0; pc < max; pc++)
     {
         opcode_fn opcode = code[pc];
-        auto found = names.find(opcode);
-        if (found != names.end())
+        opaddr_t data = (opaddr_t) opcode;
+        opaddr_t kind = data & OPMASK;
+        opaddr_t index = data >> OPSHIFT;
+
+        switch ((opaddr_t) opcode & OPMASK)
         {
-            out << pc << ":\t" << (*found).second << "\n";
-        }
-        else
-        {
-            opaddr_t index = (opaddr_t) opcode;
-            out << pc << ":\t#" << index << "\n";
+        case OPCODE:
+            if (names.count(opcode))
+                out << pc << ":\t" << names[opcode] << "\n";
+            else
+                out << pc << ":\t" << "Invalid " << (void *) opcode << "\n";
+            break;
+        case UNPATCHED:
+            out << pc << ":\t" << "JUMP?\t#" << index << "\n";
+            break;
+        case JUMP:
+            out << pc << ":\t" << "JUMP\t#" << index << "\n";
+            break;
+        case LOCAL:
+            out << pc << ":\t" << "LOCAL\t#" << index << "\n";
+            break;
+        case CONSTANT:
+            out << pc << ":\t" << "CST\t#" << index << "\t";
             if (index < constants.size())
-                out << "\tCST\t" << constants[index] << "\n";
+                out << constants[index];
+            else
+                out << "(Invalid)";
+            out << "\n";
+            break;
+        case REWRITE:
+            out << pc << ":\t" << "RWR\t#" << index << "\t";
             if (index < rewrites.size())
-                out << "\tRWR\t" << rewrites[index] << "\n";
+                out << rewrites[index];
+            else
+                out << "(Invalid)";
+            out << "\n";
+            break;
+        case PARAMETER:
+            out << pc << ":\t" << "RWR\t#" << index << "\t";
             if (parameters && index < parameters->size())
-                out << "\tPAR\t" << (*parameters)[index] << "\n";
+                out << (*parameters)[index];
+            else
+                out << "(Invalid)";
+            out << "\n";
+            break;
+        default:
+            out << pc << ":\t" << "INVALID\t" << kind << "\n";
+            break;
         }
     }
 }
@@ -393,7 +443,7 @@ inline void Bytecode::EnterCheck()
 // ----------------------------------------------------------------------------
 {
     checks.push_back(code.size());
-    code.push_back(0);          // Offset, to be patched by PatchChecks
+    code.push_back((opcode_fn) UNPATCHED);
 }
 
 
@@ -403,7 +453,7 @@ inline void Bytecode::EnterSuccess()
 // ----------------------------------------------------------------------------
 {
     successes.push_back(code.size());
-    code.push_back(0);          // Offset, to be patched by PatchSuccesses
+    code.push_back((opcode_fn) UNPATCHED);
 }
 
 
@@ -419,7 +469,7 @@ opaddr_t Bytecode::EnterConstant(Tree_p tree)
             break;
     if (index >= size)
         constants.push_back(tree);
-    code.push_back((opcode_fn) index);
+    code.push_back((opcode_fn) ((index << OPSHIFT) | CONSTANT));
     return index;
 }
 
@@ -436,7 +486,7 @@ opaddr_t Bytecode::EnterRewrite(Rewrite_p rewrite)
             break;
     if (index >= size)
         rewrites.push_back(rewrite);
-    code.push_back((opcode_fn) index);
+    code.push_back((opcode_fn) ((index << OPSHIFT) | REWRITE));
     return index;
 }
 
@@ -521,7 +571,10 @@ void Bytecode::PatchChecks()
 {
     opaddr_t current = code.size();
     for (auto check : checks)
-        code[check] = (opcode_fn) current;
+    {
+        XL_ASSERT(code[check] == (opcode_fn) UNPATCHED);
+        code[check] = (opcode_fn) ((current << OPSHIFT) | JUMP);
+    }
     checks.clear();
 }
 
@@ -533,7 +586,10 @@ void Bytecode::PatchSuccesses()
 {
     opaddr_t current = code.size();
     for (auto success : successes)
-        code[success] = (opcode_fn) current;
+    {
+        XL_ASSERT(code[success] == (opcode_fn) UNPATCHED);
+        code[success] = (opcode_fn) ((current << OPSHIFT) | JUMP);
+    }
     successes.clear();
 }
 
@@ -604,6 +660,7 @@ Tree_p Bytecode::Constant(opaddr_t index)
 //   Return a given constant
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(index < constants.size());
     return constants[index];
 }
 
@@ -613,6 +670,7 @@ Rewrite_p Bytecode::Rewrite(opaddr_t index)
 //   Return a given rewrite
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(index < rewrites.size());
     return rewrites[index];
 }
 
@@ -683,15 +741,24 @@ opaddr_t Bytecode::Parameter(Name *name)
 // ----------------------------------------------------------------------------
 {
     if (parameters)
-    {
-        text symbol = name->value;
-        opaddr_t max = parameters->size();
-        for (opaddr_t index = 0; index < max; index++)
-            if ((*parameters)[index]->value == symbol)
-                return index;
-    }
-    return (opaddr_t) -1;
+        return Parameter(name, *parameters);
+    return 0;                   // Not a valid parameter index
 }
+
+
+opaddr_t Bytecode::Parameter(Name *name, NameList &names)
+// ----------------------------------------------------------------------------
+//    Find the index of a parameter in the current bytecode
+// ----------------------------------------------------------------------------
+{
+    text symbol = name->value;
+    opaddr_t max = names.size();
+    for (opaddr_t index = 0; index < max; index++)
+        if (names[index]->value == symbol)
+            return (index << OPSHIFT) | PARAMETER;
+    return 0;                   // Not a valid parameter index
+}
+
 
 
 // ============================================================================
@@ -718,22 +785,51 @@ Tree_p RunState::Self()
 }
 
 
-opaddr_t RunState::Data()
+opaddr_t RunState::Jump()
 // ----------------------------------------------------------------------------
 //   Read the next opcode as an intptr_t, e.g. branch offsets
 // ----------------------------------------------------------------------------
 {
-    return (opaddr_t) bytecode->code[pc++];
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::JUMP);
+    return (opaddr_t) (data >> Bytecode::OPSHIFT);
 }
 
 
-Tree_p RunState::Constant()
+Tree *RunState::Local()
+// ----------------------------------------------------------------------------
+//   Get a local binding from the bytecode
+// ----------------------------------------------------------------------------
+{
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::LOCAL);
+    opaddr_t index = data >> Bytecode::OPSHIFT;
+    XL_ASSERT(index < args);
+    return stack[index];
+}
+
+
+Tree *RunState::Constant()
 // ----------------------------------------------------------------------------
 //   Get a constant from the bytecode
 // ----------------------------------------------------------------------------
 {
-    opaddr_t index = (opaddr_t) bytecode->code[pc++];
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::CONSTANT);
+    opaddr_t index = data >> Bytecode::OPSHIFT;
     return bytecode->Constant(index);
+}
+
+
+Rewrite *RunState::Rewrite()
+// ----------------------------------------------------------------------------
+//   Get a rewrite from the bytecode
+// ----------------------------------------------------------------------------
+{
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::REWRITE);
+    opaddr_t index = data >> Bytecode::OPSHIFT;
+    return bytecode->Rewrite(index);
 }
 
 
@@ -820,9 +916,9 @@ private:
     Tree_p              test;           // Sub-exrpression being tested
     Bytecode *          bytecode;       // Bytecode we generate code in
     NameList            parameters;     // Parameters we are defining
-    strength            match;
-    Tree_p              defined;
-    Tree_p              type;
+    strength            match;          // Check how well we matched
+    Tree_p              defined;        // Have we bound a name yet?
+    Tree_p              type;           // Result type
 };
 
 
@@ -1202,12 +1298,7 @@ opaddr_t BytecodeBindings::Parameter(Name *name)
 //   Find the index of the named parameter
 // ----------------------------------------------------------------------------
 {
-    text symbol = name->value;
-    for (size_t index = 0; index < parameters.size(); index++)
-        if (parameters[index]->value == symbol)
-            return index;
-    record(opcode_error, "Invalid parameter %t", name);
-    return 0;
+    return Bytecode::Parameter(name, parameters);
 }
 
 
@@ -1342,7 +1433,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
             if (Name *name = pattern->AsName())
             {
                 opaddr_t index = bytecode->Parameter(name);
-                if (index != (opaddr_t) -1)
+                if (index)
                 {
                     OPCST(local, index);
                     done = true;
@@ -1358,9 +1449,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
         // Insert code to evaluate the body
         if (!done)
         {
-            compile(declScope, decl->Definition(), bytecode);
-            OPCST(constant, decl->Definition());
-            OP(evaluate);
+            compile(bindings.ArgumentsScope(), decl->Definition(), bytecode);
 
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
@@ -1683,10 +1772,8 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         compiled = new Bytecode(scope, expr);
         expr->SetInfo<Bytecode>(compiled);
         compile(scope, expr, compiled);
-
-        // Transfer to that bytecode from the old invokation point
         OPCST(constant, expr);
-        OP(transfer);
+        OP(evaluate);
         return;
     }
 

@@ -83,7 +83,7 @@ static void check(RunState &state)
 {
     Tree_p value = state.Top();
     Tree_p err = state.Constant();
-    opaddr_t target = state.Data();
+    opaddr_t target = state.Jump();
     if (!value)
     {
         state.pc = target;
@@ -131,7 +131,7 @@ static void branch(RunState &state)
 //   Terminate execution
 // ----------------------------------------------------------------------------
 {
-    state.pc = state.Data();
+    state.pc = state.Jump();
 }
 
 
@@ -494,14 +494,12 @@ static void assign(RunState &state)
 }
 
 
-
 static void init_constant(RunState &state)
 // ----------------------------------------------------------------------------
 //   Initialize a named constant
 // ----------------------------------------------------------------------------
 {
-    opaddr_t index = state.Data();
-    Rewrite_p rewrite = state.bytecode->Rewrite(index);
+    Rewrite_p rewrite = state.Rewrite();
     Tree_p value = state.Pop();
     rewrite->right = value;
 }
@@ -512,8 +510,7 @@ static void local(RunState &state)
 //   Fetch a local value from the state and put it on top of stack
 // ----------------------------------------------------------------------------
 {
-    opaddr_t index = state.Data();
-    Tree_p value = state.stack[index];
+    Tree_p value = state.Local();
     state.Push(value);
 }
 
