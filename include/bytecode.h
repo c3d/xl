@@ -109,8 +109,10 @@ struct RunState
     Tree_p      Self();
     Scope_p     EvaluationScope()       { return scope; }
     Scope_p     DeclarationScope();
-    opaddr_t    Data();
-    Tree_p      Constant();
+    opaddr_t    Jump();
+    Tree *      Local();
+    Tree *      Constant();
+    Rewrite *   Rewrite();
     void        Error(Tree *msg)        { error = msg; }
     Tree *      Error()                 { return error; }
 
