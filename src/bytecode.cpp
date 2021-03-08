@@ -583,6 +583,13 @@ void Bytecode::PatchSuccesses()
 // ----------------------------------------------------------------------------
 {
     opaddr_t current = code.size();
+
+    // If we have a branch to patch as the last instruction, we can remove it
+    if (current >= 2 &&
+        code[current - 2] == branch &&
+        successes.back() == current-1)
+        code.erase(code.end() - 2, code.end());
+
     for (auto success : successes)
     {
         XL_ASSERT(code[success] == (opcode_fn) UNPATCHED);
