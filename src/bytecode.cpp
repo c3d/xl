@@ -532,12 +532,10 @@ void Bytecode::RemoveLastDefinition()
 // ----------------------------------------------------------------------------
 //   Remove definitions inserted in sequences
 // ----------------------------------------------------------------------------
-//   A definition adds:
-//   - An OPCST(constant, expr) for the initial (unevaluated) value
-//   - An OPCST(constant, rewrite) for the rewrite
-//  Each of these occupies two opcodes, so we need to remove 4 opcodes
+//   A definition adds an OPCST(constant, rewrite) for the rewrite
+//   This occupies two opcodes, so remove both
 {
-    code.erase(code.end() - 4, code.end());
+    code.erase(code.end() - 2, code.end());
 }
 
 
@@ -1409,11 +1407,6 @@ static Tree *lookupCandidate(Scope   *evalScope,
 
     // Add bytecode to check argument against parameters and create locals
     Bytecode::Attempt attempt(bytecode);
-
-    // Save the top of stack before this candidate attempts to analyze it
-    OP(dup);
-
-    // Match the pattern or fail
     bindings.Candidate(decl, evalScope, declScope);
     strength matched = pattern->Do(bindings);
 
@@ -1792,7 +1785,6 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         }
         else
         {
-            OP(drop);
             OP(get_scope);
             return;
         }
@@ -1813,7 +1805,6 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         }
 
         // Lookup expression
-        OPCST(constant, expr);
         Context::LookupMode mode = lookupMode(bytecode);
         BytecodeBindings bindings(expr, bytecode);
         context.Lookup(expr, lookupCandidate, &bindings, mode);
