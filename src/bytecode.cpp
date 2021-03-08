@@ -600,6 +600,7 @@ void Bytecode::PatchSuccesses(size_t where)
     // If we have a branch to patch as the last instruction, we can remove it
     while (current >= 2 &&
            code[current - 2] == branch &&
+           successes.size() > where &&
            successes.back() == current-1)
     {
         code.erase(code.end() - 2, code.end());
