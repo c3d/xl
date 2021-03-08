@@ -1889,7 +1889,7 @@ static Bytecode *compile(Scope *scope,
         if (hasInstructions)
             compile(scope, expr, bytecode);
         bytecode->Validate();
-        if (RECORDER_TRACE(opcode))
+        if (RECORDER_TRACE(bytecode))
         {
             std::cerr << "Compiled " << expr << " as\n";
             bytecode->Dump(std::cerr);
