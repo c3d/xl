@@ -1854,6 +1854,12 @@ static Bytecode *compile(Scope *scope, Tree *expr)
 // ----------------------------------------------------------------------------
 {
     NameList parameters;
+    if (Name *name = expr->AsName())
+    {
+        Context context(scope);
+        Tree *form = context.Bound(name);
+        return compile(scope, expr, form, parameters);
+    }
     return compile(scope, expr, expr, parameters);
 }
 
