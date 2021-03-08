@@ -76,21 +76,6 @@ static void cast(RunState &state)
 }
 
 
-static void check(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if the top of stack contains a nullptr
-// ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Top();
-    Tree_p err = state.Constant();
-    opaddr_t target = state.Jump();
-    if (!value)
-    {
-        state.pc = target;
-        state.Error(err);
-    }
-}
-
 
 static void error(RunState &state)
 // ----------------------------------------------------------------------------
@@ -185,115 +170,6 @@ static void swap(RunState &state)
 }
 
 
-static void swap_drop(RunState &state)
-// ----------------------------------------------------------------------------
-//   Drop the item above top of stack
-// ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Pop();
-    state.Set(value);
-};
-
-
-static void guard(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if the guard condition is true, or nullify the stack
-// ----------------------------------------------------------------------------
-{
-    Tree_p condition = state.Constant();
-    state.Push(condition);
-    evaluate(state);
-    condition = state.Top();
-    if (condition == xl_true)
-        return;
-    state.Set(nullptr);
-}
-
-
-static void match_same(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if the two tops levels are equal, leave it or nullptr
-// ----------------------------------------------------------------------------
-{
-    Tree_p test = state.Pop();
-    Tree_p expr = state.Top();
-    if (Tree::Equal(expr, test))
-    {
-        // Special case where the value was nil - leave a non-null nil value
-        if (!expr)
-        {
-            static Name_p nil = new Name("nil");
-            state.Set(nil);
-        }
-        return;
-    }
-    state.Set(nullptr);
-}
-
-
-static void match_natural(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if we match a natural constant
-// ----------------------------------------------------------------------------
-{
-    Tree *top = state.Top();
-    Natural *natural = top->AsNatural();
-    Natural *match = state.Constant()->AsNatural();
-    if (natural && natural->value == match->value)
-        return;
-    state.Set(nullptr);
-}
-
-
-static void match_real(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if we match a real constant
-// ----------------------------------------------------------------------------
-{
-    Tree *top = state.Top();
-    Real *real = top->AsReal();
-    Real *match = state.Constant()->AsReal();
-    if (real && real->value == match->value)
-        return;
-    Natural *nat = top->AsNatural();
-    if (nat && nat->value == match->value)
-    {
-        state.Set(new Real(nat->value, nat->Position()));
-        return;
-    }
-    state.Set(nullptr);
-}
-
-
-static void match_text(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if we match a text constant
-// ----------------------------------------------------------------------------
-{
-    Tree *top = state.Top();
-    Text *text = top->AsText();
-    Text *match = state.Constant()->AsText();
-    if (text && text->value == match->value)
-        return;
-    state.Set(nullptr);
-}
-
-
-static void match_infix(RunState &state)
-// ----------------------------------------------------------------------------
-//   Check if we have an infix, and if so, split it into two components
-// ----------------------------------------------------------------------------
-//   We have [infix], we will have either [right, left], or [nullptr]
-{
-    Infix *reference = state.Constant()->AsInfix();
-    Tree_p top = state.Pop();
-    Infix *infix = top->AsInfix();
-    if (infix && infix->name == reference->name)
-        return;
-    state.Push(nullptr);
-}
-
-
 static void make_variable(RunState &state)
 // ----------------------------------------------------------------------------
 //   Turn something into a variable type
@@ -364,7 +240,7 @@ static void set_scope(RunState &state)
 
 static void enter(RunState &state)
 // ----------------------------------------------------------------------------
-//   Enter a new frame for a call
+//   Enter a nested scope
 // ----------------------------------------------------------------------------
 {
     Context context(state.scope);
@@ -381,7 +257,7 @@ static void call(RunState &state)
     // Save bytecode, program counter and current frame
     Bytecode *saveBC = state.bytecode;
     opaddr_t  savePC = state.pc;
-    opaddr_t  frame  = state.locals;
+    opaddr_t  locals = state.locals;
 
     // Get bytecode for what we want to call
     Tree_p callee = state.Pop();
@@ -393,13 +269,13 @@ static void call(RunState &state)
     // Restore caller's state
     state.pc = savePC;
     state.bytecode = saveBC;
-    state.locals = frame;
-    state.frame = frame;
+    state.locals = locals;
+    state.frame = locals + 1;
 
-    // Pop the input arguments, leaving result on top of stack
-    Tree_p result = state.Pop();
+    // If callee did not consume its arguments, cleanup
     auto &stack = state.stack;
-    stack.erase(stack.begin() + frame, stack.end());
+    Tree_p result = state.Pop();
+    stack.erase(stack.begin() + state.frame, stack.end());
     state.Push(result);
 }
 
@@ -409,8 +285,10 @@ static void bind(RunState &state)
 //   Bind the top value on the stack to a formal parameter
 // ----------------------------------------------------------------------------
 {
-    state.frame++;
-    XL_ASSERT(state.frame == state.stack.size());
+    size_t size = state.FrameSize();
+    XL_ASSERT(size <= state.stack.size());
+    state.frame = state.stack.size();
+    state.locals = state.frame - size;
 }
 
 
@@ -434,17 +312,6 @@ static void assign(RunState &state)
 }
 
 
-static void init_constant(RunState &state)
-// ----------------------------------------------------------------------------
-//   Initialize a named constant
-// ----------------------------------------------------------------------------
-{
-    Rewrite_p rewrite = state.Rewrite();
-    Tree_p value = state.Pop();
-    rewrite->right = value;
-}
-
-
 static void local(RunState &state)
 // ----------------------------------------------------------------------------
 //   Fetch a local value from the state and put it on top of stack
@@ -455,26 +322,190 @@ static void local(RunState &state)
 }
 
 
-static void borrow(RunState &state)
+static void init_value(RunState &state)
+// ----------------------------------------------------------------------------
+//   Initialize a named constant
+// ----------------------------------------------------------------------------
+{
+    Rewrite_p rewrite = state.Rewrite();
+    Tree_p value = state.Pop();
+    rewrite->right = value;
+}
+
+
+// ============================================================================
+//
+//    Checks - Branch to target in case of failure
+//
+// ============================================================================
+
+static void check_type(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check a type at runtime
+// ----------------------------------------------------------------------------
+{
+    Tree_p type = state.Constant();
+    opaddr_t target = state.Jump();
+    Tree_p value = state.Pop();
+    Tree_p result = typecheck(state.scope, type, value);
+    if (result)
+    {
+        state.Push(result);
+        return;
+    }
+    state.pc = target;
+}
+
+
+static void check_input_type(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check the type of an input argument
+// ----------------------------------------------------------------------------
+{
+    check_type(state);
+}
+
+
+static void check_result_type(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check the type of an argument
+// ----------------------------------------------------------------------------
+{
+    check_type(state);
+}
+
+
+static void check_init_type(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check the type of an initializer
+// ----------------------------------------------------------------------------
+{
+    check_type(state);
+}
+
+
+static void check_typecast(RunState &state)
+// ----------------------------------------------------------------------------
+//   Evaluate a type cast, i.e. [X as Y]
+// ----------------------------------------------------------------------------
+{
+    check_type(state);
+}
+
+
+static void check_guard(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check if the guard condition is true, or nullify the stack
+// ----------------------------------------------------------------------------
+{
+    opaddr_t target = state.Jump();
+    Tree *condition = state.Pop();
+    if (condition == xl_true)
+        return;
+    state.pc = target;
+}
+
+
+static void check_same(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check if the two tops levels are equal, leave one copy if it matches
+// ----------------------------------------------------------------------------
+{
+    Tree_p test = state.Pop();
+    Tree_p expr = state.Top();
+    opaddr_t target = state.Jump();
+    if (Tree::Equal(expr, test))
+        return;
+    state.pc = target;
+}
+
+
+static void check_natural(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check if we match a natural constant
+// ----------------------------------------------------------------------------
+{
+    Tree *value = state.Pop();
+    Natural *natural = value->AsNatural();
+    Natural *match = state.Constant()->AsNatural();
+    opaddr_t target = state.Jump();
+    if (natural && natural->value == match->value)
+        return;
+    state.pc = target;
+}
+
+
+static void check_real(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check if we match a real constant
+// ----------------------------------------------------------------------------
+{
+    Tree *value = state.Pop();
+    Real *real = value->AsReal();
+    Real *match = state.Constant()->AsReal();
+    opaddr_t target = state.Jump();
+    if (real && real->value == match->value)
+        return;
+    Natural *nat = value->AsNatural();
+    if (nat && nat->value == match->value)
+        return;
+    state.pc = target;
+}
+
+
+static void check_text(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check if we match a text constant
+// ----------------------------------------------------------------------------
+{
+    Tree *top = state.Top();
+    Text *text = top->AsText();
+    Text *match = state.Constant()->AsText();
+    opaddr_t target = state.Jump();
+    if (text && text->value == match->value)
+        return;
+    state.pc = target;
+}
+
+
+static void check_infix(RunState &state)
+// ----------------------------------------------------------------------------
+//   Check if we have an infix, and if so, split it into two components
+// ----------------------------------------------------------------------------
+//   We have [infix], we will have either [right, left], or [nullptr]
+{
+    Infix *reference = state.Constant()->AsInfix();
+    Tree_p value = state.Pop();
+    Infix *infix = value->AsInfix();
+    opaddr_t target = state.Jump();
+    if (infix && infix->name == reference->name)
+        return;
+    state.pc = target;
+}
+
+
+static void check_borrow(RunState &state)
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration
 // ----------------------------------------------------------------------------
 {
     Tree *top = state.Top();
+    opaddr_t target = state.Jump();
     Rewrite *rewrite = top->As<Rewrite>();
     if (rewrite)
         return;
-    state.Set(nullptr);
+    state.pc = target;
 }
 
 
-static void typed_borrow(RunState &state)
+static void check_typed_borrow(RunState &state)
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration and check its type
 // ----------------------------------------------------------------------------
 {
     Tree *top = state.Top();
     Tree *type = state.Constant();
+    opaddr_t target = state.Jump();
     Rewrite *rewrite = top->As<Rewrite>();
     if (rewrite)
     {
@@ -483,5 +514,5 @@ static void typed_borrow(RunState &state)
         if (Tree::Equal(type, have))
             return;
     }
-    state.Set(nullptr);
+    state.pc = target;
 }

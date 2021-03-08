@@ -94,6 +94,10 @@ struct RunState
 //   The state of the program during evaluation
 // ----------------------------------------------------------------------------
 //   During evaluation, the stack looks like this:
+//   - [...]
+//   - Outermost stack  <--- frames[0]
+//   - [...]
+//   - Enclosing stack  <--- frames.back()
 //   - caller's stack
 //   - arg 0            <--- locals
 //   - arg 1
@@ -106,10 +110,8 @@ struct RunState
 {
     RunState(Scope *scope, Tree *expr)
         : stack(), scope(scope), bytecode(), transfer(),
-          pc(0), frame(0), locals(0), error()
-    {
-        Push(expr);
-    }
+          pc(0), locals(0), frame(0), error()
+    { }
 
     void        Push(Tree *value)       { stack.push_back(value); }
     Tree_p      Pop();
@@ -120,12 +122,13 @@ struct RunState
     Scope_p     EvaluationScope()       { return scope; }
     Scope_p     DeclarationScope();
     opaddr_t    Jump();
-    opaddr_t    FrameSize();
     Tree *      Local();
+    size_t      FrameSize();
     Tree *      Constant();
     Rewrite *   Rewrite();
     void        Error(Tree *msg)        { error = msg; }
     Tree *      Error()                 { return error; }
+    void        Dump(std::ostream &out);
 
     typedef std::vector<size_t> Frames;
 
@@ -134,8 +137,9 @@ struct RunState
     Bytecode *  bytecode;               // Bytecode currently executing
     Bytecode *  transfer;               // Bytecode to transfer to
     opaddr_t    pc;                     // Program counter in the bytcode
-    opaddr_t    frame;                  // Base of current frame on the stack
-    opaddr_t    locals;                 // Base of locals (inputs) on stack
+    size_t      locals;                 // Base of locals (inputs) on stack
+    size_t      frame;                  // Base of stack for current subexpr
+    Frames      frames;                 // Enclosing frames
     Tree_p      error;                  // Error messages
 };
 
