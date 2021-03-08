@@ -1322,6 +1322,7 @@ strength BytecodeBindings::Do(Infix *what)
         // Need to match the left part with the converted value
         if (!outermost && !defined)
             defined = what;
+        bytecode->Type(nullptr);
         what->left->Do(this);
 
         // Type check value against type
@@ -1541,7 +1542,9 @@ static Tree *lookupCandidate(Scope   *evalScope,
             else
             {
                 // Real call
-                compile(locals, body, pattern, bytecode->Parameters());
+                NameList parms = bytecode->Parameters();
+                parms.erase(parms.begin(), parms.begin() + attempt.frame);
+                compile(locals, body, pattern, parms);
 
                 // Transfer evaluation to the body
                 if (opaddr_t framesize = bytecode->FrameSize(attempt.frame))
