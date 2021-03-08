@@ -1694,17 +1694,16 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
     Context context(scope);
     if (expr->AsBlock() || IsSequence(expr))
     {
-        scope = context.CreateScope();
         Initializers inits;
         bool hasInstructions = context.ProcessDeclarations(expr, inits);
         bool hasLocals = !scope->IsEmpty();
-        if (hasLocals && hasInstructions)
-            OP(enter);
-        else
-            scope = context.PopScope();
         if (hasLocals)
             doInitializers(inits, bytecode);
-        if (!hasInstructions)
+        if (hasInstructions)
+        {
+            OP(enter);
+        }
+        else
         {
             OP(drop);
             OP(get_scope);
