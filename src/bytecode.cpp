@@ -1548,10 +1548,9 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 compile(locals, body, pattern, parms);
 
                 // Transfer evaluation to the body
-                if (opaddr_t framesize = bytecode->FrameSize(attempt.frame))
-                    OPCST(bind, framesize);
+                opaddr_t framesize = bytecode->FrameSize(attempt.frame);
                 OPCST(constant, pattern);
-                OP(call);
+                OPCST(call, framesize);
             }
 
             // Check the result type if we had one
