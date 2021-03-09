@@ -235,6 +235,7 @@ struct Bytecode : Info
     void        Type(Tree *value, Tree *type);
     void        Dump(std::ostream &out);
     void        Dump(std::ostream &out, opaddr_t pc);
+    opaddr_t    Data(opaddr_t pc);
 
     typedef std::vector<opaddr_t>       Patches;
     typedef std::vector<opcode_fn>      Opcodes;
@@ -439,6 +440,15 @@ void Bytecode::Dump(std::ostream &out, opaddr_t pc)
         out << pc << ":\t" << "  INVALID\t" << kind << "\n";
         break;
     }
+}
+
+
+opaddr_t Bytecode::Data(opaddr_t pc)
+// ----------------------------------------------------------------------------
+//   Read data from a given PC
+// ----------------------------------------------------------------------------
+{
+    return (opaddr_t) code[pc] >> OPSHIFT;
 }
 
 
