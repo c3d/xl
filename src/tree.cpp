@@ -312,6 +312,38 @@ text Normalize(text spelling)
 }
 
 
+void SourceTree(Tree *tree)
+// ----------------------------------------------------------------------------
+//    Mark source code with FROM_SOURCE to indicate we must compile it
+// ----------------------------------------------------------------------------
+{
+    if (!tree)
+        return;
+
+    tree->MarkSourceTree();
+    switch(tree->Kind())
+    {
+    case INFIX:
+        SourceTree(((Infix *) tree)->left);
+        SourceTree(((Infix *) tree)->right);
+        break;
+    case PREFIX:
+        SourceTree(((Prefix *) tree)->left);
+        SourceTree(((Prefix *) tree)->right);
+        break;
+    case POSTFIX:
+        SourceTree(((Postfix *) tree)->left);
+        SourceTree(((Postfix *) tree)->right);
+        break;
+    case BLOCK:
+        SourceTree(((Block *) tree)->child);
+        break;
+    default:
+        break;
+    }
+}
+
+
 
 // ============================================================================
 //
