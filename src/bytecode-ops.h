@@ -254,6 +254,9 @@ static void call(RunState &state)
 //    Call the top of stack
 // ----------------------------------------------------------------------------
 {
+    size_t size = state.FrameSize();
+    XL_ASSERT(size <= state.stack.size());
+
     // Save bytecode, program counter and current frame
     Bytecode *saveBC = state.bytecode;
     opaddr_t  savePC = state.pc;
@@ -262,6 +265,10 @@ static void call(RunState &state)
     // Get bytecode for what we want to call
     Tree_p callee = state.Pop();
     Bytecode *bytecode = compile(state.EvaluationScope(), callee);
+
+    // Set the frame for the callee
+    state.frame = state.stack.size();
+    state.locals = state.frame - size;
 
     // Run the target code
     bytecode->Run(state);
@@ -277,18 +284,6 @@ static void call(RunState &state)
     Tree_p result = state.Pop();
     stack.erase(stack.begin() + state.frame, stack.end());
     state.Push(result);
-}
-
-
-static void bind(RunState &state)
-// ----------------------------------------------------------------------------
-//   Bind the top value on the stack to a formal parameter
-// ----------------------------------------------------------------------------
-{
-    size_t size = state.FrameSize();
-    XL_ASSERT(size <= state.stack.size());
-    state.frame = state.stack.size();
-    state.locals = state.frame - size;
 }
 
 
