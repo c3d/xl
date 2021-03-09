@@ -180,6 +180,11 @@ static Tree_p ErrorMessage(Args...args)
     } while(0)
 
 
+typedef std::map<Tree_p, Tree_p>        TypeMap;
+typedef std::map<Tree_p, size_t>        ValueMap;
+
+
+
 struct Bytecode : Info
 // ----------------------------------------------------------------------------
 //   A sequence of instructions associated to a tree
@@ -224,8 +229,10 @@ struct Bytecode : Info
     opaddr_t    Parameter(Name *name);
     NameList &  Parameters();
     opaddr_t    FrameSize(size_t base);
-    Tree *      Type();
-    void        Type(Tree *type);
+    bool        Cached(Tree *value);
+    void        Evaluate(Scope *scope, Tree *value);
+    Tree *      Type(Tree *value);
+    void        Type(Tree *value, Tree *type);
     void        Dump(std::ostream &out);
     void        Dump(std::ostream &out, opaddr_t pc);
 
@@ -247,10 +254,11 @@ private:
 
     struct CompileInfo
     {
-        CompileInfo(): checks(), successes(), type(), local(), variable() {}
+        CompileInfo(): local(false), variable(false) {}
         Patches     checks;     // Checks to patch
         Patches     successes;  // Checks to patch
-        Tree_p      type;       // Last known type of current value
+        TypeMap     types;      // Last known type for a value
+        ValueMap    values;     // Already-computed value
         bool        local;      // Non-recursive lookup
         bool        variable;   // Evaluate as variable
     };
@@ -282,9 +290,12 @@ public:
             : bytecode(bytecode),
               cutpoint(bytecode->Size()),
               frame(bytecode->parameters.size()),
-              checks(bytecode->compile->checks)
+              checks(bytecode->compile->checks),
+              values(bytecode->compile->values),
+              types(bytecode->compile->types)
         {
             bytecode->compile->checks.clear();
+            bytecode->compile->types.clear();
         }
         ~Attempt()
         {
@@ -297,12 +308,16 @@ public:
         {
             bytecode->Cut(cutpoint);
             bytecode->compile->checks.clear();
+            bytecode->compile->values = values;
+            bytecode->compile->types = types;
         }
 
         Bytecode *bytecode;
         opaddr_t  cutpoint;
         size_t    frame;
         Patches   checks;
+        ValueMap  values;
+        TypeMap   types;
     };
 
     // Names for debugging purpose
@@ -339,9 +354,30 @@ void Bytecode::Dump(std::ostream &out)
 // ----------------------------------------------------------------------------
 {
     size_t parms = parameters.size();
-    for (size_t parm = 0; parm < parms; parm++)
-        out << parm << "\t= " << parameters[parm] << "\n";
+    if (parms)
+    {
+        out << "Parameters:\n";
+        for (size_t parm = 0; parm < parms; parm++)
+            out << parm << "\t= " << parameters[parm] << "\n";
+    }
 
+    if (compile)
+    {
+        if (compile->values.size())
+        {
+            out << "Cached values:\n";
+            for (auto &it : compile->values)
+                out << it.second << ":\t" << it.first << "\n";
+        }
+        if (compile->values.size())
+        {
+            out << "Types:\n";
+            for (auto &it : compile->types)
+                out << it.first << "\tas\t" << it.second << "\n";
+        }
+    }
+
+    out << "Opcodes:\n";
     opaddr_t max = code.size();
     for (opaddr_t pc = 0; pc < max; pc++)
         Dump(out, pc);
@@ -534,7 +570,8 @@ void Bytecode::Clear()
     constants.clear();
     rewrites.clear();
     parameters.clear();
-    compile->type = nullptr;
+    compile->types.clear();
+    compile->values.clear();
     compile->local = false;
     compile->variable = false;
 }
@@ -789,21 +826,57 @@ inline opaddr_t Bytecode::FrameSize(size_t base)
 }
 
 
-Tree *Bytecode::Type()
+bool Bytecode::Cached(Tree *value)
 // ----------------------------------------------------------------------------
-//   Return the last known type of the top of stack
+//   Evaluate a value but only once
 // ----------------------------------------------------------------------------
 {
-    return compile->type;
+    ValueMap &values = compile->values;
+    auto found = values.find(value);
+    if (found != values.end())
+    {
+        Bytecode *bytecode = this;
+        opaddr_t data = (*found).second;
+        OPCST(load, data);
+        return true;
+    }
+    return false;
 }
 
 
-void Bytecode::Type(Tree *ty)
+void Bytecode::Evaluate(Scope *scope, Tree *value)
+// ----------------------------------------------------------------------------
+//   Evaluate a value but only once
+// ----------------------------------------------------------------------------
+{
+    Bytecode *bytecode = this;
+    if (!Cached(value))
+    {
+        ValueMap &values = compile->values;
+        XL::compile(scope, value, bytecode);
+        size_t index = values.size();
+        opaddr_t data = (index << OPSHIFT) | LOCAL;
+        values[value] = data;
+        OPCST(store, data);
+    }
+}
+
+
+Tree *Bytecode::Type(Tree *value)
 // ----------------------------------------------------------------------------
 //   Return the last known type of the top of stack
 // ----------------------------------------------------------------------------
 {
-    compile->type = ty;
+    return compile->types[value];
+}
+
+
+void Bytecode::Type(Tree *value, Tree *type)
+// ----------------------------------------------------------------------------
+//   Return the last known type of the top of stack
+// ----------------------------------------------------------------------------
+{
+    compile->types[value] = type;
 }
 
 
@@ -850,10 +923,37 @@ Tree *RunState::Local()
 // ----------------------------------------------------------------------------
 {
     opaddr_t data = (opaddr_t) bytecode->code[pc++];
-    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::PARAMETER);
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::PARAMETER ||
+              (data & Bytecode::OPMASK) == Bytecode::LOCAL);
     opaddr_t index = data >> Bytecode::OPSHIFT;
     XL_ASSERT(locals + index < frame);
     return stack[locals + index];
+}
+
+
+void RunState::Save(Tree *value)
+// ----------------------------------------------------------------------------
+//   Save value to a local binding
+// ----------------------------------------------------------------------------
+{
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::LOCAL);
+    opaddr_t index = data >> Bytecode::OPSHIFT;
+    XL_ASSERT(stack.size() >= frame + index);
+    stack.insert(stack.begin() + frame + index, value);
+}
+
+
+Tree *RunState::Saved()
+// ----------------------------------------------------------------------------
+//   Save value to a local binding
+// ----------------------------------------------------------------------------
+{
+    opaddr_t data = (opaddr_t) bytecode->code[pc++];
+    XL_ASSERT((data & Bytecode::OPMASK) == Bytecode::LOCAL);
+    opaddr_t index = data >> Bytecode::OPSHIFT;
+    XL_ASSERT(stack.size() >= frame + index);
+    return stack[frame + index];
 }
 
 
@@ -939,6 +1039,8 @@ struct BytecodeBindings
 
     // Start considering a new candidate
     void        Candidate(Rewrite *decl, Scope *evalScope, Scope *declScope);
+    void        EvaluateCandidate()     { if (match != FAILED) successes++; }
+    size_t      Successes()             { return successes; }
 
     // Tree::Do interface to check the pattern
     strength    Do(Natural *what);
@@ -975,10 +1077,10 @@ private:
 
     void        MustEvaluate()
     {
-        compile(evaluation, test, bytecode);
+        bytecode->Evaluate(evaluation, test);
     }
 
-    Tree_p      Evaluate(Tree *expr)
+    Tree_p Evaluate(Tree *expr)
     {
         return evaluate(evaluation, expr);
     }
@@ -1007,6 +1109,7 @@ private:
     strength            match;          // Check how well we matched
     Tree_p              defined;        // Have we bound a name yet?
     Tree_p              type;           // Result type
+    size_t              successes;      // Number of cases where it worked
 };
 
 
@@ -1031,7 +1134,9 @@ BytecodeBindings::BytecodeBindings(Tree *expr, Bytecode *bytecode)
       test(expr),
       bytecode(bytecode),
       match(FAILED),
-      defined(nullptr)
+      defined(nullptr),
+      type(),
+      successes(0)
 {
     record(bindings, ">Created bindings %p for %t", this, expr);
 }
@@ -1076,7 +1181,7 @@ strength BytecodeBindings::Do(Natural *what)
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
-    bytecode->Type(natural_type);
+    bytecode->Type(test, natural_type);
 
     // If an exact match, no need to even check the value at runtime
     if (Natural *ival = test->AsNatural())
@@ -1100,7 +1205,7 @@ strength BytecodeBindings::Do(Real *what)
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
-    bytecode->Type(real_type);
+    bytecode->Type(test, real_type);
 
     // If an exact match, no need to check the value at runtime
     if (Real *rval = test->AsReal())
@@ -1133,7 +1238,7 @@ strength BytecodeBindings::Do(Text *what)
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
-    bytecode->Type(text_type);
+    bytecode->Type(test, text_type);
 
     if (Text *ival = test->AsText())
     {
@@ -1236,9 +1341,9 @@ strength BytecodeBindings::Do(Prefix *what)
         {
             Tree_p type = EvaluateType(typecast->right);
             compile(evaluation, test, bytecode);
-            if (type != bytecode->Type())
+            if (type != bytecode->Type(test))
                 CHECKCST(check_typed_borrow, type);
-            bytecode->Type(type);
+            bytecode->Type(test, type);
             Bind(name);
             return Possible();
         }
@@ -1249,6 +1354,7 @@ strength BytecodeBindings::Do(Prefix *what)
     if (Prefix *pfx = test->AsPrefix())
     {
         // Check prefix left first, which may set 'defined' to name
+        bytecode->Type(pfx, prefix_type);
         defined = nullptr;
         test = pfx->left;
         what->left->Do(this);
@@ -1274,6 +1380,7 @@ strength BytecodeBindings::Do(Postfix *what)
     if (Postfix *pfx = test->AsPostfix())
     {
         // Check postfix left first, which may set 'defined' to name
+        bytecode->Type(pfx, postfix_type);
         defined = nullptr;
         test = pfx->right;
         what->right->Do(this);
@@ -1285,6 +1392,53 @@ strength BytecodeBindings::Do(Postfix *what)
 
     // Otherwise, it's a mismatch
     return Failed();
+}
+
+
+static Name *IsBuiltinType(Tree *type)
+// ----------------------------------------------------------------------------
+//   Check if a type is a built-in type
+// ----------------------------------------------------------------------------
+{
+#define NAME(N)
+#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)
+#define BINARY_OP(Name, ReturnType, LeftTYpe, RightType, Body)
+#define TYPE(N, Body)   if (type == N##_type) return N##_type;
+#include "builtins.tbl"
+    return nullptr;
+}
+
+
+static bool IncompatibleTypes(Name *want, Name *have)
+// ----------------------------------------------------------------------------
+//   Check if types are incompatible
+// ----------------------------------------------------------------------------
+{
+    if (want == have)
+        return false;
+    if (want == tree_type || have == tree_type)
+        return false;
+    if (want == value_type || have == value_type)
+        return false;
+    if (want == symbol_type && (have == name_type || have == operator_type))
+        return false;
+    if ((want == name_type || want == operator_type) && have == symbol_type)
+        return false;
+    if ((want == text_type || want == character_type) &&
+        (have == text_type || have == character_type))
+        return false;
+    text wn = want->value;
+    text hn = have->value;
+#define like(t)       compare(0, sizeof(t)-1, t) == 0
+    if ((wn.like("natural") ||
+         wn.like("integer") ||
+         wn.like("real")) &&
+        (hn.like("natural") ||
+         hn.like("integer")))
+        return false;
+#undef like
+
+    return true;
 }
 
 
@@ -1311,11 +1465,11 @@ strength BytecodeBindings::Do(Infix *what)
 
                 // Get the value to test, e.g. [A+B] in the example above
                 test = cast->left;
+                bytecode->Type(test, wtype);
 
                 // Test that against [lambda N]
                 defined = what;
                 declared->Do(this);
-                bytecode->Type(wtype);
                 return Perfect();
             }
 
@@ -1329,15 +1483,22 @@ strength BytecodeBindings::Do(Infix *what)
         // Need to match the left part with the converted value
         if (!outermost && !defined)
             defined = what;
-        bytecode->Type(nullptr);
+        Tree_p value = test;
         what->left->Do(this);
+
+        // Check hard incompatible types, e.g. integer vs text
+        Tree_p have = bytecode->Type(test);
+        if (Name *wn = IsBuiltinType(want))
+            if (Name *hn = IsBuiltinType(have))
+                if (IncompatibleTypes(wn, hn))
+                    return Failed();
 
         // Type check value against type
         if (outermost)
             type = want;
-        else if (want != bytecode->Type())
+        else if (want != have)
             CHECKCST(check_input_type, want);
-        bytecode->Type(want);
+        bytecode->Type(value, want);
         return Possible();
     }
 
@@ -1364,6 +1525,7 @@ strength BytecodeBindings::Do(Infix *what)
     {
         if (ifx->name == what->name)
         {
+            bytecode->Type(ifx, infix_type);
             test = ifx->left;
             what->left->Do(this);
             test = ifx->right;
@@ -1375,6 +1537,7 @@ strength BytecodeBindings::Do(Infix *what)
     {
         MustEvaluate();
         CHECKCST(check_infix, what);
+        bytecode->Type(name, infix_type);
         return Possible();
     }
 
@@ -1505,6 +1668,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
     Bytecode::Attempt attempt(bytecode);
     bindings.Candidate(decl, evalScope, declScope);
     strength matched = pattern->Do(bindings);
+    bindings.EvaluateCandidate();
 
     // Check if the candidate succeeded or failed
     if (matched == BytecodeBindings::FAILED)
@@ -1563,9 +1727,9 @@ static Tree *lookupCandidate(Scope   *evalScope,
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
             {
-                if (bytecode->Type() != type)
+                if (bytecode->Type(expr) != type)
                     CHECKCST(check_result_type, type);
-                bytecode->Type(type);
+                bytecode->Type(expr, type);
             }
         }
 
@@ -1608,9 +1772,9 @@ static bool doConstant(Scope *scope, Tree *tree, Bytecode *bytecode)
     OPCST(constant, tree);
     switch(tree->Kind())
     {
-    case NATURAL:       bytecode->Type(natural_type); break;
-    case REAL:          bytecode->Type(real_type); break;
-    case TEXT:          bytecode->Type(text_type); break;
+    case NATURAL:       bytecode->Type(tree, natural_type); break;
+    case REAL:          bytecode->Type(tree, real_type); break;
+    case TEXT:          bytecode->Type(tree, text_type); break;
     default:            break;
     }
 
@@ -1839,8 +2003,9 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
             }
         }
         compile(scope, infix->left, bytecode);
-        CHECKCST(check_typecast, want);
-        bytecode->Type(want);
+        if (bytecode->Type(infix->left) != want)
+            CHECKCST(check_typecast, want);
+        bytecode->Type(infix->left, want);
         return true;
     }
 
@@ -1909,13 +2074,13 @@ static Bytecode *compile(Scope *scope,
 
         if (hasInstructions)
             compile(scope, expr, bytecode);
-        bytecode->Validate();
         if (RECORDER_TRACE(bytecode))
         {
             std::cerr << "Compiled " << expr << " as\n";
             bytecode->Dump(std::cerr);
             std::cerr << "\n";
         }
+        bytecode->Validate();
 }
 
     return bytecode;
@@ -1950,7 +2115,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         bytecode->PatchSuccesses(patches);
 
         // If we did not find a matching form, check standard evaluation
-        int done = bindings.Strength() != BytecodeBindings::FAILED;
+        int done = bindings.Successes() != 0;
         if (!done) switch(expr->Kind())
         {
         case NATURAL:
@@ -1976,6 +2141,9 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         // If we failed, clean up and error out
         if (!done)
         {
+            record(bytecode, "Giving up on bytecode for %t", expr);
+            if (RECORDER_TRACE(bytecode))
+                bytecode->Dump(std::cerr);
             bytecode->Clear();
             Tree_p msg = ErrorMessage("No form matches $1", expr);
             bytecode->ErrorExit(msg);

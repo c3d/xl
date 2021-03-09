@@ -123,6 +123,8 @@ struct RunState
     Scope_p     DeclarationScope();
     opaddr_t    Jump();
     Tree *      Local();
+    void        Save(Tree *);
+    Tree *      Saved();
     size_t      FrameSize();
     Tree *      Constant();
     Rewrite *   Rewrite();

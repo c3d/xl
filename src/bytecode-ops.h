@@ -317,6 +317,26 @@ static void local(RunState &state)
 }
 
 
+static void store(RunState &state)
+// ----------------------------------------------------------------------------
+//   Save top of stack to a new local
+// ----------------------------------------------------------------------------
+{
+    Tree_p value = state.Top();
+    state.Save(value);
+}
+
+
+static void load(RunState &state)
+// ----------------------------------------------------------------------------
+//   Save top of stack to a new local
+// ----------------------------------------------------------------------------
+{
+    Tree_p value = state.Saved();
+    state.Push(value);
+}
+
+
 static void init_value(RunState &state)
 // ----------------------------------------------------------------------------
 //   Initialize a named constant
