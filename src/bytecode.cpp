@@ -367,7 +367,7 @@ void Bytecode::Dump(std::ostream &out)
         {
             out << "Cached values:\n";
             for (auto &it : compile->values)
-                out << it.second << ":\t" << it.first << "\n";
+                out << (it.second >> OPSHIFT) << ":\t" << it.first << "\n";
         }
         if (compile->values.size())
         {
