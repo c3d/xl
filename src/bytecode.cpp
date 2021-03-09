@@ -1390,7 +1390,8 @@ void BytecodeBindings::Bind(Name *name)
 {
     bytecode->Bind(name);
     Context context(arguments);
-    context.Define(name, test);
+    Context eval(evaluation);
+    context.Define(name, eval.Enclose(test));
 }
 
 
@@ -1881,6 +1882,11 @@ static Bytecode *compile(Scope *scope,
 //   Compile a definition with parameters and create its bytecode
 // ----------------------------------------------------------------------------
 {
+    if (Closure *closure = expr->As<Closure>())
+    {
+        expr = closure->Value();
+        scope = closure->CapturedScope();
+    }
     Bytecode *bytecode = pattern->GetInfo<Bytecode>();
     if (!bytecode)
     {
