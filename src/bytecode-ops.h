@@ -255,20 +255,22 @@ static void call(RunState &state)
 // ----------------------------------------------------------------------------
 {
     size_t size = state.FrameSize();
-    XL_ASSERT(size <= state.stack.size());
+    Tree_p callee = state.Pop();
 
     // Save bytecode, program counter and current frame
     Bytecode *saveBC = state.bytecode;
     opaddr_t  savePC = state.pc;
     opaddr_t  locals = state.locals;
+    opaddr_t  frame  = state.frame;
+    opaddr_t  ssize  = state.stack.size();
+    XL_ASSERT(locals + size <= ssize);
 
     // Get bytecode for what we want to call
-    Tree_p callee = state.Pop();
     Bytecode *bytecode = compile(state.EvaluationScope(), callee);
 
     // Set the frame for the callee
-    state.frame = state.stack.size();
-    state.locals = state.frame - size;
+    state.frame = ssize;
+    state.locals = ssize - size;
 
     // Run the target code
     bytecode->Run(state);
@@ -277,12 +279,11 @@ static void call(RunState &state)
     state.pc = savePC;
     state.bytecode = saveBC;
     state.locals = locals;
-    state.frame = locals + 1;
+    state.frame = frame;
 
-    // If callee did not consume its arguments, cleanup
     auto &stack = state.stack;
     Tree_p result = state.Pop();
-    stack.erase(stack.begin() + state.frame, stack.end());
+    stack.erase(stack.begin() + ssize - size, stack.end());
     state.Push(result);
 }
 
