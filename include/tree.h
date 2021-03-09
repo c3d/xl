@@ -128,10 +128,11 @@ struct Tree
 //   The base class for all XL trees
 // ----------------------------------------------------------------------------
 {
-    enum { KINDBITS = 3, SIGNBIT = 3, POSBITS = 4, KINDMASK=7 };
+    enum { KINDBITS = 3, SIGNBIT = 3, SRCBIT = 4, POSBITS = 5, KINDMASK=7 };
     enum { UNKNOWN_POSITION = ~0UL, COMMAND_LINE=~1UL, BUILTIN=~2UL };
     typedef Tree        self_t;
     typedef Tree *      value_t;
+    const uintptr_t     FROM_SOURCE = 1 << SRCBIT;
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
@@ -156,6 +157,8 @@ struct Tree
     bool                IsLeaf()              { return Kind() <= NAME; }
     bool                IsConstant()          { return Kind() <= TEXT; }
     void                SetPosition(TreePosition pos, bool recurse = true);
+    bool                IsFromSource()        { return tag & FROM_SOURCE; }
+    void                MarkSourceTree()      { tag |= FROM_SOURCE; }
 
     // Safe cast to an appropriate subclass
     template<class T>
@@ -592,6 +595,7 @@ inline Natural *Natural::MakeUnsigned()
 
 // Case normalization according to XL language rules
 text Normalize(text spelling);
+void SourceTree(Tree *tree);
 
 
 

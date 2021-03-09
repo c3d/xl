@@ -442,6 +442,7 @@ Tree *Module::SourceFile::Reload()
     Parser       parser(path.c_str(), syntax, positions, errors);
 
     source = parser.Parse();
+    SourceTree(source);
     modified = FileModifiedTimeStamp(path);
     record(fileload, "Loaded %s as %t - time %llu", path, source, modified);
 

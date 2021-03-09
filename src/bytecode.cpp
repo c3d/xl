@@ -2170,6 +2170,10 @@ Tree *evaluate(Scope_p scope, Tree_p expr)
 //   Internal evaluator - Short circuits a few common expressions
 // ----------------------------------------------------------------------------
 {
+    // Quick exit without compilation if the value was computed
+    if (!expr->IsFromSource())
+        return expr;
+
     // Check stack depth during evaluation
     static uint depth = 0;
     Save<uint>  save(depth, depth+1);
