@@ -1792,6 +1792,34 @@ static bool doConstant(Scope *scope, Tree *tree, Bytecode *bytecode)
 }
 
 
+static void binary_Sub(RunState &state);
+static void binary_Add(RunState &state);
+static void magic(RunState &state)
+{
+    Tree_p input = state.Pop();
+    Natural_p value = input->AsNatural();
+    static Natural_p one = new Natural(1);
+    if (value->value == 0)
+    {
+        state.Push(one);
+        return;
+    }
+    if (value->value == 1)
+    {
+        state.Push(one);
+        return;
+    }
+    value->value -= 1;
+    state.Push(value);
+    magic(state);
+    value->value -= 1;
+    state.Push(value);
+    magic(state);
+    value->value += 2;
+    binary_Add(state);
+}
+
+
 static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
 // ----------------------------------------------------------------------------
 //   Deal with special names
@@ -1815,6 +1843,44 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
     if (name->value == "self")
     {
         OP(get_self);
+        return true;
+    }
+    if (name->value == "magic")
+    {
+#if 0
+        Context context(scope);
+        Name *fib = new Name("fib");
+        Name *N = new Name("n");
+        Prefix *pattern = new Prefix(fib, N);
+        Tree *target = context.DeclaredPattern(pattern);
+
+        opaddr_t zero = (0 << 3) | 3;
+        opaddr_t one = (1 << 3) | 3;
+        OPCST(local, zero);
+        CHECKCST(check_natural, new Natural((int) 0));
+        OPCST(constant, new Natural(1));
+        bytecode->Success();
+        bytecode->PatchChecks();
+        OPCST(local, zero);
+        CHECKCST(check_natural, new Natural(1));
+        OPCST(constant, new Natural(1));
+        bytecode->Success();
+        bytecode->PatchChecks();
+        OPCST(local, zero);
+        OPCST(constant, new Natural(1));
+        OP(binary_Sub);
+        OPCST(constant, target);
+        OPCST(call, one);
+        OPCST(local, zero);
+        OPCST(constant, new Natural(2));
+        OP(binary_Sub);
+        OPCST(constant, target);
+        OPCST(call, one);
+        OP(binary_Add);
+        bytecode->PatchSuccesses(0);
+#else
+        OP(magic);
+#endif
         return true;
     }
     return false;
