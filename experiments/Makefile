@@ -1,4 +1,4 @@
-VARIANTS=fib register switch function
+VARIANTS=hwregisters register switch function fib
 
 SOURCES=$(VARIANT:%=%.cpp)
 PRODUCTS=$(VARIANT:%=%.exe)
