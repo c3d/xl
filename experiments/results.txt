@@ -1,0 +1,15 @@
+Best - Worse runtimes of 10 runs for fib(40);
+
+C (25x):     16.16 - 17.62
+
+Python:      29.20 - 29.82
+Lua:          9.95 - 11.03
+
+In order of experimentation:
+
+function:    27.26 - 36.18
+switch:      32.21 - 34.83
+register:     8.31 - 12.42
+hwregister:  13.55 - 15.49
++-opcodes:    9.43 - 11.31
++-goto:       6.30 -  7.86
