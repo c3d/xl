@@ -286,5 +286,5 @@ GENERATE_BYTECODE_NAMES=						\
 	sed -e 's/^static void \([a-zA-Z_0-9]*\).*$$/BC_NAME(\1)/g'	\
 	> $@
 .prebuild: bytecode-names.h
-bytecode-names.h: bytecode-ops.h
+bytecode-names.h: bytecode.tbl
 	$(PRINT_GENERATE) $(GENERATE_BYTECODE_NAMES)
