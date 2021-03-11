@@ -327,7 +327,7 @@ public:
 
 
 // Load the bytecode ops that we may need below
-#include "bytecode-ops.h"
+#include "bytecode.tbl"
 
 
 void Bytecode::Run(RunState &state)
