@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <vector>
+#include <cstdint>
+#include <cstdlib>
 
 struct RunState;
 typedef void (*opcode_fn)(RunState &);

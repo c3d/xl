@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <cassert>
 #include <vector>
+#include <cstdint>
+#include <cstdlib>
 
 struct Stack;
 typedef signed char byte;
