@@ -1,0 +1,81 @@
+// ****************************************************************************
+//  tree-types.tbl                                                   XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Representation of tree types
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2021 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+
+#ifdef TREE_TYPE
+ TREE_TYPE(tree,        Tree,           value)
+ #ifndef NATURAL_TYPE
+  TREE_TYPE(natural,    Natural,        value->MakeUnsigned())
+ #endif
+ #ifndef INTEGER_TYPE
+  TREE_TYPE(integer,    Natural,        value->MakeSigned())
+ #endif
+ #ifndef REAL_TYPE
+  TREE_TYPE(real,       Real,           value)
+ #endif
+ #ifndef OTHER_TYPE
+  TREE_TYPE(text,       Text,           value)
+  TREE_TYPE(character,  Text,           (value->AsText() &&
+                                         ((Text *) value)->IsCharacter()
+                                         ? value : nullptr))
+  TREE_TYPE(boolean,    Name,           (value->AsName() &&
+                                         ((Name *) value)->IsBoolean()
+                                         ? value : nullptr))
+ #endif
+
+#else
+
+ #define TREE_TYPE(Name, Rep, Cast)      MACHINE_TYPE(Name, Rep *, tree)
+ RUNTIME_TYPE(tree,     Tree_p,          tree)
+
+#endif
+
+TREE_TYPE(scope,        Scope,          value->As<Scope>())
+TREE_TYPE(closure,      Closure,        value->As<Closure>())
+TREE_TYPE(definition,   Rewrite,        value->As<Rewrite>())
+TREE_TYPE(error,        Tree,           IsError(value) ? value : nullptr)
+TREE_TYPE(nil,          Tree,           value == nullptr ? nil_type : nullptr)
+TREE_TYPE(block,        Block,          value->AsBlock())
+TREE_TYPE(infix,        Infix,          value->AsInfix())
+TREE_TYPE(prefix,       Prefix,         value->AsPrefix())
+TREE_TYPE(postfix,      Postfix,        value->AsPostfix())
+TREE_TYPE(symbol,       Name,           value->AsName())
+TREE_TYPE(name,         Name,           (value->AsName() &&
+                                         ((Name *) value)->IsName()
+                                         ? value : nullptr))
+TREE_TYPE(operator,     Name,           (value->AsName() &&
+                                         ((Name *) value)->IsOperator()
+                                         ? value : nullptr))
+
+#undef TREE_TYPE

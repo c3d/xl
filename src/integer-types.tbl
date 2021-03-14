@@ -1,0 +1,48 @@
+// ****************************************************************************
+//  integer-types.tbl                                                XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Integer-like representation types
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2021 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+
+#ifdef INTEGER_TYPE
+ INTEGER_TYPE(integer, longlong)
+#else
+ #define INTEGER_TYPE(Name, Rep)        MACHINE_TYPE(Name, Rep, integer)
+ RUNLOOP_TYPE(integer,  longlong)
+#endif
+
+INTEGER_TYPE(integer8,  int8_t)
+INTEGER_TYPE(integer16, int16_t)
+INTEGER_TYPE(integer32, int32_t)
+INTEGER_TYPE(integer64, int64_t)
+
+#undef INTEGER_TYPE

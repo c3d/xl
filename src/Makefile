@@ -52,10 +52,10 @@ COMPILER=llvm
 SOURCES_VARIANT_exe=				\
 	xl.cpp
 SOURCES_VARIANT_lib     =			\
+	bytecode.cpp				\
 	$(SOURCES_$(COMPILER))			\
 	action.cpp				\
 	builtins.cpp				\
-	bytecode.cpp				\
 	cdecls.cpp				\
 	context.cpp				\
 	errors.cpp				\

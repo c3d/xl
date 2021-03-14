@@ -206,7 +206,7 @@ Error::operator Tree *()
     Tree *args = new Text(message, position);
     for (auto arg : arguments)
         args = new Infix(",", args, arg);
-    return new Prefix(xl_error, args, position);
+    return new Prefix(error_type, args, position);
 }
 
 

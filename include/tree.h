@@ -299,6 +299,11 @@ struct Text : Tree
                                   value.length() == 1); }
     bool IsBinary()     { return opening == "" && closing == ""; }
 
+    static Text *Character(char c)
+    {
+        return new Text(text(1, c), "'", "'");
+    }
+
     GARBAGE_COLLECT(Text);
 };
 

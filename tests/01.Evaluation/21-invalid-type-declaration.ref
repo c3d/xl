@@ -9,6 +9,8 @@
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as closure] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as definition] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as definition] against [0:27]
+01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as error] does not match [0:27]:
+01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as error] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as infix] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as infix] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as integer] does not match [0:27]:
@@ -33,6 +35,8 @@
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as natural64] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as natural8] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as natural8] against [0:27]
+01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as nil] does not match [0:27]:
+01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as nil] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as operator] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as operator] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as postfix] does not match [0:27]:
