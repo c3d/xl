@@ -996,7 +996,7 @@ JIT::Type_p CompilerFunction::BoxedType(Tree *type)
         }
         if (base == nullptr)
             mtype = compiler.voidTy;
-        if (base == xl_error)
+        if (base == error_type)
             mtype = compiler.treePtrTy;
         STYPE(boolean);
         STYPE(natural);

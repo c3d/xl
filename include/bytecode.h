@@ -51,14 +51,12 @@ XL_BEGIN
 
 struct Bytecode;
 struct RunState;
-
-typedef size_t  opaddr_t;
-typedef int     branch_t;
+struct RunValue;
+struct Bytecode;
 
 typedef std::vector<Rewrite_p>          RewriteList;
 typedef std::vector<Name_p>             NameList;
-typedef std::map<Tree_p, unsigned>      EvaluatedSet;
-typedef void (*opcode_fn)(RunState &);
+typedef size_t                          opaddr_t;
 
 
 class BytecodeEvaluator : public Evaluator
@@ -73,14 +71,308 @@ public:
     Tree *Evaluate(Scope *, Tree *source) override;
     Tree *TypeCheck(Scope *, Tree *type, Tree *value) override;
 
-public:
-    static std::map<text, opcode_fn>    builtins;
-    static std::map<text, opcode_fn>    natives;
-    static std::map<text, opcode_fn>    types;
-
     static void InitializeBuiltins();
     static void InitializeContext(Context &context);
 };
+
+
+
+// ============================================================================
+//
+//   Runtime representation of typed values
+//
+// ============================================================================
+
+enum MachineType
+// ----------------------------------------------------------------------------
+//   An enum identifying all the machine types
+// ----------------------------------------------------------------------------
+{
+    runvalue_unset = 0,         // For quick check if runvalue is set
+
+    runvalue_pc, runvalue_bytecode, runvalue_locals,
+
+#define RUNTIME_TYPE(Name, Rep, BC)     Name##_mtype,
+#include "machine-types.tbl"
+
+    BUILTIN_TYPES
+};
+
+
+#ifdef HAVE_FLOAT16
+inline std::ostream &operator<<(std::ostream &out, _Float16 f)
+// ----------------------------------------------------------------------------
+//    The type is not known to ostream, convert to double
+// ----------------------------------------------------------------------------
+
+{
+    return out << (double) f;
+}
+#endif
+
+
+struct RunValue
+// ----------------------------------------------------------------------------
+//   A representation that fits in two words and can be used efficiently
+// ----------------------------------------------------------------------------
+//   There are two small complications in the implementation of this class.
+//
+//   The first complication is the text class (and possibly others later)
+//   It does not necessarily fit in a word (e.g. 3 words on clang macosx),
+//   and may have a different representation for literals (const char *).
+//   In a RunValue, we store a 'text *' allocated dynamically.
+//   This is handled by the Representation class.
+//
+//   The second complication is handling tree types safely for the
+//   garbage collector, which requires Acquire / Release.
+{
+public:
+    typedef std::vector<RunValue>       ValueList;
+    typedef std::map<Tree_p, RunValue>  ValueMap;
+
+public:
+    // Default constructor creates a nil value
+    RunValue(MachineType mtype = runvalue_unset)
+        : type(mtype), flags(0), as_tree(nullptr)               { }
+
+    RunValue(opaddr_t addr, MachineType mtype)
+        : type (mtype), flags(0), as_natural(addr)              { }
+
+    RunValue(void *addr, MachineType mtype)
+        : type (mtype), flags(0), as_natural((uintptr_t) addr) { }
+
+    // Copy constructor
+    RunValue(const RunValue &rv)
+        : type(rv.type), flags(rv.flags), as_tree(rv.as_tree)   { Acquire(); }
+
+    // Destructor
+    ~RunValue()                                                 { Release(); }
+
+    // Assignment
+    RunValue &operator=(const RunValue &rv)
+    {
+        Release();
+        type = rv.type;
+        as_tree = rv.as_tree;
+        Acquire();
+        return *this;
+    }
+
+    // Constructor from trees and constant trees
+    RunValue(Tree *t, MachineType mtype = tree_mtype)
+        : type(mtype), flags(0), as_tree(t)                     { Acquire(t); }
+    RunValue(Natural *n)
+        : type(n->IsSigned() ? integer_mtype : natural_mtype),
+          flags(0), as_natural(n->value)                        { }
+    RunValue(Real *r)
+        : type(real_mtype), flags(0), as_real(r->value)         { }
+    RunValue(Text *t)
+        : type(t->IsCharacter() ? character_mtype : text_mtype),
+          flags(0)
+    {
+        if (t->IsCharacter())
+            as_character = t->value[0];
+        else
+            as_text = new text(t->value);
+    }
+
+    template<typename Rep>
+    struct Representation
+    // ------------------------------------------------------------------------
+    //   Dependencies on the represented type
+    // ------------------------------------------------------------------------
+    //   By default, all representations are identical
+    {
+        typedef Rep value_t;
+        typedef Rep literal_t;
+        typedef Rep union_t;
+        static  Rep ToUnion(Rep r)              { return r; }
+        static  Rep ToValue(Rep r)              { return r; }
+    };
+
+
+    template<>
+    struct Representation<text>
+    // ------------------------------------------------------------------------
+    //    Specialization for `text`
+    // ------------------------------------------------------------------------
+    {
+        typedef text value_t;
+        typedef kstring literal_t;
+        typedef text *union_t;
+        static  text *ToUnion(const text &t)    { return new text(t); }
+        static  text  ToValue(text *ptr)        { return *ptr; }
+    };
+
+
+    template<MachineType mtype>
+    struct Type
+    // ------------------------------------------------------------------------
+    //   Get the type of a field
+    // ------------------------------------------------------------------------
+    {
+        typedef Tree *type;
+    };
+
+
+    template<MachineType mtype>
+    typename Type<mtype>::type Field()
+    // ------------------------------------------------------------------------
+    //   Get a field
+    // ------------------------------------------------------------------------
+    {
+        return as_tree;
+    }
+
+#define RUNTIME_TYPE(Name, Rep, BC)                                     \
+    template<> struct Type<Name##_mtype>                                \
+    {                                                                   \
+        typedef Representation<Rep>::union_t type;                      \
+    };                                                                  \
+    template<> typename Type<Name##_mtype>::type Field<Name##_mtype>()  \
+    {                                                                   \
+        return as_##Name;                                               \
+    }
+#include "machine-types.tbl"
+
+    template<MachineType mtype>
+    struct AsTreeType
+    // ------------------------------------------------------------------------
+    //   Type to use as an arg to AsTree
+    // ------------------------------------------------------------------------
+    {
+        using type = typename Type<mtype>::type;
+    };
+
+#define NATURAL_TYPE(Name, Rep)                                         \
+    template<> struct AsTreeType<Name##_mtype>    { typedef ulonglong type; };
+#define INTEGER_TYPE(Name, Rep)                                         \
+    template<> struct AsTreeType<Name##_mtype>    { typedef longlong  type; };
+#define REAL_TYPE(Name, Rep)                                            \
+    template<> struct AsTreeType<Name##_mtype>    { typedef double    type; };
+#include "machine-types.tbl"
+
+    // Construction and conversion from machine types
+#define TREE_TYPE(Name, Rep, Cast)
+#define MACHINE_TYPE(Name, Rep, BC)                     \
+    RunValue(Representation<Rep>::value_t rep)          \
+        : type(Name##_mtype), flags(0)                  \
+    {                                                   \
+        as_##Name = Representation<Rep>::ToUnion(rep);  \
+    }                                                   \
+    operator Rep() const                                \
+    {                                                   \
+        XL_ASSERT(type == Name##_mtype);                \
+        return Representation<Rep>::ToValue(as_##Name); \
+    }
+MACHINE_TYPE(integer, long, naught)
+MACHINE_TYPE(natural, unsigned long, naught)
+#include "machine-types.tbl"
+
+    // Special case kstring for Native interface
+    RunValue(kstring rep): type(text_mtype),flags(0),as_text(new text(rep)) {}
+    operator kstring() const
+    {
+        XL_ASSERT(type == text_mtype);
+        return as_text->c_str();
+    }
+
+    Tree *AsTree()
+    {
+        switch(type)
+        {
+#define RUNTIME_TYPE(Name, Rep, BC)                                     \
+        case Name##_mtype:                                              \
+            return AsTree(AsTreeType<Name##_mtype>::type(as_##Name));
+#include "machine-types.tbl"
+        default:
+            break;
+        }
+        return as_tree;
+    }
+
+    friend inline std::ostream &operator<<(std::ostream &out, RunValue &rv)
+    {
+        switch(rv.type)
+        {
+#define RUNTIME_TYPE(Name, Rep, BC)                             \
+        case Name##_mtype:                                      \
+            return out << #Name "(" << rv.as_##Name << ")";
+#include "machine-types.tbl"
+        default:
+            return out << "Invalid";
+        }
+    }
+
+    static Tree *AsTree(Tree *t)        { return t; }
+    static Tree *AsTree(longlong n)     { return Natural::Signed(n); }
+    static Tree *AsTree(ulonglong n)    { return new Natural(n); }
+    static Tree *AsTree(double d)       { return new Real(d); }
+    static Tree *AsTree(text *t)        { return new Text(*t); }
+    static Tree *AsTree(text t)         { return new Text(t); }
+    static Tree *AsTree(char c)         { return Text::Character(c); }
+    static Tree *AsTree(bool b)         { return b ? xl_true : xl_false; }
+
+
+private:
+    void Acquire(Tree *tree)
+    {
+        TypeAllocator::Acquire(tree);
+    }
+
+    void Release(Tree *tree)
+    {
+        TypeAllocator::Release(tree);
+    }
+
+    void Release(text *tptr)
+    {
+        delete tptr;
+    }
+
+    template<class T> void Acquire(T &t) { }
+    template<class T> void Release(T &t) { }
+
+    void Acquire()
+    {
+        switch(type)
+        {
+#define RUNTIME_TYPE(Name, Rep, BC)             \
+        case Name##_mtype:                      \
+            Acquire(as_##Name);                 \
+            break;
+#include "machine-types.tbl"
+        default: break;
+        }
+    }
+
+    void Release()
+    {
+        switch(type)
+        {
+#define RUNTIME_TYPE(Name, Rep, BC)             \
+        case Name##_mtype:                      \
+            Release(as_##Name);                 \
+            break;
+#include "machine-types.tbl"
+        default: break;
+        }
+    }
+
+public:
+    MachineType         type            :  8;
+    unsigned            flags           : 24;
+    union
+    {
+#define RUNTIME_TYPE(Name, Rep, BC)     Representation<Rep>::union_t as_##Name;
+#include "machine-types.tbl"
+    };
+};
+
+
+// Representation of a stack at runtime
+typedef RunValue::ValueList     RunStack;
+
 
 
 // ============================================================================
@@ -97,85 +389,102 @@ struct RunState
 //   - [...]
 //   - Outermost stack  <--- frames[0]
 //   - [...]
+
 //   - Enclosing stack  <--- frames.back()
 //   - caller's stack
-//   - arg 0            <--- locals
+//   - arg 0            <--- frame[0], locals
 //   - arg 1
 //   - ...
-//   - local temp 1     <--- frame
-//   - local temp 2
+//   - local temp 0     <--- frame[nparms], locals + nparms
+//   - local temp 1
 //   - ...
 //   The difference between locals and frame is the number of formal parameters
 //   bound for the current code.
 {
     RunState(Scope *scope, Tree *expr)
-        : stack(), scope(scope), bytecode(), transfer(),
-          pc(0), locals(0), frame(0), error()
+        : stack(), scope(scope), self(expr), error()
     { }
 
-    void        Push(Tree *value)       { stack.push_back(value); }
-    Tree_p      Pop();
-    Tree_p      Top();
-    void        Set(Tree *top)          { stack.back() = top; }
-    size_t      Depth()                 { return stack.size(); }
-    Tree_p      Self();
-    Scope_p     EvaluationScope()       { return scope; }
-    Scope_p     DeclarationScope();
-    opaddr_t    Jump();
-    Tree *      Local();
-    void        Save(Tree *);
-    Tree *      Saved();
-    size_t      FrameSize();
-    Tree *      Constant();
-    Rewrite *   Rewrite();
-    void        Error(Tree *msg)        { error = msg; }
-    Tree *      Error()                 { return error; }
+    void        Push(const RunValue &rv)        { stack.push_back(rv); }
+    RunValue    Pop();
+    RunValue    Pop(MachineType mtype);
+    RunValue &  Top();
+    void        Set(const RunValue &top)        { stack.back() = top; }
+    size_t      Depth()                         { return stack.size(); }
+    void        Allocate(size_t size);
+    void        Cut(size_t size);
+    Scope_p     EvaluationScope()               { return scope; }
+    void        Error(Tree *msg)                { error = msg; }
+    Tree *      Error()                         { return error; }
     void        Dump(std::ostream &out);
 
     typedef std::vector<size_t> Frames;
 
-    TreeList    stack;                  // Evaluation stack and parameters
+    RunStack    stack;                  // Evaluation stack and parameters
     Scope_p     scope;                  // Current evaluation scope
-    Bytecode *  bytecode;               // Bytecode currently executing
-    Bytecode *  transfer;               // Bytecode to transfer to
-    opaddr_t    pc;                     // Program counter in the bytcode
-    size_t      locals;                 // Base of locals (inputs) on stack
-    size_t      frame;                  // Base of stack for current subexpr
-    Frames      frames;                 // Enclosing frames
+    Tree_p      self;                   // What we are evaluating
     Tree_p      error;                  // Error messages
 };
 
 
-inline Tree_p RunState::Pop()
+inline RunValue RunState::Pop()
 // ----------------------------------------------------------------------------
 //   Return the last item on the stack and remove it
 // ----------------------------------------------------------------------------
 {
     if (!stack.size())
     {
-        record(opcode_error,
-               "Popping from empty stack while evaluating %t", Self());
-        return nullptr;
+        record(opcode_error, "Popping from empty stack evaluating %t", self);
+        return RunValue();
     }
-    Tree_p result = stack.back();
+    RunValue result = stack.back();
     stack.pop_back();
     return result;
 }
 
 
-inline Tree_p RunState::Top()
+inline RunValue RunState::Pop(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return the last item on the stack and remove it
+// ----------------------------------------------------------------------------
+{
+    RunValue result = Pop();
+    XL_ASSERT(result.type == mtype);
+    return result;
+}
+
+
+inline RunValue &RunState::Top()
 // ----------------------------------------------------------------------------
 //   Return the last item on the stack without removing it
 // ----------------------------------------------------------------------------
 {
     if (!stack.size())
     {
-        record(opcode_error,
-               "Getting top from empty stack while evaluating %t", Self());
-        return nullptr;
+        record(opcode_error,"Getting top from empty stack evaluating %t",self);
+        stack.push_back(RunValue());
     }
     return stack.back();
 }
+
+
+inline void RunState::Allocate(size_t size)
+// ----------------------------------------------------------------------------
+//   Cut the stack at the given level
+// ----------------------------------------------------------------------------
+{
+    stack.resize(stack.size() + size);
+}
+
+
+inline void RunState::Cut(size_t size)
+// ----------------------------------------------------------------------------
+//   Resize the stack at the given size
+// ----------------------------------------------------------------------------
+{
+    stack.resize(size);
+}
+
 
 XL_END
 

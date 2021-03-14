@@ -87,7 +87,7 @@ struct xl_type
     }
     static native_type Arg(RunState &stack)
     {
-        return stack.Pop();
+        return stack.Pop().AsTree();
     }
 };
 
@@ -159,13 +159,7 @@ struct xl_type<bool>
     }
     static native_type Arg(RunState &stack)
     {
-        Tree_p value = stack.Pop();
-        if (value == xl_true)
-            return true;
-        else if (value == xl_false)
-            return false;
-        Ooops("Expected a boolean value, got $1", value);
-        return false;
+        return (bool) stack.Pop();
     }
 };
 
@@ -213,11 +207,7 @@ struct xl_type<Num,
     }
     static native_type Arg(RunState &stack)
     {
-        Tree *boxed = stack.Pop();
-        if (BoxType *check = boxed->As<BoxType>())
-            return check->value;
-        Ooops("Expected a natural value, got $1", boxed);
-        return 0;
+        return (native_type) stack.Pop();
     }
 };
 
@@ -271,11 +261,7 @@ struct xl_type<Num,
     }
     static native_type Arg(RunState &stack)
     {
-        Tree *boxed = stack.Pop();
-        if (BoxType *check = boxed->As<BoxType>())
-            return check->value;
-        Ooops("Expected a real value, got $1", boxed);
-        return 0.0;
+        return (native_type) stack.Pop();
     }
 };
 
@@ -322,11 +308,7 @@ struct xl_type<kstring>
     }
     static native_type Arg(RunState &stack)
     {
-        Tree *boxed = stack.Pop();
-        if (BoxType *check = boxed->As<BoxType>())
-            return check->value.c_str();
-        Ooops("Expected a text value, got $1", boxed);
-        return "";
+        return (native_type) stack.Pop();
     }
 };
 
@@ -370,11 +352,7 @@ struct xl_type<text>
     }
     static native_type Arg(RunState &stack)
     {
-        Tree *boxed = stack.Pop();
-        if (BoxType *check = boxed->As<BoxType>())
-            return check->value;
-        Ooops("Expected a text value, got $1", boxed);
-        return "";
+        return (native_type) stack.Pop();
     }
 };
 
@@ -419,12 +397,7 @@ struct xl_type<char>
     }
     static native_type Arg(RunState &stack)
     {
-        Tree *boxed = stack.Pop();
-        if (BoxType *check = boxed->As<BoxType>())
-            if (check->IsCharacter())
-                return check->value[0];
-        Ooops("Expected a character value, got $1", boxed);
-        return 0;
+        return (native_type) stack.Pop();
     }
 };
 
@@ -535,7 +508,7 @@ struct function_type<R(*)()>
     static inline void Run(pointer_type callee, RunState &stack)
     {
         auto value = callee();
-        auto boxed = xl_type<R>::Box(value, stack.Self()->Position());
+        auto boxed = xl_type<R>::Box(value, stack.self->Position());
         stack.Push(boxed);
     }
 };
@@ -577,7 +550,7 @@ struct function_type<void(*)()>
     static inline void Run(pointer_type callee, RunState &stack)
     {
         callee();
-        stack.Push(nullptr);
+        stack.Push(RunValue());
     }
 };
 
@@ -634,7 +607,7 @@ struct function_type<R(*)(T)>
     static inline void Run(pointer_type callee, RunState &stack)
     {
         auto value = callee(xl_type<T>::Arg(stack));
-        auto boxed = xl_type<R>::Box(value, stack.Self()->Position());
+        auto boxed = xl_type<R>::Box(value, stack.self->Position());
         stack.Push(boxed);
     }
 
@@ -693,7 +666,7 @@ struct function_type<void(*)(T)>
     static inline void Run(pointer_type callee, RunState &stack)
     {
         callee(xl_type<T>::Arg(stack));
-        stack.Push(nullptr);
+        stack.Push(RunValue());
     }
 };
 
@@ -752,7 +725,7 @@ struct function_type<R(*)(T,A...)>
     {
         auto value = callee(xl_type<T>::Arg(stack),
                             xl_type<A>::Arg(stack)...);
-        auto boxed = xl_type<R>::Box(value, stack.Self()->Position());
+        auto boxed = xl_type<R>::Box(value, stack.self->Position());
         stack.Push(boxed);
     }
 };
@@ -809,7 +782,7 @@ struct function_type<void(*)(T,A...)>
     {
         callee(xl_type<T>::Arg(stack),
                xl_type<A>::Arg(stack)...);
-        stack.Push(nullptr);
+        stack.Push(RunValue());
     }
 };
 
@@ -937,12 +910,13 @@ struct Native
 // ----------------------------------------------------------------------------
 {
     typedef Interpreter::builtin_fn builtin_fn;
+    typedef void (*opcode_fn)(RunState &state);
 
     template<typename fntype>
-    Native(fntype function, opcode_fn opcode, kstring name)
+    Native(fntype function, opcode_fn opcode_function, kstring name)
         : symbol(name),
           implementation(new NativeImplementation<fntype>(name, function)),
-          opcode(opcode),
+          opcode_function(opcode_function),
           shape(nullptr),
           next(list)
     {
@@ -967,7 +941,7 @@ struct Native
 public:
     kstring             symbol;
     NativeInterface *   implementation;
-    opcode_fn           opcode;
+    opcode_fn           opcode_function;
     Tree_p              shape;
 
 private:

@@ -34,501 +34,594 @@
 // ****************************************************************************
 
 
+
 // ============================================================================
 //
-//   Opcodes
+//    Opcodes exposed as builtins
 //
 // ============================================================================
 
-static void evaluate(RunState &state)
+// Builtins are the ones exposed
+#ifndef BUILTIN
+#define BUILTIN(Name, Parms, Body)      OPCODE(Name, Parms, Body)
+#endif
+
+#define NATURAL_TYPE(Name, Rep)                         \
+BUILTIN(Name##_typecheck, (),                           \
+        Rep rep = x_natural;                            \
+        if (!IsNatural(xtype) || rep != x_natural)      \
+        {                                               \
+            x_tree = nullptr;                           \
+            TYPE(nil);                                  \
+        })
+#define INTEGER_TYPE(Name, Rep)                         \
+BUILTIN(Name##_typecheck, (),                           \
+        Rep rep = x_integer;                            \
+        if (!IsInteger(xtype) || rep != x_integer)      \
+        {                                               \
+            x_tree = nullptr;                           \
+            TYPE(nil);                                  \
+        })
+#define REAL_TYPE(Name, Rep)                    \
+BUILTIN(Name##_typecheck, (),                   \
+        Rep rep = x_real;                       \
+        if (!IsReal(xtype) || rep != x_real)    \
+        {                                       \
+            x_tree = nullptr;                   \
+            TYPE(nil);                          \
+        })
+#define OTHER_TYPE(Name, Rep)                   \
+BUILTIN(Name##_typecheck, (),                   \
+        if (xtype != Name##_mtype)              \
+        {                                       \
+            x_tree = nullptr;                   \
+            TYPE(nil);                          \
+        })
+#define TREE_TYPE(Name, Rep, Cast)                      \
+BUILTIN(Name##_typecheck, (),                           \
+        WANT_XTREE;                                     \
+        if (xtype != Name##_mtype)                      \
+        {                                               \
+            Tree *value = x_tree;                       \
+            x_tree = (Cast);                            \
+            xtype = x_tree ? Name##_mtype : nil_mtype;  \
+        })
+#include "machine-types.tbl"
+
+
+
+// ============================================================================
+//
+//   General evaluation opcodes
+//
+// ============================================================================
+
+OPCODE(evaluate, (),
 // ----------------------------------------------------------------------------
-//   Evaluate the top of the stack
+//   Evaluate x in current scope
 // ----------------------------------------------------------------------------
-{
-    Tree_p expr = state.Pop();
-    Scope_p scope = state.EvaluationScope();
-    Tree_p result = evaluate(scope, expr);
-    state.Push(result);
-}
+       WANT_XTREE;
+       x_tree = evaluate(scope, x_tree);
+       CLASSIFY;
+)
 
 
-static void transfer(RunState &state)
+OPCODE(cast, (),
 // ----------------------------------------------------------------------------
-//   Transfer evaluation to the item at the top of stack
+//   Cast the value x to type y
 // ----------------------------------------------------------------------------
-{
-    Tree_p target = state.Top();
-    Bytecode *bytecode = target ? target->GetInfo<Bytecode>() : nullptr;
-    state.transfer = bytecode;
-    state.pc = ~0U;
-};
+       WANT_XTREE;
+       x_tree = typecheck(scope, y_tree, x_tree);
+       CLASSIFY;
+)
 
 
-static void cast(RunState &state)
+OPCODE(error, (CONSTANT),
 // ----------------------------------------------------------------------------
-//   Cast the value to a static type
+//   Emit an error with the given arguments (not evaluated)
 // ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Pop();
-    Tree_p type = state.Constant();
-    Tree_p result = typecheck(state.scope, type, value);
-    state.Push(result);
-}
+       x_tree = Constant(DATA);
+       x_tree = new Prefix(error_type, x_tree);
+       xtype = error_mtype;
+)
 
 
-
-static void error(RunState &state)
+OPCODE(error_exit, (CONSTANT),
 // ----------------------------------------------------------------------------
-//   Emit an error with the given arguments
+//   Exit evaluation immediately with an error
 // ----------------------------------------------------------------------------
-{
-    Tree_p error = state.Constant();
-    state.Push(error);
-    evaluate(state);
-}
+       x_tree = Constant(DATA);
+       x_tree = new Prefix(error_type, x_tree);
+       xtype = error_mtype;
+       return x_tree;
+)
 
 
-static void exit(RunState &state)
+OPCODE(exit, (),
 // ----------------------------------------------------------------------------
 //   Terminate execution
 // ----------------------------------------------------------------------------
-{
-    state.pc |= ~0ULL;
-    state.bytecode = nullptr;
-}
+       WANT_XTREE;
+       return x_tree;
+)
 
 
-static void check_statement(RunState &state)
+OPCODE(native, (CONSTANT_natural),
+// ----------------------------------------------------------------------------
+//   Call a native function
+// ----------------------------------------------------------------------------
+       Natural::value_t addr = Constant<Natural::value_t>(pc);
+       Native::opcode_fn fn = (Native::opcode_fn) addr;
+       fn(state);
+       x = state.Pop();
+       CLASSIFY;
+)
+
+
+OPCODE(xtoy, (),
+// ----------------------------------------------------------------------------
+//   Copy X to Y
+// ----------------------------------------------------------------------------
+       WANT_XRUNVALUE;
+       y = x;
+       READ_RUNVALUES;
+)
+
+
+
+OPCODE(swap, (),
+// ----------------------------------------------------------------------------
+//   Swap X and Y
+// ----------------------------------------------------------------------------
+       WANT_RUNVALUES;
+       std::swap(x,y);
+       READ_RUNVALUES;
+)
+
+
+
+OPCODE(check_statement, (),
 // ----------------------------------------------------------------------------
 //   If we have an error on top of stack, exit, otherwise check we have nil
 // ----------------------------------------------------------------------------
-{
-    Tree_p check = state.Pop();
-    if (IsError(check))
-        exit(state);
-    if (check)
-        record(opcode_error, "Non-nil result %t for a statement", check);
-}
+       if (xtype == error_mtype)
+           CHAIN(ret);
+       if (xtype != nil_mtype)
+       {
+           Error error("Non-nil result from statement");
+           state.Error(error);
+           xtype = error_mtype;
+           CHAIN(ret);
+       }
+)
 
 
-static void branch(RunState &state)
+OPCODE(branch, (JUMP),
 // ----------------------------------------------------------------------------
-//   Terminate execution
+//   Branch to the given target
 // ----------------------------------------------------------------------------
-{
-    state.pc = state.Jump();
-}
+       opcode_t offset = DATA;
+       pc += offset;
+)
 
 
-static void error_exit(RunState &state)
+OPCODE(nil, (),
 // ----------------------------------------------------------------------------
-//   Emit an error with the given arguments
+//   Generate a nil value
 // ----------------------------------------------------------------------------
-{
-    error(state);
-    exit(state);
-}
+       x_tree = nullptr;
+       TYPE(nil);
+)
 
 
-static void constant(RunState &state)
+OPCODE(true, (),
 // ----------------------------------------------------------------------------
-//   Deposit a constant on the stack
+//   Generate constant true
 // ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Constant();
-    state.Push(value);
-}
+       x_boolean = true;
+       TYPE(boolean);
+)
 
 
-static void dup(RunState &state)
+OPCODE(false, (),
 // ----------------------------------------------------------------------------
-//   Duplicate the top of stack
+//   Generate constant true
 // ----------------------------------------------------------------------------
-{
-    state.Push(state.Top());
-}
+       x_boolean = false;
+       TYPE(boolean);
+)
 
 
-static void drop(RunState &state)
+OPCODE(constant, (CONSTANT),
 // ----------------------------------------------------------------------------
-//   Drop the top of the stack
+//   Deposit a constant tree on the stack
 // ----------------------------------------------------------------------------
-{
-    state.Pop();
-}
+       x_tree = Constant(DATA);
+       TYPE(tree);
+       CLASSIFY;
+)
 
 
-static void swap(RunState &state)
 // ----------------------------------------------------------------------------
-//   Swap the two top levels of the stack
+// Constants for the various representation types
 // ----------------------------------------------------------------------------
-{
-    Tree_p x = state.Pop();
-    Tree_p y = state.Pop();
-    state.Push(x);
-    state.Push(y);
-}
+#define TREE_TYPE(Name, Rep, Cast)
+#define RUNTIME_TYPE(Name, Rep, BC)             \
+OPCODE(constant_##Name, (CONSTANT_##Name),      \
+       x_##BC = Constant<Rep>(pc);              \
+       TYPE(Name);                              \
+)
+#include "machine-types.tbl"
 
 
-static void make_variable(RunState &state)
+OPCODE(make_variable, (),
 // ----------------------------------------------------------------------------
-//   Turn something into a variable type
+//   Turn a tree into a variable tree
 // ----------------------------------------------------------------------------
-{
-    Tree_p type = state.Top();
-    if (!IsVariableType(type))
-    {
-        type = new Prefix(xl_variable, type, type->Position());
-        state.Set(type);
-    }
-}
+       WANT_XTREE;
+       Tree *type = x_tree;
+       if (!IsVariableType(type))
+       {
+           type = new Prefix(xl_variable, type, type->Position());
+           x_tree = type;
+           TYPE(prefix);
+       }
+)
 
 
-static void make_matching(RunState &state)
+OPCODE(make_matching, (),
 // ----------------------------------------------------------------------------
 //   Turn something into a pattern matching type
 // ----------------------------------------------------------------------------
-{
-    Tree_p type = state.Top();
-    if (!IsPatternMatchingType(type))
-    {
-        type = new Prefix(xl_matching, type, type->Position());
-        state.Set(type);
-    }
-}
+       WANT_XTREE;
+       Tree *type = x_tree;
+       if (!IsPatternMatchingType(type))
+       {
+           type = new Prefix(xl_matching, type, type->Position());
+           x_tree = type;
+           TYPE(prefix);
+       }
+)
 
 
-static void get_scope(RunState &state)
+OPCODE(get_scope, (),
 // ----------------------------------------------------------------------------
-//   Push the current scope on the stack
+//   Return current scope
 // ----------------------------------------------------------------------------
-{
-    state.Push(state.EvaluationScope());
-}
+       x_tree = state.EvaluationScope();
+       TYPE(scope);
+)
 
 
-static void get_super(RunState &state)
+OPCODE(get_super, (),
 // ----------------------------------------------------------------------------
-//   Push the enclosing scope on the stack
+//   Return super scope
 // ----------------------------------------------------------------------------
-{
-    state.Push(state.EvaluationScope()->Enclosing());
-}
+       x_tree = state.EvaluationScope()->Enclosing();
+       TYPE(scope);
+)
 
 
-static void get_self(RunState &state)
+OPCODE(get_self, (),
 // ----------------------------------------------------------------------------
-//   Push self on the state
+//   Return super scope
 // ----------------------------------------------------------------------------
-{
-    state.Push(state.Self());
-}
+       x_tree = state.self;
+       CLASSIFY;
+)
 
 
-static void set_scope(RunState &state)
+OPCODE(set_scope, (),
 // ----------------------------------------------------------------------------
-//   Set the scope to what is on the stack
+//   Set the scope
 // ----------------------------------------------------------------------------
-{
-    Tree_p tree = state.Pop();
-    Scope_p scope = tree->As<Scope>();
-    if (!scope)
-        record(opcode_error, "set_scope received non-scope %t", tree);
-    state.scope = scope;
-}
+       WANT_XTREE;
+       Scope *scope = x_tree->As<Scope>();
+       if (!scope)
+           record(opcode_error, "set_scope received non-scope %t", x_tree);
+       state.scope = scope;
+)
 
 
-static void enter(RunState &state)
+OPCODE(enter, (),
 // ----------------------------------------------------------------------------
 //   Enter a nested scope
 // ----------------------------------------------------------------------------
-{
-    Context context(state.scope);
-    state.scope = context.CreateScope();
-    state.locals = state.frame;
-}
+       Context context(state.scope);
+       state.scope = context.CreateScope();
+       locals = state.Depth();
+       REFRAME;
+)
 
 
-static void call(RunState &state)
+OPCODE(call_constant, (CONSTANT, ARGUMENTS),
 // ----------------------------------------------------------------------------
-//    Call the top of stack
+//   Call a constant tree
 // ----------------------------------------------------------------------------
-{
-    size_t size = state.FrameSize();
-    Tree_p callee = state.Pop();
-
-    // Save bytecode, program counter and current frame
-    Bytecode *saveBC = state.bytecode;
-    opaddr_t  savePC = state.pc;
-    opaddr_t  locals = state.locals;
-    opaddr_t  frame  = state.frame;
-    opaddr_t  ssize  = state.stack.size();
-    XL_ASSERT(locals + size <= ssize);
-
-    // Get bytecode for what we want to call
-    Bytecode *bytecode = compile(state.EvaluationScope(), callee);
-
-    // Set the frame for the callee
-    state.frame = ssize;
-    state.locals = ssize - size;
-
-    // Run the target code
-    bytecode->Run(state);
-
-    // Restore caller's state
-    state.pc = savePC;
-    state.bytecode = saveBC;
-    state.locals = locals;
-    state.frame = frame;
-
-    auto &stack = state.stack;
-    Tree_p result = state.Pop();
-    stack.erase(stack.begin() + ssize - size, stack.end());
-    state.Push(result);
-}
+       x_tree = Constant(DATA);
+       CHAIN(call);
+)
 
 
-static void assign(RunState &state)
+OPCODE(call, (ARGUMENTS),
 // ----------------------------------------------------------------------------
-//   Perform an assignment
+//    Call X with the given arguments
 // ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Pop();
-    Tree_p variable = state.Pop();
-    Rewrite_p rewrite = variable->As<Rewrite>();
-    if (rewrite)
-    {
-        rewrite->right = value;
-    }
-    else
-    {
-        Error error("Cannot assign to non-variable $1", variable);
-        state.Error(error);
-    }
-}
+       // Push PC and locals value
+       state.Push(RunValue(pc, runvalue_pc));
+       state.Push(RunValue(locals, runvalue_locals));
+       state.Push(RunValue(bc, runvalue_bytecode));
+
+       size_t base = state.Depth();
+       size_t nargs = DATA;
+       for (size_t a = 0; a < nargs; a++)
+       {
+           REFRAME;
+           opcode_t index = DATA;
+           state.Push(frame[index]);
+       }
+       pc = 0;
+       bc = x_tree->GetInfo<Bytecode>();
+       if (!bc)
+       {
+           record(opcode_error, "Calling %t which was not compiled", x_tree);
+           return nullptr;
+       }
+       XL_ASSERT(bc->parameters.size() == nargs);
+       locals = base;
+       state.Allocate(bc->locals); // Add locals on top of arguments
+
+       REFRAME;
+       RETARGET;
+)
 
 
-static void local(RunState &state)
+OPCODE(ret, (),
 // ----------------------------------------------------------------------------
-//   Fetch a local value from the state and put it on top of stack
+//    Return to caller, returning the result as X in RunValue as is
 // ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Local();
-    state.Push(value);
-}
+       WANT_XRUNVALUE;
+
+       state.Cut(locals);
+       if (locals)
+       {
+           bc = (Bytecode *) state.Pop(runvalue_bytecode).as_natural;
+           locals = state.Pop(runvalue_locals).as_natural;
+           pc = state.Pop(runvalue_pc).as_natural;
+       }
+       else
+       {
+           return x.AsTree();
+       }
+       RETARGET;
+)
 
 
-static void store(RunState &state)
+OPCODE(assign, (),
 // ----------------------------------------------------------------------------
-//   Save top of stack to a new local
+//   Perform an assignment X := Y
 // ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Top();
-    state.Save(value);
-}
+       WANT_TREES;
+
+       Rewrite_p rewrite = x_tree->As<XL::Rewrite>();
+       if (rewrite)
+       {
+           rewrite->right = y_tree;
+           TYPE(nil);
+       }
+       else
+       {
+           Error error("Cannot assign to non-variable $1", x_tree);
+           state.Error(error);
+           x_tree = error;
+           TYPE(error);
+       }
+)
 
 
-static void load(RunState &state)
+OPCODE(store, (LOCAL),
 // ----------------------------------------------------------------------------
-//   Save top of stack to a new local
+//   Save X to a local storage (0..nparms: Parameters; then local storage)
 // ----------------------------------------------------------------------------
-{
-    Tree_p value = state.Saved();
-    state.Push(value);
-}
+       WANT_XRUNVALUE;
+       opcode_t index = DATA;
+       frame[index] = x;
+)
 
 
-static void init_value(RunState &state)
+OPCODE(load, (LOCAL),
+// ----------------------------------------------------------------------------
+//   Load a local value (0..nparms: Parameters; then local storage)
+// ----------------------------------------------------------------------------
+       opcode_t index = DATA;
+       x = frame[index];
+       READ_XRUNVALUE;
+)
+
+
+OPCODE(loady, (LOCAL),
+// ----------------------------------------------------------------------------
+//   Load a local value into y
+// ----------------------------------------------------------------------------
+       opcode_t index = DATA;
+       y = frame[index];
+       READ_YRUNVALUE;
+)
+
+
+OPCODE(init_value, (DEFINITION),
 // ----------------------------------------------------------------------------
 //   Initialize a named constant
 // ----------------------------------------------------------------------------
-{
-    Rewrite_p rewrite = state.Rewrite();
-    Tree_p value = state.Pop();
-    rewrite->right = value;
-}
+       WANT_XTREE;
+       Rewrite_p rewrite = bc->Definition(DATA);
+       rewrite->right = x_tree;
+)
 
 
 // ============================================================================
 //
-//    Checks - Branch to target in case of failure
+//    Checks - Branch to target in case of failure, leave value in X
 //
 // ============================================================================
 
-static void check_type(RunState &state)
+OPCODE(check_type, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check a type at runtime
 // ----------------------------------------------------------------------------
-{
-    Tree_p type = state.Constant();
-    opaddr_t target = state.Jump();
-    Tree_p value = state.Pop();
-    Tree_p result = typecheck(state.scope, type, value);
-    if (result)
-    {
-        state.Push(result);
-        return;
-    }
-    state.pc = target;
-}
+       WANT_XTREE;
+       Tree_p value = x_tree;
+       Tree_p type = Constant(DATA);
+       opcode_t branch = DATA;
+       x_tree = typecheck(state.scope, type, value);
+       if (!x_tree)
+           pc += branch;
+       CLASSIFY;
+)
 
 
-static void check_input_type(RunState &state)
+OPCODE(check_input_type, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check the type of an input argument
 // ----------------------------------------------------------------------------
-{
-    check_type(state);
-}
+       CHAIN(check_type);
+)
 
 
-static void check_result_type(RunState &state)
+OPCODE(check_result_type, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check the type of an argument
 // ----------------------------------------------------------------------------
-{
-    check_type(state);
-}
+       CHAIN(check_type);
+)
 
 
-static void check_init_type(RunState &state)
+OPCODE(check_init_type, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check the type of an initializer
 // ----------------------------------------------------------------------------
-{
-    check_type(state);
-}
+       CHAIN(check_type);
+)
 
 
-static void check_typecast(RunState &state)
+OPCODE(check_typecast, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Evaluate a type cast, i.e. [X as Y]
 // ----------------------------------------------------------------------------
-{
-    check_type(state);
-}
+       CHAIN(check_type);
+)
 
 
-static void check_guard(RunState &state)
+OPCODE(check_guard, (JUMP),
 // ----------------------------------------------------------------------------
 //   Check if the guard condition is true, or nullify the stack
 // ----------------------------------------------------------------------------
-{
-    opaddr_t target = state.Jump();
-    Tree *condition = state.Pop();
-    if (condition == xl_true)
-        return;
-    state.pc = target;
-}
+       opcode_t branch = DATA;
+       if (xtype != boolean_mtype || !x_boolean)
+           pc += branch;
+)
 
 
-static void check_same(RunState &state)
+OPCODE(check_same, (JUMP),
 // ----------------------------------------------------------------------------
-//   Check if the two tops levels are equal, leave one copy if it matches
+//   Check if X and Y match, if not branch to taget
 // ----------------------------------------------------------------------------
-{
-    Tree_p test = state.Pop();
-    Tree_p expr = state.Top();
-    opaddr_t target = state.Jump();
-    if (Tree::Equal(expr, test))
-        return;
-    state.pc = target;
-}
+       WANT_TREES;
+       opcode_t branch = DATA;
+       if (!Tree::Equal(x_tree, y_tree))
+           pc += branch;
+)
 
 
-static void check_natural(RunState &state)
+OPCODE(check_natural, (CONSTANT_natural, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
-{
-    Tree *value = state.Pop();
-    Natural *natural = value->AsNatural();
-    Natural *match = state.Constant()->AsNatural();
-    opaddr_t target = state.Jump();
-    if (natural && natural->value == match->value)
-        return;
-    state.pc = target;
-}
+       uintptr_t ref = Constant<Natural::value_t>(pc);
+       opcode_t branch = DATA;
+       if (xtype != natural_mtype || x_natural != ref)
+           pc += branch;
+)
 
 
-static void check_real(RunState &state)
+OPCODE(check_real, (CONSTANT_real, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
-{
-    Tree *value = state.Pop();
-    Real *real = value->AsReal();
-    Real *match = state.Constant()->AsReal();
-    opaddr_t target = state.Jump();
-    if (real && real->value == match->value)
-        return;
-    Natural *nat = value->AsNatural();
-    if (nat && nat->value == match->value)
-        return;
-    state.pc = target;
-}
+       double ref = Constant<Real::value_t>(pc);
+       opcode_t branch = DATA;
+       if (xtype != real_mtype || x_real != ref)
+           pc += branch;
+)
 
 
-static void check_text(RunState &state)
+OPCODE(check_text, (CONSTANT_text, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
-{
-    Tree *top = state.Top();
-    Text *text = top->AsText();
-    Text *match = state.Constant()->AsText();
-    opaddr_t target = state.Jump();
-    if (text && text->value == match->value)
-        return;
-    state.pc = target;
-}
+       text ref = Constant<Text::value_t>(pc);
+       opcode_t branch = DATA;
+       if (xtype != text_mtype || x_text != ref)
+           pc += branch;
+)
 
 
-static void check_infix(RunState &state)
+OPCODE(check_infix, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we have an infix, and if so, split it into two components
 // ----------------------------------------------------------------------------
 //   We have [infix], we will have either [right, left], or [nullptr]
-{
-    Infix *reference = state.Constant()->AsInfix();
-    Tree_p value = state.Pop();
-    Infix *infix = value->AsInfix();
-    opaddr_t target = state.Jump();
-    if (infix && infix->name == reference->name)
-        return;
-    state.pc = target;
-}
+       WANT_XTREE;
+
+       Tree *ref = Constant(DATA);
+       opcode_t offset = DATA;
+       Infix *refinfix = ref->AsInfix();
+       if (!refinfix)
+       {
+           record(opcode_error, "check_infix with non-infix reference %t", ref);
+           return nullptr;
+       }
+       Infix *infix = x_tree->AsInfix();
+       if (!infix || infix->name != refinfix->name)
+           pc += offset;
+       else
+           xtype = infix_mtype;
+)
 
 
-static void check_borrow(RunState &state)
+OPCODE(check_borrow, (JUMP),
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration
 // ----------------------------------------------------------------------------
-{
-    Tree *top = state.Top();
-    opaddr_t target = state.Jump();
-    Rewrite *rewrite = top->As<Rewrite>();
-    if (rewrite)
-        return;
-    state.pc = target;
-}
+       opcode_t offset = DATA;
+       Rewrite *rewrite = x_tree->As<Rewrite>();
+       if (!rewrite)
+           pc += offset;
+       else
+           xtype = definition_mtype;
+)
 
 
-static void check_typed_borrow(RunState &state)
+OPCODE(check_typed_borrow, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration and check its type
 // ----------------------------------------------------------------------------
-{
-    Tree *top = state.Top();
-    Tree *type = state.Constant();
-    opaddr_t target = state.Jump();
-    Rewrite *rewrite = top->As<Rewrite>();
-    if (rewrite)
-    {
-        Infix *vartype = IsTypeAnnotation(rewrite->left);
-        Tree_p have = vartype->right;
-        if (Tree::Equal(type, have))
-            return;
-    }
-    state.pc = target;
-}
+       Tree_p type = Constant(DATA);
+       opcode_t offset = DATA;
+       Rewrite *rewrite = x_tree->As<Rewrite>();
+       bool ok = false;
+       if (rewrite)
+       {
+           xtype = definition_mtype;
+
+           Infix *vartype = IsTypeAnnotation(rewrite->left);
+           Tree_p have = vartype->right;
+           if (Tree::Equal(type, have))
+               ok = true;
+       }
+       if (!ok)
+           pc += offset;
+)
+
+#undef OPCODE
+#undef BUILTIN

@@ -45,7 +45,6 @@
 NAME(self)                      // Must come first, used in Define(...)
 NAME(true)
 NAME(false)
-NAME(error)
 NAME(matching)
 NAME(builtin)
 NAME(lambda)
@@ -64,6 +63,8 @@ TYPE(tree,              R_TYPE(TYPE_TREE))
 TYPE(scope,             R_TYPE(TYPE_TREE->As<Scope>()))
 TYPE(closure,           R_TYPE(TYPE_CLOSURE))
 TYPE(definition,        R_TYPE(IsDefinition(TYPE_TREE)))
+TYPE(error,             R_TYPE(IsError(TYPE_TREE)))
+TYPE(nil,               R_TYPE(nullptr))
 
 // Types that evaluate only if they don't initially match
 #define MATCH_OR_EVAL(TypeName, TypeClass, TypeCondition)               \
@@ -80,16 +81,17 @@ TYPE(definition,        R_TYPE(IsDefinition(TYPE_TREE)))
                      R_TYPE(typed);                                     \
          record(typecheck, "No " #TypeName " for %t", tree);            \
          R_TYPE(nullptr))
-MATCH_OR_EVAL(block,    Block,  true)
-MATCH_OR_EVAL(infix,    Infix,  true)
-MATCH_OR_EVAL(prefix,   Prefix, true)
-MATCH_OR_EVAL(postfix,  Postfix,true)
-MATCH_OR_EVAL(symbol,   Name,   true)
-MATCH_OR_EVAL(name,     Name,   typed->IsName())
-MATCH_OR_EVAL(operator, Name,   typed->IsOperator())
 
-// Other types need to evaluate their arugment
-TYPE(value,     R_TYPE(TYPE_VALUE))
+MATCH_OR_EVAL(block,    Block,          true)
+MATCH_OR_EVAL(infix,    Infix,          true)
+MATCH_OR_EVAL(prefix,   Prefix,         true)
+MATCH_OR_EVAL(postfix,  Postfix,        true)
+MATCH_OR_EVAL(symbol,   Name,           true)
+MATCH_OR_EVAL(name,     Name,           typed->IsName())
+MATCH_OR_EVAL(operator, Name,           typed->IsOperator())
+
+// Other types need to evaluate their argument
+TYPE(value,             R_TYPE(TYPE_VALUE))
 TYPE(natural,                                                   \
      if (Natural *nat = TYPE_VALUE->AsNatural())                \
      {                                                          \
@@ -98,7 +100,7 @@ TYPE(natural,                                                   \
          R_TYPE(nat->MakeUnsigned());                           \
      }                                                          \
      R_TYPE(nullptr))
-TYPE(text,      R_TYPE(TYPE_VALUE->AsText()))
+TYPE(text,              R_TYPE(TYPE_VALUE->AsText()))
 TYPE(character,
      if (Text *text = TYPE_VALUE->AsText())
          if (text->IsCharacter())

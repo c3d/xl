@@ -158,10 +158,7 @@ Tree * Compiler::Evaluate(Scope *scope, Tree *source)
            source, scope, (void *) code);
 
     if (!code)
-    {
-        Ooops("Error compiling $1", source);
-        return xl_error;
-    }
+        return Ooops("Error compiling $1", source);
 
     Tree *result = source;
     if (!Opt::emitIR)

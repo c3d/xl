@@ -43,7 +43,6 @@
 
 XL_BEGIN
 
-struct Opcode;
 struct Bindings;
 struct Native;
 struct EvaluationCache;

@@ -1,0 +1,93 @@
+// ****************************************************************************
+//  machine-types.tbl                                               XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     List of machine types, i.e. types with a direct machine-level
+//     representation that the bytecode can take advantage of
+//
+//     RUNLOOP_TYPE(Name, Rep):      Define a type with a variable in run loop
+//     MACHINE_TYPE(Name, Rep, BC):  Define a machine type to/from RunValue
+//     RUNTIME_TYPE(Name, Rep):      Define a type that has both
+//
+//
+//
+// ****************************************************************************
+//   (C) 2021 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+//
+//   A lot of the complication here is intended to allow multiple names
+//   for types that are identical in C++. Some operations we want to generate,
+//   such as constructors or conversion operators, cannot have the same type
+//   multiple times. Conversely, in the run loop, we don't want to multiply
+//   variables for types that can all be held in a single variable.
+//   An additional complication is that the same type, e.g. 'long' may match
+//   either a 32-bit or 64-bit type depending on the platform.
+//
+//   As a result, we classify built-in types as follows:
+//
+//   - RUNLOOP_TYPE is a type that has a variable in the run loop.
+//     For example, tree and integer each have their own varianle.
+//
+//   - MACHINE_TYPE is a type that has a machine representation in C++
+//     which is stored in a RunValue. For example, integer has 4 variants,
+//     integer8, integer16, integer32 and integer64. This allows us to
+//     correctly capture the type of native interfaces, among other things.
+//
+//   - RUNTIME_TYPE is a type that is both a RUNLOOP_TYPE and a MACHINE_TYPE.
+//
+//   Furthermore, types are classified in 5 other subsets:
+//   - Natural (unsigned whole number)
+//   - Integer (signed whole number)
+//   - Real    (floating-point value)
+//   - Tree    (all the parse tree derived types)
+//   - Other   (text, boolean, etc)
+//
+//   Each of the categories has a dedicated macro, which makes it possible to
+//   do different things for different kinds of tree in one pass.
+
+#ifdef RUNTIME_TYPE
+# define RUNLOOP_TYPE(Name, Rep)        RUNTIME_TYPE(Name, Rep, Name)
+# define MACHINE_TYPE(Name, Rep, BC)    RUNTIME_TYPE(Name, Rep, BC)
+#else
+# ifdef RUNLOOP_TYPE
+#  define RUNTIME_TYPE(Name, Rep, BC)   RUNLOOP_TYPE(Name, Rep)
+# else
+#  define RUNLOOP_TYPE(Name, Rep)
+# endif
+# ifdef MACHINE_TYPE
+#  define RUNTIME_TYPE(Name, Rep, BC)   MACHINE_TYPE(Name, Rep, BC)
+# else
+#  define MACHINE_TYPE(Name, Rep, BC)
+# endif
+# ifndef RUNTIME_TYPE
+#  define RUNTIME_TYPE(Name, Rep, BC)
+# endif
+#endif
+
+#include "tree-types.tbl"
+#include "integer-types.tbl"
+#include "natural-types.tbl"
+#include "real-types.tbl"
+#include "other-types.tbl"
+
+#undef MACHINE_TYPE
+#undef RUNLOOP_TYPE
+#undef RUNTIME_TYPE

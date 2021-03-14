@@ -298,6 +298,11 @@ struct Text : Tree
                                   closing == "'" &&
                                   value.length() == 1); }
 
+    static Text *Character(char c)
+    {
+        return new Text(text(1, c), "'", "'");
+    }
+
     GARBAGE_COLLECT(Text);
 };
 

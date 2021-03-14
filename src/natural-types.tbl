@@ -1,0 +1,48 @@
+// ****************************************************************************
+//  natural-types.tbl                                                XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Natural-like representation types
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2021 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+
+#ifdef NATURAL_TYPE
+ NATURAL_TYPE(natural, ulonglong)
+#else
+ #define NATURAL_TYPE(Name, Rep)        MACHINE_TYPE(Name, Rep, natural)
+ RUNLOOP_TYPE(natural,  ulonglong)
+#endif
+
+NATURAL_TYPE(natural8,  uint8_t)
+NATURAL_TYPE(natural16, uint16_t)
+NATURAL_TYPE(natural32, uint32_t)
+NATURAL_TYPE(natural64, uint64_t)
+
+#undef NATURAL_TYPE

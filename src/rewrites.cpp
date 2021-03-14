@@ -613,7 +613,7 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Rewrite *candidate)
         {
             type = binding_types->AssignType(init, type);
             type = binding_types->AssignType(what, type);
-            if (!type || type == xl_error)
+            if (!type || type == error_type)
                 binding = FAILED;
         }
 
@@ -633,7 +633,7 @@ Tree *RewriteCalls::Check (Scope *scope, Tree *what, Rewrite *candidate)
                     bcontext->ProcessDeclarations(init, inits);
                 }
                 type = binding_types->Type(init);
-                if (!type || type == xl_error)
+                if (!type || type == error_type)
                     binding = FAILED;
                 break;
             case Types::Decl::C:

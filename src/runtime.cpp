@@ -1410,7 +1410,7 @@ bool XLCall::Analyze(Scope *scope)
 
     Types types(scope);
     Tree *type = types.TypeAnalysis(call);
-    bool result = type != nullptr && type != xl_error && !errors.HadErrors();
+    bool result = type != nullptr && type != error_type && !errors.HadErrors();
 
     return result;
 }

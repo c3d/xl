@@ -364,6 +364,7 @@ Errors *Main::InitMAIN()
 {
     MAIN = this;
     Interpreter::InitializeBuiltins();
+    BytecodeEvaluator::InitializeBuiltins();
     return nullptr;
 }
 
