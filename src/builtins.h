@@ -39,8 +39,8 @@
 #define NAME(Name)              extern Name_p xl_##Name;
 #define TYPE(Name, Body)        extern Name_p Name##_type;
 
-#define UNARY_OP(Name, ReturnType, ArgType, Body)
-#define BINARY_OP(Name, ReturnType, LeftType, RightType, Body)
+#define UNARY(Name, ReturnType, ArgType, Body)
+#define BINARY(Name, ReturnType, LeftType, RightType, Body)
 
 namespace XL
 {

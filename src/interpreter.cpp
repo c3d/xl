@@ -1607,50 +1607,42 @@ bool Interpreter::DoInitializers(Initializers &inits, EvaluationCache &cache)
 //
 // ============================================================================
 
-#define R_INT(x)                                                        \
-        {                                                               \
-            Natural *result = new Natural((x), self->Position());       \
-            result->tag |= signbit;                                     \
-            return result;                                              \
-        }
+#define R_NAT(x)        return new Natural((x), self->Position());
+#define R_INT(x)        return Natural::Signed((x), self->Position());
 #define R_REAL(x)       return new Real((x), self->Position())
 #define R_TEXT(x)       return new Text((x), self->Position())
 #define R_BOOL(x)       return (x) ? xl_true : xl_false
-#define LEFT            (left->value)
-#define RIGHT           (right->value)
-#define VALUE           (value->value)
-#define LEFT_B          (LEFT == "true")
-#define RIGHT_B         (RIGHT == "true")
-#define VALUE_B         (VALUE == "true")
-#define SIGNED          (longlong)
-#define UNSIGNED        (ulonglong)
-#define SLEFT           SIGNED LEFT
-#define SRIGHT          SIGNED RIGHT
-#define SVALUE          SIGNED VALUE
-#define ULEFT           UNSIGNED LEFT
-#define URIGHT          UNSIGNED RIGHT
-#define UVALUE          UNSIGNED VALUE
-#define DIV0            if (RIGHT == 0) return Ooops("Divide $1 by zero", self)
+#define x               (x_tree->value)
+#define y               (y_tree->value)
+#define x_boolean       (x == "true")
+#define y_boolean       (y == "true")
+#define x_integer       ( (longlong) x)
+#define y_integer       ( (longlong) y)
+#define x_natural       ((ulonglong) x)
+#define y_natural       ((ulonglong) y)
+#define x_real          (x)
+#define y_real          (y)
+#define x_text          (x)
+#define y_text          (y)
+#define DIV0            if (y == 0) return Ooops("Divide $1 by zero", self)
 
-#define UNARY_OP(Name, ReturnType, ArgType, Body)               \
+#define UNARY(Name, RType, XType, Body)                         \
 static Tree *builtin_unary_##Name(Bindings &args)               \
 {                                                               \
     Tree *self = args.Self();                                   \
-    Tree *result = self;                                        \
     if (args.Size() != 1)                                       \
         return Ooops("Invalid number of arguments "             \
                      "for unary builtin " #Name                 \
-                     " in $1", result);                         \
-    ArgType *value  = args[0]->As<ArgType>();                   \
-    ulong signbit = value->tag & (1 << Tree::SIGNBIT);          \
-    if (!value && signbit == signbit)                           \
-        return Ooops("Argument $1 is not a " #ArgType           \
+                     " in $1", self);                           \
+    XType *x_tree  = args[0]->As<XType>();                      \
+    if (!x_tree)                                                \
+        return Ooops("Argument $1 is not a " #XType             \
                      " in builtin " #Name, args[0]);            \
     Body;                                                       \
 }
 
 
-#define BINARY_OP(Name, ReturnType, LeftType, RightType, Body)  \
+#define BINARY(Name, RType, XType, YType, Body)                 \
 static Tree *builtin_binary_##Name(Bindings &args)              \
 {                                                               \
     Tree *self = args.Self();                                   \
@@ -1658,14 +1650,13 @@ static Tree *builtin_binary_##Name(Bindings &args)              \
         return Ooops("Invalid number of arguments "             \
                      "for binary builtin " #Name                \
                      " in $1", self);                           \
-    LeftType *left  = args[0]->As<LeftType>();                  \
-    ulong signbit = left->tag & (1 << Tree::SIGNBIT);           \
-    if (!left && signbit == signbit)                            \
-        return Ooops("First argument $1 is not a " #LeftType    \
+    XType *x_tree  = args[0]->As<XType>();                      \
+    if (!x_tree)                                                \
+        return Ooops("First argument $1 is not a " #XType       \
                      " in builtin " #Name, args[0]);            \
-    RightType *right = args[1]->As<RightType>();                \
-    if (!right)                                                 \
-        return Ooops("Second argument $1 is not a " #RightType  \
+    YType *y_tree = args[1]->As<YType>();                       \
+    if (!y_tree)                                                \
+        return Ooops("Second argument $1 is not a " #YType      \
                      " in builtin " #Name, args[1]);            \
     Body;                                                       \
 }
@@ -1698,7 +1689,7 @@ static Tree *builtin_typecheck_##N(Bindings &args)              \
         return Ooops("Invalid number of arguments "             \
                      "for " #N " typecheck"                     \
                      " in $1", args.Self());                    \
-    Tree_p type  = N##_type;                                    \
+    Tree *type  = N##_type;                                     \
     record(typecheck, "Builtin typecheck %t as %t = " #N,       \
            args.Unevaluated(0), type);                          \
     Body;                                                       \
@@ -1729,8 +1720,8 @@ void Interpreter::InitializeBuiltins()
 {
 #define NAME(N)         xl_##N = new Name(#N);
 #define TYPE(N, Body)   N##_type = new Name(#N);
-#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)
-#define BINARY_OP(Name, ReturnType, LeftTYpe, RightType, Body)
+#define UNARY(Name, RType, XType, Body)
+#define BINARY(Name, RType, XType, YType, Body)
 
 #include "builtins.tbl"
 }
@@ -1755,10 +1746,10 @@ void Interpreter::InitializeContext(Context &context)
 //    Load the outer context with the type check operators referring to
 //    the builtins.
 {
-#define UNARY_OP(Name, ReturnType, LeftTYpe, Body)                      \
+#define UNARY(Name, RType, XType, Body)                                 \
     builtins[#Name] = builtin_unary_##Name;
 
-#define BINARY_OP(Name, RetTy, LeftTy, RightTy, Body)                   \
+#define BINARY(Name, RetTy, LeftTy, RightTy, Body)                      \
     builtins[#Name] = builtin_binary_##Name;
 
 #define NAME(N)                                                         \

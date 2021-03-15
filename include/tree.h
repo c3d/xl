@@ -236,9 +236,16 @@ struct Natural : Tree
         Tree(NATURAL, pos), value(i) {}
     Natural(Natural *i): Tree(NATURAL, i), value(i->value) {}
     value_t  value;
-    operator value_t()          { return value; }
+    operator value_t()                  { return value; }
 
-    bool        IsSigned()      { return tag & (1 << SIGNBIT); }
+    static Natural *Signed(longlong x, TreePosition pos = NOWHERE)
+    {
+        Natural *result = new Natural((ulonglong) x, pos);
+        result->tag |= (1 << SIGNBIT);
+        return result;
+    }
+
+    bool        IsSigned()              { return tag & (1 << SIGNBIT); }
     Natural *   MakeSigned();
     Natural *   MakeUnsigned();
 
