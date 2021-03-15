@@ -26,7 +26,7 @@ Power: 125
 Sum: -8
 Difference: -2
 Product: 15
-Ratio: 0
+Ratio: 1
 Modulo: -2
 Reminder: -2
 And: -7
@@ -40,7 +40,7 @@ Power: 0
 Sum: 2
 Difference: 8
 Product: -15
-Ratio: 0
+Ratio: -1
 Modulo: -1
 Reminder: 2
 And: 5
@@ -54,7 +54,7 @@ Power: 0
 Sum: -2
 Difference: -8
 Product: -15
-Ratio: 6148914691236517203
+Ratio: -1
 Modulo: 1
 Reminder: -2
 And: 3
