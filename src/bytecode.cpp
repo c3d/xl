@@ -1326,25 +1326,28 @@ inline std::vector<Bytecode::OpcodeKind> Bytecode::OpcodeArgList(Args... args)
 }
 
 
-void Bytecode::Dump(std::ostream &out, opaddr_t &pc)
+void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
 // ----------------------------------------------------------------------------
 //   Dump a single bytecode
 // ----------------------------------------------------------------------------
 {
     std::vector<OpcodeKind> args;
+    opaddr_t pc = pcr;
 
     switch(code[pc++])
     {
-#define OPCODE(Name, Parms, Body)                               \
-    case opcode_##Name:                                         \
-    {                                                           \
-        std::cout << pc << ":\t" << #Name;                      \
-        args = OpcodeArgList Parms;                             \
-        break;                                                  \
+#define OPCODE(Name, Parms, Body)                                       \
+    case opcode_##Name:                                                 \
+    {                                                                   \
+        std::cout << std::right << std::setw(6) << pc-1 << ": "         \
+                  << std::left  << std::setw(20) << #Name;              \
+        args = OpcodeArgList Parms;                                     \
+        break;                                                          \
     }
 #include "bytecode.tbl"
     default:
-        std::cout << pc << ":\t" << "INVALID OPCODE " << code[pc-1];
+        std::cout << std::right << std::setw(6) << pc-1 << ": "
+                  << std::left  << std::setw(20) << "INVALID " << code[pc-1];
         break;
     }
 
@@ -1355,27 +1358,27 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pc)
         switch(a)
         {
         case JUMP:
-            out << "\tjump " << value << " to " << pc+value; break;
+            out << "jump " << value << " to " << pc+value; break;
         case LOCAL:
             if (value < parameters.size())
-                out << "\targ " << value << "\t= " << parameters[value];
+                out << "arg " << value << "\t= " << parameters[value];
             else if (compile)
-                out << "\tlocal " << value << "\t= " << Cached(value);
+                out << "local " << value << "\t= " << Cached(value);
             else
-                out << "\tlocal " << value;
+                out << "local " << value;
             break;
         case CONSTANT:
-            out << "\tconstant " << value;
+            out << "constant " << value;
             if (value < constants.size())
                 out << "=" << constants[value];
             break;
         case DEFINITION:
-            out << "\trewrite " << value;
+            out << "rewrite " << value;
             if (value < rewrites.size())
                 out << "=" << rewrites[value];
             break;
         case ARGUMENTS:
-            out << "\targs " << value;
+            out << "args " << value;
             for (size_t a = 0; a < value; a++)
             {
                 opcode_t index = code[pc++];
@@ -1387,7 +1390,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pc)
 #define TREE_TYPE(Name, Rep, Cast)
 #define RUNTIME_TYPE(Name, Rep, BC)                                     \
         case CONSTANT_##Name:                                           \
-            out << "\tconstant_" #Name "\t" << *((Rep *) &code[pc]);    \
+            out << "constant_" #Name "\t" << *((Rep *) &code[pc]);      \
             pc += sizeof(Rep) / sizeof(opcode_t);                       \
             break;
 #include "machine-types.tbl"
@@ -1398,6 +1401,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pc)
     }
 
     out << "\n";
+    pcr = pc;
 }
 
 
@@ -2417,7 +2421,7 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
             OP(init_value, rewrite);
         }
         // Return the definition
-        OP(constant, rewrite);
+        OP(rewrite, rewrite);
         return IS_DEFINITION;
     }
 
