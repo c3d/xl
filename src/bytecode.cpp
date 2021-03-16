@@ -177,7 +177,7 @@ struct Bytecode : Info
 {
     Bytecode(Scope *scope, Tree *self, NameList &parameters):
         code(), scope(scope), self(self),
-        constants(), rewrites(), parameters(parameters),
+        constants(), rewrites(), parameters(parameters), locals(0),
         compile(new CompileInfo)
     {}
     ~Bytecode() { Cut(0); delete compile; }
