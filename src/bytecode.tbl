@@ -41,13 +41,14 @@
 //
 // ============================================================================
 
-// Builtins are the ones exposed
+// Builtins are the ones exposed through the [builtin "ABC"] construct
 #ifndef BUILTIN
 #define BUILTIN(Name, Parms, Body)      OPCODE(Name, Parms, Body)
 #endif
 
+// Type checks
 #define NATURAL_TYPE(Name, Rep)                         \
-BUILTIN(Name##_typecheck, (),                           \
+    BUILTIN(Name##_typecheck, (),                       \
         Rep rep = x_natural;                            \
         if (!IsNatural(xtype) || rep != x_natural)      \
         {                                               \
@@ -55,7 +56,7 @@ BUILTIN(Name##_typecheck, (),                           \
             TYPE(nil);                                  \
         })
 #define INTEGER_TYPE(Name, Rep)                         \
-BUILTIN(Name##_typecheck, (),                           \
+    BUILTIN(Name##_typecheck, (),                       \
         Rep rep = x_integer;                            \
         if (!IsInteger(xtype) || rep != x_integer)      \
         {                                               \
@@ -63,7 +64,7 @@ BUILTIN(Name##_typecheck, (),                           \
             TYPE(nil);                                  \
         })
 #define REAL_TYPE(Name, Rep)                    \
-BUILTIN(Name##_typecheck, (),                   \
+    BUILTIN(Name##_typecheck, (),               \
         Rep rep = x_real;                       \
         if (!IsReal(xtype) || rep != x_real)    \
         {                                       \
@@ -71,14 +72,14 @@ BUILTIN(Name##_typecheck, (),                   \
             TYPE(nil);                          \
         })
 #define OTHER_TYPE(Name, Rep)                   \
-BUILTIN(Name##_typecheck, (),                   \
+    BUILTIN(Name##_typecheck, (),               \
         if (xtype != Name##_mtype)              \
         {                                       \
             x_tree = nullptr;                   \
             TYPE(nil);                          \
         })
 #define TREE_TYPE(Name, Rep, Cast)                      \
-BUILTIN(Name##_typecheck, (),                           \
+    BUILTIN(Name##_typecheck, (),                       \
         WANT_XTREE;                                     \
         if (xtype != Name##_mtype)                      \
         {                                               \
@@ -87,6 +88,111 @@ BUILTIN(Name##_typecheck, (),                           \
             xtype = x_tree ? Name##_mtype : nil_mtype;  \
         })
 #include "machine-types.tbl"
+
+
+// Arithmetic
+#define DIVIDER(Name, BC, Body)                 \
+    BUILTIN(Name, (),                           \
+            if (!y_##BC) goto divide_by_zero;   \
+            Body)
+
+#define mod_natural(Rep, x, y)          x = x % y
+#define rem_natural(Rep, x, y)          x = x % y
+#define pow_natural(Rep, x, y)                  \
+{                                               \
+    Rep result = 1;                             \
+    while (y > 0)                               \
+    {                                           \
+        if (y & 1)                              \
+            result *= x;                        \
+        x *= x;                                 \
+        y >>= 1;                                \
+    }                                           \
+    x = result;                                 \
+}
+
+#define mod_integer(Rep, x, y)                  \
+{                                               \
+    Rep result = x % y;                         \
+    if (result && (x^y) < 0)                    \
+        result += y;                            \
+    x = result;                                 \
+}
+
+#define rem_integer(Rep, x, y)          x = x % y
+#define pow_integer(Rep, x, y)                  \
+{                                               \
+    Rep result = y >= 0 ? 1 : 0;                \
+    while (y > 0)                               \
+    {                                           \
+        if (y & 1)                              \
+            result *= x;                        \
+        x *= x;                                 \
+        y >>= 1;                                \
+    }                                           \
+    x = result;                                 \
+}
+
+#define mod_real(Rep, x, y)                     \
+    {                                           \
+    Rep result = fmod(x, y);                    \
+    if (result != 0.0 && x*y < 0.0)             \
+        result += y;                            \
+    x = result;                                 \
+}
+#define rem_real(Rep, x, y)             x = fmod(x,y)
+#define pow_real(Rep, x, y)             x = pow(x,y);
+
+
+#define ARITH(Name, R, BC)                                              \
+    BUILTIN(add_##Name, (),     x_##BC = R(R(x_##BC) + R(y_##BC)))      \
+    BUILTIN(sub_##Name, (),     x_##BC = R(R(x_##BC) - R(y_##BC)))      \
+    BUILTIN(mul_##Name, (),     x_##BC = R(R(x_##BC) * R(y_##BC)))      \
+    DIVIDER(div_##Name, BC,     x_##BC = R(R(x_##BC) / R(y_##BC)))      \
+    DIVIDER(mod_##Name, BC,     mod_##BC(R, x_##BC, y_##BC))            \
+    DIVIDER(rem_##Name, BC,     rem_##BC(R, x_##BC, y_##BC))            \
+    BUILTIN(pow_##Name, (),     pow_##BC(R, x_##BC, y_##BC))
+
+#define SHIFTS(Name, R, BC)                                             \
+    BUILTIN(shl_##Name, (),     x_##BC = R(R(x_##BC) << R(y_##BC)))     \
+    BUILTIN(shr_##Name, (),     x_##BC = R(R(x_##BC) >> R(y_##BC)))
+
+#define LOGICAL(Name, R, BC)                                            \
+    BUILTIN(and_##Name, (),     x_##BC = R(R(x_##BC) & R(y_##BC)))      \
+    BUILTIN( or_##Name, (),     x_##BC = R(R(x_##BC) | R(y_##BC)))      \
+    BUILTIN(xor_##Name, (),     x_##BC = R(R(x_##BC) ^ R(y_##BC)))
+
+#define COMPARE(Name, R, BC)                                            \
+    BUILTIN(eq_##Name, (), x_boolean = x_##BC == y_##BC; TYPE(boolean)) \
+    BUILTIN(ne_##Name, (), x_boolean = x_##BC != y_##BC; TYPE(boolean)) \
+    BUILTIN(lt_##Name, (), x_boolean = x_##BC <  y_##BC; TYPE(boolean)) \
+    BUILTIN(gt_##Name, (), x_boolean = x_##BC  > y_##BC; TYPE(boolean)) \
+    BUILTIN(le_##Name, (), x_boolean = x_##BC <= y_##BC; TYPE(boolean)) \
+    BUILTIN(ge_##Name, (), x_boolean = x_##BC >= y_##BC; TYPE(boolean))
+
+#define NATURAL_TYPE(Name, Rep)                 \
+    ARITH(Name,   Rep, natural)                 \
+    SHIFTS(Name,  Rep, natural)                 \
+    LOGICAL(Name, Rep, natural)                 \
+    COMPARE(Name, Rep, natural)
+
+#define INTEGER_TYPE(Name, Rep)                 \
+    ARITH(Name,   Rep, integer)                 \
+    SHIFTS(Name,  Rep, integer)                 \
+    LOGICAL(Name, Rep, integer)                 \
+    COMPARE(Name, Rep, integer)
+
+#define REAL_TYPE(Name, Rep)                    \
+    ARITH(Name,   Rep, real)                    \
+    COMPARE(Name, Rep, real)
+
+#include "machine-types.tbl"
+
+LOGICAL(boolean, bool, boolean)
+COMPARE(boolean, bool, boolean)
+
+COMPARE(text, text, text)
+BUILTIN(concat, (),     x_text = x_text + y_text)
 
 
 
