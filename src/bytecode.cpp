@@ -648,6 +648,18 @@ classify:
     NEXT;
 
 
+divide_by_zero:
+// ----------------------------------------------------------------------------
+//    We get here if an arithmetic divide by zero occurs
+// ----------------------------------------------------------------------------
+    {
+        Error error("Divide by zero");
+        state.Error(error);
+        TYPE(error);
+    }
+    CHAIN(ret);
+
+
 // ----------------------------------------------------------------------------
 //  Magic happens here - Insert code for the various opcodes
 // ----------------------------------------------------------------------------
