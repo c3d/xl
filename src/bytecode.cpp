@@ -1023,6 +1023,8 @@ void Bytecode::Validate()
 // ----------------------------------------------------------------------------
 {
     PatchChecks(0);
+    if (code.back() != opcode_ret)
+        code.push_back(opcode_ret);
     locals = compile->values.size();
     delete compile;
     compile = nullptr;
