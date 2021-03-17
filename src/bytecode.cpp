@@ -2105,7 +2105,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 if (index != UNPATCHED)
                 {
                     attempt.Fail();     // Cut any generated code
-                    OP(load, Constant(index), CHECK);
+                    OP(load, Constant(index));
                     done = true;
                 }
                 else if (IsSelf(decl->Definition()))
