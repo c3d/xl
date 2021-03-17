@@ -1365,7 +1365,11 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
         switch(a)
         {
         case JUMP:
-            out << "jump " << value << " to " << pc+value; break;
+            if (value == UNPATCHED)
+                out << "jump (not patched yet)";
+            else
+                out << "jump " << value << " to " << pc+value;
+            break;
         case LOCAL:
             if (value < parameters.size())
                 out << "arg " << value << "\t= " << parameters[value];
