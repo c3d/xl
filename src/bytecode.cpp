@@ -1314,8 +1314,10 @@ void Bytecode::Dump(std::ostream &out)
 
     out << "Opcodes ("
         << locals << " locals, "
-        << parms << " parameters, "
-        << locals - parms << " temporaries)\n";
+        << parms << " parameters";
+    if (locals > parms)
+        out << ", " << locals - parms << " temporaries";
+    out << ")\n";
     opaddr_t max = code.size();
     opaddr_t pc = 0;
     while (pc < max)
