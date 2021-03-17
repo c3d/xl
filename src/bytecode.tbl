@@ -48,45 +48,75 @@
 
 // Type checks
 #define NATURAL_TYPE(Name, Rep)                         \
-    BUILTIN(Name##_typecheck, (),                       \
-        Rep rep = x_natural;                            \
-        if (!IsNatural(xtype) || rep != x_natural)      \
-        {                                               \
-            x_tree = nullptr;                           \
-            TYPE(nil);                                  \
-        })
+    BUILTIN(Name##_cast, (),                            \
+            Rep rep = x_natural;                        \
+            if (!IsNatural(xtype) || rep != x_natural)  \
+            {                                           \
+                x_tree = nullptr;                       \
+                TYPE(nil);                              \
+            })                                          \
+    BUILTIN(Name##_typecheck, (JUMP),                   \
+            Rep rep = x_natural;                        \
+            opcode_t offset = DATA;                     \
+            if (!IsNatural(xtype) || rep != x_natural)  \
+                pc += offset;)
 #define INTEGER_TYPE(Name, Rep)                         \
-    BUILTIN(Name##_typecheck, (),                       \
-        Rep rep = x_integer;                            \
-        if (!IsInteger(xtype) || rep != x_integer)      \
-        {                                               \
-            x_tree = nullptr;                           \
-            TYPE(nil);                                  \
-        })
+    BUILTIN(Name##_cast, (),                            \
+            Rep rep = x_integer;                        \
+            if (!IsInteger(xtype) || rep != x_integer)  \
+            {                                           \
+                x_tree = nullptr;                       \
+                TYPE(nil);                              \
+            })                                          \
+    BUILTIN(Name##_typecheck, (JUMP),                   \
+            Rep rep = x_integer;                        \
+            opcode_t offset = DATA;                     \
+            if (!IsInteger(xtype) || rep != x_integer)  \
+                pc += offset;)
 #define REAL_TYPE(Name, Rep)                    \
-    BUILTIN(Name##_typecheck, (),               \
-        Rep rep = x_real;                       \
-        if (!IsReal(xtype) || rep != x_real)    \
-        {                                       \
-            x_tree = nullptr;                   \
-            TYPE(nil);                          \
-        })
+    BUILTIN(Name##_cast, (),                    \
+            Rep rep = x_real;                   \
+            if (!IsReal(xtype) || rep != x_real)        \
+            {                                           \
+                x_tree = nullptr;                       \
+                TYPE(nil);                              \
+            })                                          \
+    BUILTIN(Name##_typecheck, (JUMP),                   \
+            Rep rep = x_real;                           \
+            opcode_t offset = DATA;                     \
+            if (!IsReal(xtype) || rep != x_real)        \
+                pc += offset;)
 #define OTHER_TYPE(Name, Rep)                   \
-    BUILTIN(Name##_typecheck, (),               \
-        if (xtype != Name##_mtype)              \
-        {                                       \
-            x_tree = nullptr;                   \
-            TYPE(nil);                          \
-        })
+    BUILTIN(Name##_cast, (),                    \
+            if (xtype != Name##_mtype)          \
+            {                                   \
+                x_tree = nullptr;               \
+                TYPE(nil);                      \
+            })                                  \
+    BUILTIN(Name##_typecheck, (JUMP),           \
+            opcode_t offset = DATA;             \
+            if (xtype != Name##_mtype)          \
+                pc += offset;)
 #define TREE_TYPE(Name, Rep, Cast)                      \
-    BUILTIN(Name##_typecheck, (),                       \
-        WANT_XTREE;                                     \
-        if (xtype != Name##_mtype)                      \
-        {                                               \
-            Tree *value = x_tree;                       \
-            x_tree = (Cast);                            \
-            xtype = x_tree ? Name##_mtype : nil_mtype;  \
-        })
+    BUILTIN(Name##_cast, (),                            \
+            WANT_XTREE;                                 \
+            if (xtype != Name##_mtype)                  \
+            {                                           \
+                Tree *value = x_tree;                   \
+                x_tree = (Cast);                        \
+                xtype = x_tree ? Name##_mtype : nil_mtype;      \
+            })                                                  \
+    BUILTIN(Name##_typecheck, (JUMP),                           \
+            WANT_XTREE;                                         \
+            opcode_t offset = DATA;                             \
+            if (xtype != Name##_mtype)                          \
+            {                                                   \
+                Tree *value = x_tree;                           \
+                x_tree = (Cast);                                \
+                xtype = x_tree ? Name##_mtype : nil_mtype;      \
+                if (!x_tree)                                    \
+                    pc += offset;                               \
+            })
 #include "machine-types.tbl"
 
 

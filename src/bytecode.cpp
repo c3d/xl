@@ -2768,7 +2768,7 @@ void BytecodeEvaluator::InitializeContext(Context &context)
                   Type##_type);                                         \
     Prefix *Type##_value =                                              \
         new Prefix(xl_builtin,                                          \
-                   new Text(#Type"_typecheck"));                        \
+                   new Text(#Type"_cast"));                             \
     context.Define(Type##_type, xl_self);                               \
     context.Define(Type##_pattern, Type##_value);
 #include "machine-types.tbl"
