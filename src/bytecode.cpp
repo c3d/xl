@@ -1385,7 +1385,9 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
 #define TREE_TYPE(Name, Rep, Cast)
 #define RUNTIME_TYPE(Name, Rep, BC)                                     \
         case CONSTANT_##Name:                                           \
-            out << "constant_" #Name "\t" << *((Rep *) &code[pc]);      \
+            pc--;                                                       \
+            out << "constant_" #Name "\t"                               \
+                << *((RepConstant<Rep>::literal_t *) &code[pc]);        \
             pc += sizeof(Rep) / sizeof(opcode_t);                       \
             break;
 #include "machine-types.tbl"
