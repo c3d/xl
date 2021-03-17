@@ -287,6 +287,7 @@ private:
         CompileInfo(): local(false), variable(false) {}
         Patches     checks;     // Checks to patch
         Patches     successes;  // Checks to patch
+        Patches     jumps;      // Jumps to patch if we shorten
         TypeMap     types;      // Last known type for a value
         ValueMap    values;     // Already-computed value
         bool        local;      // Non-recursive lookup
@@ -874,12 +875,14 @@ void Bytecode::PatchChecks(size_t where)
 {
     opaddr_t target = code.size();
     Patches &checks = compile->checks;
+    Patches &jumps = compile->jumps;
     while (checks.size() > where)
     {
         opaddr_t check = checks.back();
         XL_ASSERT(code[check] == UNPATCHED);
         code[check] = target - (check + 1);
         checks.pop_back();
+        jumps.push_back(check);
     }
 }
 
@@ -900,6 +903,7 @@ void Bytecode::PatchSuccesses(size_t where)
 {
     opaddr_t target = code.size();
     Patches &successes = compile->successes;
+    Patches &jumps = compile->jumps;
 
     while (successes.size() > where)
     {
@@ -907,6 +911,14 @@ void Bytecode::PatchSuccesses(size_t where)
         XL_ASSERT(code[success] == UNPATCHED);
         code[success] = target - (success + 1);
         successes.pop_back();
+        jumps.push_back(success);
+    }
+
+    if (jumps.size() == 1 && jumps.back() == target - 1 &&
+        code.size() >= 2 && code[code.size() - 2] == opcode_branch)
+    {
+        code.erase(code.end() - 2, code.end());
+        jumps.pop_back();
     }
 }
 
