@@ -267,12 +267,10 @@ private:
     void        EnterArg(const Local &local);
     template<typename T>
     void        EnterArg(const GCPtr<T> &p)     { EnterArg(p.Pointer()); }
+    template<typename Rep>
+    void        EnterArg(const RepConstant<Rep> &rep);
     template<typename First, typename ...Rest>
     void        EnterArg(First first, Rest... rest);
-#define TREE_TYPE(Name, Rep, Cast)
-#define MACHINE_TYPE(Name, Rep, BC)                     \
-    void        EnterArg(const RepConstant<Rep> &rep);
-#include "machine-types.tbl"
 
 private:
     // Data for the bytecode
@@ -850,21 +848,22 @@ void Bytecode::EnterArg(Rewrite *rw)
 }
 
 
-#define TREE_TYPE(Name, Rep, Cast)
-#define MACHINE_TYPE(Name, Rep, BC)                             \
-void Bytecode::EnterArg(const RepConstant<Rep> &rep)            \
-{                                                               \
-    typedef RepConstant<Rep>::literal_t literal_t;              \
-    const size_t SIZE = sizeof(literal_t) / sizeof(opcode_t);   \
-    union                                                       \
-    {                                                           \
-        literal_t       value;                                  \
-        opcode_t        ops[SIZE];                              \
-    } u;                                                        \
-    u.value = rep.value;                                        \
-    code.insert(code.end(), u.ops, u.ops + SIZE);               \
+template <typename Rep>
+void Bytecode::EnterArg(const RepConstant<Rep> &rep)
+// ----------------------------------------------------------------------------
+//   Enter a constant for a given machine typeo
+// ----------------------------------------------------------------------------
+{
+    typedef typename RepConstant<Rep>::literal_t literal_t;
+    const size_t SIZE = sizeof(literal_t) / sizeof(opcode_t);
+    union
+    {
+        literal_t       value;
+        opcode_t        ops[SIZE];
+    } u;
+    u.value = rep.value;
+    code.insert(code.end(), u.ops, u.ops + SIZE);
 }
-#include "machine-types.tbl"
 
 
 
