@@ -2111,7 +2111,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 else if (IsSelf(decl->Definition()))
                 {
                     attempt.Fail();     // Cut any generated code
-                    OP(constant, pattern);
+                    OP(constant, name);
                     done = true;
                 }
             }
