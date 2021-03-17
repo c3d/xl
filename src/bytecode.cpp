@@ -258,12 +258,15 @@ private:
     void        Cut(opaddr_t cutpoint);
 
     // Enter the various kind of arguments (in a somewhat typesafe way)
-    void        EnterArg();
     void        EnterArg(Tree *cst);
+    void        EnterArg(Name *cst)             { EnterArg((Tree *) cst); }
+    void        EnterArg(Infix *cst)            { EnterArg((Tree *) cst); }
     void        EnterArg(Rewrite *rewrite);
     void        EnterArg(const CheckJump &);
     void        EnterArg(const SuccessJump &);
     void        EnterArg(const Local &local);
+    template<typename T>
+    void        EnterArg(const GCPtr<T> &p)     { EnterArg(p.Pointer()); }
     template<typename First, typename ...Rest>
     void        EnterArg(First first, Rest... rest);
 #define TREE_TYPE(Name, Rep, Cast)
@@ -803,13 +806,6 @@ void Bytecode::EnterArg(const Bytecode::Local &local)
     record(opcode, "Local %u", local.index);
     code.push_back(local.index);
 }
-
-
-void Bytecode::EnterArg()
-// ----------------------------------------------------------------------------
-//   No argument
-// ----------------------------------------------------------------------------
-{}
 
 
 void Bytecode::EnterArg(Tree *cst)
@@ -2108,7 +2104,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 if (index != UNPATCHED)
                 {
                     attempt.Fail();     // Cut any generated code
-                    OP(load, index, CHECK);
+                    OP(load, Constant(index), CHECK);
                     done = true;
                 }
                 else if (IsSelf(decl->Definition()))
@@ -2138,8 +2134,8 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 compile(locals, body, pattern, parms);
 
                 // Transfer evaluation to the body
-                opaddr_t framesize = bytecode->FrameSize(attempt.frame);
-                OP(call_constant, pattern, framesize);
+                opcode_t framesize = bytecode->FrameSize(attempt.frame);
+                OP(call_constant, pattern, Constant(framesize));
             }
 
             // Check the result type if we had one
