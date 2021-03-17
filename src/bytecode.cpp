@@ -1832,50 +1832,75 @@ strength BytecodeBindings::Do(Postfix *what)
 }
 
 
-static Name *IsBuiltinType(Tree *type)
+static MachineType IsMachineType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a type is a built-in type
 // ----------------------------------------------------------------------------
 {
-#define NAME(N)
-#define UNARY(Name, ReturnType, LeftTYpe, Body)
-#define BINARY(Name, ReturnType, LeftTYpe, RightType, Body)
-#define TYPE(N, Body)   if (type == N##_type) return N##_type;
-#include "builtins.tbl"
-    return nullptr;
+#define RUNTIME_TYPE(Name, Rep, BC)                     \
+    if (type == Name##_type) return Name##_mtype;
+#include "machine-types.tbl"
+    return runvalue_unset;
 }
 
 
-static bool IncompatibleTypes(Name *want, Name *have)
+static bool IncompatibleTypes(MachineType want, MachineType have)
 // ----------------------------------------------------------------------------
 //   Check if types are incompatible
 // ----------------------------------------------------------------------------
 {
     if (want == have)
         return false;
-    if (want == tree_type || have == tree_type)
+    if (want == tree_mtype || have == tree_mtype)
         return false;
-    if (want == value_type || have == value_type)
+    if (want == symbol_mtype && (have == name_mtype || have == operator_mtype))
         return false;
-    if (want == symbol_type && (have == name_type || have == operator_type))
+    if ((want == name_mtype || want == operator_mtype) && have == symbol_mtype)
         return false;
-    if ((want == name_type || want == operator_type) && have == symbol_type)
+    if ((want == text_mtype || want == character_mtype) &&
+        (have == text_mtype || have == character_mtype))
         return false;
-    if ((want == text_type || want == character_type) &&
-        (have == text_type || have == character_type))
+    if ((Bytecode::IsInteger(want) ||
+         Bytecode::IsNatural(want) ||
+         Bytecode::IsReal(want)) &&
+        (Bytecode::IsNatural(have) ||
+         Bytecode::IsInteger(have)))
         return false;
-    text wn = want->value;
-    text hn = have->value;
-#define like(t)       compare(0, sizeof(t)-1, t) == 0
-    if ((wn.like("natural") ||
-         wn.like("integer") ||
-         wn.like("real")) &&
-        (hn.like("natural") ||
-         hn.like("integer")))
-        return false;
-#undef like
-
     return true;
+}
+
+
+static Opcode MachineTypeCast(MachineType mtype)
+// ----------------------------------------------------------------------------
+//    Generate the machine cast for a given machine type
+// ----------------------------------------------------------------------------
+{
+    switch(mtype)
+    {
+#define RUNTIME_TYPE(Name, Rep, BC)                     \
+    case Name##_mtype:  return opcode_##Name##_cast;
+#include "machine-types.tbl"
+    default:
+        break;
+    }
+    return opcode_nil;
+}
+
+
+static Opcode MachineTypeCheck(MachineType mtype)
+// ----------------------------------------------------------------------------
+//    Generate the machine cast for a given machine type
+// ----------------------------------------------------------------------------
+{
+    switch(mtype)
+    {
+#define RUNTIME_TYPE(Name, Rep, BC)                             \
+    case Name##_mtype:  return opcode_##Name##_typecheck;
+#include "machine-types.tbl"
+    default:
+        break;
+    }
+    return opcode_nil;
 }
 
 
@@ -1925,10 +1950,24 @@ strength BytecodeBindings::Do(Infix *what)
 
         // Check hard incompatible types, e.g. integer vs text
         Tree_p have = bytecode->Type(test);
-        if (Name *wn = IsBuiltinType(want))
-            if (Name *hn = IsBuiltinType(have))
-                if (IncompatibleTypes(wn, hn))
+        if (MachineType wm = IsMachineType(want))
+        {
+            MachineType hm = IsMachineType(have);
+            if (hm)
+            {
+                if (IncompatibleTypes(wm, hm))
                     return Failed();
+            }
+            bytecode->Type(value, want);
+
+            if (wm != hm)
+            {
+                Opcode cast = MachineTypeCheck(wm);
+                bytecode->Op(cast, CHECK);
+                return Possible();
+            }
+            return Perfect();
+        }
 
         // Type check value against type
         if (outermost)
