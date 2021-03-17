@@ -1361,9 +1361,11 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
     }
 
     // Print arguments
+    text sep;
     for (auto a : args)
     {
         opcode_t value = code[pc++];
+        out << sep;
         switch(a)
         {
         case JUMP:
@@ -1413,6 +1415,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
             out << "Unhandled parameter kind " << a;
             break;
         }
+        sep = ", ";
     }
 
     out << "\n";
