@@ -1669,7 +1669,7 @@ strength BytecodeBindings::Do(Real *what)
 
 strength BytecodeBindings::Do(Text *what)
 // ----------------------------------------------------------------------------
-//   The pattern contains a real: check we have the same
+//   The pattern contains a text: check we have the same
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
