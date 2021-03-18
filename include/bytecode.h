@@ -55,7 +55,6 @@ struct RunValue;
 struct Bytecode;
 
 typedef std::vector<Rewrite_p>          RewriteList;
-typedef std::vector<Name_p>             NameList;
 typedef size_t                          opaddr_t;
 
 
