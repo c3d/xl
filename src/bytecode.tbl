@@ -282,12 +282,22 @@ OPCODE(exit, (),
 )
 
 
-OPCODE(native, (CONSTANT_natural),
+OPCODE(native, (CONSTANT_natural, ARGUMENTS),
 // ----------------------------------------------------------------------------
 //   Call a native function
 // ----------------------------------------------------------------------------
        Natural::value_t addr = Constant<Natural::value_t>(pc);
        Native::opcode_fn fn = (Native::opcode_fn) addr;
+
+       // Read arguments
+       size_t nargs = DATA;
+       for (size_t a = 0; a < nargs; a++)
+       {
+           REFRAME;
+           opcode_t index = DATA;
+           state.Push(frame[index]);
+       }
+
        fn(state);
        x = state.Pop();
        CLASSIFY;
@@ -592,6 +602,25 @@ OPCODE(loady, (LOCAL),
        opcode_t index = DATA;
        y = frame[index];
        READ_YRUNVALUE;
+)
+
+
+OPCODE(push_local, (LOCAL),
+// ----------------------------------------------------------------------------
+//   Load a local value and push it on top of stack (for native functions)
+// ----------------------------------------------------------------------------
+       opcode_t index = DATA;
+       state.Push(frame[index]);
+       REFRAME;
+)
+
+
+OPCODE(pop, (),
+// ----------------------------------------------------------------------------
+//   Load a local value and push it on top of stack (for native functions)
+// ----------------------------------------------------------------------------
+       x = state.Pop();
+       READ_XRUNVALUE;
 )
 
 
