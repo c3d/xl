@@ -1762,7 +1762,7 @@ strength BytecodeBindings::Do(Name *what)
     {
         opcode_t index = bytecode->ParameterIndex(what);
         XL_ASSERT(index != UNPATCHED);
-        OP(loady, Local(index));
+        OP(load_y, Local(index));
         OP(check_same, CHECK);
         return Possible();
     }
@@ -2240,7 +2240,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 size_t psize = parms.size();
                 XL_ASSERT(psize <= 2);
                 if (psize >= 2)
-                    OP(loady, Local(parms[1].argument));
+                    OP(load_y, Local(parms[1].argument));
                 if (psize >= 1)
                     OP(load, Local(parms[0].argument));
 
