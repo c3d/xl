@@ -126,12 +126,13 @@
             RunValue &y = frame[DATA];                          \
             XL_ASSERT(x.type == TypeXY##_mtype);                \
             XL_ASSERT(y.type == TypeXY##_mtype);                \
-            RepXY left  = x.as_##TypeXY;                        \
-            RepXY right = y.as_##TypeXY;                        \
+            RepXY left  = y.as_##TypeXY;                        \
+            RepXY right = x.as_##TypeXY;                        \
             RepR  result;                                       \
             Body;                                               \
             x.as_##TypeR = result;                              \
-            x.type = TypeR##_mtype; )                           \
+            if (TypeR##_mtype != TypeXY##_mtype)                \
+                x.type = TypeR##_mtype; )                       \
     BUILTIN(Op##_constant_##TypeXY, (CONSTANT_##TypeXY),        \
             XL_ASSERT(x.type == TypeXY##_mtype);                \
             RepXY left  = x.as_##TypeXY;                        \
@@ -259,6 +260,16 @@ OPCODE(error_exit, (CONSTANT),
        error = new Prefix(error_type, error);
        return error;
 )
+
+
+OPCODE(form_error, (),
+// ----------------------------------------------------------------------------
+//   No form matches the given input
+// ----------------------------------------------------------------------------
+       Tree_p form = x.AsTree();
+       Error error("No form matches $1", form);
+       x = RunValue((Tree *) error, error_mtype);
+       CHAIN(ret); )
 
 
 OPCODE(exit, (),
