@@ -761,9 +761,14 @@ void Bytecode::BuiltinArguments(const Parameters &args)
 //   Push arguments for a native function
 // ----------------------------------------------------------------------------
 {
-    record(opcode, "BuiltinArguments %u", args.size());
-    for (auto &a : args)
-        code.push_back(a.argument);
+    size_t count = args.size();
+    record(opcode, "BuiltinArguments %u", count);
+    if (count)
+    {
+        count--;
+        for (size_t idx = 0; idx < count; idx++)
+            code.push_back(args[idx].argument);
+    }
 }
 
 
@@ -1301,6 +1306,7 @@ struct BytecodeBindings
     void        Candidate(Rewrite *decl, Scope *evalScope, Scope *declScope);
     void        EvaluateCandidate()     { if (match != FAILED) successes++; }
     size_t      Successes()             { return successes; }
+    bool        PerfectMatch()          { return match == PERFECT; }
 
     // Tree::Do interface to check the pattern
     strength    Do(Natural *what);
@@ -2435,10 +2441,9 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         Context::LookupMode mode = lookupMode(bytecode);
         BytecodeBindings bindings(expr, bytecode);
         context.Lookup(expr, lookupCandidate, &bindings, mode);
-        bytecode->PatchSuccesses(patches);
 
         // If we did not find a matching form, check standard evaluation
-        int done = bindings.Successes() != 0;
+        int done = bindings.Successes() != 0 ? -1 : 0;
         if (!done) switch(expr->Kind())
         {
         case NATURAL:
@@ -2462,7 +2467,13 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         }
 
         // If we failed, clean up and error out
-        if (!done)
+        if (done)
+        {
+            if (done < 0 && !bindings.PerfectMatch())
+                OP(form_error);
+            bytecode->PatchSuccesses(patches);
+        }
+        else
         {
             record(bytecode, "Giving up on bytecode for %t", expr);
             if (RECORDER_TRACE(bytecode))
