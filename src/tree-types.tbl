@@ -73,9 +73,9 @@ TREE_TYPE(postfix,      Postfix,        value->AsPostfix())
 TREE_TYPE(symbol,       Name,           value->AsName())
 TREE_TYPE(name,         Name,           (value->AsName() &&
                                          ((Name *) value)->IsName()
-                                         ? value : nullptr))
+                                         ? (Name *) value : nullptr))
 TREE_TYPE(operator,     Name,           (value->AsName() &&
                                          ((Name *) value)->IsOperator()
-                                         ? value : nullptr))
+                                         ? (Name *) value : nullptr))
 
 #undef TREE_TYPE

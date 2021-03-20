@@ -90,6 +90,10 @@ typedef uint16_t                        opcode_t; // 16-bit ought to be enough
 typedef std::map<Tree_p, Tree_p>        TypeMap;
 typedef std::map<Tree_p, opcode_t>      ValueMap;
 
+// Array for builtins and native functions
+static std::map<text, Opcode>           builtins;
+static std::map<text, Native::opcode_fn> natives;
+
 
 struct Parameter
 // ----------------------------------------------------------------------------
@@ -113,8 +117,8 @@ typedef std::vector<Parameter>  Parameters;
 static Tree *evaluate(Scope_p scope, Tree_p expr);
 static Tree *typecheck(Scope_p scope, Tree_p type, Tree_p value);
 static Bytecode *compile(Scope *scope, Tree *expr);
-static Bytecode *compile(Scope *, Tree *body, Tree *form, Parameters &parms);
 static void compile(Scope *scope, Tree *expr, Bytecode *bytecode);
+static Bytecode *compile(Scope *, Tree *body, Tree *form, Parameters &parms);
 static Tree *unwrap(Tree *expr);
 
 
@@ -208,7 +212,6 @@ public:
     typedef std::vector<opaddr_t>       Patches;
     typedef std::vector<opcode_t>       Opcodes;
     typedef std::vector<opcode_t>       ArgList;
-    typedef enum RegSelector { NONE, X, Y, XY } RegSelector;
 
     // Record a jump in the code (to be patched later)
     struct CheckJump   {};
@@ -236,6 +239,7 @@ public:
     template<typename ...Args>
     void        Op(Opcode op, Args... args);
     void        NativeArguments(const Parameters &parms);
+    void        BuiltinArguments(const Parameters &parms);
     void        PatchChecks(size_t where);
     void        PatchSuccesses(size_t where);
     size_t      ChecksToPatch();
@@ -267,12 +271,7 @@ public:
     void        Dump(std::ostream &out);
     void        Dump(std::ostream &out, opaddr_t &pc);
     Tree *      Cached(opcode_t local);
-    static bool IsTree(MachineType mtype);
-    static bool IsNatural(MachineType mtype);
-    static bool IsInteger(MachineType mtype);
-    static bool IsReal(MachineType mtype);
-    static bool IsScalar(MachineType mtype);
-
+    opcode_t    LocalIndex(Tree *value);
 
 private:
     friend struct RunState;
@@ -383,6 +382,73 @@ public:
 
 // ============================================================================
 //
+//    Adapters for arithmetic with various data types
+//
+// ============================================================================
+
+// Arithmetic helpers
+#define mod_natural(r, x, y)    r = x % y
+#define rem_natural(r, x, y)    r = x % y
+#define pow_natural(r, x, y)                    \
+{                                               \
+    r = 1;                                      \
+    while (y > 0)                               \
+    {                                           \
+        if (y & 1)                              \
+            r *= x;                             \
+        x *= x;                                 \
+        y >>= 1;                                \
+    }                                           \
+}
+
+#define mod_integer(r, x, y)                    \
+{                                               \
+    r = x % y;                                  \
+    if (r && (x^y) < 0)                         \
+        r += y;                                 \
+}
+
+#define rem_integer(r, x, y)    r = x % y
+#define pow_integer(r, x, y)                    \
+{                                               \
+    r = y >= 0 ? 1 : 0;                         \
+    while (y > 0)                               \
+    {                                           \
+        if (y & 1)                              \
+            r *= x;                             \
+        x *= x;                                 \
+        y >>= 1;                                \
+    }                                           \
+}
+
+#define mod_real(r, x, y)                       \
+{                                               \
+    r = fmod(x, y);                             \
+    if (r != 0.0 && x*y < 0.0)                  \
+        r += y;                                 \
+}
+#define rem_real(r, x, y)       r = fmod(x,y)
+#define pow_real(r, x, y)       r = pow(x,y);
+
+#define not_natural(x)          ~x
+#define not_integer(x)          ~x
+#define not_boolean(x)          !x
+
+#ifdef HAVE_FLOAT16
+static inline _Float16 fmod(_Float16 x, _Float16 y)
+{
+    return (_Float16)  ::fmod(float(x), float(y));
+}
+static inline _Float16 pow(_Float16 x, _Float16 y)
+{
+    return (_Float16)  ::pow(float(x), float(y));
+}
+#endif // HAVE_FLOAT16
+
+
+
+// ============================================================================
+//
 //    Bytecode evaluation
 //
 // ============================================================================
@@ -417,14 +483,8 @@ Tree_p Bytecode::Run(RunState &state)
     opaddr_t     max    = bc->code.size();
     opaddr_t     pc     = 0;
     size_t       locals = 0;
-    MachineType  xtype  = tree_mtype;
-    MachineType  ytype  = tree_mtype;
-    RunValue     x, y;
     RunValue    *frame  = nullptr;
-    RegSelector  xy     = NONE;
-
-#define RUNLOOP_TYPE(Name, Rep)        Rep x_##Name = Rep(), y_##Name = Rep();
-#include "machine-types.tbl"
+    RunValue     x;
 
 start:
     // Put the labels in a static const table with deltas to ease relocation
@@ -443,232 +503,9 @@ start:
                         goto *((char *) &&start + entry[code[pc++]])
 #define BRANCH(b)       (pc += b)
 #define CHAIN(op)       goto label_##op
-#define TYPE(t)         xtype = t##_mtype
-#define TYPES(x,y)      (xtype = x##_mtype, ytype = y##_mtype)
-#define WANT(t)         XL_ASSERT(xtype == t##_mtype)
-#define WANTXY(x,y)     XL_ASSERT(xtype == x##_mtype && ytype == y##_mtype)
-#define WANT_XTREE      if (!IsTree(xtype)) { xy =  X; goto want_xtree; }
-#define WANT_YTREE      if (!IsTree(ytype)) { xy =  Y; goto want_trees; }
-#define WANT_TREES      if (!IsTree(xtype) ||                           \
-                            !IsTree(ytype)) { xy = XY; goto want_trees; }
-#define WANT_XRUNVALUE  if (!x.type) { xy =  X; goto want_xrunvalue; }
-#define WANT_YRUNVALUE  if (!y.type) { xy =  Y; goto want_runvalues; }
-#define WANT_RUNVALUES  if (!x.type ||                                  \
-                            !y.type) { xy = XY; goto want_runvalues; }
-#define READ_XRUNVALUE  xy = X;  goto read_xrunvalue;
-#define READ_YRUNVALUE  xy = Y;  goto read_runvalues;
-#define READ_RUNVALUES  xy = XY; goto read_runvalues;
-#define CLASSIFY        xy =  X; goto classify;
-#define XSELECT         ((int) xy & X)
-#define YSELECT         ((int) xy & Y)
 
     // Jump to first opcode
     REFRAME;
-    NEXT;
-
-
-want_runvalues:
-// ----------------------------------------------------------------------------
-//  Set X and Y RunValue from scalar values
-// ----------------------------------------------------------------------------
-//  When this is done, the RunValues x or y are valid.
-//  While the values in registers like x_natural are not lost, they are stale
-
-    if (YSELECT)
-    {
-        switch(ytype)
-        {
-#define RUNTIME_TYPE(Name, Rep, BC)             \
-        case Name##_mtype:                      \
-            y = RunValue(y_##BC);               \
-            break;
-#include "machine-types.tbl"
-        default:
-            y = RunValue(y_tree, ytype);
-            break;
-        }
-    }
-
-want_xrunvalue:
-    // Decrement the program counter to retry at end
-    pc--;
-
-    if (XSELECT)
-    {
-        switch(xtype)
-        {
-#define RUNTIME_TYPE(Name, Rep, BC)             \
-        case Name##_mtype:                      \
-            x = RunValue(x_##BC);               \
-            break;
-#include "machine-types.tbl"
-        default:
-            x = RunValue(x_tree, xtype);
-            break;
-        }
-    }
-
-    // Retry the opcode that made the request
-    NEXT;
-
-
-read_runvalues:
-// ----------------------------------------------------------------------------
-//  Set X and Y scalar values, e.g. x_natural from X and Y RunValues
-// ----------------------------------------------------------------------------
-//  When this is done, the corresponding runvalue has `runvalue_unset`
-//  and only one of the scalar variables is set, e.g. x_natural.
-
-    if (YSELECT)
-    {
-        // Unbox the current xvalue
-        switch(y.type)
-        {
-#define RUNTIME_TYPE(Name, Rep, BC)                     \
-        case Name##_mtype:                              \
-            y_##BC = RunValue::Representation<Rep>      \
-                ::ToValue(y.as_##Name);                 \
-            break;
-#include "machine-types.tbl"
-        default:
-            y_tree = y.as_tree;
-            break;
-        }
-        ytype = y.type;
-        y.type = runvalue_unset;
-    }
-
-read_xrunvalue:
-    if (XSELECT)
-    {
-        switch(x.type)
-        {
-#define RUNTIME_TYPE(Name, Rep, BC)                     \
-        case Name##_mtype:                              \
-            x_##BC = RunValue::Representation<Rep>      \
-                ::ToValue(x.as_##Name);                 \
-            break;
-#include "machine-types.tbl"
-        default:
-            x_tree = x.as_tree;
-            break;
-        }
-        xtype = x.type;
-        x.type = runvalue_unset;
-    }
-    NEXT;
-
-
-want_trees:
-// ----------------------------------------------------------------------------
-//  Convert X and/or Y into tree form, i.e. x_tree or y_tree
-// ----------------------------------------------------------------------------
-//  On input, the values must already be in scalar form
-//  After evaluating this, numerical values have been converted to a tree
-//  This is necessary to call functions that expect a parse tree.
-
-    if (YSELECT)
-    {
-        switch(ytype)
-        {
-#define RUNTIME_TYPE(Name, Rep, BC)                     \
-        case Name##_mtype:                              \
-            y_tree = RunValue::AsTree(y_##BC);          \
-            break;
-#include "machine-types.tbl"
-        default:
-            break;
-        }
-        ytype = tree_mtype;
-    }
-
-want_xtree:
-    // Decrement the program counter to retry after generating tree
-    pc--;
-
-    if (XSELECT)
-    {
-
-        switch(xtype)
-        {
-#define RUNTIME_TYPE(Name, Rep, BC)                     \
-        case Name##_mtype:                              \
-            x_tree = RunValue::AsTree(x_##BC);          \
-            break;
-#include "machine-types.tbl"
-        default:
-            break;
-        }
-        xtype = tree_mtype;
-    }
-
-    NEXT;
-
-
-classify:
-// ----------------------------------------------------------------------------
-//  Classify a tree into possible scalars
-// ----------------------------------------------------------------------------
-//  On input, the value must be in x_tree. This computes x_type and
-//  may generate a scalar.
-
-    if (!x_tree)
-    {
-        xtype = nil_mtype;
-    }
-    else
-    {
-        switch(x_tree->Kind())
-        {
-        case NATURAL:
-        {
-            Natural *xn = (Natural *) (Tree *) x_tree;
-            xtype = xn->IsSigned() ? integer_mtype : natural_mtype;
-            if (xtype == integer_mtype)
-                x_integer = xn->value;
-            else
-                x_natural = xn->value;
-            break;
-        }
-        case REAL:
-        {
-            Real *xr = (Real *) (Tree *) x_tree;
-            xtype = real_mtype;
-            x_real = xr->value;
-            break;
-        }
-        case TEXT:
-        {
-            Text *xt = (Text *) (Tree *) x_tree;
-            xtype = xt->IsCharacter() ? character_mtype : text_mtype;
-            if (xtype == character_mtype)
-                x_character = xt->value[0];
-            else
-                x_text = xt->value;
-            break;
-        }
-        case NAME:
-        {
-            Name *xn = (Name *) (Tree *) x_tree;
-            xtype = (xn->IsName()       ? name_mtype
-                     : xn->IsOperator() ? operator_mtype
-                     : symbol_mtype);
-            break;
-        }
-        case INFIX:
-            xtype = infix_mtype;
-            break;
-        case PREFIX:
-            xtype = IsError(x_tree) ? error_mtype : prefix_mtype;
-            break;
-        case POSTFIX:
-            xtype = postfix_mtype;
-            break;
-        case BLOCK:
-            xtype = block_mtype;
-            break;
-        }
-    }
     NEXT;
 
 
@@ -679,7 +516,7 @@ divide_by_zero:
     {
         Error error("Divide by zero");
         state.Error(error);
-        TYPE(error);
+        x = RunValue((Tree *) error, error_mtype);
     }
     CHAIN(ret);
 
@@ -703,26 +540,6 @@ divide_by_zero:
 #undef NEXT
 #undef BRANCH
 #undef CHAIN
-#undef TYPE
-#undef TYPES
-#undef WANT
-#undef WANTXY
-#undef WANT_XTREE
-#undef WANT_YTREE
-#undef WANT_TREES
-
-#undef WANT_XRUNVALUE
-#undef WANT_XRUNVALUE
-#undef WANT_RUNVALUES
-
-#undef READ_XRUNVALUE
-#undef READ_YRUNVALUE
-#undef READ_RUNVALUES
-#undef XCLASSIFY
-#undef YCLASSIFY
-#undef CLASSIFYS
-#undef XSELECT
-#undef YSELECT
 }
 
 
@@ -901,6 +718,29 @@ void Bytecode::EnterArg(const RepConstant<Rep> &rep)
 }
 
 
+opcode_t Bytecode::LocalIndex(Tree *value)
+// ----------------------------------------------------------------------------
+//   Return the local index for a given value
+// ----------------------------------------------------------------------------
+{
+    ValueMap &values = compile->values;
+    opcode_t index;
+    auto found = values.find(value);
+    if (found != values.end())
+    {
+        // Already compiled and evaluated - Reload it
+        index = (*found).second;
+    }
+    else
+    {
+        // Compile the value and store the result
+        index = values.size();
+        values[value] = index;
+    }
+    return index;
+}
+
+
 void Bytecode::NativeArguments(const Parameters &args)
 // ----------------------------------------------------------------------------
 //   Push arguments for a native function
@@ -908,11 +748,22 @@ void Bytecode::NativeArguments(const Parameters &args)
 //   Since the native interface pops arguments in the C order, we need to
 //   push the first argument last.
 {
-    record(opcode, "NativeArgs %u", args.size());
-    code.push_back(args.size());
     size_t n = args.size();
+    record(opcode, "NativeArgumentss %u", n);
+    code.push_back(n);
     while (n --> 0)
         code.push_back(args[n].argument);
+}
+
+
+void Bytecode::BuiltinArguments(const Parameters &args)
+// ----------------------------------------------------------------------------
+//   Push arguments for a native function
+// ----------------------------------------------------------------------------
+{
+    record(opcode, "BuiltinArguments %u", args.size());
+    for (auto &a : args)
+        code.push_back(a.argument);
 }
 
 
@@ -1109,7 +960,8 @@ inline Rep Bytecode::Constant(opaddr_t &pc)
         literal_t value;
         opcode_t  ops[SIZE];
     } u;
-    std::copy(code.begin() + pc, code.begin() + pc + SIZE, u.ops);
+    auto start = code.begin() + pc;
+    std::copy(start, start + SIZE, u.ops);
     pc += SIZE;
     return u.value;
 }
@@ -1210,7 +1062,6 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
     if (found != values.end())
     {
         // Already compiled and evaluated - Reload it
-        Bytecode *bytecode = this;
         index = (*found).second;
         OP(load,  Local(index));
     }
@@ -1243,78 +1094,6 @@ void Bytecode::Type(Tree *value, Tree *type)
     compile->types[value] = type;
 }
 
-
-bool Bytecode::IsTree(MachineType mtype)
-// ----------------------------------------------------------------------------
-//   Return true if this is a tree type
-// ----------------------------------------------------------------------------
-{
-    switch(mtype)
-    {
-#define TREE_TYPE(Name, Rep, Code)      case  Name##_mtype:
-#include "machine-types.tbl"
-        return true;
-    default:
-        return false;
-    }
-}
-
-
-bool Bytecode::IsNatural(MachineType mtype)
-// ----------------------------------------------------------------------------
-//   Return true if this is a natural machine type
-// ----------------------------------------------------------------------------
-{
-    switch(mtype)
-    {
-#define NATURAL_TYPE(Name, Rep)         case  Name##_mtype:
-#include "machine-types.tbl"
-        return true;
-    default:
-        return false;
-    }
-}
-
-
-bool Bytecode::IsInteger(MachineType mtype)
-// ----------------------------------------------------------------------------
-//   Return true if this is a integer machine type
-// ----------------------------------------------------------------------------
-{
-    switch(mtype)
-    {
-#define INTEGER_TYPE(Name, Rep)         case  Name##_mtype:
-#include "machine-types.tbl"
-        return true;
-    default:
-        return false;
-    }
-}
-
-
-bool Bytecode::IsReal(MachineType mtype)
-// ----------------------------------------------------------------------------
-//   Return true if this is a real machine type
-// ----------------------------------------------------------------------------
-{
-    switch(mtype)
-    {
-#define REAL_TYPE(Name, Rep)         case  Name##_mtype:
-#include "machine-types.tbl"
-        return true;
-    default:
-        return false;
-    }
-}
-
-
-bool Bytecode::IsScalar(MachineType mtype)
-// ----------------------------------------------------------------------------
-//   Return true if this is a scalar type (non-tree)
-// ----------------------------------------------------------------------------
-{
-    return !IsTree(mtype);
-}
 
 
 
@@ -1762,8 +1541,7 @@ strength BytecodeBindings::Do(Name *what)
     {
         opcode_t index = bytecode->ParameterIndex(what);
         XL_ASSERT(index != UNPATCHED);
-        OP(load_y, Local(index));
-        OP(check_same, CHECK);
+        OP(check_same, Local(index), CHECK);
         return Possible();
     }
 
@@ -1902,11 +1680,8 @@ static bool IncompatibleTypes(MachineType want, MachineType have)
     if ((want == text_mtype || want == character_mtype) &&
         (have == text_mtype || have == character_mtype))
         return false;
-    if ((Bytecode::IsInteger(want) ||
-         Bytecode::IsNatural(want) ||
-         Bytecode::IsReal(want)) &&
-        (Bytecode::IsNatural(have) ||
-         Bytecode::IsInteger(have)))
+    if ((IsInteger(want) || IsNatural(want) || IsReal(want)) &&
+        (IsNatural(have) || IsInteger(have)))
         return false;
     return true;
 }
@@ -2227,25 +2002,33 @@ static Tree *lookupCandidate(Scope   *evalScope,
             Parameters parms = bytecode->ParameterList();
             parms.erase(parms.begin(), parms.begin() + attempt.frame);
 
-            if (IsNative(body))
+            if (Text *name = IsNative(body))
             {
-                // Inline bytecode for the native call
-                compile(locals, body, bytecode);
-
-                // Insert the parameters after that
+                Native::opcode_fn function = natives[name->value];
+                if (!function)
+                {
+                    record(opcode_error,
+                           "Nonexistent native function %t", name);
+                    attempt.Fail();
+                    return nullptr;
+                }
+                // Insert the opcode, followed by the parameters after that
+                OP(native, Constant((Natural::value_t) function));
                 bytecode->NativeArguments(parms);
             }
-            else if (IsBuiltin(body))
+            else if (Text *name = IsBuiltin(body))
             {
-                size_t psize = parms.size();
-                XL_ASSERT(psize <= 2);
-                if (psize >= 2)
-                    OP(load_y, Local(parms[1].argument));
-                if (psize >= 1)
-                    OP(load, Local(parms[0].argument));
+                Opcode opcode = builtins[name->value];
+                if (!opcode)
+                {
+                    record(opcode_error, "Nonexistent builtin %t", name);
+                    attempt.Fail();
+                    return nullptr;
+                }
 
-                // Inline opcode for the builtin
-                compile(locals, body, bytecode);
+                // Insert the opcode, followed by the parameters
+                bytecode->Op(opcode);
+                bytecode->BuiltinArguments(parms);
             }
             else if (body->Kind() <= TEXT)
             {
@@ -2265,7 +2048,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
             if (Tree *type = bindings.ResultType())
             {
                 if (bytecode->Type(expr) != type)
-                    OP(check_result_type, type, CHECK);
+                    OP(check_result_type, type);
                 bytecode->Type(expr, type);
             }
         }
@@ -2380,11 +2163,6 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
 
 const int IS_DEFINITION = 2;
 
-// Array for builtins and native functions
-static std::map<text, Opcode> builtins;
-static std::map<text, Native::opcode_fn> natives;
-
-
 static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
 // ----------------------------------------------------------------------------
 //   Deal with special prefixen
@@ -2457,32 +2235,6 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
         Prefix_p inner = new Prefix(prefix, name, args);
         Infix_p outer = new Infix(qualified, qualifier, inner);
         compile(scope, outer, bytecode);
-        return true;
-    }
-
-    // Check if this is a builtin
-    if (Text *name = IsBuiltin(prefix))
-    {
-        Opcode opcode = builtins[name->value];
-        if (!opcode)
-        {
-            record(opcode_error, "Nonexistent builtin %t", name);
-            return false;
-        }
-        bytecode->Op(opcode);
-        return true;
-    }
-
-    // Check if this is a native function
-    if (Text *name = IsNative(prefix))
-    {
-        Native::opcode_fn function = natives[name->value];
-        if (!function)
-        {
-            record(opcode_error, "Nonexistent native function %t", name);
-            return false;
-        }
-        OP(native, Constant((Natural::value_t) function));
         return true;
     }
 
