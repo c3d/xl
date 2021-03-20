@@ -47,158 +47,136 @@
 #endif
 
 // Type checks
-#define NATURAL_TYPE(Name, Rep)                         \
-    BUILTIN(Name##_cast, (),                            \
-            Rep rep = x_natural;                        \
-            if (!IsNatural(xtype) || rep != x_natural)  \
-            {                                           \
-                x_tree = nullptr;                       \
-                TYPE(nil);                              \
-            })                                          \
-    BUILTIN(Name##_typecheck, (JUMP),                   \
-            Rep rep = x_natural;                        \
-            opcode_t offset = DATA;                     \
-            if (!IsNatural(xtype) || rep != x_natural)  \
-                pc += offset;)
-#define INTEGER_TYPE(Name, Rep)                         \
-    BUILTIN(Name##_cast, (),                            \
-            Rep rep = x_integer;                        \
-            if (!IsInteger(xtype) || rep != x_integer)  \
-            {                                           \
-                x_tree = nullptr;                       \
-                TYPE(nil);                              \
-            })                                          \
-    BUILTIN(Name##_typecheck, (JUMP),                   \
-            Rep rep = x_integer;                        \
-            opcode_t offset = DATA;                     \
-            if (!IsInteger(xtype) || rep != x_integer)  \
-                pc += offset;)
-#define REAL_TYPE(Name, Rep)                    \
-    BUILTIN(Name##_cast, (),                    \
-            Rep rep = x_real;                   \
-            if (!IsReal(xtype) || rep != x_real)        \
-            {                                           \
-                x_tree = nullptr;                       \
-                TYPE(nil);                              \
-            })                                          \
-    BUILTIN(Name##_typecheck, (JUMP),                   \
-            Rep rep = x_real;                           \
-            opcode_t offset = DATA;                     \
-            if (!IsReal(xtype) || rep != x_real)        \
-                pc += offset;)
+#define NATURAL_TYPE(Name, Rep)                          \
+    BUILTIN(Name##_cast, (),                             \
+            if (!x.CastNatural<Rep, Name##_mtype>())     \
+                CHAIN(nil); )                            \
+    BUILTIN(Name##_typecheck, (JUMP),                    \
+            opcode_t branch = DATA;                      \
+            if (!x.CastNatural<Rep, Name##_mtype>())     \
+                pc += branch; )
+
+#define INTEGER_TYPE(Name, Rep)                          \
+    BUILTIN(Name##_cast, (),                             \
+            if (!x.CastInteger<Rep, Name##_mtype>())     \
+                CHAIN(nil); )                            \
+    BUILTIN(Name##_typecheck, (JUMP),                    \
+            opcode_t branch = DATA;                      \
+            if (!x.CastInteger<Rep, Name##_mtype>())     \
+                pc += branch; )
+
+#define REAL_TYPE(Name, Rep)                             \
+    BUILTIN(Name##_cast, (),                             \
+            if (!x.CastReal<Rep, Name##_mtype>())        \
+                CHAIN(nil); )                            \
+    BUILTIN(Name##_typecheck, (JUMP),                    \
+            opcode_t branch = DATA;                      \
+            if (!x.CastReal<Rep, Name##_mtype>())        \
+                pc += branch; )
+
 #define OTHER_TYPE(Name, Rep)                   \
     BUILTIN(Name##_cast, (),                    \
-            if (xtype != Name##_mtype)          \
-            {                                   \
-                x_tree = nullptr;               \
-                TYPE(nil);                      \
-            })                                  \
+            if (x.type != Name##_mtype)         \
+                CHAIN(nil); )                   \
     BUILTIN(Name##_typecheck, (JUMP),           \
-            opcode_t offset = DATA;             \
-            if (xtype != Name##_mtype)          \
-                pc += offset;)
+            opcode_t branch = DATA;             \
+            if (x.type != Name##_mtype)         \
+                pc += branch; )
+
 #define TREE_TYPE(Name, Rep, Cast)                      \
     BUILTIN(Name##_cast, (),                            \
-            WANT_XTREE;                                 \
-            if (xtype != Name##_mtype)                  \
+            if (x.type != Name##_mtype)                 \
             {                                           \
-                Tree *value = x_tree;                   \
-                x_tree = (Cast);                        \
-                xtype = x_tree ? Name##_mtype : nil_mtype;      \
-            })                                                  \
-    BUILTIN(Name##_typecheck, (JUMP),                           \
-            WANT_XTREE;                                         \
-            opcode_t offset = DATA;                             \
-            if (xtype != Name##_mtype)                          \
-            {                                                   \
-                Tree *value = x_tree;                           \
-                x_tree = (Cast);                                \
-                xtype = x_tree ? Name##_mtype : nil_mtype;      \
-                if (!x_tree)                                    \
-                    pc += offset;                               \
+                Tree *value = x.AsTree();               \
+                Rep *cast = (Cast);                     \
+                if (!cast)                              \
+                    CHAIN(nil);                         \
+                x = RunValue(cast, Name##_mtype);       \
+            })                                          \
+    BUILTIN(Name##_typecheck, (JUMP),                   \
+            opcode_t branch = DATA;                     \
+            if (x.type != Name##_mtype)                 \
+            {                                           \
+                Tree *value = x.AsTree();               \
+                Rep *cast = (Cast);                     \
+                if (cast)                               \
+                    x = RunValue(cast, Name##_mtype);   \
+                else                                    \
+                    pc += branch;                       \
             })
+
 #include "machine-types.tbl"
 
 
-// Arithmetic
-#define DIVIDER(Name, BC, Body)                 \
-    BUILTIN(Name, (),                           \
-            if (!y_##BC) goto divide_by_zero;   \
-            Body)
+// Arithmetic opcodes
+#define UNARY2(Op, TypeX, TypeR, RepXY, RepR, Body)     \
+    BUILTIN(Op##_##TypeX, (),                           \
+            XL_ASSERT(x.type == TypeX##_mtype);         \
+            RepXY value = x.as_##TypeX;                 \
+            RepR  result;                               \
+            Body;                                       \
+            x.as_##TypeR = result;                      \
+            if (TypeX##_mtype != TypeR##_mtype)         \
+                x.type = TypeR##_mtype; )
+#define UNARY(Op, Type, Rep, Body)                      \
+    UNARY2(Op, Type, Type, Rep, Rep, Body)
 
-#define mod_natural(Rep, x, y)          x = x % y
-#define rem_natural(Rep, x, y)          x = x % y
-#define pow_natural(Rep, x, y)                  \
-{                                               \
-    Rep result = 1;                             \
-    while (y > 0)                               \
-    {                                           \
-        if (y & 1)                              \
-            result *= x;                        \
-        x *= x;                                 \
-        y >>= 1;                                \
-    }                                           \
-    x = result;                                 \
-}
+#define BINARY2(Op, TypeXY, TypeR, RepXY, RepR, Body)           \
+    BUILTIN(Op##_##TypeXY, (LOCAL),                             \
+            RunValue &y = frame[DATA];                          \
+            XL_ASSERT(x.type == TypeXY##_mtype);                \
+            XL_ASSERT(y.type == TypeXY##_mtype);                \
+            RepXY left  = x.as_##TypeXY;                        \
+            RepXY right = y.as_##TypeXY;                        \
+            RepR  result;                                       \
+            Body;                                               \
+            x.as_##TypeR = result;                              \
+            x.type = TypeR##_mtype; )                           \
+    BUILTIN(Op##_constant_##TypeXY, (CONSTANT_##TypeXY),        \
+            XL_ASSERT(x.type == TypeXY##_mtype);                \
+            RepXY left  = x.as_##TypeXY;                        \
+            RepXY right = Constant<RepXY>(pc);                  \
+            RepR  result;                                       \
+            Body;                                               \
+            x.as_##TypeR = result;                              \
+            if (TypeXY##_mtype != TypeR##_mtype)                \
+                x.type = TypeR##_mtype; )
 
-#define mod_integer(Rep, x, y)                  \
-{                                               \
-    Rep result = x % y;                         \
-    if (result && (x^y) < 0)                    \
-        result += y;                            \
-    x = result;                                 \
-}
+#define BINARY(Op, Type, Rep, Body)                     \
+        BINARY2(Op, Type, Type, Rep, Rep, Body)
+#define DIVIDE(Op, Type, Rep, Body)                     \
+    BINARY(Op, Type, Rep,                               \
+           if (!right)                                  \
+               goto divide_by_zero;                     \
+           Body)
 
-#define rem_integer(Rep, x, y)          x = x % y
-#define pow_integer(Rep, x, y)                  \
-{                                               \
-    Rep result = y >= 0 ? 1 : 0;                \
-    while (y > 0)                               \
-    {                                           \
-        if (y & 1)                              \
-            result *= x;                        \
-        x *= x;                                 \
-        y >>= 1;                                \
-    }                                           \
-    x = result;                                 \
-}
+#define ARITH(Name, Rep, BC)                                    \
+    BINARY(add, Name, Rep, result = left + right)               \
+    BINARY(sub, Name, Rep, result = left - right)               \
+    BINARY(mul, Name, Rep, result = left * right)               \
+    DIVIDE(div, Name, Rep, result = left / right)               \
+    DIVIDE(mod, Name, Rep, mod_##BC(result, left, right))       \
+    DIVIDE(rem, Name, Rep, rem_##BC(result, left, right))       \
+    BINARY(pow, Name, Rep, pow_##BC(result, left, right))       \
+    UNARY (neg, Name, Rep, result = -value)
 
-#define mod_real(Rep, x, y)                     \
-    {                                           \
-    Rep result = fmod(x, y);                    \
-    if (result != 0.0 && x*y < 0.0)             \
-        result += y;                            \
-    x = result;                                 \
-}
-#define rem_real(Rep, x, y)             x = fmod(x,y)
-#define pow_real(Rep, x, y)             x = pow(x,y);
+#define SHIFTS(Name, Rep, BC)                               \
+    BINARY(shl, Name, Rep, result = left << right)          \
+    BINARY(shr, Name, Rep, result = left >> right)
 
+#define LOGICAL(Name, Rep, BC)                              \
+    BINARY(and, Name, Rep, result = left & right)           \
+    BINARY(or,  Name, Rep, result = left | right)           \
+    BINARY(xor, Name, Rep, result = left ^ right)           \
+    UNARY (not, Name, Rep, result = not_##BC(value))
 
-#define ARITH(Name, R, BC)                                              \
-    BUILTIN(add_##Name, (),     x_##BC = R(R(x_##BC) + R(y_##BC)))      \
-    BUILTIN(sub_##Name, (),     x_##BC = R(R(x_##BC) - R(y_##BC)))      \
-    BUILTIN(mul_##Name, (),     x_##BC = R(R(x_##BC) * R(y_##BC)))      \
-    DIVIDER(div_##Name, BC,     x_##BC = R(R(x_##BC) / R(y_##BC)))      \
-    DIVIDER(mod_##Name, BC,     mod_##BC(R, x_##BC, y_##BC))            \
-    DIVIDER(rem_##Name, BC,     rem_##BC(R, x_##BC, y_##BC))            \
-    BUILTIN(pow_##Name, (),     pow_##BC(R, x_##BC, y_##BC))
-
-#define SHIFTS(Name, R, BC)                                             \
-    BUILTIN(shl_##Name, (),     x_##BC = R(R(x_##BC) << R(y_##BC)))     \
-    BUILTIN(shr_##Name, (),     x_##BC = R(R(x_##BC) >> R(y_##BC)))
-
-#define LOGICAL(Name, R, BC)                                            \
-    BUILTIN(and_##Name, (),     x_##BC = R(R(x_##BC) & R(y_##BC)))      \
-    BUILTIN( or_##Name, (),     x_##BC = R(R(x_##BC) | R(y_##BC)))      \
-    BUILTIN(xor_##Name, (),     x_##BC = R(R(x_##BC) ^ R(y_##BC)))
-
-#define COMPARE(Name, R, BC)                                            \
-    BUILTIN(eq_##Name, (), x_boolean = x_##BC == y_##BC; TYPE(boolean)) \
-    BUILTIN(ne_##Name, (), x_boolean = x_##BC != y_##BC; TYPE(boolean)) \
-    BUILTIN(lt_##Name, (), x_boolean = x_##BC <  y_##BC; TYPE(boolean)) \
-    BUILTIN(gt_##Name, (), x_boolean = x_##BC  > y_##BC; TYPE(boolean)) \
-    BUILTIN(le_##Name, (), x_boolean = x_##BC <= y_##BC; TYPE(boolean)) \
-    BUILTIN(ge_##Name, (), x_boolean = x_##BC >= y_##BC; TYPE(boolean))
+#define COMPARE(Name, Rep, BC)                                          \
+    BINARY2(eq, Name, boolean, Rep, bool,       result = left == right) \
+    BINARY2(ne, Name, boolean, Rep, bool,       result = left != right) \
+    BINARY2(lt, Name, boolean, Rep, bool,       result = left <  right) \
+    BINARY2(gt, Name, boolean, Rep, bool,       result = left  > right) \
+    BINARY2(le, Name, boolean, Rep, bool,       result = left <= right) \
+    BINARY2(ge, Name, boolean, Rep, bool,       result = left >= right)
 
 #define NATURAL_TYPE(Name, Rep)                 \
     ARITH(Name,   Rep, natural)                 \
@@ -221,8 +199,18 @@
 LOGICAL(boolean, bool, boolean)
 COMPARE(boolean, bool, boolean)
 
-COMPARE(text, text, text)
-BUILTIN(concat, (),     x_text = x_text + y_text)
+BINARY2(eq, text, boolean, text *, bool,       result = *left == *right)
+BINARY2(ne, text, boolean, text *, bool,       result = *left != *right)
+BINARY2(lt, text, boolean, text *, bool,       result = *left <  *right)
+BINARY2(gt, text, boolean, text *, bool,       result = *left  > *right)
+BINARY2(le, text, boolean, text *, bool,       result = *left <= *right)
+BINARY2(ge, text, boolean, text *, bool,       result = *left >= *right)
+BINARY2(concat, text, text, text *, text *,    result = new text(*left + *right))
+
+#undef UNARY
+#undef UNARY2
+#undef BINARY
+#undef BINARY2
 
 
 
@@ -236,19 +224,20 @@ OPCODE(evaluate, (),
 // ----------------------------------------------------------------------------
 //   Evaluate x in current scope
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       x_tree = evaluate(scope, x_tree);
-       CLASSIFY;
+       Tree_p expr = x.AsTree();
+       expr = evaluate(scope, expr);
+       x = RunValue::Classify(expr);
 )
 
 
-OPCODE(cast, (),
+OPCODE(cast, (CONSTANT),
 // ----------------------------------------------------------------------------
-//   Cast the value x to type y
+//   Cast the value in first register to the type in second register
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       x_tree = typecheck(scope, y_tree, x_tree);
-       CLASSIFY;
+       Tree_p expr = x.AsTree();
+       Tree_p type = Constant(DATA);
+       expr = typecheck(scope, type, expr);
+       x = RunValue::Classify(expr);
 )
 
 
@@ -256,9 +245,9 @@ OPCODE(error, (CONSTANT),
 // ----------------------------------------------------------------------------
 //   Emit an error with the given arguments (not evaluated)
 // ----------------------------------------------------------------------------
-       x_tree = Constant(DATA);
-       x_tree = new Prefix(error_type, x_tree);
-       xtype = error_mtype;
+       Tree_p error = Constant(DATA);
+       error = new Prefix(error_type, error);
+       x = RunValue(error, error_mtype);
 )
 
 
@@ -266,10 +255,9 @@ OPCODE(error_exit, (CONSTANT),
 // ----------------------------------------------------------------------------
 //   Exit evaluation immediately with an error
 // ----------------------------------------------------------------------------
-       x_tree = Constant(DATA);
-       x_tree = new Prefix(error_type, x_tree);
-       xtype = error_mtype;
-       return x_tree;
+       Tree_p error = Constant(DATA);
+       error = new Prefix(error_type, error);
+       return error;
 )
 
 
@@ -277,8 +265,7 @@ OPCODE(exit, (),
 // ----------------------------------------------------------------------------
 //   Terminate execution
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       return x_tree;
+       return x.AsTree();
 )
 
 
@@ -294,49 +281,26 @@ OPCODE(native, (CONSTANT_natural, ARGUMENTS),
        for (size_t a = 0; a < nargs; a++)
        {
            REFRAME;
-           opcode_t index = DATA;
-           state.Push(frame[index]);
+           state.Push(frame[DATA]);
        }
 
        fn(state);
-       x = state.Pop();
-       CLASSIFY;
+       x = state.Pop().Classify();
+       REFRAME;
 )
-
-
-OPCODE(x_to_y, (),
-// ----------------------------------------------------------------------------
-//   Copy X to Y
-// ----------------------------------------------------------------------------
-       WANT_XRUNVALUE;
-       y = x;
-       READ_RUNVALUES;
-)
-
-
-
-OPCODE(swap, (),
-// ----------------------------------------------------------------------------
-//   Swap X and Y
-// ----------------------------------------------------------------------------
-       WANT_RUNVALUES;
-       std::swap(x,y);
-       READ_RUNVALUES;
-)
-
 
 
 OPCODE(check_statement, (),
 // ----------------------------------------------------------------------------
 //   If we have an error on top of stack, exit, otherwise check we have nil
 // ----------------------------------------------------------------------------
-       if (xtype == error_mtype)
+       if (x.type == error_mtype)
            CHAIN(ret);
-       if (xtype != nil_mtype)
+       if (x.type != nil_mtype)
        {
            Error error("Non-nil result from statement");
            state.Error(error);
-           xtype = error_mtype;
+           x = RunValue(state.Error(), error_mtype);
            CHAIN(ret);
        }
 )
@@ -346,8 +310,8 @@ OPCODE(branch, (JUMP),
 // ----------------------------------------------------------------------------
 //   Branch to the given target
 // ----------------------------------------------------------------------------
-       opcode_t offset = DATA;
-       pc += offset;
+       opcode_t branch = DATA;
+       pc += branch;
 )
 
 
@@ -355,8 +319,7 @@ OPCODE(nil, (),
 // ----------------------------------------------------------------------------
 //   Generate a nil value
 // ----------------------------------------------------------------------------
-       x_tree = nullptr;
-       TYPE(nil);
+       x = RunValue(nil_mtype);
 )
 
 
@@ -364,8 +327,7 @@ OPCODE(true, (),
 // ----------------------------------------------------------------------------
 //   Generate constant true
 // ----------------------------------------------------------------------------
-       x_boolean = true;
-       TYPE(boolean);
+       x = RunValue(true, boolean_mtype);
 )
 
 
@@ -373,8 +335,7 @@ OPCODE(false, (),
 // ----------------------------------------------------------------------------
 //   Generate constant true
 // ----------------------------------------------------------------------------
-       x_boolean = false;
-       TYPE(boolean);
+       x = RunValue(false, boolean_mtype);
 )
 
 
@@ -382,9 +343,8 @@ OPCODE(constant, (CONSTANT),
 // ----------------------------------------------------------------------------
 //   Deposit a constant tree on the stack
 // ----------------------------------------------------------------------------
-       x_tree = Constant(DATA);
-       TYPE(tree);
-       CLASSIFY;
+       Tree_p tree = Constant(DATA);
+       x = RunValue::Classify(tree);
 )
 
 
@@ -392,9 +352,8 @@ OPCODE(rewrite, (DEFINITION),
 // ----------------------------------------------------------------------------
 //   Deposit a rewrite on the stack
 // ----------------------------------------------------------------------------
-       x_tree = Definition(DATA);
-       TYPE(tree);
-       CLASSIFY;
+       Rewrite_p rewrite = Definition(DATA);
+       x = RunValue(rewrite, definition_mtype);
 )
 
 
@@ -403,10 +362,10 @@ OPCODE(rewrite, (DEFINITION),
 // ----------------------------------------------------------------------------
 #define TREE_TYPE(Name, Rep, Cast)
 #define RUNTIME_TYPE(Name, Rep, BC)             \
-OPCODE(constant_##Name, (CONSTANT_##Name),      \
-       x_##BC = Constant<Rep>(pc);              \
-       TYPE(Name);                              \
-)
+    OPCODE(constant_##Name, (CONSTANT_##Name),  \
+           Rep value = Constant<Rep>(pc);       \
+           x = RunValue(value); )
+
 #include "machine-types.tbl"
 
 
@@ -414,13 +373,11 @@ OPCODE(make_variable, (),
 // ----------------------------------------------------------------------------
 //   Turn a tree into a variable tree
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       Tree *type = x_tree;
+       Tree_p type = x.AsTree();
        if (!IsVariableType(type))
        {
            type = new Prefix(xl_variable, type, type->Position());
-           x_tree = type;
-           TYPE(prefix);
+           x = RunValue(type, prefix_mtype);
        }
 )
 
@@ -429,13 +386,11 @@ OPCODE(make_matching, (),
 // ----------------------------------------------------------------------------
 //   Turn something into a pattern matching type
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       Tree *type = x_tree;
+       Tree_p type = x.AsTree();
        if (!IsPatternMatchingType(type))
        {
            type = new Prefix(xl_matching, type, type->Position());
-           x_tree = type;
-           TYPE(prefix);
+           x = RunValue(type, prefix_mtype);
        }
 )
 
@@ -444,8 +399,8 @@ OPCODE(get_scope, (),
 // ----------------------------------------------------------------------------
 //   Return current scope
 // ----------------------------------------------------------------------------
-       x_tree = state.EvaluationScope();
-       TYPE(scope);
+       Scope *scope = state.EvaluationScope();
+       x = RunValue(scope, scope_mtype);
 )
 
 
@@ -453,8 +408,8 @@ OPCODE(get_super, (),
 // ----------------------------------------------------------------------------
 //   Return super scope
 // ----------------------------------------------------------------------------
-       x_tree = state.EvaluationScope()->Enclosing();
-       TYPE(scope);
+       Scope *scope = state.EvaluationScope()->Enclosing();
+       x = RunValue(scope, scope_mtype);
 )
 
 
@@ -462,8 +417,7 @@ OPCODE(get_self, (),
 // ----------------------------------------------------------------------------
 //   Return super scope
 // ----------------------------------------------------------------------------
-       x_tree = state.self;
-       CLASSIFY;
+       x = RunValue::Classify(state.self);
 )
 
 
@@ -471,10 +425,8 @@ OPCODE(set_scope, (),
 // ----------------------------------------------------------------------------
 //   Set the scope
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       Scope *scope = x_tree->As<Scope>();
-       if (!scope)
-           record(opcode_error, "set_scope received non-scope %t", x_tree);
+       XL_ASSERT(x.type == scope_mtype);
+       Scope *scope = x.as_scope;
        state.scope = scope;
 )
 
@@ -494,7 +446,8 @@ OPCODE(call_constant, (CONSTANT, ARGUMENTS),
 // ----------------------------------------------------------------------------
 //   Call a constant tree
 // ----------------------------------------------------------------------------
-       x_tree = Constant(DATA);
+       Tree_p callee = Constant(DATA);
+       x = RunValue(callee, tree_mtype);
        CHAIN(call);
 )
 
@@ -503,6 +456,8 @@ OPCODE(call, (ARGUMENTS),
 // ----------------------------------------------------------------------------
 //    Call X with the given arguments
 // ----------------------------------------------------------------------------
+       XL_ASSERT(IsTree(x.type));
+
        // Push PC and locals value
        state.Push(RunValue(pc, runvalue_pc));
        state.Push(RunValue(locals, runvalue_locals));
@@ -517,10 +472,10 @@ OPCODE(call, (ARGUMENTS),
            state.Push(frame[index]);
        }
        pc = 0;
-       bc = x_tree->GetInfo<Bytecode>();
+       bc = x.as_tree->GetInfo<Bytecode>();
        if (!bc)
        {
-           record(opcode_error, "Calling %t which was not compiled", x_tree);
+           record(opcode_error, "Calling %t which was not compiled", x.as_tree);
            return nullptr;
        }
        XL_ASSERT(bc->parameters.size() == nargs);
@@ -534,10 +489,8 @@ OPCODE(call, (ARGUMENTS),
 
 OPCODE(ret, (),
 // ----------------------------------------------------------------------------
-//    Return to caller, returning the result as X in RunValue as is
+//    Return to caller, the returned value is in x
 // ----------------------------------------------------------------------------
-       WANT_XRUNVALUE;
-
        state.Cut(locals);
        if (locals)
        {
@@ -553,25 +506,22 @@ OPCODE(ret, (),
 )
 
 
-OPCODE(assign, (),
+OPCODE(assign, (LOCAL),
 // ----------------------------------------------------------------------------
-//   Perform an assignment X := Y
+//   Assign x to a definition stored in a local
 // ----------------------------------------------------------------------------
-       WANT_TREES;
-
-       Rewrite_p rewrite = x_tree->As<XL::Rewrite>();
-       if (rewrite)
+       RunValue &target = frame[DATA];
+       if (target.type != definition_mtype)
        {
-           rewrite->right = y_tree;
-           TYPE(nil);
-       }
-       else
-       {
-           Error error("Cannot assign to non-variable $1", x_tree);
+           Error error("Cannot assign to non-variable $1", target.AsTree());
            state.Error(error);
-           x_tree = error;
-           TYPE(error);
+           x = RunValue(state.Error(), error_mtype);
+           CHAIN(ret);
        }
+
+       Rewrite_p rewrite = x.as_definition;
+       XL_ASSERT(rewrite && "Cannot assign to null definition");
+       rewrite->right = x.AsTree();
 )
 
 
@@ -579,7 +529,6 @@ OPCODE(store, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Save X to a local storage (0..nparms: Parameters; then local storage)
 // ----------------------------------------------------------------------------
-       WANT_XRUNVALUE;
        opcode_t index = DATA;
        frame[index] = x;
 )
@@ -591,36 +540,6 @@ OPCODE(load, (LOCAL),
 // ----------------------------------------------------------------------------
        opcode_t index = DATA;
        x = frame[index];
-       READ_XRUNVALUE;
-)
-
-
-OPCODE(load_y, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Load a local value into y
-// ----------------------------------------------------------------------------
-       opcode_t index = DATA;
-       y = frame[index];
-       READ_YRUNVALUE;
-)
-
-
-OPCODE(push_local, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Load a local value and push it on top of stack (for native functions)
-// ----------------------------------------------------------------------------
-       opcode_t index = DATA;
-       state.Push(frame[index]);
-       REFRAME;
-)
-
-
-OPCODE(pop, (),
-// ----------------------------------------------------------------------------
-//   Load a local value and push it on top of stack (for native functions)
-// ----------------------------------------------------------------------------
-       x = state.Pop();
-       READ_XRUNVALUE;
 )
 
 
@@ -628,10 +547,10 @@ OPCODE(init_value, (DEFINITION),
 // ----------------------------------------------------------------------------
 //   Initialize a named constant
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
        Rewrite_p rewrite = bc->Definition(DATA);
-       rewrite->right = x_tree;
+       rewrite->right = x.AsTree();
 )
+
 
 
 // ============================================================================
@@ -644,14 +563,14 @@ OPCODE(check_type, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check a type at runtime
 // ----------------------------------------------------------------------------
-       WANT_XTREE;
-       Tree_p value = x_tree;
+       Tree_p value = x.AsTree();
        Tree_p type = Constant(DATA);
        opcode_t branch = DATA;
-       x_tree = typecheck(state.scope, type, value);
-       if (!x_tree)
+       Tree_p cast = typecheck(state.scope, type, value);
+       if (cast)
+           x = RunValue::Classify(cast);
+       else
            pc += branch;
-       CLASSIFY;
 )
 
 
@@ -663,11 +582,23 @@ OPCODE(check_input_type, (CONSTANT, JUMP),
 )
 
 
-OPCODE(check_result_type, (CONSTANT, JUMP),
+OPCODE(check_result_type, (CONSTANT),
 // ----------------------------------------------------------------------------
-//   Check the type of an argument
+//   Check the type of an argument, or return a type error
 // ----------------------------------------------------------------------------
-       CHAIN(check_type);
+       Tree_p value = x.AsTree();
+       Tree_p type = Constant(DATA);
+       Tree_p cast = typecheck(state.scope, type, value);
+       if (cast)
+       {
+           x = RunValue::Classify(cast);
+       }
+       else
+       {
+           Error error("Returned value $1 does not match type $2", value, type);
+           x = RunValue((Tree *) error, error_mtype);
+           CHAIN(ret);
+       }
 )
 
 
@@ -692,18 +623,18 @@ OPCODE(check_guard, (JUMP),
 //   Check if the guard condition is true, or nullify the stack
 // ----------------------------------------------------------------------------
        opcode_t branch = DATA;
-       if (xtype != boolean_mtype || !x_boolean)
+       if (x.type != boolean_mtype || !x.as_boolean)
            pc += branch;
 )
 
 
-OPCODE(check_same, (JUMP),
+OPCODE(check_same, (LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if X and Y match, if not branch to taget
 // ----------------------------------------------------------------------------
-       WANT_TREES;
+       RunValue &y = frame[DATA];
        opcode_t branch = DATA;
-       if (!Tree::Equal(x_tree, y_tree))
+       if (!Tree::Equal(x.AsTree(), y.AsTree()))
            pc += branch;
 )
 
@@ -712,9 +643,9 @@ OPCODE(check_natural, (CONSTANT_natural, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
-       uintptr_t ref = Constant<Natural::value_t>(pc);
+       Natural::value_t ref = Constant<Natural::value_t>(pc);
        opcode_t branch = DATA;
-       if (xtype != natural_mtype || x_natural != ref)
+       if (!IsNatural(x.type) || x.AsNatural() != ref)
            pc += branch;
 )
 
@@ -723,9 +654,9 @@ OPCODE(check_real, (CONSTANT_real, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
-       double ref = Constant<Real::value_t>(pc);
+       Real::value_t ref = Constant<Real::value_t>(pc);
        opcode_t branch = DATA;
-       if (xtype != real_mtype || x_real != ref)
+       if (!IsReal(x.type) || x.AsReal() != ref)
            pc += branch;
 )
 
@@ -734,33 +665,43 @@ OPCODE(check_text, (CONSTANT_text, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
-       text ref = Constant<Text::value_t>(pc);
+       Text::value_t ref = Constant<Text::value_t>(pc);
        opcode_t branch = DATA;
-       if (xtype != text_mtype || x_text != ref)
+       if (!IsText(x.type) || x.AsText() != ref)
            pc += branch;
 )
 
 
-OPCODE(check_infix, (CONSTANT, JUMP),
+OPCODE(check_infix, (CONSTANT, LOCAL, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we have an infix, and if so, split it into two components
 // ----------------------------------------------------------------------------
-//   We have [infix], we will have either [right, left], or [nullptr]
-       WANT_XTREE;
-
+//   We have [infix], we either
+//   - jump to the target if no match,
+//   - split into left and right that we store in the to locals
        Tree *ref = Constant(DATA);
-       opcode_t offset = DATA;
+       RunValue &left = frame[DATA];
+       RunValue &right = frame[DATA];
+       opcode_t branch = DATA;
        Infix *refinfix = ref->AsInfix();
        if (!refinfix)
        {
            record(opcode_error, "check_infix with non-infix reference %t", ref);
            return nullptr;
        }
-       Infix *infix = x_tree->AsInfix();
+       Infix *infix = x.AsTree()->AsInfix();
        if (!infix || infix->name != refinfix->name)
-           pc += offset;
+       {
+           pc += branch;
+       }
        else
-           xtype = infix_mtype;
+       {
+           if (x.type != infix_mtype)
+               x = RunValue(infix, infix_mtype);
+           XL_ASSERT(x.as_infix == infix);
+           left  = RunValue::Classify(infix->left);
+           right = RunValue::Classify(infix->right);
+       }
 )
 
 
@@ -768,12 +709,9 @@ OPCODE(check_borrow, (JUMP),
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration
 // ----------------------------------------------------------------------------
-       opcode_t offset = DATA;
-       Rewrite *rewrite = x_tree->As<Rewrite>();
-       if (!rewrite)
-           pc += offset;
-       else
-           xtype = definition_mtype;
+       opcode_t branch = DATA;
+       if (x.type != definition_mtype)
+           pc += branch;
 )
 
 
@@ -782,20 +720,18 @@ OPCODE(check_typed_borrow, (CONSTANT, JUMP),
 //    Borrow a variable declaration and check its type
 // ----------------------------------------------------------------------------
        Tree_p type = Constant(DATA);
-       opcode_t offset = DATA;
-       Rewrite *rewrite = x_tree->As<Rewrite>();
+       opcode_t branch = DATA;
        bool ok = false;
-       if (rewrite)
+       if (x.type == definition_mtype)
        {
-           xtype = definition_mtype;
-
-           Infix *vartype = IsTypeAnnotation(rewrite->left);
-           Tree_p have = vartype->right;
-           if (Tree::Equal(type, have))
-               ok = true;
+           if (Infix *vartype = IsTypeAnnotation(x.as_definition->left))
+           {
+               Tree_p have = vartype->right;
+               ok = Tree::Equal(type, have);
+           }
        }
        if (!ok)
-           pc += offset;
+           pc += branch;
 )
 
 #undef OPCODE

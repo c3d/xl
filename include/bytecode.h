@@ -98,6 +98,88 @@ enum MachineType
 };
 
 
+inline bool IsTree(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a tree type
+// ----------------------------------------------------------------------------
+{
+    switch(mtype)
+    {
+#define TREE_TYPE(Name, Rep, Code)      case  Name##_mtype:
+#include "machine-types.tbl"
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+inline bool IsNatural(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a natural machine type
+// ----------------------------------------------------------------------------
+{
+    switch(mtype)
+    {
+#define NATURAL_TYPE(Name, Rep)         case  Name##_mtype:
+#include "machine-types.tbl"
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+inline bool IsInteger(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a integer machine type
+// ----------------------------------------------------------------------------
+{
+    switch(mtype)
+    {
+#define INTEGER_TYPE(Name, Rep)         case  Name##_mtype:
+#include "machine-types.tbl"
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+inline bool IsReal(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a real machine type
+// ----------------------------------------------------------------------------
+{
+    switch(mtype)
+    {
+#define REAL_TYPE(Name, Rep)         case  Name##_mtype:
+#include "machine-types.tbl"
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+inline bool IsText(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a text machine type
+// ----------------------------------------------------------------------------
+{
+    return (mtype == text_mtype || mtype == character_mtype);
+}
+
+
+inline bool IsScalar(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a scalar type (non-tree)
+// ----------------------------------------------------------------------------
+{
+    return !IsTree(mtype);
+}
+
+
 #ifdef HAVE_FLOAT16
 inline std::ostream &operator<<(std::ostream &out, _Float16 f)
 // ----------------------------------------------------------------------------
@@ -215,7 +297,7 @@ public:
 
 
     template<MachineType mtype>
-    typename Type<mtype>::type Field()
+    typename Type<mtype>::type &Field()
     // ------------------------------------------------------------------------
     //   Get a field
     // ------------------------------------------------------------------------
@@ -228,7 +310,7 @@ public:
     {                                                                   \
         typedef Representation<Rep>::union_t type;                      \
     };                                                                  \
-    template<> typename Type<Name##_mtype>::type Field<Name##_mtype>()  \
+    template<> typename Type<Name##_mtype>::type &Field<Name##_mtype>() \
     {                                                                   \
         return as_##Name;                                               \
     }
@@ -276,7 +358,7 @@ MACHINE_TYPE(natural, unsigned long, naught)
         return as_text->c_str();
     }
 
-    Tree *AsTree()
+    inline Tree *AsTree()
     {
         switch(type)
         {
@@ -289,6 +371,201 @@ MACHINE_TYPE(natural, unsigned long, naught)
         }
         return as_tree;
     }
+
+    inline ulonglong AsNatural()
+    {
+        switch(type)
+        {
+#define NATURAL_TYPE(Name, Rep)         case Name##_mtype: return as_##Name;
+#include "machine-types.tbl"
+        default:
+            XL_ASSERT("Invalid machine type for AsNatural()");
+            break;
+        }
+        return 0;
+    }
+
+    inline longlong AsInteger()
+    {
+        switch(type)
+        {
+#define INTEGER_TYPE(Name, Rep)         case Name##_mtype: return as_##Name;
+#include "machine-types.tbl"
+        default:
+            XL_ASSERT("Invalid machine type for AsInteger()");
+            break;
+        }
+        return 0;
+    }
+
+    inline double AsReal()
+    {
+        switch(type)
+        {
+#define REAL_TYPE(Name, Rep)         case Name##_mtype: return as_##Name;
+#include "machine-types.tbl"
+        default:
+            XL_ASSERT("Invalid machine type for AsReal()");
+            break;
+        }
+        return 0;
+    }
+
+    inline text AsText()
+    {
+        switch(type)
+        {
+        case text_mtype:        return *as_text;
+        case character_mtype:   return text(as_character, 1);
+        default:
+            XL_ASSERT("Invalid machine type for AsText()");
+            break;
+        }
+        return "";
+    }
+
+
+    // Classify a tree into a more precise RunValue types
+    RunValue &Classify()
+    {
+        if (type != tree_mtype)
+        {
+            return *this;
+        }
+        Tree *tree = as_tree;
+        if (!tree)
+        {
+            type = nil_mtype;
+            return *this;
+        }
+        switch(tree->Kind())
+        {
+        case NATURAL:
+        {
+            Natural *xn = (Natural *) tree;
+            if (xn->IsSigned())
+            {
+                type = integer_mtype;
+                as_integer = (longlong) xn->value;
+            }
+            else
+            {
+                type = natural_mtype;
+                as_natural = xn->value;
+            }
+            Release(xn);
+            return *this;
+        }
+        case REAL:
+        {
+            Real *xr = (Real *) tree;
+            type = real_mtype;
+            as_real = xr->value;
+            Release(xr);
+            return *this;
+        }
+        case TEXT:
+        {
+            Text *xt = (Text *) tree;
+            if (xt->IsCharacter())
+            {
+                type = character_mtype;
+                as_character = xt->value[0];
+            }
+            else
+            {
+                type = text_mtype;
+                as_text = new text(xt->value);
+            }
+            Release(xt);
+            return *this;
+        }
+        case NAME:
+        {
+            Name *xn = (Name *) tree;
+            if (xn->IsName())
+                type = name_mtype;
+            else if (xn->IsOperator())
+                type = operator_mtype;
+            else
+                type = symbol_mtype;
+            return *this;
+        }
+        case INFIX:
+            type = infix_mtype;
+            return *this;
+        case PREFIX:
+            if (IsError(tree))
+                type = error_mtype;
+            else
+                type = prefix_mtype;
+            return *this;
+        case POSTFIX:
+            type = postfix_mtype;
+            return *this;
+        case BLOCK:
+            type = block_mtype;
+            return *this;
+        }
+        return *this;
+    }
+
+    static RunValue Classify(Tree *tree)
+    {
+        return RunValue(tree, tree_mtype).Classify();
+    }
+
+
+    template <typename Rep, MachineType mtype>
+    bool CastNatural()
+    {
+        if (type != mtype && IsNatural(type))
+        {
+            ulonglong value = AsNatural();
+            Rep cast = (Rep) value;
+            if (cast == value)
+            {
+                type = mtype;
+                Field<mtype>() = cast;
+            }
+        }
+        return (type == mtype);
+    }
+
+
+    template <typename Rep, MachineType mtype>
+    bool CastInteger()
+    {
+        if (type != mtype && IsInteger(type))
+        {
+            longlong value = AsInteger();
+            Rep cast = (Rep) value;
+            if (cast == value)
+            {
+                type = mtype;
+                Field<mtype>() = cast;
+            }
+        }
+        return (type == mtype);
+    }
+
+
+    template <typename Rep, MachineType mtype>
+    bool CastReal()
+    {
+        if (type != mtype && IsReal(type))
+        {
+            double value = AsReal();
+            Rep cast = (Rep) value;
+            if (cast == value)
+            {
+                type = mtype;
+                Field<mtype>() = cast;
+            }
+        }
+        return (type == mtype);
+    }
+
 
     friend inline std::ostream &operator<<(std::ostream &out, RunValue &rv)
     {
@@ -311,7 +588,6 @@ MACHINE_TYPE(natural, unsigned long, naught)
     static Tree *AsTree(text t)         { return new Text(t); }
     static Tree *AsTree(char c)         { return Text::Character(c); }
     static Tree *AsTree(bool b)         { return b ? xl_true : xl_false; }
-
 
 private:
     void Acquire(Tree *tree)
@@ -483,7 +759,6 @@ inline void RunState::Cut(size_t size)
 {
     stack.resize(size);
 }
-
 
 XL_END
 
