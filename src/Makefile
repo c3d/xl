@@ -48,11 +48,14 @@ COMPILER=llvm
 #MODULES_SOURCES=$(MODULES:%=%_module.cpp)
 #MODULES_HEADERS=$(MODULES:%=%_module.h)
 
+# Set expand to expand the bytecode for debuggability
+EXPAND=
+
 # List of source files to process
 SOURCES_VARIANT_exe=				\
 	xl.cpp
 SOURCES_VARIANT_lib     =			\
-	bytecode.cpp				\
+	bytecode$(EXPAND:%=-expanded).cpp	\
 	$(SOURCES_$(COMPILER))			\
 	action.cpp				\
 	builtins.cpp				\
@@ -280,11 +283,7 @@ $(MIQ)rules.mk:
 $(MIQ_DEPENDENCIES): 	$(MODULES_HEADERS) 	\
 			../recorder/recorder.h ../recorder/recorder_ring.h
 
-# Generation of bytecode names map
-GENERATE_BYTECODE_NAMES=						\
-	grep 'static void' $< |						\
-	sed -e 's/^static void \([a-zA-Z_0-9]*\).*$$/BC_NAME(\1)/g'	\
-	> $@
-.prebuild: bytecode-names.h
-bytecode-names.h: bytecode.tbl
-	$(PRINT_GENERATE) $(GENERATE_BYTECODE_NAMES)
+# Expand bytecode.cpp
+bytecode-expanded.cpp: bytecode.cpp $(MAKEFILE_LIST)
+	$(PRINT_GENERATE) $(CXX) $(MIQ_CXXFLAGS) -E -P $< -o $@ && clang-format $@ > $@.fmt && mv $@.fmt $@
+CXXFLAGS_bytecode-expanded=-w
