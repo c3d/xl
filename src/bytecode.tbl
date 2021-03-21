@@ -482,7 +482,6 @@ OPCODE(call, (ARGUMENTS),
            opcode_t index = DATA;
            state.Push(frame[index]);
        }
-       pc = 0;
        bc = x.as_tree->GetInfo<Bytecode>();
        if (!bc)
        {
