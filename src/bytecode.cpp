@@ -498,13 +498,19 @@ start:
 // Macros to help writing opcodes
 #define DATA            (code[pc++])
 #define REFRAME         (frame = &state.stack[locals])
-#define RETARGET        (max = bc->code.size(), pc = 0, code = &bc->code[0])
+#define RETARGET                                                        \
+    do {                                                                \
+        max = bc->code.size();                                          \
+        pc = 0;                                                         \
+        code = &bc->code[0];                                            \
+    } while(0)
 #define NEXT            XL_ASSERT(pc < max);                            \
                         goto *((char *) &&start + entry[code[pc++]])
 #define BRANCH(b)       (pc += b)
 #define CHAIN(op)       goto label_##op
 
     // Jump to first opcode
+    state.Allocate(bc->locals);
     REFRAME;
     NEXT;
 
