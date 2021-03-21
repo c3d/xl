@@ -504,7 +504,6 @@ start:
 #define RETARGET                                                        \
     do {                                                                \
         max = bc->code.size();                                          \
-        pc = 0;                                                         \
         code = &bc->code[0];                                            \
     } while(0)
 #define NEXT            XL_ASSERT(pc < max);                            \
