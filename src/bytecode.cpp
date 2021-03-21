@@ -271,6 +271,7 @@ public:
     void        Dump(std::ostream &out);
     void        Dump(std::ostream &out, opaddr_t &pc);
     Tree *      Cached(opcode_t local);
+    void        SetX(Tree *value, opcode_t local);
     opcode_t    LocalIndex(Tree *value);
 
 private:
@@ -305,12 +306,14 @@ private:
 
     struct CompileInfo
     {
-        CompileInfo(): local(false), variable(false) {}
+        CompileInfo(): x_value(), x_index(), local(false), variable(false) {}
         Patches     checks;     // Checks to patch
         Patches     successes;  // Checks to patch
         Patches     jumps;      // Jumps to patch if we shorten
         TypeMap     types;      // Last known type for a value
         ValueMap    values;     // Already-computed value
+        Tree *      x_value;    // Value in X
+        opcode_t    x_index;    // Index of value in X
         bool        local;      // Non-recursive lookup
         bool        variable;   // Evaluate as variable
     };
@@ -729,6 +732,9 @@ opcode_t Bytecode::LocalIndex(Tree *value)
 //   Return the local index for a given value
 // ----------------------------------------------------------------------------
 {
+    if (value == compile->x_value)
+        return compile->x_index;
+
     ValueMap &values = compile->values;
     opcode_t index;
     auto found = values.find(value);
@@ -1066,6 +1072,9 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
 //   Evaluate a value but only once
 // ----------------------------------------------------------------------------
 {
+    if (value == compile->x_value)
+        return compile->x_index;
+
     Bytecode *bytecode = this;
     ValueMap &values = compile->values;
     opcode_t index;
@@ -1074,16 +1083,21 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
     {
         // Already compiled and evaluated - Reload it
         index = (*found).second;
-        OP(load,  Local(index));
+        if (index != compile->x_index)
+            OP(load,  Local(index));
     }
     else
     {
         // Compile the value and store the result
         XL::compile(scope, value, bytecode);
+        if (compile->x_value == value)
+            return compile->x_index;
         index = values.size();
         values[value] = index;
         OP(store,  Local(index));
     }
+    compile->x_value = value;
+    compile->x_index = index;
     return index;
 }
 
@@ -1267,6 +1281,20 @@ Tree *Bytecode::Cached(opcode_t local)
         if (local == it.second)
             return it.first;
     return nullptr;
+}
+
+
+inline void Bytecode::SetX(Tree *value, opcode_t local)
+// ----------------------------------------------------------------------------
+//   Return the cached expression corresponding to an index
+// ----------------------------------------------------------------------------
+{
+    if (value != compile->x_value)
+    {
+        compile->values[value] = local;
+        compile->x_value = value;
+        compile->x_index = local;
+    }
 }
 
 
@@ -1995,6 +2023,8 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 {
                     attempt.Fail();     // Cut any generated code
                     OP(load, Local(index));
+                    bytecode->SetX(name, index);
+                    bytecode->SetX(expr, index);
                     done = true;
                 }
                 else if (IsSelf(decl->Definition()))
