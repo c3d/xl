@@ -57,7 +57,7 @@
 #else
 
  #define TREE_TYPE(Name, Rep, Cast)      MACHINE_TYPE(Name, Rep *, tree)
- RUNTIME_TYPE(tree,     Tree_p,          tree)
+ TREE_TYPE(tree,        Tree,            value)
 
 #endif
 
