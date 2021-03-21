@@ -224,7 +224,8 @@ public:
 
     // Copy constructor
     RunValue(const RunValue &rv)
-        : type(rv.type), flags(rv.flags), as_tree(rv.as_tree)   { Acquire(); }
+        : type(rv.type), flags(rv.flags),
+          as_natural(rv.as_natural)                             { Acquire(); }
 
     // Destructor
     ~RunValue()                                                 { Release(); }
