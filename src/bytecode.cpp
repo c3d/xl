@@ -87,6 +87,7 @@ enum Opcode
 
 
 typedef uint16_t                        opcode_t; // 16-bit ought to be enough
+typedef opcode_t *                      opcode_p;
 typedef std::map<Tree_p, Tree_p>        TypeMap;
 typedef std::map<Tree_p, opcode_t>      ValueMap;
 
@@ -256,7 +257,7 @@ public:
     void        Validate();
     Tree_p      Constant(opcode_t index);
     template<typename Rep>
-    Rep         Constant(opaddr_t &pc);
+    Rep         Constant(opcode_p &pc);
     Rewrite_p   Definition(opcode_t index);
     bool        LocalMode();
     bool        LocalMode(bool mode);
@@ -482,9 +483,8 @@ Tree_p Bytecode::Run(RunState &state)
 {
     Scope       *scope  = state.scope;
     Bytecode    *bc     = this;
-    opcode_t    *code   = &bc->code[0];
-    opaddr_t     max    = bc->code.size();
-    opaddr_t     pc     = 0;
+    opcode_t    *pc     = &bc->code[0];
+    opcode_t    *last   = pc + bc->code.size();
     size_t       locals = 0;
     RunValue    *frame  = nullptr;
     RunValue     x;
@@ -499,15 +499,15 @@ start:
 
 
 // Macros to help writing opcodes
-#define DATA            (code[pc++])
+#define DATA            (*pc++)
 #define REFRAME         (frame = &state.stack[locals])
-#define RETARGET                                                        \
+#define RETARGET(offset)                                                \
     do {                                                                \
-        max = bc->code.size();                                          \
-        code = &bc->code[0];                                            \
+        pc   = &bc->code[0] + offset;                                   \
+        last = pc + bc->code.size();                                    \
     } while(0)
-#define NEXT            XL_ASSERT(pc < max);                            \
-                        goto *((char *) &&start + entry[code[pc++]])
+#define NEXT            XL_ASSERT(pc < last);                           \
+                        goto *((char *) &&start + entry[*pc++])
 #define BRANCH(b)       (pc += b)
 #define CHAIN(op)       goto label_##op
 
@@ -964,7 +964,7 @@ Tree_p Bytecode::Constant(opcode_t index)
 
 
 template<typename Rep>
-inline Rep Bytecode::Constant(opaddr_t &pc)
+inline Rep Bytecode::Constant(opcode_p &pc)
 // ----------------------------------------------------------------------------
 //   Return a representation constant
 // ----------------------------------------------------------------------------
@@ -976,9 +976,9 @@ inline Rep Bytecode::Constant(opaddr_t &pc)
         literal_t value;
         opcode_t  ops[SIZE];
     } u;
-    auto start = code.begin() + pc;
-    std::copy(start, start + SIZE, u.ops);
-    pc += SIZE;
+    opcode_p end = pc + SIZE;
+    std::copy(pc, end, u.ops);
+    pc = end;
     return u.value;
 }
 
