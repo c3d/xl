@@ -2021,7 +2021,6 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 opcode_t index = bytecode->ParameterIndex(name);
                 if (index != UNPATCHED)
                 {
-                    attempt.Fail();     // Cut any generated code
                     OP(load, Local(index));
                     bytecode->SetX(name, index);
                     bytecode->SetX(expr, index);
@@ -2030,7 +2029,6 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 }
                 else if (IsSelf(decl->Definition()))
                 {
-                    attempt.Fail();     // Cut any generated code
                     OP(constant, name);
                     done = true;
                 }
