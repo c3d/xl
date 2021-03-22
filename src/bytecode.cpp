@@ -1508,15 +1508,6 @@ strength BytecodeBindings::Do(Real *what)
             return Failed();
     }
 
-    // Promote natural values in pattern (is this a good idea?)
-    if (Natural *nval = test->AsNatural())
-    {
-        if (nval->value == what->value)
-            return Perfect();
-        else
-            return Failed();
-    }
-
     // Otherwise, we need to evaluate and check at runtime
     MustEvaluate();
     OP(check_real, Constant(what->value), CHECK);
