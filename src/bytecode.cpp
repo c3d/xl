@@ -1085,6 +1085,8 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
         index = (*found).second;
         if (index != compile->x_index)
             OP(load,  Local(index));
+        if (index < parameters.size() && value != parameters[index].name)
+            Type(value, parameters[index].type);
     }
     else
     {
