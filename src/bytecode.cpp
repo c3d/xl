@@ -485,6 +485,7 @@ Tree_p Bytecode::Run(RunState &state)
     Bytecode    *bc     = this;
     opcode_t    *pc     = &bc->code[0];
     opcode_t    *last   = pc + bc->code.size();
+    opcode_t    *ret_pc = 0;
     size_t       locals = 0;
     RunValue    *frame  = nullptr;
     RunValue     x;
@@ -501,9 +502,9 @@ start:
 // Macros to help writing opcodes
 #define DATA            (*pc++)
 #define REFRAME         (frame = &state.stack[locals])
-#define RETARGET(offset)                                                \
+#define RETARGET(PC)                                                    \
     do {                                                                \
-        pc   = &bc->code[0] + offset;                                   \
+        pc   = PC;                                                      \
         last = pc + bc->code.size();                                    \
     } while(0)
 #define NEXT            XL_ASSERT(pc < last);                           \
