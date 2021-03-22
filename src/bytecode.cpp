@@ -970,16 +970,9 @@ inline Rep Bytecode::Constant(opcode_p &pc)
 // ----------------------------------------------------------------------------
 {
     using literal_t = typename RepConstant<Rep>::literal_t;
-    const size_t SIZE = sizeof(literal_t) / sizeof(opcode_t);
-    union
-    {
-        literal_t value;
-        opcode_t  ops[SIZE];
-    } u;
-    opcode_p end = pc + SIZE;
-    std::copy(pc, end, u.ops);
-    pc = end;
-    return u.value;
+    literal_t value = *((literal_t *) pc);
+    pc += sizeof(literal_t) / sizeof(opcode_t);
+    return value;
 }
 
 
