@@ -101,8 +101,10 @@ struct Parameter
 //   Description of a parameter in the bytecode
 // ----------------------------------------------------------------------------
 {
-    Parameter(Name *name, opcode_t arg): name(name), argument(arg) {}
+    Parameter(Name *name, Tree *type, opcode_t arg)
+        : name(name), type(type), argument(arg) {}
     Name *      name;           // Name for the parameter
+    Tree *      type;           // Known type for the parameter if any
     opcode_t    argument;       // Local index for the argument
 };
 typedef std::vector<Parameter>  Parameters;
@@ -203,7 +205,9 @@ struct Bytecode : Info
         code(), scope(scope), self(self),
         constants(), rewrites(), parameters(parameters), locals(0),
         compile(new CompileInfo)
-    {}
+    {
+        SetTypesFromParameters();
+    }
     ~Bytecode() { Cut(0); delete compile; }
 
     // Evaluate the bytecode
@@ -269,6 +273,7 @@ public:
     opcode_t    Evaluate(Scope *scope, Tree *value);
     Tree *      Type(Tree *value);
     void        Type(Tree *value, Tree *type);
+    void        SetTypesFromParameters();
     void        Dump(std::ostream &out);
     void        Dump(std::ostream &out, opaddr_t &pc);
     Tree *      Cached(opcode_t local);
@@ -350,6 +355,7 @@ public:
               types(compile->types)
         {
             compile->types.clear();
+            bytecode->SetTypesFromParameters();
         }
         ~Attempt()
         {
@@ -1033,7 +1039,8 @@ void Bytecode::Bind(Name *name, Scope *scope, Tree *value)
 // ----------------------------------------------------------------------------
 {
     opcode_t index = Evaluate(scope, value);
-    parameters.push_back(Parameter(name, index));
+    Tree *type = Type(value);
+    parameters.push_back(Parameter(name, type, index));
 }
 
 
@@ -1112,6 +1119,15 @@ void Bytecode::Type(Tree *value, Tree *type)
     compile->types[value] = type;
 }
 
+
+void Bytecode::SetTypesFromParameters()
+// ----------------------------------------------------------------------------
+//   Resset the types to what is in the parameter list
+// ----------------------------------------------------------------------------
+{
+    for (auto &p : parameters)
+        Type(p.name, p.type);
+}
 
 
 
@@ -2009,6 +2025,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                     OP(load, Local(index));
                     bytecode->SetX(name, index);
                     bytecode->SetX(expr, index);
+                    bytecode->Type(expr, bytecode->Type(name));
                     done = true;
                 }
                 else if (IsSelf(decl->Definition()))
