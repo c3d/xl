@@ -471,7 +471,7 @@ OPCODE(call, (ARGUMENTS),
        XL_ASSERT(IsTree(x.type));
 
        // Push PC and locals value
-       state.Push(RunValue(opaddr_t(0), runvalue_pc));
+       state.Push(RunValue(ret_pc, runvalue_pc));
        state.Push(RunValue(locals, runvalue_locals));
        state.Push(RunValue(bc, runvalue_bytecode));
 
@@ -483,7 +483,7 @@ OPCODE(call, (ARGUMENTS),
            opcode_t index = DATA;
            state.Push(frame[index]);
        }
-       state.stack[base-3].as_natural = pc - &bc->code[0];
+       ret_pc = pc;
        bc = x.as_tree->GetInfo<Bytecode>();
        if (!bc)
        {
@@ -495,7 +495,7 @@ OPCODE(call, (ARGUMENTS),
        state.Allocate(bc->locals); // Add locals on top of arguments
 
        REFRAME;
-       RETARGET(0);
+       RETARGET(&bc->code[0]);
 )
 
 
@@ -508,9 +508,9 @@ OPCODE(ret, (),
        {
            bc = (Bytecode *) state.Pop(runvalue_bytecode).as_natural;
            locals = state.Pop(runvalue_locals).as_natural;
-           opaddr_t offset = state.Pop(runvalue_pc).as_natural;
+           RETARGET(ret_pc);
+           ret_pc = (opcode_t *) state.Pop(runvalue_pc).as_natural;
            REFRAME;
-           RETARGET(offset);
        }
        else
        {
