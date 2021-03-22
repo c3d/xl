@@ -136,7 +136,7 @@
     BUILTIN(Op##_constant_##TypeXY, (CONSTANT_##TypeXY),        \
             XL_ASSERT(x.type == TypeXY##_mtype);                \
             RepXY left  = x.as_##TypeXY;                        \
-            RepXY right = bc->Constant<RepXY>(pc);              \
+            RepXY right = Constant<RepXY>(pc);              \
             RepR  result;                                       \
             Body;                                               \
             x.as_##TypeR = result;                              \
@@ -284,7 +284,7 @@ OPCODE(native, (CONSTANT_natural, ARGUMENTS),
 // ----------------------------------------------------------------------------
 //   Call a native function
 // ----------------------------------------------------------------------------
-       Natural::value_t addr = bc->Constant<Natural::value_t>(pc);
+       Natural::value_t addr = Constant<Natural::value_t>(pc);
        Native::opcode_fn fn = (Native::opcode_fn) addr;
 
        // Read arguments
@@ -374,7 +374,7 @@ OPCODE(rewrite, (DEFINITION),
 #define TREE_TYPE(Name, Rep, Cast)
 #define RUNTIME_TYPE(Name, Rep, BC)             \
     OPCODE(constant_##Name, (CONSTANT_##Name),  \
-           Rep value = bc->Constant<Rep>(pc);   \
+           Rep value = Constant<Rep>(pc);   \
            x = RunValue(value);                 \
            x.type = Name##_mtype; )
 
@@ -656,7 +656,7 @@ OPCODE(check_natural, (CONSTANT_natural, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
-       Natural::value_t ref = bc->Constant<Natural::value_t>(pc);
+       Natural::value_t ref = Constant<Natural::value_t>(pc);
        opcode_t branch = DATA;
        if (!IsNatural(x.type) || x.AsNatural() != ref)
            pc += branch;
@@ -667,7 +667,7 @@ OPCODE(check_real, (CONSTANT_real, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
-       Real::value_t ref = bc->Constant<Real::value_t>(pc);
+       Real::value_t ref = Constant<Real::value_t>(pc);
        opcode_t branch = DATA;
        if (!IsReal(x.type) || x.AsReal() != ref)
            pc += branch;
@@ -678,7 +678,7 @@ OPCODE(check_text, (CONSTANT_text, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
-       Text::value_t ref = bc->Constant<Text::value_t>(pc);
+       Text::value_t ref = Constant<Text::value_t>(pc);
        opcode_t branch = DATA;
        if (!IsText(x.type) || x.AsText() != ref)
            pc += branch;

@@ -256,7 +256,7 @@ public:
     bool        IsValid();
     void        Validate();
     Tree_p      Constant(opcode_t index);
-    template<typename Rep>
+    template<typename Rep> static
     Rep         Constant(opcode_p &pc);
     Rewrite_p   Definition(opcode_t index);
     bool        LocalMode();
