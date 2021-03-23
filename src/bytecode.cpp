@@ -278,7 +278,6 @@ public:
     void        Dump(std::ostream &out, opaddr_t &pc);
     Tree *      Cached(opcode_t local);
     void        SetX(Tree *value, opcode_t local);
-    opcode_t    LocalIndex(Tree *value);
 
 private:
     friend struct RunState;
@@ -766,32 +765,6 @@ void Bytecode::EnterArg(const RepConstant<Rep> &rep)
     } u;
     u.value = rep.value;
     code.insert(code.end(), u.ops, u.ops + SIZE);
-}
-
-
-opcode_t Bytecode::LocalIndex(Tree *value)
-// ----------------------------------------------------------------------------
-//   Return the local index for a given value
-// ----------------------------------------------------------------------------
-{
-    if (value == compile->x_value)
-        return compile->x_index;
-
-    ValueMap &values = compile->values;
-    opcode_t index;
-    auto found = values.find(value);
-    if (found != values.end())
-    {
-        // Already compiled and evaluated - Reload it
-        index = (*found).second;
-    }
-    else
-    {
-        // Compile the value and store the result
-        index = values.size();
-        values[value] = index;
-    }
-    return index;
 }
 
 
