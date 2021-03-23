@@ -326,7 +326,8 @@ private:
 
     struct CompileInfo
     {
-        CompileInfo(): x_value(), x_index(), local(false), variable(false) {}
+        CompileInfo()
+            : x_value(), x_index(), last(), local(false), variable(false) {}
         Patches     checks;     // Checks to patch
         Patches     successes;  // Checks to patch
         Patches     jumps;      // Jumps to patch if we shorten
@@ -334,6 +335,7 @@ private:
         ValueMap    values;     // Already-computed value
         Tree *      x_value;    // Value in X
         opcode_t    x_index;    // Index of value in X
+        opaddr_t    last;       // Last instruction entered by Op
         OpcodeKind *args;       // Checking arguments
         bool        local;      // Non-recursive lookup
         bool        variable;   // Evaluate as variable
@@ -628,6 +630,7 @@ void Bytecode::Op(Opcode opcode)
 // ----------------------------------------------------------------------------
 {
     record(opcode, "Opcode %+s", name[opcode]);
+    compile->last = code.size();
     code.push_back(opcode);
 #ifdef XL_ASSERT
     compile->args = &OpcodeArgs[opcode][0];
@@ -870,9 +873,9 @@ void Bytecode::PatchSuccesses(size_t where)
     }
 
     if (jumps.size() == 1 && jumps.back() == target - 1 &&
-        code.size() >= 2 && code[code.size() - 2] == opcode_branch)
+        code.size() >= 2 && code[compile->last] == opcode_branch)
     {
-        code.erase(code.end() - 2, code.end());
+        code.erase(code.begin() + compile->last, code.end());
         jumps.pop_back();
     }
 }
