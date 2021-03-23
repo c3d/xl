@@ -301,6 +301,20 @@ private:
     void        EnterArg(First first, Rest... rest);
 
 private:
+    enum OpcodeKind
+    {
+        JUMP,                   // New value for PC
+        LOCAL,                  // Index of a local variable
+        CONSTANT,               // Index of a constant
+        DEFINITION,             // Index of a definition
+        ARGUMENTS,              // Argument list
+        CONSTANTS,              // First of the constants
+#define TREE_TYPE(Name, Rep, Cast)
+#define RUNTIME_TYPE(Name, Rep, BC)     CONSTANT_##Name,
+#include "machine-types.tbl"
+    };
+
+private:
     // Data for the bytecode
     Opcodes     code;           // Bytecode itself
     Scope_p     scope;          // Declaration scope for the code
@@ -320,23 +334,11 @@ private:
         ValueMap    values;     // Already-computed value
         Tree *      x_value;    // Value in X
         opcode_t    x_index;    // Index of value in X
+        OpcodeKind *args;       // Checking arguments
         bool        local;      // Non-recursive lookup
         bool        variable;   // Evaluate as variable
     };
     CompileInfo *compile;       // Information used at compile-time
-
-    enum OpcodeKind
-    {
-        JUMP,                   // New value for PC
-        LOCAL,                  // Index of a local variable
-        CONSTANT,               // Index of a constant
-        DEFINITION,             // Index of a definition
-        ARGUMENTS,              // Argument list
-#define TREE_TYPE(Name, Rep, Cast)
-#define RUNTIME_TYPE(Name, Rep, BC)             \
-        CONSTANT_##Name,
-#include "machine-types.tbl"
-    };
 
 public:
     friend struct Attempt;
@@ -386,6 +388,7 @@ public:
 
     template <typename ...Args>
     static std::vector<OpcodeKind> OpcodeArgList(Args... args);
+    static std::vector<Bytecode::OpcodeKind> OpcodeArgs[OPCODE_COUNT];
 };
 
 
@@ -599,6 +602,26 @@ Bytecode::RepConstant<text> Constant(text rep)
 }
 
 
+template <typename ...Args>
+std::vector<Bytecode::OpcodeKind> Bytecode::OpcodeArgList(Args... args)
+// ----------------------------------------------------------------------------
+//   Build a list from the parameters given to OPCODE macro
+// ----------------------------------------------------------------------------
+{
+    return std::vector<Bytecode::OpcodeKind>{ args... };
+}
+
+
+std::vector<Bytecode::OpcodeKind> Bytecode::OpcodeArgs[OPCODE_COUNT] =
+// ----------------------------------------------------------------------------
+//   Pre-compute the argument list for each opcode
+// ----------------------------------------------------------------------------
+{
+#define OPCODE(Name, Parms, Body)       OpcodeArgList Parms,
+#include "bytecode.tbl"
+};
+
+
 void Bytecode::Op(Opcode opcode)
 // ----------------------------------------------------------------------------
 //   Record an opcode in the bytecode
@@ -606,6 +629,9 @@ void Bytecode::Op(Opcode opcode)
 {
     record(opcode, "Opcode %+s", name[opcode]);
     code.push_back(opcode);
+#ifdef XL_ASSERT
+    compile->args = &OpcodeArgs[opcode][0];
+#endif
 }
 
 
@@ -636,6 +662,7 @@ void Bytecode::EnterArg(const Bytecode::CheckJump &)
 //   Record that we have a check to patch
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ == JUMP);
     compile->checks.push_back(code.size());
     code.push_back(UNPATCHED);
 }
@@ -646,6 +673,7 @@ void Bytecode::EnterArg(const Bytecode::SuccessJump &)
 //   Record that we have a successful value
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ == JUMP);
     compile->successes.push_back(code.size());
     code.push_back(UNPATCHED);
 }
@@ -656,6 +684,7 @@ void Bytecode::EnterArg(const Bytecode::Local &local)
 //   Record a constant indicating a bytecode local
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ == LOCAL);
     record(opcode, "Local %u", local.index);
     code.push_back(local.index);
 }
@@ -666,6 +695,7 @@ void Bytecode::EnterArg(const Parameters &parms)
 //   Enter an argument list in the order expected for a normal call
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ == ARGUMENTS);
     record(opcode, "Parameters %u", parms.size());
     code.push_back(parms.size());
     for (auto &p : parms)
@@ -678,6 +708,7 @@ void Bytecode::EnterArg(Tree *cst)
 //   Record an opcode with a constant in the bytecode
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ == CONSTANT);
     size_t size = constants.size();
 
     opcode_t index;
@@ -699,6 +730,7 @@ void Bytecode::EnterArg(Rewrite *rw)
 //   Record an opcode with a definition (rewrite) in the bytecode
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ == DEFINITION);
     size_t size = rewrites.size();
 
     opcode_t index;
@@ -721,6 +753,7 @@ void Bytecode::EnterArg(const RepConstant<Rep> &rep)
 //   Enter a constant for a given machine typeo
 // ----------------------------------------------------------------------------
 {
+    XL_ASSERT(*compile->args++ > CONSTANTS);
     typedef typename RepConstant<Rep>::literal_t literal_t;
     const size_t SIZE = sizeof(literal_t) / sizeof(opcode_t);
     union
@@ -1181,16 +1214,6 @@ void Bytecode::Dump(std::ostream &out)
 }
 
 
-template <typename ...Args>
-inline std::vector<Bytecode::OpcodeKind> Bytecode::OpcodeArgList(Args... args)
-// ----------------------------------------------------------------------------
-//   Build a list from the parameters given to OPCODE macro
-// ----------------------------------------------------------------------------
-{
-    return std::vector<OpcodeKind>{ args... };
-}
-
-
 void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
 // ----------------------------------------------------------------------------
 //   Dump a single bytecode
@@ -1206,7 +1229,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
     {                                                                   \
         std::cout << std::right << std::setw(6) << pc-1 << ": "         \
                   << std::left  << std::setw(20) << #Name;              \
-        args = OpcodeArgList Parms;                                     \
+        args = OpcodeArgs[opcode_##Name];                               \
         break;                                                          \
     }
 #include "bytecode.tbl"
