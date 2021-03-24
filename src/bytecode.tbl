@@ -133,10 +133,12 @@
             x.as_##TypeR = result;                              \
             if (TypeR##_mtype != TypeXY##_mtype)                \
                 x.type = TypeR##_mtype; )                       \
-    BUILTIN(Op##_constant_##TypeXY, (CONSTANT_##TypeXY),        \
+    BUILTIN(Op##_constant_##TypeXY, (CONSTANT),                 \
+            RunValue &y = cst[DATA];                            \
             XL_ASSERT(x.type == TypeXY##_mtype);                \
+            XL_ASSERT(y.type == TypeXY##_mtype);                \
             RepXY left  = x.as_##TypeXY;                        \
-            RepXY right = Constant<RepXY>(pc);              \
+            RepXY right = y.as_##TypeXY;                        \
             RepR  result;                                       \
             Body;                                               \
             x.as_##TypeR = result;                              \
@@ -236,8 +238,9 @@ OPCODE(cast, (CONSTANT),
 //   Cast the value in first register to the type in second register
 // ----------------------------------------------------------------------------
        Tree_p expr = x.AsTree();
-       Tree_p type = Constant(DATA);
-       expr = typecheck(scope, type, expr);
+       RunValue &type = cst[DATA];
+       XL_ASSERT(IsTree(type.type));
+       expr = typecheck(scope, type.as_tree, expr);
        x = RunValue::Classify(expr);
 )
 
@@ -246,9 +249,9 @@ OPCODE(error, (CONSTANT),
 // ----------------------------------------------------------------------------
 //   Emit an error with the given arguments (not evaluated)
 // ----------------------------------------------------------------------------
-       Tree_p error = bc->Constant(DATA);
-       error = new Prefix(error_type, error);
-       x = RunValue(error, error_mtype);
+       RunValue &error = cst[DATA];
+       XL_ASSERT(error.type == error_mtype);
+       x = error;
 )
 
 
@@ -256,9 +259,9 @@ OPCODE(error_exit, (CONSTANT),
 // ----------------------------------------------------------------------------
 //   Exit evaluation immediately with an error
 // ----------------------------------------------------------------------------
-       Tree_p error = bc->Constant(DATA);
-       error = new Prefix(error_type, error);
-       return error;
+       RunValue &error = cst[DATA];
+       XL_ASSERT(error.type == error_mtype);
+       return error.as_error;
 )
 
 
@@ -280,12 +283,12 @@ OPCODE(exit, (),
 )
 
 
-OPCODE(native, (CONSTANT_natural, ARGUMENTS),
+OPCODE(native, (NATIVE, ARGUMENTS),
 // ----------------------------------------------------------------------------
 //   Call a native function
 // ----------------------------------------------------------------------------
-       Natural::value_t addr = Constant<Natural::value_t>(pc);
-       Native::opcode_fn fn = (Native::opcode_fn) addr;
+       // Find the associated native function
+       Native::opcode_fn fn = natives[DATA];
 
        // Read arguments
        size_t nargs = DATA;
@@ -352,10 +355,9 @@ OPCODE(false, (),
 
 OPCODE(constant, (CONSTANT),
 // ----------------------------------------------------------------------------
-//   Deposit a constant tree on the stack
+//   Deposit a constant on the stack
 // ----------------------------------------------------------------------------
-       Tree_p tree = bc->Constant(DATA);
-       x = RunValue::Classify(tree);
+       x = cst[DATA];
 )
 
 
@@ -363,22 +365,9 @@ OPCODE(rewrite, (DEFINITION),
 // ----------------------------------------------------------------------------
 //   Deposit a rewrite on the stack
 // ----------------------------------------------------------------------------
-       Rewrite_p rewrite = Definition(DATA);
-       x = RunValue(rewrite, definition_mtype);
+       x = cst[DATA];
+       XL_ASSERT(x.type == definition_mtype);
 )
-
-
-// ----------------------------------------------------------------------------
-// Constants for the various representation types
-// ----------------------------------------------------------------------------
-#define TREE_TYPE(Name, Rep, Cast)
-#define RUNTIME_TYPE(Name, Rep, BC)             \
-    OPCODE(constant_##Name, (CONSTANT_##Name),  \
-           Rep value = Constant<Rep>(pc);   \
-           x = RunValue(value);                 \
-           x.type = Name##_mtype; )
-
-#include "machine-types.tbl"
 
 
 OPCODE(make_variable, (),
@@ -458,8 +447,8 @@ OPCODE(call_constant, (CONSTANT, ARGUMENTS),
 // ----------------------------------------------------------------------------
 //   Call a constant tree
 // ----------------------------------------------------------------------------
-       Tree_p callee = bc->Constant(DATA);
-       x = RunValue(callee, tree_mtype);
+       x = cst[DATA];
+       XL_ASSERT(IsTree(x.type));
        CHAIN(call);
 )
 
@@ -481,7 +470,9 @@ OPCODE(call, (ARGUMENTS),
        {
            REFRAME;
            opcode_t index = DATA;
-           state.Push(frame[index]);
+           state.Push(IsConstantIndex(index)
+                      ? cst[ConstantIndex(index)]
+                      : frame[index]);
        }
        ret_pc = pc;
        bc = x.as_tree->GetInfo<Bytecode>();
@@ -492,7 +483,8 @@ OPCODE(call, (ARGUMENTS),
        }
        XL_ASSERT(bc->parameters.size() == nargs);
        locals = base;
-       state.Allocate(bc->locals); // Add locals on top of arguments
+       if (bc->locals)
+           state.Allocate(bc->locals); // Add locals on top of arguments
 
        REFRAME;
        RETARGET(&bc->code[0]);
@@ -560,8 +552,9 @@ OPCODE(init_value, (DEFINITION),
 // ----------------------------------------------------------------------------
 //   Initialize a named constant
 // ----------------------------------------------------------------------------
-       Rewrite_p rewrite = bc->Definition(DATA);
-       rewrite->right = x.AsTree();
+       RunValue &rewrite = cst[DATA];
+       XL_ASSERT(rewrite.type == definition_mtype);
+       rewrite.as_definition->right = x.AsTree();
 )
 
 
@@ -577,9 +570,10 @@ OPCODE(check_type, (CONSTANT, JUMP),
 //   Check a type at runtime
 // ----------------------------------------------------------------------------
        Tree_p value = x.AsTree();
-       Tree_p type = bc->Constant(DATA);
+       RunValue &type = cst[DATA];
        opcode_t branch = DATA;
-       Tree_p cast = typecheck(state.scope, type, value);
+       XL_ASSERT(IsTree(type.type));
+       Tree_p cast = typecheck(state.scope, type.as_tree, value);
        if (cast)
            x = RunValue::Classify(cast);
        else
@@ -600,15 +594,17 @@ OPCODE(check_result_type, (CONSTANT),
 //   Check the type of an argument, or return a type error
 // ----------------------------------------------------------------------------
        Tree_p value = x.AsTree();
-       Tree_p type = bc->Constant(DATA);
-       Tree_p cast = typecheck(state.scope, type, value);
+       RunValue &type = cst[DATA];
+       XL_ASSERT(IsTree(type.type));
+       Tree_p cast = typecheck(state.scope, type.as_tree, value);
        if (cast)
        {
            x = RunValue::Classify(cast);
        }
        else
        {
-           Error error("Returned value $1 does not match type $2", value, type);
+           Error error("Returned value $1 does not match type $2",
+                       value, type.as_tree);
            x = RunValue((Tree *) error, error_mtype);
            CHAIN(ret);
        }
@@ -652,35 +648,38 @@ OPCODE(check_same, (LOCAL, JUMP),
 )
 
 
-OPCODE(check_natural, (CONSTANT_natural, JUMP),
+OPCODE(check_natural, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
-       Natural::value_t ref = Constant<Natural::value_t>(pc);
+       RunValue &ref = cst[DATA];
+       XL_ASSERT(IsNatural(ref.type));
        opcode_t branch = DATA;
-       if (!IsNatural(x.type) || x.AsNatural() != ref)
+       if (!IsNatural(x.type) || x.AsNatural() != ref.AsNatural())
            pc += branch;
 )
 
 
-OPCODE(check_real, (CONSTANT_real, JUMP),
+OPCODE(check_real, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
-       Real::value_t ref = Constant<Real::value_t>(pc);
+       RunValue &ref = cst[DATA];
+       XL_ASSERT(IsReal(ref.type));
        opcode_t branch = DATA;
-       if (!IsReal(x.type) || x.AsReal() != ref)
+       if (!IsReal(x.type) || x.AsReal() != ref.AsReal())
            pc += branch;
 )
 
 
-OPCODE(check_text, (CONSTANT_text, JUMP),
+OPCODE(check_text, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
-       Text::value_t ref = Constant<Text::value_t>(pc);
+       RunValue &ref = cst[DATA];
+       XL_ASSERT(IsText(ref.type));
        opcode_t branch = DATA;
-       if (!IsText(x.type) || x.AsText() != ref)
+       if (!IsText(x.type) || x.AsText() != ref.AsText())
            pc += branch;
 )
 
@@ -692,16 +691,12 @@ OPCODE(check_infix, (CONSTANT, LOCAL, LOCAL, JUMP),
 //   We have [infix], we either
 //   - jump to the target if no match,
 //   - split into left and right that we store in the to locals
-       Tree *ref = bc->Constant(DATA);
+       RunValue &ref = cst[DATA];
        RunValue &left = frame[DATA];
        RunValue &right = frame[DATA];
        opcode_t branch = DATA;
-       Infix *refinfix = ref->AsInfix();
-       if (!refinfix)
-       {
-           record(opcode_error, "check_infix with non-infix reference %t", ref);
-           return nullptr;
-       }
+       XL_ASSERT(ref.type == infix_mtype);
+       Infix *refinfix = ref.as_infix;
        Infix *infix = x.AsTree()->AsInfix();
        if (!infix || infix->name != refinfix->name)
        {
@@ -732,7 +727,8 @@ OPCODE(check_typed_borrow, (CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration and check its type
 // ----------------------------------------------------------------------------
-       Tree_p type = bc->Constant(DATA);
+       RunValue &type = cst[DATA];
+       XL_ASSERT(IsTree(type.type));
        opcode_t branch = DATA;
        bool ok = false;
        if (x.type == definition_mtype)
@@ -740,7 +736,7 @@ OPCODE(check_typed_borrow, (CONSTANT, JUMP),
            if (Infix *vartype = IsTypeAnnotation(x.as_definition->left))
            {
                Tree_p have = vartype->right;
-               ok = Tree::Equal(type, have);
+               ok = Tree::Equal(type.as_tree, have);
            }
        }
        if (!ok)

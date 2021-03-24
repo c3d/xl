@@ -358,7 +358,7 @@ MACHINE_TYPE(natural, unsigned long, naught)
         return as_text->c_str();
     }
 
-    inline Tree *AsTree()
+    inline Tree *AsTree() const
     {
         switch(type)
         {
@@ -647,6 +647,7 @@ public:
 
 // Representation of a stack at runtime
 typedef RunValue::ValueList     RunStack;
+typedef RunValue::ValueList     RunValues;
 
 
 
