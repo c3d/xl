@@ -47,53 +47,63 @@
 #endif
 
 // Type checks
-#define NATURAL_TYPE(Name, Rep)                          \
-    BUILTIN(Name##_cast, (),                             \
-            if (!x.CastNatural<Rep, Name##_mtype>())     \
-                CHAIN(nil); )                            \
-    BUILTIN(Name##_typecheck, (JUMP),                    \
-            opcode_t branch = DATA;                      \
-            if (!x.CastNatural<Rep, Name##_mtype>())     \
+#define NATURAL_TYPE(Name, Rep)                         \
+    BUILTIN(Name##_cast, (LOCAL),                       \
+            RunValue &x = OUTPUT_VALUE;                 \
+            if (!x.CastNatural<Rep, Name##_mtype>())    \
+                CHAIN(nil, 1); )                        \
+    BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
+            RunValue &x = OUTPUT_VALUE;                 \
+            opcode_t branch = DATA;                     \
+            if (!x.CastNatural<Rep, Name##_mtype>())    \
                 pc += branch; )
 
-#define INTEGER_TYPE(Name, Rep)                          \
-    BUILTIN(Name##_cast, (),                             \
-            if (!x.CastInteger<Rep, Name##_mtype>())     \
-                CHAIN(nil); )                            \
-    BUILTIN(Name##_typecheck, (JUMP),                    \
-            opcode_t branch = DATA;                      \
-            if (!x.CastInteger<Rep, Name##_mtype>())     \
+#define INTEGER_TYPE(Name, Rep)                         \
+    BUILTIN(Name##_cast, (LOCAL),                       \
+            RunValue &x = OUTPUT_VALUE;                 \
+            if (!x.CastInteger<Rep, Name##_mtype>())    \
+                CHAIN(nil, 1); )                        \
+    BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
+            RunValue &x = OUTPUT_VALUE;                 \
+            opcode_t branch = DATA;                     \
+            if (!x.CastInteger<Rep, Name##_mtype>())    \
                 pc += branch; )
 
-#define REAL_TYPE(Name, Rep)                             \
-    BUILTIN(Name##_cast, (),                             \
-            if (!x.CastReal<Rep, Name##_mtype>())        \
-                CHAIN(nil); )                            \
-    BUILTIN(Name##_typecheck, (JUMP),                    \
-            opcode_t branch = DATA;                      \
-            if (!x.CastReal<Rep, Name##_mtype>())        \
-                pc += branch; )
+#define REAL_TYPE(Name, Rep)                            \
+    BUILTIN(Name##_cast, (LOCAL),                       \
+            RunValue &x = OUTPUT_VALUE;                 \
+            if (!x.CastReal<Rep, Name##_mtype>())       \
+                CHAIN(nil, 1); )                        \
+    BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
+            RunValue &x = OUTPUT_VALUE;                 \
+            opcode_t branch = DATA;                     \
+            if (!x.CastReal<Rep, Name##_mtype>())       \
+                pc += branch; )                         \
 
 #define OTHER_TYPE(Name, Rep)                   \
-    BUILTIN(Name##_cast, (),                    \
+    BUILTIN(Name##_cast, (LOCAL),               \
+            RunValue &x = OUTPUT_VALUE;         \
             if (x.type != Name##_mtype)         \
-                CHAIN(nil); )                   \
-    BUILTIN(Name##_typecheck, (JUMP),           \
+                CHAIN(nil, 1); )                \
+    BUILTIN(Name##_typecheck, (LOCAL, JUMP),    \
+            RunValue &x = OUTPUT_VALUE;         \
             opcode_t branch = DATA;             \
             if (x.type != Name##_mtype)         \
                 pc += branch; )
 
 #define TREE_TYPE(Name, Rep, Cast)                      \
     BUILTIN(Name##_cast, (),                            \
+            RunValue &x = OUTPUT_VALUE;                 \
             if (x.type != Name##_mtype)                 \
             {                                           \
                 Tree *value = x.AsTree();               \
                 Rep *cast = (Cast);                     \
                 if (!cast)                              \
-                    CHAIN(nil);                         \
+                    CHAIN(nil, 1);                      \
                 x = RunValue(cast, Name##_mtype);       \
             })                                          \
-    BUILTIN(Name##_typecheck, (JUMP),                   \
+    BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
+            RunValue &x = OUTPUT_VALUE ;                \
             opcode_t branch = DATA;                     \
             if (x.type != Name##_mtype)                 \
             {                                           \
@@ -110,42 +120,30 @@
 
 // Arithmetic opcodes
 #define UNARY2(Op, TypeX, TypeR, RepXY, RepR, Body)     \
-    BUILTIN(Op##_##TypeX, (),                           \
+    BUILTIN(Op##_##TypeX, (LOCAL, LOCAL),               \
+            RunValue &x = INPUT_VALUE;                  \
             XL_ASSERT(x.type == TypeX##_mtype);         \
             RepXY value = x.as_##TypeX;                 \
             RepR  result;                               \
             Body;                                       \
-            x.as_##TypeR = result;                      \
-            if (TypeX##_mtype != TypeR##_mtype)         \
-                x.type = TypeR##_mtype; )
+            RunValue &r = OUTPUT_VALUE;                 \
+            r = RunValue(result, TypeR##_mtype); )
 #define UNARY(Op, Type, Rep, Body)                      \
     UNARY2(Op, Type, Type, Rep, Rep, Body)
 
-#define BINARY2(Op, TypeXY, TypeR, RepXY, RepR, Body)           \
-    BUILTIN(Op##_##TypeXY, (LOCAL),                             \
-            RunValue &y = frame[DATA];                          \
-            XL_ASSERT(x.type == TypeXY##_mtype);                \
-            XL_ASSERT(y.type == TypeXY##_mtype);                \
-            RepXY left  = y.as_##TypeXY;                        \
-            RepXY right = x.as_##TypeXY;                        \
-            RepR  result;                                       \
-            Body;                                               \
-            x.as_##TypeR = result;                              \
-            if (TypeR##_mtype != TypeXY##_mtype)                \
-                x.type = TypeR##_mtype; )                       \
-    BUILTIN(Op##_constant_##TypeXY, (CONSTANT),                 \
-            RunValue &y = cst[DATA];                            \
-            XL_ASSERT(x.type == TypeXY##_mtype);                \
-            XL_ASSERT(y.type == TypeXY##_mtype);                \
-            RepXY left  = x.as_##TypeXY;                        \
-            RepXY right = y.as_##TypeXY;                        \
-            RepR  result;                                       \
-            Body;                                               \
-            x.as_##TypeR = result;                              \
-            if (TypeXY##_mtype != TypeR##_mtype)                \
-                x.type = TypeR##_mtype; )
-
-#define BINARY(Op, Type, Rep, Body)                     \
+#define BINARY2(Op, TypeXY, TypeR, RepXY, RepR, Body)   \
+    BUILTIN(Op##_##TypeXY, (LOCAL, LOCAL, LOCAL),       \
+            RunValue &x = INPUT_VALUE;                  \
+            RunValue &y = INPUT_VALUE;                  \
+            XL_ASSERT(x.type == TypeXY##_mtype);        \
+            XL_ASSERT(y.type == TypeXY##_mtype);        \
+            RepXY left  = x.as_##TypeXY;                \
+            RepXY right = y.as_##TypeXY;                \
+            RepR  result;                               \
+            Body;                                       \
+            RunValue &r = OUTPUT_VALUE;                 \
+            r = RunValue(result, TypeR##_mtype); )
+#define BINARY(Op, Type, Rep, Body)             \
         BINARY2(Op, Type, Type, Rep, Rep, Body)
 #define DIVIDE(Op, Type, Rep, Body)                     \
     BINARY(Op, Type, Rep,                               \
@@ -223,35 +221,40 @@ BINARY2(concat, text, text, text *, text *,    result = new text(*left + *right)
 //
 // ============================================================================
 
-OPCODE(evaluate, (),
+OPCODE(evaluate, (LOCAL, LOCAL),
 // ----------------------------------------------------------------------------
 //   Evaluate x in current scope
 // ----------------------------------------------------------------------------
+       RunValue &x = INPUT_VALUE;
        Tree_p expr = x.AsTree();
        expr = evaluate(scope, expr);
-       x = RunValue::Classify(expr);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue::Classify(expr);
 )
 
 
-OPCODE(cast, (CONSTANT),
+OPCODE(cast, (LOCAL, LOCAL, CONSTANT),
 // ----------------------------------------------------------------------------
 //   Cast the value in first register to the type in second register
 // ----------------------------------------------------------------------------
+       RunValue &x = INPUT_VALUE;
        Tree_p expr = x.AsTree();
        RunValue &type = cst[DATA];
        XL_ASSERT(IsTree(type.type));
        expr = typecheck(scope, type.as_tree, expr);
-       x = RunValue::Classify(expr);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue::Classify(expr);
 )
 
 
-OPCODE(error, (CONSTANT),
+OPCODE(error, (LOCAL, CONSTANT),
 // ----------------------------------------------------------------------------
 //   Emit an error with the given arguments (not evaluated)
 // ----------------------------------------------------------------------------
-       RunValue &error = cst[DATA];
+       RunValue &error = INPUT_CONSTANT;
        XL_ASSERT(error.type == error_mtype);
-       x = error;
+       RunValue &r = INPUT_VALUE;
+       r = error;
 )
 
 
@@ -259,31 +262,34 @@ OPCODE(error_exit, (CONSTANT),
 // ----------------------------------------------------------------------------
 //   Exit evaluation immediately with an error
 // ----------------------------------------------------------------------------
-       RunValue &error = cst[DATA];
+       RunValue &error = INPUT_CONSTANT;
        XL_ASSERT(error.type == error_mtype);
        return error.as_error;
 )
 
 
-OPCODE(form_error, (),
+OPCODE(form_error, (LOCAL),
 // ----------------------------------------------------------------------------
 //   No form matches the given input
 // ----------------------------------------------------------------------------
+       RunValue &x = INPUT_VALUE;
        Tree_p form = x.AsTree();
        Error error("No form matches $1", form);
        x = RunValue((Tree *) error, error_mtype);
-       CHAIN(ret); )
+       CHAIN(ret, 1);
+)
 
 
-OPCODE(exit, (),
+OPCODE(exit, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Terminate execution
 // ----------------------------------------------------------------------------
+       RunValue &x = INPUT_VALUE;
        return x.AsTree();
 )
 
 
-OPCODE(native, (NATIVE, ARGUMENTS),
+OPCODE(native, (NATIVE, ARGUMENTS, LOCAL),
 // ----------------------------------------------------------------------------
 //   Call a native function
 // ----------------------------------------------------------------------------
@@ -295,27 +301,29 @@ OPCODE(native, (NATIVE, ARGUMENTS),
        for (size_t a = 0; a < nargs; a++)
        {
            REFRAME;
-           state.Push(frame[DATA]);
+           state.Push(INPUT_VALUE);
        }
 
        fn(state);
-       x = state.Pop().Classify();
+       RunValue &r = OUTPUT_VALUE;
+       r = state.Pop().Classify();
        REFRAME;
 )
 
 
-OPCODE(check_statement, (),
+OPCODE(check_statement, (LOCAL),
 // ----------------------------------------------------------------------------
 //   If we have an error on top of stack, exit, otherwise check we have nil
 // ----------------------------------------------------------------------------
-       if (x.type == error_mtype)
-           CHAIN(ret);
-       if (x.type != nil_mtype)
+       RunValue &r = INPUT_VALUE;
+       if (r.type == error_mtype)
+           CHAIN(ret, 1);
+       if (r.type != nil_mtype)
        {
            Error error("Non-nil result from statement");
            state.Error(error);
-           x = RunValue(state.Error(), error_mtype);
-           CHAIN(ret);
+           r = RunValue(state.Error(), error_mtype);
+           CHAIN(ret, 1);
        }
 )
 
@@ -329,135 +337,79 @@ OPCODE(branch, (JUMP),
 )
 
 
-OPCODE(nil, (),
+OPCODE(nil, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Generate a nil value
 // ----------------------------------------------------------------------------
-       x = RunValue(nil_mtype);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue(nil_mtype);
 )
 
 
-OPCODE(true, (),
+OPCODE(true, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Generate constant true
 // ----------------------------------------------------------------------------
-       x = RunValue(true, boolean_mtype);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue(true, boolean_mtype);
 )
 
 
-OPCODE(false, (),
+OPCODE(false, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Generate constant true
 // ----------------------------------------------------------------------------
-       x = RunValue(false, boolean_mtype);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue(false, boolean_mtype);
 )
 
 
-OPCODE(constant, (CONSTANT),
-// ----------------------------------------------------------------------------
-//   Deposit a constant on the stack
-// ----------------------------------------------------------------------------
-       x = cst[DATA];
-)
-
-
-OPCODE(rewrite, (DEFINITION),
-// ----------------------------------------------------------------------------
-//   Deposit a rewrite on the stack
-// ----------------------------------------------------------------------------
-       x = cst[DATA];
-       XL_ASSERT(x.type == definition_mtype);
-)
-
-
-OPCODE(make_variable, (),
-// ----------------------------------------------------------------------------
-//   Turn a tree into a variable tree
-// ----------------------------------------------------------------------------
-       Tree_p type = x.AsTree();
-       if (!IsVariableType(type))
-       {
-           type = new Prefix(xl_variable, type, type->Position());
-           x = RunValue(type, prefix_mtype);
-       }
-)
-
-
-OPCODE(make_matching, (),
-// ----------------------------------------------------------------------------
-//   Turn something into a pattern matching type
-// ----------------------------------------------------------------------------
-       Tree_p type = x.AsTree();
-       if (!IsPatternMatchingType(type))
-       {
-           type = new Prefix(xl_matching, type, type->Position());
-           x = RunValue(type, prefix_mtype);
-       }
-)
-
-
-OPCODE(get_scope, (),
+OPCODE(get_scope, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Return current scope
 // ----------------------------------------------------------------------------
        Scope *scope = state.EvaluationScope();
-       x = RunValue(scope, scope_mtype);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue(scope, scope_mtype);
 )
 
 
-OPCODE(get_super, (),
+OPCODE(get_super, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Return super scope
 // ----------------------------------------------------------------------------
        Scope *scope = state.EvaluationScope()->Enclosing();
-       x = RunValue(scope, scope_mtype);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue(scope, scope_mtype);
 )
 
 
-OPCODE(get_self, (),
+OPCODE(get_self, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Return super scope
 // ----------------------------------------------------------------------------
-       x = RunValue::Classify(state.self);
+       RunValue &r = OUTPUT_VALUE;
+       r = RunValue::Classify(state.self);
 )
 
 
-OPCODE(set_scope, (),
+OPCODE(set_scope, (LOCAL),
 // ----------------------------------------------------------------------------
 //   Set the scope
 // ----------------------------------------------------------------------------
+       RunValue &x = INPUT_VALUE;
        XL_ASSERT(x.type == scope_mtype);
        Scope *scope = x.as_scope;
        state.scope = scope;
 )
 
 
-OPCODE(enter, (),
-// ----------------------------------------------------------------------------
-//   Enter a nested scope
-// ----------------------------------------------------------------------------
-       Context context(state.scope);
-       state.scope = context.CreateScope();
-       locals = state.Depth();
-       REFRAME;
-)
-
-
-OPCODE(call_constant, (CONSTANT, ARGUMENTS),
-// ----------------------------------------------------------------------------
-//   Call a constant tree
-// ----------------------------------------------------------------------------
-       x = cst[DATA];
-       XL_ASSERT(IsTree(x.type));
-       CHAIN(call);
-)
-
-
-OPCODE(call, (ARGUMENTS),
+OPCODE(call, (CONSTANT, ARGUMENTS, LOCAL),
 // ----------------------------------------------------------------------------
 //    Call X with the given arguments
 // ----------------------------------------------------------------------------
-       XL_ASSERT(IsTree(x.type));
+       RunValue &callee = INPUT_VALUE;
+       XL_ASSERT(IsTree(callee.type));
 
        // Push PC and locals value
        state.Push(RunValue(ret_pc, runvalue_pc));
@@ -469,16 +421,14 @@ OPCODE(call, (ARGUMENTS),
        for (size_t a = 0; a < nargs; a++)
        {
            REFRAME;
-           opcode_t index = DATA;
-           state.Push(IsConstantIndex(index)
-                      ? cst[ConstantIndex(index)]
-                      : frame[index]);
+           state.Push(INPUT_VALUE);
        }
        ret_pc = pc;
-       bc = x.as_tree->GetInfo<Bytecode>();
+       bc = callee.as_tree->GetInfo<Bytecode>();
        if (!bc)
        {
-           record(opcode_error, "Calling %t which was not compiled", x.as_tree);
+           record(opcode_error, "Calling %t which was not compiled",
+                  callee.as_tree);
            return nullptr;
        }
        XL_ASSERT(bc->parameters.size() == nargs);
@@ -491,10 +441,11 @@ OPCODE(call, (ARGUMENTS),
 )
 
 
-OPCODE(ret, (),
+OPCODE(ret, (LOCAL),
 // ----------------------------------------------------------------------------
 //    Return to caller, the returned value is in x
 // ----------------------------------------------------------------------------
+       RunValue result = INPUT_VALUE;
        state.Cut(locals);
        if (locals)
        {
@@ -503,58 +454,33 @@ OPCODE(ret, (),
            RETARGET(ret_pc);
            ret_pc = (opcode_t *) state.Pop(runvalue_pc).as_natural;
            REFRAME;
+           RunValue &target = INPUT_VALUE;
+           target = result;
        }
        else
        {
-           return x.AsTree();
+           return result.AsTree();
        }
 )
 
 
-OPCODE(assign, (LOCAL),
+OPCODE(assign, (LOCAL, LOCAL),
 // ----------------------------------------------------------------------------
 //   Assign x to a definition stored in a local
 // ----------------------------------------------------------------------------
-       RunValue &target = frame[DATA];
-       if (target.type != definition_mtype)
-       {
-           Error error("Cannot assign to non-variable $1", target.AsTree());
-           state.Error(error);
-           x = RunValue(state.Error(), error_mtype);
-           CHAIN(ret);
-       }
-
-       Rewrite_p rewrite = x.as_definition;
-       XL_ASSERT(rewrite && "Cannot assign to null definition");
-       rewrite->right = x.AsTree();
+       RunValue &source = INPUT_VALUE;
+       RunValue &target = OUTPUT_VALUE;
+       target = source;
 )
 
 
-OPCODE(store, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Save X to a local storage (0..nparms: Parameters; then local storage)
-// ----------------------------------------------------------------------------
-       opcode_t index = DATA;
-       frame[index] = x;
-)
-
-
-OPCODE(load, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Load a local value (0..nparms: Parameters; then local storage)
-// ----------------------------------------------------------------------------
-       opcode_t index = DATA;
-       x = frame[index];
-)
-
-
-OPCODE(init_value, (DEFINITION),
+OPCODE(init_value, (LOCAL, DEFINITION),
 // ----------------------------------------------------------------------------
 //   Initialize a named constant
 // ----------------------------------------------------------------------------
-       RunValue &rewrite = cst[DATA];
-       XL_ASSERT(rewrite.type == definition_mtype);
-       rewrite.as_definition->right = x.AsTree();
+       RunValue &source = INPUT_VALUE;
+       RunValue &target = OUTPUT_VALUE;
+       target = source;
 )
 
 
@@ -565,175 +491,183 @@ OPCODE(init_value, (DEFINITION),
 //
 // ============================================================================
 
-OPCODE(check_type, (CONSTANT, JUMP),
+OPCODE(check_type, (CONSTANT, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check a type at runtime
 // ----------------------------------------------------------------------------
-       Tree_p value = x.AsTree();
-       RunValue &type = cst[DATA];
+       RunValue &type = INPUT_CONSTANT;
+       RunValue &value = INPUT_VALUE;
        opcode_t branch = DATA;
        XL_ASSERT(IsTree(type.type));
-       Tree_p cast = typecheck(state.scope, type.as_tree, value);
+       Tree_p cast = typecheck(state.scope, type.as_tree, value.as_tree);
        if (cast)
-           x = RunValue::Classify(cast);
+           value = RunValue::Classify(cast);
        else
            pc += branch;
 )
 
 
-OPCODE(check_input_type, (CONSTANT, JUMP),
+OPCODE(check_input_type, (CONSTANT, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check the type of an input argument
 // ----------------------------------------------------------------------------
-       CHAIN(check_type);
+       CHAIN(check_type, 0);
 )
 
 
-OPCODE(check_result_type, (CONSTANT),
+OPCODE(check_init_type, (CONSTANT, LOCAL, JUMP),
+// ----------------------------------------------------------------------------
+//   Check the type of an initializer
+// ----------------------------------------------------------------------------
+       CHAIN(check_type, 0);
+)
+
+
+OPCODE(check_typecast, (CONSTANT, LOCAL, JUMP),
+// ----------------------------------------------------------------------------
+//   Evaluate a type cast, i.e. [X as Y]
+// ----------------------------------------------------------------------------
+       CHAIN(check_type, 0);
+)
+
+
+OPCODE(check_result_type, (CONSTANT, LOCAL),
 // ----------------------------------------------------------------------------
 //   Check the type of an argument, or return a type error
 // ----------------------------------------------------------------------------
-       Tree_p value = x.AsTree();
-       RunValue &type = cst[DATA];
+       RunValue &type = INPUT_CONSTANT;
+       RunValue &value = INPUT_VALUE;
        XL_ASSERT(IsTree(type.type));
-       Tree_p cast = typecheck(state.scope, type.as_tree, value);
+       Tree_p cast = typecheck(state.scope, type.as_tree, value.as_tree);
        if (cast)
        {
-           x = RunValue::Classify(cast);
+           value = RunValue::Classify(cast);
        }
        else
        {
            Error error("Returned value $1 does not match type $2",
-                       value, type.as_tree);
-           x = RunValue((Tree *) error, error_mtype);
-           CHAIN(ret);
+                       value.as_tree, type.as_tree);
+           value = RunValue((Tree *) error, error_mtype);
+           CHAIN(ret, 1);
        }
 )
 
 
-OPCODE(check_init_type, (CONSTANT, JUMP),
-// ----------------------------------------------------------------------------
-//   Check the type of an initializer
-// ----------------------------------------------------------------------------
-       CHAIN(check_type);
-)
-
-
-OPCODE(check_typecast, (CONSTANT, JUMP),
-// ----------------------------------------------------------------------------
-//   Evaluate a type cast, i.e. [X as Y]
-// ----------------------------------------------------------------------------
-       CHAIN(check_type);
-)
-
-
-OPCODE(check_guard, (JUMP),
+OPCODE(check_guard, (LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if the guard condition is true, or nullify the stack
 // ----------------------------------------------------------------------------
+       RunValue &value = INPUT_VALUE;
        opcode_t branch = DATA;
-       if (x.type != boolean_mtype || !x.as_boolean)
+       if (value.type != boolean_mtype || !value.as_boolean)
            pc += branch;
 )
 
 
-OPCODE(check_same, (LOCAL, JUMP),
+OPCODE(check_same, (LOCAL, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if X and Y match, if not branch to taget
 // ----------------------------------------------------------------------------
-       RunValue &y = frame[DATA];
+       RunValue &x = INPUT_VALUE;
+       RunValue &y = INPUT_VALUE;
        opcode_t branch = DATA;
        if (!Tree::Equal(x.AsTree(), y.AsTree()))
            pc += branch;
 )
 
 
-OPCODE(check_natural, (CONSTANT, JUMP),
+OPCODE(check_natural, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
-       RunValue &ref = cst[DATA];
+       RunValue &value = INPUT_VALUE;
+       RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsNatural(ref.type));
        opcode_t branch = DATA;
-       if (!IsNatural(x.type) || x.AsNatural() != ref.AsNatural())
+       if (!IsNatural(value.type) || value.AsNatural() != ref.AsNatural())
            pc += branch;
 )
 
 
-OPCODE(check_real, (CONSTANT, JUMP),
+OPCODE(check_real, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
-       RunValue &ref = cst[DATA];
+       RunValue &value = INPUT_VALUE;
+       RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsReal(ref.type));
        opcode_t branch = DATA;
-       if (!IsReal(x.type) || x.AsReal() != ref.AsReal())
+       if (!IsReal(value.type) || value.AsReal() != ref.AsReal())
            pc += branch;
 )
 
 
-OPCODE(check_text, (CONSTANT, JUMP),
+OPCODE(check_text, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
-       RunValue &ref = cst[DATA];
+       RunValue &value = INPUT_VALUE;
+       RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsText(ref.type));
        opcode_t branch = DATA;
-       if (!IsText(x.type) || x.AsText() != ref.AsText())
+       if (!IsText(value.type) || value.AsText() != ref.AsText())
            pc += branch;
 )
 
 
-OPCODE(check_infix, (CONSTANT, LOCAL, LOCAL, JUMP),
+OPCODE(check_infix, (LOCAL, CONSTANT, LOCAL, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we have an infix, and if so, split it into two components
 // ----------------------------------------------------------------------------
 //   We have [infix], we either
 //   - jump to the target if no match,
 //   - split into left and right that we store in the to locals
-       RunValue &ref = cst[DATA];
-       RunValue &left = frame[DATA];
-       RunValue &right = frame[DATA];
+       RunValue &test = INPUT_VALUE;
+       RunValue &ref = INPUT_CONSTANT;
+       RunValue &left = OUTPUT_VALUE;
+       RunValue &right = OUTPUT_VALUE;
        opcode_t branch = DATA;
        XL_ASSERT(ref.type == infix_mtype);
        Infix *refinfix = ref.as_infix;
-       Infix *infix = x.AsTree()->AsInfix();
+       Infix *infix = test.AsTree()->AsInfix();
        if (!infix || infix->name != refinfix->name)
        {
            pc += branch;
        }
        else
        {
-           if (x.type != infix_mtype)
-               x = RunValue(infix, infix_mtype);
-           XL_ASSERT(x.as_infix == infix);
+           if (test.type != infix_mtype)
+               test = RunValue(infix, infix_mtype);
+           XL_ASSERT(test.as_infix == infix);
            left  = RunValue::Classify(infix->left);
            right = RunValue::Classify(infix->right);
        }
 )
 
 
-OPCODE(check_borrow, (JUMP),
+OPCODE(check_borrow, (LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration
 // ----------------------------------------------------------------------------
+       RunValue &value = INPUT_VALUE;
        opcode_t branch = DATA;
-       if (x.type != definition_mtype)
+       if (value.type != definition_mtype)
            pc += branch;
 )
 
 
-OPCODE(check_typed_borrow, (CONSTANT, JUMP),
+OPCODE(check_typed_borrow, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //    Borrow a variable declaration and check its type
 // ----------------------------------------------------------------------------
-       RunValue &type = cst[DATA];
+       RunValue &value = INPUT_CONSTANT;
+       RunValue &type = INPUT_CONSTANT;
        XL_ASSERT(IsTree(type.type));
        opcode_t branch = DATA;
        bool ok = false;
-       if (x.type == definition_mtype)
+       if (value.type == definition_mtype)
        {
-           if (Infix *vartype = IsTypeAnnotation(x.as_definition->left))
+           if (Infix *vartype = IsTypeAnnotation(value.as_definition->left))
            {
                Tree_p have = vartype->right;
                ok = Tree::Equal(type.as_tree, have);
