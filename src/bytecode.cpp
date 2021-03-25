@@ -245,10 +245,20 @@ public:
     struct SuccessJump {};
 
     // Record a local value
-    struct Local
+    struct LocalIndexWrapper
     {
-        Local(opcode_t index): index(index) {}
+        LocalIndexWrapper(opcode_t index): index(index) {}
         opcode_t index;
+    };
+    struct ValueIndexWrapper
+    {
+        ValueIndexWrapper(Tree *value): value(value) {}
+        Tree *value;
+    };
+    struct StorageIndexWrapper
+    {
+        StorageIndexWrapper(Tree *value): value(value) {}
+        Tree *value;
     };
 
     // Record a typed constant
@@ -265,8 +275,10 @@ public:
     void        Op(Opcode op);
     template<typename ...Args>
     void        Op(Opcode op, Args... args);
-    void        NativeArguments(opcode_t index, const Parameters &parms);
-    void        BuiltinArguments(const Parameters &parms);
+    void        NativeArguments(opcode_t nat, const Parameters &, Tree *expr);
+    void        BuiltinArguments(const Parameters &parms, Tree *expr);
+    opcode_t    EnterRunValue(const RunValue &rv);
+    opcode_t    EnterTreeConstant(Tree *cst, MachineType mtype);
     void        PatchChecks(size_t where);
     void        PatchSuccesses(size_t where);
     size_t      ChecksToPatch();
@@ -277,7 +289,6 @@ public:
     // Runtime support functions
     void        ErrorExit(Tree *msg);   // Emit an error with msg and exit
     void        Clear();
-    void        RemoveLastDefinition();
     size_t      Size();
     Scope *     EvaluationScope();
     Tree *      Self();
@@ -290,31 +301,33 @@ public:
     void        Bind(Name *name, Scope *scope, Tree *value);
     opcode_t    ParameterIndex(Name *name);
     Parameters &ParameterList();
+    opcode_t    ValueIndex(Tree *value);
+    opcode_t    StorageIndex(Tree *value);
+    opcode_t    Unify(Tree *source, Tree *target, bool writable);
     opcode_t    Evaluate(Scope *scope, Tree *value);
-    bool        EvaluateAsConstant(Scope *scope, Tree *value);
+    opcode_t    EvaluateAsConstant(Tree *value);
     Tree *      Type(Tree *value);
     void        Type(Tree *value, Tree *type);
     void        SetTypesFromParameters();
     void        SetLocalsFromParameters();
     void        Dump(std::ostream &out);
     void        Dump(std::ostream &out, opaddr_t &pc);
-    Tree *      Cached(opcode_t local);
-    void        SetX(Tree *value, opcode_t local);
+    text        Cached(opcode_t index);
 
 private:
     friend struct RunState;
     void        Cut(opaddr_t cutpoint);
 
     // Enter the various kind of arguments (in a somewhat typesafe way)
-    void        EnterRunValue(const RunValue &rv);
-    void        EnterTreeConstant(Tree *cst, MachineType mtype);
     void        EnterArg(Tree *cst);
     void        EnterArg(Name *cst);
     void        EnterArg(Infix *cst);
     void        EnterArg(Rewrite *rewrite);
     void        EnterArg(const CheckJump &);
     void        EnterArg(const SuccessJump &);
-    void        EnterArg(const Local &local);
+    void        EnterArg(const LocalIndexWrapper &local);
+    void        EnterArg(const ValueIndexWrapper &local);
+    void        EnterArg(const StorageIndexWrapper &local);
     void        EnterArg(const Parameters &parms);
     template<typename T>
     void        EnterArg(const GCPtr<T> &p)     { EnterArg(p.Pointer()); }
@@ -345,15 +358,12 @@ private:
 
     struct CompileInfo
     {
-        CompileInfo()
-            : x_value(), x_index(), last(), local(false), variable(false) {}
+        CompileInfo(): last(), local(false), variable(false) {}
         Patches     checks;     // Checks to patch
         Patches     successes;  // Checks to patch
         Patches     jumps;      // Jumps to patch if we shorten
         TypeMap     types;      // Last known type for a value
         ValueMap    values;     // Already-computed value
-        Tree *      x_value;    // Value in X
-        opcode_t    x_index;    // Index of value in X
         opaddr_t    last;       // Last instruction entered by Op
         OpcodeKind *args;       // Checking arguments
         bool        local;      // Non-recursive lookup
@@ -519,7 +529,6 @@ Tree_p Bytecode::Run(RunState &state)
     size_t       locals = 0;
     RunValue    *frame  = nullptr;
     RunValue    *cst    = &bc->constants[0];
-    RunValue     x;
 
 start:
     // Put the labels in a static const table with deltas to ease relocation
@@ -532,6 +541,10 @@ start:
 
 // Macros to help writing opcodes
 #define DATA            (*pc++)
+#define INPUT_CONSTANT      cst[ConstantIndex(*pc++)]
+#define INPUT_VALUE                                                     \
+    (IsConstantIndex(*pc) ? cst[ConstantIndex(*pc++)] : frame[*pc++])
+#define OUTPUT_VALUE                                    frame[*pc++]
 #define REFRAME         (frame = &state.stack[locals])
 #define RETARGET(PC)                                                    \
     do {                                                                \
@@ -542,7 +555,7 @@ start:
 #define NEXT            XL_ASSERT(pc < last);                           \
                         goto *((char *) &&start + entry[*pc++])
 #define BRANCH(b)       (pc += b)
-#define CHAIN(op)       goto label_##op
+#define CHAIN(op, args) do { pc -= args; goto label_##op; } while(0)
 
     // Jump to first opcode
     state.Allocate(bc->locals);
@@ -557,9 +570,10 @@ divide_by_zero:
     {
         Error error("Divide by zero");
         state.Error(error);
-        x = RunValue((Tree *) error, error_mtype);
+        RunValue &output = OUTPUT_VALUE;
+        output = RunValue((Tree *) error, error_mtype);
     }
-    CHAIN(ret);
+    CHAIN(ret, 1);
 
 
 // ----------------------------------------------------------------------------
@@ -576,6 +590,8 @@ divide_by_zero:
 
 // Cleanup our macro junk
 #undef DATA
+#undef INPUT_VALUE
+#undef OUTPUT_VALUE
 #undef REFRAME
 #undef RETARGET
 #undef NEXT
@@ -602,7 +618,9 @@ divide_by_zero:
 // This makes it possible to directly insert a check, a success or a local
 static Bytecode::CheckJump CHECK;
 static Bytecode::SuccessJump SUCCESS;
-typedef Bytecode::Local Local;
+typedef Bytecode::LocalIndexWrapper LocalIndex;
+typedef Bytecode::ValueIndexWrapper ValueIndex;
+typedef Bytecode::StorageIndexWrapper StorageIndex;
 
 
 template <typename Rep>
@@ -642,6 +660,37 @@ std::vector<Bytecode::OpcodeKind> Bytecode::OpcodeArgs[OPCODE_COUNT] =
 #define OPCODE(Name, Parms, Body)       OpcodeArgList Parms,
 #include "bytecode.tbl"
 };
+
+
+opcode_t Bytecode::EnterRunValue(const RunValue &rv)
+// ----------------------------------------------------------------------------
+//   Enter a runvalue directly
+// ----------------------------------------------------------------------------
+{
+    size_t size = constants.size();
+    opcode_t index;
+    for (index = 0; index < size; index++)
+        if (constants[index].type == rv.type &&
+            constants[index].as_natural == rv.as_natural)
+            break;
+    if (index >= size)
+    {
+        constants.push_back(rv);
+        XL_ASSERT(size < std::numeric_limits<opcode_t>::max());
+    }
+    record(opcode, "Constant %t = %u", rv.AsTree(), index);
+    return ConstantIndex(index);
+}
+
+
+opcode_t Bytecode::EnterTreeConstant(Tree *cst, MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Record an opcode with a constant in the bytecode
+// ----------------------------------------------------------------------------
+{
+    RunValue rv(cst, mtype);
+    return EnterRunValue(rv);
+}
 
 
 void Bytecode::Op(Opcode opcode)
@@ -702,14 +751,36 @@ void Bytecode::EnterArg(const Bytecode::SuccessJump &)
 }
 
 
-void Bytecode::EnterArg(const Bytecode::Local &local)
+void Bytecode::EnterArg(const Bytecode::LocalIndexWrapper &local)
 // ----------------------------------------------------------------------------
-//   Record a constant indicating a bytecode local
+//   Record the index
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(*compile->args++ == LOCAL);
     record(opcode, "Local %u", local.index);
     code.push_back(local.index);
+}
+
+
+void Bytecode::EnterArg(const Bytecode::ValueIndexWrapper &local)
+// ----------------------------------------------------------------------------
+//   Record a constant indicating a bytecode local
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(*compile->args++ == LOCAL);
+    record(opcode, "Local value %t", local.value);
+    code.push_back(ValueIndex(local.value));
+}
+
+
+void Bytecode::EnterArg(const Bytecode::StorageIndexWrapper &local)
+// ----------------------------------------------------------------------------
+//   Record a constant indicating a bytecode local
+// ----------------------------------------------------------------------------
+{
+    XL_ASSERT(*compile->args++ == LOCAL);
+    record(opcode, "Local storage %t", local.value);
+    code.push_back(StorageIndex(local.value));
 }
 
 
@@ -726,44 +797,14 @@ void Bytecode::EnterArg(const Parameters &parms)
 }
 
 
-void Bytecode::EnterRunValue(const RunValue &rv)
-// ----------------------------------------------------------------------------
-//   Enter a runvalue directly
-// ----------------------------------------------------------------------------
-{
-    size_t size = constants.size();
-    opcode_t index;
-    for (index = 0; index < size; index++)
-        if (constants[index].type == rv.type &&
-            constants[index].as_natural == rv.as_natural)
-            break;
-    if (index >= size)
-    {
-        constants.push_back(rv);
-        XL_ASSERT(size < std::numeric_limits<opcode_t>::max());
-    }
-    record(opcode, "Constant %t = %u", rv.AsTree(), index);
-    code.push_back(index);
-}
-
-
-void Bytecode::EnterTreeConstant(Tree *cst, MachineType mtype)
-// ----------------------------------------------------------------------------
-//   Record an opcode with a constant in the bytecode
-// ----------------------------------------------------------------------------
-{
-    RunValue rv(cst, mtype);
-    EnterRunValue(rv);
-}
-
-
 void Bytecode::EnterArg(Tree *cst)
 // ----------------------------------------------------------------------------
 //   Enter a tree constant
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(*compile->args++ == CONSTANT);
-    EnterTreeConstant(cst, tree_mtype);
+    opcode_t index = EnterTreeConstant(cst, tree_mtype);
+    code.push_back(index);
 }
 
 
@@ -773,7 +814,8 @@ void Bytecode::EnterArg(Name *cst)
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(*compile->args++ == CONSTANT);
-    EnterTreeConstant(cst, name_mtype);
+    opcode_t index = EnterTreeConstant(cst, name_mtype);
+    code.push_back(index);
 }
 
 
@@ -783,7 +825,8 @@ void Bytecode::EnterArg(Infix *cst)
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(*compile->args++ == CONSTANT);
-    EnterTreeConstant(cst, infix_mtype);
+    opcode_t index = EnterTreeConstant(cst, infix_mtype);
+    code.push_back(index);
 }
 
 
@@ -793,7 +836,8 @@ void Bytecode::EnterArg(Rewrite *rw)
 // ----------------------------------------------------------------------------
 {
     XL_ASSERT(*compile->args++ == DEFINITION);
-    EnterTreeConstant(rw, definition_mtype);
+    opcode_t index = EnterTreeConstant(rw, definition_mtype);
+    code.push_back(index);
 }
 
 
@@ -819,11 +863,14 @@ void Bytecode::EnterArg(const RepConstant<Rep> &rep)
         rv.type == integer32_mtype)
         rv.type = natural_mtype;
 
-    EnterRunValue(rv);
+    opcode_t index = EnterRunValue(rv);
+    code.push_back(index);
 }
 
 
-void Bytecode::NativeArguments(opcode_t index, const Parameters &args)
+void Bytecode::NativeArguments(opcode_t native,
+                               const Parameters &args,
+                               Tree *expr)
 // ----------------------------------------------------------------------------
 //   Push arguments for a native function
 // ----------------------------------------------------------------------------
@@ -833,27 +880,27 @@ void Bytecode::NativeArguments(opcode_t index, const Parameters &args)
     XL_ASSERT(*compile->args++ == NATIVE);
     XL_ASSERT(*compile->args++ == ARGUMENTS);
     size_t n = args.size();
-    record(opcode, "NativeArgumentss index %u, args=%u", index, n);
-    code.push_back(index);
+    record(opcode, "NativeArguments index %u, args=%u", native, n);
+    code.push_back(native);
     code.push_back(n);
     while (n --> 0)
         code.push_back(args[n].argument);
+    opcode_t index = StorageIndex(expr);
+    code.push_back(index);
 }
 
 
-void Bytecode::BuiltinArguments(const Parameters &args)
+void Bytecode::BuiltinArguments(const Parameters &args, Tree *expr)
 // ----------------------------------------------------------------------------
 //   Push arguments for a native function
 // ----------------------------------------------------------------------------
 {
     size_t count = args.size();
     record(opcode, "BuiltinArguments %u", count);
-    if (count)
-    {
-        count--;
-        for (size_t idx = 0; idx < count; idx++)
-            code.push_back(args[idx].argument);
-    }
+    for (size_t idx = 0; idx < count; idx++)
+        code.push_back(args[idx].argument);
+    opcode_t index = StorageIndex(expr);
+    code.push_back(index);
 }
 
 
@@ -976,17 +1023,6 @@ void Bytecode::Clear()
 }
 
 
-void Bytecode::RemoveLastDefinition()
-// ----------------------------------------------------------------------------
-//   Remove definitions inserted in sequences
-// ----------------------------------------------------------------------------
-//   A definition adds an OPCST(constant, rewrite) for the rewrite
-//   This occupies two opcodes, so remove both
-{
-    code.erase(code.end() - 2, code.end());
-}
-
-
 inline size_t Bytecode::Size()
 // ----------------------------------------------------------------------------
 //   Return the size of the generated code
@@ -1040,8 +1076,17 @@ void Bytecode::Validate()
 {
     PatchChecks(0);
     if (code.back() != opcode_ret)
-        code.push_back(opcode_ret);
-    locals = compile->values.size() - parameters.size();
+    {
+        Bytecode *bytecode = this;
+        OP(ret, XL::ValueIndex(bytecode->self));
+    }
+    locals -= parameters.size();
+    if (RECORDER_TRACE(bytecode))
+    {
+        std::cerr << "Compiled " << self << " as\n";
+        Dump(std::cerr);
+        std::cerr << "\n";
+    }
     delete compile;
     compile = nullptr;
 }
@@ -1138,20 +1183,80 @@ static Tree *MachineTypeToXLType(MachineType mtype)
 }
 
 
-bool Bytecode::EvaluateAsConstant(Scope *scope, Tree *value)
+opcode_t Bytecode::ValueIndex(Tree *value)
 // ----------------------------------------------------------------------------
-//   Return true if we found the value as a constant
+//   Find the local or constant index for a given value
+// ----------------------------------------------------------------------------
+{
+    opcode_t index = EvaluateAsConstant(value);
+    if (index)
+        return index;
+    return StorageIndex(value);
+}
+
+
+opcode_t Bytecode::StorageIndex(Tree *value)
+// ----------------------------------------------------------------------------
+//   Return the local storage index for a given value
+// ----------------------------------------------------------------------------
+{
+    opcode_t index;
+    ValueMap &values = compile->values;
+    auto found = values.find(value);
+    if (found != values.end())
+    {
+        // Already compiled and evaluated - Reload it
+        index = (*found).second;
+    }
+    else
+    {
+        index = locals++;
+        values[value] = index;
+    }
+    return index;
+}
+
+
+opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
+// ----------------------------------------------------------------------------
+//   Share the storage between source and target
+// ----------------------------------------------------------------------------
+{
+    opcode_t index = ValueIndex(source);
+    ValueMap &values = compile->values;
+    Bytecode *bytecode = this;
+    auto tf = values.find(target);
+    if (tf == values.end())
+    {
+        if (writable && IsConstantIndex(index))
+        {
+            opcode_t tgt = locals++;
+            OP(assign, LocalIndex(index), LocalIndex(tgt));
+            values[target] = tgt;
+            return tgt;
+        }
+        else
+        {
+            values[target] = index;
+            return index;
+        }
+    }
+    if (index != (*tf).second)
+        OP(assign, LocalIndex(index), LocalIndex((*tf).second));
+    return index;
+}
+
+
+opcode_t Bytecode::EvaluateAsConstant(Tree *value)
+// ----------------------------------------------------------------------------
+//   Return a constant index if we can evaluate as a constant
 // ----------------------------------------------------------------------------
 //   Note that if we don't find a constant, e.g. [0], we need to return false
 //   in order to do a proper lookup, which usually fails, so we enter a
 //   constant, which is checked after compilation
 {
-    Bytecode *bytecode = this;
     Tree *type = tree_type;
     opcode_t index;
-
-    if (value == compile->x_value)
-        return true;
 
     // Check if we have a constant
     size_t max = constants.size();
@@ -1223,6 +1328,22 @@ bool Bytecode::EvaluateAsConstant(Scope *scope, Tree *value)
         break;
     }
 
+    case NAME:
+    {
+        Name *name = (Name *) value;
+
+        // Check as a name constant
+        for (index = 0; index < max; index++)
+        {
+            RunValue &cst = constants[index];
+            if (cst.type == name_mtype && name->value == cst.as_name->value)
+            {
+                type = name_type;
+                goto found;
+            }
+        }
+        break;
+    }
     default:
         // Check as a tree constant
         for (index = 0; index < max; index++)
@@ -1236,17 +1357,11 @@ bool Bytecode::EvaluateAsConstant(Scope *scope, Tree *value)
         }
         break;
     }
-    return false;
+    return 0;
 
 found:
-    if (LastOpcode() == opcode_constant || LastOpcode() == opcode_load)
-        CutToLastOpcode();
-    compile->x_value = value;
-    compile->x_index = ConstantIndex(index);
-    OP(constant);
-    code.push_back(index);
     Type(value, type);
-    return true;
+    return ConstantIndex(index);
 }
 
 
@@ -1255,35 +1370,32 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
 //   Evaluate a value but only once
 // ----------------------------------------------------------------------------
 {
-    if (EvaluateAsConstant(scope, value))
-        return compile->x_index;
-
-    // Not found - Need to compile and load it
     opcode_t index;
-    Bytecode *bytecode = this;
     ValueMap &values = compile->values;
-    auto found = values.find(value);
-    if (found != values.end())
+
+    for (int pass = 0; pass < 2; pass++)
     {
-        // Already compiled and evaluated - Reload it
-        index = (*found).second;
-        if (index != compile->x_index)
-            OP(load,  Local(index));
-        if (index < parameters.size() && value != parameters[index].name)
-            Type(value, parameters[index].type);
+        if (opcode_t cst = EvaluateAsConstant(value))
+            return cst;
+
+        auto found = values.find(value);
+        if (found != values.end())
+        {
+            // Already compiled and evaluated - Reload it
+            index = (*found).second;
+        }
+        else if (pass)
+        {
+            index = locals++;
+            values[value] = index;
+            if (index < parameters.size() && value != parameters[index].name)
+                Type(value, parameters[index].type);
+        }
+        else
+        {
+            XL::compile(scope, value, this);
+        }
     }
-    else
-    {
-        // Compile the value and store the result
-        XL::compile(scope, value, bytecode);
-        if (EvaluateAsConstant(scope, value))
-            return compile->x_index;
-        index = values.size();
-        values[value] = index;
-        OP(store,  Local(index));
-    }
-    compile->x_value = value;
-    compile->x_index = index;
     return index;
 }
 
@@ -1325,6 +1437,7 @@ void Bytecode::SetLocalsFromParameters()
     ValueMap &values = compile->values;
     for (auto &p : parameters)
         values[p.name] = index++;
+    locals = index;
 }
 
 
@@ -1334,6 +1447,22 @@ void Bytecode::SetLocalsFromParameters()
 //    Debug utilities
 //
 // ============================================================================
+
+text Bytecode::Cached(opcode_t local)
+// ----------------------------------------------------------------------------
+//   Return the cached expression corresponding to an index
+// ----------------------------------------------------------------------------
+{
+    text result = "";
+    if (compile)
+    {
+        for (const auto &it : compile->values)
+            if (local == it.second)
+                result = result + "[" + text(*it.first) + "]";
+    }
+    return result;
+}
+
 
 void Bytecode::Dump(std::ostream &out)
 // ----------------------------------------------------------------------------
@@ -1345,7 +1474,7 @@ void Bytecode::Dump(std::ostream &out)
     {
         out << "Constants:\n";
         for (size_t cst = 0; cst < csts; cst++)
-            out << cst << "\t= " << constants[cst].AsTree() << "\n";
+            out << "C" << cst << "\t= " << constants[cst].AsTree() << "\n";
     }
 
     size_t parms = parameters.size();
@@ -1353,21 +1482,19 @@ void Bytecode::Dump(std::ostream &out)
     {
         out << "Parameters:\n";
         for (size_t parm = 0; parm < parms; parm++)
-            out << parm << "\t= " << parameters[parm].name << "\n";
+            out << "A" << parm << "\t= " << parameters[parm].name << "\n";
     }
 
     if (compile)
     {
-        ValueMap &values = compile->values;
-        if (opcode_t max = values.size())
+        if (locals)
         {
             out << "Locals:\n";
-            for (opcode_t index = 0; index < max; index++)
+            for (opcode_t index = 0; index < locals; index++)
             {
-                out << index << ":\t" << Cached(index);
-                if (index < parameters.size())
-                    out << "\t(input)";
-                out << "\n";
+                out << (index < parameters.size() ? "A" : "L") << index
+                    << Cached(index)
+                    << "\n";
             }
         }
         if (compile->types.size())
@@ -1426,25 +1553,27 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
         {
         case JUMP:
             if (value == UNPATCHED)
-                out << "jump (not patched yet)";
+                out << "?";
             else
-                out << "jump " << value << " to " << pc+value;
+                out << "+" << value << "=" << pc+value;
             break;
         case LOCAL:
-            if (value < parameters.size())
-                out << "arg " << value << "\t= " << parameters[value].name;
-            else if (compile)
-                out << "local " << value << "\t= " << Cached(value);
+            if (IsConstantIndex(value))
+                out << "C" << ConstantIndex(value)
+                    << "[" << constants[ConstantIndex(value)].AsTree() << "]";
+            else if (value < parameters.size())
+                out << "A" << value << "[" << parameters[value].name << "]";
             else
-                out << "local " << value;
+                out << "L" << value << Cached(value);
             break;
         case CONSTANT:
-            out << "constant " << value;
+            value = ConstantIndex(value);
+            out << "C" << value;
             if (value < constants.size())
-                out << "\t= " << constants[value].AsTree();
+                out << "[" << constants[value].AsTree() << "]";
             break;
         case ARGUMENTS:
-            out << "with " << value << " arguments";
+            out << "#" << value << " args";
             for (size_t a = 0; a < value; a++)
             {
                 opcode_t index = code[pc++];
@@ -1453,24 +1582,25 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
                 if (IsConstantIndex(index))
                 {
                     index = ConstantIndex(index);
-                    out << ":\tconstant " << index
-                        << "\t= " << constants[index].AsTree();
+                    out << ": C" << index
+                        << "[" << constants[index].AsTree() << "]";
                 }
                 else
                 {
-                    out << ":\tlocal " << index;
+                    out << ": L" << index;
                     if (index < parameters.size())
-                        out << "\t= " << parameters[index].name;
-                    else if (compile)
-                        out << " = " << Cached(index);
+                        out << "[" << parameters[index].name << "]";
+                    else
+                        out << Cached(index);
                 }
             }
-            break;
+            sep = "\n       => ";
+            continue;
         case NATIVE:
-            out << "native_fn #" << value << "=";
+            out << "#" << value;
             for (auto &n : natives_index)
                 if (n.second == value)
-                    out << n.first;
+                    out << "=" << n.first;
             break;
         default:
             out << "Unhandled parameter kind " << a;
@@ -1481,31 +1611,6 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
 
     out << "\n";
     pcr = pc;
-}
-
-
-Tree *Bytecode::Cached(opcode_t local)
-// ----------------------------------------------------------------------------
-//   Return the cached expression corresponding to an index
-// ----------------------------------------------------------------------------
-{
-    for (const auto &it : compile->values)
-        if (local == it.second)
-            return it.first;
-    return nullptr;
-}
-
-
-inline void Bytecode::SetX(Tree *value, opcode_t local)
-// ----------------------------------------------------------------------------
-//   Return the cached expression corresponding to an index
-// ----------------------------------------------------------------------------
-{
-    if (value != compile->x_value)
-    {
-        compile->x_value = value;
-        compile->x_index = local;
-    }
 }
 
 
@@ -1704,7 +1809,7 @@ strength BytecodeBindings::Do(Natural *what)
 
     // Otherwise, we need to evaluate and check at runtime
     MustEvaluate();
-    OP(check_natural, Constant(what->value), CHECK);
+    OP(check_natural, ValueIndex(test), Constant(what->value), CHECK);
     return Possible();
 }
 
@@ -1728,7 +1833,7 @@ strength BytecodeBindings::Do(Real *what)
 
     // Otherwise, we need to evaluate and check at runtime
     MustEvaluate();
-    OP(check_real, Constant(what->value), CHECK);
+    OP(check_real, ValueIndex(test), Constant(what->value), CHECK);
     return Possible();
 }
 
@@ -1751,7 +1856,7 @@ strength BytecodeBindings::Do(Text *what)
 
     // Otherwise, we need to evaluate and check at runtime
     MustEvaluate();
-    OP(check_text, Constant(what->value), CHECK);
+    OP(check_text, ValueIndex(test), Constant(what->value), CHECK);
     return Possible();
 }
 
@@ -1783,7 +1888,7 @@ strength BytecodeBindings::Do(Name *what)
     {
         opcode_t index = bytecode->ParameterIndex(what);
         XL_ASSERT(index != UNPATCHED);
-        OP(check_same, Local(index), CHECK);
+        OP(check_same, ValueIndex(test), LocalIndex(index), CHECK);
         return Possible();
     }
 
@@ -1804,8 +1909,7 @@ strength BytecodeBindings::Do(Block *what)
         // Evaluate metabox at "compile time"
         Tree_p meta = EvaluateInDeclaration(expr);
         MustEvaluate();
-        OP(constant, meta);
-        OP(check_same, CHECK);
+        OP(check_same, ValueIndex(test), Constant(meta), CHECK);
         return Possible();
     }
 
@@ -1834,16 +1938,17 @@ strength BytecodeBindings::Do(Prefix *what)
         if (Name *name = binding->AsName())
         {
             Bind(name, test);
-            OP(check_borrow);
+            OP(check_borrow, ValueIndex(name), CHECK);
             return Possible();
         }
         else if (Infix *typecast = binding->AsInfix())
         {
+            name = typecast->left->AsName();
             Tree_p type = EvaluateType(typecast->right);
             bytecode->Type(test, type);
             Bind(name, test);
             if (type != bytecode->Type(test))
-                OP(check_typed_borrow, type, CHECK);
+                OP(check_typed_borrow, ValueIndex(name),  type, CHECK);
             return Possible();
         }
         return Failed();
@@ -2023,7 +2128,7 @@ strength BytecodeBindings::Do(Infix *what)
             if (wm != hm)
             {
                 Opcode cast = MachineTypeCheck(wm);
-                bytecode->Op(cast, CHECK);
+                bytecode->Op(cast, StorageIndex(value), CHECK);
                 return Possible();
             }
             return Perfect();
@@ -2033,7 +2138,7 @@ strength BytecodeBindings::Do(Infix *what)
         if (outermost)
             type = want;
         else if (want != have)
-            OP(check_input_type, want, CHECK);
+            OP(check_input_type, want, ValueIndex(test), CHECK);
         bytecode->Type(value, want);
         return Possible();
     }
@@ -2051,7 +2156,7 @@ strength BytecodeBindings::Do(Infix *what)
 
         // Compile the condition and check it
         compile(evaluation, what->right, bytecode);
-        OP(check_guard, CHECK);
+        OP(check_guard, ValueIndex(what->right), CHECK);
 
         return Possible();
     }
@@ -2072,7 +2177,9 @@ strength BytecodeBindings::Do(Infix *what)
     else if (Name *name = test->AsName())
     {
         MustEvaluate();
-        OP(check_infix, what, CHECK);
+        OP(check_infix, ValueIndex(test), what,
+           StorageIndex(what->left), StorageIndex(what->right),
+           CHECK);
         bytecode->Type(name, infix_type);
         return Possible();
     }
@@ -2223,14 +2330,14 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 opcode_t index = bytecode->ParameterIndex(name);
                 if (index != UNPATCHED)
                 {
-                    OP(load, Local(index));
-                    bytecode->SetX(expr, index);
                     bytecode->Type(expr, bytecode->Type(name));
+                    bytecode->Unify(name, expr, false);
                     done = true;
                 }
                 else if (IsSelf(decl->Definition()))
                 {
-                    OP(constant, name);
+                    bytecode->Type(expr, bytecode->Type(name));
+                    bytecode->EnterTreeConstant(name, name_mtype);
                     done = true;
                 }
             }
@@ -2256,7 +2363,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 }
                 opcode_t index = (*found).second;
                 OP(native);
-                bytecode->NativeArguments(index, parms);
+                bytecode->NativeArguments(index, parms, expr);
             }
             else if (Text *name = IsBuiltin(body))
             {
@@ -2270,12 +2377,13 @@ static Tree *lookupCandidate(Scope   *evalScope,
 
                 // Insert the opcode, followed by the parameters
                 bytecode->Op(opcode);
-                bytecode->BuiltinArguments(parms);
+                bytecode->BuiltinArguments(parms, expr);
             }
             else if (body->Kind() <= TEXT)
             {
                 // Inline the compilation of constants, e.g. [0]
                 compile(locals, body, bytecode);
+                bytecode->Unify(body, expr, true);
             }
             else
             {
@@ -2283,14 +2391,14 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 compile(locals, body, pattern, parms);
 
                 // Transfer evaluation to the body
-                OP(call_constant, pattern, parms);
+                OP(call, pattern, parms, StorageIndex(expr));
             }
 
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
             {
                 if (bytecode->Type(expr) != type)
-                    OP(check_result_type, type);
+                    OP(check_result_type, type, StorageIndex(expr));
                 bytecode->Type(expr, type);
             }
         }
@@ -2319,7 +2427,7 @@ static void doInitializers(Initializers &inits, Bytecode *bytecode)
             // If there is a type, insert a typecheck
             Tree_p type = typedecl->right;
             type = evaluate(scope, type);
-            OP(check_init_type, type, CHECK);
+            OP(check_init_type, type, ValueIndex(init), CHECK);
         }
         OP(init_value, rw);
     }
@@ -2336,27 +2444,33 @@ static bool doConstant(Scope *scope, Tree *tree, Bytecode *bytecode)
     case NATURAL:
     {
         Natural *n = (Natural *) tree;
-        if (n->IsSigned())
-            OP(constant, Constant((longlong) n->value));
-        else
-            OP(constant, Constant(n->value));
+        RunValue rv = n->IsSigned()
+            ? RunValue((longlong) n->value, integer_mtype)
+            : RunValue(n->value, natural_mtype);
+        bytecode->EnterRunValue(rv);
         bytecode->Type(tree, natural_type);
         break;
     }
     case REAL:
     {
-        OP(constant, Constant(((Real *) tree)->value));
+        Real *r = (Real *) tree;
+        RunValue rv(r->value, real_mtype);
+        bytecode->EnterRunValue(rv);
         bytecode->Type(tree, real_type);
         break;
     }
     case TEXT:
     {
-        OP(constant, Constant(((Text *) tree)->value));
+        Text *t = (Text *) tree;
+        RunValue rv = t->IsCharacter()
+            ? RunValue(t->value[0])
+            : RunValue(t->value);
+        bytecode->EnterRunValue(rv);
         bytecode->Type(tree, text_type);
         break;
     }
     default:
-        OP(constant, tree);
+        XL_ASSERT(!"doConstant called with non-constant tree");
         break;
     }
 
@@ -2371,32 +2485,32 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
 {
     if (name->value == "nil")
     {
-        OP(nil);
+        OP(nil, StorageIndex(name));
         return true;
     }
     if (name->value == "true")
     {
-        OP(true);
+        OP(true, StorageIndex(name));
         return true;
     }
     if (name->value == "false")
     {
-        OP(false);
+        OP(false, StorageIndex(name));
         return true;
     }
     if (name->value == "scope" || name->value == "context")
     {
-        OP(get_scope);
+        OP(get_scope, StorageIndex(name));
         return true;
     }
     if (name->value == "super")
     {
-        OP(get_super);
+        OP(get_super, StorageIndex(name));
         return true;
     }
     if (name->value == "self")
     {
-        OP(get_self);
+        OP(get_self, StorageIndex(name));
         return true;
     }
     return false;
@@ -2417,7 +2531,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     if (Scope_p closure = context.ProcessScope(prefix->left, inits))
     {
         compile(scope, prefix->left, bytecode);
-        OP(set_scope);
+        OP(set_scope, ValueIndex(prefix->left));
         doInitializers(inits, bytecode);
         compile(closure, prefix->right, bytecode);
         return true;
@@ -2427,7 +2541,6 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     if (IsVariableType(prefix))
     {
         compile(scope, prefix->right, bytecode);
-        OP(make_variable);
         return true;
     }
 
@@ -2435,7 +2548,8 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     if (Tree *matching = IsPatternMatchingType(prefix))
     {
         Tree_p pattern = xl_parse_tree(scope, matching);
-        OP(make_matching, pattern);
+        Tree_p entered = new Prefix(xl_matching, pattern);
+        bytecode->EnterTreeConstant(entered, prefix_mtype);
         return true;
     }
 
@@ -2452,7 +2566,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     if (Tree *quoted = IsQuote(prefix))
     {
         Tree_p quote = xl_parse_tree(scope, quoted);
-        OP(constant, quote);
+        bytecode->EnterTreeConstant(quote, tree_mtype);
         return true;
     }
 
@@ -2463,7 +2577,6 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
         {
             // Process the import statement
             callback(scope, prefix);
-            OP(constant, import);
             return IS_DEFINITION;
         }
     }
@@ -2526,15 +2639,12 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
         // Find the corresponding declaration
         Context context(scope);
         Tree *pattern = infix->left;
-        Rewrite *rewrite = context.Declared(pattern, Context::REFERENCE_SCOPE);
         if (Name *name = pattern->AsName())
         {
             // Compile the initialization and initialize the constant
             compile(scope, infix->right, bytecode);
-            OP(init_value, rewrite);
+            OP(init_value, ValueIndex(infix->right), StorageIndex(infix->left));
         }
-        // Return the definition
-        OP(rewrite, rewrite);
         return IS_DEFINITION;
     }
 
@@ -2569,7 +2679,7 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
         }
         compile(scope, infix->left, bytecode);
         if (bytecode->Type(infix->left) != want)
-            OP(check_typecast, want, CHECK);
+            OP(check_typecast, want, ValueIndex(infix->left), CHECK);
         bytecode->Type(infix->left, want);
         return true;
     }
@@ -2581,7 +2691,7 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
         compile(scope, infix->left, bytecode);
         bytecode->VariableMode(variable);
         compile(scope, infix->right, bytecode);
-        OP(assign);
+        OP(assign, ValueIndex(infix->right), StorageIndex(infix->left));
         return true;
     }
     return false;
@@ -2634,19 +2744,13 @@ static Bytecode *compile(Scope *scope,
             if (!scope->IsEmpty())
                 doInitializers(inits, bytecode);
             if (!hasInstructions)
-                OP(get_scope);
+                OP(get_scope, StorageIndex(expr));
         }
 
         if (hasInstructions)
             compile(scope, expr, bytecode);
-        if (RECORDER_TRACE(bytecode))
-        {
-            std::cerr << "Compiled " << expr << " as\n";
-            bytecode->Dump(std::cerr);
-            std::cerr << "\n";
-        }
         bytecode->Validate();
-}
+    }
 
     return bytecode;
 }
@@ -2659,17 +2763,16 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
 {
     Context context(scope);
     Tree::Iterator next(expr);
-    bool first = true;
+    Tree *input = expr;
+    Tree *last = nullptr;
     bool definition = false;
     while ((expr = next()))
     {
         // If not the first statement, check result of previous statement
-        if (!first)
+        if (last)
         {
-            if (definition)
-                bytecode->RemoveLastDefinition();
-            else
-                OP(check_statement);
+            if (!definition)
+                OP(check_statement, ValueIndex(last));
         }
 
         // Lookup expression
@@ -2706,7 +2809,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         if (done)
         {
             if (done < 0 && !bindings.PerfectMatch())
-                OP(form_error);
+                OP(form_error, StorageIndex(expr));
             bytecode->PatchSuccesses(patches);
         }
         else
@@ -2720,8 +2823,10 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
             return;
         }
         definition = done == IS_DEFINITION;
-        first = false;
+        last = expr;
     }
+    if (last)
+        bytecode->Unify(last, input, false);
 }
 
 
