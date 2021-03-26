@@ -1893,6 +1893,7 @@ strength BytecodeBindings::Do(Name *what)
     }
 
     // Otherwise, bind test value to name
+    StripBlocks();
     Bind(what, test);
     return Perfect();
 }
@@ -1958,7 +1959,6 @@ strength BytecodeBindings::Do(Prefix *what)
     if (Prefix *pfx = test->AsPrefix())
     {
         // Check prefix left first, which may set 'defined' to name
-        bytecode->Type(pfx, prefix_type);
         defined = nullptr;
         test = pfx->left;
         what->left->Do(this);
@@ -1984,7 +1984,6 @@ strength BytecodeBindings::Do(Postfix *what)
     if (Postfix *pfx = test->AsPostfix())
     {
         // Check postfix left first, which may set 'defined' to name
-        bytecode->Type(pfx, postfix_type);
         defined = nullptr;
         test = pfx->right;
         what->right->Do(this);
@@ -2166,7 +2165,6 @@ strength BytecodeBindings::Do(Infix *what)
     {
         if (ifx->name == what->name)
         {
-            bytecode->Type(ifx, infix_type);
             test = ifx->left;
             what->left->Do(this);
             test = ifx->right;
