@@ -285,6 +285,7 @@ public:
     size_t      SuccessesToPatch();
     Opcode      LastOpcode();
     void        CutToLastOpcode();
+    opaddr_t    RemoveLastNoOpBranch();
 
     // Runtime support functions
     void        ErrorExit(Tree *msg);   // Emit an error with msg and exit
@@ -932,12 +933,30 @@ size_t Bytecode::ChecksToPatch()
 }
 
 
+opaddr_t Bytecode::RemoveLastNoOpBranch()
+// ----------------------------------------------------------------------------
+//   Remove the last no-op branch
+// ----------------------------------------------------------------------------
+{
+    opaddr_t target = code.size();
+    Patches &jumps = compile->jumps;
+    if (jumps.size() >= 1 && jumps.back() == target - 1)
+    {
+        code.erase(code.begin() + jumps.back() - 1, code.end());
+        jumps.pop_back();
+        compile->last = 0;
+        target = code.size();
+    }
+    return target;
+}
+
+
 void Bytecode::PatchSuccesses(size_t where)
 // ----------------------------------------------------------------------------
 //   Patch the pending checks to the current position
 // ----------------------------------------------------------------------------
 {
-    opaddr_t target = code.size();
+    opaddr_t target = RemoveLastNoOpBranch();
     Patches &successes = compile->successes;
     Patches &jumps = compile->jumps;
 
@@ -948,15 +967,9 @@ void Bytecode::PatchSuccesses(size_t where)
         code[success] = target - (success + 1);
         successes.pop_back();
         jumps.push_back(success);
+        target = RemoveLastNoOpBranch();
     }
 
-    if (jumps.size() == 1 && jumps.back() == target - 1 &&
-        code.size() >= 2 && code[compile->last] == opcode_branch)
-    {
-        code.erase(code.begin() + compile->last, code.end());
-        jumps.pop_back();
-        compile->last = 0;
-    }
 }
 
 
