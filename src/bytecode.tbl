@@ -424,7 +424,7 @@ OPCODE(call, (CONSTANT, ARGUMENTS, LOCAL),
            state.Push(INPUT_VALUE);
        }
        ret_pc = pc;
-       bc = callee.as_tree->GetInfo<Bytecode>();
+       bc = (Bytecode *) callee.as_tree->code;
        if (!bc)
        {
            record(opcode_error, "Calling %t which was not compiled",
@@ -464,9 +464,9 @@ OPCODE(ret, (LOCAL),
 )
 
 
-OPCODE(assign, (LOCAL, LOCAL),
+OPCODE(copy, (LOCAL, LOCAL),
 // ----------------------------------------------------------------------------
-//   Assign x to a definition stored in a local
+//   Copy a value from source to target
 // ----------------------------------------------------------------------------
        RunValue &source = INPUT_VALUE;
        RunValue &target = OUTPUT_VALUE;

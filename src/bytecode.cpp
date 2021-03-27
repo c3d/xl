@@ -217,7 +217,7 @@ static Tree_p ErrorMessage(Args...args)
 //
 // ============================================================================
 
-struct Bytecode : Info
+struct Bytecode
 // ----------------------------------------------------------------------------
 //   A sequence of instructions associated to a tree
 // ----------------------------------------------------------------------------
@@ -1244,7 +1244,7 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
         if (writable && IsConstantIndex(index))
         {
             opcode_t tgt = locals++;
-            OP(assign, LocalIndex(index), LocalIndex(tgt));
+            OP(copy, LocalIndex(index), LocalIndex(tgt));
             values[target] = tgt;
             return tgt;
         }
@@ -1255,7 +1255,7 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
         }
     }
     if (index != (*tf).second)
-        OP(assign, LocalIndex(index), LocalIndex((*tf).second));
+        OP(copy, LocalIndex(index), LocalIndex((*tf).second));
     return index;
 }
 
@@ -1487,7 +1487,7 @@ void Bytecode::Dump(std::ostream &out)
     {
         out << "Constants:\n";
         for (size_t cst = 0; cst < csts; cst++)
-            out << "C" << cst << "\t= " << constants[cst].AsTree() << "\n";
+            out << "  C" << cst << "\t= " << constants[cst].AsTree() << "\n";
     }
 
     size_t parms = parameters.size();
@@ -1495,7 +1495,7 @@ void Bytecode::Dump(std::ostream &out)
     {
         out << "Parameters:\n";
         for (size_t parm = 0; parm < parms; parm++)
-            out << "A" << parm << "\t= " << parameters[parm].name << "\n";
+            out << "  A" << parm << "\t= " << parameters[parm].name << "\n";
     }
 
     if (compile)
@@ -1505,8 +1505,8 @@ void Bytecode::Dump(std::ostream &out)
             out << "Locals:\n";
             for (opcode_t index = 0; index < locals; index++)
             {
-                out << (index < parameters.size() ? "A" : "L") << index
-                    << Cached(index)
+                out << (index < parameters.size() ? "  A" : "  L") << index
+                    << "\t= " << Cached(index)
                     << "\n";
             }
         }
@@ -1514,7 +1514,7 @@ void Bytecode::Dump(std::ostream &out)
         {
             out << "Types:\n";
             for (auto &it : compile->types)
-                out << it.first << "\tas\t" << it.second << "\n";
+                out << "  " << it.first << "\tas\t" << it.second << "\n";
         }
     }
 
@@ -1538,6 +1538,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
 {
     std::vector<OpcodeKind> args;
     opaddr_t pc = pcr;
+    bool debug = RECORDER_TRACE(bytecode) > 1;
 
     switch(code[pc++])
     {
@@ -1572,21 +1573,34 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
             break;
         case LOCAL:
             if (IsConstantIndex(value))
-                out << "C" << ConstantIndex(value)
-                    << "[" << constants[ConstantIndex(value)].AsTree() << "]";
+            {
+                out << "C" << ConstantIndex(value);
+                if (debug)
+                    out << "["
+                        << constants[ConstantIndex(value)].AsTree()
+                        << "]";
+            }
             else if (value < parameters.size())
-                out << "A" << value << "[" << parameters[value].name << "]";
+            {
+                out << "A" << value;
+                if (debug)
+                    out << "[" << parameters[value].name << "]";
+            }
             else
-                out << "L" << value << Cached(value);
+            {
+                out << "L" << value;
+                if (debug)
+                    out << Cached(value);
+            }
             break;
         case CONSTANT:
             value = ConstantIndex(value);
             out << "C" << value;
-            if (value < constants.size())
+            if (debug && value < constants.size())
                 out << "[" << constants[value].AsTree() << "]";
             break;
         case ARGUMENTS:
-            out << "#" << value << " args";
+            out << "(" << value << ")";
             for (size_t a = 0; a < value; a++)
             {
                 opcode_t index = code[pc++];
@@ -1595,16 +1609,20 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
                 if (IsConstantIndex(index))
                 {
                     index = ConstantIndex(index);
-                    out << ": C" << index
-                        << "[" << constants[index].AsTree() << "]";
+                    out << ": C" << index;
+                    if (debug)
+                        out << "[" << constants[index].AsTree() << "]";
                 }
                 else
                 {
                     out << ": L" << index;
-                    if (index < parameters.size())
-                        out << "[" << parameters[index].name << "]";
-                    else
-                        out << Cached(index);
+                    if (debug)
+                    {
+                        if (index < parameters.size())
+                            out << "[" << parameters[index].name << "]";
+                        else
+                            out << Cached(index);
+                    }
                 }
             }
             sep = "\n       => ";
@@ -2702,7 +2720,7 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
         compile(scope, infix->left, bytecode);
         bytecode->VariableMode(variable);
         compile(scope, infix->right, bytecode);
-        OP(assign, ValueIndex(infix->right), StorageIndex(infix->left));
+        OP(copy, ValueIndex(infix->right), StorageIndex(infix->left));
         return true;
     }
     return false;
@@ -2738,12 +2756,12 @@ static Bytecode *compile(Scope *scope,
         expr = closure->Value();
         scope = closure->CapturedScope();
     }
-    Bytecode *bytecode = pattern->GetInfo<Bytecode>();
+    Bytecode *bytecode = (Bytecode *) pattern->code;
     if (!bytecode)
     {
         // We need to create the bytecode for this expression
         bytecode = new Bytecode(scope, expr, parameters);
-        pattern->SetInfo<Bytecode>(bytecode);
+        pattern->code = bytecode;
 
         // Check if we have instructions to process. If not, return declarations
         Context context(scope);

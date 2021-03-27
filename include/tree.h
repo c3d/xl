@@ -136,9 +136,9 @@ struct Tree
 
     // Constructor and destructor
     Tree (kind k, TreePosition pos = NOWHERE):
-        tag((pos<<POSBITS) | k), info(nullptr) {}
+        tag((pos<<POSBITS) | k), info(), code() {}
     Tree(kind k, Tree *from):
-        tag(from->tag), info(nullptr)
+        tag(from->tag), info(), code()
     {
         assert(k == Kind()); (void) k;
     }
@@ -209,6 +209,7 @@ public:
 public:
     uintptr_t           tag;                            // Position + kind
     Atomic<Info *>      info;                           // Information for tree
+    void *              code;                           // Pointer to code
 
     static TreePosition NOWHERE;
     GARBAGE_COLLECT(Tree);
