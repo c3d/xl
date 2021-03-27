@@ -2143,32 +2143,36 @@ strength BytecodeBindings::Do(Infix *what)
         Tree_p value = test;
         what->left->Do(this);
 
-        // Check hard incompatible types, e.g. integer vs text
-        Tree_p have = bytecode->Type(test);
-        if (MachineType wm = IsMachineType(want))
-        {
-            MachineType hm = IsMachineType(have);
-            if (hm)
-            {
-                if (IncompatibleTypes(wm, hm))
-                    return Failed();
-            }
-            bytecode->Type(value, want);
-
-            if (wm != hm)
-            {
-                Opcode cast = MachineTypeCheck(wm);
-                bytecode->Op(cast, StorageIndex(value), CHECK);
-                return Possible();
-            }
-            return Perfect();
-        }
-
         // Type check value against type
+        Tree_p have = bytecode->Type(test);
         if (outermost)
+        {
             type = want;
+        }
         else if (want != have)
+        {
+            // Check hard incompatible types, e.g. integer vs text
+            if (MachineType wm = IsMachineType(want))
+            {
+                MachineType hm = IsMachineType(have);
+                if (hm)
+                {
+                    if (IncompatibleTypes(wm, hm))
+                        return Failed();
+                }
+                bytecode->Type(value, want);
+
+                if (wm != hm)
+                {
+                    Opcode cast = MachineTypeCheck(wm);
+                    bytecode->Op(cast, StorageIndex(value), CHECK);
+                    return Possible();
+                }
+                return Perfect();
+            }
+
             OP(check_input_type, want, ValueIndex(test), CHECK);
+        }
         bytecode->Type(value, want);
         return Possible();
     }
