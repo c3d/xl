@@ -803,7 +803,8 @@ void Bytecode::EnterArg(Tree *cst)
 //   Enter a tree constant
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(*compile->args++ == CONSTANT);
+    XL_ASSERT((*compile->args == CONSTANT || *compile->args == LOCAL) &&
+              compile->args++);
     opcode_t index = EnterTreeConstant(cst, tree_mtype);
     code.push_back(index);
 }
@@ -814,7 +815,8 @@ void Bytecode::EnterArg(Name *cst)
 //   Enter a name constant
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(*compile->args++ == CONSTANT);
+    XL_ASSERT((*compile->args == CONSTANT || *compile->args == LOCAL) &&
+              compile->args++);
     opcode_t index = EnterTreeConstant(cst, name_mtype);
     code.push_back(index);
 }
@@ -825,7 +827,8 @@ void Bytecode::EnterArg(Infix *cst)
 //   Enter an infix constant
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(*compile->args++ == CONSTANT);
+    XL_ASSERT((*compile->args == CONSTANT || *compile->args == LOCAL) &&
+              compile->args++);
     opcode_t index = EnterTreeConstant(cst, infix_mtype);
     code.push_back(index);
 }
@@ -1941,7 +1944,7 @@ strength BytecodeBindings::Do(Block *what)
         // Evaluate metabox at "compile time"
         Tree_p meta = EvaluateInDeclaration(expr);
         MustEvaluate();
-        OP(check_same, ValueIndex(test), Constant(meta), CHECK);
+        OP(check_same, ValueIndex(test), meta, CHECK);
         return Possible();
     }
 
