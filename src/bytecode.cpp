@@ -2741,6 +2741,8 @@ static Bytecode *compile(Scope *scope, Tree *expr)
     {
         Context context(scope);
         Tree *form = context.Bound(name);
+        if (!form)
+            form = expr;        // Case for names such as "false"
         return compile(scope, expr, form, parameters);
     }
     return compile(scope, expr, expr, parameters);
