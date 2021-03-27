@@ -600,6 +600,11 @@ private:
         TypeAllocator::Release(tree);
     }
 
+    void Acquire(text *tptr)
+    {
+        as_text = new text(*tptr);
+    }
+
     void Release(text *tptr)
     {
         delete tptr;
