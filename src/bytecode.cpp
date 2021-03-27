@@ -690,6 +690,7 @@ opcode_t Bytecode::EnterTreeConstant(Tree *cst, MachineType mtype)
 // ----------------------------------------------------------------------------
 {
     RunValue rv(cst, mtype);
+    rv.Classify();
     return EnterRunValue(rv);
 }
 
