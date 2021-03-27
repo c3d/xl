@@ -9,4 +9,3 @@ foo(C)=Outer C
 foo A=Inner A
 foo B=Inner B
 foo C=Outer C
-true
