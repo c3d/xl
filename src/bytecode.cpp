@@ -47,6 +47,7 @@
 #include <cmath>
 #include <algorithm>
 
+RECORDER(runvalue,      32, "Runtime values");
 RECORDER(bytecode,      32, "Bytecode class evaluation of XL code");
 RECORDER(opcode,        32, "Bytecode opcodes as they are being emitted");
 RECORDER(opcode_error , 16, "Errors in the generated opcodes");
@@ -208,6 +209,16 @@ static Tree_p ErrorMessage(Args...args)
     Tree_p msg = XL::Error(args...);
     return msg;
 }
+
+
+kstring RunValue::MachineTypeName[] =
+// ----------------------------------------------------------------------------
+//   Name for the machine types
+// ----------------------------------------------------------------------------
+{
+#define RUNTIME_TYPE(Name, Rep, BC)             #Name,
+#include "machine-types.tbl"
+};
 
 
 
