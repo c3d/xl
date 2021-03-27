@@ -550,7 +550,7 @@ struct function_type<void(*)()>
     static inline void Run(pointer_type callee, RunState &stack)
     {
         callee();
-        stack.Push(RunValue());
+        stack.Push(RunValue(nil_mtype));
     }
 };
 
@@ -666,7 +666,7 @@ struct function_type<void(*)(T)>
     static inline void Run(pointer_type callee, RunState &stack)
     {
         callee(xl_type<T>::Arg(stack));
-        stack.Push(RunValue());
+        stack.Push(RunValue(nil_mtype));
     }
 };
 
@@ -782,7 +782,7 @@ struct function_type<void(*)(T,A...)>
     {
         callee(xl_type<T>::Arg(stack),
                xl_type<A>::Arg(stack)...);
-        stack.Push(RunValue());
+        stack.Push(RunValue(nil_mtype));
     }
 };
 
