@@ -162,13 +162,13 @@ inline number   xl_random(number low, number high)
 //
 // ============================================================================
 
-bool      xl_write_natural(ulonglong);
-bool      xl_write_integer(longlong);
-bool      xl_write_real(double);
-bool      xl_write_text(kstring);
-bool      xl_write_character(char c);
-bool      xl_write_tree(XL::Tree *t);
-bool      xl_write_cr(void);
+void      xl_write_natural(ulonglong);
+void      xl_write_integer(longlong);
+void      xl_write_real(double);
+void      xl_write_text(kstring);
+void      xl_write_character(char c);
+void      xl_write_tree(XL::Tree *t);
+void      xl_write_cr(void);
 
 
 

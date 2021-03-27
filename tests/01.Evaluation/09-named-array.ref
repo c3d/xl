@@ -1,3 +1,2 @@
 With function notation, foo 1 = B (should be B)
 With array notation, foo[2] = C (should be C)
-true

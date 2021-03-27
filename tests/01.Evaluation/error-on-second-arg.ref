@@ -1,2 +1,1 @@
 A=error "Nothing matches $1", Index ("A")
-true

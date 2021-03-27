@@ -880,80 +880,73 @@ Tree *xl_load_data(Scope *scope, Tree *self, text inputName,
 //
 // ============================================================================
 
-bool xl_write_natural(ulonglong x)
+void xl_write_natural(ulonglong x)
 // ----------------------------------------------------------------------------
 //   Write a natural value
 // ----------------------------------------------------------------------------
 {
     // HACK: Until type system is more robust, print as signed value
     std::cout << (longlong) x;
-    return true;
 }
 NATIVE(xl_write_natural);
 
 
-bool xl_write_integer(longlong x)
+void xl_write_integer(longlong x)
 // ----------------------------------------------------------------------------
 //   Write an integer value
 // ----------------------------------------------------------------------------
 {
     std::cout << x;
-    return true;
 }
 NATIVE(xl_write_integer);
 
 
-bool xl_write_real(double x)
+void xl_write_real(double x)
 // ----------------------------------------------------------------------------
 //   Write a double value
 // ----------------------------------------------------------------------------
 {
     std::cout << x;
-    return true;
 }
 NATIVE(xl_write_real);
 
 
-bool xl_write_text(kstring x)
+void xl_write_text(kstring x)
 // ----------------------------------------------------------------------------
 //   Write a text value
 // ----------------------------------------------------------------------------
 {
     std::cout << x;
-    return true;
 }
 NATIVE(xl_write_text);
 
 
-bool xl_write_tree(Tree *tree)
+void xl_write_tree(Tree *tree)
 // ----------------------------------------------------------------------------
 //   Write a text value
 // ----------------------------------------------------------------------------
 {
     std::cout << tree;
-    return true;
 }
 NATIVE(xl_write_tree);
 
 
-bool xl_write_character(char x)
+void xl_write_character(char x)
 // ----------------------------------------------------------------------------
 //   Write a character value
 // ----------------------------------------------------------------------------
 {
     std::cout << x;
-    return true;
 }
 NATIVE(xl_write_character);
 
 
-bool xl_write_cr()
+void xl_write_cr()
 // ----------------------------------------------------------------------------
 //   Write a line separator
 // ----------------------------------------------------------------------------
 {
     std::cout << '\n';
-    return true;
 }
 NATIVE(xl_write_cr);
 

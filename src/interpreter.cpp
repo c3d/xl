@@ -377,7 +377,7 @@ Tree *Bindings::Do(Infix *what)
 
         // Need to evaluate the type on the right
         Tree_p want = EvaluateType(what->right);
-        if (!want || HadErrors() || IsError(want))
+        if (HadErrors() || IsError(want))
             return nullptr;
 
         // Type check value against type
