@@ -41,6 +41,7 @@
 #include "evaluator.h"
 
 
+RECORDER_DECLARE(runvalue);
 RECORDER_DECLARE(bytecode);
 RECORDER_DECLARE(typecheck);
 RECORDER_DECLARE(opcode);
@@ -616,6 +617,7 @@ private:
 
     void Acquire()
     {
+        record(runvalue, "Acquire %+s %p", MachineTypeName[type], this);
         switch(type)
         {
 #define RUNTIME_TYPE(Name, Rep, BC)             \
@@ -629,6 +631,7 @@ private:
 
     void Release()
     {
+        record(runvalue, "Release %+s %p", MachineTypeName[type], this);
         switch(type)
         {
 #define RUNTIME_TYPE(Name, Rep, BC)             \
@@ -648,6 +651,7 @@ public:
 #define RUNTIME_TYPE(Name, Rep, BC)     Representation<Rep>::union_t as_##Name;
 #include "machine-types.tbl"
     };
+    static kstring MachineTypeName[];
 };
 
 
