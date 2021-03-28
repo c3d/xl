@@ -119,8 +119,8 @@
 
 
 // Arithmetic opcodes
-#define UNARY2(Op, TypeX, TypeR, RepXY, RepR, Body)     \
-    BUILTIN(Op##_##TypeX, (LOCAL, LOCAL),               \
+#define UNARY0(Op, TypeX, TypeR, RepXY, RepR, Body)     \
+    BUILTIN(Op, (LOCAL, LOCAL),                         \
             RunValue &x = INPUT_VALUE;                  \
             XL_ASSERT(x.type == TypeX##_mtype);         \
             RepXY value = x.as_##TypeX;                 \
@@ -128,6 +128,8 @@
             Body;                                       \
             RunValue &r = OUTPUT_VALUE;                 \
             r = RunValue(result, TypeR##_mtype); )
+#define UNARY2(Op, TypeX, TypeR, RepXY, RepR, Body)     \
+    UNARY0(Op##_##TypeX, TypeX, TypeR, RepXY, RepR, Body)
 #define UNARY(Op, Type, Rep, Body)                      \
     UNARY2(Op, Type, Type, Rep, Rep, Body)
 
@@ -208,7 +210,24 @@ BINARY2(le, text, boolean, text *, bool,       result = *left <= *right)
 BINARY2(ge, text, boolean, text *, bool,       result = *left >= *right)
 BINARY2(concat, text, text, text *, text *,    result = new text(*left + *right))
 
+UNARY0(tree_kind, tree, natural, Tree *, ulonglong, result = value->Kind())
+UNARY0(prefix_left, prefix, tree, Prefix *, Tree *, result = value->left)
+UNARY0(prefix_right, prefix, tree, Prefix *, Tree *, result = value->right)
+UNARY0(postfix_left, postfix, tree, Postfix *, Tree *, result = value->left)
+UNARY0(postfix_right, postfix, tree, Postfix *, Tree *, result = value->right)
+UNARY0(infix_left, infix, tree, Infix *, Tree *, result = value->left)
+UNARY0(infix_right, infix, tree, Infix *, Tree *, result = value->right)
+UNARY0(infix_name, infix, text, Infix *, text *, result = new text(value->name))
+UNARY0(block_child, block, tree, Block *, Tree *, result = value->child)
+UNARY0(block_opening, block, text, Block *, text *,
+       result = new text(value->opening))
+UNARY0(block_closing, block, text, Block *, text *,
+       result = new text(value->closing))
+
+
+
 #undef UNARY
+#undef UNARY0
 #undef UNARY2
 #undef BINARY
 #undef BINARY2
