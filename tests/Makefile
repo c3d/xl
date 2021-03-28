@@ -33,7 +33,7 @@
 #  along with XL.  If not, see <https://www.gnu.org/licenses/>.
 #******************************************************************************
 
-XL=./xl
+XL=./xl $(OPTLEVEL)
 TESTS=$(wildcard */*.xl)
 RUN_TESTS=yes
 TIMEOUT=30
@@ -47,7 +47,9 @@ export LC_CTYPE=C
 
 include $(MIQ)rules.mk
 
-base rebase baseline: baseline.txt
+BASELINE=baseline$(OPTLEVEL).txt
+
+base rebase baseline: $(BASELINE)
 run-%:
 	$(PRINT_COMMAND) $(MAKE) TESTS="$(wildcard */*$**.xl)" .tests
 ref-%:
@@ -89,8 +91,8 @@ endef
 UPDATE_CMD=$(UPDATE_CMD_$(UPDATE_REFS))
 UPDATE_CMD_yes=					\
   cp $1.output $1.ref;				\
-  grep -v $1 baseline.txt > baseline-new.txt;	\
-  mv baseline-new.txt baseline.txt ;
+  grep -v $1 $(BASELINE) > baseline-new.txt;	\
+  mv baseline-new.txt $(BASELINE) ;
 
 # Run a command with a timeout
 # $1 = timeout
@@ -127,7 +129,7 @@ endef
 GENERATE_FAILURES_LOG=						\
   ( for F in $(^:.diff=); do					\
     if [ $(call TEST_KO,$$F) ] ; then				\
-      if ! grep -q "$$F" baseline.txt; then			\
+      if ! grep -q "$$F" $(BASELINE); then			\
 	echo "=== $$F FAILED ===";				\
 	( echo "--- $$F DIFF ---";				\
 	  [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
@@ -140,7 +142,7 @@ GENERATE_FAILURES_LOG=						\
   done;								\
   for F in $(^:.diff=); do					\
     if [ $(call TEST_KO,$$F) ]; then				\
-      if grep -q "$$F" baseline.txt; then			\
+      if grep -q "$$F" $(BASELINE); then			\
 	echo "=== $$F FAILED (EXPECTED) ===";			\
 	( echo "--- $$F DIFF ---";				\
 	  [ -f "$$F.diff" ] && $(CAT) "$$F.diff" ;		\
@@ -153,7 +155,7 @@ GENERATE_FAILURES_LOG=						\
   done;								\
   for F in $(^:.diff=); do					\
     if [ $(call TEST_OK,$$F) ]; then				\
-      if grep -q "$$F" baseline.txt; then			\
+      if grep -q "$$F" $(BASELINE); then			\
 	echo "=== $$F IMPROVED ===";				\
       else							\
 	echo "=== $$F SUCCEEDED ===";				\
@@ -193,7 +195,7 @@ GENERATE_BASELINE=						\
 
 failures.log: $(TESTS:%.xl=%.diff)
 	$(PRINT_GENERATE) $(GENERATE_FAILURES_LOG) $(COLORIZE)
-baseline.txt: failures.log
+$(BASELINE): failures.log
 	$(PRINT_GENERATE) $(GENERATE_BASELINE) $(COLORIZE)
 
 %.xl.mk: %.xl ./alltests-make.awk # Makefile
