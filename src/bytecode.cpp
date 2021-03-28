@@ -2225,9 +2225,18 @@ strength BytecodeBindings::Do(Infix *what)
     else if (Name *name = test->AsName())
     {
         MustEvaluate();
-        OP(check_infix, ValueIndex(test), what,
-           StorageIndex(what->left), StorageIndex(what->right),
-           CHECK);
+        static Name_p lname = new Name("left");
+        static Name_p rname = new Name("right");
+        Prefix *ltest = new Prefix(lname, name);
+        Prefix *rtest = new Prefix(rname, name);
+        opcode_t lindex = bytecode->StorageIndex(ltest);
+        opcode_t rindex = bytecode->StorageIndex(rtest);
+        test = ltest;
+        what->left->Do(this);
+        test = rtest;
+        what->right->Do(this);
+        OP(check_infix, ValueIndex(name), what,
+           LocalIndex(lindex), LocalIndex(rindex), CHECK);
         bytecode->Type(name, infix_type);
         return Possible();
     }
