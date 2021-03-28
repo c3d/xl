@@ -289,6 +289,7 @@ public:
     void        NativeArguments(opcode_t nat, const Parameters &, Tree *expr);
     void        BuiltinArguments(const Parameters &parms, Tree *expr);
     opcode_t    EnterRunValue(const RunValue &rv);
+    opcode_t    EnterRunValue(const RunValue &rv, Tree *value);
     opcode_t    EnterTreeConstant(Tree *cst, MachineType mtype);
     void        PatchChecks(size_t where);
     void        PatchSuccesses(size_t where);
@@ -692,6 +693,17 @@ opcode_t Bytecode::EnterRunValue(const RunValue &rv)
     }
     record(opcode, "Constant %t = %u", rv.AsTree(), index);
     return ConstantIndex(index);
+}
+
+
+opcode_t Bytecode::EnterRunValue(const RunValue &rv, Tree *value)
+// ----------------------------------------------------------------------------
+//   Enter a runvalue directly
+// ----------------------------------------------------------------------------
+{
+    opcode_t index = EnterRunValue(rv);
+    compile->values[value] = index;
+    return index;
 }
 
 
@@ -1103,7 +1115,7 @@ void Bytecode::Validate()
 // ----------------------------------------------------------------------------
 {
     PatchChecks(0);
-    if (code.back() != opcode_ret)
+    if (!code.size() || code.back() != opcode_ret)
     {
         Bytecode *bytecode = this;
         OP(ret, XL::ValueIndex(bytecode->self));
@@ -1956,7 +1968,11 @@ strength BytecodeBindings::Do(Block *what)
         // Evaluate metabox at "compile time"
         Tree_p meta = EvaluateInDeclaration(expr);
         MustEvaluate();
-        OP(check_same, ValueIndex(test), meta, CHECK);
+        opcode_t mindex = bytecode->Evaluate(evaluation, meta);
+        opcode_t tindex = bytecode->ValueIndex(test);
+        if (IsConstantIndex(tindex) && IsConstantIndex(mindex))
+            return tindex == mindex ? Perfect() : Failed();
+        OP(check_same, LocalIndex(tindex), LocalIndex(mindex), CHECK);
         return Possible();
     }
 
@@ -2079,23 +2095,6 @@ static bool IncompatibleTypes(MachineType want, MachineType have)
 }
 
 
-static Opcode MachineTypeCast(MachineType mtype)
-// ----------------------------------------------------------------------------
-//    Generate the machine cast for a given machine type
-// ----------------------------------------------------------------------------
-{
-    switch(mtype)
-    {
-#define RUNTIME_TYPE(Name, Rep, BC)                     \
-    case Name##_mtype:  return opcode_##Name##_cast;
-#include "machine-types.tbl"
-    default:
-        break;
-    }
-    return opcode_nil;
-}
-
-
 static Opcode MachineTypeCheck(MachineType mtype)
 // ----------------------------------------------------------------------------
 //    Generate the machine cast for a given machine type
@@ -2109,7 +2108,7 @@ static Opcode MachineTypeCheck(MachineType mtype)
     default:
         break;
     }
-    return opcode_nil;
+    return INVALID_OPCODE;
 }
 
 
@@ -2542,17 +2541,23 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
 {
     if (name->value == "nil")
     {
-        OP(nil, StorageIndex(name));
+        RunValue rv(nil_mtype);
+        bytecode->EnterRunValue(rv, name);
+        bytecode->Type(name, nil_type);
         return true;
     }
     if (name->value == "true")
     {
-        OP(true, StorageIndex(name));
+        RunValue rv(true, boolean_mtype);
+        bytecode->EnterRunValue(rv, name);
+        bytecode->Type(name, boolean_type);
         return true;
     }
     if (name->value == "false")
     {
-        OP(false, StorageIndex(name));
+        RunValue rv(false, boolean_mtype);
+        bytecode->EnterRunValue(rv, name);
+        bytecode->Type(name, boolean_type);
         return true;
     }
     if (name->value == "scope" || name->value == "context")
