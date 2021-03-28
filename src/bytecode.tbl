@@ -51,7 +51,7 @@
     BUILTIN(Name##_cast, (LOCAL),                       \
             RunValue &x = OUTPUT_VALUE;                 \
             if (!x.CastNatural<Rep, Name##_mtype>())    \
-                CHAIN(nil, 1); )                        \
+                x = RunValue(nil_mtype); )              \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = OUTPUT_VALUE;                 \
             opcode_t branch = DATA;                     \
@@ -62,7 +62,7 @@
     BUILTIN(Name##_cast, (LOCAL),                       \
             RunValue &x = OUTPUT_VALUE;                 \
             if (!x.CastInteger<Rep, Name##_mtype>())    \
-                CHAIN(nil, 1); )                        \
+                x = RunValue(nil_mtype); )              \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = OUTPUT_VALUE;                 \
             opcode_t branch = DATA;                     \
@@ -73,7 +73,7 @@
     BUILTIN(Name##_cast, (LOCAL),                       \
             RunValue &x = OUTPUT_VALUE;                 \
             if (!x.CastReal<Rep, Name##_mtype>())       \
-                CHAIN(nil, 1); )                        \
+                x = RunValue(nil_mtype); )              \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = OUTPUT_VALUE;                 \
             opcode_t branch = DATA;                     \
@@ -84,7 +84,7 @@
     BUILTIN(Name##_cast, (LOCAL),               \
             RunValue &x = OUTPUT_VALUE;         \
             if (x.type != Name##_mtype)         \
-                CHAIN(nil, 1); )                \
+                x = RunValue(nil_mtype); )      \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),    \
             RunValue &x = OUTPUT_VALUE;         \
             opcode_t branch = DATA;             \
@@ -98,9 +98,9 @@
             {                                           \
                 Tree *value = x.AsTree();               \
                 Rep *cast = (Cast);                     \
-                if (!cast)                              \
-                    CHAIN(nil, 1);                      \
-                x = RunValue(cast, Name##_mtype);       \
+                x = cast                                \
+                    ? RunValue(cast, Name##_mtype)      \
+                    : RunValue(nil_mtype);              \
             })                                          \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = OUTPUT_VALUE ;                \
@@ -353,33 +353,6 @@ OPCODE(branch, (JUMP),
 // ----------------------------------------------------------------------------
        opcode_t branch = DATA;
        pc += branch;
-)
-
-
-OPCODE(nil, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Generate a nil value
-// ----------------------------------------------------------------------------
-       RunValue &r = OUTPUT_VALUE;
-       r = RunValue(nil_mtype);
-)
-
-
-OPCODE(true, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Generate constant true
-// ----------------------------------------------------------------------------
-       RunValue &r = OUTPUT_VALUE;
-       r = RunValue(true, boolean_mtype);
-)
-
-
-OPCODE(false, (LOCAL),
-// ----------------------------------------------------------------------------
-//   Generate constant true
-// ----------------------------------------------------------------------------
-       RunValue &r = OUTPUT_VALUE;
-       r = RunValue(false, boolean_mtype);
 )
 
 
