@@ -282,19 +282,19 @@ UNARY(Natural2Real, Real,   Natural,            R_REAL(x_real))
 //
 // ============================================================================
 
-UNARY(TreeKind,         Natural, Tree,          R_INT (x_tree->Kind()))
-UNARY(PrefixLeft,       Tree,    Prefix,        R_TYPE(x_tree->left))
-UNARY(PrefixRight,      Tree,    Prefix,        R_TYPE(x_tree->right))
-UNARY(PostfixLeft,      Tree,    Postfix,       R_TYPE(x_tree->left))
-UNARY(PostfixRight,     Tree,    Postfix,       R_TYPE(x_tree->right))
-UNARY(InfixLeft,        Tree,    Infix,         R_TYPE(x_tree->left))
-UNARY(InfixRight,       Tree,    Infix,         R_TYPE(x_tree->right))
-UNARY(InfixName,        Text,    Infix,         R_TEXT(x_tree->name))
-UNARY(TextOpening,      Text,    Text,          R_TEXT(x_tree->opening))
-UNARY(TextClosing,      Text,    Text,          R_TEXT(x_tree->closing))
-UNARY(BlockChild,       Tree,    Block,         R_TYPE(x_tree->child))
-UNARY(BlockOpening,     Text,    Block,         R_TEXT(x_tree->opening))
-UNARY(BlockClosing,     Text,    Block,         R_TEXT(x_tree->closing))
+UNARY(tree_kind,        Natural, Tree,          R_INT (x_tree->Kind()))
+UNARY(prefix_left,      Tree,    Prefix,        R_TYPE(x_tree->left))
+UNARY(prefix_right,     Tree,    Prefix,        R_TYPE(x_tree->right))
+UNARY(postfix_left,     Tree,    Postfix,       R_TYPE(x_tree->left))
+UNARY(postfix_right,    Tree,    Postfix,       R_TYPE(x_tree->right))
+UNARY(infix_left,       Tree,    Infix,         R_TYPE(x_tree->left))
+UNARY(infix_right,      Tree,    Infix,         R_TYPE(x_tree->right))
+UNARY(infix_name,       Text,    Infix,         R_TEXT(x_tree->name))
+UNARY(text_opening,     Text,    Text,          R_TEXT(x_tree->opening))
+UNARY(text_closing,     Text,    Text,          R_TEXT(x_tree->closing))
+UNARY(block_child,      Tree,    Block,         R_TYPE(x_tree->child))
+UNARY(block_opening,    Text,    Block,         R_TEXT(x_tree->opening))
+UNARY(block_closing,    Text,    Block,         R_TEXT(x_tree->closing))
 
 
 

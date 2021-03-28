@@ -174,19 +174,19 @@ write Head, Rest        is { write Head; write Rest }
 print Items             is { write Items; print }
 
 // Tree shape and attributes
-kind  X:tree            as natural      is builtin "TreeKind"
-left  X:prefix          as tree         is builtin "PrefixLeft"
-right X:prefix          as tree         is builtin "PrefixRight"
-left  X:postfix         as tree         is builtin "PostfixLeft"
-right X:postfix         as tree         is builtin "PostfixRight"
-left  X:infix           as tree         is builtin "InfixLeft"
-right X:infix           as tree         is builtin "InfixRight"
-name  X:infix           as text         is builtin "InfixName"
-opening X:text          as text         is builtin "TextOpening"
-closing X:text          as text         is builtin "TextClosing"
-child X:block           as tree         is builtin "BlockChild"
-opening X:block         as text         is builtin "BlockOpening"
-closing X:block         as text         is builtin "BlockClosing"
+kind  X:tree            as natural      is builtin "tree_kind"
+left  X:prefix          as tree         is builtin "prefix_left"
+right X:prefix          as tree         is builtin "prefix_right"
+left  X:postfix         as tree         is builtin "postfix_left"
+right X:postfix         as tree         is builtin "postfix_right"
+left  X:infix           as tree         is builtin "infix_left"
+right X:infix           as tree         is builtin "infix_right"
+name  X:infix           as text         is builtin "infix_name"
+opening X:text          as text         is builtin "text_opening"
+closing X:text          as text         is builtin "text_closing"
+child X:block           as tree         is builtin "block_child"
+opening X:block         as text         is builtin "block_opening"
+closing X:block         as text         is builtin "block_closing"
 
 // Min and max functions
 min X, Y is { mx is min X; my is min Y; if mx < my then mx else my }
