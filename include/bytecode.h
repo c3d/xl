@@ -444,6 +444,7 @@ MACHINE_TYPE(natural, unsigned long, naught)
         case NATURAL:
         {
             Natural *xn = (Natural *) tree;
+            Release(xn);
             if (xn->IsSigned())
             {
                 type = integer_mtype;
@@ -454,20 +455,20 @@ MACHINE_TYPE(natural, unsigned long, naught)
                 type = natural_mtype;
                 as_natural = xn->value;
             }
-            Release(xn);
             return *this;
         }
         case REAL:
         {
             Real *xr = (Real *) tree;
+            Release(xr);
             type = real_mtype;
             as_real = xr->value;
-            Release(xr);
             return *this;
         }
         case TEXT:
         {
             Text *xt = (Text *) tree;
+            Release(xt);
             if (xt->IsCharacter())
             {
                 type = character_mtype;
@@ -478,7 +479,6 @@ MACHINE_TYPE(natural, unsigned long, naught)
                 type = text_mtype;
                 as_text = new text(xt->value);
             }
-            Release(xt);
             return *this;
         }
         case NAME:
