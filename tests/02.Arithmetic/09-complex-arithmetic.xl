@@ -31,11 +31,14 @@
 // along with XL, in a file named COPYING.
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
+
+X,Y is self
+
 complex is matching(re:real, im:real)
 Z1:complex + Z2:complex is (Z1.re + Z2.re, Z1.im + Z2.im)
 Z1:complex + Z2:real    is (Z1.re + Z2, Z1.im)
 Z1:complex - Z2:complex is (Z1.re - Z2.re, Z1.im - Z2.im)
-Z1:complex + Z2:real    is (Z1.re - Z2, Z1.im)
+Z1:complex - Z2:real    is (Z1.re - Z2, Z1.im)
 Z1:complex * Z2:real    is (Z1.re * Z2, Z1.im * Z2)
 Z1:complex * Z2:complex is (Z1.re * Z2.re - Z1.im * Z2.im, Z1.re * Z2.im + Z1.im * Z2.re)
 Z1:complex / Z2:real    is (Z1.re / Z2, Z1.im / Z2)

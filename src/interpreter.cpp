@@ -441,6 +441,34 @@ Tree *Bindings::Do(Infix *what)
 
     // In all other cases, we need an infix with matching name
     StripBlocks();
+    if (Name *name = test->AsName())
+    {
+        if (Tree *bound = evalContext.Bound(name, true))
+        {
+            Scope *scope = nullptr;
+            if (Closure *closure = bound->As<Closure>())
+            {
+                scope = closure->CapturedScope();
+                bound = closure->Value();
+            }
+            Infix *ifx = bound->AsInfix();
+            if (ifx && ifx->name == what->name)
+            {
+                if (scope)
+                {
+                    Tree *left = ifx->left->As<Closure>();
+                    Tree *right = ifx->right->As<Closure>();
+                    if (!left)
+                        left = new Closure(scope, ifx->left);
+                    if (!right)
+                        right = new Closure(scope, ifx->right);
+                    ifx = new Infix(ifx, left, right);
+                }
+                test = ifx;
+            }
+        }
+    }
+
     Infix *ifx = test->AsInfix();
     if (!ifx || ifx->name != what->name)
     {
@@ -1421,11 +1449,11 @@ next:
             goto done;
         }
 
-       if (mode == MAYFAIL)
-       {
-           record(eval, "<May fail %t", expr);
-           return nullptr;
-       }
+        if (mode == MAYFAIL)
+        {
+            record(eval, "<May fail %t", expr);
+            return nullptr;
+        }
         Ooops("Nothing matches $1", expr);
         record(eval, "<Failed to find a match for %t", expr);
         return nullptr;
