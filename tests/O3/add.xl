@@ -34,5 +34,5 @@
 // OPT=-O3 -nobuiltins
 // This tests if we can invoke a builtin operation
 
-X:integer + Y:integer as integer is builtin Add
+X:natural + Y:natural as natural is builtin "Add_natural"
 3 + 5
