@@ -300,7 +300,8 @@ public:
     opaddr_t    RemoveLastNoOpBranch();
 
     // Runtime support functions
-    void        ErrorExit(Tree *msg);   // Emit an error with msg and exit
+    void        CompileError(Tree *msg);
+    Tree *      CompileError();
     void        Clear();
     size_t      Size();
     Scope *     EvaluationScope();
@@ -379,6 +380,7 @@ private:
         ValueMap    values;     // Already-computed value
         opaddr_t    last;       // Last instruction entered by Op
         OpcodeKind *args;       // Checking arguments
+        Tree_p      error;      // Compile-time error that was detected
         bool        local;      // Non-recursive lookup
         bool        variable;   // Evaluate as variable
     };
@@ -1036,13 +1038,22 @@ void Bytecode::CutToLastOpcode()
 //
 // ============================================================================
 
-void Bytecode::ErrorExit(Tree *expr)
+void Bytecode::CompileError(Tree *expr)
 // ----------------------------------------------------------------------------
 //   Emit an error and exit evaluation
 // ----------------------------------------------------------------------------
 {
     Bytecode *bytecode = this;
-    OP(error_exit, expr);
+    compile->error = expr;
+}
+
+
+Tree *Bytecode::CompileError()
+// ----------------------------------------------------------------------------
+//   Return compile error if any
+// ----------------------------------------------------------------------------
+{
+    return compile->error;
 }
 
 
@@ -1115,10 +1126,14 @@ void Bytecode::Validate()
 // ----------------------------------------------------------------------------
 {
     PatchChecks(0);
-    if (!code.size() || code.back() != opcode_ret)
+    if (!code.size() ||
+        (code.back() != opcode_ret && code.back() != opcode_error_exit))
     {
         Bytecode *bytecode = this;
-        OP(ret, XL::ValueIndex(bytecode->self));
+        if (Tree *err = CompileError())
+            OP(error_exit, err);
+        else
+            OP(ret, XL::ValueIndex(bytecode->self));
     }
     locals -= parameters.size();
     if (RECORDER_TRACE(bytecode))
@@ -1434,6 +1449,11 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
         else
         {
             XL::compile(scope, value, this);
+            if (CompileError())
+            {
+                index = EnterTreeConstant(value, tree_mtype);
+                CompileError(nullptr);
+            }
         }
     }
     return index;
@@ -2886,7 +2906,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
                 bytecode->Dump(std::cerr);
             bytecode->Clear();
             Tree_p msg = ErrorMessage("No form matches $1", expr);
-            bytecode->ErrorExit(msg);
+            bytecode->CompileError(msg);
             return;
         }
         definition = done == IS_DEFINITION;

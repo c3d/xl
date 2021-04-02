@@ -283,7 +283,7 @@ OPCODE(error_exit, (CONSTANT),
 // ----------------------------------------------------------------------------
        RunValue &error = INPUT_CONSTANT;
        XL_ASSERT(error.type == error_mtype);
-       return error.as_error;
+       CHAIN(ret, 1);
 )
 
 
