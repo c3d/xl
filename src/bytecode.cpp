@@ -2149,6 +2149,8 @@ strength BytecodeBindings::Do(Infix *what)
 
         // Need to evaluate the type on the right
         Tree_p want = EvaluateType(what->right);
+        if (IsError(want))
+            return Failed();
         what->right = want;
 
         // Need to match the left part with the converted value
@@ -2347,6 +2349,8 @@ inline Context::LookupMode lookupMode(Bytecode *bytecode)
 }
 
 
+static void debug(Tree *expr, Tree *decl) {}
+
 static Tree *lookupCandidate(Scope   *evalScope,
                              Scope   *declScope,
                              Tree    *expr,
@@ -2361,6 +2365,12 @@ static Tree *lookupCandidate(Scope   *evalScope,
     Bytecode *bytecode = bindings.Code();
     Tree *pattern = decl->Pattern();
     XL_ASSERT(bindings.Self() == expr);
+
+if (Prefix *prefix = expr->AsPrefix())
+    if (Name *name = prefix->left->AsName())
+        if (name->value == "write")
+            if (Text *text = prefix->right->AsText())
+                debug(expr, decl);
 
     // Add bytecode to check argument against parameters and create locals
     Bytecode::Attempt attempt(bytecode);
