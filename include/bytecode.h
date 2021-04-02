@@ -181,6 +181,28 @@ inline bool IsScalar(MachineType mtype)
 }
 
 
+inline bool SameMachineType(MachineType t1, MachineType t2)
+// ----------------------------------------------------------------------------
+//    Return true if machine types are indistinguishable in C/C++
+// ----------------------------------------------------------------------------
+{
+    return (t1 == t2)
+        || (sizeof(uint64_t) == sizeof(Natural::value_t)  &&
+            ((t1 == natural_mtype && t2 == natural64_mtype) ||
+             (t2 == natural_mtype && t1 == natural64_mtype) ||
+             (t1 == integer_mtype && t2 == integer64_mtype) ||
+                 (t2 == integer_mtype && t1 == integer64_mtype)))
+        || (sizeof(uint32_t) == sizeof(Natural::value_t)  &&
+            ((t1 == natural_mtype && t2 == natural32_mtype) ||
+             (t2 == natural_mtype && t1 == natural32_mtype) ||
+             (t1 == integer_mtype && t2 == integer32_mtype) ||
+             (t2 == integer_mtype && t1 == integer32_mtype)))
+        || (sizeof(double) == sizeof(uint64_t)  &&
+            ((t1 == real_mtype && t2 == real64_mtype) ||
+             (t2 == real_mtype && t1 == real64_mtype)));
+}
+
+
 #ifdef HAVE_FLOAT16
 inline std::ostream &operator<<(std::ostream &out, _Float16 f)
 // ----------------------------------------------------------------------------
@@ -345,7 +367,7 @@ public:
     }                                                   \
     operator Rep() const                                \
     {                                                   \
-        XL_ASSERT(type == Name##_mtype);                \
+        XL_ASSERT(SameMachineType(type, Name##_mtype)); \
         return Representation<Rep>::ToValue(as_##Name); \
     }
 MACHINE_TYPE(integer, long, naught)
