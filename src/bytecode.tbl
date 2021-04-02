@@ -324,6 +324,7 @@ OPCODE(native, (NATIVE, ARGUMENTS, LOCAL),
        }
 
        fn(state);
+       REFRAME;
        RunValue &r = OUTPUT_VALUE;
        r = state.Pop().Classify();
        REFRAME;
@@ -339,7 +340,7 @@ OPCODE(check_statement, (LOCAL),
            CHAIN(ret, 1);
        if (r.type != nil_mtype)
        {
-           Error error("Non-nil result from statement");
+           Error error("Non-nil result $1 from statement", r.AsTree());
            state.Error(error);
            r = RunValue(state.Error(), error_mtype);
            CHAIN(ret, 1);
