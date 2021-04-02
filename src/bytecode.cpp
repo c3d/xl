@@ -2164,6 +2164,7 @@ strength BytecodeBindings::Do(Infix *what)
         if (outermost)
         {
             type = want;
+            have = want;
         }
         else if (want != have)
         {
@@ -2190,7 +2191,7 @@ strength BytecodeBindings::Do(Infix *what)
             OP(check_input_type, want, ValueIndex(test), CHECK);
         }
         bytecode->Type(value, want);
-        return Possible();
+        return want == have ? Perfect() : Possible();
     }
 
     // Make sure names bind to values
@@ -2349,8 +2350,6 @@ inline Context::LookupMode lookupMode(Bytecode *bytecode)
 }
 
 
-static void debug(Tree *expr, Tree *decl) {}
-
 static Tree *lookupCandidate(Scope   *evalScope,
                              Scope   *declScope,
                              Tree    *expr,
@@ -2365,12 +2364,6 @@ static Tree *lookupCandidate(Scope   *evalScope,
     Bytecode *bytecode = bindings.Code();
     Tree *pattern = decl->Pattern();
     XL_ASSERT(bindings.Self() == expr);
-
-if (Prefix *prefix = expr->AsPrefix())
-    if (Name *name = prefix->left->AsName())
-        if (name->value == "write")
-            if (Text *text = prefix->right->AsText())
-                debug(expr, decl);
 
     // Add bytecode to check argument against parameters and create locals
     Bytecode::Attempt attempt(bytecode);
