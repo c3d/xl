@@ -1131,9 +1131,14 @@ void Bytecode::Validate()
     {
         Bytecode *bytecode = this;
         if (Tree *err = CompileError())
+        {
             OP(error_exit, err);
+            CompileError(nullptr);
+        }
         else
+        {
             OP(ret, XL::ValueIndex(bytecode->self));
+        }
     }
     locals -= parameters.size();
     if (RECORDER_TRACE(bytecode))
@@ -2855,9 +2860,16 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
     bool definition = false;
     while ((expr = next()))
     {
+        Bytecode::Attempt attempt(bytecode);
+
         // If not the first statement, check result of previous statement
         if (last)
         {
+            if (Tree *err = bytecode->CompileError())
+            {
+                OP(error_exit, err);
+                bytecode->CompileError(nullptr);
+            }
             if (!definition)
                 OP(check_statement, ValueIndex(last));
         }
@@ -2904,10 +2916,9 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
             record(bytecode, "Giving up on bytecode for %t", expr);
             if (RECORDER_TRACE(bytecode))
                 bytecode->Dump(std::cerr);
-            bytecode->Clear();
+            attempt.Fail();
             Tree_p msg = ErrorMessage("No form matches $1", expr);
             bytecode->CompileError(msg);
-            return;
         }
         definition = done == IS_DEFINITION;
         last = expr;
