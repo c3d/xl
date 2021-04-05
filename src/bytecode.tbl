@@ -293,6 +293,8 @@ OPCODE(form_error, (LOCAL),
 // ----------------------------------------------------------------------------
        RunValue &x = INPUT_VALUE;
        Tree_p form = x.AsTree();
+       if (!form)
+           form = new Name("nil");
        Error error("No form matching $1", form);
        x = RunValue((Tree *) error, error_mtype);
        CHAIN(ret, 1);
