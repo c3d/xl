@@ -1345,7 +1345,7 @@ inline Tree *Context::Enclose(Tree *value)
 //   Prefix the value wiht the current symbols - Unwrapped by evaluate()
 // ----------------------------------------------------------------------------
 {
-    if (!value->As<Closure>())
+    if (value && !value->As<Closure>())
     {
         // Strip blocks (if-then-else common optimization)
         Tree *expr = value;
