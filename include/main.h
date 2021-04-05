@@ -82,6 +82,7 @@ struct Main
     // Evaluate a tree in the given context
     Tree *              Evaluate(Scope *scope, Tree *value);
     Tree *              TypeCheck(Scope *scope, Tree *type, Tree *value);
+    Tree *              Evaluate(Tree *error);
 
     // Internal procesing
     Errors *            InitMAIN();

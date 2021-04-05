@@ -330,6 +330,15 @@ Tree *Main::TypeCheck(Scope *scope, Tree *type, Tree *value)
 }
 
 
+Tree *Main::Evaluate(Tree *error)
+// ----------------------------------------------------------------------------
+//   Evaluate an error in the top-level context
+// ----------------------------------------------------------------------------
+{
+    return evaluator->Evaluate(context.Symbols(), error);
+}
+
+
 XL::Tree *Main::Show(std::ostream &out, XL::Tree *tree)
 // ----------------------------------------------------------------------------
 //   Show the output we got from evaluation
