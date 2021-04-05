@@ -1645,6 +1645,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
                 out << "+" << value << "=" << pc+value;
             break;
         case LOCAL:
+        case DEFINITION:
             if (IsConstantIndex(value))
             {
                 out << "C" << ConstantIndex(value);
