@@ -9,5 +9,5 @@ foo 3=X + 2 * 4
 bar 3=X + 3 * (3 + 1)
 foo 551.3=X + 2 * 552.3
 bar 551.3=X + 3 * (551.3 + 1)
-foo Z+1=X + 2 * error ("Nothing matches $1", X + 1)
+foo Z+1=X + 2 * error ("No form matching $1", X + 1)
 bar Z+1=X + 3 * (Z + 1 + 1)

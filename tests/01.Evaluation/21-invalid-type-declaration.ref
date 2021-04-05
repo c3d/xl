@@ -61,4 +61,4 @@
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as tree] against [0:27]
 01.Evaluation/21-invalid-type-declaration.xl:38:2:  Pattern [lambda Value as value] does not match [0:27]:
 01.Evaluation/21-invalid-type-declaration.xl:38:2:   Cannot match type cast [lambda Value as value] against [0:27]
-01.Evaluation/21-invalid-type-declaration.xl:38:2:  Nothing matches [0:27]
+01.Evaluation/21-invalid-type-declaration.xl:38:2:  No form matching [0:27]

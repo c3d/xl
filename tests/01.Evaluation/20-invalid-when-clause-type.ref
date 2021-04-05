@@ -5,4 +5,4 @@
 01.Evaluation/20-invalid-when-clause-type.xl:36:9:  Pattern [collatz N when "glop"] does not match [collatz 10]:
 01.Evaluation/20-invalid-when-clause-type.xl:36:21:   Invalid guard clause, "glop" is not a boolean
 01.Evaluation/20-invalid-when-clause-type.xl:36:9:   Prefix [collatz N when "glop"] does not match [collatz 10]
-01.Evaluation/20-invalid-when-clause-type.xl:39:10:  Nothing matches [collatz 10]
+01.Evaluation/20-invalid-when-clause-type.xl:39:10:  No form matching [collatz 10]

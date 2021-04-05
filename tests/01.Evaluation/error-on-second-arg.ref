@@ -1,1 +1,1 @@
-A=error "Nothing matches $1", Index ("A")
+A=error "No form matching $1", Index ("A")
