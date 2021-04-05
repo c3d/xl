@@ -2924,7 +2924,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         if (done)
         {
             if (done < 0 && !bindings.PerfectMatch())
-                OP(form_error, StorageIndex(expr));
+                OP(form_error, expr);
             bytecode->PatchSuccesses(patches);
         }
         else
