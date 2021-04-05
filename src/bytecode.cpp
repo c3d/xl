@@ -1316,10 +1316,25 @@ opcode_t Bytecode::EvaluateAsConstant(Tree *value)
 //   constant, which is checked after compilation
 {
     Tree *type = tree_type;
+    size_t max = constants.size();
     opcode_t index;
 
+    // Special-case for nil
+    if (!value)
+    {
+        type = nil_type;
+        for (index = 0; index < max; index++)
+        {
+            RunValue &cst = constants[index];
+            if (cst.type == nil_mtype)
+                goto found;
+        }
+        RunValue nilrv(nil_mtype);
+        index = EnterRunValue(nilrv);
+        return index;
+    }
+
     // Check if we have a constant
-    size_t max = constants.size();
     switch(value->Kind())
     {
     case NATURAL:
