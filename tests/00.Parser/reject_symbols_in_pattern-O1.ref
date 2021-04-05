@@ -1,0 +1,4 @@
+00.Parser/reject_symbols_in_pattern.xl:36:1: The pattern variable [@] is not a name
+00.Parser/reject_symbols_in_pattern.xl:36:5: The pattern variable [`] is not a name
+00.Parser/reject_symbols_in_pattern.xl:36:1: The pattern variable [@] is not a name
+00.Parser/reject_symbols_in_pattern.xl:36:5: The pattern variable [`] is not a name
