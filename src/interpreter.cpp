@@ -1439,7 +1439,7 @@ next:
             record(eval, "<May fail %t", expr);
             return nullptr;
         }
-        Ooops("Nothing matches $1", expr);
+        Ooops("No form matching $1", expr);
         record(eval, "<Failed to find a match for %t", expr);
         return nullptr;
     }

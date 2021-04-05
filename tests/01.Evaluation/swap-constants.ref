@@ -3,4 +3,4 @@
 01.Evaluation/swap-constants.xl:38:20:   Binding variable [var Y] to non-variable 1
 01.Evaluation/swap-constants.xl:38:14:   Infix [var X, var Y] does not match [X, 1]
 01.Evaluation/swap-constants.xl:38:8:   Prefix [Swap (var X, var Y)] does not match [Swap X, 1]
-01.Evaluation/swap-constants.xl:46:6:  Nothing matches [Swap X, 1]
+01.Evaluation/swap-constants.xl:46:6:  No form matching [Swap X, 1]

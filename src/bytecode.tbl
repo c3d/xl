@@ -289,11 +289,11 @@ OPCODE(error_exit, (CONSTANT),
 
 OPCODE(form_error, (LOCAL),
 // ----------------------------------------------------------------------------
-//   No form matches the given input
+//   No form matching the given input - Report the error
 // ----------------------------------------------------------------------------
        RunValue &x = INPUT_VALUE;
        Tree_p form = x.AsTree();
-       Error error("No form matches $1", form);
+       Error error("No form matching $1", form);
        x = RunValue((Tree *) error, error_mtype);
        CHAIN(ret, 1);
 )
