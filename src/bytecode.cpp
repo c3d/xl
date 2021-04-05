@@ -805,7 +805,8 @@ void Bytecode::EnterArg(const Bytecode::StorageIndexWrapper &local)
 //   Record a constant indicating a bytecode local
 // ----------------------------------------------------------------------------
 {
-    XL_ASSERT(*compile->args++ == LOCAL);
+    XL_ASSERT((*compile->args == LOCAL || *compile->args == DEFINITION) &&
+              compile->args++);
     record(opcode, "Local storage %t", local.value);
     code.push_back(StorageIndex(local.value));
 }
