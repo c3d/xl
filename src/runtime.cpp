@@ -951,6 +951,26 @@ void xl_write_cr()
 NATIVE(xl_write_cr);
 
 
+void xl_error(text message, Tree *args)
+// ----------------------------------------------------------------------------
+//   Display an error message
+// ----------------------------------------------------------------------------
+{
+    Error error(message.c_str(), args ? args->Position() : Tree::NOWHERE);
+    while (Infix *infix = args->AsInfix())
+    {
+        if (infix->name != ",")
+            break;
+        error.Arg(infix->left);
+        args = infix->right;
+    }
+    if (args)
+        error.Arg(args);
+    MAIN->errors->Log(error);
+}
+NATIVE(xl_error);
+
+
 bool xl_text_eq(kstring x, kstring y)
 // ----------------------------------------------------------------------------
 //   Compare two texts

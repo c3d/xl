@@ -68,7 +68,15 @@ int main(int argc, char **argv)
 
     // Enter server mode if requested
     if (!main.HadErrors() && main.ServerMode())
-            result = main.EnterServerMode();
+        result = main.EnterServerMode();
+
+    // Check error results
+    if (XL::IsError(result))
+    {
+        // Display errors
+        result->MarkSourceTree();
+        result = main.Evaluate(result);
+    }
 
     // Show errors if we had any
     int rc = main.HadErrors() > 0;
