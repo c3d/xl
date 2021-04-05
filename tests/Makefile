@@ -82,15 +82,18 @@ TEST_KO=! \( $(TEST_OK) \)
 # Set the result based on whether files are identical
 # $1 = target
 define diff
-  if [ $(TEST_OK) ]; then					\
-  $(UPDATE_CMD)							\
-  $(call result,$1,diff $1.ref $1.output > $1.diff 2>&1)	\
+  if [ $(TEST_OK) ]; then				\
+  $(UPDATE_CMD)						\
+  $(call result,$1,					\
+    diff $(firstword $(wildcard $1$(OPTLEVEL).ref)	\
+		     $(wildcard $1.ref))		\
+         $1.output > $1.diff 2>&1)			\
   fi
 endef
 
 UPDATE_CMD=$(UPDATE_CMD_$(UPDATE_REFS))
 UPDATE_CMD_yes=					\
-  cp $1.output $1.ref;				\
+  cp $1.output $1$(OPTLEVEL).ref;		\
   grep -v $1 $(BASELINE) > baseline-new.txt;	\
   mv baseline-new.txt $(BASELINE) ;
 

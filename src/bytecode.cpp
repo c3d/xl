@@ -2917,7 +2917,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
             if (RECORDER_TRACE(bytecode))
                 bytecode->Dump(std::cerr);
             attempt.Fail();
-            Tree_p msg = ErrorMessage("No form matches $1", expr);
+            Tree_p msg = ErrorMessage("Nothing matches $1", expr);
             bytecode->CompileError(msg);
         }
         definition = done == IS_DEFINITION;

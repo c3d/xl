@@ -1,2 +1,1 @@
->>
-00.Parser/bug346.xl:2: No prefix matches '<<>>>>'
+00.Parser/bug346.xl:35:6: Nothing matches [<<>>>>]
