@@ -302,6 +302,7 @@ public:
     // Runtime support functions
     void        CompileError(Tree *msg);
     Tree *      CompileError();
+    bool        CheckCompileErrors();
     void        Clear();
     size_t      Size();
     Scope *     EvaluationScope();
@@ -1063,6 +1064,22 @@ Tree *Bytecode::CompileError()
 }
 
 
+bool Bytecode::CheckCompileErrors()
+// ----------------------------------------------------------------------------
+//   Check if there are compile errors at that stage, and if so report them
+// ----------------------------------------------------------------------------
+{
+    Bytecode *bytecode = this;
+    if (Tree *err = CompileError())
+    {
+        OP(error_exit, err);
+        CompileError(nullptr);
+        return true;
+    }
+    return false;
+}
+
+
 void Bytecode::Clear()
 // ----------------------------------------------------------------------------
 //   In case of failure, clear the bytecode
@@ -1136,12 +1153,7 @@ void Bytecode::Validate()
         (code.back() != opcode_ret && code.back() != opcode_error_exit))
     {
         Bytecode *bytecode = this;
-        if (Tree *err = CompileError())
-        {
-            OP(error_exit, err);
-            CompileError(nullptr);
-        }
-        else
+        if (!CheckCompileErrors())
         {
             OP(ret, XL::ValueIndex(bytecode->self));
         }
@@ -2647,9 +2659,13 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     if (Scope_p closure = context.ProcessScope(prefix->left, inits))
     {
         compile(scope, prefix->left, bytecode);
-        OP(set_scope, ValueIndex(prefix->left));
-        doInitializers(inits, bytecode);
-        compile(closure, prefix->right, bytecode);
+        if (!bytecode->CheckCompileErrors())
+        {
+            OP(set_scope, ValueIndex(prefix->left));
+            doInitializers(inits, bytecode);
+            if (!bytecode->CheckCompileErrors())
+                compile(closure, prefix->right, bytecode);
+        }
         return true;
     }
 
@@ -2891,11 +2907,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         // If not the first statement, check result of previous statement
         if (last)
         {
-            if (Tree *err = bytecode->CompileError())
-            {
-                OP(error_exit, err);
-                bytecode->CompileError(nullptr);
-            }
+            bytecode->CheckCompileErrors();
             if (!definition)
                 OP(check_statement, ValueIndex(last));
         }
