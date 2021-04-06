@@ -399,6 +399,7 @@ public:
               cutpoint(bytecode->Size()),
               frame(bytecode->parameters.size()),
               checks(bytecode->ChecksToPatch()),
+              successes(bytecode->SuccessesToPatch()),
               values(compile->values),
               types(compile->types)
         {
@@ -416,6 +417,8 @@ public:
             bytecode->Cut(cutpoint);
             Patches &chk = compile->checks;
             chk.erase(chk.begin() + checks, chk.end());
+            Patches &succ = compile->successes;
+            succ.erase(succ.begin() + successes, succ.end());
             compile->values = values;
             compile->types = types;
         }
@@ -425,6 +428,7 @@ public:
         opaddr_t     cutpoint;
         size_t       frame;
         size_t       checks;
+        size_t       successes;
         ValueMap     values;
         TypeMap      types;
     };
