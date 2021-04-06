@@ -704,7 +704,8 @@ opcode_t Bytecode::EnterRunValue(const RunValue &rv, Tree *value)
 // ----------------------------------------------------------------------------
 {
     opcode_t index = EnterRunValue(rv);
-    compile->values[value] = index;
+    if (compile->values.find(value) == compile->values.end())
+        compile->values[value] = index;
     return index;
 }
 
@@ -1249,6 +1250,10 @@ opcode_t Bytecode::ValueIndex(Tree *value)
 //   Find the local or constant index for a given value
 // ----------------------------------------------------------------------------
 {
+    ValueMap &values = compile->values;
+    auto found = values.find(value);
+    if (found != values.end())
+        return (*found).second;
     opcode_t index = EvaluateAsConstant(value);
     if (index)
         return index;
