@@ -108,8 +108,8 @@ X:boolean xor Y:boolean         as boolean is builtin "xor_boolean"
 not X:boolean                   as boolean is builtin "not_boolean"
 
 // Implicit conversion of integer and natural to real
-X:integer as real               is builtin "Integer2Real"
-X:natural as real               is builtin "Natural2Real"
+X:integer as real               is builtin "integer2real"
+X:natural as real               is builtin "natural2real"
 
 // Text
 X:text = Y:text                 as boolean is native "xl_text_eq"

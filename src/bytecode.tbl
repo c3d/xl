@@ -224,6 +224,9 @@ UNARY0(block_opening, block, text, Block *, text *,
 UNARY0(block_closing, block, text, Block *, text *,
        result = new text(value->closing))
 
+UNARY0(integer2real, integer, real,  longlong, double, result = value)
+UNARY0(natural2real, integer, real, ulonglong, double, result = value)
+
 
 
 #undef UNARY

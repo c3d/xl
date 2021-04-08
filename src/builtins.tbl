@@ -273,8 +273,10 @@ BINARY(ge_boolean,  Name,    Name,    Name,     R_BOOL(x_boolean >=  y_boolean))
 //
 // ============================================================================
 
-UNARY(Integer2Real, Real,   Natural,            R_REAL(x_real))
-UNARY(Natural2Real, Real,   Natural,            R_REAL(x_real))
+UNARY(integer2real, Real,   Natural,            R_REAL(x_real))
+UNARY(natural2real, Real,   Natural,            R_REAL(x_real))
+
+
 
 // ============================================================================
 //
