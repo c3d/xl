@@ -608,26 +608,31 @@ inline Name *IsLambda(Tree *what)
 }
 
 
-inline Name *IsTypeCastDeclaration(Infix *infix)
+inline Tree *IsTypeCastDeclaration(Infix *infix)
 // ----------------------------------------------------------------------------
 //   Check if an infix is a type cast declaration [lambda N as type]
 // ----------------------------------------------------------------------------
 {
     if (IsTypeCast(infix))
+    {
         if (Name *name = IsLambda(infix->left))
             return name;
+        if (Infix *decl = IsTypeAnnotation(infix->left))
+            if (decl->left->AsName())
+                return decl;
+    }
     return nullptr;
 }
 
 
-inline Name *IsTypeCastDeclaration(Tree *tree)
+inline Tree *IsTypeCastDeclaration(Tree *tree)
 // ----------------------------------------------------------------------------
 //    Check if a type is a type cast declaration [lambda N as type]
 // ----------------------------------------------------------------------------
 {
     if (Infix *infix = tree->AsInfix())
-        if (Name *name = IsTypeCastDeclaration(infix))
-            return name;
+        if (Tree *declared = IsTypeCastDeclaration(infix))
+            return declared;
     return nullptr;
 }
 
