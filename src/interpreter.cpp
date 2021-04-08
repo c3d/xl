@@ -350,7 +350,7 @@ Tree *Bindings::Do(Infix *what)
         bool outermost = test == self;
 
         // Check if we test [A+B as integer] against [lambda N as integer]
-        if (Name *declared = IsTypeCastDeclaration(what))
+        if (Tree *declared = IsTypeCastDeclaration(what))
         {
             if (Infix *cast = IsTypeCast(test))
             {
@@ -454,7 +454,7 @@ Tree *Bindings::Do(Infix *what)
         }
     }
 
-    Infix *ifx = test->AsInfix();
+    Infix_p ifx = test->AsInfix();
     if (!ifx || ifx->name != what->name)
     {
         // Try to get an infix by evaluating what we have
