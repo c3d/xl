@@ -2041,7 +2041,7 @@ that value to the calling program.</p>
 </li>
 <li>
 <p><code>invoke</code> evaluates a remote program, establishing a two-way
-communication with the remote that the remote can use with <code>reply</code></p>
+communication with the remote that the remote can use with <code>reply</code>.</p>
 </li>
 <li>
 <p><code>reply</code> allows remote code within an <code>invoke</code> to evaluate code in its
@@ -2194,7 +2194,7 @@ option of XL:</p>
 <p>Like for Tao3D, the implementation of these functions is not very
 complicated, and more importantly, it did not require any kind of change
 to the basic XL evaluation rules. In other words, adding something as
-sophisticated as transparently distributed progrmming to XL can be done
+sophisticated as transparently distributed programming to XL can be done
 by practically any programmer, without changing the compiler.</p>
 </div>
 </div>
@@ -2330,18 +2330,7 @@ real numbers like <code>1.234</code>, <code>1.5e-10</code> or <code>2#1.0001_000
 <p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code></p>
 </li>
 <li>
-<p><a id="name"></a><code>name</code> nodes represent names like <code>JOHN_DOE</code></p>
-</li>
-<li>
-<p><a id="operator"></a><code>operator</code> nodes represent non-alphabetical operators
-like <code>&lt;=&gt;</code>.</p>
-</li>
-<li>
-<p><a id="symbols"></a><code>symbols</code> nodes regroup names, symbols and a special empty
-symbol used in the representation of empty blocks like <code>()</code>.</p>
-</li>
-<li>
-<p><a id="data"></a><code>data</code> nodes hold an arbitrary amount of binary data.</p>
+<p><a id="symbols"></a><code>symbols</code> nodes regroup names like <code>JOHN_DOE</code> and symbols like <code>+=</code>.</p>
 </li>
 </ol>
 </div>
@@ -2365,19 +2354,7 @@ operand, like <code>3%</code> or <code>45km</code>.</p>
 </li>
 <li>
 <p><a id="block"></a><code>block</code> nodes represent a node surrounded by two delimiters, like
-<code>[a]</code>, <code>(a)</code>, <code>{a}</code>. Blocks are also used to represent indentation.</p>
-</li>
-<li>
-<p><a id="parenthese_block"></a><code>parenthese_block</code> nodes are delimited with <code>(</code> and <code>)</code>.</p>
-</li>
-<li>
-<p><a id="square_block"></a><code>square_block</code> nodes are delimited with <code>[</code> and <code>]</code>.</p>
-</li>
-<li>
-<p><a id="curly_block"></a><code>curly_block</code> nodes are delimited with <code>{</code> and <code>}</code>.</p>
-</li>
-<li>
-<p><a id="indent"></a><code>indent_block</code> nodes are delimited by
+<code>[a]</code>, <code>(a)</code>, <code>{a}</code>. Blocks are also used to represent indentation.
 <a href="#indentation">code indentation</a>.</p>
 </li>
 </ol>
@@ -2566,7 +2543,7 @@ sequence of ASCII characters in <code>Hello!</code>.</p>
 <p>For fractional numbers, a dot <code>.</code> is used as decimal separator,
 and must separate digits. For example, <code>0.2</code> and <code>2.0</code> are valid but,
 unlike in C, <code>.2</code> and <code>2.</code> are not numbers but a prefix and
-dpostfix <code>.</code> respectively. This is necessary to avoid ambiguities.
+postfix <code>.</code> respectively. This is necessary to avoid ambiguities.
 Also, the standard library denotes <a href="#range">ranges</a> using
 an infix <code>..</code>, so <code>2..3</code> is an infix <code>..</code> with <code>2</code> and <code>3</code> as
 operands, representing the range between 2 and 3.</p>
@@ -2579,7 +2556,7 @@ is the same as <code>0.001</code>. The exponent is always given in base 10, and 
 indicates an exponentiation in the given base, so that <code>2#1e8</code> is
 2<sup>8</sup>, in other words decimal value 256. For based numbers, the
 exponent may be preceded by a <code>#</code> sign, which is mandatory if <code>e</code> or
-<code>E</code> are valid digits in the base, as in <code>16#FF#e2</code> which is an
+<code>E</code> are valid digits in the base. For example, <code>16#FF#e2</code> is an
 hexadecimal representation of decimal value 65280.</p>
 </div>
 <div class="paragraph">
@@ -13821,7 +13798,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-01-30 10:59:13 +0100
+Last updated 2021-07-01 15:26:50 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

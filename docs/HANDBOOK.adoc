@@ -1131,7 +1131,7 @@ This was achieved by adding only four relatively simple XL functions:
 * `ask` evaluates a remote program that returns a value, and returns
   that value to the calling program.
 * `invoke` evaluates a remote program, establishing a two-way
-  communication with the remote that the remote can use with `reply`
+  communication with the remote that the remote can use with `reply`.
 * `reply` allows remote code within an `invoke` to evaluate code in its
   original caller’s context, but with access to all the local variables
   declared by the remote.
@@ -1242,7 +1242,7 @@ You can then run the program on a third machine with:
 Like for Tao3D, the implementation of these functions is not very
 complicated, and more importantly, it did not require any kind of change
 to the basic XL ((evaluation)) rules. In other words, adding something as
-sophisticated as transparently distributed progrmming to XL can be done
+sophisticated as transparently distributed programming to XL can be done
 by practically any programmer, without changing the compiler.
 
 
@@ -1351,12 +1351,7 @@ Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
   real numbers like `1.234`, `1.5e-10` or `2#1.0001_0001#e24`.
 . [[character]]`character` nodes represent individual characters, like `'A'`.
 . [[text]]`text` nodes represent text values like `"Hello world"`
-. [[name]]`name` nodes represent names like `JOHN_DOE`
-. [[operator]]`operator` nodes represent non-alphabetical operators
-  like `+<=>+`.
-. [[symbols]]`symbols` nodes regroup names, symbols and a special empty
-  symbol used in the representation of empty blocks like `()`.
-. [[data]]`data` nodes hold an arbitrary amount of binary data.
+. [[symbols]]`symbols` nodes regroup names like `JOHN_DOE` and symbols like `+=`.
 
 Inner nodes contains combinations of other XL nodes:
 
@@ -1370,10 +1365,6 @@ Inner nodes contains combinations of other XL nodes:
   operand, like `3%` or `45km`.
 . [[block]]`block` nodes represent a node surrounded by two delimiters, like
   `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
-. [[parenthese_block]]`parenthese_block` nodes are delimited with `(` and `)`.
-. [[square_block]]`square_block` nodes are delimited with `[` and `]`.
-. [[curly_block]]`curly_block` nodes are delimited with `{` and `}`.
-. [[indent]]`indent_block` nodes are delimited by
   link:#indentation[code indentation].
 
 For example, let’s consider the following code:
@@ -1511,7 +1502,7 @@ sequence of ASCII characters in `Hello!`.
 For ((fractional number))s, a dot `.` is used as ((decimal separator)),
 and must separate digits. For example, `0.2` and `2.0` are valid but,
 unlike in C, `.2` and `2.` are not numbers but a prefix and
-dpostfix `.` respectively. This is necessary to avoid ambiguities.
+postfix `.` respectively. This is necessary to avoid ambiguities.
 Also, the ((standard library)) denotes link:#range[((range))s] using
 an infix `..`, so `2..3` is an infix `..` with `2` and `3` as
 operands, representing the range between 2 and 3.
@@ -1523,7 +1514,7 @@ is the same as `0.001`. The exponent is always given in base 10, and it
 indicates an exponentiation in the given base, so that `2#1e8` is
 2^8^, in other words decimal value 256. For based numbers, the
 exponent may be preceded by a `#` sign, which is mandatory if `e` or
-`E` are valid digits in the base, as in `16#FF#e2` which is an
+`E` are valid digits in the base. For example, `16#FF#e2` is an
 hexadecimal representation of decimal value 65280.
 
 There is an implementation-dependent limit for the maximum value a
