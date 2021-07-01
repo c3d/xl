@@ -629,10 +629,16 @@ always returns `-1`, `0` or `1` is the following:
 
 [source]
 ----
-syntax { INFIX 290 <=> }
 X <=> Y     when X < Y  is -1
 X <=> Y     when X = Y  is  0
 X <=> Y     when X > Y  is  1
+----
+
+Note that this also requires a syntax file defining the precedence of the operator:
+
+[source]
+----
+INFIX 290 <=>
 ----
 
 Similarly, {cpp} makes it extremely difficult to optimize(((optimization)))
@@ -1586,8 +1592,7 @@ Operators longer than one character must be specified in the XL syntax
 file. For example, the XL syntax file defines a `+<=+` operator, but no
 `+<=>+` operator. Consequently, the sequence `+1 <=> 2+` will be parsed as
 `+(1 <= (> 2))+`. In order to add this operator, it is necessary to
-link:#extending-the-syntax[extend the syntax] using a `syntax`
-statement.
+link:#extending-the-syntax[extend the syntax].
 
 Names and operators are treated interchangeably by XL after the parsing
 phase, and are collectively called _symbols_.
@@ -1801,26 +1806,19 @@ relatively simple function declarations.
 
 ==== [[syntax-statements]]Extending the syntax
 
-The `syntax` name followed by a block can be used to alter the default
-syntax provided by the link:{xl}src/xl.syntax[syntax file]. Within the
-block, operators can be defined and their precedence given using the
-link:#operator-precedence-and-associativity[same rules] as in the syntax
-file.
+In addition the to the default syntax provided by the
+link:{xl}src/xl.syntax[syntax file], modules can also supply a `.syntax` file
+providing the precedence of the operators that this module adds.
 
 For example, if you want to add the spaceship operator `+<=>+` in your
 program, and give the same precedence as `+<=+`, namely 290, you could
-write:
+write a `spaceship` module with a `spaceship.syntax` file:
 
 [source]
 ----
-syntax
-    INFIX 290 <=>
+INFIX 290 <=>
 ----
 
-NOTE: Extending the syntax is intended to also work also in a module.
-This means that an `use` statement can alter the syntax in your source
-code. This is, however, rarely recommended. Also, importing a syntax
-extension does not presently work.
 
 === Making the syntax easy for humans
 
@@ -1998,31 +1996,26 @@ performed during parsing:
 [arabic]
 . Filtering out comments: Comments should not have an effect on the
   program, so they are simply eliminated during parsing.
-. Processing `syntax` statements: This must be done during parsing,
-  because `syntax` is designed to modify the
-  link:#extending-the-syntax[spelling and precedence]
-  of operators, and that information is used during the parsing phase.
 . Processing `use` statements: Since imported modules can contain
-  `syntax` statements, they must at least partially be processed during
-  parsing. Details about `use` statements are covered in the
+  link:#extending-the-syntax[syntax extensions], they must at least partially be
+  processed during parsing. Details about `use` statements are covered in the
   link:#modules[chapter about modules].
-. Identifying words that switch to a
-  link:#child-syntax[child syntax]: symbols that
-  activate a child syntax are recognized during parsing. This is the case
-  for example with the `extern` name in the
-  link:{xl}src/xl.syntax#L62[default syntax].
+. Identifying words that switch to a link:#child-syntax[child syntax]: symbols
+  that activate a child syntax are recognized during parsing. This is the case
+  for example with the `extern` name in the link:{xl}src/xl.syntax#L62[default
+  syntax].
 . Identifying binary data: words such as `bits` marked as introducing
   `BINARY` data in the syntax file are treated specially during parsing,
   to generate parse tree nodes representing binary data.
 
-NOTE: this is not currently implemented.
+NOTE: binary data is not currently implemented.
 
 The need to process `use` statements during parsing means that it’s not
 possible in XL to have computed `use` statements. The name of the module
 must always be evaluated at compile-time.
 
 NOTE: *RATIONALE* An alternative would have been to allow computed `use`
-statement, but disallow `syntax` in them. However, for convenience,
+statement, but disallow syntax extensions in them. However, for convenience,
 `use` names look like `XL.CONSOLE.TEXT_IO` and not, say,
 `"xl/console/text_io.xs"`, so there is no obvious way to compute them
 anyway. If computed `use` statement ever become necessary, it will be
@@ -2063,13 +2056,6 @@ processing in all three executation phases.
 [source]
 ----
 use XL.MATH.COMPLEX
-----
-* A `syntax` definition, which only plays a role during parsing is
-ignored during the declaration and evaluation phases.
-+
-[source]
-----
-syntax { INFIX 290 <=> }
 ----
 * An infix `is`, which is called a _definition_, an infix `:` or `as`,
 which are called link:#type-annotations[_type annotations_], or an

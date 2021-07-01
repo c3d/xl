@@ -1451,10 +1451,17 @@ always returns <code>-1</code>, <code>0</code> or <code>1</code> is the followin
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">syntax { INFIX 290 &lt;=&gt; }
-X &lt;=&gt; Y     when X &lt; Y  is -1
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X &lt;=&gt; Y     when X &lt; Y  is -1
 X &lt;=&gt; Y     when X = Y  is  0
 X &lt;=&gt; Y     when X &gt; Y  is  1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that this also requires a syntax file defining the precedence of the operator:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">INFIX 290 &lt;=&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2667,8 +2674,7 @@ but <code>⇒A2</code> is presently a valid XL name, and this is considered a bu
 file. For example, the XL syntax file defines a <code>&lt;=</code> operator, but no
 <code>&lt;=&gt;</code> operator. Consequently, the sequence <code>1 &lt;=&gt; 2</code> will be parsed as
 <code>(1 &lt;= (&gt; 2))</code>. In order to add this operator, it is necessary to
-<a href="#extending-the-syntax">extend the syntax</a> using a <code>syntax</code>
-statement.</p>
+<a href="#extending-the-syntax">extend the syntax</a>.</p>
 </div>
 <div class="paragraph">
 <p>Names and operators are treated interchangeably by XL after the parsing
@@ -2949,37 +2955,19 @@ relatively simple function declarations.
 <div class="sect3">
 <h4 id="extending-the-syntax"><a class="anchor" href="#extending-the-syntax"></a><a class="link" href="#extending-the-syntax">2.3.5. <a id="syntax-statements"></a>Extending the syntax</a></h4>
 <div class="paragraph">
-<p>The <code>syntax</code> name followed by a block can be used to alter the default
-syntax provided by the <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>. Within the
-block, operators can be defined and their precedence given using the
-<a href="#operator-precedence-and-associativity">same rules</a> as in the syntax
-file.</p>
+<p>In addition the to the default syntax provided by the
+<a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>, modules can also supply a <code>.syntax</code> file
+providing the precedence of the operators that this module adds.</p>
 </div>
 <div class="paragraph">
 <p>For example, if you want to add the spaceship operator <code>&lt;=&gt;</code> in your
 program, and give the same precedence as <code>&lt;=</code>, namely 290, you could
-write:</p>
+write a <code>spaceship</code> module with a <code>spaceship.syntax</code> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">syntax
-    INFIX 290 &lt;=&gt;</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">INFIX 290 &lt;=&gt;</code></pre>
 </div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Extending the syntax is intended to also work also in a module.
-This means that an <code>use</code> statement can alter the syntax in your source
-code. This is, however, rarely recommended. Also, importing a syntax
-extension does not presently work.
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
@@ -3230,23 +3218,16 @@ performed during parsing:</p>
 program, so they are simply eliminated during parsing.</p>
 </li>
 <li>
-<p>Processing <code>syntax</code> statements: This must be done during parsing,
-because <code>syntax</code> is designed to modify the
-<a href="#extending-the-syntax">spelling and precedence</a>
-of operators, and that information is used during the parsing phase.</p>
-</li>
-<li>
 <p>Processing <code>use</code> statements: Since imported modules can contain
-<code>syntax</code> statements, they must at least partially be processed during
-parsing. Details about <code>use</code> statements are covered in the
+<a href="#extending-the-syntax">syntax extensions</a>, they must at least partially be
+processed during parsing. Details about <code>use</code> statements are covered in the
 <a href="#modules">chapter about modules</a>.</p>
 </li>
 <li>
-<p>Identifying words that switch to a
-<a href="#child-syntax">child syntax</a>: symbols that
-activate a child syntax are recognized during parsing. This is the case
-for example with the <code>extern</code> name in the
-<a href="http://github.com/c3d/xl/blob/master/src/xl.syntax#L62">default syntax</a>.</p>
+<p>Identifying words that switch to a <a href="#child-syntax">child syntax</a>: symbols
+that activate a child syntax are recognized during parsing. This is the case
+for example with the <code>extern</code> name in the <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax#L62">default
+syntax</a>.</p>
 </li>
 <li>
 <p>Identifying binary data: words such as <code>bits</code> marked as introducing
@@ -3262,7 +3243,7 @@ to generate parse tree nodes representing binary data.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-this is not currently implemented.
+binary data is not currently implemented.
 </td>
 </tr>
 </table>
@@ -3280,7 +3261,7 @@ must always be evaluated at compile-time.</p>
 </td>
 <td class="content">
 <strong>RATIONALE</strong> An alternative would have been to allow computed <code>use</code>
-statement, but disallow <code>syntax</code> in them. However, for convenience,
+statement, but disallow syntax extensions in them. However, for convenience,
 <code>use</code> names look like <code>XL.CONSOLE.TEXT_IO</code> and not, say,
 <code>"xl/console/text_io.xs"</code>, so there is no obvious way to compute them
 anyway. If computed <code>use</code> statement ever become necessary, it will be
@@ -3333,15 +3314,6 @@ processing in all three executation phases.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">use XL.MATH.COMPLEX</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>A <code>syntax</code> definition, which only plays a role during parsing is
-ignored during the declaration and evaluation phases.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">syntax { INFIX 290 &lt;=&gt; }</code></pre>
 </div>
 </div>
 </li>
@@ -13850,7 +13822,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-01 16:07:59 +0200
+Last updated 2021-07-01 19:32:14 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
