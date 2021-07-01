@@ -1153,7 +1153,7 @@ type polar      matches polar(mod:number, arg:number)</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<a href="#types">types</a> in XL indicate the shape of parse trees. In
+The <a href="#types">types</a> in XL indicate the shape of parse trees. In
 other words, the <code>cartesian</code> type above will match any parse tree that
 takes the shape of the word <code>cartesian</code> followed by two numbers, like
 for example <code>cartesian(1,5)</code>.
@@ -3243,7 +3243,7 @@ to generate parse tree nodes representing binary data.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-binary data is not currently implemented.
+Binary data is not currently implemented.
 </td>
 </tr>
 </table>
@@ -3294,13 +3294,11 @@ block’s child</p>
 </div>
 </li>
 <li>
-<p>An infix <code>NEWLINE</code>, semi-colon <code>;</code> or comma <code>,</code>, in which case the
-left and right operands of the infix are processed in that order.
-The comma is typically used in parameter lists and to separate
-expressions, whereas the semi-colon and new-line are used to separate
-statements. Processing the infix as a sequence only happens if
-<a href="#pattern-matching">pattern matching</a> did not succeed with the
-infix form.</p>
+<p>An infix <code>NEWLINE</code> or semi-colon <code>;</code>, in which case the left and right
+operands of the infix are processed in that order.  The semi-colon and
+new-line are used to separate statements. Processing the infix as a sequence
+only happens if <a href="#pattern-matching">pattern matching</a> did not succeed with
+the infix form.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">print "One"; print "Two"
@@ -13822,7 +13820,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-01 19:32:14 +0200
+Last updated 2021-07-01 23:22:13 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

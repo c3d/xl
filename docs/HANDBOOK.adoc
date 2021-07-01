@@ -368,7 +368,7 @@ type cartesian  matches cartesian(re:number, im:number)
 type polar      matches polar(mod:number, arg:number)
 ----
 
-NOTE: link:#types[((type))s] in XL indicate the shape of ((parse tree))s. In
+NOTE: The link:#types[((type))s] in XL indicate the shape of ((parse tree))s. In
 other words, the `cartesian` type above will match any parse tree that
 takes the shape of the word `cartesian` followed by two numbers, like
 for example `cartesian(1,5)`.
@@ -2008,7 +2008,7 @@ performed during parsing:
   `BINARY` data in the syntax file are treated specially during parsing,
   to generate parse tree nodes representing binary data.
 
-NOTE: binary data is not currently implemented.
+NOTE: Binary data is not currently implemented.
 
 The need to process `use` statements during parsing means that it’s not
 possible in XL to have computed `use` statements. The name of the module
@@ -2037,13 +2037,11 @@ block’s child
 ----
 { print "Hello World" }
 ----
-* An infix `NEWLINE`, semi-colon `;` or comma `,`, in which case the
-left and right operands of the infix are processed in that order.
-The comma is typically used in parameter lists and to separate
-expressions, whereas the semi-colon and new-line are used to separate
-statements. Processing the infix as a sequence only happens if
-link:#pattern-matching[pattern matching] did not succeed with the
-infix form.
+* An infix `NEWLINE` or semi-colon `;`, in which case the left and right
+  operands of the infix are processed in that order.  The semi-colon and
+  new-line are used to separate statements. Processing the infix as a sequence
+  only happens if link:#pattern-matching[pattern matching] did not succeed with
+  the infix form.
 +
 [source]
 ----
