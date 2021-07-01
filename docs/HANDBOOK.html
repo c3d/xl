@@ -1826,7 +1826,7 @@ the definition of integer addition may look like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X:integer + Y:integer as integer    is builtin Add</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X:integer + Y:integer as integer    is builtin "Add"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1834,9 +1834,10 @@ the definition of integer addition may look like this:</p>
 compiler that an expression like <code>X+Y</code> where both <code>X</code> and <code>Y</code> have the
 <code>integer</code> type will result in an <code>integer</code> value (that is the meaning of
 <code>as integer</code>). The implementation, however, is not given. Instead, the
-<code>builtin Add</code> tells the compiler that it has a cheat sheet for that
+<code>builtin "Add"</code> tells the compiler that it has a cheat sheet for that
 operations, called <code>Add</code>. How this cheat sheet is actually implemented
-is not specified, and depends on the compiler.</p>
+is not specified, and depends on the compiler. The name of builtins is machine
+dependent, and is represented as text so as to allow for arbitrary syntax.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2652,20 +2653,6 @@ but <code>⇒A2</code> is presently a valid XL name, and this is considered a bu
 <div class="paragraph">
 <p>Case and delimiters are not significant in XL, so that <code>JOE_DALTON</code> and
 <code>JoeDalton</code> are treated identically.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-For historical reasons, the current implementations are quite
-lacking in that respect, and will treat <code>V</code> and <code>v</code> differently. There
-is still an open debate about giving a semantic role to capitalization.
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>Operators begin with one of the ASCII punctuation characters:</p>
@@ -3602,7 +3589,7 @@ that looks something like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X:integer as real     is builtin IntegerToReal</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X:integer as real     is builtin "IntegerToReal"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6685,7 +6672,7 @@ print "Square root of -1 is ", sqrt(-1)     // Error</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="console" class="language-console hljs">Square root of 2 is 1.41421356237
-Square root of -1 is Error: No form matches sqrt(-1)</code></pre>
+Square root of -1 is Error: No form matching sqrt(-1)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9483,9 +9470,74 @@ X:integer := Y:real is
 <h4 id="mutability"><a class="anchor" href="#mutability"></a><a class="link" href="#mutability">4.8.5. Mutability</a></h4>
 <div class="paragraph">
 <p>A value is said to be <em>mutable</em> if it can change during its lifetime. A
-value that is not mutable is said to be <em>constant</em>. A mutable named
-entity is called a <em>variable</em>. An immutable named entity is called a
-<em>named constant</em>.</p>
+value that is not mutable is said to be <em>constant</em>.</p>
+</div>
+<div class="paragraph">
+<p>You create a mutable entity with the notation: <code>Name:Type := Init</code>, where <code>Name</code>
+is the name you give to the entity, <code>Type</code> is the type it must have over its
+lifetime, and <code>Init</code> is its initial value.</p>
+</div>
+<div class="paragraph">
+<p>A mutable value can be referenced at most in one place at a time in the
+program. That place is called the <em>owner</em> of the mutable value.
+A <em>mutable binding</em> is a binding that transfers a mutable value. While the
+mutable binding is active, the mutable value is owned by the mutable binding.
+A mutable binding is marked by the <code>out</code> or <code>inout</code> marker.</p>
+</div>
+<div class="paragraph">
+<p>Consider for example a <code>Swap</code> function that swaps its parameters. Since it needs
+to modify both parameters, both are marked as <code>inout</code>, meaning that they are
+both mutable.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Swap(inout A, inout B) is
+    Tmp is A
+    A := B
+    B := Tmp</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following code shows an example of valid use of <code>Swap</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X : integer := 35
+Y : integer := 42
+Swap X, Y</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>However, the statement <code>Swap X, X</code> is not valid, because <code>X</code> is passed to two
+distinct mutable bindings.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following more subtle example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">X : array[1..5] of real
+Y : array[2..7] of real
+Swap X[2], Y[3]         // OK
+Swap X[2], X[3]         // Not OK</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The second example is not valid, because for <code>A[I]</code> to be mutable, <code>A</code> needs to
+be mutable itself, so for <code>X[2], X[3]</code>, we need to hold two mutable bindings
+to <code>X</code> at the same time.</p>
+</div>
+<div class="paragraph">
+<p>Note that you can implement <code>Swap</code> for an array by swapping its elements,
+because if <code>Swap</code> receives two mutable bindings, they are necesary to two
+different mutable arrays.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Swap(inout X:array, inout Y:array) is
+    for I in array.index_range loop
+        Swap X[I], Y[I]</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>The <code>X:T</code> type annotations indicates that <code>X</code> is a mutable value of type
@@ -13798,7 +13850,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-01 15:26:50 +0200
+Last updated 2021-07-01 16:07:59 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
