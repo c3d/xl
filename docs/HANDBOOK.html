@@ -3316,19 +3316,20 @@ processing in all three executation phases.</p>
 </div>
 </li>
 <li>
-<p>An infix <code>is</code>, which is called a <em>definition</em>, an infix <code>:</code> or <code>as</code>,
-which are called <a href="#type-annotations"><em>type annotations</em></a>, or an
-infix assignment operator <code>:=</code> with a <code>:</code> type annotation on the left,
-called a <em>variable initialization</em>. Definitions, type annotations and
-variable initializations are collectively called <em>declarations</em>, and
-are processed during the <a href="#declaration-phase">declaration phase</a>.</p>
+<p>An infix <code>is</code>, which is called a <em>definition</em>, an infix <code>:</code> or <code>as</code>, which are
+called <a href="#type-annotations"><em>type annotations</em></a>, or an infix assignment
+operator <code>:=</code> with a <code>:</code> type annotation or a <code>variable</code> prefix on the left,
+called a <em>variable initialization</em>. Definitions, type annotations and variable
+initializations are collectively called <em>declarations</em>, and are processed
+during the <a href="#declaration-phase">declaration phase</a>.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">pi is 3.1415                  // Definition of 'pi'
 e as real is 2.71828          // Typed definition of 'e'
 Count : integer               // Variable declaration of 'Count'
 byte_size X as integer        // Function declaration of 'byte_size X'
-Remaining : integer := 100    // Variable initialization of 'Remaining'</code></pre>
+variable Steps := 100         // Variable initialization of 'Steps'
+Remaining : integer := 100    // Typed variable initialization of 'Remaining'</code></pre>
 </div>
 </div>
 </li>
@@ -13820,7 +13821,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-01 23:22:13 +0200
+Last updated 2021-07-02 00:00:24 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

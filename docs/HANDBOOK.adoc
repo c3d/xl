@@ -2055,12 +2055,12 @@ processing in all three executation phases.
 ----
 use XL.MATH.COMPLEX
 ----
-* An infix `is`, which is called a _definition_, an infix `:` or `as`,
-which are called link:#type-annotations[_type annotations_], or an
-infix assignment operator `:=` with a `:` type annotation on the left,
-called a _variable initialization_. Definitions, type annotations and
-variable initializations are collectively called _declarations_, and
-are processed during the link:#declaration-phase[declaration phase].
+* An infix `is`, which is called a _definition_, an infix `:` or `as`, which are
+  called link:#type-annotations[_type annotations_], or an infix assignment
+  operator `:=` with a `:` type annotation or a `variable` prefix on the left,
+  called a _variable initialization_. Definitions, type annotations and variable
+  initializations are collectively called _declarations_, and are processed
+  during the link:#declaration-phase[declaration phase].
 +
 [source]
 ----
@@ -2068,7 +2068,8 @@ pi is 3.1415                  // Definition of 'pi'
 e as real is 2.71828          // Typed definition of 'e'
 Count : integer               // Variable declaration of 'Count'
 byte_size X as integer        // Function declaration of 'byte_size X'
-Remaining : integer := 100    // Variable initialization of 'Remaining'
+variable Steps := 100         // Variable initialization of 'Steps'
+Remaining : integer := 100    // Typed variable initialization of 'Remaining'
 ----
 * Anything else, which is called a _statement_ and is processed during
 the link:#evaluation-phase[evaluation phase].
