@@ -2861,7 +2861,7 @@ with the same name as the formal parameter:
 circle (Radius:real, CenterX:real, CenterY:real) as circle
 C : circle := circle(Radius := 3.5, CenterX := 6.5, CenterY := 3.3)
 
-picture is type picture
+type picture is matching picture
     Width  : size
     Height : size
     Buffer : buffer
