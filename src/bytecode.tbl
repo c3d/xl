@@ -434,8 +434,19 @@ OPCODE(call, (CONSTANT, ARGUMENTS, LOCAL),
        if (bc->locals)
            state.Allocate(bc->locals); // Add locals on top of arguments
 
-       REFRAME;
-       RETARGET(&bc->code[0]);
+
+       if (state.Depth() <= Opt::stackDepth)
+       {
+           REFRAME;
+           RETARGET(&bc->code[0]);
+       }
+       else
+       {
+           Error error("Stack depth exceeded evaluating $1", callee.AsTree());
+           RunValue &target = INPUT_VALUE;
+           target = RunValue((Tree *) error, error_mtype);
+           CHAIN(ret, 1);
+       }
 )
 
 
