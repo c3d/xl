@@ -615,11 +615,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#category-types">4.7.3. Category types</a></li>
 <li><a href="#generic-containers">4.7.4. Generic containers</a></li>
 <li><a href="#true-generic-types">4.7.5. True generic types</a></li>
-<li><a href="#other-generic-types">4.7.6. Other generic types</a></li>
-<li><a href="#mathematical-types">4.7.7. Mathematical types</a></li>
-<li><a href="#parse-tree-types">4.7.8. Parse tree types</a></li>
-<li><a href="#program-related-types">4.7.9. Program-related types</a></li>
-<li><a href="#other-common-types">4.7.10. Other common types</a></li>
+<li><a href="#constrained-generic-types">4.7.6. Constrained generic types</a></li>
+<li><a href="#other-generic-types">4.7.7. Other generic types</a></li>
+<li><a href="#mathematical-types">4.7.8. Mathematical types</a></li>
+<li><a href="#parse-tree-types">4.7.9. Parse tree types</a></li>
+<li><a href="#program-related-types">4.7.10. Program-related types</a></li>
+<li><a href="#other-common-types">4.7.11. Other common types</a></li>
 </ul>
 </li>
 <li><a href="#type-related-concepts">4.8. Type-related concepts</a>
@@ -8140,6 +8141,64 @@ type that values <code>0</code> and <code>1</code> can be implicitly converted t
 </table>
 </div>
 <div class="paragraph">
+<p>Such generic types can be equipped with attributes or functions like any other
+entity in XL. For example, to get the <code>length</code> of an array type, assuming we
+know how to compute the length of its index, we could write:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>function Length(type A like array) written A.length is
+    length(A.array_index)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wihin a same definition, a given name only matches a single type, even if the
+type is generic and could represent different values. For example, if we define
+a function that performs the sum of two arrays, the array types have to match:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>function AddArray(A:array, B:array) as array written A+B is
+    for I in array.index loop
+        result[I] := A[I] + B[I]
+
+A : array[1..5] of integer
+B : array[1..5] of integer
+C : array[2..7] of real
+
+A := A + B      // OK, same type
+C := A + B      // Not OK, conflicting value for `array`</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to have multiple distinct types in the same declaration, you need to
+name them indiviudally. For example, to example a <code>Find</code> functions that checks
+if a smaller array is contained in a larger one with the same value type, you can
+write the following:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>with
+    type haystack  is array
+    type needle    is array when
+        needle.length &lt;= haystack.length and
+        needle.value = haystack.value
+
+function Find(What : needle, Where : haystack) as want(haystack.index) is
+    for H in haystack.index loop
+        let S := H
+        for N in needle.index loop
+            if What[N] &lt;&gt; Where[S] then
+                next H
+            S++
+        return S
+    return nil</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="constrained-generic-types"><a class="anchor" href="#constrained-generic-types"></a><a class="link" href="#constrained-generic-types">4.7.6. Constrained generic types</a></h4>
+<div class="paragraph">
 <p>It is possible for the pattern of the true generic type to be somewhat
 more restrictive. For example, for a <code>complex</code> type, one might want to
 create a type that only accepts numbers for the <code>real</code> type. The type
@@ -8190,13 +8249,19 @@ address the need to constrain generic types.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="other-generic-types"><a class="anchor" href="#other-generic-types"></a><a class="link" href="#other-generic-types">4.7.6. Other generic types</a></h4>
+<h4 id="other-generic-types"><a class="anchor" href="#other-generic-types"></a><a class="link" href="#other-generic-types">4.7.7. Other generic types</a></h4>
 <div class="paragraph">
 <p>Many generic types are not intended as containers.
 They include the following:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p><code>want T</code> is <code>nil or T</code></p>
+</li>
+<li>
+<p>'T?` is <code>T or error</code></p>
+</li>
 <li>
 <p><code>range of T</code> holds ranges of values of type <code>T</code>. For example, the
 type <code>range of integer</code> can hold a value such as <code>1..5</code>, which is
@@ -8250,7 +8315,7 @@ value that can be read or written to in a controlled fashion.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="mathematical-types"><a class="anchor" href="#mathematical-types"></a><a class="link" href="#mathematical-types">4.7.7. Mathematical types</a></h4>
+<h4 id="mathematical-types"><a class="anchor" href="#mathematical-types"></a><a class="link" href="#mathematical-types">4.7.8. Mathematical types</a></h4>
 <div class="paragraph">
 <p>Computers are often used to perform mathematical operations. XL
 features several mathematical types designed for that purpose:</p>
@@ -8324,7 +8389,7 @@ matrix with <code>i32</code> as the underlying numerical type, whereas
 </div>
 </div>
 <div class="sect3">
-<h4 id="parse-tree-types"><a class="anchor" href="#parse-tree-types"></a><a class="link" href="#parse-tree-types">4.7.8. Parse tree types</a></h4>
+<h4 id="parse-tree-types"><a class="anchor" href="#parse-tree-types"></a><a class="link" href="#parse-tree-types">4.7.9. Parse tree types</a></h4>
 <div class="paragraph">
 <p>The <code>XL.PARSER</code> module offers a number of types intended to represent
 or match elements in the parse tree:</p>
@@ -8372,7 +8437,7 @@ symbol used in empty blocks, e.g. <code>()</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="program-related-types"><a class="anchor" href="#program-related-types"></a><a class="link" href="#program-related-types">4.7.9. Program-related types</a></h4>
+<h4 id="program-related-types"><a class="anchor" href="#program-related-types"></a><a class="link" href="#program-related-types">4.7.10. Program-related types</a></h4>
 <div class="paragraph">
 <p>A few other types are related to program evaluation, notably:</p>
 </div>
@@ -8394,7 +8459,7 @@ symbol used in empty blocks, e.g. <code>()</code>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="other-common-types"><a class="anchor" href="#other-common-types"></a><a class="link" href="#other-common-types">4.7.10. Other common types</a></h4>
+<h4 id="other-common-types"><a class="anchor" href="#other-common-types"></a><a class="link" href="#other-common-types">4.7.11. Other common types</a></h4>
 <div class="paragraph">
 <p>A number of modules provide various generally useful, if more
 specialized types. Here are some examples:</p>
@@ -9506,7 +9571,7 @@ different mutable arrays.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">to Swap(inout X:array, inout Y:array) is
-    for I in array.index_range loop
+    for I in array.index loop
         Swap X[I], Y[I]</code></pre>
 </div>
 </div>
@@ -13821,7 +13886,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-03 15:06:08 +0200
+Last updated 2021-07-04 14:58:34 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">

@@ -5583,6 +5583,59 @@ function sum(A:array) as A.value is
 `0` to the `A.value` type. There is a requirement for the `number`
 type that values `0` and `1` can be implicitly converted to it.
 
+Such generic types can be equipped with attributes or functions like any other
+entity in XL. For example, to get the `length` of an array type, assuming we
+know how to compute the length of its index, we could write:
+
+....
+function Length(type A like array) written A.length is
+    length(A.array_index)
+....
+
+Wihin a same definition, a given name only matches a single type, even if the
+type is generic and could represent different values. For example, if we define
+a function that performs the sum of two arrays, the array types have to match:
+
+....
+function AddArray(A:array, B:array) as array written A+B is
+    for I in array.index loop
+        result[I] := A[I] + B[I]
+
+A : array[1..5] of integer
+B : array[1..5] of integer
+C : array[2..7] of real
+
+A := A + B      // OK, same type
+C := A + B      // Not OK, conflicting value for `array`
+....
+
+If you want to have multiple distinct types in the same declaration, you need to
+name them indiviudally. For example, to example a `Find` functions that checks
+if a smaller array is contained in a larger one with the same value type, you can
+write the following:
+
+....
+
+with
+    type haystack  is array
+    type needle    is array when
+        needle.length <= haystack.length and
+        needle.value = haystack.value
+
+function Find(What : needle, Where : haystack) as want(haystack.index) is
+    for H in haystack.index loop
+        let S := H
+        for N in needle.index loop
+            if What[N] <> Where[S] then
+                next H
+            S++
+        return S
+    return nil
+....
+
+
+==== Constrained generic types
+
 It is possible for the pattern of the true generic type to be somewhat
 more restrictive. For example, for a `complex` type, one might want to
 create a type that only accepts numbers for the `real` type. The type
@@ -5624,6 +5677,10 @@ address the need to constrain generic types.
 
 Many generic types are not intended as containers.
 They include the following:
+
+* `want T` is `nil or T`
+
+* 'T?` is `T or error`
 
 * `range of T` holds ranges of values of type `T`. For example, the
   type `range of integer` can hold a value such as `1..5`, which is
@@ -6593,7 +6650,7 @@ different mutable arrays.
 [source]
 ----
 to Swap(inout X:array, inout Y:array) is
-    for I in array.index_range loop
+    for I in array.index loop
         Swap X[I], Y[I]
 ----
 
