@@ -3198,3 +3198,24 @@ XL::RunState *xldebug(XL::RunState &state)
 {
     return xldebug(&state);
 }
+
+
+
+XL::RunValue *xldebug(XL::RunValue &value)
+// ----------------------------------------------------------------------------
+//   Dump the value for debugging
+// ----------------------------------------------------------------------------
+{
+    std::cout << "RunValue " << value << "\n";
+    return &value;
+}
+
+
+XL::RunValue *xldebug(XL::RunValue *value)
+// ----------------------------------------------------------------------------
+//   Dump the value for debugging
+// ----------------------------------------------------------------------------
+{
+    std::cout << "RunValue " << *value << "\n";
+    return value;
+}
