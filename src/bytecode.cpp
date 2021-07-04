@@ -1683,7 +1683,7 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
                 out << "[" << constants[value].AsTree() << "]";
             break;
         case ARGUMENTS:
-            out << "(" << value << ")";
+            out << "(" << value << " arguments)";
             for (size_t a = 0; a < value; a++)
             {
                 opcode_t index = code[pc++];
