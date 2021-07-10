@@ -3832,36 +3832,6 @@ a <code>method</code>, a <code>function</code>, an <code>operation</code> or if 
 <code>data</code>, a <code>property</code> or an <code>attribute</code>. Like other kinds of syntactic
 sugar, the primary intent is to make the code easier to read.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Interface
-procedure Initialization
-to Reset(Devices:devices)
-function Sin(X:real) as real
-method Width(S:shape) as length // aka S.width
-type shape with
-    method Height as length
-    property Foreground : color
-    attribute Background : color
-operation Value in Low..High as boolean
-data X, Y as infix
-
-// Implementation
-procedure Initialization is { Zero Memory; Reset AllDevices }
-to Reset(Devices:devices) is { for D in Devices loop Reset D }
-function Sin(X:real) as real is Cos(pi/2 - X)
-method Width(S:shape) as length is S.right - S.left // aka S.Width
-type shape is
-    method Height as length is top - bottom
-    property Foreground : color
-    bg : color
-    attribute Background : color is
-        get   is bg
-        set C is bg := C
-operation Value in Low..High as boolean is Value &gt;= Low and Value &lt;= High
-data X, Y as infix is self</code></pre>
-</div>
-</div>
 <div class="paragraph">
 <p>While these sugared forms are optional, they may make the code more
 readable, shorter or more precise. In addition, they convey additional
@@ -3877,11 +3847,23 @@ accordingly. A result type can also be explicitly given. In that
 case, using <code>procedure</code> is a hint to the compiler that the
 implementation is expected to have side effects, as opposed to
 <code>function</code>.</p>
+<div class="literalblock">
+<div class="content">
+<pre>procedure Initialization  is { Step1; Step2 }         // Sugared
+Initialization as mayfail is { Step1; Step2 }         // Raw</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>to</code> is a shorter form of <code>procedure</code> that is normally used for
 patterns that look like English verbs. For example, <code>procedure Write</code>
 can be written as <code>to Write</code>.</p>
+<div class="literalblock">
+<div class="content">
+<pre>to Write(C:character)                                 // Sugared
+Write(C:character) as mayfail                         // Raw</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>function</code> indicates that the operation behaves like a pure
@@ -3889,12 +3871,24 @@ mathematical function, i.e. it has no side effects and returns the
 same value for identical inputs. This allows the compiler to explore
 additional optimizations, and emit additional diagnostics if the
 implementation has side effects.</p>
+<div class="literalblock">
+<div class="content">
+<pre>function Sin(X:real) as real                          // Sugared
+Sin(X:real) as real                                   // Raw</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>method</code> indicates that the pattern applies to an object, its first
 formal parameter, and for prefix methods, it provides a dot notation
 <code>Object.Method</code> for calling the method.  For example, the <code>Width</code> method
 defined above can also be invoked as <code>S.Width</code>.</p>
+<div class="literalblock">
+<div class="content">
+<pre>method Width(S:shape) as real                         // Sugared
+Width(S:shape) as real written S.Width                // Raw</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>property</code> and <code>attribute</code> are shorthand ways to specify
@@ -3904,19 +3898,38 @@ language does not make a distinction between attributes and
 properties, but a special project may give them different meaning,
 for example in a drawing program, that attributes have a
 user-visible interface whereas properties are internal values.</p>
+<div class="literalblock">
+<div class="content">
+<pre>property Width(S:shape) as size                       // Sugared
+attribute Height(S:shape) as size                     // Sugared
+Width(S:shape) as attribute[size] written S.width     // Raw</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>operation</code> is a marker when reading the code for special notations.
 It is intended to draw the attention of the reader on some special
 form that he may not be used to.</p>
+<div class="literalblock">
+<div class="content">
+<pre>operation A:real + B:real as real                     // Sugared
+A:real + B:real as real                               // Raw</pre>
+</div>
+</div>
 </li>
 <li>
 <p><code>data</code> is a marker indicating that the notation is used primarily
 for data. For example, the notation <code>data X,Y</code> indicates that there
 is no actual operation associated to the <code>,</code> infix operator,
-i.e. that <code>1,3,5,8,4</code> should be representable using only data as
-opposed to code. The implementation of a <code>data</code> normally uses
-<a href="#self"><code>self</code></a>.</p>
+  i.e. that <code>1,3,5,8,4</code> should be representable using only data as
+  opposed to code. The implementation of a <code>data</code> normally uses
+  <a href="#self"><code>self</code></a>.</p>
+<div class="literalblock">
+<div class="content">
+<pre>data X, Y is self                                     // Sugared
+X, Y is self                                          // Raw</pre>
+</div>
+</div>
 </li>
 </ul>
 </div>
@@ -13886,7 +13899,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-07-04 14:58:34 +0200
+Last updated 2021-07-10 22:42:20 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
