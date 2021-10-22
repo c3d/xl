@@ -21,7 +21,6 @@
 02.Arithmetic/08-complex-add.xl
 02.Arithmetic/01-arith-add-with-const.xl
 01.Evaluation/bug2279.xl
-01.Evaluation/03-primitives.xl
 01.Evaluation/05-kind.xl
 01.Evaluation/bug3327.xl
 01.Evaluation/17-returning-inner-functions.xl

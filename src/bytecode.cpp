@@ -2485,6 +2485,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 {
                     record(opcode_error,
                            "Nonexistent native function %t", name);
+                    bytecode->CompileError(Error("Invalid native $1", name));
                     attempt.Fail();
                     return nullptr;
                 }
@@ -2499,6 +2500,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
                 if (!opcode)
                 {
                     record(opcode_error, "Nonexistent builtin %t", name);
+                    bytecode->CompileError(Error("Invalid builtin $1", name));
                     attempt.Fail();
                     return nullptr;
                 }
@@ -2954,21 +2956,25 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         default:        break;
         }
 
-        // If we failed, clean up and error out
-        if (done)
+        // Check if we had any compile error along the way
+        if (!bytecode->CheckCompileErrors())
         {
-            if (done < 0 && !bindings.PerfectMatch())
-                OP(form_error, expr);
-            bytecode->PatchSuccesses(patches);
-        }
-        else
-        {
-            record(bytecode, "Giving up on bytecode for %t", expr);
-            if (RECORDER_TRACE(bytecode))
-                bytecode->Dump(std::cerr);
-            attempt.Fail();
-            Tree_p msg = ErrorMessage("No form matching $1", expr);
-            bytecode->CompileError(msg);
+            // If we failed, clean up and error out
+            if (done)
+            {
+                if (done < 0 && !bindings.PerfectMatch())
+                    OP(form_error, expr);
+                bytecode->PatchSuccesses(patches);
+            }
+            else
+            {
+                record(bytecode, "Giving up on bytecode for %t", expr);
+                if (RECORDER_TRACE(bytecode))
+                    bytecode->Dump(std::cerr);
+                attempt.Fail();
+                Tree_p msg = ErrorMessage("No form matching $1", expr);
+                bytecode->CompileError(msg);
+            }
         }
         definition = done == IS_DEFINITION;
         last = expr;

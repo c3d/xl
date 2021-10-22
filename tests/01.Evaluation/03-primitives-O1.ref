@@ -1,2 +1,2 @@
-Nonexistent
-01.Evaluation/03-primitives.xl:2: Invalid opcode name in 'opcode Nonexistent'
+[49217 0.035090] opcode_error: Nonexistent builtin 0x7fec2357bd40 ["Nonexistent"]
+<Unknown position>: Invalid builtin "Nonexistent"
