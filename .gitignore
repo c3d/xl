@@ -1,3 +1,4 @@
+xl
 *.d
 *.o
 *.log
@@ -28,7 +29,13 @@ tests/**/*.ref.old
 tests/**/expected-*.out
 tests/**/failure-*.out
 tests/**/success-*.out
-src/[a-z].xl
+tests/**/*.xl.mk
+tests/**/*.diff
+tests/**/*.output
+tests/**/*.result
+tests/**/*.err
+**.dylib
+[a-z].xl
 src/[a-z].xl
 src/config.h
 xl2/*/TESTS/**/*.c
