@@ -61,7 +61,7 @@ really means three things:
 
 [arabic]
 . XL offers a standard way to extend the
-  language(((extensible,language))) with any kind of feature, not just
+  language(((extensible,language))) with many kinds of features, not just
   functions or data types, but also ((programming construct))s,
   ((optimization))s, ((domain-specific notation))s, and
   more. Actually, all this is done with a
