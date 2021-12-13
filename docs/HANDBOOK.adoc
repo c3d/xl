@@ -1371,13 +1371,14 @@ children can be of any kind.
 Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 
 [arabic]
-. [[integer]]`integer` nodes represent non-negative whole numbers
+. [[natural]]`natural` nodes represent non-negative whole numbers
   like `1234`, `2#1001` or `16#FFFE_FFFF`.
 . [[real]]`real` nodes represent a floating-point approximation of
-  real numbers like `1.234`, `1.5e-10` or `2#1.0001_0001#e24`.
-. [[character]]`character` nodes represent individual characters, like `'A'`.
-. [[text]]`text` nodes represent text values like `"Hello world"`
-. [[symbols]]`symbols` nodes regroup names like `JOHN_DOE` and symbols like `+=`.
+  real numbers like `1.234`, `1.5e-10`, `2e-3`, or `2#1.0001_0001#e24`.
+. [[text]]`text` nodes represent text values like `"Hello world"`, as well as
+  single-character constants like `'A'`.
+. [[name]]`name` nodes represent entity names like `JOHN_DOE`, as well as
+  symbols like `+=`.
 
 Inner nodes contains combinations of other XL nodes:
 
@@ -1390,7 +1391,7 @@ Inner nodes contains combinations of other XL nodes:
 . [[postfix]]`postfix` nodes represent two nodes where the operator follows the
   operand, like `3%` or `45km`.
 . [[block]]`block` nodes represent a node surrounded by two delimiters, like
-  `[a]`, `(a)`, `{a}`. Blocks are also used to represent indentation.
+  `[a]`, `(a)`, `{a}`. Blocks are also used to represent
   link:#indentation[code indentation].
 
 For example, let’s consider the following code:
@@ -1409,23 +1410,23 @@ command:
 [source,shell]
 ----
 % xl -parse program.xl -style debug -show
-(infixthen
+(infix then
  (prefix
   if
-  (infix<
+  (infix <
    X
    0))
  (block indent
   (infix CR
    (prefix
     print
-    (infix,
+    (infix ,
      "The value of "
-     (infix,
+     (infix ,
       X
       " is negative"
      )))
-   (infix:=
+   (infix :=
     X
     (prefix
      -
