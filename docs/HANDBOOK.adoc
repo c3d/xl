@@ -141,56 +141,60 @@ video::6WIMWlUZJvs[youtube,title=Hello World in Tao3D,width=800,height=600]
 
 The source code for this example can be found below. The Tao3D dialect
 of XL still uses `+->+` instead of `is` as the definition
-operator. Apart from that change, the following code is valid XL for
-the language described in this document.
+operator, but the change was made below to use the modern syntax.
 
 [source]
 ----
+// Note: To run this in Tao3D 1.61 or earlier, replace 'is' with '->'
 color "white"
 milkyway 10000
-rotatez -23
+rotate_z -23
 earth 400
 hello_world 440
 
-milkyway R ->
+milkyway R is
 // ----------------------------------------------------------------------------
-//    Draw the Milky Way
+//    Draw the Milky Way inside a sphere of radius R
 // ----------------------------------------------------------------------------
     locally
         texture_wrap true, true
         texture_transform {scale 5, 5, 5}
         texture "milkyway.jpg"
-        rotatey 0.02 * page_time + 100
+        rotate_y 0.02 * page_time + 100
         scale 1, -1, 1
         sphere R
 
 
-earth R ->
+earth R is
 // ----------------------------------------------------------------------------
-//    Draw Earth
+//    Draw the Earth surface on a sphere of radius R
 // ----------------------------------------------------------------------------
     locally
         texture "earth.bmp"
         texture_wrap true, true
-        rotatey 5 * page_time + 250
+        rotate_y 5 * page_time + 250
         sphere 0, 0, 0, R
 
 
-hello_world R ->
+hello_world R is
 // ----------------------------------------------------------------------------
-//    Draw "hello world" text
+//    Draw "hello world" text on a sphere of radius R
 // ----------------------------------------------------------------------------
     locally
         frame_texture 1900, 600,
             color 1, 1, 1, 1
             reset_transform
-            // If font Arial Unicode installed, it will be used.
-            // Otherwise, unifont will be used (unifont is packaged
-            // with Tao presentations).
+            // If font Arial Unicode installed, it will be used, else unifont
+            // unifont is packaged with Tao presentations, but .
             font "Arial Unicode MS", "unifont", 72
             move_to -800, -9, 0
+
+            // Multilingual text to test Unicode support
             text "Hello World! or Καλημέρα κόσμε; or こんにちは 世界"
-        rotatey -11 * page_time + 180
+
+        rotate_y -11 * page_time + 180
+
+        // Two spheres with different colors to create a pseudo-shadow
         color 20% , 20% , 20% , 70%
         sphere 0, 0, 0, R - 30
         color 100% , 90% , 20% , 90%
