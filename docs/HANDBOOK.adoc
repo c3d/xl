@@ -1223,16 +1223,16 @@ computations are performed efficiently by the remote node.
 [source]
 ----
 invoke "pi.local",
-    min   is 100.0
-    max   is 0.0
-    sum   is 0.0
-    count is 0
+    min   : real := 100.0
+    max   : real := 0.0
+    sum   : real := 0.0
+    count : natural := 0
 
     compute_stats T:real is
         min   := min(T, min)
         max   := max(T, max)
-        sum   := sum + T
-        count := count + 1
+        sum   += T
+        count += 1
         reply
             report_stats count, T, min, max, sum/count
 
@@ -1244,10 +1244,10 @@ report_stats Count, T, Min, Max, Avg is
           "Min=", Min, " Max=", Max, " Avg=", Avg
 ----
 
-NOTE: The definitions of `min`, `max`, `sum` and `count` would not be
-acceptable in the version of XL described in this document. You would
-need to write for example `min : real := 100` instead of `min is 100.0`,
-since `min is 100.0` would declare a constant.
+NOTE: The actual link:{xl}demo/9-min-max-average.xl[sample code] uses a slightly
+different formulation, notably for the declaration of `min`, `max`, `sum` and
+`count`, due to limitations in the current implementation. The code above is
+what we expect the final, idiomatic formulation to look like.
 
 To run the ELFE demos, you need to start an XL server on the machines
 called `pi.local` and `pi2.local`, using the `-remote` command-line
@@ -1265,11 +1265,11 @@ You can then run the program on a third machine with:
 % xl 7-two-hops.xl
 ----
 
-Like for Tao3D, the implementation of these functions is not very
-complicated, and more importantly, it did not require any kind of change
-to the basic XL ((evaluation)) rules. In other words, adding something as
-sophisticated as transparently distributed programming to XL can be done
-by practically any programmer, without changing the compiler.
+Like for Tao3D, the implementation of these functions is not very complicated,
+and more importantly, it did not require any kind of change to the basic XL
+((evaluation)) rules. In other words, adding something as sophisticated as
+transparently distributed programming to XL can be done by practically any
+programmer, without changing the language definition or implementation.
 
 
 == [[syntax]]XL syntax
@@ -6610,8 +6610,8 @@ X:integer := Y:real is
 
 ==== Mutability
 
-A value is said to be _mutable_ if it can change during its lifetime. A
-value that is not mutable is said to be _constant_.
+A value is said to be _mutable_ if it can change during its lifetime. A value
+that is not mutable is said to be _constant_.
 
 You create a mutable entity with the notation: `Name:Type := Init`, where `Name`
 is the name you give to the entity, `Type` is the type it must have over its
