@@ -534,6 +534,13 @@ min X       is X
 
 // Computes 4
 min 7, 42, 20, 8, 4, 5, 30
+
+// This works even if there are parentheses to group things
+min 7, 42, (20, 8, 4), (5, 30)
+
+// The data can be in separate entities
+numbers is 8, 9, 25, 42
+min 7, 42, numbers, (20, 8, 4), (5, numbers, 30)
 ----
 ====
 
