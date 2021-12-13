@@ -493,12 +493,15 @@ example if all the indexes are contiguous integers.
 ====
 [source]
 ----
-// An (inefficient) implementation of a generic 1-based array type
+// An implementation of a generic 1-based array type.
+// This version is a bit hard to compile efficiently.
 
 // array[1] of T, start of the recurrence
 array[1] of T is
     // Implementation stores one variable value of type T
     Tail : T
+
+    // Indexing with value 1 gives the value
     1 is Value
 
 // array[N] of T: defined based on array[N-1] of T
@@ -506,7 +509,11 @@ array[N] of T when N > 1 is
     // Implemenation is a two-parter for Head and Tail
     Head  : array[N-1] of T
     Tail  : T
+
+    // Indexing with values below N refers to the head
     lambda I when I<N is Head[I]
+
+    // Indexing with value N refers to the tail
     lambda I when I=N is Tail
 
 // Usage looks exactly like a regular array in another language
