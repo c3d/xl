@@ -1435,42 +1435,33 @@ command:
 ----
 
 All of XL is built on this very simple link:#parse-tree-types[data structure].
-Some choices, like having distinct `integer` and `real` node, were
+Some choices, like having distinct `natural` and `real` node, were
 guided primarily by considerations beyond syntax, for example the need
 to be able to precisely define link:#evaluation[program evaluation] or
-to represent distinct machine types.
+to represent distinct machine types. The XL link:#types[type system] is built
+on these node types, but introduce refinements. For example, the `name` parse
+tree node type can be subdivided, based on the value in the node, into `name`
+values such as `ABC`, `operator` values such as `+=`, and `symbol` which
+includes both names and operators.
+
 
 [NOTE]
 ====
-The list of node types given above is what the current implementations
-of XL offer. Some changes may happen in the future, notably:
+The list of node types given above is what the current implementations of XL
+offer. Some changes might happen in the future, notably the introduction of a
+`bits` node type for arbitrary binary data:
 
 [[bits]]
-* Adding a "((binary object))" node type, which could be used to store
-  binary data in the program. A possible syntax would be to prefix
-  `bits` before a large integer value or file name:
 [source]
 ----
 bits 16#FF_00_FF_00_FF_FF_00_FF_00
 bits "image.png"
 ----
-* Finding a better representation for empty blocks such as `+()+`.
-  In the current implementation, they are represented as a block with
-  an "empty symbol" as a child. With this choice, the parse tree has no
-  "null" node anywhere in the tree. However, this is not very
-  satisfactory, since the empty symbol cannot exist anywhere else in
-  the parse tree. Alternatives such as representing blocks as possibly
-  empty sequences of items have proven even more complicated, since the
-  representation of `[A,B,C]` becomes ambiguous (it could be a block
-  containing three elements, or a block containing two elements, one
-  of them being an infix, or any other combination), and proved more
-  difficult to process in a generic way.
 
-* Finding a more efficient representation for large sequences of items.
-  Currently, they are represented by an unbalanced tree, i.e. a tree
-  where one side is disproportionately larger than the other.
-  So far, attempts at finding a better representation all had at
-  least one severe drawback that precluded their use.
+It is unclear at this point if this `bits` node type is sufficiently distinct
+from `text` to warrant a specific node type. In other words, `bits` could be
+implemented in teh scanner but ultimately generate a `text` node in the parse
+tree, the distinction for programs happening in the type system.
 ====
 
 === Leaf nodes
