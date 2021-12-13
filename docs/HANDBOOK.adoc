@@ -1643,6 +1643,10 @@ MyHTML is HTML
 END_HTML
 ----
 
+NOTE: Long text is stripped of its first and last empty line and of leading
+indentation. In other words, the value of the `HTML` example  above is the same
+as `"<p>This is some HTML text here</p>"`.
+
 NOTE: *RATIONALE* The reason for a built-in format for text using
 single or double quotes is because the link:#syntax-file[((syntax file))]
 is read using the standard XL parser, and it needs text tokens in some
@@ -1679,7 +1683,7 @@ being the operators being used. For example, `A;B` is an infix `;`
 with `A` on the left and `B` on the right, whereas individual lines
 are operands of an infix _new-line_ operator. Similarly, `{A}` is a
 block containing `A`, and indentation is represented in the parse tree
-by a block delimited by _indent_ and _outdent_ invisible symbols.
+by a block delimited by _indent_ and _outdent_ internal symbols.
 
 The structure of the second loop from the previous listing can be
 shown by the XL compiler using the `-show` option, as illustrated
