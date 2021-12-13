@@ -1703,10 +1703,10 @@ below:
    ))))
 ----
 
-Indentation must use the same ((indentation character)) within a
-single file, either ((tab)) or ((space)). In other words, either your
-whole file is indented with tabs, or it is indented with spaces, but
-it is a ((syntax error)) to mix both.
+A given source file must use the same ((indentation character)), either ((tab))
+or ((space)). In other words, either your whole file is indented with tabs, or
+it is indented with spaces, but it is a ((syntax error)) to mix both in the same
+file.
 
 Indentation within a block must be consistent. For example, the
 following code will cause a syntax error because of the incorrect
