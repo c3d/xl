@@ -1488,11 +1488,11 @@ have no fractional part, and _((fractional number))s_, which have a
 fractional part.
 
 NOTE: In the rest of the document, other terminologies, such as
-_integer_ or _real_ numbers may be applied for whole numbers and
+_natural_ or _real_ numbers may be applied for whole numbers and
 fractional numbers respectively. This corresponds to numbers having
 been given a link:#types[type] for ((evaluation)) purpose. This is notably
 the case whenever a computer font is used, e.g. when we refer to
-`integer` or `real` values. Except as far as syntax is concerned, this
+`natural` or `real` values. Except as far as syntax is concerned, this
 document will very rarely talk about whole numbers or fractional
 numbers.
 
