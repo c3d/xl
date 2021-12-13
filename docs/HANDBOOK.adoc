@@ -1529,8 +1529,8 @@ Numbers can contain an exponent, specified by the letter `e` or
 `E`. If the exponent is negative, then the number is parsed as a
 fractional number. Therefore, `1e3` is integer value 1000, but `1e-3`
 is the same as `0.001`. The exponent is always given in base 10, and it
-indicates an exponentiation in the given base, so that `2#1e8` is
-2^8^, in other words decimal value 256. For based numbers, the
+indicates an exponentiation in the given base, so that `2#1e16` is
+2^16^, in other words decimal value 65536. For based numbers, the
 exponent may be preceded by a `#` sign, which is mandatory if `e` or
 `E` are valid digits in the base. For example, `16#FF#e2` is an
 hexadecimal representation of decimal value 65280.
