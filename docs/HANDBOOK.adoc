@@ -652,7 +652,8 @@ X <=> Y     when X = Y  is  0
 X <=> Y     when X > Y  is  1
 ----
 
-Note that this also requires a syntax file defining the precedence of the operator:
+Note that this also requires a link:#syntax-file[((syntax file))] defining the
+precedence of the operator:
 
 [source]
 ----
@@ -1355,7 +1356,7 @@ is over twice as much!
 
 A key to keeping things really simple is that the XL syntax is
 _dynamic_. Available operators and their precedence are _configured_
-primarily through a link:{xl}src/xl.syntax[syntax file]. As a result,
+primarily through a link:#syntax-file[((syntax file))]. As a result,
 there are no hard-coded keywords or special operators in the XL
 compiler.
 
@@ -1481,9 +1482,9 @@ is an operator. This section describes the syntax for leaf nodes.
 
 NOTE: There is currently no provision in the compiler to add new kinds
 of leaf nodes. This is being considered, and would require a minimal
-addition to the syntax file. The primary implementation issue is that
-it would require the syntax of the syntax file to diverge from the XL
-syntax itself, since numbers or names in the syntax file have to be
+addition to the link:#syntax-file[((syntax file))]. The primary implementation
+issue is that it would require the syntax of the syntax file to diverge from the
+XL syntax itself, since numbers or names in the syntax file have to be
 "hardcoded" somehow
 
 ==== Numbers
@@ -1606,11 +1607,11 @@ Operators begin with one of the ASCII punctuation characters:
 ! # $ % & ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
 ....
 
-Operators longer than one character must be specified in the XL syntax
-file. For example, the XL syntax file defines a `+<=+` operator, but no
-`+<=>+` operator. Consequently, the sequence `+1 <=> 2+` will be parsed as
-`+(1 <= (> 2))+`. In order to add this operator, it is necessary to
-link:#extending-the-syntax[extend the syntax].
+Operators longer than one character must be specified in the XL
+link:#syntax-file[((syntax file))]. For example, the XL syntax file defines a
+`+<=+` operator, but no `+<=>+` operator. Consequently, the sequence `+1 <=> 2+`
+will be parsed as `+(1 <= (> 2))+`. In order to add this operator, it is
+necessary to link:#extending-the-syntax[extend the syntax].
 
 Names and operators are treated interchangeably by XL after the parsing
 phase, and are collectively called _symbols_.
@@ -1651,7 +1652,7 @@ END_HTML
 ----
 
 NOTE: *RATIONALE* The reason for a built-in format for text using
-single or double quotes is because the link:#syntax-file[syntax file]
+single or double quotes is because the link:#syntax-file[((syntax file))]
 is read using the standard XL parser, and it needs text tokens in some
 specific cases that would otherwise parse incorrectly such as block or
 comment delimiters.
@@ -1783,8 +1784,8 @@ The syntax file uses a few special names:
 
 ==== Delimiters
 
-Additional sections of the syntax file define delimiters for comment,
-block and text. Comment and text delimiters come in pairs.
+Additional sections of the ((syntax file)) define delimiters for comment, block
+and text. Comment and text delimiters come in pairs.
 
 The default syntax file specifies comments that follow the C/{cpp}
 convention, i.e. comments either start with `+/*+` and end with `+*/+` or
@@ -1822,15 +1823,15 @@ NOTE: The so-called "C syntax" in XL is only a very crude and limited
 approximation of the actual C syntax, which is only intended for
 relatively simple function declarations.
 
-==== [[syntax-statements]]Extending the syntax
+==== [[module-syntax]]Extending the syntax
 
 In addition the to the default syntax provided by the
-link:{xl}src/xl.syntax[syntax file], modules can also supply a `.syntax` file
+link:#syntax-file[((syntax file))], modules can also supply a `.syntax` file
 providing the precedence of the operators that this module adds.
 
 For example, if you want to add the spaceship operator `+<=>+` in your
 program, and give the same precedence as `+<=+`, namely 290, you could
-write a `spaceship` module with a `spaceship.syntax` file:
+write a `spaceship` module with a `spaceship.syntax` file containing:
 
 [source]
 ----
@@ -1997,7 +1998,7 @@ examples and are assumed to be inherited from earlier execution.
 
 The parsing phase reads source text and turns it into a parse tree using
 operator spelling and precedence information given in the
-link:{xl}src/xl.syntax[syntax file]. This results either in a parse-time
+link:#syntax-file[((syntax file))]. This results either in a parse-time
 error, or in a faithful representation of the source code as a parse
 tree data structure that can be used for program evaluation.
 
@@ -2015,7 +2016,7 @@ performed during parsing:
 . Filtering out comments: Comments should not have an effect on the
   program, so they are simply eliminated during parsing.
 . Processing `use` statements: Since imported modules can contain
-  link:#extending-the-syntax[syntax extensions], they must at least partially be
+  link:#module-syntax[syntax extensions], they must at least partially be
   processed during parsing. Details about `use` statements are covered in the
   link:#modules[chapter about modules].
 . Identifying words that switch to a link:#child-syntax[child syntax]: symbols
@@ -2023,7 +2024,7 @@ performed during parsing:
   for example with the `extern` name in the link:{xl}src/xl.syntax#L62[default
   syntax].
 . Identifying binary data: words such as `bits` marked as introducing
-  `BINARY` data in the syntax file are treated specially during parsing,
+  `BINARY` data in the ((syntax file)) are treated specially during parsing,
   to generate parse tree nodes representing binary data.
 
 NOTE: Binary data is not currently implemented.
@@ -6164,7 +6165,6 @@ common expressions such as `2+3i` and turn them into constructors.
 ----
 i   is complex(0.0, 1.0)
 
-syntax { POSTFIX 190 i }
 Re:real + Im:real i                 is complex(Re, Im)      // Case 1
 Re:real + Im:real * [[i]]           is complex(Re, Im)      // Case 2
 Re:real + [[i]] * Im:real           is complex(Re, Im)      // Case 3
@@ -6176,6 +6176,14 @@ X:complex + Y:complex as complex    is ...
 2 + i * 3           // Calls case 3
 2 + 3i + 5.2        // Calls case 4 to convert 5.2 to complex(5.2, 0.0)
 2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)
+----
+
+For this, you need a link:#module-syntax[syntax extension] for the `i` postfix
+notation:
+
+[source]
+----
+POSTFIX 190 i
 ----
 
 The fact that the only elementary way to create a type is through the
@@ -9393,7 +9401,7 @@ names, like `[A]`, `(3)` or `{write}`.
 
 Individual program lines are seen as the leaves of an infix "newline"
 operator. There are no keywords at all, the precedence of all operators
-being given dynamically by a syntax file.
+being given dynamically by a ((syntax file)).
 
 === Bootstrapping XL
 
