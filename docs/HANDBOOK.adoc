@@ -1723,13 +1723,13 @@ loop
 
 ==== [[syntax-file]]Operator precedence and associativity
 
-The operators available for XL programmers are defined by the
+The operators available for XL programmers are defined by a
 link:{xl}src/xl.syntax[syntax file]. The same rules apply for all
 symbols, i.e. for names or for operators. The table given in this file
 uses keywords such as `INFIX`, `PREFIX` and `POSTFIX` to indicate if
 an operator is an infix, a prefix, or a postfix respectively.
 
-The table also gives operators a precedence. For example, the following
+This table also gives operators a precedence. For example, the following
 segment in the `INFIX` portion of the table indicates that `*` and `/`
 have higher precedence than `+` and `-`, so that `X+Y*Z` will parse as
 `X+(Y*Z)`:
@@ -1742,7 +1742,7 @@ have higher precedence than `+` and `-`, so that `X+Y*Z` will parse as
 ----
 
 The precedence also indicates associativity for infix operators. Even
-precedences indicate left associativity, as for `+` and `*` above. This
+precedences indicate left associativity, like for `+` and `*` above. This
 means that `X * Y * Z` parses as `(X * Y) * Z`. Conversely,
 right-associativity is indicated by an odd precedence, as is the case
 for `is`. This means that `X is Y is Z` parses as `X is (Y is Z)`.
@@ -1750,7 +1750,10 @@ for `is`. This means that `X is Y is Z` parses as `X is (Y is Z)`.
 Enforcing different precedences for left and right associativity
 guarantees that it’s impossible for operators to have the same
 precedence, with some being left-associative and some being
-right-associative, which would cause parsing ambiguities.
+right-associative, which would cause parsing ambiguities. You can remember that
+odd values correspond to right-associativity because the rightmost bit is set,
+or because precedence 1 is highter than 0, which matches the fact that
+right-associativity takes precedence over left-associativity.
 
 The syntax file uses a few special names:
 
