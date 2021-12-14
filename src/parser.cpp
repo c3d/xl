@@ -397,6 +397,12 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
                 is_expression = false;
             prefix_priority = function_priority;
             break;
+        case tokBINARY:
+            right = new Text(scanner.TextValue(), "", "", pos);
+            if (!result && new_statement)
+                is_expression = false;
+            prefix_priority = function_priority;
+            break;
         case tokNAME:
         case tokSYMBOL:
             name = scanner.NameValue();

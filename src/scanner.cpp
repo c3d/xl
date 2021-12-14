@@ -46,6 +46,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdint.h>
+#include <sstream>
 
 
 XL_BEGIN
@@ -262,10 +263,13 @@ static inline char xlcase(char c)
     } while (0)
 
 
-token_t Scanner::NextToken(bool hungry)
+token_t Scanner::NextToken(bool hungry, bool binary)
 // ----------------------------------------------------------------------------
 //   Return the next token, and compute the token text and value
 // ----------------------------------------------------------------------------
+//   hungry mode is used by the syntax parser, and collects symbols hungrily
+//   (i.e. it scans --+-- as a single token)
+//   binary mode is used after 'bits' or similar to scan a long binary value
 {
     textValue = "";
     tokenText = "";
@@ -435,6 +439,50 @@ token_t Scanner::NextToken(bool hungry)
                 NEXT_CHAR(c);
                 intValue = 0;
                 basedNumber = true;
+                if (binary)
+                {
+                    if (base != 2 && base != 16 && base != 64)
+                        errors.Log(Error("Binary data must be in base 16 or 64",
+                                         position));
+                    text data;
+                    unsigned count = 0;
+                    while (digits[c] < base)
+                    {
+                        intValue = base * intValue + digits[c];
+                        NEXT_CHAR(c);
+                        count++;
+                        if (c == '_')       // Skip a single underscore
+                        {
+                            IGNORE_CHAR(c);
+                            if (c == '_')
+                                errors.Log(
+                                    Error("Two _ characters in a row, how odd",
+                                          position));
+                        }
+                        if ((base == 16 && count == 2) ||
+                            (base == 2  && count == 8))
+                        {
+                            data += text(1, (char) intValue);
+                            intValue = 0;
+                            count = 0;
+                        }
+                        else if (base == 64 && count == 4)
+                        {
+                            data += text(1, (char) (intValue >> 16))
+                                + text(1, (char) (intValue >> 8))
+                                + text(1, (char) (intValue));
+                            intValue = 0;
+                            count = 0;
+                        }
+                    }
+                    if (count)
+                    {
+                        errors.Log(Error("Binary data has leftover digit(s)",
+                                         position));
+                    }
+                    textValue = data;
+                    return tokBINARY;
+                }
             }
             else
             {
@@ -567,6 +615,14 @@ token_t Scanner::NextToken(bool hungry)
             return closing ? tokPARCLOSE : tokPAROPEN;
         }
         record(scanner, "Name %s at position %lu", textValue.c_str(), position);
+        if (syntax.KnownBinary(textValue))
+        {
+            token_t btok = NextToken(false, true);
+            if (btok != tokBINARY)
+                errors.Log(Error("Expected binary data after $1", position)
+                           .Arg(textValue));
+            return btok;
+        }
         return tokNAME;
     }
 
@@ -592,6 +648,23 @@ token_t Scanner::NextToken(bool hungry)
                     hadSpaceAfter = isspace(c);
                     record(scanner, "Text %s at position %lu",
                            tokenText.c_str(), position);
+                    if (binary)
+                    {
+                        if (eos != '"')
+                            errors.Log(
+                                Error("Binary file name $1 in single quotes",
+                                      position).Arg(tokenText));
+
+                        // Case where we read a binary file
+                        std::ifstream file(textValue);
+                        std::ostringstream stream;
+                        if (!(stream << file.rdbuf()))
+                            errors.Log(
+                                Error("Cannot open binary data file $1",
+                                      position).Arg(textValue));
+                        textValue = stream.str();
+                        return tokBINARY;
+                    }
                     return eos == '"' ? tokTEXT : tokQUOTE;
                 }
 

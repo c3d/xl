@@ -266,6 +266,7 @@ struct Text : Tree
     bool IsCharacter()  { return (opening == "'" &&
                                   closing == "'" &&
                                   value.length() == 1); }
+    bool IsBinary()     { return opening == "" && closing == ""; }
 
     GARBAGE_COLLECT(Text);
 };

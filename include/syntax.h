@@ -87,6 +87,7 @@ public:
     void                SetPostfixPriority(text n, int p);
     bool                KnownToken(text n);
     bool                KnownPrefix(text n);
+    bool                KnownBinary(text n);
 
     // Read a complete syntax file (xl.syntax)
     void                ReadSyntaxFile (Scanner &scanner, uint indents = 1);
@@ -114,6 +115,7 @@ public:
     subsyntax_table     subsyntax;
     token_set           known_tokens;
     token_set           known_prefixes;
+    token_set           known_binary_prefixes;
     int                 priority;
 
     int                 default_priority;

@@ -131,6 +131,8 @@ enum token_t
     tokTEXT,                    // Double-quoted text
     tokQUOTE,                   // Single-quoted text
     tokLONGTEXT,                // Long (multiline) text
+    tokBINARY,                  // Binary data
+
     tokNAME,                    // Alphanumeric name
     tokSYMBOL,                  // Punctuation symbol
     tokNEWLINE,                 // New line
@@ -188,7 +190,7 @@ public:
 
 public:
     // Scanning
-    token_t     NextToken(bool hungry = false);
+    token_t     NextToken(bool hungry = false, bool binary = false);
     text        Comment(text EndOfComment, bool stripIndent = true);
 
     // Access to scanned data

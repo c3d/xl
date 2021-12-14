@@ -66,6 +66,7 @@ Syntax::Syntax(const Syntax &other)
       subsyntax(other.subsyntax),
       known_tokens(other.known_tokens),
       known_prefixes(other.known_prefixes),
+      known_binary_prefixes(other.known_binary_prefixes),
       priority(other.priority),
       default_priority(other.default_priority),
       statement_priority(other.statement_priority),
@@ -176,6 +177,15 @@ bool Syntax::KnownPrefix(text n)
 // ----------------------------------------------------------------------------
 {
     return known_prefixes.count(n) > 0;
+}
+
+
+bool Syntax::KnownBinary(text n)
+// ----------------------------------------------------------------------------
+//   Check if the given symbol is a known binary prefix (e.g. "bits")
+// ----------------------------------------------------------------------------
+{
+    return known_binary_prefixes.count(n) > 0;
 }
 
 
@@ -297,6 +307,7 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
         inComment, inCommentDef,
         inText, inTextDef,
         inBlock, inBlockDef,
+        inBinary,
         inSyntaxName, inSyntax, inSyntaxDef
     };
 
@@ -365,6 +376,8 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 state = inComment;
             else if (txt == "TEXT")
                 state = inText;
+            else if (txt == "BINARY")
+                state = inBinary;
             else if (txt == "SYNTAX")
                 state = inSyntaxName;
 
@@ -414,6 +427,9 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 block_delimiters[txt] = "";
                 infix_priority[txt] = priority;
                 state = inBlock;
+                break;
+            case inBinary:
+                known_binary_prefixes.insert(txt);
                 break;
             case inSyntaxName:
                 if (txt.find(".syntax") == txt.npos)

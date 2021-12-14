@@ -1,0 +1,40 @@
+// *****************************************************************************
+// binary-data.xl                                                     XL project
+// *****************************************************************************
+//
+// File description:
+//
+//   Check the parsing of binary data
+//
+//
+//
+//
+//
+//
+// *****************************************************************************
+// This software is licensed under the GNU General Public License v3+
+// (C) 2018-2019, Christophe de Dinechin <christophe@dinechin.org>
+// *****************************************************************************
+// This file is part of XL
+//
+// XL is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// XL is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with XL, in a file named COPYING.
+// If not, see <https://www.gnu.org/licenses/>.
+// *****************************************************************************
+// CMD=%x -nobuiltins -parse %f -show
+
+bits "00.Parser/binary-data.xl"
+bits 64#SGVsbG8h
+bits 16#30313233344041424344606162636470717273
+bits 2#01001111011010110010_0001
+Hello! 01234@ABCD`abcdpqrs Ok!

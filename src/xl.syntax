@@ -60,6 +60,7 @@ COMMENT
         "//" NEWLINE
         "/*" "*/"
 
+BINARY  "bits"
 
 SYNTAX "C"
         extern ;

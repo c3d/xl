@@ -1,0 +1,12 @@
+42
+ 1.3
+ F
+00.Parser/binary-data-errors.xl:37:7: Expected binary data after "42"
+00.Parser/binary-data-errors.xl:38:8: Binary data must be in base 16 or 64
+00.Parser/binary-data-errors.xl:38:10: Binary data has leftover digit(s)
+00.Parser/binary-data-errors.xl:39:8: Expected binary data after "1.3"
+00.Parser/binary-data-errors.xl:40:11: Two _ characters in a row, how odd
+00.Parser/binary-data-errors.xl:40:11: Binary data has leftover digit(s)
+00.Parser/binary-data-errors.xl:41:15: Binary file name "'Hello.fs'" in single quotes
+00.Parser/binary-data-errors.xl:41:15: Cannot open binary data file "Hello.fs"
+00.Parser/binary-data-errors.xl:42:27: Cannot open binary data file "Nonexistent-File.txt"
