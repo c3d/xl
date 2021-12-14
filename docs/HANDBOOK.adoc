@@ -1870,9 +1870,9 @@ or `{}` begin a statement, whereas parentheses `()` or square brackets `[]`
 begin an expression.
 
 There are rare cases where the default rule will not achieve the desired
-objective, and you will need additional parentheses. One important such
-case is what follow `is` if it is not a block. Consider the following
-declarations:
+objective, and you will need additional parentheses or curly braces to enforce a
+particular interpretation. One important such case is what follow `is` if it is
+not a block. Consider the following declarations:
 
 [source]
 ----
