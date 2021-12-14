@@ -128,9 +128,9 @@ enum token_t
     tokEOF,                     // End of file marker
     tokNATURAL,                 // Natural number
     tokREAL,                    // Real number,
-    tokSTRING,                  // Double-quoted string
-    tokQUOTE,                   // Single-quoted string
-    tokLONGSTRING,              // Specially quoted string
+    tokTEXT,                    // Double-quoted text
+    tokQUOTE,                   // Single-quoted text
+    tokLONGTEXT,                // Long (multiline) text
     tokNAME,                    // Alphanumeric name
     tokSYMBOL,                  // Punctuation symbol
     tokNEWLINE,                 // New line

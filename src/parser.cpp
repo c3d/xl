@@ -158,7 +158,7 @@ token_t Parser::NextToken()
                 closequote = closing;
                 if (pend == tokNEWLINE)
                 {
-                    pending = tokLONGSTRING;
+                    pending = tokLONGTEXT;
                     return tokNEWLINE;
                 }
                 if (closing == "\n" && pend == tokNONE)
@@ -170,7 +170,7 @@ token_t Parser::NextToken()
                 {
                     beginningLine = false;
                 }
-                return tokLONGSTRING;
+                return tokLONGTEXT;
             }
 
             // If the next token has a substatement infix priority,
@@ -382,13 +382,13 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
             right = new Real(scanner.RealValue(), pos);
             prefix_priority = function_priority;
             break;
-        case tokLONGSTRING:
+        case tokLONGTEXT:
             right = new Text(scanner.TextValue(), openquote, closequote, pos);
             if (!result && new_statement)
                 is_expression = false;
             prefix_priority = function_priority;
             break;
-        case tokSTRING:
+        case tokTEXT:
         case tokQUOTE:
             separator = scanner.TokenText()[0];
             name = text(1, separator);

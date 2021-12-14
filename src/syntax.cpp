@@ -342,7 +342,7 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
             break;
         case tokNAME:
         case tokSYMBOL:
-        case tokSTRING:
+        case tokTEXT:
         case tokQUOTE:
             txt = scanner.TextValue();
 

@@ -592,7 +592,7 @@ token_t Scanner::NextToken(bool hungry)
                     hadSpaceAfter = isspace(c);
                     record(scanner, "Text %s at position %lu",
                            tokenText.c_str(), position);
-                    return eos == '"' ? tokSTRING : tokQUOTE;
+                    return eos == '"' ? tokTEXT : tokQUOTE;
                 }
 
                 // Double: put it in
@@ -609,7 +609,7 @@ token_t Scanner::NextToken(bool hungry)
                 }
                 record(scanner, "Truncated text %s at position %lu",
                        tokenText.c_str(), position);
-                return eos == '"' ? tokSTRING : tokQUOTE;
+                return eos == '"' ? tokTEXT : tokQUOTE;
             }
             NEXT_CHAR(c);
         }
