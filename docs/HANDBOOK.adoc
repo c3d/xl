@@ -2017,13 +2017,16 @@ happens during parsing. There are, however, a few tasks that can only be
 performed during parsing:
 
 [arabic]
-. Filtering out comments: Comments should not have an effect on the
+. _Filtering out comments_: Comments should not have an effect on the
   program, so they are simply eliminated during parsing.
-. Processing `use` statements: Since imported modules can contain
+  An implementation may preserve the comments as metadata in the parse tree
+  e.g. for rendering purpose, or to help building auto-documentation tools, as
+  long as the comments have no effect on the parse tree structure.
+. _Processing `use` statements_: Since imported modules can contain
   link:#module-syntax[syntax extensions], they must at least partially be
   processed during parsing. Details about `use` statements are covered in the
   link:#modules[chapter about modules].
-. Identifying words that switch to a link:#child-syntax[child syntax]: symbols
+. _Identifying words that switch to a link:#child-syntax[child syntax]_: symbols
   that activate a child syntax are recognized during parsing. This is the case
   for example with the `extern` name in the link:{xl}src/xl.syntax#L62[default
   syntax].
