@@ -1842,12 +1842,11 @@ INFIX 290 <=>
 === Making the syntax easy for humans
 
 XL contains a couple of tweaks designed specifically to make code easier
-to read or write by humans. When the human logic is subtle, so is the XL
-compiler parsing…
+to read or write by humans. When the human logic is subtle, so is XL parsing…
 
 ==== Expression vs. statement
 
-This first tweak is intended to put in XL an implicit grammatical
+The first tweak is intended to put in XL an implicit grammatical
 grouping that humans apparently do. Consider for example the following:
 
 [source]
@@ -1866,8 +1865,9 @@ This shows that humans have a notion of _expressions_ vs. _statements_.
 Expressions such as `sin X` have higher priority than commas and require
 parentheses if you want multiple arguments. By contrast, statements such
 as `print` have lower priority, and will take comma-separated argument
-lists. An indent or `{ }` block begins a statement, whereas parentheses
-`()` or square brackets `[]` begin an expression.
+lists. In XL, with the default link:#syntax-file[((syntax file))], indent
+or `{}` begin a statement, whereas parentheses `()` or square brackets `[]`
+begin an expression.
 
 There are rare cases where the default rule will not achieve the desired
 objective, and you will need additional parentheses. One important such
