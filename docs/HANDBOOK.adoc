@@ -1223,10 +1223,10 @@ computations are performed efficiently by the remote node.
 [source]
 ----
 invoke "pi.local",
-    min   : real := 100.0
-    max   : real := 0.0
-    sum   : real := 0.0
-    count : natural := 0
+    var min := 100.0
+    var max := 0.0
+    var sum := 0.0
+    var count := 0
 
     compute_stats T:real is
         min   := min(T, min)
@@ -2088,10 +2088,11 @@ use XL.MATH.COMPLEX
 ----
 * An infix `is`, which is called a _definition_, an infix `:` or `as`, which are
   called link:#type-annotations[_type annotations_], or an infix assignment
-  operator `:=` with a `:` type annotation or a `variable` prefix on the left,
-  called a _variable initialization_. Definitions, type annotations and variable
-  initializations are collectively called _declarations_, and are processed
-  during the link:#declaration-phase[declaration phase].
+  operator `:=` with a `:` type annotation or a `variable` or `var`
+  prefix on the left, called a _variable initialization_. Definitions, type
+  annotations and variable initializations are collectively called
+  _declarations_, and are processed during the
+  link:#declaration-phase[declaration phase].
 +
 [source]
 ----
