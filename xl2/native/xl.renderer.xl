@@ -76,7 +76,7 @@ module XL.RENDERER is
             tok := SC.NextToken(S)
             exit if tok = SC.tokEOF
 
-            if tok = SC.tokINTEGER then
+            if tok = SC.tokNATURAL then
                 priority := S.integer_value
 
             else if (tok = SC.tokNAME or tok = SC.tokSYMBOL or
@@ -462,7 +462,7 @@ module XL.RENDERER is
 
         if what = nil then
             RenderFormat output, "?null?", "?null?", "error "
-        else if what.kind = PT.xlINTEGER then
+        else if what.kind = PT.xlNATURAL then
             W : what as PT.integer_tree
             T : text := text(W.value)
             RenderFormat output, T, T, "integer "

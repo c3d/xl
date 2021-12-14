@@ -258,7 +258,7 @@ module XL.SCANNER is
                     IO.PutBack S.input, C
                     IO.PutBack S.input, '.'
                     S.position -= 2
-                    return tokINTEGER
+                    return tokNATURAL
                 else
                     S.token += '.'
                     S.string_value += '.'
@@ -340,7 +340,7 @@ module XL.SCANNER is
             S.position -= 1
             if floating_point then
                 return tokREAL
-            return tokINTEGER
+            return tokNATURAL
         // End of numbers
 
         // Look for names

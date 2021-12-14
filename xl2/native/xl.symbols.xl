@@ -678,7 +678,7 @@ module XL.SYMBOLS is
     // ------------------------------------------------------------------------
     //   Set an integer property
     // ------------------------------------------------------------------------
-        SetProperty table, name, PT.NewInteger(value)
+        SetProperty table, name, PT.NewNatural(value)
 
 
     function GetInteger (table         : symbol_table;
@@ -689,7 +689,7 @@ module XL.SYMBOLS is
     //   Get an integer property
     // ------------------------------------------------------------------------
        I : PT.tree := GetProperty(table, name, enclosed)
-       if I <> nil and I.kind = PT.xlINTEGER then
+       if I <> nil and I.kind = PT.xlNATURAL then
            as_int : I as PT.integer_tree
            return as_int.value
        return default_value
@@ -876,7 +876,7 @@ module XL.SYMBOLS is
                 prop : PT.tree := S.properties[name]
                 if prop = nil then
                     IO.WriteLn "nil"
-                else if (prop.kind = PT.xlINTEGER or prop.kind = PT.xlREAL or
+                else if (prop.kind = PT.xlNATURAL or prop.kind = PT.xlREAL or
                          prop.kind = PT.xlTEXT or prop.kind = PT.xlNAME) then
                     IO.WriteLn prop
                 else

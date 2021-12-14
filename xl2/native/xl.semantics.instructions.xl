@@ -474,7 +474,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         E : integer
         for E in 0..size(values)-1 loop
             Eval  : PT.tree := values[E]
-            Entry : PT.tree := PT.NewInteger(E, Eval.position)
+            Entry : PT.tree := PT.NewNatural(E, Eval.position)
             result := parse_tree
                 'result'
                 @case_label 'label' 'Entry'
@@ -485,7 +485,7 @@ module XL.SEMANTICS.INSTRUCTIONS is
         // Generate all the entries
         for E in 0..size(values)-1 loop
             Eval  : PT.tree := values[E]
-            Entry : PT.tree := PT.NewInteger(E, Eval.position)
+            Entry : PT.tree := PT.NewNatural(E, Eval.position)
             Code  : PT.tree := XLT.XLSemantics(stmts[E])
             result := parse_tree
                 'result'

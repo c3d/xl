@@ -39,7 +39,7 @@ module XL.PARSER.TREE with
     // Identification of the type of tree
     type tree_kind is enumeration
         xlUNKNOWN,
-        xlINTEGER, xlREAL, xlTEXT, xlNAME,    // Atoms
+        xlNATURAL, xlREAL, xlTEXT, xlNAME,    // Atoms
         xlBLOCK,                                // Unary paren / block
         xlPREFIX,                               // Binary prefix-op
         xlINFIX,                                // Ternary infix-op
@@ -59,8 +59,8 @@ module XL.PARSER.TREE with
     type integer_node is tree_node with
         value : integer
     type integer_tree is access to integer_node
-    function NewInteger(value : integer) return integer_tree is
-        result.kind := xlINTEGER
+    function NewNatural(value : integer) return integer_tree is
+        result.kind := xlNATURAL
         result.value := value
 
     // Representation of a real

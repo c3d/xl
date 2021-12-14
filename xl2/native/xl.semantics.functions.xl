@@ -412,8 +412,8 @@ module XL.SEMANTICS.FUNCTIONS is
         POS.PositionToLine cond.position, file, line, column, source
 
         fileT   : PT.tree := PT.NewText (file, '"', cond.position)
-        lineT   : PT.tree := PT.NewInteger (line, cond.position)
-        columnT : PT.tree := PT.NewInteger (column, cond.position)
+        lineT   : PT.tree := PT.NewNatural (line, cond.position)
+        columnT : PT.tree := PT.NewNatural (column, cond.position)
         sourceT : PT.tree := PT.NewText(source, '"', cond.position)
         callT   : PT.tree := PT.NewName(call, cond.position)
 

@@ -50,7 +50,7 @@ module XL.PLUGIN.DIFFERENTIATION is
 
         translate expr
 
-            when ('K') where K.kind = PT.xlINTEGER or K.kind = PT.xlREAL then
+            when ('K') where K.kind = PT.xlNATURAL or K.kind = PT.xlREAL then
                 return parse_tree(0.0)
 
             when ('X') where X.kind = PT.xlNAME then

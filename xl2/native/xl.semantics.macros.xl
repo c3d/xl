@@ -100,7 +100,7 @@ module XL.SEMANTICS.MACROS is
                 return PT.NewWildcard(name.value, name.position)
             return name
 
-        else if (form.kind = PT.xlINTEGER or
+        else if (form.kind = PT.xlNATURAL or
                  form.kind = PT.xlREAL or
                  form.kind = PT.xlNAME) then
             return form
@@ -145,7 +145,7 @@ module XL.SEMANTICS.MACROS is
                 return repl
             return name
 
-        else if (form.kind = PT.xlINTEGER or
+        else if (form.kind = PT.xlNATURAL or
                  form.kind = PT.xlREAL or
                  form.kind = PT.xlNAME) then
             return form
@@ -418,7 +418,7 @@ module XL.SEMANTICS.MACROS is
 
         when (xl.position 'Expression') then
             // Return the position of the expression (not that useful)
-            return PT.NewInteger (Expression.position, input.position)
+            return PT.NewNatural (Expression.position, input.position)
 
         when (xl.file 'Expression') then
             // Return the file where a given expression was seen
@@ -432,14 +432,14 @@ module XL.SEMANTICS.MACROS is
             file, source : text
             line, column : integer
             POS.PositionToLine Expression.position, file, line, column, source
-            return PT.NewInteger (line, input.position)
+            return PT.NewNatural (line, input.position)
 
         when (xl.column 'Expression') then
             // Return the line where a given expression was seen
             file, source : text
             line, column : integer
             POS.PositionToLine Expression.position, file, line, column, source
-            return PT.NewInteger (column, input.position)
+            return PT.NewNatural (column, input.position)
 
         when (xl.source_text 'Expression') then
             // Return the line where a given expression was seen

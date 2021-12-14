@@ -66,7 +66,7 @@ module XL.SEMANTICS.WRITTEN_FORMS is
                 return PT.NewWildcard(name.value, name.position)
             return name
 
-        else if (form.kind = PT.xlINTEGER or
+        else if (form.kind = PT.xlNATURAL or
                  form.kind = PT.xlREAL or
                  form.kind = PT.xlTEXT) then
             return form

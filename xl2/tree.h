@@ -46,7 +46,7 @@ enum XLKind
 // ----------------------------------------------------------------------------
 {
     xlUNKNOWN,
-    xlINTEGER, xlREAL, xlSTRING, xlNAME,        // Atoms
+    xlNATURAL, xlREAL, xlSTRING, xlNAME,        // Atoms
     xlBLOCK,                                    // Unary parentheses and block
     xlPREFIX,                                   // Binary prefix-op
     xlINFIX,                                    // Ternary infix-op
@@ -75,15 +75,15 @@ struct XLTree
 std::ostream &operator<<(std::ostream &out, XLTree &tree);
 
 
-struct XLInteger : XLTree
+struct XLNatural : XLTree
 // ----------------------------------------------------------------------------
 //   A node representing an integer
 // ----------------------------------------------------------------------------
 {
-    XLInteger(longlong i = 0): value(i) {}
+    XLNatural(ulonglong i = 0): value(i) {}
     virtual void        Output(ostream &out) { out << value; }
-    virtual XLKind      Kind() { return xlINTEGER; }
-    longlong            value;
+    virtual XLKind      Kind() { return xlNATURAL; }
+    ulonglong           value;
 };
 
 
@@ -188,7 +188,7 @@ struct XLAction
 // ----------------------------------------------------------------------------
 {
     // Override these...
-    bool Integer(XLInteger *input)      { return false; }
+    bool Natural(XLNatural *input)      { return false; }
     bool Real(XLReal *input)            { return false; }
     bool String(XLString *input)        { return false; }
     bool Name(XLName *input)            { return false; }
@@ -214,8 +214,8 @@ struct XLDo
         {
             switch (input->Kind())
             {
-            case xlINTEGER:
-                done = action.Integer((XLInteger *) input);
+            case xlNATURAL:
+                done = action.Natural((XLNatural *) input);
                 input = NULL;
                 break;
             case xlREAL:

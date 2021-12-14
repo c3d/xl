@@ -359,7 +359,7 @@ module XL.SEMANTICS.TYPES is
             return
         rtti : PT.tree := PT.Attached(mname, "RTTI")
         if rtti = nil then
-            rtti := PT.NewInteger(size(types_with_rtti) + 1, mname.position)
+            rtti := PT.NewNatural(size(types_with_rtti) + 1, mname.position)
             PT.AttachTree mname, "RTTI", rtti
             types_with_rtti += mname
             XLT.AddGlobalDecl parse_tree
@@ -928,7 +928,7 @@ module XL.SEMANTICS.TYPES is
         when
             'Thing'
         where
-            Thing.kind = PT.xlINTEGER
+            Thing.kind = PT.xlNATURAL
         then
             SetType Thing, integer_literal_type
             return Thing

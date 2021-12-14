@@ -394,7 +394,7 @@ module XL.TRANSLATOR is
         //    Leafs
         // --------------------------------------------------------------------
 
-        if input.kind = PT.xlINTEGER then
+        if input.kind = PT.xlNATURAL then
             T : PT.integer_tree := PT.integer_tree(input)
             IO.write T.value
 
@@ -1178,9 +1178,9 @@ module XL.TRANSLATOR is
             IO.Write ' '
 
         // For each kind of atom, check and return 0 or 1
-        if form.kind = PT.xlINTEGER then
+        if form.kind = PT.xlNATURAL then
             T : PT.integer_tree := PT.integer_tree(form)
-            IO.Write "xl::parser::tree::newinteger(", T.value, ")"
+            IO.Write "xl::parser::tree::newnatural(", T.value, ")"
 
         if form.kind = PT.xlREAL then
             T : PT.real_tree := PT.real_tree(form)

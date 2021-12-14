@@ -286,7 +286,7 @@ token_t XLScanner::NextToken()
                 // This is something else following an integer: 1..3, 1.(3)
                 ungetc(c, file);
                 ungetc('.', file);
-                return tokINTEGER;
+                return tokNATURAL;
             }
             else
             {
@@ -364,7 +364,7 @@ token_t XLScanner::NextToken()
 
         // Return the token
         ungetc(c, file);
-        return floating_point ? tokREAL : tokINTEGER;
+        return floating_point ? tokREAL : tokNATURAL;;
     } // Numbers
 
     // Look for names
@@ -398,7 +398,7 @@ token_t XLScanner::NextToken()
                 if (c != eos)
                 {
                     ungetc(c, file);
-                    return eos == '"' ? tokSTRING : tokQUOTE;
+                    return eos == '"' ? tokTEXT : tokQUOTE;
                 }
 
                 // Double: put it in

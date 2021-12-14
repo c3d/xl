@@ -72,7 +72,7 @@ struct XLInitializeContext : XLAction
         return Enter(input->value);
     }
 
-    bool Integer(XLInteger *input)
+    bool Natural(XLNatural *input)
     {
         priority = int(input->value);
         return false;

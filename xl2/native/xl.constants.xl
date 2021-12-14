@@ -62,7 +62,7 @@ module XL.CONSTANTS is
             false_tree := name
 
         // Evaluate leaf values
-        if input.kind = PT.xlINTEGER then
+        if input.kind = PT.xlNATURAL then
             return input
         else if input.kind = PT.xlREAL then
             return input
@@ -156,7 +156,7 @@ module XL.CONSTANTS is
     // ------------------------------------------------------------------------
     //   Return true if the expression is a constant (call after cst eval)
     // ------------------------------------------------------------------------
-        return (expr.kind = PT.xlINTEGER or
+        return (expr.kind = PT.xlNATURAL or
                 expr.kind = PT.xlREAL or
                 expr.kind = PT.xlTEXT or
                 PT.Matches(expr, true_tree) or
@@ -192,80 +192,80 @@ module XL.CONSTANTS is
         // INTEGERS
 
         // Arithmetic - Integer
-        when ('X' + 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' + 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value + intY.value, input.position)
+            return PT.NewNatural(intX.value + intY.value, input.position)
 
-        when ('X' - 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' - 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value - intY.value, input.position)
+            return PT.NewNatural(intX.value - intY.value, input.position)
 
-        when ('X' * 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' * 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value * intY.value, input.position)
+            return PT.NewNatural(intX.value * intY.value, input.position)
 
-        when ('X' / 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' / 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value / intY.value, input.position)
+            return PT.NewNatural(intX.value / intY.value, input.position)
 
         // Logic - Integer
-        when ('X' and 'Y') where (X.kind = PT.xlINTEGER and
-                                  Y.kind = PT.xlINTEGER) then
+        when ('X' and 'Y') where (X.kind = PT.xlNATURAL and
+                                  Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value and intY.value, input.position)
+            return PT.NewNatural(intX.value and intY.value, input.position)
 
-        when ('X' or 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' or 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value or intY.value, input.position)
+            return PT.NewNatural(intX.value or intY.value, input.position)
 
-        when ('X' xor 'Y') where (X.kind = PT.xlINTEGER and
-                                  Y.kind = PT.xlINTEGER) then
+        when ('X' xor 'Y') where (X.kind = PT.xlNATURAL and
+                                  Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
-            return PT.NewInteger(intX.value xor intY.value, input.position)
-        when (not 'X') where (X.kind = PT.xlINTEGER) then
+            return PT.NewNatural(intX.value xor intY.value, input.position)
+        when (not 'X') where (X.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
-            return PT.NewInteger(not intX.value)
+            return PT.NewNatural(not intX.value)
 
         // Comparisons - Integer
-        when ('X' = 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' = 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
             return AsBoolean(intX.value = intY.value, input.position)
-        when ('X' < 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' < 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
             return AsBoolean(intX.value < intY.value, input.position)
-        when ('X' > 'Y') where (X.kind = PT.xlINTEGER and
-                                Y.kind = PT.xlINTEGER) then
+        when ('X' > 'Y') where (X.kind = PT.xlNATURAL and
+                                Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
             return AsBoolean(intX.value > intY.value, input.position)
-        when ('X' <> 'Y') where (X.kind = PT.xlINTEGER and
-                                 Y.kind = PT.xlINTEGER) then
+        when ('X' <> 'Y') where (X.kind = PT.xlNATURAL and
+                                 Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
             return AsBoolean(intX.value <> intY.value, input.position)
-        when ('X' <= 'Y') where (X.kind = PT.xlINTEGER and
-                                 Y.kind = PT.xlINTEGER) then
+        when ('X' <= 'Y') where (X.kind = PT.xlNATURAL and
+                                 Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
             return AsBoolean(intX.value <= intY.value, input.position)
-        when ('X' >= 'Y') where (X.kind = PT.xlINTEGER and
-                                 Y.kind = PT.xlINTEGER) then
+        when ('X' >= 'Y') where (X.kind = PT.xlNATURAL and
+                                 Y.kind = PT.xlNATURAL) then
             intX : X as PT.integer_tree
             intY : Y as PT.integer_tree
             return AsBoolean(intX.value >= intY.value, input.position)
@@ -346,10 +346,10 @@ module XL.CONSTANTS is
             return PT.NewText (txX.value + txY.value, '"', input.position)
         when (xl.length('X')) where IsText(X) then
             txX : X as PT.text_tree
-            return PT.NewInteger (length(txX.value), input.position)
+            return PT.NewNatural (length(txX.value), input.position)
         when ('X'['A'..'B']) where (IsText(X) and
-                                    A.kind = PT.xlINTEGER and
-                                    B.kind = PT.xlINTEGER) then
+                                    A.kind = PT.xlNATURAL and
+                                    B.kind = PT.xlNATURAL) then
             txX : X as PT.text_tree
             inA : A as PT.integer_tree
             inB : B as PT.integer_tree
@@ -358,29 +358,26 @@ module XL.CONSTANTS is
 
 
         // Conversions
-        when (integer('X')) where X.kind = PT.xlINTEGER then
+        when (integer('X')) where X.kind = PT.xlNATURAL then
             return X
         when (integer('X')) where X.kind = PT.xlREAL then
             reX : X as PT.real_tree
-            return PT.NewInteger(integer(reX.value), input.position)
+            return PT.NewNatural(integer(reX.value), input.position)
         when (integer('X')) where X.kind = PT.xlTEXT then
             txX : X as PT.text_tree
             if txX.quote = '''' then
                 // Character conversion
                 txVal : text := txX.value
                 txNum : integer := integer(txVal[0])
-                return PT.NewInteger(txNum, input.position)
+                return PT.NewNatural(txNum, input.position)
             return input
-        when (real('X')) where X.kind = PT.xlINTEGER then
+        when (real('X')) where X.kind = PT.xlNATURAL then
             inX : X as PT.integer_tree
             return PT.NewReal(real(inX.value), input.position)
         when (real('X')) where X.kind = PT.xlREAL then
             return X
-        when (character('X')) where X.kind = PT.xlINTEGER then
+        when (character('X')) where X.kind = PT.xlNATURAL then
             inX : X as PT.integer_tree
             txt : text
             txt += character(inX.value)
             return PT.NewText(txt, '''', input.position)
-
-
-

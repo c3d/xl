@@ -235,13 +235,13 @@ module XL.PARSER is
             // Check token result
             if tok = SC.tokEOF or tok = SC.tokERROR then
                 done := true
-            else if tok = SC.tokINTEGER then
-                right := PT.NewInteger(S.integer_value)
+            else if tok = SC.tokNATURAL then
+                right := PT.NewNatural(S.integer_value)
                 prefix_priority := function_priority
             else if tok = SC.tokREAL then
                 right := PT.NewReal(S.real_value)
                 prefix_priority := function_priority
-            else if tok = SC.tokSTRING then
+            else if tok = SC.tokTEXT then
                 right := PT.NewText(S.string_value, '"')
                 prefix_priority := function_priority
             else if tok = SC.tokQUOTE then
@@ -513,10 +513,10 @@ module XL.PARSER is
             tok := SC.NextToken(S)
             exit if tok = SC.tokEOF
 
-            if tok = SC.tokINTEGER then
+            if tok = SC.tokNATURAL then
                 priority := S.integer_value
 
-            else if tok = SC.tokNAME or tok = SC.tokSYMBOL or tok = SC.tokSTRING or tok = SC.tokQUOTE then
+            else if tok = SC.tokNAME or tok = SC.tokSYMBOL or tok = SC.tokTEXT or tok = SC.tokQUOTE then
                 txt := S.string_value
                 if txt = "NEWLINE" then
                     txt := ASCII.CR

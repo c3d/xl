@@ -120,7 +120,7 @@ module XL.SEMANTICS.TYPES.ENUMERATIONS is
                 else
                     decl : DCL.declaration := DCL.Declare (Name, etp)
                     etp.names += decl
-                    ival  : PT.tree := PT.NewInteger(Index, Name.position)
+                    ival  : PT.tree := PT.NewNatural(Index, Name.position)
                     mname : PT.tree := decl.machine_name
                     mtype : PT.tree := etp.machine_name
                     enumDecl : BC.Bytecode :=

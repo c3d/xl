@@ -115,10 +115,10 @@ module XL.SCANNER with
 
         // Normal conditions
         tokEOF,                     // End of file marker
-        tokINTEGER,                 // Integer number
+        tokNATURAL,                 // Natural number
         tokREAL,                    // Real number,
-        tokSTRING,                  // Double-quoted string
-        tokQUOTE,                   // Single-quoted string
+        tokTEXT,                    // Double-quoted text
+        tokQUOTE,                   // Single-quoted text
         tokNAME,                    // Alphanumeric name
         tokSYMBOL,                  // Punctuation symbol
         tokNEWLINE,                 // New line

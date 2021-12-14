@@ -509,7 +509,7 @@ module XL.CODE_GENERATOR is
                     idx : integer := integer(C) - integer('1')
                     if idx >= size(args) then
                         ERR.Error "Missing bytecode argument in '$1' ($2>=$3)",
-                            name,PT.NewInteger(idx),PT.NewInteger(size(args))
+                            name,PT.NewNatural(idx),PT.NewNatural(size(args))
                     else
                         arg    : text := args[integer(C) - integer('1')]
                         if not keyMode then
@@ -757,7 +757,7 @@ module XL.CODE_GENERATOR is
         //    Leafs
         // --------------------------------------------------------------------
 
-        if input.kind = PT.xlINTEGER then
+        if input.kind = PT.xlNATURAL then
             T : input as PT.integer_tree
             IO.write T.value
 
@@ -1615,9 +1615,9 @@ module XL.CODE_GENERATOR is
             IO.Write ' '
 
         // For each kind of atom, check and return 0 or 1
-        if form.kind = PT.xlINTEGER then
+        if form.kind = PT.xlNATURAL then
             T : form as PT.integer_tree
-            IO.Write "xl::parser::tree::newinteger(", T.value, ")"
+            IO.Write "xl::parser::tree::newnatural(", T.value, ")"
 
         if form.kind = PT.xlREAL then
             T : form as PT.real_tree

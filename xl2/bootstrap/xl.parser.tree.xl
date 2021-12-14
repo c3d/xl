@@ -92,7 +92,7 @@ module XL.PARSER.TREE is
             return 0
 
         // For each kind of atom, check and return 0 or 1
-        if test.kind = PT.xlINTEGER then
+        if test.kind = PT.xlNATURAL then
             T : PT.integer_tree := PT.integer_tree(test)
             R : PT.integer_tree := PT.integer_tree(ref)
             if T.value = R.value then
@@ -213,7 +213,7 @@ module XL.TEXT_IO with
     // ------------------------------------------------------------------------
     //    For debugging purpose, write a tree
     // ------------------------------------------------------------------------
-        if what.kind = PT.xlINTEGER then
+        if what.kind = PT.xlNATURAL then
             T : PT.integer_tree := PT.integer_tree(what)
             IO.write T.value
         else if what.kind = PT.xlREAL then

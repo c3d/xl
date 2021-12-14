@@ -156,7 +156,7 @@ module XL.PARSER.TREE is
             return 0
 
         // For each kind of atom, check and return 0 or 1
-        if test.kind = xlINTEGER then
+        if test.kind = xlNATURAL then
             T : test as integer_tree
             R : ref as integer_tree
             if T.value = R.value then
@@ -298,9 +298,9 @@ module XL.PARSER.TREE is
 
         if original = nil then
             return original
-        if original.kind = xlINTEGER then
+        if original.kind = xlNATURAL then
             it : original as integer_tree
-            return NewInteger(it.value, it.position)
+            return NewNatural(it.value, it.position)
         if original.kind = xlREAL then
             rt : original as real_tree
             return NewReal (rt.value, rt.position)

@@ -281,8 +281,8 @@ module XL.PARSER is
                 if closing <> "" and closing <> UNINDENT_MARKER then
                     ERR.Error "Unexpected end of text, expected '$1'",
                               S.position, closing
-            else if tok = SC.tokINTEGER then
-                right := PT.NewInteger(S.integer_value, pos)
+            else if tok = SC.tokNATURAL then
+                right := PT.NewNatural(S.integer_value, pos)
                 prefix_priority := function_priority
             else if tok = SC.tokREAL then
                 right := PT.NewReal(S.real_value, pos)
@@ -563,7 +563,7 @@ module XL.PARSER is
             tok := SC.NextToken(S)
             exit if tok = SC.tokEOF
 
-            if tok = SC.tokINTEGER then
+            if tok = SC.tokNATURAL then
                 priority := S.integer_value
 
             else if (tok = SC.tokNAME or tok = SC.tokSYMBOL or

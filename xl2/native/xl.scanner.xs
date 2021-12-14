@@ -115,7 +115,7 @@ module XL.SCANNER with
 
         // Normal conditions
         tokEOF,                     // End of file marker
-        tokINTEGER,                 // Integer number
+        tokNATURAL,                 // Natural number
         tokREAL,                    // Real number,
         tokTEXT,                    // Text ('A' or "A")
         tokNAME,                    // Alphanumeric name
@@ -176,4 +176,3 @@ module XL.SCANNER with
     // Opening and closing parenthese
     function OpenParen(S : scanner) return integer
     procedure CloseParen (S : scanner; old_indent : integer)
-

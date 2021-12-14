@@ -191,16 +191,16 @@ XLTree *XLParser::Parse(text closing_paren)
             done = true;
             break;
 
-        case tokINTEGER:
-            right = new XLInteger(scanner.IntegerValue());
+        case tokNATURAL:
+            right = new XLNatural(scanner.IntegerValue());
             break;
         case tokREAL:
             right = new XLReal(scanner.RealValue());
             break;
-        case tokSTRING:
+        case tokTEXT:
         case tokQUOTE:
             right = new XLString(scanner.StringValue(),
-                                tok == tokSTRING ? '"' : '\'');
+                                tok == tokTEXT ? '"' : '\'');
             break;
         case tokNAME:
         case tokSYMBOL:
@@ -477,4 +477,3 @@ XLTree *XLParser::Parse(text closing_paren)
     }
     return result;
 }
-

@@ -185,7 +185,7 @@ struct XL2CTranslation : XLAction
     XL2CTranslation() {}
 
     // Override these...
-    bool Integer(XLInteger *input);
+    bool Natural(XLNatural *input);
     bool Real(XLReal *input);
     bool String(XLString *input);
     bool Name(XLName *input);
@@ -196,7 +196,7 @@ struct XL2CTranslation : XLAction
 };
 
 
-bool XL2CTranslation::Integer(XLInteger *input)
+bool XL2CTranslation::Natural(XLNatural *input)
 // ----------------------------------------------------------------------------
 //    Translation of an integer...
 // ----------------------------------------------------------------------------
@@ -967,9 +967,9 @@ void TranslateForm(XLTree *form, args_map &args, int nesting = 3)
 
     switch (form->Kind())
     {
-    case xlINTEGER:
-        out << "xl::parser::tree::newinteger("
-            << ((XLInteger *) form)->value << ")";
+    case xlNATURAL:
+        out << "xl::parser::tree::newnatural("
+            << ((XLNatural *) form)->value << ")";
         break;
     case xlREAL:
         out << "xl::parser::tree::newreal("
