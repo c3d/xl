@@ -1968,8 +1968,9 @@ actually a feature for Tao3D, which purposely disabled some
 optimizations in order to improve compilation speed, notably when the
 program structure did not change. The version of XL described in this
 document, however, has markedly evolved relative to what was implemented
-in Tao3D, with the hope that much better code quality can be achieved.
-This part has not been demonstrated yet.
+in Tao3D, with the hope that much better code quality can be achieved thanks to
+a well-defined type system. This part has not been fully demonstrated yet,
+although some early results using type inference techniques showed real promise.
 
 ==== Execution context
 
