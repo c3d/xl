@@ -247,9 +247,9 @@ ALLTESTS_ARG_O3=-O3
 
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:
-	@$(INFO) "[INFO]" Building with LLVM version $(LLVM_VERSION)
+	@$(INFO) "[INFO]" "Building with LLVM version" "$(LLVM_VERSION)"
 .show_none_version:
-	@$(INFO) "[INFO]" Building in interpreter-only mode
+	@$(INFO) "[INFO]" "Building in interpreter-only mode"
 
 # Module-related rules
 ifndef RECURSE
