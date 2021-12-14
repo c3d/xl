@@ -1888,7 +1888,7 @@ for the same reason that the line above parses as `write ("X=", X)`.
 Another issue occurs with the body of `double X`, because it actually
 only contains the first `X`. The `;` operator has lower precedence
 than `is`, which is useful for link:#scoping[maps], but does not
-achieve the expected effect above.
+achieve the expected effect in the `double` definition above.
 
 The solution to these problems is use a block on the right of `is` in
 all these cases. The correct way to write the above code is therefore:
@@ -1921,6 +1921,9 @@ For example:
 write -A    // write (-A)
 B - A       // (B - A)
 ----
+
+This rule was implemented for practical reasons, based on experience using XL in
+the Tao3D project.
 
 == [[evaluation]]XL program evaluation
 
