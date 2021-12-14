@@ -1929,15 +1929,15 @@ the Tao3D project.
 
 XL defines _((program execution))_ primarily in terms of operations on the
 parse tree combined with operations on an implicit _((context))_ that stores
-the program state. The context itself is also described in XL in order
-to define the expected result of ((evaluation)).
+the program state. The context itself is also described in XL, in order
+to precisely define the expected result of ((evaluation)).
 
-For efficiency, actual implementations are unlikely to store everything
-as an actual parse tree, although there is an _interpreter_
-implementation that does exactly that. A compiler is more likely to
-link:#compiled-representations[optimize representations] of both code
-and data, as long as that optimized representation ultimately respect
-the semantics described using the normal form for the parse tree.
+For efficiency, actual implementations are unlikely to store everything as parse
+trees, although there is an _((interpreter))_ implementation that does exactly
+that. A compiler is more likely to link:#compiled-representations[optimize
+representations] of both code and data, as long as that optimized representation
+ultimately respects the semantics described using the normal form for the parse
+tree.
 
 === Execution phases
 
