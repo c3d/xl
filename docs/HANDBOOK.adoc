@@ -1447,21 +1447,18 @@ includes both names and operators.
 
 [NOTE]
 ====
-The list of node types given above is what the current implementations of XL
-offer. Some changes might happen in the future, notably the introduction of a
-`bits` node type for arbitrary binary data:
-
 [[bits]]
+The text nodes are used for binary data such as:
+
 [source]
 ----
 bits 16#FF_00_FF_00_FF_FF_00_FF_00
 bits "image.png"
 ----
 
-It is unclear at this point if this `bits` node type is sufficiently distinct
-from `text` to warrant a specific node type. In other words, `bits` could be
-implemented in teh scanner but ultimately generate a `text` node in the parse
-tree, the distinction for programs happening in the type system.
+This generates text nodes in the parse tree that have empty delimiters
+(i.e. their delimiter is neither `"` nor `'`), and in the XL type system, this
+corresponds to the `binary` data type.
 ====
 
 === Leaf nodes
@@ -1512,8 +1509,8 @@ of `62`. For bases between 11 and 36, letters `A` through `Z` or `a` through
 is 15, `Z` is 35. Case does not matter. For example, `16#FF` and
 `16#ff` are two valid ((hexadecimal)) representation of `255`.
 For base 64, https://en.wikipedia.org/wiki/Base64[Base64] encoding is
-used, and case matters. This is mostly indended for use in link:#bits[((binary
-objects))], i.e. after `bits`. For instance, `64#SGVsbG8h` is the base-64
+used, and case matters. This is mostly indended for link:#bits[((binary
+data))], e.g. after `bits`. For instance, `64#SGVsbG8h` is the base-64
 encoding for the number with the same binary representation as the
 sequence of ASCII characters in `Hello!`.
 
@@ -1767,7 +1764,8 @@ The syntax file uses a few special names:
   syntax file uses `bits`. The syntax for binary data can take one of two
   forms: either a very large integer constant in big-endian format, as in
   `bits 16#000102030405060708090A0B0C0D0E0F`, or the name of a file, as in
-  `bits "image.png"`.
+  `bits "image.png"`. In both cases, this generates a text node containing the
+  data and empty delimiters.
 * `NEWLINE` is used to represent the infix operators that separates
   individual source code lines.
 * `STATEMENT` is the precedence that delimits
@@ -1801,6 +1799,9 @@ also to determine if the block contains an expression or a statement.
 In the default syntax file, indentation blocks and blocks delimited by
 curly braces `{ }` contain statements, whereas blocks delimited by
 parentheses `( )` or square brackets `[ ]` will contain expressions.
+
+Binary data prefix is introduced by the keyword `BINARY`. By default, the `bits`
+prefix is used for that purpose.
 
 ==== Child syntax
 
@@ -2022,11 +2023,9 @@ performed during parsing:
   that activate a child syntax are recognized during parsing. This is the case
   for example with the `extern` name in the link:{xl}src/xl.syntax#L62[default
   syntax].
-. Identifying binary data: words such as `bits` marked as introducing
-  `BINARY` data in the ((syntax file)) are treated specially during parsing,
-  to generate parse tree nodes representing binary data.
-
-NOTE: Binary data is not currently implemented.
+. _Identifying binary data_: words such as `bits` marked as `BINARY` in the
+  ((syntax file)) are treated specially during parsing, in order to generate
+  parse tree text nodes holding arbitrary large amounts of binary data.
 
 The need to process `use` statements during parsing means that it’s not
 possible in XL to have computed `use` statements. The name of the module
