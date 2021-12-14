@@ -2049,6 +2049,13 @@ Once ((parsing)) completes successfully, the parse tree can be handed to the
 ((declaration)) and ((evaluation)) phases. Parsing occurs for the _entire
 program_, including imported modules, before the other phases begin.
 
+The rule that parsing occurs for the entire program only applies to the source
+code that is known before evaluation. The XL standard library features
+link:#modules[modules] providing access to the underlying XL implementation
+(compiler or interpreter). It is possible to use these modules to dynamically
+evaluate XL programs. However, doing so corresponds, conceptually, to parsing or
+evaluating a _separate_ program.
+
 ==== Sequences
 
 Both declaration and evaluation phases will process _sequences_, which
