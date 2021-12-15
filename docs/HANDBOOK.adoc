@@ -5824,8 +5824,7 @@ or match elements in the parse tree:
 * `character` matches link:#text[character] literals such as `'A'`.
 * `name` matches names such as `A`.
 * `operator` matches operators such as `+`.
-* `symbol` matches either name or operators, as well as an empty
-   symbol used in empty blocks, e.g. `()`.
+* `symbol` matches either names or operators
 * `infix` matches infix expressions such as `A+B`.
 * `prefix` matches prefix expressions such as `+3`.
 * `postfix` matches postfix expressions such as `4%`.
