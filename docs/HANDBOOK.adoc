@@ -768,8 +768,9 @@ like `printf` in C. You can write multiple comma-separated items in a
 print "The value of X is ", X, " and the value of Y is ", Y
 ----
 
-That would first call the last definition of `print` with the following
-link:#binding[((binding))] for the variable `Items`:
+That would first call the last definition of `print` with
+link:#binding[((binding))] similar to what is shown below for the variable
+`Items` (simplified for clarity, details forthcoming):
 
 [source]
 ----
