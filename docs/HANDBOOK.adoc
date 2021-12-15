@@ -1377,9 +1377,9 @@ Leaf nodes contain values that are ((atomic)) as far as XL is concerned:
 . [[real]]`real` nodes represent a floating-point approximation of
   real numbers like `1.234`, `1.5e-10`, `2e-3`, or `2#1.0001_0001#e24`.
 . [[text]]`text` nodes represent text values like `"Hello world"`, as well as
-  single-character constants like `'A'`.
-. [[name]]`name` nodes represent entity names like `JOHN_DOE`, as well as
-  symbols like `+=`.
+  single-character constants like `'A'`, and binary data like `bits 16#42`.
+. [[symbol]]`symbol` nodes represent entity [[name]]`names` like `JOHN_DOE`, as
+  well as [[operator]]`operator` symbols like `+=`.
 
 Inner nodes contains combinations of other XL nodes:
 
@@ -1395,18 +1395,47 @@ Inner nodes contains combinations of other XL nodes:
   `[a]`, `(a)`, `{a}`. Blocks are also used to represent
   link:#indentation[code indentation].
 
-For example, let’s consider the following code:
+A program can directly access that source code program structure very easily,
+using a number of link:#parse-tree-types[parse tree types], as shown in the
+following sample code, which produces text representing the internal structure
+of any code:
 
 [source]
 ----
-if X < 0 then
-   print "The value of ", X, " is negative"
-   X := -X
+debug N:natural         is "natural(" & N & ")"
+debug R:real            is "real(" & R & ")"
+debug T:text            is "text(""" & T & """)"
+debug S:symbol          is "symbol(""" & S & """)"
+debug I:infix           is
+    "infix(""" & I.name & """," & debug(I.left) & "," & debug(I.right) & ")"
+debug P:prefix          is
+    "prefix(" & debug(P.left) & "," & debug(P.right) & ")"
+debug P:postfix         is
+    "postfix(" & debug(P.left) & "," & debug(P.right) & ")"
+debug B:block           is
+    "block(" & debug(B.child) & ")"
+
+print debug
+    if X < 0 then
+       print "The value of ", X, " is negative"
+       X := -X
 ----
 
-Assuming that this program is stored in a file called `program.xl`, the
-XL parse tree for this program can be obtained by using the following
-command:
+The output of this program should look like this:
+
+[source]
+----
+block(infix("then",prefix(symbol("if"),infix("<",symbol("X"),natural(0))),block(infix(" <1>
+",prefix(symbol("print"),infix(",",text("The value of ",infix(",",symbol("X"),text(" is negative")))),infix(":=",symbol("X"),prefix(symbol("-"),symbol("X"))))))))
+----
+
+<1> The line separator is an infix with a new-line character in its `name`
+    field. We have not special-cased the printout, so this emits a new-line in
+    the middle of the string.
+
+
+The XL parse tree for any program can also be shown using the following
+command-line options to the `xl` program:
 
 [source,shell]
 ----
@@ -1435,32 +1464,11 @@ command:
     )))))
 ----
 
-All of XL is built on this very simple link:#parse-tree-types[data structure].
-Some choices, like having distinct `natural` and `real` node, were
-guided primarily by considerations beyond syntax, for example the need
-to be able to precisely define link:#evaluation[program evaluation] or
-to represent distinct machine types. The XL link:#types[type system] is built
-on these node types, but introduce refinements. For example, the `name` parse
-tree node type can be subdivided, based on the value in the node, into `name`
-values such as `ABC`, `operator` values such as `+=`, and `symbol` which
-includes both names and operators.
+All of XL is built on this very simple link:#parse-tree-types[data structure],
+and the link:#parse-tree-types[parse tree types] provide further refinements,
+for example distinguishing the `character` subtype of `text`, or the `name`
+subtype of `symbol`.
 
-
-[NOTE]
-====
-[[bits]]
-The text nodes are used for binary data such as:
-
-[source]
-----
-bits 16#FF_00_FF_00_FF_FF_00_FF_00
-bits "image.png"
-----
-
-This generates text nodes in the parse tree that have empty delimiters
-(i.e. their delimiter is neither `"` nor `'`), and in the XL type system, this
-corresponds to the `binary` data type.
-====
 
 === Leaf nodes
 
