@@ -1619,14 +1619,21 @@ if 16#FFFF <> 65535 then
     print "(or you overrode the <> operator)"
 ----
 
-WARNING: One unsatisfactory aspect of XL number syntax is that it does not
-offer an obvious path to correctly represent "semantic" version
-numbers in the code. For example, a notation like `2.3.1` will parse as
-an infix `.` between real number `2.3` and integer `1`, making it
-indistinguishable from `2.30.1`.
+*Version numbers and other special cases*:
+One unsatisfactory aspect of XL number syntax is that it does not offer an
+obvious path to correctly represent "semantic" version numbers in the code. For
+example, a notation like `2.3.1` will parse as an infix `.` between real number
+`2.3` and integer `1`, making it indistinguishable from `2.30.1`. A similar
+problem exists with the representation of dates, although it is less serious,
+since a date like `12-05-1968` or `05/12/1968` can easily be processed
+correctly.
 
-[CAUTION]
-====
+A future extension allowing the syntax file to specify new node types
+might enable the creation of special number formats like this. This is currently
+under consideration. Avoiding ambiguities is part of what makes the problem
+complicated.
+
+*Range limitations and numerical behaviour*:
 Computers cannot really represent mathematical numbers. For
 example, the set of natural numbers is infinite, so there is no such
 thing as "the largest natural number". Due to hardware limitations,
@@ -1635,16 +1642,22 @@ Similarly, there is no way to accurately represent real numbers in a
 computer, but there are at least two widely used representations
 called
 link:https://en.wikipedia.org/wiki/Floating_point[floating-point] and
-link:https://en.wikipedia.org/wiki/Fixed-point_arithmetic[fixed-point].
+link:https://en.wikipedia.org/wiki/Fixed-point_arithmetic[fixed-point], and
+a widely implemented link:https://en.wikipedia.org/wiki/IEEE_754[standard] that
+is supported on the vast majority of modern computer platforms. XL leverages
+that work, and does not attempt to define `real` arithmetic or number
+representation other than by reference to the underlying floating-point
+implementation. XL also provides link:#real-subtypes[subtypes] that offer some
+platform-independent guarantees.
 
-From a link:#concept-programming[concept programming] point of view,
-this is a blatant case of link:#concept-cast[concept cast]. A computer
-`integer` is not a mathematical _integer_, and a computer `real` is
-only a floating-point or fixed-point approximation of a true _real
-number_. In the rest of this document, we will ignore this
-distinction, and refer to a `real`, knowing full well that there is a
-"largest" `real` value and a limited number of digits.
-====
+WARNING: From a link:#concept-programming[concept programming] point of view,
+the difference between a computer representation like `natural` and the
+underlying concept of _natural_ is a blatant case of link:#concept-cast[concept
+cast]. A computer `integer` is not a mathematical _integer_, and a computer
+`real` is only a floating-point or fixed-point approximation of a true _real
+number_. In the rest of this document, we will ignore this distinction, and
+refer to a `real`, knowing full well that there is a "largest" `real` value and
+a limited number of digits.
 
 ==== Symbols
 
