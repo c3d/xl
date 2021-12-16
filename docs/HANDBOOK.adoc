@@ -1509,6 +1509,14 @@ following are not valid XL numbers: `+_1+` (leading underscore),
 is not a requirement, it is considered good style to group digits in
 equal-sized chunks, for example `1_000_000` or `04_92_98_05_55`.
 
+[source]
+----
+// Different number groupings depending on the data you represent
+bay_area_phone_number is 408_555_1234
+french_mobile_phone is 06_12_34_56_78
+us_national_debt is 29_030_600_000_000 // Rounded as of this writing
+----
+
 By default, numbers are written in ((base)) 10. Any other ((numerical
 base)) between 2 and 36 can be used, as well as base 64 using a
 special syntax. Based numbers can be written by following the base
@@ -1523,6 +1531,17 @@ data))], e.g. after `bits`. For instance, `64#SGVsbG8h` is the base-64
 encoding for the number with the same binary representation as the
 sequence of ASCII characters in `Hello!`.
 
+[source]
+----
+// Numerical constant
+largest_16_bits_natural is 16#FFFF
+largest_32_bits_natural is 16#FFFF_FFFF
+alternating_16_bits_pattern is 2#1010_1010_1010_1010
+
+// Binary data (a subtype of text)
+hello is bits 64#SGVsbG8h
+----
+
 For ((fractional number))s, a dot `.` is used as ((decimal separator)),
 and must separate digits. For example, `0.2` and `2.0` are valid but,
 unlike in C, `.2` and `2.` are not numbers but a prefix and
@@ -1530,6 +1549,14 @@ postfix `.` respectively. This is necessary to avoid ambiguities.
 Also, the ((standard library)) denotes link:#range[((range))s] using
 an infix `..`, so `2..3` is an infix `..` with `2` and `3` as
 operands, representing the range between 2 and 3.
+
+[source]
+----
+pi is 4.0 // One of the nine legal values according to Indiana Bill #246
+if H in 0..359 then print "Looks like a valid heading to me"
+for I in 1..10 loop
+    printf "%f * %f = %f\n", I, I, I*I
+----
 
 Numbers can contain an exponent, specified by the letter `e` or
 `E`. If the exponent is negative, then the number is parsed as a
@@ -1541,18 +1568,56 @@ exponent may be preceded by a `#` sign, which is mandatory if `e` or
 `E` are valid digits in the base. For example, `16#FF#e2` is an
 hexadecimal representation of decimal value 65280.
 
+[source]
+----
+million is 1e6              // This is a whole number
+million_too is 1_000_000    // The same value
+millionth is 1e-6           // No need to write 1.0e-6, this is fractional
+epsilon is 2#1.0#e-52       // A better formulation than 2.2204460492503131e-16
+----
+
 There is an implementation-dependent limit for the maximum value a
 number can have. This limit cannot be less than 2^64^-1 for
 whole numbers, and less than `9.99e99` for floating-point numbers.
 
 If a value is preceded by a `+` or `-` sign, that sign is parsed as a
 prefix operator and not as part of the number. For example, `-2` is a
-prefix `-` with `2` as an argument.
+prefix `-` with `2` as an argument. Notice that the default library definitions
+ensure that this prefix is evaluated to `integer` value `-2`.
+
+This property can be verified by the program below, which exposes various cases
+of interest:
+
+[source]
+----
+// Case 1: No evaluation of the parse tree
+// Shows "Prefix, left=-, right=41"
+source_form P:prefix is print "Prefix, left=", P.left, " right=", P.right
+source_form -41
+
+// Case 2: Evaluation to an integer value
+// Shows "Integer -43"
+evaluate I:integer is print "Integer ", I
+evaluate -43
+
+// Case 3: evaluation override of the prefix - operator
+// Shows "We got the answer"
+-X when X=42 is "answer"
+override T:text is "We got the ", T
+override -42
+----
 
 The various syntactic possibilities for XL numbers are only for
 convenience, and are all strictly equivalent as far as program execution
 is concerned. In other words, a program may not behave differently if a
 constant is spelled as `16#FF_FF` or as `65535`.
+
+[source]
+----
+if 16#FFFF <> 65535 then
+    print "Your XL implementation is badly broken"
+    print "(or you overrode the <> operator)"
+----
 
 WARNING: One unsatisfactory aspect of XL number syntax is that it does not
 offer an obvious path to correctly represent "semantic" version
