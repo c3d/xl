@@ -2073,17 +2073,44 @@ allow standard compilation and optimization techniques to remain
 applicable, and to leave a lot of freedom regarding actual evaluation
 techniques(((evaluation,technique))).
 
-In the examples below, `CONTEXT0`, `CONTEXT1`, … will denote
-pseudo-variables that describe the various currently visible execution
-contexts, following the language link:#scoping[scoping] rules. The most
-recent contexts will have higher numbers. In addition, `HIDDEN0`,
-`HIDDEN1`, … will represent pending execution contexts that are
-invisible to the currently executing code. These are also known as
-https://en.wikipedia.org/wiki/Activation_record[_activation records_].
-Entries in `HIDDEN` contexts are
-link:#lifetime[live], but invisible to the current
-code. By convention, `CONTEXT0` and `HIDDEN0` are not defined in the
-examples and are assumed to be inherited from earlier execution.
+Context are a formal representation of
+https://en.wikipedia.org/wiki/Activation_record[_activation records_], and let
+us know which values are presently link:#lifetime[_live_], and which values are
+presently link:#scoping[_visible_]. Conventionally, in the rest of the document,
+we will denote `CONTEXT` (possibly `CONTEXT1`, `CONTEXT2`, ...) a context that
+is visible, and `HIDDEN` (possibly `HIDDEN1`, `HIDDEN2`, ...) a context that is
+live but not currently visible.
+
+Just like XL source code has a well-defined parse tree representation that is
+accessible to programs, XL contexts also have a normalized representation called
+link:#scopes-and-maps[scopes and maps], which is used notably by the language
+implementation modules, but can also, under specific conditions, be made visible
+to a program.
+
+Consider the following program:
+
+[source]
+----
+foo X+Y
+
+X is 3
+Y is 5
+foo Z is Z + 42
+----
+
+At the point where the program evaluates the expression `Z+42` inside `foo`, the
+evaluation context will look something like the following scoped expression:
+
+[source]
+----
+{ X is 3; Y is 5 } { Z is X+Y } ( Z + 42 )
+----
+
+In this scoped expression, the outer context contains the definitions of `X` and
+`Y`. A local context contains the binding for the parameters of `foo Z`,
+specifically `Z is X + Y`. Notice how it is necessary to have the outer context
+to be able to evaluate that binding correctly.
+
 
 ==== Parsing phase
 
