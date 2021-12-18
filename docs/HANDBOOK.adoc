@@ -2048,16 +2048,13 @@ ahead-of-time compiler for XL. Work is currently in progress to build
 one.
 
 NOTE: Reasonably efficient compilers were produced for earlier
-generations of the language, notably as part of the Tao3D project.
-However, this earlier iteration of the language had a very weak type
-system that made advanced optimizations hard to achieve. This was
-actually a feature for Tao3D, which purposely disabled some
-optimizations in order to improve compilation speed, notably when the
-program structure did not change. The version of XL described in this
-document, however, has markedly evolved relative to what was implemented
-in Tao3D, with the hope that much better code quality can be achieved thanks to
-a well-defined type system. This part has not been fully demonstrated yet,
-although some early results using type inference techniques showed real promise.
+generations of the language, notably as part of the Tao3D project and the XL2
+self-compiling compiler. However, the earlier iterations of the language these
+compilers implemented had either a very weak type system (Tao3D) that made
+advanced optimizations hard to achieve, or on the contrary, a very explicit type
+system (XL2). The changes in the type system, as described in this document,
+require a lot of work before the model cna be considered proven.
+Some early results using type inference techniques showed real promise.
 
 ==== Execution context
 
