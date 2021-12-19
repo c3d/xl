@@ -57,6 +57,7 @@ struct Bytecode;
 
 typedef std::vector<Rewrite_p>          RewriteList;
 typedef size_t                          opaddr_t;
+typedef std::vector<kstring>            kstrings;
 
 
 class BytecodeEvaluator : public Evaluator
@@ -727,12 +728,29 @@ struct RunState
     Tree *      Error()                         { return error; }
     void        Dump(std::ostream &out);
 
+    // Special case for kstring values
+    kstring     PopKstring()
+    {
+        RunValue rv = Pop();
+        kstring allocated = strdup(rv.AsText().c_str());
+        callTemporaries.push_back(allocated);
+        return allocated;
+    }
+
+    void        CleanTemporaries()
+    {
+        for (auto k : callTemporaries)
+            free((void *) k);
+        callTemporaries.clear();
+    }
+
     typedef std::vector<size_t> Frames;
 
     RunStack    stack;                  // Evaluation stack and parameters
     Scope_p     scope;                  // Current evaluation scope
     Tree_p      self;                   // What we are evaluating
     Tree_p      error;                  // Error messages
+    kstrings    callTemporaries;        // Temporary strings in native calls
 };
 
 

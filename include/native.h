@@ -308,7 +308,7 @@ struct xl_type<kstring>
     }
     static native_type Arg(RunState &stack)
     {
-        return (native_type) stack.Pop();
+        return stack.PopKstring();
     }
 };
 
@@ -894,6 +894,7 @@ inline void NativeOpcodeAdapter(FType function, RunState &state)
 // ----------------------------------------------------------------------------
 {
     function_type<FType>::Run(function, state);
+    state.CleanTemporaries();
 }
 
 
