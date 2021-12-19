@@ -594,9 +594,11 @@ MACHINE_TYPE(natural, unsigned long, naught)
     {
         switch(rv.type)
         {
-#define RUNTIME_TYPE(Name, Rep, BC)                             \
-        case Name##_mtype:                                      \
-            return out << #Name "(" << rv.as_##Name << ")";
+#define RUNTIME_TYPE(Name, Rep, BC)                                     \
+            case Name##_mtype:                                          \
+                return out << #Name "("                                 \
+                           << Representation<Rep>::ToValue(rv.as_##Name) \
+                           << ")";
 #include "machine-types.tbl"
         default:
             return out << "Invalid";
