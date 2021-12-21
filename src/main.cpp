@@ -170,7 +170,7 @@ BooleanOption   writeEncrypted("encrypted_writes",
 BooleanOption   writePacked("packed_writes",
                      "Pack files as they are written");
 
-BooleanOption   emitIR("emit_ir", "Generate LLVM IR suitable for llvmc");
+BooleanOption   emitIR("emit_ir", "Generate code listing.");
 AliasOption     emitIRAlias("B", emitIR);
 }
 
@@ -232,14 +232,6 @@ Main::Main(int inArgc,
     Syntax::syntax = &syntax;
     MAIN = this;
     ParseOptions();
-#ifndef INTERPRETER_ONLY
-    if (Opt::emitIR && Opt::optimize.value < 2)
-    {
-        JIT::Comment("WARNING: Using -emit_ir or -B option without LLVM.");
-        JIT::Comment("         Enabled -O3 to get an LLVM output.");
-        Opt::optimize.value = 3;
-    }
-#endif // INTERPRETER_ONLY
 
     // When given paths, add the standard ones at end
     path_list &plist = Opt::paths;

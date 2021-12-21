@@ -1139,11 +1139,11 @@ void Bytecode::Validate()
         }
     }
     locals -= parameters.size();
-    if (RECORDER_TRACE(bytecode))
+    if (Opt::emitIR || RECORDER_TRACE(bytecode))
     {
-        std::cerr << "Compiled [" << pattern << "]";
+        std::cerr << "Compiled [" << ShortTreeForm(pattern) << "]";
         if (pattern != self)
-            std::cerr << " is [" << self << "]";
+            std::cerr << " is [" << ShortTreeForm(self) << "]";
         std::cerr << " as\n";
         Dump(std::cerr);
         std::cerr << "\n";
@@ -1553,7 +1553,7 @@ text Bytecode::Cached(opcode_t local)
     {
         for (const auto &it : compile->values)
             if (local == it.second)
-                result = result + "[" + text(*it.first) + "]";
+                result = result + "[" + ShortTreeForm(&(*it.first)) + "]";
     }
     return result;
 }
@@ -1569,7 +1569,8 @@ void Bytecode::Dump(std::ostream &out)
     {
         out << "Constants:\n";
         for (size_t cst = 0; cst < csts; cst++)
-            out << "  C" << cst << "\t= " << constants[cst].AsTree() << "\n";
+            out << "  C" << cst << "\t= "
+                << ShortTreeForm(constants[cst].AsTree()) << "\n";
     }
 
     size_t parms = parameters.size();

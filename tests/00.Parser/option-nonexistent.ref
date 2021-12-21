@@ -9,7 +9,7 @@ Option names can be shortened if unambiguous.
 -case_sensitive   : Distinguish names based on case and underscores
 -closures         : Show the closures in the output
 -compile          : Only compile the file without evaluating it
--emit_ir          : Generate LLVM IR suitable for llvmc
+-emit_ir          : Generate code listing.
 -encrypted_writes : Encrypt files as they are written
 -forks            : Select the number of forks for remote access
 -help             : Show usage for the program and list available options
