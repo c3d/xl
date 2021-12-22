@@ -38,7 +38,7 @@
 #endif
 
 OTHER_TYPE(text,      text)
-OTHER_TYPE(character, char)
+OTHER_TYPE(character, character_t)
 OTHER_TYPE(boolean,   bool)
 
 #undef OTHER_TYPE

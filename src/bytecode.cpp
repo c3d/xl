@@ -1400,7 +1400,7 @@ opcode_t Bytecode::EvaluateAsConstant(Tree *value)
             for (index = 0; index < max; index++)
             {
                 RunValue &cst = constants[index];
-                if (cst.type == character_mtype && ref == cst.AsText()[0])
+                if (cst.type == character_mtype && ref == cst.AsCharacter())
                     goto found;
             }
         }
@@ -1959,20 +1959,44 @@ strength BytecodeBindings::Do(Text *what)
 // ----------------------------------------------------------------------------
 {
     StripBlocks();
-    bytecode->Type(test, text_type);
-
-    if (Text *ival = test->AsText())
+    if (what->IsCharacter())
     {
-        if (ival->value == what->value)
-            return Perfect();
-        else
-            return Failed();
-    }
+        bytecode->Type(test, character_type);
 
-    // Otherwise, we need to evaluate and check at runtime
-    MustEvaluate();
-    OP(check_text, ValueIndex(test), Constant(what->value), CHECK);
-    return Possible();
+        if (Text *ival = test->AsText())
+        {
+            if (!ival->IsCharacter())
+                return Failed();
+            if (ival->value == what->value)
+                return Perfect();
+            else
+                return Failed();
+        }
+
+        // Otherwise, we need to evaluate and check at runtime
+        MustEvaluate();
+        OP(check_character, ValueIndex(test), Constant(what->value[0]), CHECK);
+        return Possible();
+    }
+    else
+    {
+        bytecode->Type(test, text_type);
+
+        if (Text *ival = test->AsText())
+        {
+            if (ival->IsCharacter())
+                return Failed();
+            if (ival->value == what->value)
+                return Perfect();
+            else
+                return Failed();
+        }
+
+        // Otherwise, we need to evaluate and check at runtime
+        MustEvaluate();
+        OP(check_text, ValueIndex(test), Constant(what->value), CHECK);
+        return Possible();
+    }
 }
 
 
@@ -2602,7 +2626,7 @@ static bool doConstant(Scope *scope, Tree *tree, Bytecode *bytecode)
             ? RunValue(t->value[0])
             : RunValue(t->value);
         bytecode->EnterRunValue(rv);
-        bytecode->Type(tree, text_type);
+        bytecode->Type(tree, t->IsCharacter() ? character_type : text_type);
         break;
     }
     default:

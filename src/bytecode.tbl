@@ -624,6 +624,19 @@ OPCODE(check_text, (LOCAL, CONSTANT, JUMP),
 )
 
 
+OPCODE(check_character, (LOCAL, CONSTANT, JUMP),
+// ----------------------------------------------------------------------------
+//   Check if we match a character constant
+// ----------------------------------------------------------------------------
+       RunValue &value = INPUT_VALUE;
+       RunValue &ref = INPUT_CONSTANT;
+       XL_ASSERT(IsCharacter(ref.type));
+       opcode_t branch = DATA;
+       if (!IsCharacter(value.type) || value.AsText() != ref.AsText())
+           pc += branch;
+)
+
+
 OPCODE(check_infix, (LOCAL, CONSTANT, LOCAL, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we have an infix, and if so, split it into two components

@@ -58,6 +58,7 @@ struct Bytecode;
 typedef std::vector<Rewrite_p>          RewriteList;
 typedef size_t                          opaddr_t;
 typedef std::vector<kstring>            kstrings;
+typedef char                            character_t;
 
 
 class BytecodeEvaluator : public Evaluator
@@ -169,7 +170,16 @@ inline bool IsText(MachineType mtype)
 //   Return true if this is a text machine type
 // ----------------------------------------------------------------------------
 {
-    return (mtype == text_mtype || mtype == character_mtype);
+    return mtype == text_mtype;
+}
+
+
+inline bool IsCharacter(MachineType mtype)
+// ----------------------------------------------------------------------------
+//   Return true if this is a character machine type
+// ----------------------------------------------------------------------------
+{
+    return mtype == character_mtype;
 }
 
 
@@ -440,12 +450,23 @@ MACHINE_TYPE(natural, unsigned long, naught)
         switch(type)
         {
         case text_mtype:        return *as_text;
-        case character_mtype:   return text(as_character, 1);
         default:
             XL_ASSERT("Invalid machine type for AsText()");
             break;
         }
         return "";
+    }
+
+    inline character_t AsCharacter()
+    {
+        switch(type)
+        {
+        case character_mtype:   return as_character;
+        default:
+            XL_ASSERT("Invalid machine type for AsCharacter()");
+            break;
+        }
+        return character_t(0);
     }
 
 
