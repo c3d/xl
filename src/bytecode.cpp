@@ -2614,7 +2614,7 @@ static bool doConstant(Scope *scope, Tree *tree, Bytecode *bytecode)
     case REAL:
     {
         Real *r = (Real *) tree;
-        RunValue rv(r->value, real_mtype);
+        RunValue rv(r);
         bytecode->EnterRunValue(rv);
         bytecode->Type(tree, real_type);
         break;
