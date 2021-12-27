@@ -708,7 +708,7 @@ typedef RunValue::ValueList     RunValues;
 
 // ============================================================================
 //
-//   Instruction opcodes and evaluation stack
+//   Instruction opcodes and evaluati ron stack
 //
 // ============================================================================
 

@@ -315,7 +315,7 @@ public:
     opcode_t    StorageIndex(Tree *value);
     opcode_t    Unify(Tree *source, Tree *target, bool writable);
     opcode_t    Evaluate(Scope *scope, Tree *value);
-    opcode_t    EvaluateAsConstant(Tree *value);
+    opcode_t    EvaluateAsConstant(Tree *value, bool scalarsOnly);
     Tree *      Type(Tree *value);
     void        Type(Tree *value, Tree *type);
     void        SetTypesFromParameters();
@@ -1253,7 +1253,7 @@ opcode_t Bytecode::ValueIndex(Tree *value)
     auto found = values.find(value);
     if (found != values.end())
         return (*found).second;
-    opcode_t index = EvaluateAsConstant(value);
+    opcode_t index = EvaluateAsConstant(value, false);
     if (index)
         return index;
     return StorageIndex(value);
@@ -1325,7 +1325,7 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
 }
 
 
-opcode_t Bytecode::EvaluateAsConstant(Tree *value)
+opcode_t Bytecode::EvaluateAsConstant(Tree *value, bool scalarsOnly)
 // ----------------------------------------------------------------------------
 //   Return a constant index if we can evaluate as a constant
 // ----------------------------------------------------------------------------
@@ -1423,33 +1423,41 @@ opcode_t Bytecode::EvaluateAsConstant(Tree *value)
 
     case NAME:
     {
-        Name *name = (Name *) value;
-
-        // Check as a name constant
-        for (index = 0; index < max; index++)
+        if (!scalarsOnly)
         {
-            RunValue &cst = constants[index];
-            if (cst.type == name_mtype && name->value == cst.as_name->value)
+            Name *name = (Name *) value;
+
+            // Check as a name constant
+            for (index = 0; index < max; index++)
             {
-                type = name_type;
-                goto found;
+                RunValue &cst = constants[index];
+                if (cst.type == name_mtype && name->value == cst.as_name->value)
+                {
+                    type = name_type;
+                    goto found;
+                }
             }
         }
         break;
     }
     default:
         // Check as a tree constant
-        for (index = 0; index < max; index++)
+        if (!scalarsOnly)
         {
-            RunValue &cst = constants[index];
-            if (IsTree(cst.type) && value == cst.as_tree)
+            for (index = 0; index < max; index++)
             {
-                type = MachineTypeToXLType(cst.type);
-                goto found;
+                RunValue &cst = constants[index];
+                if (IsTree(cst.type) && value == cst.as_tree)
+                {
+                    type = MachineTypeToXLType(cst.type);
+                    goto found;
+                }
             }
         }
         break;
     }
+
+    // Not found - Return 0
     return 0;
 
 found:
@@ -1463,37 +1471,43 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
 //   Evaluate a value but only once
 // ----------------------------------------------------------------------------
 {
-    opcode_t index;
     ValueMap &values = compile->values;
 
-    for (int pass = 0; pass < 2; pass++)
-    {
-        if (opcode_t cst = EvaluateAsConstant(value))
-            return cst;
+    // First check if this was already compiled, if so reload it
+    auto found = values.find(value);
+    if (found != values.end())
+        return (*found).second;
 
-        auto found = values.find(value);
-        if (found != values.end())
-        {
-            // Already compiled and evaluated - Reload it
-            index = (*found).second;
-        }
-        else if (pass)
-        {
-            index = locals++;
-            values[value] = index;
-            if (index < parameters.size() && value != parameters[index].name)
-                Type(value, parameters[index].type);
-        }
-        else
-        {
-            XL::compile(scope, value, this);
-            if (CompileError())
-            {
-                index = EnterTreeConstant(value, tree_mtype);
-                CompileError(nullptr);
-            }
-        }
+    // Check if this is a scalar constant, e.g. 1.3 or "ABC"
+    if (opcode_t cst = EvaluateAsConstant(value, true))
+        return cst;
+
+    // Attempt to compile it, return error in case of compile error
+    XL::compile(scope, value, this);
+    if (CompileError())
+    {
+        opcode_t index = EnterTreeConstant(value, tree_mtype);
+        CompileError(nullptr);
+        return index;
     }
+
+    // Check if we now have a local for it
+    found = values.find(value);
+    if (found != values.end())
+        return (*found).second;
+
+    // Check if this is a scalar constant, e.g. 1.3 or "ABC"
+    if (opcode_t cst = EvaluateAsConstant(value, true))
+        return cst;
+
+    // If no local, we need to assign one
+    opcode_t index = locals++;
+    values[value] = index;
+
+    // Deduce type from input argument if one was given
+    if (index < parameters.size() && value != parameters[index].name)
+        Type(value, parameters[index].type);
+
     return index;
 }
 
