@@ -1298,26 +1298,29 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
 // ----------------------------------------------------------------------------
 {
     opcode_t index = ValueIndex(source);
-    ValueMap &values = compile->values;
-    Bytecode *bytecode = this;
-    auto tf = values.find(target);
-    if (tf == values.end())
+    if (source != target)
     {
-        if (writable && IsConstantIndex(index))
+        ValueMap &values = compile->values;
+        Bytecode *bytecode = this;
+        auto tf = values.find(target);
+        if (tf == values.end())
         {
-            opcode_t tgt = locals++;
+            if (writable && IsConstantIndex(index))
+            {
+                opcode_t tgt = locals++;
             OP(copy, LocalIndex(index), LocalIndex(tgt));
             values[target] = tgt;
             return tgt;
+            }
+            else
+            {
+                values[target] = index;
+                return index;
+            }
         }
-        else
-        {
-            values[target] = index;
-            return index;
-        }
+        if (index != (*tf).second)
+            OP(copy, LocalIndex(index), LocalIndex((*tf).second));
     }
-    if (index != (*tf).second)
-        OP(copy, LocalIndex(index), LocalIndex((*tf).second));
     return index;
 }
 
