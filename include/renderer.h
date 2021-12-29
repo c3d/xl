@@ -133,7 +133,7 @@ size_t recorder_render(intptr_t tracing,
         if (value)
             os << *value;
         else
-            os << "NULL";
+            os << "nil";
 
         t = os.str();
         size_t len = t.length();
