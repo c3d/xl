@@ -242,7 +242,6 @@ struct RunValue
 {
 public:
     typedef std::vector<RunValue>       ValueList;
-    typedef std::map<Tree_p, RunValue>  ValueMap;
 
 public:
     // Default constructor creates a nil value
