@@ -905,7 +905,15 @@ void Bytecode::NativeArguments(opcode_t native,
     code.push_back(native);
     code.push_back(n);
     while (n --> 0)
-        code.push_back(args[n].argument);
+    {
+        opcode_t arg = args[n].argument;
+        if (IsConstantIndex(arg))
+        {
+            RunValue &cst = constants[ConstantIndex(arg)];
+            unwrap(cst);
+        }
+        code.push_back(arg);
+    }
     code.push_back(target);
 }
 
