@@ -541,6 +541,8 @@ MACHINE_TYPE(natural, unsigned long, naught)
         case PREFIX:
             if (IsError(tree))
                 type = error_mtype;
+            else if (tree->As<Closure>())
+                type = closure_mtype;
             else
                 type = prefix_mtype;
             return *this;

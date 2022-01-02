@@ -505,7 +505,7 @@ OPCODE(check_type, (CONSTANT, LOCAL, JUMP),
 //   Check a type at runtime
 // ----------------------------------------------------------------------------
        RunValue &type = INPUT_CONSTANT;
-       RunValue &value = INPUT_VALUE;
+       RunValue &value = INPUT_UNWRAPPED;
        opcode_t branch = DATA;
        XL_ASSERT(IsTree(type.type));
        Tree_p cast = typecheck(state.scope, type.as_tree, value.as_tree);
@@ -577,8 +577,8 @@ OPCODE(check_same, (LOCAL, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if X and Y match, if not branch to taget
 // ----------------------------------------------------------------------------
-       RunValue &x = INPUT_VALUE;
-       RunValue &y = INPUT_VALUE;
+       RunValue &x = INPUT_UNWRAPPED;
+       RunValue &y = INPUT_UNWRAPPED;
        opcode_t branch = DATA;
        if (!Tree::Equal(x.AsTree(), y.AsTree()))
            pc += branch;
@@ -589,7 +589,7 @@ OPCODE(check_natural, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a natural constant
 // ----------------------------------------------------------------------------
-       RunValue &value = INPUT_VALUE;
+       RunValue &value = INPUT_UNWRAPPED;
        RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsNatural(ref.type));
        opcode_t branch = DATA;
@@ -602,7 +602,7 @@ OPCODE(check_real, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a real constant
 // ----------------------------------------------------------------------------
-       RunValue &value = INPUT_VALUE;
+       RunValue &value = INPUT_UNWRAPPED;
        RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsReal(ref.type));
        opcode_t branch = DATA;
@@ -615,7 +615,7 @@ OPCODE(check_text, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a text constant
 // ----------------------------------------------------------------------------
-       RunValue &value = INPUT_VALUE;
+       RunValue &value = INPUT_UNWRAPPED;
        RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsText(ref.type));
        opcode_t branch = DATA;
@@ -628,7 +628,7 @@ OPCODE(check_character, (LOCAL, CONSTANT, JUMP),
 // ----------------------------------------------------------------------------
 //   Check if we match a character constant
 // ----------------------------------------------------------------------------
-       RunValue &value = INPUT_VALUE;
+       RunValue &value = INPUT_UNWRAPPED;
        RunValue &ref = INPUT_CONSTANT;
        XL_ASSERT(IsCharacter(ref.type));
        opcode_t branch = DATA;
@@ -651,18 +651,41 @@ OPCODE(check_infix, (LOCAL, CONSTANT, LOCAL, LOCAL, JUMP),
        opcode_t branch = DATA;
        XL_ASSERT(ref.type == infix_mtype);
        Infix *refinfix = ref.as_infix;
-       Infix *infix = test.AsTree()->AsInfix();
-       if (!infix || infix->name != refinfix->name)
+       if (!IsTree(test.type))
        {
            pc += branch;
        }
        else
        {
-           if (test.type != infix_mtype)
-               test = RunValue(infix, infix_mtype);
-           XL_ASSERT(test.as_infix == infix);
-           left  = RunValue::Classify(infix->left);
-           right = RunValue::Classify(infix->right);
+           Scope *scope = nullptr;
+           Tree *value = test.AsTree();
+           if (Closure *closure = value->As<Closure>())
+           {
+               scope = closure->CapturedScope();
+               value = closure->Value();
+           }
+           Infix *infix = value->AsInfix();
+           if (!infix || infix->name != refinfix->name)
+           {
+               pc += branch;
+           }
+           else
+           {
+               if (test.type != infix_mtype)
+                   test = RunValue(infix, infix_mtype);
+               XL_ASSERT(test.as_infix == infix);
+               if (scope)
+               {
+                   Context eval(scope);
+                   left = RunValue::Classify(eval.Enclose(infix->left));
+                   right = RunValue::Classify(eval.Enclose(infix->right));
+               }
+               else
+               {
+                   left  = RunValue::Classify(infix->left);
+                   right = RunValue::Classify(infix->right);
+               }
+           }
        }
 )
 

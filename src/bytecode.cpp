@@ -145,7 +145,7 @@ static Bytecode *compile(Scope *scope, Tree *expr);
 static void compile(Scope *scope, Tree *expr, Bytecode *bytecode);
 static Bytecode *compile(Scope *, Tree *body, Tree *form, Parameters &parms);
 static Tree *unwrap(Tree *expr);
-
+static RunValue &unwrap(RunValue &rv);
 
 
 
@@ -559,6 +559,7 @@ start:
 #define INPUT_CONSTANT      cst[ConstantIndex(*pc++)]
 #define INPUT_VALUE                                                     \
     (IsConstantIndex(*pc) ? cst[ConstantIndex(*pc++)] : frame[*pc++])
+#define INPUT_UNWRAPPED    unwrap(INPUT_VALUE)
 #define OUTPUT_VALUE                                    frame[*pc++]
 #define REFRAME         (frame = &state.stack[locals])
 #define RETARGET(PC)                                                    \
@@ -1486,7 +1487,9 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
     XL::compile(scope, value, this);
     if (CompileError())
     {
-        opcode_t index = EnterTreeConstant(value, tree_mtype);
+        Context eval(scope);
+        Tree *closure = eval.Enclose(value);
+        opcode_t index = EnterTreeConstant(closure, closure_mtype);
         CompileError(nullptr);
         return index;
     }
@@ -2437,6 +2440,27 @@ static Tree *unwrap(Tree *expr)
 }
 
 
+static inline RunValue &unwrap(RunValue &rv)
+// ----------------------------------------------------------------------------
+//   Check if
+// ----------------------------------------------------------------------------
+{
+    if (rv.type == closure_mtype)
+    {
+        Tree *value = rv.as_tree;
+        Closure *closure = value->As<Closure>();
+        value = closure->Value();
+        Scope *scope = closure->CapturedScope();
+        Tree *maybe = evaluate(scope, value);
+        if (!IsError(maybe))
+            rv = RunValue::Classify(maybe);
+        else
+            rv = RunValue::Classify(value);
+    }
+    return rv;
+}
+
+
 
 // ============================================================================
 //
@@ -3014,6 +3038,8 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
                 if (RECORDER_TRACE(bytecode))
                     bytecode->Dump(std::cerr);
                 attempt.Fail();
+                if (Closure *closure = expr->As<Closure>())
+                    expr = closure->Value();
                 Tree_p msg = ErrorMessage("No form matching $1", expr);
                 bytecode->CompileError(msg);
             }
