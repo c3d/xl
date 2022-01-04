@@ -2746,7 +2746,13 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     // This deals with [(X is 3) (X + 1)], i.e. closures
     Initializers inits;
     Context context(scope);
-    if (Scope_p closure = context.ProcessScope(prefix->left, inits))
+
+    // Attempt to interpret it as a local scope, which may be named
+    Tree_p locals = prefix->left;
+    if (Name *name = locals->AsName())
+        if (Tree *value = context.Bound(name))
+            locals = value;
+    if (Scope_p closure = context.ProcessScope(locals, inits))
     {
         compile(closure, prefix->right, bytecode);
         bytecode->Unify(prefix->right, prefix, true);
