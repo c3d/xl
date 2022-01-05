@@ -2858,16 +2858,6 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
     // For [Name is Expr], compute [Expr] at the time we hit the definition
     if (IsDefinition(infix))
     {
-        // Find the corresponding declaration
-        Context context(scope);
-        Tree *pattern = infix->left;
-        if (Name *name = pattern->AsName())
-        {
-            // Compile the initialization and initialize the constant
-            compile(scope, infix->right, bytecode);
-            opcode_t target = bytecode->StorageIndex(infix->left);
-            OP(init_value, ValueIndex(infix->right), LocalIndex(target));
-        }
         return IS_DEFINITION;
     }
 
