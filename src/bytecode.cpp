@@ -2993,6 +2993,8 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         if (last)
         {
             bytecode->CheckCompileErrors();
+            if (IsDefinition(expr))
+                definition = true;
             if (!definition)
                 OP(check_statement, ValueIndex(last));
         }
@@ -3050,7 +3052,8 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
             }
         }
         definition = done == IS_DEFINITION;
-        last = expr;
+        if (!definition)
+            last = expr;
     }
     if (last)
         bytecode->Unify(last, input, false);
