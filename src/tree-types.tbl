@@ -64,6 +64,7 @@
 TREE_TYPE(scope,        Scope,          value->As<Scope>())
 TREE_TYPE(closure,      Closure,        value->As<Closure>())
 TREE_TYPE(definition,   Rewrite,        value->As<Rewrite>())
+TREE_TYPE(value,        Tree,           evaluate(scope, value))
 TREE_TYPE(error,        Tree,           IsError(value) ? value : nullptr)
 TREE_TYPE(nil,          Tree,           value == nullptr ? nil_type : nullptr)
 TREE_TYPE(block,        Block,          value->AsBlock())
