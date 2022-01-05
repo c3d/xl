@@ -1317,9 +1317,9 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
             if (writable && IsConstantIndex(index))
             {
                 opcode_t tgt = locals++;
-            OP(copy, LocalIndex(index), LocalIndex(tgt));
-            values[target] = tgt;
-            return tgt;
+                OP(copy, LocalIndex(index), LocalIndex(tgt));
+                values[target] = tgt;
+                return tgt;
             }
             else
             {
@@ -2789,6 +2789,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     {
         Tree_p quote = xl_parse_tree(scope, quoted);
         bytecode->EnterTreeConstant(quote, tree_mtype);
+        bytecode->Unify(quote, prefix, false);
         return true;
     }
 
