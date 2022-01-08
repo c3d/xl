@@ -146,6 +146,8 @@ struct EvaluationCache
         types[std::make_pair(type,expr)] = cast;
     }
 
+    void Dump(std::ostream &out);
+
 private:
     std::map<Tree_p, Tree_p>                    values;
     std::map<std::pair<Tree_p,Tree_p>, Tree_p>  types;

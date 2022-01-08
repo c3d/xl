@@ -1802,4 +1802,43 @@ void Interpreter::InitializeContext(Context &context)
         context.Dump(std::cerr, context.Symbols(), false);
 }
 
+
+void EvaluationCache::Dump(std::ostream &out)
+// ----------------------------------------------------------------------------
+//   Dmp the evaluation cache for debugging purpose
+// ----------------------------------------------------------------------------
+{
+    out << "EvaluationCache " << this << "\n";
+    for (auto &value : values)
+        out << value.first << " => " << value.second << "\n";
+}
+
+
 XL_END
+
+
+XL::EvaluationCache *xldebug(XL::EvaluationCache *value)
+// ----------------------------------------------------------------------------
+//   Dump the value for debugging
+// ----------------------------------------------------------------------------
+{
+    if (value)
+    {
+        value->Dump(std::cout);
+    }
+    else
+    {
+        std::cout << "EvaluationCache(NULL)\n";
+    }
+    return value;
+}
+
+
+XL::EvaluationCache *xldebug(XL::EvaluationCache &value)
+// ----------------------------------------------------------------------------
+//   Dump the value for debugging
+// ----------------------------------------------------------------------------
+{
+    xldebug(&value);
+    return &value;
+}
