@@ -1384,7 +1384,7 @@ next:
     Context::LookupMode lm = Context::RECURSIVE;
     if (mode == LOCAL)
         lm = Context::SINGLE_SCOPE;
-    EvaluationCache lookupCache;
+    EvaluationCache lookupCache(cache);
     Bindings bindings(expr, lookupCache);
     result = context.Lookup(expr, eval, &bindings, lm);
 
