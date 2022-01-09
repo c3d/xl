@@ -402,6 +402,74 @@ OPCODE(set_scope, (LOCAL),
 )
 
 
+OPCODE(quote, (CONSTANT, LOCAL),
+// ----------------------------------------------------------------------------
+//   Evaluate a quote at runtime
+// ----------------------------------------------------------------------------
+//   This cannot be a simple native function because it needs the scope
+       RunValue &q = INPUT_CONSTANT;
+       RunValue &target = OUTPUT_VALUE;
+       target = q;
+    )
+
+OPCODE(replace, (CONSTANT, LOCAL, LOCAL),
+// ----------------------------------------------------------------------------
+//   Replace an element in the target
+// ----------------------------------------------------------------------------
+       RunValue &from = INPUT_CONSTANT;
+       RunValue &expr = INPUT_VALUE;
+       RunValue &target = OUTPUT_VALUE;
+       struct ReplaceAction
+       {
+           typedef Tree *value_type;
+           ReplaceAction(Tree *from, Tree *to)
+           {
+               this->from = from; this->to = to;
+           }
+           Tree_p Do(Tree *source)        { return source; }
+           Tree_p Do(Infix *infix)
+           {
+               Tree_p l = infix->left->Do(this);
+               Tree_p r = infix->right->Do(this);
+               if (l != infix->left || r != infix->right)
+                   infix = new Infix(infix, l, r);
+               return infix;
+           }
+           Tree_p Do(Prefix *prefix)
+           {
+               Tree_p l = prefix->left->Do(this);
+               Tree_p r = prefix->right->Do(this);
+               if (l != prefix->left || r != prefix->right)
+                   prefix = new Prefix(prefix, l, r);
+               return prefix;
+           }
+           Tree_p Do(Postfix *postfix)
+           {
+               Tree_p l = postfix->left->Do(this);
+               Tree_p r = postfix->right->Do(this);
+               if (l != postfix->left || r != postfix->right)
+                  postfix = new Postfix(postfix, l, r);
+               return postfix;
+           }
+           Tree_p Do(Block *block)
+           {
+               if (block == from)
+                   return to;
+               Tree_p c = block->child->Do(this);
+               if (c != block->child)
+                   block = new Block(block, c);
+               return block;
+           }
+
+           Tree *from;
+           Tree *to;
+       } ra(from.AsTree(), expr.AsTree());
+       Tree_p tree = target.AsTree();
+       tree = tree->Do(ra);
+       target = RunValue::Classify(tree);
+    )
+
+
 OPCODE(call, (CONSTANT, ARGUMENTS, LOCAL),
 // ----------------------------------------------------------------------------
 //    Call X with the given arguments

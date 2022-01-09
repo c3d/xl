@@ -2787,9 +2787,49 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     // Process [quote X] - REVISIT: Should just be a C function now?
     if (Tree *quoted = IsQuote(prefix))
     {
-        Tree_p quote = xl_parse_tree(scope, quoted);
-        bytecode->EnterTreeConstant(quote, tree_mtype);
-        bytecode->Unify(quote, prefix, false);
+        opcode_t target = bytecode->StorageIndex(prefix);
+        OP(quote, quoted, LocalIndex(target));
+        struct QuoteAction
+        {
+            QuoteAction(Scope *scope, Bytecode *bytecode, opcode_t target):
+                scope(scope), bytecode(bytecode), target(target) {}
+            typedef void value_type;
+            void Do(Tree *) {}
+            void Do(Infix *infix)
+            {
+                infix->left->Do(this);
+                infix->right->Do(this);
+            }
+            void Do(Prefix *prefix)
+            {
+                prefix->left->Do(this);
+                prefix->right->Do(this);
+            }
+            void Do(Postfix *postfix)
+            {
+                postfix->left->Do(this);
+                postfix->right->Do(this);
+            }
+            void Do(Block *block)
+            {
+                if (Tree *expr = block->IsMetaBox())
+                {
+                    compile(scope, expr, bytecode);
+                    opcode_t eval = bytecode->ValueIndex(expr);
+                    OP(replace, (Tree *) block,
+                       LocalIndex(eval), LocalIndex(target));
+                }
+                else
+                {
+                    block->child->Do(this);
+                }
+            }
+
+            Scope_p scope;
+            Bytecode *bytecode;
+            opcode_t target;
+        } qa(scope, bytecode, target);
+        quoted->Do(qa);
         return true;
     }
 
