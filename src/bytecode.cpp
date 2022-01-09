@@ -1147,7 +1147,6 @@ void Bytecode::Validate()
             OP(ret, XL::ValueIndex(bytecode->self));
         }
     }
-    locals -= parameters.size();
     if (Opt::emitIR || RECORDER_TRACE(bytecode))
     {
         std::cerr << "Compiled [" << ShortTreeForm(pattern) << "]";
@@ -1157,6 +1156,7 @@ void Bytecode::Validate()
         Dump(std::cerr);
         std::cerr << "\n";
     }
+    locals -= parameters.size();
     delete compile;
     compile = nullptr;
 }
