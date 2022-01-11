@@ -238,7 +238,7 @@ struct Bytecode
         constants(), parameters(parameters), locals(0),
         compile(new CompileInfo)
     {
-        SetTypesFromParameters();
+        // SetTypesFromParameters();
         SetLocalsFromParameters();
     }
     ~Bytecode() { Cut(0); delete compile; }
@@ -400,7 +400,7 @@ public:
               types(compile->types)
         {
             compile->types.clear();
-            bytecode->SetTypesFromParameters();
+            // bytecode->SetTypesFromParameters();
         }
         ~Attempt()
         {
