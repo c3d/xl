@@ -2788,6 +2788,8 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     if (Tree *quoted = IsQuote(prefix))
     {
         opcode_t target = bytecode->StorageIndex(prefix);
+        if (Block *block = quoted->AsBlock())
+            quoted = block->child;
         OP(quote, quoted, LocalIndex(target));
         struct QuoteAction
         {
