@@ -127,7 +127,7 @@
             RepR  result;                               \
             Body;                                       \
             RunValue &r = OUTPUT_VALUE;                 \
-            r = RunValue(result, TypeR##_mtype); )
+            r = RunValue(result); )
 #define UNARY2(Op, TypeX, TypeR, RepXY, RepR, Body)     \
     UNARY0(Op##_##TypeX, TypeX, TypeR, RepXY, RepR, Body)
 #define UNARY(Op, Type, Rep, Body)                      \
@@ -144,7 +144,7 @@
             RepR  result;                               \
             Body;                                       \
             RunValue &r = OUTPUT_VALUE;                 \
-            r = RunValue(result, TypeR##_mtype); )
+            r = RunValue(result); )
 #define BINARY(Op, Type, Rep, Body)             \
         BINARY2(Op, Type, Type, Rep, Rep, Body)
 #define DIVIDE(Op, Type, Rep, Body)                     \
