@@ -2302,6 +2302,8 @@ strength BytecodeBindings::Do(Infix *what)
                 if (wm != hm)
                 {
                     Opcode cast = MachineTypeCheck(wm);
+                    if (cast == INVALID_OPCODE)
+                        return Failed();
                     opcode_t target = bytecode->ValueIndex(value);
                     bytecode->Op(cast, LocalIndex(target), CHECK);
                     return Possible();
