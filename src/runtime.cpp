@@ -408,9 +408,16 @@ Tree *xl_parse_text(text source)
 //   Generate a tree from text
 // ----------------------------------------------------------------------------
 {
+    Errors errors;
     std::istringstream input(source);
     Parser parser(input, MAIN->syntax,MAIN->positions,*MAIN->errors, "<text>");
-    return parser.Parse();
+    Tree_p result = parser.Parse();
+    if (Tree_p error = errors.AsErrorTree())
+    {
+        result = error;
+        errors.Clear();
+    }
+    return result;
 }
 NATIVE(xl_parse_text);
 
