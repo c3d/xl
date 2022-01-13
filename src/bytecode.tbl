@@ -291,17 +291,17 @@ OPCODE(error_exit, (CONSTANT),
 )
 
 
-OPCODE(form_error, (LOCAL),
+OPCODE(form_error, (LOCAL, LOCAL),
 // ----------------------------------------------------------------------------
 //   No form matching the given input - Report the error
 // ----------------------------------------------------------------------------
        RunValue &x = INPUT_VALUE;
+       RunValue &result = OUTPUT_VALUE;
        Tree_p form = x.AsTree();
        if (!form)
            form = new Name("nil");
        Error error("No form matching $1", form);
-       x = RunValue((Tree *) error, error_mtype);
-       CHAIN(ret, 1);
+       result = RunValue((Tree *) error, error_mtype);
 )
 
 
