@@ -30,6 +30,7 @@ tests/**/expected-*.out
 tests/**/failure-*.out
 tests/**/success-*.out
 tests/**/*.xl.mk
+tests/**/*.xl-O1.mk
 tests/**/*.diff
 tests/**/*.output
 tests/**/*.result

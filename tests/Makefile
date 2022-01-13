@@ -44,6 +44,9 @@ MIQ=../make-it-quick/
 export LANG=C
 export LC_ALL=C
 export LC_CTYPE=C
+export XL
+export LD_LIBRARY_PATH=..
+export DYLD_LIBRARY_PATH=..
 
 include $(MIQ)rules.mk
 
@@ -54,10 +57,6 @@ run-%:
 	$(PRINT_COMMAND) $(MAKE) TESTS="$(wildcard */*$**.xl)" .tests
 ref-%:
 	$(PRINT_COMMAND) $(MAKE) TESTS="$(wildcard */*$**.xl)" UPDATE_REFS=yes .tests
-
-export XL
-export LD_LIBRARY_PATH=..
-export DYLD_LIBRARY_PATH=..
 
 # Check a command, and set the result accordingly
 # $1 = pattern
@@ -125,7 +124,7 @@ endef
 #------------------------------------------------------------------------------
 
 # Compute variables for the various builds
--include $(TESTS:%=%.mk)
+-include $(TESTS:%=%$(OPTLEVEL).mk)
 
 .tests: failures.log
 
@@ -201,7 +200,7 @@ failures.log: $(TESTS:%.xl=%.diff)
 $(BASELINE): failures.log
 	$(PRINT_GENERATE) $(GENERATE_BASELINE) $(COLORIZE)
 
-%.xl.mk: %.xl ./alltests-make.awk # Makefile
+%.xl$(OPTLEVEL).mk: %.xl ./alltests-make.awk # Makefile
 	$(PRINT_GENERATE) ./alltests-make.awk $< > $@
 
 %.xl.test: %.diff
