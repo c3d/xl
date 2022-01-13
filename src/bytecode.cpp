@@ -49,6 +49,7 @@
 
 RECORDER(runvalue,      32, "Runtime values");
 RECORDER(bytecode,      32, "Bytecode class evaluation of XL code");
+RECORDER(implicit,       8, "Implicit conversions");
 RECORDER(opcode,        32, "Bytecode opcodes as they are being emitted");
 RECORDER(opcode_error , 16, "Errors in the generated opcodes");
 
@@ -436,6 +437,11 @@ public:
     static std::vector<OpcodeKind> OpcodeArgList(Args... args);
     static std::vector<Bytecode::OpcodeKind> OpcodeArgs[OPCODE_COUNT];
 };
+
+
+// A forward declaration we cannot declare before Bytecode
+static bool compile(Scope *locals, Tree *expr, Tree *pattern, Tree *body,
+                    Parameters &parms, Bytecode::Attempt &, Bytecode *);
 
 
 
@@ -1856,6 +1862,7 @@ private:
         while (Block *block = test->AsBlock())
             test = block->child;
     }
+    Tree *      ImplicitConversion(Tree *expr, Tree *from, Tree *to);
 
 private:
     Scope_p             evaluation;     // Where we evaluate expressions
@@ -2180,6 +2187,76 @@ strength BytecodeBindings::Do(Postfix *what)
 }
 
 
+struct ImplicitConversionData
+// ----------------------------------------------------------------------------
+//   Information about an implicit conversion
+// ----------------------------------------------------------------------------
+{
+    ImplicitConversionData(Tree *from, Tree *to): from(from), to(to), name() {}
+    Tree *from;
+    Tree *to;
+    Name *name;
+};
+
+
+static Tree *conversion(Scope *evalContext,
+                        Scope *declContext,
+                        Tree *what,
+                        Rewrite *decl,
+                        void *info)
+// ----------------------------------------------------------------------------
+//   Check if we have a valid implicit conversion
+// ----------------------------------------------------------------------------
+{
+    record(implicit, "Looking at %t in %t", decl, declContext);
+    if (Infix *cast = IsTypeCast(decl->Pattern()))
+    {
+        if (Infix *vardecl = IsTypeAnnotation(cast->left))
+        {
+            auto &types = *((ImplicitConversionData *) info);
+            Tree *from = evaluate(evalContext, vardecl->right);
+            Tree *to = evaluate(evalContext, cast->right);
+            if (from == types.from && to == types.to)
+            {
+                types.name = vardecl->left->AsName();
+                record(implicit, "Matched %t", decl);
+                return decl;
+            }
+        }
+    }
+    return nullptr;
+}
+
+
+Tree *BytecodeBindings::ImplicitConversion(Tree *expr, Tree *from, Tree *to)
+// ----------------------------------------------------------------------------
+//   Check if there is a valid implicit conversion
+// ----------------------------------------------------------------------------
+{
+    Tree_p form = new Infix("as", expr, to, expr->Position());
+    Context eval(evaluation);
+    record(implicit, "Implicit conversion: %t", form);
+    ImplicitConversionData types(from, to);
+    if (Tree_p found = eval.Lookup(form, conversion, &types))
+    {
+        record(implicit, "Implicit conversion %t = %t", form, found);
+        Rewrite *decl = found->As<Rewrite>();
+        Tree *pattern = decl->Pattern();
+        Bytecode::Attempt attempt(bytecode);
+        Parameters parms;
+        opcode_t index = bytecode->ValueIndex(expr);
+        parms.push_back(Parameter(types.name, from, index));
+        Tree *body = decl->Definition();
+        if (!compile(evaluation,expr,pattern,body,parms,attempt,bytecode))
+            return nullptr;
+        bytecode->Unify(expr, body, true);
+        bytecode->Type(expr, to);
+        return to;
+    }
+    return nullptr;
+}
+
+
 static MachineType IsMachineType(Tree *type)
 // ----------------------------------------------------------------------------
 //   Check if a type is a built-in type
@@ -2288,6 +2365,19 @@ strength BytecodeBindings::Do(Infix *what)
         }
         else if (want != have)
         {
+            if (want && have)
+            {
+                if (Tree_p converted = ImplicitConversion(test, have, want))
+                {
+                    if (converted != want)
+                        return Failed();
+                    for (auto &p : bytecode->ParameterList())
+                        if (p.name == what->left)
+                            p.argument = bytecode->ValueIndex(test);
+                    have = want;
+                }
+            }
+
             // Check hard incompatible types, e.g. integer vs text
             if (MachineType wm = IsMachineType(want))
             {
@@ -2494,6 +2584,69 @@ inline Context::LookupMode lookupMode(Bytecode *bytecode)
 }
 
 
+static bool compile(Scope *locals,
+                    Tree *expr,
+                    Tree *pattern,
+                    Tree *body,
+                    Parameters &parms,
+                    Bytecode::Attempt &attempt,
+                    Bytecode *bytecode)
+// ----------------------------------------------------------------------------
+//   Generate code for a declaration body
+// ----------------------------------------------------------------------------
+{
+    if (Text *name = IsNative(body))
+    {
+        auto found = natives_index.find(name->value);
+        if (found == natives_index.end())
+        {
+            record(opcode_error,
+                   "Nonexistent native function %t", name);
+            bytecode->CompileError(Error("Invalid native $1", name));
+            attempt.Fail();
+            return false;
+        }
+        opcode_t index = (*found).second;
+        opcode_t target = bytecode->StorageIndex(expr);
+        OP(native);
+        bytecode->NativeArguments(index, parms, target);
+    }
+    else if (Text *name = IsBuiltin(body))
+    {
+        Opcode opcode = builtins[name->value];
+        if (!opcode)
+        {
+            record(opcode_error, "Nonexistent builtin %t", name);
+            bytecode->CompileError(Error("Invalid builtin $1", name));
+            attempt.Fail();
+            return false;
+        }
+
+        // Insert the opcode, followed by the parameters
+        opcode_t target = bytecode->StorageIndex(expr);
+        bytecode->Op(opcode);
+        bytecode->BuiltinArguments(parms, target);
+    }
+    else if (body->Kind() <= TEXT)
+    {
+        // Inline the compilation of constants, e.g. [0]
+        compile(locals, body, bytecode);
+        bytecode->Unify(body, expr, true);
+    }
+    else
+    {
+        // Real call
+        compile(locals, body, pattern, parms);
+
+        // Transfer evaluation to the body
+        opcode_t target = bytecode->StorageIndex(expr);
+        OP(call, pattern, parms, LocalIndex(target));
+    }
+
+    return true;
+}
+
+
 static Tree *lookupCandidate(Scope   *evalScope,
                              Scope   *declScope,
                              Tree    *expr,
@@ -2554,53 +2707,8 @@ static Tree *lookupCandidate(Scope   *evalScope,
             Parameters parms = bytecode->ParameterList();
             parms.erase(parms.begin(), parms.begin() + attempt.frame);
 
-            if (Text *name = IsNative(body))
-            {
-                auto found = natives_index.find(name->value);
-                if (found == natives_index.end())
-                {
-                    record(opcode_error,
-                           "Nonexistent native function %t", name);
-                    bytecode->CompileError(Error("Invalid native $1", name));
-                    attempt.Fail();
-                    return nullptr;
-                }
-                opcode_t index = (*found).second;
-                opcode_t target = bytecode->StorageIndex(expr);
-                OP(native);
-                bytecode->NativeArguments(index, parms, target);
-            }
-            else if (Text *name = IsBuiltin(body))
-            {
-                Opcode opcode = builtins[name->value];
-                if (!opcode)
-                {
-                    record(opcode_error, "Nonexistent builtin %t", name);
-                    bytecode->CompileError(Error("Invalid builtin $1", name));
-                    attempt.Fail();
-                    return nullptr;
-                }
-
-                // Insert the opcode, followed by the parameters
-                opcode_t target = bytecode->StorageIndex(expr);
-                bytecode->Op(opcode);
-                bytecode->BuiltinArguments(parms, target);
-            }
-            else if (body->Kind() <= TEXT)
-            {
-                // Inline the compilation of constants, e.g. [0]
-                compile(locals, body, bytecode);
-                bytecode->Unify(body, expr, true);
-            }
-            else
-            {
-                // Real call
-                compile(locals, body, pattern, parms);
-
-                // Transfer evaluation to the body
-                opcode_t target = bytecode->StorageIndex(expr);
-                OP(call, pattern, parms, LocalIndex(target));
-            }
+            if (!compile(locals,expr,pattern,body,parms,attempt,bytecode))
+                return nullptr;
 
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
@@ -3195,7 +3303,6 @@ static Tree *typecheck(Scope_p scope, Tree_p type, Tree_p tree)
     if (type == Name##_type)                    \
         return (Cast);
 #include "machine-types.tbl"
-
 
     // Otherwise go through normal evaluation
     Infix_p test = new Infix("as", value, type, type->Position());
