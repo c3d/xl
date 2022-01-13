@@ -146,7 +146,7 @@ static Bytecode *compile(Scope *scope, Tree *expr);
 static void compile(Scope *scope, Tree *expr, Bytecode *bytecode);
 static Bytecode *compile(Scope *, Tree *body, Tree *form, Parameters &parms);
 static Tree *unwrap(Tree *expr);
-static RunValue &unwrap(RunValue &rv);
+static RunValue &unwrap(RunValue &rv, bool evaluate);
 
 
 
@@ -565,7 +565,8 @@ start:
 #define INPUT_CONSTANT      cst[ConstantIndex(*pc++)]
 #define INPUT_VALUE                                                     \
     (IsConstantIndex(*pc) ? cst[ConstantIndex(*pc++)] : frame[*pc++])
-#define INPUT_UNWRAPPED    unwrap(INPUT_VALUE)
+#define INPUT_UNWRAPPED         unwrap(INPUT_VALUE, true)
+#define INPUT_UNEVALUATED       unwrap(INPUT_VALUE, false)
 #define OUTPUT_VALUE                                    frame[*pc++]
 #define REFRAME         (frame = &state.stack[locals])
 #define RETARGET(PC)                                                    \
@@ -913,11 +914,6 @@ void Bytecode::NativeArguments(opcode_t native,
     while (n --> 0)
     {
         opcode_t arg = args[n].argument;
-        if (IsConstantIndex(arg))
-        {
-            RunValue &cst = constants[ConstantIndex(arg)];
-            unwrap(cst);
-        }
         code.push_back(arg);
     }
     code.push_back(target);
@@ -2540,7 +2536,7 @@ static Tree *unwrap(Tree *expr)
 }
 
 
-static inline RunValue &unwrap(RunValue &rv)
+static inline RunValue &unwrap(RunValue &rv, bool eval)
 // ----------------------------------------------------------------------------
 //   Check if
 // ----------------------------------------------------------------------------
@@ -2550,9 +2546,12 @@ static inline RunValue &unwrap(RunValue &rv)
         Tree *value = rv.as_tree;
         Closure *closure = value->As<Closure>();
         value = closure->Value();
-        Scope *scope = closure->CapturedScope();
-        Tree *evaluated = evaluate(scope, value);
-        rv = RunValue::Classify(evaluated);
+        if (eval)
+        {
+            Scope *scope = closure->CapturedScope();
+            value = evaluate(scope, value);
+        }
+        rv = RunValue::Classify(value);
     }
     return rv;
 }

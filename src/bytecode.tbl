@@ -320,14 +320,12 @@ OPCODE(native, (NATIVE, ARGUMENTS, LOCAL),
 // ----------------------------------------------------------------------------
        // Find the associated native function
        Native::opcode_fn fn = natives[DATA];
+       REFRAME;
 
        // Read arguments
        size_t nargs = DATA;
        for (size_t a = 0; a < nargs; a++)
-       {
-           REFRAME;
-           state.Push(INPUT_VALUE);
-       }
+           state.Push(INPUT_UNEVALUATED);
 
        fn(state);
        REFRAME;
