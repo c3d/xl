@@ -2551,11 +2551,8 @@ static inline RunValue &unwrap(RunValue &rv)
         Closure *closure = value->As<Closure>();
         value = closure->Value();
         Scope *scope = closure->CapturedScope();
-        Tree *maybe = evaluate(scope, value);
-        if (!IsError(maybe))
-            rv = RunValue::Classify(maybe);
-        else
-            rv = RunValue::Classify(value);
+        Tree *evaluated = evaluate(scope, value);
+        rv = RunValue::Classify(evaluated);
     }
     return rv;
 }
