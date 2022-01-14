@@ -217,6 +217,9 @@ kstring RunValue::MachineTypeName[] =
 //   Name for the machine types
 // ----------------------------------------------------------------------------
 {
+    "unset",
+    "pc", "bytecode", "locals",
+
 #define RUNTIME_TYPE(Name, Rep, BC)             #Name,
 #include "machine-types.tbl"
 };
@@ -1600,6 +1603,7 @@ void Bytecode::Dump(std::ostream &out)
         out << "Constants:\n";
         for (size_t cst = 0; cst < csts; cst++)
             out << "  C" << cst << "\t= "
+                << RunValue::MachineTypeName[constants[cst].type] << "\t"
                 << ShortTreeForm(constants[cst].AsTree()) << "\n";
     }
 
