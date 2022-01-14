@@ -1,0 +1,2 @@
+01.Evaluation/divide-by-zero.xl:37:3: Divide [1 / 0] by zero
+01.Evaluation/divide-by-zero.xl:37:3: The returned value [error "Divide $1 by zero", 1 / 0] is not a [natural]
