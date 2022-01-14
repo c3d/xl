@@ -596,7 +596,7 @@ divide_by_zero:
         RunValue &output = OUTPUT_VALUE;
         output = RunValue((Tree *) error, error_mtype);
     }
-    CHAIN(ret, 1);
+    NEXT;
 
 
 // ----------------------------------------------------------------------------
