@@ -143,7 +143,7 @@ typedef std::vector<Parameter>  Parameters;
 static Tree *evaluate(Scope_p scope, Tree_p expr);
 static Tree *typecheck(Scope_p scope, Tree_p type, Tree_p value);
 static Bytecode *compile(Scope *scope, Tree *expr);
-static void compile(Scope *scope, Tree *expr, Bytecode *bytecode);
+static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors);
 static Bytecode *compile(Scope *, Tree *body, Tree *form, Parameters &parms);
 static Tree *unwrap(Tree *expr);
 static RunValue &unwrap(RunValue &rv, bool evaluate);
@@ -299,9 +299,7 @@ public:
     opaddr_t    RemoveLastNoOpBranch();
 
     // Runtime support functions
-    void        CompileError(Tree *msg);
-    Tree *      CompileError();
-    bool        CheckCompileErrors();
+    void        CompileError(Tree *body, kstring msg, Tree *expr);
     void        Clear();
     size_t      Size();
     Scope *     EvaluationScope();
@@ -380,7 +378,6 @@ private:
         ValueMap    values;     // Already-computed value
         opaddr_t    last;       // Last instruction entered by Op
         OpcodeKind *args;       // Checking arguments
-        Tree_p      error;      // Compile-time error that was detected
         bool        local;      // Non-recursive lookup
         bool        variable;   // Evaluate as variable
     };
@@ -1047,37 +1044,16 @@ void Bytecode::CutToLastOpcode()
 //
 // ============================================================================
 
-void Bytecode::CompileError(Tree *expr)
+void Bytecode::CompileError(Tree *body, kstring message, Tree *expr)
 // ----------------------------------------------------------------------------
 //   Emit an error and exit evaluation
 // ----------------------------------------------------------------------------
 {
-    compile->error = expr;
-}
-
-
-Tree *Bytecode::CompileError()
-// ----------------------------------------------------------------------------
-//   Return compile error if any
-// ----------------------------------------------------------------------------
-{
-    return compile->error;
-}
-
-
-bool Bytecode::CheckCompileErrors()
-// ----------------------------------------------------------------------------
-//   Check if there are compile errors at that stage, and if so report them
-// ----------------------------------------------------------------------------
-{
     Bytecode *bytecode = this;
-    if (Tree *err = CompileError())
-    {
-        OP(error_exit, err);
-        CompileError(nullptr);
-        return true;
-    }
-    return false;
+    Error err(message, expr);
+    Tree_p tree = err;
+    opcode_t index = StorageIndex(body);
+    OP(error, tree, LocalIndexWrapper(index));
 }
 
 
@@ -1150,14 +1126,10 @@ void Bytecode::Validate()
 // ----------------------------------------------------------------------------
 {
     PatchChecks(0);
-    if (!code.size() ||
-        (code.back() != opcode_ret && code.back() != opcode_error_exit))
+    if (!code.size() || code.back() != opcode_ret)
     {
         Bytecode *bytecode = this;
-        if (!CheckCompileErrors())
-        {
-            OP(ret, XL::ValueIndex(bytecode->self));
-        }
+        OP(ret, ValueIndexWrapper(bytecode->self));
     }
     if (Opt::emitIR || RECORDER_TRACE(bytecode))
     {
@@ -1504,15 +1476,7 @@ opcode_t Bytecode::Evaluate(Scope *scope, Tree *value)
         return cst;
 
     // Attempt to compile it, return error in case of compile error
-    XL::compile(scope, value, this);
-    if (CompileError())
-    {
-        Context eval(scope);
-        Tree *closure = eval.Enclose(value);
-        opcode_t index = EnterTreeConstant(closure, closure_mtype);
-        CompileError(nullptr);
-        return index;
-    }
+    XL::compile(scope, value, this, false);
 
     // Check if we now have a local for it
     found = values.find(value);
@@ -2429,7 +2393,9 @@ strength BytecodeBindings::Do(Infix *what)
         what->left->Do(this);
 
         // Compile the condition and check it
-        compile(evaluation, what->right, bytecode);
+        if (!compile(evaluation, what->right, bytecode, false))
+            return Failed();
+
         OP(check_guard, ValueIndex(what->right), CHECK);
 
         return Possible();
@@ -2611,7 +2577,7 @@ static bool compile(Scope *locals,
         {
             record(opcode_error,
                    "Nonexistent native function %t", name);
-            bytecode->CompileError(Error("Invalid native $1", name));
+            bytecode->CompileError(expr, "Invalid native $1", name);
             return false;
         }
         opcode_t index = (*found).second;
@@ -2625,7 +2591,7 @@ static bool compile(Scope *locals,
         if (!opcode)
         {
             record(opcode_error, "Nonexistent builtin %t", name);
-            bytecode->CompileError(Error("Invalid builtin $1", name));
+            bytecode->CompileError(expr, "Invalid builtin $1", name);
             return false;
         }
 
@@ -2637,7 +2603,7 @@ static bool compile(Scope *locals,
     else if (body->Kind() <= TEXT)
     {
         // Inline the compilation of constants, e.g. [0]
-        compile(locals, body, bytecode);
+        compile(locals, body, bytecode, true);
         bytecode->Unify(body, expr, true);
     }
     else
@@ -2715,10 +2681,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
             parms.erase(parms.begin(), parms.begin() + attempt.frame);
 
             if (!compile(locals, expr, pattern, body, parms, bytecode))
-            {
-                attempt.Fail();
-                return nullptr;
-            }
+                matched = BytecodeBindings::POSSIBLE;
 
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
@@ -2750,7 +2713,7 @@ static void doInitializers(Initializers &inits, Bytecode *bytecode)
         Scope *scope = i.scope;
         Rewrite_p &rw = i.rewrite;
         Tree_p init = rw->right;
-        compile(scope, init, bytecode);
+        compile(scope, init, bytecode, true);
         if (Infix *typedecl = rw->left->AsInfix())
         {
             // If there is a type, insert a typecheck
@@ -2874,7 +2837,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
             locals = value;
     if (Scope_p closure = context.ProcessScope(locals, inits))
     {
-        compile(closure, prefix->right, bytecode);
+        compile(closure, prefix->right, bytecode, true);
         bytecode->Unify(prefix->right, prefix, true);
         return true;
     }
@@ -2882,7 +2845,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
     // Check if we have [variable T], if so build a variable type
     if (IsVariableType(prefix))
     {
-        compile(scope, prefix->right, bytecode);
+        compile(scope, prefix->right, bytecode, true);
         return true;
     }
 
@@ -2936,7 +2899,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
             {
                 if (Tree *expr = block->IsMetaBox())
                 {
-                    compile(scope, expr, bytecode);
+                    compile(scope, expr, bytecode, true);
                     opcode_t eval = bytecode->ValueIndex(expr);
                     OP(replace, (Tree *) block,
                        LocalIndex(eval), LocalIndex(target));
@@ -2974,7 +2937,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
         Tree *args = prefix->right;
         Prefix_p inner = new Prefix(prefix, name, args);
         Infix_p outer = new Infix(qualified, qualifier, inner);
-        compile(scope, outer, bytecode);
+        compile(scope, outer, bytecode, true);
         return true;
     }
 
@@ -3027,9 +2990,9 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
     // Evaluate [X.Y]
     if (IsDot(infix))
     {
-        compile(scope, infix->left, bytecode);
+        compile(scope, infix->left, bytecode, true);
         bool local = bytecode->LocalMode(true);
-        compile(scope, infix->right, bytecode);
+        compile(scope, infix->right, bytecode, true);
         bytecode->LocalMode(local);
         return true;
     }
@@ -3053,7 +3016,7 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
                 return true;
             }
         }
-        compile(scope, infix->left, bytecode);
+        compile(scope, infix->left, bytecode, true);
         if (bytecode->Type(infix->left) != want)
             OP(check_typecast, want, ValueIndex(infix->left), CHECK);
         bytecode->Type(infix->left, want);
@@ -3064,9 +3027,9 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
     if (IsAssignment(infix))
     {
         bool variable = bytecode->VariableMode(true);
-        compile(scope, infix->left, bytecode);
+        compile(scope, infix->left, bytecode, true);
         bytecode->VariableMode(variable);
-        compile(scope, infix->right, bytecode);
+        compile(scope, infix->right, bytecode, true);
         bytecode->Unify(infix->right, infix->left, true);
         return true;
     }
@@ -3129,7 +3092,7 @@ static Bytecode *compile(Scope *scope,
         }
 
         if (hasInstructions)
-            compile(scope, expr, bytecode);
+            compile(scope, expr, bytecode, true);
         bytecode->Validate();
     }
 
@@ -3137,7 +3100,7 @@ static Bytecode *compile(Scope *scope,
 }
 
 
-static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
+static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
 // ----------------------------------------------------------------------------
 //   Compile an expression in the given bytecode
 // ----------------------------------------------------------------------------
@@ -3147,6 +3110,7 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
     Tree *input = expr;
     Tree *last = nullptr;
     bool definition = false;
+    bool success = true;
     while ((expr = next()))
     {
         Bytecode::Attempt attempt(bytecode);
@@ -3154,7 +3118,6 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         // If not the first statement, check result of previous statement
         if (last)
         {
-            bytecode->CheckCompileErrors();
             if (IsDefinition(expr))
                 definition = true;
             if (!definition)
@@ -3191,37 +3154,46 @@ static void compile(Scope *scope, Tree *expr, Bytecode *bytecode)
         default:        break;
         }
 
-        // Check if we had any compile error along the way
-        if (!bytecode->CheckCompileErrors())
+        // If we failed, clean up and error out
+        if (done)
         {
-            // If we failed, clean up and error out
-            if (done)
+            if (done < 0 && !bindings.PerfectMatch())
             {
-                if (done < 0 && !bindings.PerfectMatch())
-                {
-                    opcode_t target = bytecode->StorageIndex(expr);
-                    OP(form_error, expr, LocalIndex(target));
-                }
-                bytecode->PatchSuccesses(patches);
+                opcode_t target = bytecode->StorageIndex(expr);
+                OP(form_error, expr, LocalIndex(target));
+            }
+            bytecode->PatchSuccesses(patches);
+        }
+        else
+        {
+            record(bytecode, "Giving up on bytecode for %t", expr);
+            if (RECORDER_TRACE(bytecode))
+                bytecode->Dump(std::cerr);
+            attempt.Fail();
+            Tree *base = expr;
+            if (Closure *closure = base->As<Closure>())
+                base = closure->Value();
+            if (errors)
+            {
+                bytecode->CompileError(expr, "No form matching $1", base);
             }
             else
             {
-                record(bytecode, "Giving up on bytecode for %t", expr);
-                if (RECORDER_TRACE(bytecode))
-                    bytecode->Dump(std::cerr);
-                attempt.Fail();
-                if (Closure *closure = expr->As<Closure>())
-                    expr = closure->Value();
-                Tree_p msg = ErrorMessage("No form matching $1", expr);
-                bytecode->CompileError(msg);
+                if (base == expr)
+                    base = context.Enclose(expr);
+                bytecode->EnterRunValue(RunValue::Classify(base), expr);
             }
+            success = false;
         }
+
         definition = done == IS_DEFINITION;
         if (!definition)
             last = expr;
+        errors = true;
     }
     if (last)
         bytecode->Unify(last, input, false);
+    return success;
 }
 
 

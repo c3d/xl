@@ -280,24 +280,14 @@ OPCODE(cast, (LOCAL, LOCAL, CONSTANT),
 )
 
 
-OPCODE(error, (LOCAL, CONSTANT),
+OPCODE(error, (CONSTANT, LOCAL),
 // ----------------------------------------------------------------------------
 //   Emit an error with the given arguments (not evaluated)
 // ----------------------------------------------------------------------------
        RunValue &error = INPUT_CONSTANT;
        XL_ASSERT(error.type == error_mtype);
-       RunValue &r = INPUT_VALUE;
+       RunValue &r = OUTPUT_VALUE;
        r = error;
-)
-
-
-OPCODE(error_exit, (CONSTANT),
-// ----------------------------------------------------------------------------
-//   Exit evaluation immediately with an error
-// ----------------------------------------------------------------------------
-       RunValue &error = INPUT_CONSTANT;
-       XL_ASSERT(error.type == error_mtype);
-       CHAIN(ret, 1);
 )
 
 
