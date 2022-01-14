@@ -107,6 +107,7 @@ struct Errors
     void                Display();
     Tree_p              AsErrorTree();
     Error &             Log(const Error &e, bool context = false);
+    Error &             Log(Tree *error);
     Error &             Context(const Error &e) { return Log(e, true); }
     uint                Count()         { return errors.size() + count; }
     bool                HadErrors()     { return errors.size() > context; }

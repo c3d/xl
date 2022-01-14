@@ -72,11 +72,7 @@ int main(int argc, char **argv)
 
     // Check error results
     if (XL::IsError(result))
-    {
-        // Display errors
-        result->MarkSourceTree();
-        result = main.Evaluate(result);
-    }
+        main.errors->Log(result);
 
     // Show errors if we had any
     int rc = main.HadErrors() > 0;

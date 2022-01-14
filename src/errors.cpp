@@ -379,6 +379,45 @@ Error &Errors::Log(const Error &e, bool isContext)
 }
 
 
+Error &Errors::Log(Tree *tree)
+// ----------------------------------------------------------------------------
+//   Log an error
+// ----------------------------------------------------------------------------
+{
+    kstring message = "Unknown error $1";
+    if (Prefix *prefix = tree->AsPrefix())
+    {
+        if (Tree *args = IsError(prefix))
+        {
+            if (Infix *infix = args->AsInfix())
+            {
+                if (infix->name == ",")
+                {
+                    if (Text *text = infix->left->AsText())
+                    {
+                        message = text->value.c_str();
+                        tree = infix->right;
+                    }
+                }
+            }
+        }
+    }
+
+    Error error(message, tree ? tree->Position() : Tree::NOWHERE);
+    while (Infix *infix = tree->AsInfix())
+    {
+        if (infix->name != ",")
+            break;
+        error.Arg(infix->left);
+        tree = infix->right;
+    }
+    if (tree)
+        error.Arg(tree);
+    MAIN->errors->Log(error);
+    return errors.back();
+}
+
+
 Tree_p Errors::aborting;
 
 
