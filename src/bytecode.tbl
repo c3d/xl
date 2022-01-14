@@ -48,10 +48,12 @@
 
 // Type checks
 #define NATURAL_TYPE(Name, Rep)                         \
-    BUILTIN(Name##_cast, (LOCAL),                       \
+    BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
             RunValue &x = INPUT_VALUE;                  \
-            if (!x.CastNatural<Rep, Name##_mtype>())    \
-                x = RunValue(nil_mtype); )              \
+            RunValue &out = OUTPUT_VALUE;               \
+            out = x;                                    \
+            if (!out.CastNatural<Rep, Name##_mtype>())  \
+                out = RunValue(nil_mtype); )            \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
@@ -59,10 +61,12 @@
                 pc += branch; )
 
 #define INTEGER_TYPE(Name, Rep)                         \
-    BUILTIN(Name##_cast, (LOCAL),                       \
+    BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
             RunValue &x = INPUT_VALUE;                  \
-            if (!x.CastInteger<Rep, Name##_mtype>())    \
-                x = RunValue(nil_mtype); )              \
+            RunValue &out = OUTPUT_VALUE;               \
+            out = x;                                    \
+            if (!out.CastInteger<Rep, Name##_mtype>())  \
+                out = RunValue(nil_mtype); )            \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
@@ -70,35 +74,41 @@
                 pc += branch; )
 
 #define REAL_TYPE(Name, Rep)                            \
-    BUILTIN(Name##_cast, (LOCAL),                       \
+    BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
             RunValue &x = INPUT_VALUE;                  \
-            if (!x.CastReal<Rep, Name##_mtype>())       \
-                x = RunValue(nil_mtype); )              \
+            RunValue &out = OUTPUT_VALUE;               \
+            out = x;                                    \
+            if (!out.CastReal<Rep, Name##_mtype>())     \
+                out = RunValue(nil_mtype); )            \
     BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
             if (!x.CastReal<Rep, Name##_mtype>())       \
                 pc += branch; )                         \
 
-#define OTHER_TYPE(Name, Rep)                   \
-    BUILTIN(Name##_cast, (LOCAL),               \
-            RunValue &x = INPUT_VALUE;          \
-            if (x.type != Name##_mtype)         \
-                x = RunValue(nil_mtype); )      \
-    BUILTIN(Name##_typecheck, (LOCAL, JUMP),    \
-            RunValue &x = INPUT_VALUE;          \
-            opcode_t branch = DATA;             \
-            if (x.type != Name##_mtype)         \
+#define OTHER_TYPE(Name, Rep)                           \
+    BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
+            RunValue &x = INPUT_VALUE;                  \
+            RunValue &out = OUTPUT_VALUE;               \
+            out = x;                                    \
+            if (out.type != Name##_mtype)               \
+                out = RunValue(nil_mtype); )            \
+    BUILTIN(Name##_typecheck, (LOCAL, JUMP),            \
+            RunValue &x = INPUT_VALUE;                  \
+            opcode_t branch = DATA;                     \
+            if (x.type != Name##_mtype)                 \
                 pc += branch; )
 
 #define TREE_TYPE(Name, Rep, Cast)                      \
-    BUILTIN(Name##_cast, (),                            \
+    BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
             RunValue &x = INPUT_VALUE;                  \
-            if (x.type != Name##_mtype)                 \
+            RunValue &out = OUTPUT_VALUE;               \
+            out = x;                                    \
+            if (out.type != Name##_mtype)               \
             {                                           \
-                Tree *value = x.AsTree();               \
+                Tree *value = out.AsTree();             \
                 Rep *cast = (Cast);                     \
-                x = cast                                \
+                out = cast                              \
                     ? RunValue(cast, Name##_mtype)      \
                     : RunValue(nil_mtype);              \
             })                                          \
