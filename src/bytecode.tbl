@@ -266,7 +266,7 @@ OPCODE(evaluate, (LOCAL, LOCAL),
 )
 
 
-OPCODE(cast, (LOCAL, LOCAL, CONSTANT),
+OPCODE(cast, (LOCAL, CONSTANT, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Cast the value in first register to the type in second register
 // ----------------------------------------------------------------------------

@@ -290,6 +290,8 @@ public:
     opcode_t    EnterRunValue(const RunValue &rv);
     opcode_t    EnterRunValue(const RunValue &rv, Tree *value);
     opcode_t    EnterTreeConstant(Tree *cst, MachineType mtype);
+    void        ReplaceConstant(opcode_t index, const RunValue &rv);
+    bool        ReplaceParameter(Name *name, Tree *value);
     void        PatchChecks(size_t where);
     void        PatchSuccesses(size_t where);
     size_t      ChecksToPatch();
@@ -732,21 +734,51 @@ opcode_t Bytecode::EnterRunValue(const RunValue &rv, Tree *value)
 
 opcode_t Bytecode::EnterTreeConstant(Tree *cst, MachineType mtype)
 // ----------------------------------------------------------------------------
-//   Record an opcode with a constant in the bytecode
+//   Record an opcode with a constant in the by1tecode
 // ----------------------------------------------------------------------------
 {
     if (cst->IsLeaf())
     {
         RunValue rv(cst);
         rv.Classify();
-        return EnterRunValue(rv);
+        rv.type = mtype;
+        return EnterRunValue(rv, cst);
     }
     else
     {
         RunValue rv(cst, mtype);
         rv.Classify();
-        return EnterRunValue(rv);
+        return EnterRunValue(rv, cst);
     }
+}
+
+
+void Bytecode::ReplaceConstant(opcode_t index, const RunValue &rv)
+// ----------------------------------------------------------------------------
+//   Replace a constant with a
+// ----------------------------------------------------------------------------
+{
+    if (IsConstantIndex(index))
+        index = ConstantIndex(index);
+    constants[index] = rv;
+}
+
+
+bool Bytecode::ReplaceParameter(Name *name, Tree *value)
+// ----------------------------------------------------------------------------
+//   Replace a parameter in the parameter list with a new index
+// ----------------------------------------------------------------------------
+{
+    opcode_t index = ValueIndex(value);
+    for (auto &p : parameters)
+    {
+        if (p.name == name)
+        {
+            p.argument = index;
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -1785,7 +1817,7 @@ struct BytecodeBindings
 //   Structure used to record bindings
 // ----------------------------------------------------------------------------
 {
-    enum strength { FAILED, POSSIBLE, PERFECT };
+    enum strength { FAILED, POSSIBLE, CONVERT, PERFECT };
     typedef strength            value_type;
 
     BytecodeBindings(Tree *expr, Bytecode *bytecode);
@@ -1795,7 +1827,12 @@ struct BytecodeBindings
     void        Candidate(Rewrite *decl, Scope *evalScope, Scope *declScope);
     void        EvaluateCandidate()     { if (match != FAILED) successes++; }
     size_t      Successes()             { return successes; }
-    bool        PerfectMatch()          { return match == PERFECT; }
+    bool        PerfectMatch()          { return match >= CONVERT; }
+
+    // Implicit conversions
+    bool        ImplicitAllowed()       { return allowImplicit; }
+    bool        HadImplicit()           { return implicitFound; }
+    void        AllowImplicit()         { allowImplicit = true; }
 
     // Tree::Do interface to check the pattern
     strength    Do(Natural *what);
@@ -1823,9 +1860,16 @@ private:
     // Report if we match or not
     strength    Perfect()               { return match; }
     strength    Failed()                { match = FAILED; return match; }
+    strength    Convert()
+    {
+        implicitFound = true;
+        if (match == PERFECT)
+            match = allowImplicit ? CONVERT : FAILED;
+        return match;
+    }
     strength    Possible()
     {
-        if (match==PERFECT)
+        if (match >= CONVERT)
             match = POSSIBLE;
         return match;
     }
@@ -1865,6 +1909,8 @@ private:
     Tree_p              defined;        // Have we bound a name yet?
     Tree_p              type;           // Result type
     size_t              successes;      // Number of cases where it worked
+    bool                allowImplicit;  // Allow implicit conversions
+    bool                implicitFound;  // Some implicit conversion found
 };
 
 
@@ -1891,7 +1937,9 @@ BytecodeBindings::BytecodeBindings(Tree *expr, Bytecode *bytecode)
       match(FAILED),
       defined(nullptr),
       type(),
-      successes(0)
+      successes(0),
+      allowImplicit(false),
+      implicitFound(false)
 {
     record(bindings, ">Created bindings %p for %t", this, expr);
 }
@@ -2195,22 +2243,31 @@ static Tree *conversion(Scope *evalContext,
                         Rewrite *decl,
                         void *info)
 // ----------------------------------------------------------------------------
-//   Check if we have a valid implicit conversion
+//   Check if we have a valid precise implicit conversion
 // ----------------------------------------------------------------------------
 {
     record(implicit, "Looking at %t in %t", decl, declContext);
     if (Infix *cast = IsTypeCast(decl->Pattern()))
     {
-        if (Infix *vardecl = IsTypeAnnotation(cast->left))
+        if (Tree *input = IsTypeCastDeclaration(cast))
         {
-            auto &types = *((ImplicitConversionData *) info);
-            Tree *from = evaluate(evalContext, vardecl->right);
-            Tree *to = evaluate(evalContext, cast->right);
-            if (from == types.from && to == types.to)
+            Tree *from = nullptr;
+            if (Infix *typed = IsTypeAnnotation(cast->left))
             {
-                types.name = vardecl->left->AsName();
-                record(implicit, "Matched %t", decl);
-                return decl;
+                from = evaluate(evalContext, typed->right);
+                input = typed->left;
+            }
+
+            if (Name *name = input->AsName())
+            {
+                auto &types = *((ImplicitConversionData *) info);
+                Tree *to = evaluate(evalContext, cast->right);
+                if (from == types.from && to == types.to)
+                {
+                    types.name = name;
+                    record(implicit, "Matched %t", decl);
+                    return decl;
+                }
             }
         }
     }
@@ -2225,27 +2282,40 @@ Tree *BytecodeBindings::ImplicitConversion(Tree *expr, Tree *from, Tree *to)
 {
     Tree_p form = new Infix("as", expr, to, expr->Position());
     Context eval(evaluation);
-    record(implicit, "Implicit conversion: %t", form);
+    record(implicit, "Precise implicit conversion: %t", form);
     ImplicitConversionData types(from, to);
-    if (Tree_p found = eval.Lookup(form, conversion, &types))
+
+    // First look for precise implicit conversion, e.g. [X:natural as integer]
+    // If not found, look for imprecise conversions, e.g. [lambda X as integer]
+    // Imprecise conversions may fail, so we will need to check the result
+    for (unsigned pass = 0; pass < 2; pass++)
     {
-        record(implicit, "Implicit conversion %t = %t", form, found);
-        Rewrite *decl = found->As<Rewrite>();
-        Tree *pattern = decl->Pattern();
-        Bytecode::Attempt attempt(bytecode);
-        Parameters parms;
-        opcode_t index = bytecode->ValueIndex(expr);
-        parms.push_back(Parameter(types.name, from, index));
-        Tree *body = decl->Definition();
-        if (!compile(evaluation, expr, pattern, body, parms, bytecode))
+        if (Tree_p found = eval.Lookup(form, conversion, &types))
         {
-            attempt.Fail();
-            return nullptr;
+            record(implicit, "Precise implicit conversion %t = %t", form, found);
+            if (Rewrite *decl = found->As<Rewrite>())
+            {
+                Tree *pattern = decl->Pattern();
+                Bytecode::Attempt attempt(bytecode);
+                Parameters parms;
+                opcode_t index = bytecode->ValueIndex(expr);
+                parms.push_back(Parameter(types.name, from, index));
+                Tree *body = decl->Definition();
+                if (!compile(evaluation, expr, pattern, body, parms, bytecode))
+                {
+                    attempt.Fail();
+                    return nullptr;
+                }
+                bytecode->Unify(expr, body, true);
+                bytecode->Type(expr, to);
+                return to;
+            }
         }
-        bytecode->Unify(expr, body, true);
-        bytecode->Type(expr, to);
-        return to;
+
+        // For the second pass, look for vague implicit conversions
+        types.from = nullptr;
     }
+
     return nullptr;
 }
 
@@ -2364,10 +2434,11 @@ strength BytecodeBindings::Do(Infix *what)
                 {
                     if (converted != want)
                         return Failed();
-                    for (auto &p : bytecode->ParameterList())
-                        if (p.name == what->left)
-                            p.argument = bytecode->ValueIndex(test);
+                    if (Name *parm = what->left->AsName())
+                        bytecode->ReplaceParameter(parm, test);
                     have = want;
+                    bytecode->Type(value, want);
+                    return Convert();
                 }
             }
 
@@ -2375,11 +2446,9 @@ strength BytecodeBindings::Do(Infix *what)
             if (MachineType wm = IsMachineType(want))
             {
                 MachineType hm = IsMachineType(have);
-                if (hm)
-                {
-                    if (IncompatibleTypes(wm, hm))
-                        return Failed();
-                }
+                if (hm && IncompatibleTypes(wm, hm))
+                    return Failed();
+
                 bytecode->Type(value, want);
 
                 if (wm != hm)
@@ -2388,6 +2457,20 @@ strength BytecodeBindings::Do(Infix *what)
                     if (cast == INVALID_OPCODE)
                         return Failed();
                     opcode_t target = bytecode->ValueIndex(value);
+                    bytecode->Type(value, want);
+                    if (IsConstantIndex(target))
+                    {
+                        Scope *scope = EvaluationScope();
+                        Tree *cast = typecheck(scope, want, value);
+                        if (cast)
+                        {
+                            RunValue rv = RunValue::Classify(cast);
+                            rv.type = wm;
+                            bytecode->ReplaceConstant(target, rv);
+                            return Perfect();
+                        }
+                        return Failed();
+                    }
                     bytecode->Op(cast, LocalIndex(target), CHECK);
                     return Possible();
                 }
@@ -2718,7 +2801,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
     }
 
     // Keep looking for more unless it's a perfect match
-    return (matched == BytecodeBindings::PERFECT) ? decl->right : nullptr;
+    return bindings.PerfectMatch() ? decl->right : nullptr;
 }
 
 
@@ -3149,7 +3232,15 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         Context::LookupMode mode = lookupMode(bytecode);
         BytecodeBindings bindings(expr, bytecode);
         if (!isdef)
-            context.Lookup(expr, lookupCandidate, &bindings, mode);
+        {
+            Tree *perfectMatch = context.Lookup(expr, lookupCandidate, &bindings, mode);
+            if (!perfectMatch && bindings.HadImplicit())
+            {
+                // Try again allowing implicit conversions
+                bindings.AllowImplicit();
+                context.Lookup(expr, lookupCandidate, &bindings, mode);
+            }
+        }
 
         // If we did not find a matching form, check standard evaluation
         int done = bindings.Successes() != 0 ? -1 : 0;
