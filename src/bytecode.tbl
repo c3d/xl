@@ -624,7 +624,7 @@ OPCODE(check_result_type, (CONSTANT, LOCAL),
        RunValue &type = INPUT_CONSTANT;
        RunValue &value = INPUT_VALUE;
        XL_ASSERT(IsTree(type.type));
-       Tree_p cast = typecheck(state.scope, type.as_tree, value.as_tree);
+       Tree_p cast = typecheck(state.scope, type.AsTree(), value.AsTree());
        if (cast)
        {
            value = RunValue::Classify(cast);
