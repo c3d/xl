@@ -397,6 +397,7 @@ public:
             : bytecode(bytecode),
               compile(bytecode->compile),
               cutpoint(bytecode->Size()),
+              locals(bytecode->locals),
               frame(bytecode->parameters.size()),
               checks(bytecode->ChecksToPatch()),
               successes(bytecode->SuccessesToPatch()),
@@ -421,11 +422,13 @@ public:
             succ.erase(succ.begin() + successes, succ.end());
             compile->values = values;
             compile->types = types;
+            bytecode->locals = locals;
         }
 
         Bytecode    *bytecode;
         CompileInfo *compile;
         opaddr_t     cutpoint;
+        size_t       locals;
         size_t       frame;
         size_t       checks;
         size_t       successes;
