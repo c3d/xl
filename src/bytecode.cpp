@@ -447,7 +447,7 @@ public:
 
 // A forward declaration we cannot declare before Bytecode
 static bool compile(Scope *locals, Tree *expr, Tree *pattern, Tree *body,
-                    Parameters &parms, Bytecode::Attempt &, Bytecode *);
+                    Parameters &parms, Bytecode *);
 
 
 
@@ -2250,8 +2250,11 @@ Tree *BytecodeBindings::ImplicitConversion(Tree *expr, Tree *from, Tree *to)
         opcode_t index = bytecode->ValueIndex(expr);
         parms.push_back(Parameter(types.name, from, index));
         Tree *body = decl->Definition();
-        if (!compile(evaluation,expr,pattern,body,parms,attempt,bytecode))
+        if (!compile(evaluation, expr, pattern, body, parms, bytecode))
+        {
+            attempt.Fail();
             return nullptr;
+        }
         bytecode->Unify(expr, body, true);
         bytecode->Type(expr, to);
         return to;
@@ -2592,7 +2595,6 @@ static bool compile(Scope *locals,
                     Tree *pattern,
                     Tree *body,
                     Parameters &parms,
-                    Bytecode::Attempt &attempt,
                     Bytecode *bytecode)
 // ----------------------------------------------------------------------------
 //   Generate code for a declaration body
@@ -2606,7 +2608,6 @@ static bool compile(Scope *locals,
             record(opcode_error,
                    "Nonexistent native function %t", name);
             bytecode->CompileError(Error("Invalid native $1", name));
-            attempt.Fail();
             return false;
         }
         opcode_t index = (*found).second;
@@ -2621,7 +2622,6 @@ static bool compile(Scope *locals,
         {
             record(opcode_error, "Nonexistent builtin %t", name);
             bytecode->CompileError(Error("Invalid builtin $1", name));
-            attempt.Fail();
             return false;
         }
 
@@ -2710,8 +2710,11 @@ static Tree *lookupCandidate(Scope   *evalScope,
             Parameters parms = bytecode->ParameterList();
             parms.erase(parms.begin(), parms.begin() + attempt.frame);
 
-            if (!compile(locals,expr,pattern,body,parms,attempt,bytecode))
+            if (!compile(locals, expr, pattern, body, parms, bytecode))
+            {
+                attempt.Fail();
                 return nullptr;
+            }
 
             // Check the result type if we had one
             if (Tree *type = bindings.ResultType())
