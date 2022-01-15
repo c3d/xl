@@ -87,11 +87,11 @@ enum Opcode
 //    Definition of the opcodes
 // ----------------------------------------------------------------------------
 {
+    INVALID_OPCODE,
 #define OPCODE(Name, Parms, Body)      opcode_##Name,
 #include "bytecode.tbl"
     OPCODE_COUNT,
     UNPATCHED           = (opcode_t) -1,
-    INVALID_OPCODE      = (opcode_t) -1
 };
 
 
@@ -562,6 +562,7 @@ start:
     // Put the labels in a static const table with deltas to ease relocation
     static const ptrdiff_t entry[] =
     {
+        ((char *) &&label_invalid - (char *) &&start), // INVALID_OPCODE
 #define OPCODE(Name, Parms, Body) ((char *) &&label_##Name-(char *) &&start),
 #include "bytecode.tbl"
     };
@@ -604,6 +605,10 @@ divide_by_zero:
         output = RunValue((Tree *) error, error_mtype);
     }
     NEXT;
+
+label_invalid:
+    XL_ASSERT("Invalid opcode evaluated, should not happen");
+    exit(5);
 
 
 // ----------------------------------------------------------------------------
@@ -686,6 +691,7 @@ std::vector<Bytecode::OpcodeKind> Bytecode::OpcodeArgs[OPCODE_COUNT] =
 //   Pre-compute the argument list for each opcode
 // ----------------------------------------------------------------------------
 {
+    OpcodeArgList(),            // INVALID_OPCODE
 #define OPCODE(Name, Parms, Body)       OpcodeArgList Parms,
 #include "bytecode.tbl"
 };
@@ -1639,6 +1645,10 @@ void Bytecode::Dump(std::ostream &out, opaddr_t &pcr)
 
     switch(code[pc++])
     {
+    case INVALID_OPCODE:
+        std::cout << "*INVALID*\n";
+        break;
+
 #define OPCODE(Name, Parms, Body)                                       \
     case opcode_##Name:                                                 \
     {                                                                   \
@@ -3342,6 +3352,7 @@ kstring Bytecode::name[OPCODE_COUNT] =
 //   Generate the bytecode name array
 // ----------------------------------------------------------------------------
 {
+    "*INVALID*",
 #define OPCODE(Name, Parms, Body)       #Name,
 #include "bytecode.tbl"
 };
