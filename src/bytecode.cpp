@@ -729,9 +729,18 @@ opcode_t Bytecode::EnterTreeConstant(Tree *cst, MachineType mtype)
 //   Record an opcode with a constant in the bytecode
 // ----------------------------------------------------------------------------
 {
-    RunValue rv(cst, mtype);
-    rv.Classify();
-    return EnterRunValue(rv);
+    if (cst->IsLeaf())
+    {
+        RunValue rv(cst);
+        rv.Classify();
+        return EnterRunValue(rv);
+    }
+    else
+    {
+        RunValue rv(cst, mtype);
+        rv.Classify();
+        return EnterRunValue(rv);
+    }
 }
 
 
