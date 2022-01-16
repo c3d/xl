@@ -2433,6 +2433,12 @@ strength BytecodeBindings::Do(Infix *what)
                 {
                     if (converted != want)
                         return Failed();
+                    if (allowLambda)
+                    {
+                        // Lambda cnoversions may fail
+                        opcode_t index = bytecode->ValueIndex(test);
+                        OP(check_cast, LocalIndex(index), CHECK);
+                    }
                     if (Name *parm = what->left->AsName())
                         bytecode->ReplaceParameter(parm, test);
                     have = want;

@@ -567,6 +567,17 @@ OPCODE(init_value, (LOCAL, DEFINITION),
 //
 // ============================================================================
 
+OPCODE(check_cast, (LOCAL, JUMP),
+// ----------------------------------------------------------------------------
+//   Check a type at runtime
+// ----------------------------------------------------------------------------
+       RunValue &value = INPUT_VALUE;
+       opcode_t branch = DATA;
+       if (value.type == nil_mtype)
+           pc += branch;
+)
+
+
 OPCODE(check_type, (CONSTANT, LOCAL, JUMP),
 // ----------------------------------------------------------------------------
 //   Check a type at runtime
