@@ -1831,8 +1831,10 @@ struct BytecodeBindings
 
     // Implicit conversions
     bool        ImplicitAllowed()       { return allowImplicit; }
+    bool        LambdaAllowed()         { return allowLambda; }
     bool        HadImplicit()           { return implicitFound; }
     void        AllowImplicit()         { allowImplicit = true; }
+    void        AllowLambda()           { allowLambda = true; }
 
     // Tree::Do interface to check the pattern
     strength    Do(Natural *what);
@@ -1910,6 +1912,7 @@ private:
     Tree_p              type;           // Result type
     size_t              successes;      // Number of cases where it worked
     bool                allowImplicit;  // Allow implicit conversions
+    bool                allowLambda;    // Allow lambda conversions
     bool                implicitFound;  // Some implicit conversion found
 };
 
@@ -1939,6 +1942,7 @@ BytecodeBindings::BytecodeBindings(Tree *expr, Bytecode *bytecode)
       type(),
       successes(0),
       allowImplicit(false),
+      allowLambda(false),
       implicitFound(false)
 {
     record(bindings, ">Created bindings %p for %t", this, expr);
@@ -2285,35 +2289,29 @@ Tree *BytecodeBindings::ImplicitConversion(Tree *expr, Tree *from, Tree *to)
     record(implicit, "Precise implicit conversion: %t", form);
     ImplicitConversionData types(from, to);
 
-    // First look for precise implicit conversion, e.g. [X:natural as integer]
-    // If not found, look for imprecise conversions, e.g. [lambda X as integer]
-    // Imprecise conversions may fail, so we will need to check the result
-    for (unsigned pass = 0; pass < 2; pass++)
+    // Lookup for conversion form
+    if (Tree_p found = eval.Lookup(form, conversion, &types))
     {
-        if (Tree_p found = eval.Lookup(form, conversion, &types))
+        record(implicit, "%+s implicit conversion %t = %t",
+               allowLambda ? "Vague (lambda)" : "Precise (non-lambda)",
+               form, found);
+        if (Rewrite *decl = found->As<Rewrite>())
         {
-            record(implicit, "Precise implicit conversion %t = %t", form, found);
-            if (Rewrite *decl = found->As<Rewrite>())
+            Tree *pattern = decl->Pattern();
+            Bytecode::Attempt attempt(bytecode);
+            Parameters parms;
+            opcode_t index = bytecode->ValueIndex(expr);
+            parms.push_back(Parameter(types.name, from, index));
+            Tree *body = decl->Definition();
+            if (!compile(evaluation, expr, pattern, body, parms, bytecode))
             {
-                Tree *pattern = decl->Pattern();
-                Bytecode::Attempt attempt(bytecode);
-                Parameters parms;
-                opcode_t index = bytecode->ValueIndex(expr);
-                parms.push_back(Parameter(types.name, from, index));
-                Tree *body = decl->Definition();
-                if (!compile(evaluation, expr, pattern, body, parms, bytecode))
-                {
-                    attempt.Fail();
-                    return nullptr;
-                }
-                bytecode->Unify(expr, body, true);
-                bytecode->Type(expr, to);
-                return to;
+                attempt.Fail();
+                return nullptr;
             }
+            bytecode->Unify(expr, body, true);
+            bytecode->Type(expr, to);
+            return to;
         }
-
-        // For the second pass, look for vague implicit conversions
-        types.from = nullptr;
     }
 
     return nullptr;
@@ -2430,7 +2428,8 @@ strength BytecodeBindings::Do(Infix *what)
         {
             if (want && have)
             {
-                if (Tree_p converted = ImplicitConversion(test, have, want))
+                Tree *from = allowLambda ? nullptr : have;
+                if (Tree_p converted = ImplicitConversion(test, from, want))
                 {
                     if (converted != want)
                         return Failed();
@@ -3233,12 +3232,19 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         BytecodeBindings bindings(expr, bytecode);
         if (!isdef)
         {
-            Tree *perfectMatch = context.Lookup(expr, lookupCandidate, &bindings, mode);
-            if (!perfectMatch && bindings.HadImplicit())
+            Tree *match = context.Lookup(expr, lookupCandidate, &bindings, mode);
+            if (!match && bindings.HadImplicit())
             {
-                // Try again allowing implicit conversions
+                // Try again allowing precise implicit conversions
                 bindings.AllowImplicit();
-                context.Lookup(expr, lookupCandidate, &bindings, mode);
+                match = context.Lookup(expr, lookupCandidate, &bindings, mode);
+
+                if (!match && bindings.HadImplicit())
+                {
+                    // Try again allowing imprecise (lambda) conversions
+                    bindings.AllowLambda();
+                    match = context.Lookup(expr, lookupCandidate, &bindings, mode);
+                }
             }
         }
 
