@@ -2759,7 +2759,7 @@ static bool doConstant(Scope *scope, Tree *tree, Bytecode *bytecode)
             ? RunValue((longlong) n->value, integer_mtype)
             : RunValue(n->value, natural_mtype);
         bytecode->EnterRunValue(rv);
-        bytecode->Type(tree, natural_type);
+        bytecode->Type(tree, n->IsSigned() ? integer_type : natural_type);
         break;
     }
     case REAL:
