@@ -3135,9 +3135,10 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         Bytecode::Attempt attempt(bytecode);
 
         // If not the first statement, check result of previous statement
+        bool isdef = IsDefinition(expr);
         if (last)
         {
-            if (IsDefinition(expr))
+            if (isdef)
                 definition = true;
             if (!definition)
                 OP(check_statement, ValueIndex(last));
@@ -3147,7 +3148,8 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         size_t patches = bytecode->SuccessesToPatch();
         Context::LookupMode mode = lookupMode(bytecode);
         BytecodeBindings bindings(expr, bytecode);
-        context.Lookup(expr, lookupCandidate, &bindings, mode);
+        if (!isdef)
+            context.Lookup(expr, lookupCandidate, &bindings, mode);
 
         // If we did not find a matching form, check standard evaluation
         int done = bindings.Successes() != 0 ? -1 : 0;
