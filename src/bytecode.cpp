@@ -2454,10 +2454,15 @@ strength BytecodeBindings::Do(Infix *what)
                 if (hm && IncompatibleTypes(wm, hm))
                     return Failed();
 
-                bytecode->Type(value, want);
-
                 if (wm != hm)
                 {
+                    bool okToConvert =
+                        allowImplicit ||        // Implicit conversions
+                        !have ||                // foo X is ...
+                        wm == tree_mtype ||     // foo X:tree is ...
+                        wm == value_mtype;      // foo X:value is ...
+                    if (!okToConvert)
+                        return Failed();
                     Opcode cast = MachineTypeCheck(wm);
                     if (cast == INVALID_OPCODE)
                         return Failed();
@@ -2469,16 +2474,30 @@ strength BytecodeBindings::Do(Infix *what)
                         Tree *cast = typecheck(scope, want, value);
                         if (cast)
                         {
-                            RunValue rv = RunValue::Classify(cast);
-                            rv.type = wm;
-                            bytecode->ReplaceConstant(target, rv);
-                            return Perfect();
+                            if (allowImplicit)
+                            {
+                                // Machine type like "natural"
+                                RunValue rv = RunValue::Classify(cast);
+                                rv.type = wm;
+                                bytecode->ReplaceConstant(target, rv);
+                            }
+                            else
+                            {
+                                // Tree type
+                                RunValue rv = RunValue(cast, wm);
+                                bytecode->ReplaceConstant(target, rv);
+                            }
+                            bytecode->Type(value, want);
+                            return allowImplicit ? Convert() : Perfect();
                         }
                         return Failed();
                     }
                     bytecode->Op(cast, LocalIndex(target), CHECK);
+                    bytecode->Type(value, want);
                     return Possible();
                 }
+
+                bytecode->Type(value, want);
                 return Perfect();
             }
 
