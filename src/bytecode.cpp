@@ -2437,8 +2437,8 @@ strength BytecodeBindings::Do(Infix *what)
         MustEvaluate();
         static Name_p lname = new Name("left");
         static Name_p rname = new Name("right");
-        Prefix *ltest = new Prefix(lname, name);
-        Prefix *rtest = new Prefix(rname, name);
+        Prefix_p ltest = new Prefix(lname, name);
+        Prefix_p rtest = new Prefix(rname, name);
         opcode_t lindex = bytecode->StorageIndex(ltest);
         opcode_t rindex = bytecode->StorageIndex(rtest);
         test = ltest;
