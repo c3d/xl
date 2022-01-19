@@ -3233,8 +3233,6 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
     bool success = true;
     while ((expr = next()))
     {
-        Bytecode::Attempt attempt(bytecode);
-
         // If not the first statement, check result of previous statement
         bool isdef = IsDefinition(expr);
         if (last)
@@ -3246,6 +3244,7 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         }
 
         // Lookup expression
+        Bytecode::Attempt attempt(bytecode);
         size_t patches = bytecode->SuccessesToPatch();
         Context::LookupMode mode = lookupMode(bytecode);
         BytecodeBindings bindings(expr, bytecode);
