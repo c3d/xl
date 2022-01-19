@@ -3107,12 +3107,6 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
 //   Deal with all forms of special infix
 // ----------------------------------------------------------------------------
 {
-    // For [Name is Expr], compute [Expr] at the time we hit the definition
-    if (IsDefinition(infix))
-    {
-        return IS_DEFINITION;
-    }
-
     // Evaluate [X.Y]
     if (IsDot(infix))
     {
@@ -3274,7 +3268,7 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         }
 
         // If we did not find a matching form, check standard evaluation
-        int done = bindings.Successes() != 0 ? -1 : 0;
+        int done = isdef ? IS_DEFINITION : bindings.Successes() != 0 ? -1 : 0;
         if (!done) switch(expr->Kind())
         {
         case NATURAL:
