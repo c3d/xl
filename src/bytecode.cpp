@@ -2272,6 +2272,10 @@ static Tree *conversion(Scope *evalContext,
                     record(implicit, "Matched %t", decl);
                     return decl;
                 }
+
+                // Check if caller needs to set implicitFound
+                if (!from && to == types.to)
+                    types.name = xl_false;
             }
         }
     }
@@ -2313,6 +2317,10 @@ Tree *BytecodeBindings::ImplicitConversion(Tree *expr, Tree *from, Tree *to)
             return to;
         }
     }
+
+    // Check if we found any conversion to lookup later
+    if (types.name == xl_false)
+        implicitFound = true;
 
     return nullptr;
 }
