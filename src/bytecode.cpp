@@ -260,14 +260,14 @@ public:
     struct SuccessJump {};
 
     // Record a local value
-    struct LocalIndexWrapper
+    struct LocalWrapper
     {
-        LocalIndexWrapper(opcode_t index): index(index) {}
+        LocalWrapper(opcode_t index): index(index) {}
         opcode_t index;
     };
-    struct ValueIndexWrapper
+    struct ValueWrapper
     {
-        ValueIndexWrapper(Tree *value): value(value) {}
+        ValueWrapper(Tree *value): value(value) {}
         Tree *value;
     };
 
@@ -339,8 +339,8 @@ private:
     void        EnterArg(Rewrite *rewrite);
     void        EnterArg(const CheckJump &);
     void        EnterArg(const SuccessJump &);
-    void        EnterArg(const LocalIndexWrapper &local);
-    void        EnterArg(const ValueIndexWrapper &local);
+    void        EnterArg(const LocalWrapper &local);
+    void        EnterArg(const ValueWrapper &local);
     void        EnterArg(const Parameters &parms);
     template<typename T>
     void        EnterArg(const GCPtr<T> &p)     { EnterArg(p.Pointer()); }
@@ -655,8 +655,8 @@ label_invalid:
 // This makes it possible to directly insert a check, a success or a local
 static Bytecode::CheckJump CHECK;
 static Bytecode::SuccessJump SUCCESS;
-typedef Bytecode::LocalIndexWrapper LocalIndex;
-typedef Bytecode::ValueIndexWrapper ValueIndex;
+typedef Bytecode::LocalWrapper Local;
+typedef Bytecode::ValueWrapper Value;
 
 
 template <typename Rep>
@@ -840,7 +840,7 @@ void Bytecode::EnterArg(const Bytecode::SuccessJump &)
 }
 
 
-void Bytecode::EnterArg(const Bytecode::LocalIndexWrapper &local)
+void Bytecode::EnterArg(const Bytecode::LocalWrapper &local)
 // ----------------------------------------------------------------------------
 //   Record the index
 // ----------------------------------------------------------------------------
@@ -852,7 +852,7 @@ void Bytecode::EnterArg(const Bytecode::LocalIndexWrapper &local)
 }
 
 
-void Bytecode::EnterArg(const Bytecode::ValueIndexWrapper &local)
+void Bytecode::EnterArg(const Bytecode::ValueWrapper &local)
 // ----------------------------------------------------------------------------
 //   Record a constant indicating a bytecode local
 // ----------------------------------------------------------------------------
@@ -1099,7 +1099,7 @@ void Bytecode::CompileError(Tree *body, kstring message, Tree *expr)
     Bytecode *bytecode = this;
     Error err(message, expr);
     Tree_p tree = err;
-    OP(error, tree, ValueIndexWrapper(body));
+    OP(error, tree, ValueWrapper(body));
 }
 
 
@@ -1175,7 +1175,7 @@ void Bytecode::Validate()
     if (!code.size() || code.back() != opcode_ret)
     {
         Bytecode *bytecode = this;
-        OP(ret, ValueIndexWrapper(bytecode->self));
+        OP(ret, ValueWrapper(bytecode->self));
     }
     if (Opt::emitIR || RECORDER_TRACE(bytecode))
     {
@@ -1317,7 +1317,7 @@ opcode_t Bytecode::StorageIndex(Tree *value)
         {
             Bytecode *bytecode = this;
             opcode_t writable = locals++;
-            OP(copy, LocalIndex(index), LocalIndex(writable));
+            OP(copy, Local(index), Local(writable));
             values[value] = writable;
             index = writable;
         }
@@ -1347,7 +1347,7 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
             if (writable && IsConstantIndex(index))
             {
                 opcode_t tgt = locals++;
-                OP(copy, LocalIndex(index), LocalIndex(tgt));
+                OP(copy, Local(index), Local(tgt));
                 values[target] = tgt;
                 return tgt;
             }
@@ -1359,7 +1359,7 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
         }
         opcode_t existing = (*tf).second;
         if (index != existing)
-            OP(copy, LocalIndex(index), LocalIndex(existing));
+            OP(copy, Local(index), Local(existing));
     }
     return index;
 }
@@ -2001,7 +2001,7 @@ strength BytecodeBindings::Do(Natural *what)
 
     // Otherwise, we need to evaluate and check at runtime
     MustEvaluate();
-    OP(check_natural, ValueIndex(test), Constant(what->value), CHECK);
+    OP(check_natural, Value(test), Constant(what->value), CHECK);
     return Possible();
 }
 
@@ -2025,7 +2025,7 @@ strength BytecodeBindings::Do(Real *what)
 
     // Otherwise, we need to evaluate and check at runtime
     MustEvaluate();
-    OP(check_real, ValueIndex(test), Constant(what->value), CHECK);
+    OP(check_real, Value(test), Constant(what->value), CHECK);
     return Possible();
 }
 
@@ -2052,7 +2052,7 @@ strength BytecodeBindings::Do(Text *what)
 
         // Otherwise, we need to evaluate and check at runtime
         MustEvaluate();
-        OP(check_character, ValueIndex(test), Constant(what->value[0]), CHECK);
+        OP(check_character, Value(test), Constant(what->value[0]), CHECK);
         return Possible();
     }
     else
@@ -2071,7 +2071,7 @@ strength BytecodeBindings::Do(Text *what)
 
         // Otherwise, we need to evaluate and check at runtime
         MustEvaluate();
-        OP(check_text, ValueIndex(test), Constant(what->value), CHECK);
+        OP(check_text, Value(test), Constant(what->value), CHECK);
         return Possible();
     }
 }
@@ -2104,7 +2104,7 @@ strength BytecodeBindings::Do(Name *what)
     {
         opcode_t index = bytecode->ParameterIndex(what);
         XL_ASSERT(index != UNPATCHED);
-        OP(check_same, ValueIndex(test), LocalIndex(index), CHECK);
+        OP(check_same, Value(test), Local(index), CHECK);
         return Possible();
     }
 
@@ -2130,7 +2130,7 @@ strength BytecodeBindings::Do(Block *what)
         opcode_t tindex = bytecode->ValueIndex(test);
         if (IsConstantIndex(tindex) && IsConstantIndex(mindex))
             return tindex == mindex ? Perfect() : Failed();
-        OP(check_same, LocalIndex(tindex), LocalIndex(mindex), CHECK);
+        OP(check_same, Local(tindex), Local(mindex), CHECK);
         return Possible();
     }
 
@@ -2170,7 +2170,7 @@ strength BytecodeBindings::Do(Prefix *what)
         if (Name *name = binding->AsName())
         {
             Bind(name, test);
-            OP(check_borrow, ValueIndex(name), CHECK);
+            OP(check_borrow, Value(name), CHECK);
             return Possible();
         }
         else if (Infix *typecast = binding->AsInfix())
@@ -2180,7 +2180,7 @@ strength BytecodeBindings::Do(Prefix *what)
             bytecode->Type(test, type);
             Bind(name, test);
             if (type != bytecode->Type(test))
-                OP(check_typed_borrow, ValueIndex(name),  type, CHECK);
+                OP(check_typed_borrow, Value(name),  type, CHECK);
             return Possible();
         }
         return Failed();
@@ -2444,7 +2444,7 @@ strength BytecodeBindings::Do(Infix *what)
                     if (allowLambda)
                     {
                         // Lambda conversions may fail
-                        OP(check_cast, ValueIndex(test), CHECK);
+                        OP(check_cast, Value(test), CHECK);
                     }
                     if (Name *parm = what->left->AsName())
                         bytecode->ReplaceParameter(parm, test);
@@ -2499,7 +2499,7 @@ strength BytecodeBindings::Do(Infix *what)
                         }
                         return Failed();
                     }
-                    bytecode->Op(cast, LocalIndex(target), CHECK);
+                    bytecode->Op(cast, Local(target), CHECK);
                     bytecode->Type(value, want);
                     return Possible();
                 }
@@ -2508,7 +2508,7 @@ strength BytecodeBindings::Do(Infix *what)
                 return Perfect();
             }
 
-            OP(check_input_type, want, ValueIndex(test), CHECK);
+            OP(check_input_type, want, Value(test), CHECK);
         }
         bytecode->Type(value, want);
         return want == have ? Perfect() : Possible();
@@ -2529,7 +2529,7 @@ strength BytecodeBindings::Do(Infix *what)
         if (!compile(evaluation, what->right, bytecode, false))
             return Failed();
 
-        OP(check_guard, ValueIndex(what->right), CHECK);
+        OP(check_guard, Value(what->right), CHECK);
 
         return Possible();
     }
@@ -2559,8 +2559,8 @@ strength BytecodeBindings::Do(Infix *what)
         what->left->Do(this);
         test = rtest;
         what->right->Do(this);
-        OP(check_infix, ValueIndex(name), what,
-           LocalIndex(lindex), LocalIndex(rindex), CHECK);
+        OP(check_infix, Value(name), what,
+           Local(lindex), Local(rindex), CHECK);
         bytecode->Type(name, infix_type);
         return Possible();
     }
@@ -2746,7 +2746,7 @@ static bool compile(Scope *locals,
 
         // Transfer evaluation to the body
         opcode_t target = bytecode->StorageIndex(expr);
-        OP(call, pattern, parms, LocalIndex(target));
+        OP(call, pattern, parms, Local(target));
     }
 
     return true;
@@ -2820,7 +2820,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
             if (Tree *type = bindings.ResultType())
             {
                 if (bytecode->Type(expr) != type)
-                    OP(check_result_type, type, ValueIndex(expr));
+                    OP(check_result_type, type, Value(expr));
                 bytecode->Type(expr, type);
             }
         }
@@ -2849,7 +2849,7 @@ static void doInitializers(Initializers &inits, Bytecode *bytecode)
             // If there is a type, insert a typecheck
             Tree_p type = typedecl->right;
             type = evaluate(scope, type);
-            OP(check_init_type, type, ValueIndex(init), CHECK);
+            OP(check_init_type, type, Value(init), CHECK);
         }
         OP(init_value, rw);
     }
@@ -2928,17 +2928,17 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
     }
     if (name->value == "scope" || name->value == "context")
     {
-        OP(get_scope, ValueIndex(name));
+        OP(get_scope, Value(name));
         return true;
     }
     if (name->value == "super")
     {
-        OP(get_super, ValueIndex(name));
+        OP(get_super, Value(name));
         return true;
     }
     if (name->value == "self")
     {
-        OP(get_self, ValueIndex(name));
+        OP(get_self, Value(name));
         return true;
     }
     return false;
@@ -3000,7 +3000,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
         opcode_t target = bytecode->StorageIndex(prefix);
         if (Block *block = quoted->AsBlock())
             quoted = block->child;
-        OP(quote, quoted, LocalIndex(target));
+        OP(quote, quoted, Local(target));
         struct QuoteAction
         {
             QuoteAction(Scope *scope, Bytecode *bytecode, opcode_t target):
@@ -3028,8 +3028,7 @@ static int doPrefix(Scope *scope, Prefix *prefix, Bytecode *bytecode)
                 {
                     compile(scope, expr, bytecode, true);
                     opcode_t eval = bytecode->ValueIndex(expr);
-                    OP(replace, (Tree *) block,
-                       LocalIndex(eval), LocalIndex(target));
+                    OP(replace, (Tree *) block, Local(eval), Local(target));
                 }
                 else
                 {
@@ -3139,7 +3138,7 @@ static int doInfix(Scope *scope, Infix *infix, Bytecode *bytecode)
         }
         compile(scope, infix->left, bytecode, true);
         if (bytecode->Type(infix->left) != want)
-            OP(check_typecast, want, ValueIndex(infix->left), CHECK);
+            OP(check_typecast, want, Value(infix->left), CHECK);
         bytecode->Type(infix->left, want);
         return true;
     }
@@ -3206,7 +3205,7 @@ static Bytecode *compile(Scope *scope,
             if (!scope->IsEmpty())
                 doInitializers(inits, bytecode);
             if (!hasInstructions)
-                OP(get_scope, ValueIndex(expr));
+                OP(get_scope, Value(expr));
         }
 
         if (hasInstructions)
@@ -3238,7 +3237,7 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
             if (isdef)
                 definition = true;
             if (!definition)
-                OP(check_statement, ValueIndex(last));
+                OP(check_statement, Value(last));
         }
 
         // Lookup expression
@@ -3292,7 +3291,7 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         if (done)
         {
             if (done < 0 && !bindings.PerfectMatch())
-                OP(form_error, expr, ValueIndex(expr));
+                OP(form_error, expr, Value(expr));
             bytecode->PatchSuccesses(patches);
         }
         else
