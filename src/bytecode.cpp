@@ -1099,8 +1099,7 @@ void Bytecode::CompileError(Tree *body, kstring message, Tree *expr)
     Bytecode *bytecode = this;
     Error err(message, expr);
     Tree_p tree = err;
-    opcode_t index = StorageIndex(body);
-    OP(error, tree, LocalIndexWrapper(index));
+    OP(error, tree, ValueIndexWrapper(body));
 }
 
 
@@ -1358,8 +1357,9 @@ opcode_t Bytecode::Unify(Tree *source, Tree *target, bool writable)
                 return index;
             }
         }
-        if (index != (*tf).second)
-            OP(copy, LocalIndex(index), LocalIndex((*tf).second));
+        opcode_t existing = (*tf).second;
+        if (index != existing)
+            OP(copy, LocalIndex(index), LocalIndex(existing));
     }
     return index;
 }
@@ -2443,9 +2443,8 @@ strength BytecodeBindings::Do(Infix *what)
                         return Failed();
                     if (allowLambda)
                     {
-                        // Lambda cnoversions may fail
-                        opcode_t index = bytecode->ValueIndex(test);
-                        OP(check_cast, LocalIndex(index), CHECK);
+                        // Lambda conversions may fail
+                        OP(check_cast, ValueIndex(test), CHECK);
                     }
                     if (Name *parm = what->left->AsName())
                         bytecode->ReplaceParameter(parm, test);
@@ -2821,10 +2820,7 @@ static Tree *lookupCandidate(Scope   *evalScope,
             if (Tree *type = bindings.ResultType())
             {
                 if (bytecode->Type(expr) != type)
-                {
-                    opcode_t target = bytecode->StorageIndex(expr);
-                    OP(check_result_type, type, LocalIndex(target));
-                }
+                    OP(check_result_type, type, ValueIndex(expr));
                 bytecode->Type(expr, type);
             }
         }
@@ -2932,20 +2928,17 @@ static bool doName(Scope *scope, Name *name, Bytecode *bytecode)
     }
     if (name->value == "scope" || name->value == "context")
     {
-        opcode_t target = bytecode->StorageIndex(name);
-        OP(get_scope, LocalIndex(target));
+        OP(get_scope, ValueIndex(name));
         return true;
     }
     if (name->value == "super")
     {
-        opcode_t target = bytecode->StorageIndex(name);
-        OP(get_super, LocalIndex(target));
+        OP(get_super, ValueIndex(name));
         return true;
     }
     if (name->value == "self")
     {
-        opcode_t target = bytecode->StorageIndex(name);
-        OP(get_self, LocalIndex(target));
+        OP(get_self, ValueIndex(name));
         return true;
     }
     return false;
@@ -3213,10 +3206,7 @@ static Bytecode *compile(Scope *scope,
             if (!scope->IsEmpty())
                 doInitializers(inits, bytecode);
             if (!hasInstructions)
-            {
-                opcode_t target = bytecode->StorageIndex(expr);
-                OP(get_scope, LocalIndex(target));
-            }
+                OP(get_scope, ValueIndex(expr));
         }
 
         if (hasInstructions)
@@ -3302,10 +3292,7 @@ static bool compile(Scope *scope, Tree *expr, Bytecode *bytecode, bool errors)
         if (done)
         {
             if (done < 0 && !bindings.PerfectMatch())
-            {
-                opcode_t target = bytecode->StorageIndex(expr);
-                OP(form_error, expr, LocalIndex(target));
-            }
+                OP(form_error, expr, ValueIndex(expr));
             bytecode->PatchSuccesses(patches);
         }
         else
