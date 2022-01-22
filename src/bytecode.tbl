@@ -58,7 +58,7 @@
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
             if (!x.CastNatural<Rep, Name##_mtype>())    \
-                pc += branch; )
+                BRANCH(branch); )
 
 #define INTEGER_TYPE(Name, Rep)                         \
     BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
@@ -71,7 +71,7 @@
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
             if (!x.CastInteger<Rep, Name##_mtype>())    \
-                pc += branch; )
+                BRANCH(branch); )
 
 #define REAL_TYPE(Name, Rep)                            \
     BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
@@ -84,7 +84,7 @@
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
             if (!x.CastReal<Rep, Name##_mtype>())       \
-                pc += branch; )                         \
+                BRANCH(branch); )
 
 #define OTHER_TYPE(Name, Rep)                           \
     BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
@@ -97,7 +97,7 @@
             RunValue &x = INPUT_VALUE;                  \
             opcode_t branch = DATA;                     \
             if (x.type != Name##_mtype)                 \
-                pc += branch; )
+                BRANCH(branch); )
 
 #define TREE_TYPE(Name, Rep, Cast)                      \
     BUILTIN(Name##_cast, (LOCAL, LOCAL),                \
@@ -122,7 +122,7 @@
                 if (cast)                               \
                     x = RunValue(cast, Name##_mtype);   \
                 else                                    \
-                    pc += branch;                       \
+                    BRANCH(branch);                     \
             })
 
 #include "machine-types.tbl"
@@ -237,8 +237,6 @@ UNARY0(block_closing, block, text, Block *, text *,
 
 UNARY0(integer2real, integer, real,  longlong, double, result = value)
 UNARY0(natural2real, natural, real, ulonglong, double, result = value)
-
-
 
 #undef UNARY
 #undef UNARY0
@@ -357,7 +355,7 @@ OPCODE(branch, (JUMP),
 //   Branch to the given target
 // ----------------------------------------------------------------------------
        opcode_t branch = DATA;
-       pc += branch;
+       BRANCH(branch);
 )
 
 
@@ -574,7 +572,7 @@ OPCODE(check_cast, (LOCAL, JUMP),
        RunValue &value = INPUT_VALUE;
        opcode_t branch = DATA;
        if (value.type == nil_mtype)
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -590,7 +588,7 @@ OPCODE(check_type, (CONSTANT, LOCAL, JUMP),
        if (cast)
            value = RunValue::Classify(cast);
        else
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -647,7 +645,7 @@ OPCODE(check_guard, (LOCAL, JUMP),
        RunValue &value = INPUT_VALUE;
        opcode_t branch = DATA;
        if (value.type != boolean_mtype || !value.as_boolean)
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -659,7 +657,7 @@ OPCODE(check_same, (LOCAL, LOCAL, JUMP),
        RunValue &y = INPUT_UNWRAPPED;
        opcode_t branch = DATA;
        if (!Tree::Equal(x.AsTree(), y.AsTree()))
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -672,7 +670,7 @@ OPCODE(check_natural, (LOCAL, CONSTANT, JUMP),
        XL_ASSERT(IsNatural(ref.type));
        opcode_t branch = DATA;
        if (!IsNatural(value.type) || value.AsNatural() != ref.AsNatural())
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -685,7 +683,7 @@ OPCODE(check_real, (LOCAL, CONSTANT, JUMP),
        XL_ASSERT(IsReal(ref.type));
        opcode_t branch = DATA;
        if (!IsReal(value.type) || value.AsReal() != ref.AsReal())
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -698,7 +696,7 @@ OPCODE(check_text, (LOCAL, CONSTANT, JUMP),
        XL_ASSERT(IsText(ref.type));
        opcode_t branch = DATA;
        if (!IsText(value.type) || value.AsText() != ref.AsText())
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -711,7 +709,7 @@ OPCODE(check_character, (LOCAL, CONSTANT, JUMP),
        XL_ASSERT(IsCharacter(ref.type));
        opcode_t branch = DATA;
        if (!IsCharacter(value.type) || value.AsText() != ref.AsText())
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -731,7 +729,7 @@ OPCODE(check_infix, (LOCAL, CONSTANT, LOCAL, LOCAL, JUMP),
        Infix *refinfix = ref.as_infix;
        if (!IsTree(test.type))
        {
-           pc += branch;
+           BRANCH(branch);
        }
        else
        {
@@ -745,7 +743,7 @@ OPCODE(check_infix, (LOCAL, CONSTANT, LOCAL, LOCAL, JUMP),
            Infix *infix = value->AsInfix();
            if (!infix || infix->name != refinfix->name)
            {
-               pc += branch;
+               BRANCH(branch);
            }
            else
            {
@@ -775,7 +773,7 @@ OPCODE(check_borrow, (LOCAL, JUMP),
        RunValue &value = INPUT_VALUE;
        opcode_t branch = DATA;
        if (value.type != definition_mtype)
-           pc += branch;
+           BRANCH(branch);
 )
 
 
@@ -797,7 +795,7 @@ OPCODE(check_typed_borrow, (LOCAL, CONSTANT, JUMP),
            }
        }
        if (!ok)
-           pc += branch;
+           BRANCH(branch);
 )
 
 #undef OPCODE
