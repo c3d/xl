@@ -113,6 +113,17 @@ inline opcode_t ConstantIndex(opcode_t index)
 }
 
 
+inline RunValue &InputValue(opcode_t index, RunValue *frame, RunValue *cst)
+// ----------------------------------------------------------------------------
+//   Select the input value from the correct source
+// ----------------------------------------------------------------------------
+{
+    return IsConstantIndex(index)
+        ?  cst[ConstantIndex(index)]
+        :  frame[index];
+}
+
+
 // Array for builtins and native functions
 static std::map<text, Opcode>           builtins;
 static std::map<text, opcode_t>         natives_index;
@@ -571,14 +582,13 @@ start:
 
 
 // Macros to help writing opcodes
-#define DATA            (*pc++)
-#define INPUT_CONSTANT      cst[ConstantIndex(*pc++)]
-#define INPUT_VALUE                                                     \
-    (IsConstantIndex(*pc) ? cst[ConstantIndex(*pc++)] : frame[*pc++])
+#define DATA                    (*pc++)
+#define INPUT_CONSTANT          cst[ConstantIndex(*pc++)]
+#define INPUT_VALUE             InputValue(*pc++, frame, cst)
 #define INPUT_UNWRAPPED         unwrap(INPUT_VALUE, true)
 #define INPUT_UNEVALUATED       unwrap(INPUT_VALUE, false)
-#define OUTPUT_VALUE                                    frame[*pc++]
-#define REFRAME         (frame = &state.stack[locals])
+#define OUTPUT_VALUE            frame[*pc++]
+#define REFRAME                 (frame = &state.stack[locals])
 #define RETARGET(PC)                                                    \
     do {                                                                \
         pc   = PC;                                                      \
