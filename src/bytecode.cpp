@@ -455,7 +455,7 @@ public:
 
     template <typename ...Args>
     static std::vector<OpcodeKind> OpcodeArgList(Args... args);
-    static std::vector<Bytecode::OpcodeKind> OpcodeArgs[OPCODE_COUNT];
+    static std::vector<OpcodeKind> OpcodeArgs[OPCODE_COUNT];
 };
 
 
