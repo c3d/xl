@@ -35,7 +35,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-use PRS    = XL.COMPILER.PARSER
+use PARSER = XL.COMPILER.PARSER
 use CONFIG = XL.SYSTEM.CONFIGURATION
 use MEM    = XL.SYSTEM.MEMORY
 use LIFE   = XL.TYPES.LIFETIME
@@ -49,13 +49,16 @@ module XL.TYPES.TYPE with
     // Aliases for types frequently used in this interface
     type bit_count              is MEM.bit_count
     type byte_count             is MEM.byte_count
-    type source                 is PRS.tree
+    type source                 is PARSER.tree
     type lifetime               is LIFE.lifetime
 
     // Forms that are treated specially by the type system
-    type annotation             is matching(I:PRS.infix when I.name in ":","as")
-    type definition             is matching(I:PRS.infix when I.name = "is")
-    type condition              is matching(I:PRS.infix when I.name = "when")
+    type annotation             matches I:PARSER.infix when I.name in ":","as"
+    type definition             matches I:PARSER.infix when I.name = "is"
+    type condition              matches I:PARSER.infix when I.name = "when"
+
+    // Type attribute
+    type attribute              is
 
 
     type type with
@@ -67,7 +70,7 @@ module XL.TYPES.TYPE with
         Pattern                 as source       // Pattern for the type
         Condition               as source       // 'when' clause
         Attributes              as source       // 'constant', 'mutable', ...
-        Bases                   as source       // List of bases
+        Bases                   as array of type// Base types
         Lifetime                as lifetime     // Static lifetime for type
 
     with
