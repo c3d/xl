@@ -712,7 +712,7 @@ modules]. The top-level ((module)) is called `XL`, and sub-modules are
 categorized in a hierarchy(((hierarchy,modules))). For example, if you
 need to perform computations on ((complex number))s, you would `use
 XL.MATH.COMPLEX` to load the
-link:{xl}native/lib/xl/math/complex.xs[complex numbers module]
+link:{xl}native/lib/xl.math.complex.xs[complex numbers module]
 
 The link:{xl}src/builtins.xl[library builtins] is a list of definitions
 that are accessible to any XL program without any explicit `use`
