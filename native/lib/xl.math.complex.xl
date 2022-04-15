@@ -6,6 +6,8 @@
 //
 //     Implementation of complex numbers
 //
+//     The interface does not specify the many special cases and optimizations,
+//     which are described in this file
 //
 //
 //
@@ -34,8 +36,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-COMPLEX[real  : some number,
-        angle : some number] is module with
+module COMPLEX[real : like NUMBER.number, angle : like ANGLE.angle] is
 // ----------------------------------------------------------------------------
 //    Complex numbers taking the given `real` and 'angle' types
 // ----------------------------------------------------------------------------
@@ -145,3 +146,147 @@ COMPLEX[real  : some number,
     use XL.TEXT_IO
     to write    Z:cartesian                     is write format("(%1, %2)", Z.Re, Z.Im)
     to write    Z:polar                         is write format("(%1∠%2)", Z.Mod, Z.Arg)
+
+
+
+
+
+
+    // Imaginary unit, which can exist in imaginary, cartesian or polar form
+    i                           as imaginary    is imaginary 1
+    i                           as cartesian    is cartesian(0, 1)
+    i                           as polar
+    j                           is i
+
+    // Angle constant we use to identify imaginary axis
+    quarter                     is angle(pi/2)
+    half                        is angle(pi)
+
+    // Creating an imaginary
+    Im:real [[i]]               as imaginary    is imaginary(Im)
+    [[i]] Im:real               as imaginary    is imaginary(Im)
+
+    // Shortcut notation for cartesian notation like `2 + 3i`
+    Re:real + Im:imaginary      as cartesian    is cartesian(Re, Im.Im)
+
+    // Shortcut for polar notation like `2 ∠ 180°`
+    Mod:real ∠ Arg:angle        as polar        is polar(Mod, Arg)
+
+    // Shortcut for multiplication by i like `exp (i Z)
+    Z:complex [[i]]             as complex      is Z * i
+    [[i]] Z:complex             is Z i
+
+    // Optimize cases of multiplication by i
+    Z:imaginary * [[i]]         as real         is -Z.Im
+    Z:cartesian * [[i]]         as cartesian    is cartesian(-Z.Im, Z.Re)
+    Z:polar * [[i]]             as polar        is polar(Z.Mod, Z.Arg + quarter)
+
+    // Implicit conversion between the representations
+    X:real when X=0             as imaginary    is imaginary(0)
+    X:real                      as cartesian    is cartesian(X, 0)
+    X:real                      as polar        is polar(X, 0)
+    Z:imaginary when Z.Im=0     as real         is real(0)
+    Z:imaginary                 as cartesian    is cartesian(0, Z.Im)
+    Z:imaginary                 as polar        is polar(Z.Im, quarter)
+    Z:cartesian when Z.Im=0     as real         is real(Z.Re)
+    Z:cartesian when Z.Re=0     as imaginary    is imaginary(Z.Im)
+    Z:cartesian                 as polar
+    Z:polar when Z.Arg=0        as real         is real(Z.Mod)
+    Z:polar when Z.Arg=half     as real         is real(-Z.Mod)
+    Z:polar when Z.Arg=quarter  as imaginary    is imaginary(Z.Mod)
+    Z:polar when Z.Arg=-quarter as imaginary    is imaginary(-Z.Mod)
+    Z:polar                     as cartesian
+
+    // Implicit conversion from anything that implicitly converts to [real]
+    // This is necessary for [Z:=2] if [real] is floating point
+    X:implicit[real]            as cartesian    is cartesian(real(X), 0)
+    X:implicit[real]            as polar        is polar(real(X), 0)
+`
+    // Special operations that can be optimized with one real operand
+    Z:cartesian + X:real        as cartesian
+    Z:cartesian - X:real        as cartesian
+    Z:cartesian * X:real        as cartesian
+    Z:cartesian / X:real        as cartesian    when X ≠ 0
+    Z:cartesian / X:real        as error        when X = 0
+    X:real      + Z:cartesian   as cartesian
+    X:real      - Z:cartesian   as cartesian
+    X:real      * Z:cartesian   as cartesian
+    X:real      / Z:cartesian   as cartesian    when Z ≠ 0
+    X:real      / Z:cartesian   as error        when Z = 0
+
+    // In polar form, only multiplication and division are faster
+    Z:polar     * X:real        as polar
+    Z:polar     / X:real        as polar        when X ≠ 0
+    Z:polar     / X:real        as error        when X = 0
+    X:real      * Z:polar       as polar
+    X:real      / Z:polar       as polar        when X ≠ 0
+    X:real      / Z:polar       as error        when X = 0
+
+    // Basic arithmetic in cartesian form
+    X:cartesian + Y:cartesian   as cartesian
+    X:cartesian - Y:cartesian   as cartesian
+    X:cartesian * Y:cartesian   as cartesian
+    X:cartesian / Y:cartesian   as cartesian    when X ≠ 0
+    X:cartesian / Y:cartesian   as error        when X = 0
+    +X:cartesian                as cartesian
+    -X:cartesian                as cartesian
+    ~X:cartesian                as cartesian    // Conjugate
+    conjugate X:cartesian       as cartesian    is ~X
+
+    // Basic arithmetic in polar form
+    X:polar     * Y:polar       as polar
+    X:polar     / Y:polar       as polar        when Y.Arg ≠ 0
+    X:polar     / Y:polar       as error        when Y.Arg = 0
+    +X:polar                    as polar
+    -X:polar                    as polar
+    ~X:polar                    as polar        // Conjugate
+    conjugate X:polar           as polar        is ~X
+
+    // Prefix form for real and imaginary part without whole conversion
+    re          Z:cartesian     as real         is Z.Re
+    re          Z:polar         as real
+    im          Z:cartesian     as real         is Z.Im
+    im          Z:polar         as real
+    mod         Z:cartesian     as real
+    mod         Z:polar         as real         is Z.Mod
+    arg         Z:cartesian     as real
+    arg         Z:polar         as real         is Z.Arg
+
+    // Equality
+    X:cartesian = Y:cartesian   as boolean
+    X:polar     = Y:polar       as boolean
+
+    // Total order
+    // The < operator is a lexicographic order, required for some containers
+    // For consistency, it is only defined on the cartesian form, where it
+    // matches the order on real values
+    X:cartesian < Y:cartesian   as boolean
+
+    // Some elementaty functions on complex numbers
+    abs         Z: complex      as real         is mod Z
+    sqrt        Z:polar         as polar
+    exp         Z:cartesian     as polar
+    ln          Z:polar         as cartesian when Z.Arg ≠ 0
+
+    Z:cartesian ^ N:natural     as cartesian
+    X:polar     ^ Y:cartesian   as polar
+
+    sin         Z:cartesian     as polar
+    cos         Z:cartesian     as polar
+    tan         Z:cartesian     as polar
+    arcsin      Z:polar         as cartesian
+    arccos      Z:polar         as cartesian
+    arctan      Z:polar         as cartesian
+
+    sinh        Z:cartesian     as polar
+    cosh        Z:cartesian     as polar
+    tanh        Z:cartesian     as polar
+    arcsinh     Z:polar         as cartesian
+    arccosh     Z:polar         as cartesian
+    arctanh     Z:polar         as cartesian
+
+    // Basic I/O operations
+    to write    Z:cartesian     as ok
+    to write    Z:polar         as ok
+    to read     Z:out cartesian as ok
+    to read     Z:out polar     as ok

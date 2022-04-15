@@ -34,121 +34,88 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-module COMPLEX[real:type, angle:type] with
+use NUMBER = XL.MATH.NUMBER
+use ANGLE  = XL.MATH.ANGLE
+
+module COMPLEX[real : like NUMBER.number, angle : like ANGLE.angle] with
 // ----------------------------------------------------------------------------
 //   A generic module for complex numbers
 // ----------------------------------------------------------------------------
 //  The reason for separating 'real' and 'angle' arguments is to be able
 //  to properly accomodate a non floating-point representation for 'real',
 //  and possibly a natural number representation for angles (e.g. degrees)
+//
+//  The interface does not specify the many special cases and optimizations
+//  found in the implementation, e.g. converting imaginary to cartesian, etc.
 
-    // A complex can be represented in either cartesian or polar form
-    type complex                is cartesian or polar
-    type cartesian              is matching cartesian(Re:real, Im:real)
-    type polar                  is matching polar(Mod:real, Arg:angle)
+    // A complex can be represented in several different forms
+    type complex                is real or imaginary or cartesian or polar
+    type imaginary              matches imaginary(Im:real)
+    type cartesian              matches cartesian(Re:real, Im:real)
+    type polar                  matches polar(Mod:real, Arg:angle)
 
     // Imaginary unit
-    i                           as cartesian
-    i                           as polar
-    j                           as cartesian    is i
-    j                           as polar        is i
+    i                           as imaginary
+    j                           is i
 
-    // Shortcut notation for cartesian notation like `2 + 3i`
-    syntax { postfix 400 i j }
-    Re:real + Im:real i         as cartesian    is cartesian(Re, Im)
-    Im:real i                   as cartesian    is cartesian(0, Im)
-    Re:real + Im:real j         as cartesian    is cartesian(Re, Im)
-    Im:real j                   as cartesian    is cartesian(0, Im)
+    // Shortcut notations, e.g. to write `2 + 3i`
+    Z:complex [[i]]             is Z * i
+    [[i]] Z:complex             is i * Z
 
-    // Shortcut for multiplication by i (e.g. to accelerate exp(Z*i))
-    Z:cartesian i               as cartesian    is Z * i
-    Z:cartesian * [[i]]         as cartesian
-    Z:polar     * [[i]]         as polar
-    [[i]]       * Z:cartesian   as cartesian    is Z * i
-    [[i]]       * Z:polar       as polar        is Z * i
+    // Shortcut for polar notation like `2 ∠ 180°`
+    Mod:real ∠ Arg:angle        as polar        is polar(Mod, Arg)
 
     // Implicit conversion between the representations
-    Z:cartesian                 as polar
+    X:implicit real             as cartesian    // Convert 2 to 2.0 to cartesian
+    X:implicit real             as polar
+    X:imaginary                 as cartesian
+    X:imaginary                 as polar
     Z:polar                     as cartesian
+    Z:cartesian                 as polar
 
-    // Implicit conversions from the base type
-    X:real                      as cartesian    is cartesian(X, 0)
-    X:real                      as polar        is polar(X, 0)
-
-    // Implicit conversion from anything that implicitly converts to [real]
-    // This is necessary for [Z:=2] if [real] is floating point
-    X:implicit[real]            as cartesian    is cartesian(real(X), 0)
-    X:implicit[real]            as polar        is polar(real(X), 0)
-`
-    // Special operations that can be optimized with one real operand
-    Z:cartesian + X:real        as cartesian
-    Z:cartesian - X:real        as cartesian
-    Z:cartesian * X:real        as cartesian
-    Z:cartesian / X:real        as cartesian    when X ≠ 0
-    Z:cartesian / X:real        as error        when X = 0
-    X:real      + Z:cartesian   as cartesian
-    X:real      - Z:cartesian   as cartesian
-    X:real      * Z:cartesian   as cartesian
-    X:real      / Z:cartesian   as cartesian    when Z ≠ 0
-    X:real      / Z:cartesian   as error        when Z = 0
-
-    // In polar form, only multiplication and division are faster
-    Z:polar     * X:real        as polar
-    Z:polar     / X:real        as polar        when X ≠ 0
-    Z:polar     / X:real        as error        when X = 0
-    X:real      * Z:polar       as polar
-    X:real      / Z:polar       as polar        when X ≠ 0
-    X:real      / Z:polar       as error        when X = 0
-
-    // Basic arithmetic in cartesian form
-    X:cartesian + Y:cartesian   as cartesian
-    X:cartesian - Y:cartesian   as cartesian
-    X:cartesian * Y:cartesian   as cartesian
-    X:cartesian / Y:cartesian   as cartesian    when X ≠ 0
-    X:cartesian / Y:cartesian   as error        when X = 0
-    +X:cartesian                as cartesian
-    -X:cartesian                as cartesian
-    ~X:cartesian                as cartesian    // Conjugate
-    conjugate X:cartesian       as cartesian    is ~X
-
-    // Basic arithmetic in polar form
-    X:polar     * Y:polar       as polar
-    X:polar     / Y:polar       as polar        when Y.Arg ≠ 0
-    X:polar     / Y:polar       as error        when Y.Arg = 0
-    +X:polar                    as polar
-    -X:polar                    as polar
-    ~X:polar                    as polar        // Conjugate
-    conjugate X:polar           as polar        is ~X
+    // Basic arithmetic (the implementation optimizes many special cases)
+    X:complex + Y:complex       as complex
+    X:complex - Y:complex       as complex
+    X:complex * Y:complex       as complex
+    X:complex / Y:complex       as complex      when Y ≠ 0
+    X:complex / Y:complex       as error        when Y = 0 is
+        error "Divide by zero", X, Y
+    +Z:complex                  as complex      is Z
+    -Z:complex                  as complex
+    ~Z:complex                  as complex
+    conjugate Z:complex         is ~Z
 
     // Prefix form for real and imaginary part without whole conversion
-    re          Z:cartesian     as real         is Z.Re
-    re          Z:polar         as real
-    im          Z:cartesian     as real         is Z.Im
-    im          Z:polar         as real
-    mod         Z:cartesian     as real
-    mod         Z:polar         as real         is Z.Mod
-    arg         Z:cartesian     as real
-    arg         Z:polar         as real         is Z.Arg
+    re  Z:complex               as real
+    im  Z:complex               as real
+    mod Z:complex               as real
+    arg Z:complex               as real
 
-    // Equality
-    X:cartesian = Y:cartesian   as boolean
-    X:polar     = Y:polar       as boolean
+    // Equality (from which we derive inequality)
+    X:complex = Y:complex       as boolean
 
     // Total order
     // The < operator is a lexicographic order, required for some containers
     // For consistency, it is only defined on the cartesian form, where it
-    // matches the order on real values
+    // matches the order on real values. Beware of arithmetic and order, though
     X:cartesian < Y:cartesian   as boolean
 
     // Some elementaty functions on complex numbers
-    abs         Z: complex      as real         is mod Z
+    // Those are defined on the most efficient implementation, but they apply
+    // to all complex representations thanks to implicit conversions
+    modulus     Z:complex       is mod Z
+    argument    Z:complex       is arg Z
+    abs         Z: complex      is mod Z
     sqrt        Z:polar         as polar
     exp         Z:cartesian     as polar
-    ln          Z:polar         as cartesian when Z.Arg ≠ 0
+    ln          Z:polar         as cartesian    when Z.Arg ≠ 0
+    ln          Z:polar         as error        when Z.Arg = 0 is
+        error "Logarithm of zero", Z
 
     Z:cartesian ^ N:natural     as cartesian
     X:polar     ^ Y:cartesian   as polar
 
+    // Circular functions
     sin         Z:cartesian     as polar
     cos         Z:cartesian     as polar
     tan         Z:cartesian     as polar
@@ -156,6 +123,7 @@ module COMPLEX[real:type, angle:type] with
     arccos      Z:polar         as cartesian
     arctan      Z:polar         as cartesian
 
+    // Hyperbolic functions
     sinh        Z:cartesian     as polar
     cosh        Z:cartesian     as polar
     tanh        Z:cartesian     as polar
@@ -164,17 +132,26 @@ module COMPLEX[real:type, angle:type] with
     arctanh     Z:polar         as cartesian
 
     // Basic I/O operations
-    to write    Z:cartesian     as ok
-    to write    Z:polar         as ok
-    to read     Z:out cartesian as ok
-    to read     Z:out polar     as ok
+    to write    Output, Z:cartesian
+    to write    Output, Z:polar
+    to read     Input, Z:out cartesian
+    to read     Input, Z:out polar
 
 
-module COMPLEX[real:type] is COMPLEX[real, real]
+
+// ============================================================================
+//
+//  Shortcuts specializing the general case above
+//
+// ============================================================================
+
+module COMPLEX[real:type] is
 // ----------------------------------------------------------------------------
 //   A generic module for the case of floating-point numbers
 // ----------------------------------------------------------------------------
 //   In that case, we can use the same type by default for the angle type
+    use ANGLE = XL.MATH.ANGLE[real]
+    COMPLEX[real, ANGLE.angle]
 
 
 module COMPLEX with
@@ -183,6 +160,6 @@ module COMPLEX with
 // ----------------------------------------------------------------------------
 //   This makes it easier to instantiate the generic modules
 
-    type complex[real:type, angle:type] is COMPLEX[real,angle].complex
-    type complex[real:type] is complex[real,real]
-    type complex is complex[real]
+    type complex[type real, type angle]         is COMPLEX[real, angle].complex
+    type complex[type real]                     is COMPLEX[real].complex
+    type complex                                is complex[real]
