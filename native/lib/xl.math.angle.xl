@@ -1,0 +1,100 @@
+// ****************************************************************************
+//  xl.math.angle.xl                                                 XL project
+// ****************************************************************************
+//
+//   File Description:
+//
+//      Angles are numbers with a modulo equality
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2022 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the GNU General Public License v3
+// ****************************************************************************
+//   This file is part of XL.
+//
+//   XL is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+//   XL is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with XL.  If not, see <https://www.gnu.org/licenses/>.
+// ****************************************************************************
+
+use XL.MATH.NUMBER
+
+module ANGLE[type measure like number,
+             full as angle,
+             type scale like number] is
+// ----------------------------------------------------------------------------
+//  Interface for angles, includes a complete implementation
+// ----------------------------------------------------------------------------
+
+    // Representation of an angle
+    type angle matches angle(Value:measure)
+
+    // Useful constants describing a half or quarter turn
+    half                        is full / 2
+    quarter                     is half / 2
+
+    // Arithmetic operations
+    A:angle + B:angle           as angle        is angle(A.Value + B.Value)
+    A:angle - B:angle           as angle        is angle(A.Value - B.Value)
+    A:angle * B:scale           as angle        is angle(A.Value * B)
+    A:angle / B:scale           as angle        is angle(A.Value / B)
+    +A:angle                    as angle        is normalize A
+    -A:angle                    as angle        is angle(-A.Value mod full)
+    abs A:angle                 as angle        is angle(abs A.Value)
+    normalize A:angle           as angle        is angle(A.value mod full)
+
+    // Equality (modulo [full])
+    A:angle = B:angle           as boolean      is (+A).Value = (+B).Value
+
+    // Order, e.g. for containers
+    A:angle < B:angle           as boolean      is A.Value < B.Value
+
+    // Conversions to and from common units
+    degrees(A:angle)            as measure      is A.Value * 360 / full
+    radians(A:angle)            as measure      is A.Value * pi / half
+    grads(A:angle)              as measure      is A.Value * 400 / half
+    A:measure degrees           as angle        is angle(A * full / 360)
+    A:measure radians           as angle        is angle(A * half / pi)
+    A:measure grads             as angle        is angle(A * full / 400)
+
+
+module ANGLE[type measure like number, type scale like number] is
+// ----------------------------------------------------------------------------
+//   Define the degree and radian types for a given measure type
+// ----------------------------------------------------------------------------
+
+    type degrees is ANGLE[measure, 360, scale].angle
+    type radians is ANGLE[measure, 2*pi, scale].angle
+    type grads   is ANGLE[measure, 400, scale].angle
+
+
+module ANGLE is
+// ----------------------------------------------------------------------------
+//   Base instantiation
+// ----------------------------------------------------------------------------
+
+    type angle[measure, full, scale]    is ANGLE[measure, full, scale].angle
+    type degrees[measure, scale]        is ANGLE[measure, scale].degrees
+    type radians[measure, scale]        is ANGLE[measure, scale].degrees
+    type grads[measure, scale]          is ANGLE[measure, scale].grads
+
+    type angle[full]                    is angle[real, measure, real]
+    type degrees                        is angle[360]
+    type radians                        is angle[2*pi]
+    type grads                          is angle[400]
