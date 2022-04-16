@@ -5305,8 +5305,8 @@ color is one_of
     cymk  Cyan:component, Yellow:component, Magenta:component, Black:component
     named Name:text
     named Name:text, Alpha:component
-Red        : color := { rgb 100%, 0%, 0% }
-Background : color := { named "black" }
+Red        : color := rgb(100%, 0%, 0%)
+Background : color := named "black"
 ....
 * `any_of Patterns` is a type that accept any combination of the
   following patterns. It can be used to implement flags, like the

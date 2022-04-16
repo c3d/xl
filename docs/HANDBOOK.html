@@ -486,7 +486,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#leaf-nodes">2.2. Leaf nodes</a>
 <ul class="sectlevel3">
 <li><a href="#numbers">2.2.1. Numbers</a></li>
-<li><a href="#symbols-2">2.2.2. Symbols</a></li>
+<li><a href="#symbols">2.2.2. Symbols</a></li>
 <li><a href="#text-2">2.2.3. Text</a></li>
 </ul>
 </li>
@@ -897,56 +897,60 @@ of XL that produces this result:</p>
 <div class="paragraph">
 <p>The source code for this example can be found below. The Tao3D dialect
 of XL still uses <code>-&gt;</code> instead of <code>is</code> as the definition
-operator. Apart from that change, the following code is valid XL for
-the language described in this document.</p>
+operator, but the change was made below to use the modern syntax.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">color "white"
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Note: To run this in Tao3D 1.61 or earlier, replace 'is' with '-&gt;'
+color "white"
 milkyway 10000
-rotatez -23
+rotate_z -23
 earth 400
 hello_world 440
 
-milkyway R -&gt;
+milkyway R is
 // ----------------------------------------------------------------------------
-//    Draw the Milky Way
+//    Draw the Milky Way inside a sphere of radius R
 // ----------------------------------------------------------------------------
     locally
         texture_wrap true, true
         texture_transform {scale 5, 5, 5}
         texture "milkyway.jpg"
-        rotatey 0.02 * page_time + 100
+        rotate_y 0.02 * page_time + 100
         scale 1, -1, 1
         sphere R
 
 
-earth R -&gt;
+earth R is
 // ----------------------------------------------------------------------------
-//    Draw Earth
+//    Draw the Earth surface on a sphere of radius R
 // ----------------------------------------------------------------------------
     locally
         texture "earth.bmp"
         texture_wrap true, true
-        rotatey 5 * page_time + 250
+        rotate_y 5 * page_time + 250
         sphere 0, 0, 0, R
 
 
-hello_world R -&gt;
+hello_world R is
 // ----------------------------------------------------------------------------
-//    Draw "hello world" text
+//    Draw "hello world" text on a sphere of radius R
 // ----------------------------------------------------------------------------
     locally
         frame_texture 1900, 600,
             color 1, 1, 1, 1
             reset_transform
-            // If font Arial Unicode installed, it will be used.
-            // Otherwise, unifont will be used (unifont is packaged
-            // with Tao presentations).
+            // If font Arial Unicode installed, it will be used, else unifont
+            // unifont is packaged with Tao presentations, but .
             font "Arial Unicode MS", "unifont", 72
             move_to -800, -9, 0
+
+            // Multilingual text to test Unicode support
             text "Hello World! or Καλημέρα κόσμε; or こんにちは 世界"
-        rotatey -11 * page_time + 180
+
+        rotate_y -11 * page_time + 180
+
+        // Two spheres with different colors to create a pseudo-shadow
         color 20% , 20% , 20% , 70%
         sphere 0, 0, 0, R - 30
         color 100% , 90% , 20% , 90%
@@ -1292,12 +1296,15 @@ example if all the indexes are contiguous integers.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// An (inefficient) implementation of a generic 1-based array type
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// An implementation of a generic 1-based array type.
+// This version is a bit hard to compile efficiently.
 
 // array[1] of T, start of the recurrence
 array[1] of T is
     // Implementation stores one variable value of type T
     Tail : T
+
+    // Indexing with value 1 gives the value
     1 is Value
 
 // array[N] of T: defined based on array[N-1] of T
@@ -1305,7 +1312,11 @@ array[N] of T when N &gt; 1 is
     // Implemenation is a two-parter for Head and Tail
     Head  : array[N-1] of T
     Tail  : T
+
+    // Indexing with values below N refers to the head
     lambda I when I&lt;N is Head[I]
+
+    // Indexing with value N refers to the tail
     lambda I when I=N is Tail
 
 // Usage looks exactly like a regular array in another language
@@ -1326,7 +1337,14 @@ min X, Y    is { mX is min X; mY is min Y; if mX &lt; mY then mX else mY }
 min X       is X
 
 // Computes 4
-min 7, 42, 20, 8, 4, 5, 30</code></pre>
+min 7, 42, 20, 8, 4, 5, 30
+
+// This works even if there are parentheses to group things
+min 7, 42, (20, 8, 4), (5, 30)
+
+// The data can be in separate entities
+numbers is 8, 9, 25, 42
+min 7, 42, numbers, (20, 8, 4), (5, numbers, 30)</code></pre>
 </div>
 </div>
 </div>
@@ -1458,7 +1476,8 @@ X &lt;=&gt; Y     when X &gt; Y  is  1</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Note that this also requires a syntax file defining the precedence of the operator:</p>
+<p>Note that this also requires a <a href="#syntax-file">syntax file</a> defining the
+precedence of the operator:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1602,8 +1621,9 @@ like <code>printf</code> in C. You can write multiple comma-separated items in a
 </div>
 </div>
 <div class="paragraph">
-<p>That would first call the last definition of <code>print</code> with the following
-<a href="#binding">binding</a> for the variable <code>Items</code>:</p>
+<p>That would first call the last definition of <code>print</code> with
+<a href="#binding">binding</a> similar to what is shown below for the variable
+<code>Items</code> (simplified for clarity, details forthcoming):</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2145,16 +2165,16 @@ computations are performed efficiently by the remote node.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">invoke "pi.local",
-    min   is 100.0
-    max   is 0.0
-    sum   is 0.0
-    count is 0
+    var min := 100.0
+    var max := 0.0
+    var sum := 0.0
+    var count := 0
 
     compute_stats T:real is
         min   := min(T, min)
         max   := max(T, max)
-        sum   := sum + T
-        count := count + 1
+        sum   += T
+        count += 1
         reply
             report_stats count, T, min, max, sum/count
 
@@ -2173,10 +2193,10 @@ report_stats Count, T, Min, Max, Avg is
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The definitions of <code>min</code>, <code>max</code>, <code>sum</code> and <code>count</code> would not be
-acceptable in the version of XL described in this document. You would
-need to write for example <code>min : real := 100</code> instead of <code>min is 100.0</code>,
-since <code>min is 100.0</code> would declare a constant.
+The actual <a href="http://github.com/c3d/xl/blob/master/demo/9-min-max-average.xl">sample code</a> uses a slightly
+different formulation, notably for the declaration of <code>min</code>, <code>max</code>, <code>sum</code> and
+<code>count</code>, due to limitations in the current implementation. The code above is
+what we expect the final, idiomatic formulation to look like.
 </td>
 </tr>
 </table>
@@ -2200,11 +2220,11 @@ option of XL:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Like for Tao3D, the implementation of these functions is not very
-complicated, and more importantly, it did not require any kind of change
-to the basic XL evaluation rules. In other words, adding something as
-sophisticated as transparently distributed programming to XL can be done
-by practically any programmer, without changing the compiler.</p>
+<p>Like for Tao3D, the implementation of these functions is not very complicated,
+and more importantly, it did not require any kind of change to the basic XL
+evaluation rules. In other words, adding something as sophisticated as
+transparently distributed programming to XL can be done by practically any
+programmer, without changing the language definition or implementation.</p>
 </div>
 </div>
 </div>
@@ -2306,7 +2326,7 @@ is over twice as much!</p>
 <div class="paragraph">
 <p>A key to keeping things really simple is that the XL syntax is
 <em>dynamic</em>. Available operators and their precedence are <em>configured</em>
-primarily through a <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>. As a result,
+primarily through a <a href="#syntax-file">syntax file</a>. As a result,
 there are no hard-coded keywords or special operators in the XL
 compiler.</p>
 </div>
@@ -2325,21 +2345,20 @@ children can be of any kind.</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><a id="integer"></a><code>integer</code> nodes represent non-negative whole numbers
+<p><a id="natural"></a><code>natural</code> nodes represent non-negative whole numbers
 like <code>1234</code>, <code>2#1001</code> or <code>16#FFFE_FFFF</code>.</p>
 </li>
 <li>
 <p><a id="real"></a><code>real</code> nodes represent a floating-point approximation of
-real numbers like <code>1.234</code>, <code>1.5e-10</code> or <code>2#1.0001_0001#e24</code>.</p>
+real numbers like <code>1.234</code>, <code>1.5e-10</code>, <code>2e-3</code>, or <code>2#1.0001_0001#e24</code>.</p>
 </li>
 <li>
-<p><a id="character"></a><code>character</code> nodes represent individual characters, like <code>'A'</code>.</p>
+<p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code>, as well as
+single-character constants like <code>'A'</code>, and binary data like <code>bits 16#42</code>.</p>
 </li>
 <li>
-<p><a id="text"></a><code>text</code> nodes represent text values like <code>"Hello world"</code></p>
-</li>
-<li>
-<p><a id="symbols"></a><code>symbols</code> nodes regroup names like <code>JOHN_DOE</code> and symbols like <code>+=</code>.</p>
+<p><a id="symbol"></a><code>symbol</code> nodes represent entity <a id="name"></a><code>names</code> like <code>JOHN_DOE</code>, as
+well as <a id="operator"></a><code>operator</code> symbols like <code>+=</code>.</p>
 </li>
 </ol>
 </div>
@@ -2363,46 +2382,81 @@ operand, like <code>3%</code> or <code>45km</code>.</p>
 </li>
 <li>
 <p><a id="block"></a><code>block</code> nodes represent a node surrounded by two delimiters, like
-<code>[a]</code>, <code>(a)</code>, <code>{a}</code>. Blocks are also used to represent indentation.
+<code>[a]</code>, <code>(a)</code>, <code>{a}</code>. Blocks are also used to represent
 <a href="#indentation">code indentation</a>.</p>
 </li>
 </ol>
 </div>
 <div class="paragraph">
-<p>For example, let’s consider the following code:</p>
+<p>A program can directly access that source code program structure very easily,
+using a number of <a href="#parse-tree-types">parse tree types</a>, as shown in the
+following sample code, which produces text representing the internal structure
+of any code:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">if X &lt; 0 then
-   print "The value of ", X, " is negative"
-   X := -X</code></pre>
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">debug N:natural         is "natural(" &amp; N &amp; ")"
+debug R:real            is "real(" &amp; R &amp; ")"
+debug T:text            is "text(""" &amp; T &amp; """)"
+debug S:symbol          is "symbol(""" &amp; S &amp; """)"
+debug I:infix           is
+    "infix(""" &amp; I.name &amp; """," &amp; debug(I.left) &amp; "," &amp; debug(I.right) &amp; ")"
+debug P:prefix          is
+    "prefix(" &amp; debug(P.left) &amp; "," &amp; debug(P.right) &amp; ")"
+debug P:postfix         is
+    "postfix(" &amp; debug(P.left) &amp; "," &amp; debug(P.right) &amp; ")"
+debug B:block           is
+    "block(" &amp; debug(B.child) &amp; ")"
+
+print debug
+    if X &lt; 0 then
+       print "The value of ", X, " is negative"
+       X := -X</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Assuming that this program is stored in a file called <code>program.xl</code>, the
-XL parse tree for this program can be obtained by using the following
-command:</p>
+<p>The output of this program should look like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">block(infix("then",prefix(symbol("if"),infix("&lt;",symbol("X"),natural(0))),block(infix(" <i class="conum" data-value="1"></i><b>(1)</b>
+",prefix(symbol("print"),infix(",",text("The value of ",infix(",",symbol("X"),text(" is negative")))),infix(":=",symbol("X"),prefix(symbol("-"),symbol("X"))))))))</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The line separator is an infix with a new-line character in its <code>name</code>
+field. We have not special-cased the printout, so this emits a new-line in
+the middle of the string.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The XL parse tree for any program can also be shown using the following
+command-line options to the <code>xl</code> program:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="shell" class="language-shell hljs">% xl -parse program.xl -style debug -show
-(infixthen
+(infix then
  (prefix
   if
-  (infix&lt;
+  (infix &lt;
    X
    0))
  (block indent
   (infix CR
    (prefix
     print
-    (infix,
+    (infix ,
      "The value of "
-     (infix,
+     (infix ,
       X
       " is negative"
      )))
-   (infix:=
+   (infix :=
     X
     (prefix
      -
@@ -2411,65 +2465,10 @@ command:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>All of XL is built on this very simple <a href="#parse-tree-types">data structure</a>.
-Some choices, like having distinct <code>integer</code> and <code>real</code> node, were
-guided primarily by considerations beyond syntax, for example the need
-to be able to precisely define <a href="#evaluation">program evaluation</a> or
-to represent distinct machine types.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>The list of node types given above is what the current implementations
-of XL offer. Some changes may happen in the future, notably:</p>
-</div>
-<div id="bits" class="ulist">
-<ul>
-<li>
-<p>Adding a "binary object" node type, which could be used to store
-binary data in the program. A possible syntax would be to prefix
-<code>bits</code> before a large integer value or file name:</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">bits 16#FF_00_FF_00_FF_FF_00_FF_00
-bits "image.png"</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Finding a better representation for empty blocks such as <code>()</code>.
-In the current implementation, they are represented as a block with
-an "empty symbol" as a child. With this choice, the parse tree has no
-"null" node anywhere in the tree. However, this is not very
-satisfactory, since the empty symbol cannot exist anywhere else in
-the parse tree. Alternatives such as representing blocks as possibly
-empty sequences of items have proven even more complicated, since the
-representation of <code>[A,B,C]</code> becomes ambiguous (it could be a block
-containing three elements, or a block containing two elements, one
-of them being an infix, or any other combination), and proved more
-difficult to process in a generic way.</p>
-</li>
-<li>
-<p>Finding a more efficient representation for large sequences of items.
-Currently, they are represented by an unbalanced tree, i.e. a tree
-where one side is disproportionately larger than the other.
-So far, attempts at finding a better representation all had at
-least one severe drawback that precluded their use.</p>
-</li>
-</ul>
-</div>
-</td>
-</tr>
-</table>
+<p>All of XL is built on this very simple <a href="#parse-tree-types">data structure</a>,
+and the <a href="#parse-tree-types">parse tree types</a> provide further refinements,
+for example distinguishing the <code>character</code> subtype of <code>text</code>, or the <code>name</code>
+subtype of <code>symbol</code>.</p>
 </div>
 </div>
 </div>
@@ -2491,9 +2490,9 @@ is an operator. This section describes the syntax for leaf nodes.</p>
 <td class="content">
 There is currently no provision in the compiler to add new kinds
 of leaf nodes. This is being considered, and would require a minimal
-addition to the syntax file. The primary implementation issue is that
-it would require the syntax of the syntax file to diverge from the XL
-syntax itself, since numbers or names in the syntax file have to be
+addition to the <a href="#syntax-file">syntax file</a>. The primary implementation
+issue is that it would require the syntax of the syntax file to diverge from the
+XL syntax itself, since numbers or names in the syntax file have to be
 "hardcoded" somehow
 </td>
 </tr>
@@ -2516,11 +2515,11 @@ fractional part.</p>
 </td>
 <td class="content">
 In the rest of the document, other terminologies, such as
-<em>integer</em> or <em>real</em> numbers may be applied for whole numbers and
+<em>natural</em> or <em>real</em> numbers may be applied for whole numbers and
 fractional numbers respectively. This corresponds to numbers having
 been given a <a href="#types">type</a> for evaluation purpose. This is notably
 the case whenever a computer font is used, e.g. when we refer to
-<code>integer</code> or <code>real</code> values. Except as far as syntax is concerned, this
+<code>natural</code> or <code>real</code> values. Except as far as syntax is concerned, this
 document will very rarely talk about whole numbers or fractional
 numbers.
 </td>
@@ -2535,6 +2534,14 @@ following are not valid XL numbers: <code>_1</code> (leading underscore),
 is not a requirement, it is considered good style to group digits in
 equal-sized chunks, for example <code>1_000_000</code> or <code>04_92_98_05_55</code>.</p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Different number groupings depending on the data you represent
+bay_area_phone_number is 408_555_1234
+french_mobile_phone is 06_12_34_56_78
+us_national_debt is 29_030_600_000_000 // Rounded as of this writing</code></pre>
+</div>
+</div>
 <div class="paragraph">
 <p>By default, numbers are written in base 10. Any other numerical base between 2 and 36 can be used, as well as base 64 using a
 special syntax. Based numbers can be written by following the base
@@ -2544,9 +2551,20 @@ of <code>62</code>. For bases between 11 and 36, letters <code>A</code> through 
 is 15, <code>Z</code> is 35. Case does not matter. For example, <code>16#FF</code> and
 <code>16#ff</code> are two valid hexadecimal representation of <code>255</code>.
 For base 64, <a href="https://en.wikipedia.org/wiki/Base64">Base64</a> encoding is
-used, and case matters. This is mostly indended for use in <a href="#bits">binary objects</a>, i.e. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
+used, and case matters. This is mostly indended for <a href="#bits">binary data</a>, e.g. after <code>bits</code>. For instance, <code>64#SGVsbG8h</code> is the base-64
 encoding for the number with the same binary representation as the
 sequence of ASCII characters in <code>Hello!</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Numerical constant
+largest_16_bits_natural is 16#FFFF
+largest_32_bits_natural is 16#FFFF_FFFF
+alternating_16_bits_pattern is 2#1010_1010_1010_1010
+
+// Binary data (a subtype of text)
+hello is bits 64#SGVsbG8h</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>For fractional numbers, a dot <code>.</code> is used as decimal separator,
@@ -2557,16 +2575,32 @@ Also, the standard library denotes <a href="#range">ranges</a> using
 an infix <code>..</code>, so <code>2..3</code> is an infix <code>..</code> with <code>2</code> and <code>3</code> as
 operands, representing the range between 2 and 3.</p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">pi is 4.0 // One of the nine legal values according to Indiana Bill #246
+if H in 0..359 then print "Looks like a valid heading to me"
+for I in 1..10 loop
+    printf "%f * %f = %f\n", I, I, I*I</code></pre>
+</div>
+</div>
 <div class="paragraph">
 <p>Numbers can contain an exponent, specified by the letter <code>e</code> or
 <code>E</code>. If the exponent is negative, then the number is parsed as a
 fractional number. Therefore, <code>1e3</code> is integer value 1000, but <code>1e-3</code>
 is the same as <code>0.001</code>. The exponent is always given in base 10, and it
-indicates an exponentiation in the given base, so that <code>2#1e8</code> is
-2<sup>8</sup>, in other words decimal value 256. For based numbers, the
+indicates an exponentiation in the given base, so that <code>2#1e16</code> is
+2<sup>16</sup>, in other words decimal value 65536. For based numbers, the
 exponent may be preceded by a <code>#</code> sign, which is mandatory if <code>e</code> or
 <code>E</code> are valid digits in the base. For example, <code>16#FF#e2</code> is an
 hexadecimal representation of decimal value 65280.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">million is 1e6              // This is a whole number
+million_too is 1_000_000    // The same value
+millionth is 1e-6           // No need to write 1.0e-6, this is fractional
+epsilon is 2#1.0#e-52       // A better formulation than 2.2204460492503131e-16</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>There is an implementation-dependent limit for the maximum value a
@@ -2576,13 +2610,78 @@ whole numbers, and less than <code>9.99e99</code> for floating-point numbers.</p
 <div class="paragraph">
 <p>If a value is preceded by a <code>+</code> or <code>-</code> sign, that sign is parsed as a
 prefix operator and not as part of the number. For example, <code>-2</code> is a
-prefix <code>-</code> with <code>2</code> as an argument.</p>
+prefix <code>-</code> with <code>2</code> as an argument. Notice that the default library definitions
+ensure that this prefix is evaluated to <code>integer</code> value <code>-2</code>.</p>
+</div>
+<div class="paragraph">
+<p>This property can be verified by the program below, which exposes various cases
+of interest:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">// Case 1: No evaluation of the parse tree
+// Shows "Prefix, left=-, right=41"
+source_form P:prefix is print "Prefix, left=", P.left, " right=", P.right
+source_form -41
+
+// Case 2: Evaluation to an integer value
+// Shows "Integer -43"
+evaluate I:integer is print "Integer ", I
+evaluate -43
+
+// Case 3: evaluation override of the prefix - operator
+// Shows "We got the answer"
+-X when X=42 is "answer"
+override T:text is "We got the ", T
+override -42</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>The various syntactic possibilities for XL numbers are only for
 convenience, and are all strictly equivalent as far as program execution
 is concerned. In other words, a program may not behave differently if a
 constant is spelled as <code>16#FF_FF</code> or as <code>65535</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">if 16#FFFF &lt;&gt; 65535 then
+    print "Your XL implementation is badly broken"
+    print "(or you overrode the &lt;&gt; operator)"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Version numbers and other special cases</strong>:
+One unsatisfactory aspect of XL number syntax is that it does not offer an
+obvious path to correctly represent "semantic" version numbers in the code. For
+example, a notation like <code>2.3.1</code> will parse as an infix <code>.</code> between real number
+<code>2.3</code> and integer <code>1</code>, making it indistinguishable from <code>2.30.1</code>. A similar
+problem exists with the representation of dates, although it is less serious,
+since a date like <code>12-05-1968</code> or <code>05/12/1968</code> can easily be processed
+correctly.</p>
+</div>
+<div class="paragraph">
+<p>A future extension allowing the syntax file to specify new node types
+might enable the creation of special number formats like this. This is currently
+under consideration. Avoiding ambiguities is part of what makes the problem
+complicated.</p>
+</div>
+<div class="paragraph">
+<p><strong>Range limitations and numerical behaviour</strong>:
+Computers cannot really represent mathematical numbers. For
+example, the set of natural numbers is infinite, so there is no such
+thing as "the largest natural number". Due to hardware limitations,
+there is however such a thing as the largest 64-bit unsigned number.
+Similarly, there is no way to accurately represent real numbers in a
+computer, but there are at least two widely used representations
+called
+<a href="https://en.wikipedia.org/wiki/Floating_point">floating-point</a> and
+<a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic">fixed-point</a>, and
+a widely implemented <a href="https://en.wikipedia.org/wiki/IEEE_754">standard</a> that
+is supported on the vast majority of modern computer platforms. XL leverages
+that work, and does not attempt to define <code>real</code> arithmetic or number
+representation other than by reference to the underlying floating-point
+implementation. XL also provides <a href="#real-subtypes">subtypes</a> that offer some
+platform-independent guarantees.</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -2591,49 +2690,21 @@ constant is spelled as <code>16#FF_FF</code> or as <code>65535</code>.</p>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-One unsatisfactory aspect of XL number syntax is that it does not
-offer an obvious path to correctly represent "semantic" version
-numbers in the code. For example, a notation like <code>2.3.1</code> will parse as
-an infix <code>.</code> between real number <code>2.3</code> and integer <code>1</code>, making it
-indistinguishable from <code>2.30.1</code>.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>Computers cannot really represent mathematical numbers. For
-example, the set of natural numbers is infinite, so there is no such
-thing as "the largest natural number". Due to hardware limitations,
-there is however such a thing as the largest 64-bit unsigned number.
-Similarly, there is no way to accurately represent real numbers in a
-computer, but there are at least two widely used representations
-called
-<a href="https://en.wikipedia.org/wiki/Floating_point">floating-point</a> and
-<a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic">fixed-point</a>.</p>
-</div>
-<div class="paragraph">
-<p>From a <a href="#concept-programming">concept programming</a> point of view,
-this is a blatant case of <a href="#concept-cast">concept cast</a>. A computer
-<code>integer</code> is not a mathematical <em>integer</em>, and a computer <code>real</code> is
-only a floating-point or fixed-point approximation of a true <em>real
-number</em>. In the rest of this document, we will ignore this
-distinction, and refer to a <code>real</code>, knowing full well that there is a
-"largest" <code>real</code> value and a limited number of digits.</p>
-</div>
+From a <a href="#concept-programming">concept programming</a> point of view,
+the difference between a computer representation like <code>natural</code> and the
+underlying concept of <em>natural</em> is a blatant case of <a href="#concept-cast">concept
+cast</a>. A computer <code>integer</code> is not a mathematical <em>integer</em>, and a computer
+<code>real</code> is only a floating-point or fixed-point approximation of a true <em>real
+number</em>. In the rest of this document, we will ignore this distinction, and
+refer to a <code>real</code>, knowing full well that there is a "largest" <code>real</code> value and
+a limited number of digits.
 </td>
 </tr>
 </table>
 </div>
 </div>
 <div class="sect3">
-<h4 id="symbols-2"><a class="anchor" href="#symbols-2"></a><a class="link" href="#symbols-2">2.2.2. Symbols</a></h4>
+<h4 id="symbols"><a class="anchor" href="#symbols"></a><a class="link" href="#symbols">2.2.2. Symbols</a></h4>
 <div class="paragraph">
 <p>Names in XL begin with an letter, followed by letters or digits. For
 example, <code>MyName</code> and <code>A22</code> are valid XL names.  A single underscore
@@ -2671,11 +2742,11 @@ but <code>⇒A2</code> is presently a valid XL name, and this is considered a bu
 </div>
 </div>
 <div class="paragraph">
-<p>Operators longer than one character must be specified in the XL syntax
-file. For example, the XL syntax file defines a <code>&lt;=</code> operator, but no
-<code>&lt;=&gt;</code> operator. Consequently, the sequence <code>1 &lt;=&gt; 2</code> will be parsed as
-<code>(1 &lt;= (&gt; 2))</code>. In order to add this operator, it is necessary to
-<a href="#extending-the-syntax">extend the syntax</a>.</p>
+<p>Operators longer than one character must be specified in the XL
+<a href="#syntax-file">syntax file</a>. For example, the XL syntax file defines a
+<code>&lt;=</code> operator, but no <code>&lt;=&gt;</code> operator. Consequently, the sequence <code>1 &lt;=&gt; 2</code>
+will be parsed as <code>(1 &lt;= (&gt; 2))</code>. In order to add this operator, it is
+necessary to <a href="#extending-the-syntax">extend the syntax</a>.</p>
 </div>
 <div class="paragraph">
 <p>Names and operators are treated interchangeably by XL after the parsing
@@ -2719,6 +2790,20 @@ often has to manipulate HTML data could allow <code>HTML</code> and
     &lt;p&gt;This is some HTML text here&lt;/p&gt;
 END_HTML</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Long text is stripped of its first and last empty line and of leading
+indentation. In other words, the value of the <code>HTML</code> example  above is the same
+as <code>"&lt;p&gt;This is some HTML text here&lt;/p&gt;"</code>.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2771,7 +2856,7 @@ being the operators being used. For example, <code>A;B</code> is an infix <code>
 with <code>A</code> on the left and <code>B</code> on the right, whereas individual lines
 are operands of an infix <em>new-line</em> operator. Similarly, <code>{A}</code> is a
 block containing <code>A</code>, and indentation is represented in the parse tree
-by a block delimited by <em>indent</em> and <em>outdent</em> invisible symbols.</p>
+by a block delimited by <em>indent</em> and <em>outdent</em> internal symbols.</p>
 </div>
 <div class="paragraph">
 <p>The structure of the second loop from the previous listing can be
@@ -2793,10 +2878,10 @@ below:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Indentation must use the same indentation character within a
-single file, either tab or space. In other words, either your
-whole file is indented with tabs, or it is indented with spaces, but
-it is a syntax error to mix both.</p>
+<p>A given source file must use the same indentation character, either tab
+or space. In other words, either your whole file is indented with tabs, or
+it is indented with spaces, but it is a syntax error to mix both in the same
+file.</p>
 </div>
 <div class="paragraph">
 <p>Indentation within a block must be consistent. For example, the
@@ -2815,14 +2900,14 @@ indentation of <code>Pray</code>:</p>
 <div class="sect3">
 <h4 id="operator-precedence-and-associativity"><a class="anchor" href="#operator-precedence-and-associativity"></a><a class="link" href="#operator-precedence-and-associativity">2.3.2. <a id="syntax-file"></a>Operator precedence and associativity</a></h4>
 <div class="paragraph">
-<p>The operators available for XL programmers are defined by the
+<p>The operators available for XL programmers are defined by a
 <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>. The same rules apply for all
 symbols, i.e. for names or for operators. The table given in this file
 uses keywords such as <code>INFIX</code>, <code>PREFIX</code> and <code>POSTFIX</code> to indicate if
 an operator is an infix, a prefix, or a postfix respectively.</p>
 </div>
 <div class="paragraph">
-<p>The table also gives operators a precedence. For example, the following
+<p>This table also gives operators a precedence. For example, the following
 segment in the <code>INFIX</code> portion of the table indicates that <code>*</code> and <code>/</code>
 have higher precedence than <code>+</code> and <code>-</code>, so that <code>X+Y*Z</code> will parse as
 <code>X+(Y*Z)</code>:</p>
@@ -2836,7 +2921,7 @@ have higher precedence than <code>+</code> and <code>-</code>, so that <code>X+Y
 </div>
 <div class="paragraph">
 <p>The precedence also indicates associativity for infix operators. Even
-precedences indicate left associativity, as for <code>+</code> and <code>*</code> above. This
+precedences indicate left associativity, like for <code>+</code> and <code>*</code> above. This
 means that <code>X * Y * Z</code> parses as <code>(X * Y) * Z</code>. Conversely,
 right-associativity is indicated by an odd precedence, as is the case
 for <code>is</code>. This means that <code>X is Y is Z</code> parses as <code>X is (Y is Z)</code>.</p>
@@ -2845,7 +2930,10 @@ for <code>is</code>. This means that <code>X is Y is Z</code> parses as <code>X 
 <p>Enforcing different precedences for left and right associativity
 guarantees that it’s impossible for operators to have the same
 precedence, with some being left-associative and some being
-right-associative, which would cause parsing ambiguities.</p>
+right-associative, which would cause parsing ambiguities. You can remember that
+odd values correspond to right-associativity because the rightmost bit is set,
+or because precedence 1 is highter than 0, which matches the fact that
+right-associativity takes precedence over left-associativity.</p>
 </div>
 <div class="paragraph">
 <p>The syntax file uses a few special names:</p>
@@ -2869,7 +2957,8 @@ syntax file, and then by an opening and closing symbol for that syntax.</p>
 syntax file uses <code>bits</code>. The syntax for binary data can take one of two
 forms: either a very large integer constant in big-endian format, as in
 <code>bits 16#000102030405060708090A0B0C0D0E0F</code>, or the name of a file, as in
-<code>bits "image.png"</code>.</p>
+<code>bits "image.png"</code>. In both cases, this generates a text node containing the
+data and empty delimiters.</p>
 </li>
 <li>
 <p><code>NEWLINE</code> is used to represent the infix operators that separates
@@ -2897,8 +2986,8 @@ for example, the associated precedence will be that of <code>FUNCTION</code>.</p
 <div class="sect3">
 <h4 id="delimiters"><a class="anchor" href="#delimiters"></a><a class="link" href="#delimiters">2.3.3. Delimiters</a></h4>
 <div class="paragraph">
-<p>Additional sections of the syntax file define delimiters for comment,
-block and text. Comment and text delimiters come in pairs.</p>
+<p>Additional sections of the syntax file define delimiters for comment, block
+and text. Comment and text delimiters come in pairs.</p>
 </div>
 <div class="paragraph">
 <p>The default syntax file specifies comments that follow the C/C&#43;&#43;
@@ -2918,6 +3007,10 @@ also to determine if the block contains an expression or a statement.</p>
 <p>In the default syntax file, indentation blocks and blocks delimited by
 curly braces <code>{ }</code> contain statements, whereas blocks delimited by
 parentheses <code>( )</code> or square brackets <code>[ ]</code> will contain expressions.</p>
+</div>
+<div class="paragraph">
+<p>Binary data prefix is introduced by the keyword <code>BINARY</code>. By default, the <code>bits</code>
+prefix is used for that purpose.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2954,16 +3047,16 @@ relatively simple function declarations.
 </div>
 </div>
 <div class="sect3">
-<h4 id="extending-the-syntax"><a class="anchor" href="#extending-the-syntax"></a><a class="link" href="#extending-the-syntax">2.3.5. <a id="syntax-statements"></a>Extending the syntax</a></h4>
+<h4 id="extending-the-syntax"><a class="anchor" href="#extending-the-syntax"></a><a class="link" href="#extending-the-syntax">2.3.5. <a id="module-syntax"></a>Extending the syntax</a></h4>
 <div class="paragraph">
 <p>In addition the to the default syntax provided by the
-<a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>, modules can also supply a <code>.syntax</code> file
+<a href="#syntax-file">syntax file</a>, modules can also supply a <code>.syntax</code> file
 providing the precedence of the operators that this module adds.</p>
 </div>
 <div class="paragraph">
 <p>For example, if you want to add the spaceship operator <code>&lt;=&gt;</code> in your
 program, and give the same precedence as <code>&lt;=</code>, namely 290, you could
-write a <code>spaceship</code> module with a <code>spaceship.syntax</code> file:</p>
+write a <code>spaceship</code> module with a <code>spaceship.syntax</code> file containing:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2976,13 +3069,12 @@ write a <code>spaceship</code> module with a <code>spaceship.syntax</code> file:
 <h3 id="making-the-syntax-easy-for-humans"><a class="anchor" href="#making-the-syntax-easy-for-humans"></a><a class="link" href="#making-the-syntax-easy-for-humans">2.4. Making the syntax easy for humans</a></h3>
 <div class="paragraph">
 <p>XL contains a couple of tweaks designed specifically to make code easier
-to read or write by humans. When the human logic is subtle, so is the XL
-compiler parsing…</p>
+to read or write by humans. When the human logic is subtle, so is XL parsing…</p>
 </div>
 <div class="sect3">
 <h4 id="expression-vs-statement"><a class="anchor" href="#expression-vs-statement"></a><a class="link" href="#expression-vs-statement">2.4.1. Expression vs. statement</a></h4>
 <div class="paragraph">
-<p>This first tweak is intended to put in XL an implicit grammatical
+<p>The first tweak is intended to put in XL an implicit grammatical
 grouping that humans apparently do. Consider for example the following:</p>
 </div>
 <div class="listingblock">
@@ -3004,14 +3096,15 @@ other words, why doesn’t this parse as <code>print(sin(X, cos(Y))</code>?</p>
 Expressions such as <code>sin X</code> have higher priority than commas and require
 parentheses if you want multiple arguments. By contrast, statements such
 as <code>print</code> have lower priority, and will take comma-separated argument
-lists. An indent or <code>{ }</code> block begins a statement, whereas parentheses
-<code>()</code> or square brackets <code>[]</code> begin an expression.</p>
+lists. In XL, with the default <a href="#syntax-file">syntax file</a>, indent
+or <code>{}</code> begin a statement, whereas parentheses <code>()</code> or square brackets <code>[]</code>
+begin an expression.</p>
 </div>
 <div class="paragraph">
 <p>There are rare cases where the default rule will not achieve the desired
-objective, and you will need additional parentheses. One important such
-case is what follow <code>is</code> if it is not a block. Consider the following
-declarations:</p>
+objective, and you will need additional parentheses or curly braces to enforce a
+particular interpretation. One important such case is what follow <code>is</code> if it is
+not a block. Consider the following declarations:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3028,7 +3121,7 @@ for the same reason that the line above parses as <code>write ("X=", X)</code>.
 Another issue occurs with the body of <code>double X</code>, because it actually
 only contains the first <code>X</code>. The <code>;</code> operator has lower precedence
 than <code>is</code>, which is useful for <a href="#scoping">maps</a>, but does not
-achieve the expected effect above.</p>
+achieve the expected effect in the <code>double</code> definition above.</p>
 </div>
 <div class="paragraph">
 <p>The solution to these problems is use a block on the right of <code>is</code> in
@@ -3088,6 +3181,10 @@ For example:</p>
 B - A       // (B - A)</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>This rule was implemented for practical reasons, based on experience using XL in
+the Tao3D project.</p>
+</div>
 </div>
 </div>
 </div>
@@ -3098,16 +3195,16 @@ B - A       // (B - A)</code></pre>
 <div class="paragraph">
 <p>XL defines <em>program execution</em> primarily in terms of operations on the
 parse tree combined with operations on an implicit <em>context</em> that stores
-the program state. The context itself is also described in XL in order
-to define the expected result of evaluation.</p>
+the program state. The context itself is also described in XL, in order
+to precisely define the expected result of evaluation.</p>
 </div>
 <div class="paragraph">
-<p>For efficiency, actual implementations are unlikely to store everything
-as an actual parse tree, although there is an <em>interpreter</em>
-implementation that does exactly that. A compiler is more likely to
-<a href="#compiled-representations">optimize representations</a> of both code
-and data, as long as that optimized representation ultimately respect
-the semantics described using the normal form for the parse tree.</p>
+<p>For efficiency, actual implementations are unlikely to store everything as parse
+trees, although there is an <em>interpreter</em> implementation that does exactly
+that. A compiler is more likely to <a href="#compiled-representations">optimize
+representations</a> of both code and data, as long as that optimized representation
+ultimately respects the semantics described using the normal form for the parse
+tree.</p>
 </div>
 <div class="sect2">
 <h3 id="execution-phases"><a class="anchor" href="#execution-phases"></a><a class="link" href="#execution-phases">3.1. Execution phases</a></h3>
@@ -3148,15 +3245,13 @@ one.</p>
 </td>
 <td class="content">
 Reasonably efficient compilers were produced for earlier
-generations of the language, notably as part of the Tao3D project.
-However, this earlier iteration of the language had a very weak type
-system that made advanced optimizations hard to achieve. This was
-actually a feature for Tao3D, which purposely disabled some
-optimizations in order to improve compilation speed, notably when the
-program structure did not change. The version of XL described in this
-document, however, has markedly evolved relative to what was implemented
-in Tao3D, with the hope that much better code quality can be achieved.
-This part has not been demonstrated yet.
+generations of the language, notably as part of the Tao3D project and the XL2
+self-compiling compiler. However, the earlier iterations of the language these
+compilers implemented had either a very weak type system (Tao3D) that made
+advanced optimizations hard to achieve, or on the contrary, a very explicit type
+system (XL2). The changes in the type system, as described in this document,
+require a lot of work before the model cna be considered proven.
+Some early results using type inference techniques showed real promise.
 </td>
 </tr>
 </table>
@@ -3178,17 +3273,47 @@ applicable, and to leave a lot of freedom regarding actual evaluation
 techniques.</p>
 </div>
 <div class="paragraph">
-<p>In the examples below, <code>CONTEXT0</code>, <code>CONTEXT1</code>, … will denote
-pseudo-variables that describe the various currently visible execution
-contexts, following the language <a href="#scoping">scoping</a> rules. The most
-recent contexts will have higher numbers. In addition, <code>HIDDEN0</code>,
-<code>HIDDEN1</code>, … will represent pending execution contexts that are
-invisible to the currently executing code. These are also known as
-<a href="https://en.wikipedia.org/wiki/Activation_record"><em>activation records</em></a>.
-Entries in <code>HIDDEN</code> contexts are
-<a href="#lifetime">live</a>, but invisible to the current
-code. By convention, <code>CONTEXT0</code> and <code>HIDDEN0</code> are not defined in the
-examples and are assumed to be inherited from earlier execution.</p>
+<p>Context are a formal representation of
+<a href="https://en.wikipedia.org/wiki/Activation_record"><em>activation records</em></a>, and let
+us know which values are presently <a href="#lifetime"><em>live</em></a>, and which values are
+presently <a href="#scoping"><em>visible</em></a>. Conventionally, in the rest of the document,
+we will denote <code>CONTEXT</code> (possibly <code>CONTEXT1</code>, <code>CONTEXT2</code>, &#8230;&#8203;) a context that
+is visible, and <code>HIDDEN</code> (possibly <code>HIDDEN1</code>, <code>HIDDEN2</code>, &#8230;&#8203;) a context that is
+live but not currently visible.</p>
+</div>
+<div class="paragraph">
+<p>Just like XL source code has a well-defined parse tree representation that is
+accessible to programs, XL contexts also have a normalized representation called
+<a href="#scopes-and-maps">scopes and maps</a>, which is used notably by the language
+implementation modules, but can also, under specific conditions, be made visible
+to a program.</p>
+</div>
+<div class="paragraph">
+<p>Consider the following program:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">foo X+Y
+
+X is 3
+Y is 5
+foo Z is Z + 42</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At the point where the program evaluates the expression <code>Z+42</code> inside <code>foo</code>, the
+evaluation context will look something like the following scoped expression:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">{ X is 3; Y is 5 } { Z is X+Y } ( Z + 42 )</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this scoped expression, the outer context contains the definitions of <code>X</code> and
+<code>Y</code>. A local context contains the binding for the parameters of <code>foo Z</code>,
+specifically <code>Z is X + Y</code>. Notice how it is necessary to have the outer context
+to be able to evaluate that binding correctly.</p>
 </div>
 </div>
 <div class="sect3">
@@ -3196,7 +3321,7 @@ examples and are assumed to be inherited from earlier execution.</p>
 <div class="paragraph">
 <p>The parsing phase reads source text and turns it into a parse tree using
 operator spelling and precedence information given in the
-<a href="http://github.com/c3d/xl/blob/master/src/xl.syntax">syntax file</a>. This results either in a parse-time
+<a href="#syntax-file">syntax file</a>. This results either in a parse-time
 error, or in a faithful representation of the source code as a parse
 tree data structure that can be used for program evaluation.</p>
 </div>
@@ -3215,39 +3340,30 @@ performed during parsing:</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Filtering out comments: Comments should not have an effect on the
-program, so they are simply eliminated during parsing.</p>
+<p><em>Filtering out comments</em>: Comments should not have an effect on the
+program, so they are simply eliminated during parsing.
+An implementation may preserve the comments as metadata in the parse tree
+e.g. for rendering purpose, or to help building auto-documentation tools, as
+long as the comments have no effect on the parse tree structure.</p>
 </li>
 <li>
-<p>Processing <code>use</code> statements: Since imported modules can contain
-<a href="#extending-the-syntax">syntax extensions</a>, they must at least partially be
+<p><em>Processing <code>use</code> statements</em>: Since imported modules can contain
+<a href="#module-syntax">syntax extensions</a>, they must at least partially be
 processed during parsing. Details about <code>use</code> statements are covered in the
 <a href="#modules">chapter about modules</a>.</p>
 </li>
 <li>
-<p>Identifying words that switch to a <a href="#child-syntax">child syntax</a>: symbols
+<p><em>Identifying words that switch to a <a href="#child-syntax">child syntax</a></em>: symbols
 that activate a child syntax are recognized during parsing. This is the case
 for example with the <code>extern</code> name in the <a href="http://github.com/c3d/xl/blob/master/src/xl.syntax#L62">default
 syntax</a>.</p>
 </li>
 <li>
-<p>Identifying binary data: words such as <code>bits</code> marked as introducing
-<code>BINARY</code> data in the syntax file are treated specially during parsing,
-to generate parse tree nodes representing binary data.</p>
+<p><em>Identifying binary data</em>: words such as <code>bits</code> marked as <code>BINARY</code> in the
+syntax file are treated specially during parsing, in order to generate
+parse tree text nodes holding arbitrary large amounts of binary data.</p>
 </li>
 </ol>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Binary data is not currently implemented.
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>The need to process <code>use</code> statements during parsing means that it’s not
@@ -3275,6 +3391,14 @@ easy enough to use the syntax <code>use "path"</code> for them.
 <p>Once parsing completes successfully, the parse tree can be handed to the
 declaration and evaluation phases. Parsing occurs for the <em>entire
 program</em>, including imported modules, before the other phases begin.</p>
+</div>
+<div class="paragraph">
+<p>The rule that parsing occurs for the entire program only applies to the source
+code that is known before evaluation. The XL standard library features
+<a href="#modules">modules</a> providing access to the underlying XL implementation
+(compiler or interpreter). It is possible to use these modules to dynamically
+evaluate XL programs. However, doing so corresponds, conceptually, to parsing or
+evaluating a <em>separate</em> program.</p>
 </div>
 </div>
 <div class="sect3">
@@ -3319,10 +3443,11 @@ processing in all three executation phases.</p>
 <li>
 <p>An infix <code>is</code>, which is called a <em>definition</em>, an infix <code>:</code> or <code>as</code>, which are
 called <a href="#type-annotations"><em>type annotations</em></a>, or an infix assignment
-operator <code>:=</code> with a <code>:</code> type annotation or a <code>variable</code> prefix on the left,
-called a <em>variable initialization</em>. Definitions, type annotations and variable
-initializations are collectively called <em>declarations</em>, and are processed
-during the <a href="#declaration-phase">declaration phase</a>.</p>
+operator <code>:=</code> with a <code>:</code> type annotation or a <code>variable</code> or <code>var</code>
+prefix on the left, called a <em>variable initialization</em>. Definitions, type
+annotations and variable initializations are collectively called
+<em>declarations</em>, and are processed during the
+<a href="#declaration-phase">declaration phase</a>.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">pi is 3.1415                  // Definition of 'pi'
@@ -7580,8 +7705,8 @@ color is one_of
     cymk  Cyan:component, Yellow:component, Magenta:component, Black:component
     named Name:text
     named Name:text, Alpha:component
-Red        : color := { rgb 100%, 0%, 0% }
-Background : color := { named "black" }</pre>
+Red        : color := rgb(100%, 0%, 0%)
+Background : color := named "black"</pre>
 </div>
 </div>
 </li>
@@ -8431,8 +8556,7 @@ or match elements in the parse tree:</p>
 <p><code>operator</code> matches operators such as <code>+</code>.</p>
 </li>
 <li>
-<p><code>symbol</code> matches either name or operators, as well as an empty
-symbol used in empty blocks, e.g. <code>()</code>.</p>
+<p><code>symbol</code> matches either names or operators</p>
 </li>
 <li>
 <p><code>infix</code> matches infix expressions such as <code>A+B</code>.</p>
@@ -8968,7 +9092,6 @@ common expressions such as <code>2+3i</code> and turn them into constructors.</p
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">i   is complex(0.0, 1.0)
 
-syntax { POSTFIX 190 i }
 Re:real + Im:real i                 is complex(Re, Im)      // Case 1
 Re:real + Im:real * [[i]]           is complex(Re, Im)      // Case 2
 Re:real + [[i]] * Im:real           is complex(Re, Im)      // Case 3
@@ -8980,6 +9103,15 @@ X:complex + Y:complex as complex    is ...
 2 + i * 3           // Calls case 3
 2 + 3i + 5.2        // Calls case 4 to convert 5.2 to complex(5.2, 0.0)
 2 + 3i + 5          // Error: Two implicit conversions (exercise: fix it)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For this, you need a <a href="#module-syntax">syntax extension</a> for the <code>i</code> postfix
+notation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">POSTFIX 190 i</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -9518,8 +9650,8 @@ X:integer := Y:real is
 <div class="sect3">
 <h4 id="mutability"><a class="anchor" href="#mutability"></a><a class="link" href="#mutability">4.8.5. Mutability</a></h4>
 <div class="paragraph">
-<p>A value is said to be <em>mutable</em> if it can change during its lifetime. A
-value that is not mutable is said to be <em>constant</em>.</p>
+<p>A value is said to be <em>mutable</em> if it can change during its lifetime. A value
+that is not mutable is said to be <em>constant</em>.</p>
 </div>
 <div class="paragraph">
 <p>You create a mutable entity with the notation: <code>Name:Type := Init</code>, where <code>Name</code>
@@ -13899,7 +14031,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-12-10 13:15:19 +0100
+Last updated 2022-04-16 11:13:19 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
