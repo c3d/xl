@@ -479,13 +479,15 @@ number_spelling is
 number_spelling[12173]
 ----
 
-With simple value, XL maps provide a functionality roughly equivalent
-to `std::map` in C++.  However, it’s really nothing more than a
-regular function with a number of special cases, and it is a much more
-general kind of mapping that C++, as the `lambda N` example above
-demonstrates. Like for all functions, the compiler can optimize
-special kinds of mapping to provide an efficient implementation, for
-example if all the indexes are contiguous integers.
+With simple values, XL maps provide a functionality roughly equivalent to a
+constant `std::map` in {cpp}.  However, XL maps are really nothing more than a
+regular function with a number of special cases, and as such, provide a much
+more general kind of mapping that {cpp}, as the `lambda N` example above
+demonstrates. Like for all functions, the compiler can optimize special kinds of
+mapping to provide an efficient implementation, for example if all the indexes
+are contiguous integers. The downside, however, is that they are not designed to
+hold variable data. For this, there is a dedicated `map` data structure, which
+uses a different implementation.
 ====
 
 .Templates (C++ terminology)(((template))) or ((generic code)) (Ada terminology)
@@ -5306,7 +5308,7 @@ color is one_of
     named Name:text
     named Name:text, Alpha:component
 Red        : color := rgb(100%, 0%, 0%)
-Background : color := named "black"
+Background : color := { named "black" }
 ....
 * `any_of Patterns` is a type that accept any combination of the
   following patterns. It can be used to implement flags, like the
@@ -5326,7 +5328,8 @@ type text_style is any_of
     slant S:font_slant
     fill_color C:color
     line_color C:color
-default_style : text_style := { family "Arial"; weight 100% }
+arial_font : text_style := family "Arial"
+default_style : text_style := { arial_font; weight 100% }
 ....
 
 NOTE: The `one_of` and `any_of` can be implemented using a tagged
