@@ -391,16 +391,15 @@ add3            is      ( adder 3 )
  add3 5
 ----
 
-The notation `lambda X`, which can also be written `\X`, is inspired by
-https://en.wikipedia.org/wiki/Lambda_calculus[lambda calculus]. It makes
-it possible to create link:#pattern[patterns] that match entire
-expressions. In other words, `X is 0` defines a name, and only the
-expression `X` matches that definition, whereas `\X is 0` defines a
-"catch-all" pattern that will match `35` or `"ABC"`. This _((lambda))
-notation_ can be used to build something that behaves almost exactly
-like an _((anonymous function))_ in functional languages, although the way
-it actually works internally is link:#scoping[still based on pattern
-matching].
+The notation `lambda X` is inspired by
+https://en.wikipedia.org/wiki/Lambda_calculus[lambda calculus]. It makes it
+possible to create link:#pattern[patterns] that match entire expressions. In
+other words, `X is 0` defines a name, and only the expression `X` matches that
+definition, whereas `lambda X is 0` defines a "catch-all" pattern that will
+match `35` or `"ABC"`. This _((lambda)) notation_ can be used to build something
+that behaves almost exactly like an _((anonymous function))_ in functional
+languages, although the way it actually works internally is link:#scoping[still
+based on pattern matching].
 
 [NOTE]
 =====
@@ -2946,7 +2945,6 @@ necessary to use the `lambda` notation:
 |==========================================================
 | Declaration | Matched by              | Not matched by
 | `lambda N`  | Any value               | Nothing
-| `\N`        | Any value               | Nothing
 |==========================================================
 
 NOTE: Wildcards only applies to names, not to operators. You cannot
@@ -4417,38 +4415,37 @@ successively against `1`, `2`, and so on, until it matches `5`. The
 returned value for the inner expression is therefore `"five"`.
 
 A map is not restricted to constant patterns. For example, the following
-map performs a more complete spelling conversion for numbers below 1000
-(the notation `\N` being a shortcut for `lambda N`):
+map performs a more complete spelling conversion for numbers below 1000.
 
 [source]
 ----
 number_spelling is
-    \N when N<10    is digit_spelling[N]
-    11              is "eleven"
-    12              is "twelve"
-    13              is "thirteen"
-    14              is "fourteen"
-    15              is "fifteen"
-    16              is "sixteen"
-    17              is "seventeen"
-    18              is "eighteen"
-    19              is "nineteen"
-    20              is "twenty"
-    30              is "thirty"
-    40              is "forty"
-    50              is "fifty"
-    60              is "sixty"
-    70              is "seventy"
-    80              is "eighty"
-    90              is "ninety"
-    ten N           is N<100  and N mod 10 = 0
-    hun N           is N<1000 and N mod 100 = 0
-    \N when ten N   is (number_spelling[N/10*10])
-    \N when N<100   is (number_spelling[N/10*10] & " " &
-                        digit_spelling[N mod 10])
-    \N when hun N   is (digit_spelling[N/100] & "hundred")
-    \N when N<1000  is (digit_spelling[N/100] & " hundred and " &
-                        number_spelling[N mod 100])
+    lambda when N<10      is digit_spelling[N]
+    11                    is "eleven"
+    12                    is "twelve"
+    13                    is "thirteen"
+    14                    is "fourteen"
+    15                    is "fifteen"
+    16                    is "sixteen"
+    17                    is "seventeen"
+    18                    is "eighteen"
+    19                    is "nineteen"
+    20                    is "twenty"
+    30                    is "thirty"
+    40                    is "forty"
+    50                    is "fifty"
+    60                    is "sixty"
+    70                    is "seventy"
+    80                    is "eighty"
+    90                    is "ninety"
+    ten N                 is N<100  and N mod 10 = 0
+    hun N                 is N<1000 and N mod 100 = 0
+    lambda N when ten N   is (number_spelling[N/10*10])
+    lambda N when N<100   is (number_spelling[N/10*10] & " " &
+                              digit_spelling[N mod 10])
+    lambda N when hun N   is (digit_spelling[N/100] & "hundred")
+    lambda N when N<1000  is (digit_spelling[N/100] & " hundred and " &
+                              number_spelling[N mod 100])
 ----
 
 Another common idiom is to use a named map to group related

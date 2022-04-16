@@ -1182,16 +1182,15 @@ add3            is      ( adder 3 )
 </div>
 </div>
 <div class="paragraph">
-<p>The notation <code>lambda X</code>, which can also be written <code>\X</code>, is inspired by
-<a href="https://en.wikipedia.org/wiki/Lambda_calculus">lambda calculus</a>. It makes
-it possible to create <a href="#pattern">patterns</a> that match entire
-expressions. In other words, <code>X is 0</code> defines a name, and only the
-expression <code>X</code> matches that definition, whereas <code>\X is 0</code> defines a
-"catch-all" pattern that will match <code>35</code> or <code>"ABC"</code>. This <em>lambda
-notation</em> can be used to build something that behaves almost exactly
-like an <em>anonymous function</em> in functional languages, although the way
-it actually works internally is <a href="#scoping">still based on pattern
-matching</a>.</p>
+<p>The notation <code>lambda X</code> is inspired by
+<a href="https://en.wikipedia.org/wiki/Lambda_calculus">lambda calculus</a>. It makes it
+possible to create <a href="#pattern">patterns</a> that match entire expressions. In
+other words, <code>X is 0</code> defines a name, and only the expression <code>X</code> matches that
+definition, whereas <code>lambda X is 0</code> defines a "catch-all" pattern that will
+match <code>35</code> or <code>"ABC"</code>. This <em>lambda notation</em> can be used to build something
+that behaves almost exactly like an <em>anonymous function</em> in functional
+languages, although the way it actually works internally is <a href="#scoping">still
+based on pattern matching</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1281,13 +1280,15 @@ number_spelling[12173]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>With simple value, XL maps provide a functionality roughly equivalent
-to <code>std::map</code> in C.  However, it’s really nothing more than a
-regular function with a number of special cases, and it is a much more
-general kind of mapping that C, as the <code>lambda N</code> example above
-demonstrates. Like for all functions, the compiler can optimize
-special kinds of mapping to provide an efficient implementation, for
-example if all the indexes are contiguous integers.</p>
+<p>With simple values, XL maps provide a functionality roughly equivalent to a
+constant <code>std::map</code> in C&#43;&#43;.  However, XL maps are really nothing more than a
+regular function with a number of special cases, and as such, provide a much
+more general kind of mapping that C&#43;&#43;, as the <code>lambda N</code> example above
+demonstrates. Like for all functions, the compiler can optimize special kinds of
+mapping to provide an efficient implementation, for example if all the indexes
+are contiguous integers. The downside, however, is that they are not designed to
+hold variable data. For this, there is a dedicated <code>map</code> data structure, which
+uses a different implementation.</p>
 </div>
 </div>
 </details>
@@ -1552,7 +1553,7 @@ modules</a>. The top-level module is called <code>XL</code>, and sub-modules are
 categorized in a hierarchy. For example, if you
 need to perform computations on complex numbers, you would <code>use
 XL.MATH.COMPLEX</code> to load the
-<a href="http://github.com/c3d/xl/blob/master/native/lib/xl/math/complex.xs">complex numbers module</a></p>
+<a href="http://github.com/c3d/xl/blob/master/native/lib/xl.math.complex.xs">complex numbers module</a></p>
 </div>
 <div class="paragraph">
 <p>The <a href="http://github.com/c3d/xl/blob/master/src/builtins.xl">library builtins</a> is a list of definitions
@@ -4486,11 +4487,6 @@ necessary to use the <code>lambda</code> notation:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Any value</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Nothing</p></td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>\N</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Any value</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Nothing</p></td>
-</tr>
 </tbody>
 </table>
 <div class="admonitionblock note">
@@ -6520,38 +6516,37 @@ returned value for the inner expression is therefore <code>"five"</code>.</p>
 </div>
 <div class="paragraph">
 <p>A map is not restricted to constant patterns. For example, the following
-map performs a more complete spelling conversion for numbers below 1000
-(the notation <code>\N</code> being a shortcut for <code>lambda N</code>):</p>
+map performs a more complete spelling conversion for numbers below 1000.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code data-lang="xl" class="language-xl hljs">number_spelling is
-    \N when N&lt;10    is digit_spelling[N]
-    11              is "eleven"
-    12              is "twelve"
-    13              is "thirteen"
-    14              is "fourteen"
-    15              is "fifteen"
-    16              is "sixteen"
-    17              is "seventeen"
-    18              is "eighteen"
-    19              is "nineteen"
-    20              is "twenty"
-    30              is "thirty"
-    40              is "forty"
-    50              is "fifty"
-    60              is "sixty"
-    70              is "seventy"
-    80              is "eighty"
-    90              is "ninety"
-    ten N           is N&lt;100  and N mod 10 = 0
-    hun N           is N&lt;1000 and N mod 100 = 0
-    \N when ten N   is (number_spelling[N/10*10])
-    \N when N&lt;100   is (number_spelling[N/10*10] &amp; " " &amp;
-                        digit_spelling[N mod 10])
-    \N when hun N   is (digit_spelling[N/100] &amp; "hundred")
-    \N when N&lt;1000  is (digit_spelling[N/100] &amp; " hundred and " &amp;
-                        number_spelling[N mod 100])</code></pre>
+    lambda when N&lt;10      is digit_spelling[N]
+    11                    is "eleven"
+    12                    is "twelve"
+    13                    is "thirteen"
+    14                    is "fourteen"
+    15                    is "fifteen"
+    16                    is "sixteen"
+    17                    is "seventeen"
+    18                    is "eighteen"
+    19                    is "nineteen"
+    20                    is "twenty"
+    30                    is "thirty"
+    40                    is "forty"
+    50                    is "fifty"
+    60                    is "sixty"
+    70                    is "seventy"
+    80                    is "eighty"
+    90                    is "ninety"
+    ten N                 is N&lt;100  and N mod 10 = 0
+    hun N                 is N&lt;1000 and N mod 100 = 0
+    lambda N when ten N   is (number_spelling[N/10*10])
+    lambda N when N&lt;100   is (number_spelling[N/10*10] &amp; " " &amp;
+                              digit_spelling[N mod 10])
+    lambda N when hun N   is (digit_spelling[N/100] &amp; "hundred")
+    lambda N when N&lt;1000  is (digit_spelling[N/100] &amp; " hundred and " &amp;
+                              number_spelling[N mod 100])</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7706,7 +7701,7 @@ color is one_of
     named Name:text
     named Name:text, Alpha:component
 Red        : color := rgb(100%, 0%, 0%)
-Background : color := named "black"</pre>
+Background : color := { named "black" }</pre>
 </div>
 </div>
 </li>
@@ -7729,7 +7724,8 @@ type text_style is any_of
     slant S:font_slant
     fill_color C:color
     line_color C:color
-default_style : text_style := { family "Arial"; weight 100% }</pre>
+arial_font : text_style := family "Arial"
+default_style : text_style := { arial_font; weight 100% }</pre>
 </div>
 </div>
 </li>
@@ -14031,7 +14027,7 @@ development).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-04-16 11:13:19 +0200
+Last updated 2022-04-16 18:52:52 +0200
 </div>
 </div>
 <link rel="stylesheet" href="highlight/styles/github.min.css">
