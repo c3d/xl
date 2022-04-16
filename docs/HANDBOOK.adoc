@@ -503,7 +503,7 @@ array[1] of T is
     Tail : T
 
     // Indexing with value 1 gives the value
-    1 is Value
+    1 is Tail
 
 // array[N] of T: defined based on array[N-1] of T
 array[N] of T when N > 1 is
