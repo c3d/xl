@@ -7,11 +7,11 @@
 #
 #    Base makefile calling the sub-makefiles in turn
 #
-#
-#
-#
-#
-#
+#    This builds various 'stages' of the native compiler
+#    - stage0 is written in C++, can build stage 1
+#    - stage1 is written in stage 0 XL, can build stage 1 and stage 2
+#    - stage2 is written in stage 1 XL, can build stage 2 and stage 3
+#    - and so on
 #
 #
 #******************************************************************************
@@ -23,33 +23,20 @@
 #* Date       : $Date$
 #******************************************************************************
 
-# List of source files to process
-SOURCES=                                        \
-        main.cpp                                \
-        scanner.cpp                             \
-        tree.cpp                                \
-        context.cpp                             \
-        parser.cpp                              \
-        ctrans.cpp                              \
-        options.cpp                             \
-        errors.cpp
+STAGES=	stage0	\
+	stage1	\
+	stage2
 
-PRODUCTS=xl2c.exe
 
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 $(MIR)rules.mk:
 	$(PRINT_BUILD) cd ..; git submodule update --init --recursive
 
-.postbuild:	bootstrap_compiler native_compiler
+.build: $(STAGES)
 
-bootstrap_compiler: .product
-	$(PRINT_GENERATE) cd bootstrap && $(MIQ_RECURSE)
+stage%:	.ALWAYS
+	$(PRINT_GENERATE) cd stage$* && $(MIQ_RECURSE)
 
-native_compiler:
-	$(PRINT_GENERATE) cd $(BROOT)native && $(MIQ_RECURSE)
-
-errors.tbl: errors.txt
-	@echo Generating errors messages table
-	@awk '/\#.*/ { next } /^[A-Za-z_].*/ { printf "XL_ERROR(E_%s, ", $$1; printf "\""; for (i = 2; i <= NF; i++) printf (i<NF ? "%s " : "%s"), $$i; print "\")"; }' $< > $@
-	@echo "#undef XL_ERROR" >> $@
+stage2: stage1
+stage1: stage0

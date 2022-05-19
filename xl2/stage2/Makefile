@@ -23,7 +23,8 @@
 #* Date       : $Date$
 #******************************************************************************
 
-BROOT=../
+STAGE=stage2
+BOOTSTRAP=stage1
 
 SOURCES=compiler.xl
 OTHER_SOURCES=					\
@@ -84,8 +85,8 @@ OTHER_SOURCES=					\
 	xl.optimizer.xs				\
 	xl.optimizer.xl				\
 	xl.textio.xl				\
-	../xl_lib.h				\
-	../xl.syntax				\
+	xl_lib.h				\
+	xl.syntax				\
 						\
 	xl.plugin.xl2c.xl			\
 	xl.plugin.listing.xl			\
@@ -94,54 +95,6 @@ OTHER_SOURCES=					\
 	xl.plugin.differentiation.xl		\
 	xl.plugin.constantfold.xl
 
-VARIANTS=	native				\
-		reboot				\
-		stability
+XLOPTS=-bootstrap
 
-PRODUCTS=		$(PRODUCTS_$(VARIANT))
-PRODUCTS_native=	nxl.exe
-PRODUCTS_reboot=	nrxl.exe
-PRODUCTS_stability=	nsxl.exe
-
-XL=			$(OUTPUT)$(XL_$(VARIANT))$(EXT.exe)
-XL_native=		sxl
-XL_reboot=		nxl
-XL_stability=		nrxl
-
-INCLUDES=.
-
-MIQ=../../make-it-quick/
-include $(MIQ)rules.mk
-$(MIQ)rules.mk:
-	$(PRINT_COMMAND) cd ../.. && git submodule update --init --recursive
-
-ifeq ($(VARIANT),)
-.tests: three-run-diff
-three-run-diff:
-	$(PRINT_TEST)	$(XL_DIFF)
-XL_DIFF= diff								\
-	$(MIQ_OBJDIR:%$(MIQ_DIR)=%/reboot/$(MIQ_DIR))/compiler.xl.cpp   \
-	$(MIQ_OBJDIR:%$(MIQ_DIR)=%/stability/$(MIQ_DIR))/compiler.xl.cpp
-else
-.tests: regression
-regression:
-	$(PRINT_TEST)	cd TESTS && ./alltests -xl "$(MIQ_OUTEXE)"
-endif
-
-
-
-.prebuild: xl_lib.h xl.syntax
-# MinGW's unable to follow symlinks, so we have to copy dependencies
-xl_lib.h: ../xl_lib.h
-	$(PRINT_COPY) cp $< $@
-xl.syntax: ../xl.syntax
-	$(PRINT_COPY) cp $< $@
-
-$(MIQ_OBJDIR)%.xl$(EXT.obj): $(MIQ_OBJDIR)%.xl.cpp
-	$(PRINT_COMPILE) $(COMPILE.cpp)
-
-$(MIQ_OBJDIR)%.xl.cpp: %.xl $(XL) $(OTHER_SOURCES)
-	$(PRINT_COMPILE) $(XL) -bootstrap -g $< > $@
-.PRECIOUS: $(MIQ_OBJDIR)%.xl.cpp
-
-LD=$(CXX)
+include ../stage.mk
