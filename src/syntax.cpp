@@ -497,7 +497,16 @@ void Syntax::ReadSyntaxFile(Scanner &scanner, uint indents)
                 if (txt.find(".syntax") == txt.npos)
                     txt += ".syntax";
                 if (txt.find("/") == txt.npos)
-                    txt = MAIN->SearchLibFile(txt);
+                {
+                    text path = MAIN->SearchLibFile(txt);
+                    if (path == "")
+                        scanner.InputErrors()
+                            .Log(Error("Syntax file for $1 not found",
+                                       scanner.Position())
+                                 .Arg(txt));
+                    else
+                        txt = path;
+                }
                 childSyntax = subsyntax[txt];
                 if (!childSyntax)
                 {
