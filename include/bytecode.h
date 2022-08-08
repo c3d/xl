@@ -119,7 +119,7 @@ inline bool IsTree(MachineType mtype)
 
 inline bool IsNatural(MachineType mtype)
 // ----------------------------------------------------------------------------
-//   Return true if this is a natural machine type
+//   Return true if this is a natural machine type (aka unsigned integer)
 // ----------------------------------------------------------------------------
 {
     switch(mtype)
@@ -135,7 +135,7 @@ inline bool IsNatural(MachineType mtype)
 
 inline bool IsInteger(MachineType mtype)
 // ----------------------------------------------------------------------------
-//   Return true if this is a integer machine type
+//   Return true if this is an integer machine type (aka signed integer)
 // ----------------------------------------------------------------------------
 {
     switch(mtype)
@@ -151,7 +151,7 @@ inline bool IsInteger(MachineType mtype)
 
 inline bool IsReal(MachineType mtype)
 // ----------------------------------------------------------------------------
-//   Return true if this is a real machine type
+//   Return true if this is a real machine type (floating-point)
 // ----------------------------------------------------------------------------
 {
     switch(mtype)
