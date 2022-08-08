@@ -40,8 +40,8 @@ include ../version.mk
 VARIANTS=lib exe
 
 # Set to 'none' to disable LLVM
-#COMPILER=none
-COMPILER=llvm
+COMPILER=none
+#COMPILER=llvm
 
 # List of modules to build
 #MODULES=basics io math text remote time_functions temperature
