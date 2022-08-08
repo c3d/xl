@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
 import lldb
-import fblldbbase as fb
+
+# For this one, need "brew install chisel"
+import fbchisellldbbase as fb
 
 def lldbcommands():
   return [
