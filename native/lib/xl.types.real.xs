@@ -56,7 +56,7 @@ module XL.TYPES.REAL[MantissaBits : natural, ExponentBits : natural] with
 
 module XL.TYPES.REAL with
 // ----------------------------------------------------------------------------
-//   Concreate real tyeps
+//   Concrete real types
 // ----------------------------------------------------------------------------
 
     type real[MantissaBits : natural, ExponentBits : natural] is
