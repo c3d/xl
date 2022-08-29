@@ -40,4 +40,4 @@ fib 0 is 1
 fib 1 is "ABC"
 fib N is (fib(N-1) + fib(N-2))
 
-fib 30
+fib 3
