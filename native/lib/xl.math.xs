@@ -104,29 +104,24 @@ Y 1, X          as real is y1 X
 Y I, X          as real is yn I, X
 
 // Optimized forms
-(exp X) - 1.0   as real
-log (1.0+X)     as real
-log (X+1.0)     as real
-2.0^X           as real
+(exp X) - 1     as real
+log (1+X)       as real
+log (X+1)       as real is log(1+X)
+2^X             as real
 
 // Constants
-pi
-e
+pi              as real
+e               as real
 
 // Optimized expressions
-// constant (log2  [[e]])
-// constant (log10 [[e]])
-// constant (log   2.0)
-// constant (pi/2.0)
-// constant (pi/4.0)
-// constant (pi*0.5)
-// constant (pi*0.25)
-// constant (1.0/[[pi]])
-// constant (2.0/[[pi]])
-// constant (2.0/sqrt [[pi]])
-// constant (1.0/[[pi]])
-// constant (2.0/[[pi]])
-// constant (2.0/sqrt [[pi]])
-// constant (sqrt 2.0)
-// constant (1.0/sqrt 2.0)
-// constant (sqrt 2.0/2.0)
+log2  [[e]]     as real
+log10 [[e]]     as real
+log   2         as real
+[[pi]]/2        as real
+[[pi]]/4        as real
+1/[[pi]]        as real
+2/[[pi]]        as real
+2/sqrt [[pi]]   as real
+sqrt 2          as real
+1/sqrt 2        as real
+(sqrt 2) / 2    as real
