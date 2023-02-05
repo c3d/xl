@@ -33,7 +33,7 @@
 #  along with XL.  If not, see <https://www.gnu.org/licenses/>.
 #******************************************************************************
 
-XL=./xl $(OPTLEVEL)
+XL=./xl $(OPTLEVEL) -I../native/lib
 TESTS=$(wildcard */*.xl)
 RUN_TESTS=yes
 TIMEOUT=30
