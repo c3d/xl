@@ -367,7 +367,7 @@ Tree *Bindings::Do(Infix *what)
                 // Process the lambda name
                 defined = what;
                 if (Tree_p result = declared->Do(this))
-                    return result;
+                    return outermost ? cast : result;
             }
 
             // Not a type cast - Give up
