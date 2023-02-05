@@ -259,7 +259,9 @@ Main::Main(int inArgc,
 
     // Once all options have been read, enter symbols and setup compiler
     compilerName = SearchFile(compilerName, Opt::binPaths);
+#ifndef INTERPRETER_ONLY
     kstring cname = compilerName.c_str();
+#endif // INTERPRETER_ONLY
     uint opt = Opt::optimize.value;
     switch(opt)
     {
