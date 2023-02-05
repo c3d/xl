@@ -125,11 +125,13 @@ CONFIG= sigaction                       \
         libregex                        \
         drand48                         \
         glob                            \
-	float16				\
         uchar ushort uint ulong longlong
+# It looks like _Float16 is supported in clang++ and gcc, but not g++
+#	float16				\
 
 CXX_STD=$(CXX_STD_$(COMPILER))
 CXX_STD_none=c++14
+CXX_STD_llvm=c++17
 
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
