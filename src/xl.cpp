@@ -43,6 +43,22 @@
 #endif // HAVE_SBRK
 
 
+static inline char *low_water_mark()
+// ----------------------------------------------------------------------------
+//   Return  the
+// ----------------------------------------------------------------------------
+{
+#if HAVE_SBRK
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    return (char *) sbrk(0);
+#pragma GCC diagnostic pop
+#else
+    return (char *) malloc(0);
+#endif
+}
+
+
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
 //   Parse the command line and run the compiler phases
@@ -51,9 +67,7 @@ int main(int argc, char **argv)
     recorder_dump_on_common_signals(0, 0);
     record(main, "XL Compiler version %+s starting", XL_VERSION);
 
-#if HAVE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
+    char *low_water = low_water_mark();
 
     XL::path_list bin { XL_BIN,
                         "/usr/local/bin", "/bin", "/usr/bin" };
@@ -89,10 +103,8 @@ int main(int argc, char **argv)
     IFTRACE2(memory, gc_statistics)
         XL::GarbageCollector::GC()->PrintStatistics();
 
-#if HAVE_SBRK
     record(main, "Total memory usage %ldK\n",
-           long ((char *) sbrk(1) - low_water) / 1024);
-#endif
+           long (low_water_mark() - low_water) / 1024);
 
     RECORD(main, "Compiler exit code %d", rc);
 
