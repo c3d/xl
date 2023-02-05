@@ -113,7 +113,7 @@ log (X+1)       as real is log(1+X)
 pi              as real
 e               as real
 
-// Optimized expressions
+// Optimized constant expressions (have a constant defined in <math.h>)
 log2  [[e]]     as real
 log10 [[e]]     as real
 log   2         as real

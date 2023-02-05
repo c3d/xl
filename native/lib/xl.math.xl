@@ -97,26 +97,24 @@ y1 X            as real is native "y1"
 yn I, X         as real is native "yn"
 
 // Optimized forms
-(exp X)-1.0     as real is native "expm1"
-log (1.0+X)     as real is native "log1p"
-log (X+1.0)     as real is native "log1p"
-2.0^X           as real is native "exp2"
+(exp X) - 1     as real is native "expm1"
+log (1+X)       as real is native "log1p"
+log (X+1)       as real is native "log1p"
+2^X             as real is native "exp2"
 
 // Constants
-pi is 3.1415926535897932384626433
-e  is 2.7182818284590452353602875
+pi as real      is 3.1415926535897932384626433
+e  as real      is 2.7182818284590452353602875
 
-// Optimized expressions
-// constant (log2  [[e]])          is 1.442695040888963407359924681001892137
-// constant (log10 [[e]])          is 0.434294481903251827651128918916605082
-// constant (log   2.0)            is 0.693147180559945309417232121458176568
-// constant (pi/2.0)               is 1.570796326794896619231321691639751442
-// constant (pi/4.0)               is 0.785398163397448309615660845819875721
-// constant (pi*0.5)               is constant(pi/2.0)
-// constant (pi*0.25)              is constant(pi/4.0)
-// constant (1.0/[[pi]])           is 0.318309886183790671537767526745028724
-// constant (2.0/[[pi]])           is 0.636619772367581343075535053490057448
-// constant (2.0/sqrt [[pi]])      is 1.128379167095512573896158903121545172
-// constant (sqrt 2.0)             is 1.414213562373095048801688724209698079
-// constant (1.0/sqrt 2.0)         is 0.707106781186547524400844362104849039
-// constant (sqrt 2.0/2.0)         is 0.707106781186547524400844362104849039
+// Optimized constant expressions
+log2  [[e]]     as real is 1.442695040888963407359924681001892137
+log10 [[e]]     as real is 0.434294481903251827651128918916605082
+log   2         as real is 0.693147180559945309417232121458176568
+[[pi]]/2        as real is 1.570796326794896619231321691639751442
+[[pi]]/4        as real is 0.785398163397448309615660845819875721
+1/[[pi]]        as real is 0.318309886183790671537767526745028724
+2/[[pi]]        as real is 0.636619772367581343075535053490057448
+2/sqrt [[pi]]   as real is 1.128379167095512573896158903121545172
+sqrt 2          as real is 1.414213562373095048801688724209698079
+1/sqrt 2        as real is 0.707106781186547524400844362104849039
+(sqrt 2) / 2    as real is 0.707106781186547524400844362104849039
