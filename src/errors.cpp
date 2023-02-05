@@ -188,7 +188,7 @@ text Error::Message()
     for (uint i = 0; i < arguments.size(); i++)
     {
         char buffer[10];
-        sprintf(buffer, "$%d", i+1);
+        snprintf(buffer, sizeof(buffer), "$%d", i+1);
         size_t found = result.find(buffer);
         if (found != result.npos)
             result.replace(found, strlen(buffer),

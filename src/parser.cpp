@@ -575,8 +575,8 @@ Tree *Parser::Parse(text closing, text opening, ulong opening_pos)
         default:
             if (true)
             {
-                char buffer[20];
-                sprintf(buffer, "%u", tok);
+                char buffer[16];
+                snprintf(buffer, sizeof(buffer), "%u", tok);
                 errors.Log(Error("Internal error: unknown token $1 ($2)",
                                  pos).Arg(scanner.TextValue()).Arg(buffer));
             }
