@@ -39,6 +39,8 @@
 #include "tree.h"
 #include "context.h"
 #include "evaluator.h"
+#include <limits>
+#include <string.h>
 
 
 RECORDER_DECLARE(runvalue);
@@ -379,8 +381,8 @@ public:
         XL_ASSERT(SameMachineType(type, Name##_mtype)); \
         return Representation<Rep>::ToValue(as_##Name); \
     }
-MACHINE_TYPE(integer, long, naught)
-MACHINE_TYPE(natural, unsigned long, naught)
+// MACHINE_TYPE(integer, long, naught)
+// MACHINE_TYPE(natural, unsigned long, naught)
 #include "machine-types.tbl"
 
     // Special case kstring for Native interface

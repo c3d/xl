@@ -159,7 +159,7 @@ struct xl_type<bool>
     }
     static native_type Arg(RunState &stack)
     {
-        return (bool) stack.Pop();
+        return (bool) stack.Pop().AsInteger();
     }
 };
 
@@ -352,7 +352,7 @@ struct xl_type<text>
     }
     static native_type Arg(RunState &stack)
     {
-        return (native_type) stack.Pop();
+        return stack.Pop().AsText();
     }
 };
 
@@ -397,7 +397,7 @@ struct xl_type<char>
     }
     static native_type Arg(RunState &stack)
     {
-        return (native_type) stack.Pop();
+        return stack.Pop().AsCharacter();
     }
 };
 
