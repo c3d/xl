@@ -180,7 +180,7 @@ void *TypeAllocator::Allocate()
             for (uint i = 0; i < chunkSize; i++)
             {
                 Chunk_vp ptr = (Chunk_vp) (chunkBase + i * itemSize);
-                VALGRIND_MAKE_MEM_UNDEFINED(&ptr->next,sizeof(ptr->next));
+                (void) VALGRIND_MAKE_MEM_UNDEFINED(&ptr->next,sizeof(ptr->next));
                 ptr->next = free;
                 free = ptr;
             }
@@ -210,7 +210,7 @@ void *TypeAllocator::Allocate()
     }
     while (!freeList.SetQ(result, result->next));
 
-    VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
+    (void) VALGRIND_MAKE_MEM_UNDEFINED(result, sizeof(Chunk));
     result->allocator = this;
     result->bits |= IN_USE;     // Mark it as in use for current collection
     result->count = 0;
@@ -264,7 +264,7 @@ void TypeAllocator::Delete(void *ptr)
     // Scrub all the pointers
     uint32 *base = (uint32 *) ptr;
     uint32 *last = (uint32 *) (((char *) ptr) + alignedSize);
-    VALGRIND_MAKE_MEM_UNDEFINED(ptr, alignedSize);
+    (void) VALGRIND_MAKE_MEM_UNDEFINED(ptr, alignedSize);
     for (uint *p = base; p < last; p++)
         *p = 0xDeadBeef;
 #endif
