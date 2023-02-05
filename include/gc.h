@@ -65,7 +65,7 @@ template <class Object, typename ValueType=void> struct GCPtr;
 //
 // ****************************************************************************
 
-#if __cpp_exceptions
+#if __cpp_has_exceptions
 #define NEW_THROW
 #else // ! __cpp_exceptions
 #define NEW_THROW       throw()
