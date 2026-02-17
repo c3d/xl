@@ -34,7 +34,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-BINARY(GEP)
+BINARY_GEP(GEP)
 
 BINARY(Add)
 BINARY(Sub)
@@ -62,7 +62,7 @@ UNARY(Neg)
 UNARY(Not)
 UNARY(FNeg)
 
-UNARY(Load)
+UNARY_LOAD(Load)
 BINARY(Store)
 
 CAST(Trunc)
@@ -116,3 +116,5 @@ BINARY(FCmpULE)
 #undef UNARY
 #undef BINARY
 #undef CAST
+#undef UNARY_LOAD
+#undef BINARY_GEP

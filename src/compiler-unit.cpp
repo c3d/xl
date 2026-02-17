@@ -108,6 +108,8 @@ CompilerUnit::CompilerUnit(Compiler &compiler, Scope *scope, Tree *source)
     // Initialize all the static functions
 #define UNARY(Name)
 #define BINARY(Name)
+#define UNARY_LOAD(Name)
+#define BINARY_GEP(Name)
 #define CAST(Name)
 #define ALIAS(Name, Arity, Original)
 #define SPECIAL(Name, Arity, Code)

@@ -316,6 +316,10 @@ public:
     Value_p             Name(Value_p l, kstring name = "");
 #define BINARY(Name)                                                    \
     Value_p             Name(Value_p l, Value_p r, kstring name = "");
+#define UNARY_LOAD(Name)                                                \
+    Value_p             Name(Value_p l, kstring name = "");
+#define BINARY_GEP(Name)                                                \
+    Value_p             Name(Value_p l, Value_p r, kstring name = "");
 #define CAST(Name)                                                      \
     Value_p             Name(Value_p l, Type_p r, kstring name = "");
 #include "llvm-crap.tbl"

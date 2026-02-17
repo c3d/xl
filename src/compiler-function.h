@@ -145,6 +145,10 @@ protected:
     Value_p             llvm_##Name(Tree *source, Value_p *args);
 #define BINARY(Name)                                                    \
     Value_p             llvm_##Name(Tree *source, Value_p *args);
+#define UNARY_LOAD(Name)                                                \
+    Value_p             llvm_##Name(Tree *source, Value_p *args);
+#define BINARY_GEP(Name)                                                \
+    Value_p             llvm_##Name(Tree *source, Value_p *args);
 #define CAST(Name)                                                      \
     Value_p             llvm_##Name(Tree *source, Value_p *args);
 #define SPECIAL(Name, Arity, Code)                                      \

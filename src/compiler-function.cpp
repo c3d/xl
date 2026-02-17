@@ -123,6 +123,10 @@ void CompilerFunction::InitializePrimitives()
     primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 1};
 #define BINARY(Name)                                                    \
     primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
+#define UNARY_LOAD(Name)                                                \
+    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 1};
+#define BINARY_GEP(Name)                                                \
+    primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
 #define CAST(Name)                                                      \
     primitives[#Name] = PrimitiveInfo {&CompilerFunction::llvm_##Name, 2};
 #define SPECIAL(Name, Arity, Code)                                      \
@@ -1168,6 +1172,18 @@ Value_p CompilerFunction::llvm_##Name(Tree *source, Value_p *args)      \
 }
 
 #define BINARY(Name)                                                    \
+Value_p CompilerFunction::llvm_##Name(Tree *source, Value_p *args)      \
+{                                                                       \
+    return code.Name(args[0], args[1]);                                 \
+}
+
+#define UNARY_LOAD(Name)                                                \
+Value_p CompilerFunction::llvm_##Name(Tree *source, Value_p *args)      \
+{                                                                       \
+    return code.Name(args[0]);                                          \
+}
+
+#define BINARY_GEP(Name)                                                \
 Value_p CompilerFunction::llvm_##Name(Tree *source, Value_p *args)      \
 {                                                                       \
     return code.Name(args[0], args[1]);                                 \
