@@ -114,6 +114,9 @@ $LN $SRC/*.stylesheet .
 $LN $SRC/xl.syntax .
 $LN $SRC/builtins.xl .
 $LN $SRC/opt-builtins.xl .
+# Make runtime libraries visible for local test runs.
+$LN ../libxl.0.dylib .
+$LN ../librecorder.1.dylib .
 export LD_LIBRARY_PATH=$LIBPATH
 export DYLD_LIBRARY_PATH=$LIBPATH
 
@@ -199,6 +202,7 @@ do
             sed 's@'$TESTDIR'@TESTS@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             sed 's@'library/runtime/$RUNTIME'@library/runtime/default@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             sed 's@/usr/local/lib/xl/@@g' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
+            sed '1s@Usage: [^ ]*@Usage: ../xl@' < $LOG > $LOG.tmp && mv $LOG.tmp $LOG
             if diff $REF $LOG > /dev/null 2>&1; then
                 THIS=ok
             elif diff $REFR $LOG > /dev/null 2>&1; then

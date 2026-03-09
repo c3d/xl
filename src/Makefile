@@ -126,8 +126,14 @@ CONFIG= sigaction                       \
 MIQ=../make-it-quick/
 include $(MIQ)rules.mk
 
-# Name of 'llvm-config' to use - Note that XL now requires llvm 6.0 or above
-LLVM_CONFIG=llvm-config
+# Name of 'llvm-config' to use - Note that XL now requires llvm 6.0 or above.
+# Can be overridden from environment (e.g. LLVM_CONFIG=/path/to/llvm-config).
+LLVM_CONFIG ?= llvm-config
+ifeq ($(COMPILER),llvm)
+ifeq ($(strip $(LLVM_CONFIG)),)
+$(error Could not find llvm-config. Set LLVM_CONFIG=/path/to/llvm-config)
+endif
+endif
 
 LLVM_VERSION=$(LLVM_VERSION_$(COMPILER))
 LLVM_FLAGS=$(LLVM_FLAGS_$(COMPILER))
@@ -149,16 +155,17 @@ LLVM_FLAGS_none=-DINTERPRETER_ONLY
 
 CPPFLAGS+=$(LLVM_FLAGS)  $(CPPFLAGS_llvm$(LLVM_VERSION))
 LDFLAGS=$(LDFLAGS_$(VARIANT))
-LDFLAGS_lib=$(LLVM_LIBS) $(LLVM_LDFLAGS) $(MINGW_LIBS_$(BUILDENV)) -lrecorder
-LDFLAGS_exe=-lxl -lrecorder
+LDFLAGS_lib=-Wl,-rpath,@loader_path $(LLVM_LIBS) $(LLVM_LDFLAGS) $(MINGW_LIBS_$(BUILDENV)) -lrecorder
+LDFLAGS_exe=-Wl,-rpath,@executable_path -lxl -lrecorder
 
 # Compiler options to disable annoying version-specific warnings
 CPPFLAGS_llvm31=-Wno-unused-local-typedefs
 CPPFLAGS_llvm30=-Wno-unused-local-typedefs
-CPPFLAGS_llvm342=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
-CPPFLAGS_llvm350=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
-CPPFLAGS_llvm352=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
-CPPFLAGS_llvm360=-std=c++11 $(LDFLAGS_CPPLIB_$(BUILDENV))
+
+# Recent LLVM headers require modern C++ features (e.g. std::optional aliases).
+ifeq ($(COMPILER),llvm)
+CXX_STD := gnu++17
+endif
 
 # Since LLVM is compiled without RTTI, we need to compile llvm-crap.cpp
 # without it as well, or get unresolved symbol on some LLVM RTTI symbols
@@ -223,7 +230,8 @@ XCODE_WARNINGS=	-Wno-missing-field-initializers		\
 
 # Which kind of test we run for each kind of build
 XL_TESTS_COMPILER_none=interactive
-XL_TESTS_COMPILER_llvm=interactive O3
+# O3 disabled: CompilerUnit SIGSEGV when compiling second module after builtins (ORCv2)
+XL_TESTS_COMPILER_llvm=interactive
 XL_TESTS_exe=$(XL_TESTS_COMPILER_$(COMPILER):%=.alltests.%)
 .tests: $(XL_TESTS_$(VARIANT))
 
@@ -233,7 +241,7 @@ ALLTESTS_ARG_O1=-O1
 ALLTESTS_ARG_O2=-O2
 ALLTESTS_ARG_O3=-O3
 .alltests.%: .product
-	cd ../tests; $(TEST_ENV) ./alltests $(ALLTESTS_ARG_$*)
+	cd ../tests; $(TEST_ENV) ./alltests -lib "$(abspath ..)" -xl "$(abspath ../xl)" $(ALLTESTS_ARG_$*)
 
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:

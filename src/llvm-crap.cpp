@@ -166,6 +166,7 @@
 # include <llvm/IR/Mangler.h>
 # if LLVM_VERSION >= 1700
 #  include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
+#  include "llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h"
 #  include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #  include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 # else
@@ -601,7 +602,11 @@ JITPrivate::JITPrivate(int argc, char **argv)
 {
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 #if LLVM_VERSION >= 1700
-    auto jit = LLJITBuilder().create();
+    auto JTMB = orc::JITTargetMachineBuilder(target->getTargetTriple());
+    auto jit = llvm::orc::LLJITBuilder()
+        .setJITTargetMachineBuilder(std::move(JTMB))
+        .setNumCompileThreads(1)
+        .create();
     if (!jit)
     {
         text message = toString(jit.takeError());
@@ -668,8 +673,8 @@ ModuleID JITPrivate::CreateModule(text name)
 
     // The "Can't make up my mind" school of programming
 #if LLVM_VERSION >= 1700
-    if (!context)
-        context = std::make_unique<LLVMContext>();
+    // Always create a fresh context for each module to avoid use-after-move.
+    context = std::make_unique<LLVMContext>();
     module = std::make_unique<llvm::Module>(name, *context);
 #elif LLVM_VERSION < 500
     module = llvm::make_unique<llvm::Module>(name, context);
@@ -1271,10 +1276,13 @@ Function_p JIT::ExternFunction(FunctionType_p type, text name)
 //    Create an extern function with the given name and type
 // ----------------------------------------------------------------------------
 {
-    assert(p.module);
+    Module_p mod = p.Module();
+    if (!mod)
+        Ooops("ExternFunction $1 requires active JIT module (none created?)")
+            .Arg(name, "");
     Function_p f = llvm::Function::Create(type,
                                           llvm::Function::ExternalLinkage,
-                                          name, p.Module());
+                                          name, mod);
     record(llvm_externals, "Extern function %s is %v type %T", name, f, type);
     return f;
 }

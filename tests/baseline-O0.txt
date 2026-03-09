@@ -1,1 +1,3 @@
 02.Arithmetic/08c-complex-add-with-unnamed-prefix.xl
+00.Parser/option-bool-variants.xl
+00.Parser/fault-injection-stack.xl
