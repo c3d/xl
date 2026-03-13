@@ -396,6 +396,14 @@ XL_END
 #define R_REAL(x)       RESULT(AS_REAL(x))
 #define R_BOOL(x)       RESULT(AS_BOOL(x))
 #define R_TEXT(x)       RESULT(AS_TEXT(x))
+#define XL_INT(x)       ((longlong)(x))
+#define XL_REAL(x)      ((double)(x))
+#define XL_BOOL(x)      ((bool)(x))
+#define XL_TEXT(x)      ((text)(x))
+#define XL_RINT(x)      R_INT(x)
+#define XL_RREAL(x)     R_REAL(x)
+#define XL_RBOOL(x)     R_BOOL(x)
+#define XL_RTEXT(x)     R_TEXT(x)
 
 #endif // OPCODES_H
 
@@ -445,12 +453,12 @@ XL_END
 #define INIT_ALLOCATOR(type)
 #define UNARY_OP(Name, ResTy, LeftTy, Code)
 #define BINARY_OP(Name, ResTy, LeftTy, RightTy, Code)
-#define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code)
-#define INFIX_SCOPE(Name, ResTy, LeftTy, Symbol, RightTy, Code)
-#define PREFIX(Name, ResTy, Symbol, RightTy, Code)
+#define INFIX(Name, ResTy, LeftTy, Symbol, RightTy, Code, ...)
+#define INFIX_SCOPE(Name, ResTy, LeftTy, Symbol, RightTy, Code, ...)
+#define PREFIX(Name, ResTy, Symbol, RightTy, Code, ...)
 #define PREFIX_FN(Name, ResTy, RightTy, Code)
 #define PREFIX_SCOPE(Name, ResTy, Symbol, RightTy, Code)
-#define POSTFIX(Name, ResTy, RightTy, Symbol, Code)
+#define POSTFIX(Name, ResTy, RightTy, Symbol, Code, ...)
 #define OVERLOAD(Name, ResTy, Symbol, Parms, Code, ...)
 #define FUNCTION(Name, ResTy, Parms, Code)
 #define PARM(Name, Type, ...)
@@ -605,7 +613,7 @@ XL_END
     static Opcode_B_##BName init_opcode_B_##BName;
 
 
-#define INFIX(IName, ResTy, LeftTy, Symbol, RightTy, Code)              \
+#define INFIX(IName, ResTy, LeftTy, Symbol, RightTy, Code, ...)          \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
@@ -643,7 +651,7 @@ XL_END
     static Opcode_I_##IName init_opcode_I_##IName;
 
 
-#define INFIX_SCOPE(IName, ResTy, LeftTy, Symbol, RightTy, Code)        \
+#define INFIX_SCOPE(IName, ResTy, LeftTy, Symbol, RightTy, Code, ...)   \
 /* ------------------------------------------------------------ */      \
 /*  Create an infix opcode, also generates infix declaration    */      \
 /* ------------------------------------------------------------ */      \
@@ -652,62 +660,31 @@ XL_END
           Code)
 
 
-#define PREFIX(PName, ResTy, Symbol, RightTy, Code)                     \
-/* ------------------------------------------------------------ */      \
-/*  Create a prefix opcode, also generates prefix declaration   */      \
-/* ------------------------------------------------------------ */      \
-    struct Opcode_P_##PName : PrefixOpcode                              \
-    {                                                                   \
-        Opcode_P_##PName(int argID = -1)                                \
-            : PrefixOpcode(Symbol, RightTy##_type, ResTy##_type),       \
-              argID(argID) {}                                           \
-        virtual Op *Run(Data data)                                      \
-        {                                                               \
-            ARG(left, RightTy, data[argID]);                            \
-            Code;                                                       \
-            return success;                                             \
-        }                                                               \
-        virtual kstring OpID()  { return #PName; }                      \
-        virtual void Dump(std::ostream &out)                            \
-        {                                                               \
-            out << #PName "\t" << argID;                                \
-        }                                                               \
-        virtual Opcode *Clone()                                         \
-        {                                                               \
-            return new Opcode_P_##PName(*this);                         \
-        }                                                               \
-        virtual void SetParms(ParmOrder &parms)                         \
-        {                                                               \
-            XL_ASSERT(parms.size() == 1);                               \
-            argID = parms[0];                                           \
-        }                                                               \
-        int argID;                                                      \
-    };                                                                  \
-                                                                        \
-    static Opcode_P_##PName init_opcode_P_##PName;
+/* PREFIX uses OVERLOAD implementation - supports 0, 1, or many args via Parms */
+#define PREFIX(Name, ResTy, Symbol, Parms, Code, ...)                    \
+    OVERLOAD(Name, ResTy, Symbol, Parms, Code, ##__VA_ARGS__)
 
-
-#define PREFIX_FN(Name, ResTy, RightTy, Code)                           \
+#define PREFIX_FN(Name, ResTy, RightTy, Code)                             \
 /* ------------------------------------------------------------ */      \
 /*  Create a prefix opcode for a single-argument function       */      \
 /* ------------------------------------------------------------ */      \
-    PREFIX(Name, ResTy, #Name, RightTy, Code)
+    PREFIX(Name, ResTy, #Name, PARM(left, RightTy, ), Code)
 
 
 #define PREFIX_SCOPE(Name, ResTy, Symbol, RightTy, Code)                \
 /* ------------------------------------------------------------ */      \
-/*  Create a prefixopcode, also generates prefix declaration    */      \
+/*  Create a prefix opcode with scope, single-argument          */      \
 /* ------------------------------------------------------------ */      \
-    PREFIX(Name, ResTy, Symbol, RightTy,                                \
+    PREFIX(Name, ResTy, Symbol, PARM(left, RightTy, ),                 \
           Scope_p scope = DataScope(data);                              \
           Code)
 
 
-#define POSTFIX(PName, ResTy, LeftTy, Symbol, Code)                     \
+#define POSTFIX(PName, ResTy, LeftTy, Symbol, Code, ...)                 \
 /* ------------------------------------------------------------ */      \
-/*  Create a prefixopcode, also generates prefix declaration    */      \
+/*  Create a postfix opcode, also generates postfix declaration  */      \
 /* ------------------------------------------------------------ */      \
-    struct Opcode_p_##PName : PrefixOpcode                              \
+    struct Opcode_p_##PName : PostfixOpcode                             \
     {                                                                   \
         Opcode_p_##PName(int argID = -1)                                \
             : PostfixOpcode(Symbol, LeftTy##_type, ResTy##_type),       \

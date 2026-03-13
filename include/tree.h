@@ -275,6 +275,9 @@ struct Text : Tree
     GARBAGE_COLLECT(Text);
 };
 
+// Unary + on Text_p yields kstring for readable conversion in tbl files
+inline kstring operator+(const Text_p &t) { return t ? t->value.c_str() : ""; }
+
 
 struct Name : Tree
 // ----------------------------------------------------------------------------

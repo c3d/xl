@@ -42,10 +42,10 @@ INFIX(IntPow,  integer, integer, "^",   integer,R_INT (xl_pow(LEFT, RIGHT)));
 INFIX(RealPowI,real,    real,    "^",   integer,R_INT (xl_powf(LEFT, RIGHT)));
 INFIX(RealPow, real,    real,    "^",   real,   R_REAL(pow(LEFT, RIGHT)));
 
-PREFIX(AbsI,   integer, "abs", integer,         R_INT(LEFT < 0 ? -LEFT : LEFT));
-PREFIX(AbsR,   real,    "abs", real,            R_REAL(fabs(LEFT)));
+PREFIX(AbsI,   integer, "abs", PARM(left, integer, ), R_INT(left < 0 ? -left : left));
+PREFIX(AbsR,   real,    "abs", PARM(left, real, ),    R_REAL(fabs(left)));
 
-#define REALFN(fn)  PREFIX(fn, real, #fn, real, R_REAL(fn(LEFT)))
+#define REALFN(fn)  PREFIX(fn, real, #fn, PARM(left, real, ), R_REAL(fn(left)))
 REALFN(sqrt);
 REALFN(sin);
 REALFN(cos);

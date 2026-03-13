@@ -618,6 +618,96 @@ Tree *xl_use(Scope *scope, Tree *self)
 }
 
 
+Tree *xl_import(Scope *scope, Tree *self)
+// ----------------------------------------------------------------------------
+//    Import (Tao synonym for use) - handles Prefix(import, X) or Infix(use, X)
+// ----------------------------------------------------------------------------
+{
+    Tree *nameTree = nullptr;
+    if (Prefix *prefix = self->AsPrefix())
+        nameTree = prefix->right;
+    else if (Infix *infix = self->AsInfix())
+        nameTree = infix->right;
+    if (!nameTree)
+    {
+        Ooops("Unexpected import: $1", self);
+        return self;
+    }
+    text modname = "";
+    Name *name = nameTree->AsName();
+    if (name)
+        modname = name->value;
+    else
+    {
+        Tree *value = xl_evaluate(scope, nameTree);
+        if (Text *text = value->AsText())
+            modname = text->value;
+        else
+        {
+            Ooops("Invalid import name $1", nameTree);
+            return self;
+        }
+    }
+    text path = "";
+    ImportedFileInfo *info = self->GetInfo<ImportedFileInfo>();
+    if (info)
+        path = info->path;
+    else
+    {
+        if (path == "")
+            path = MAIN->SearchFile(modname);
+        if (path == "" && !isAbsolute(modname))
+        {
+            static Name_p module_dir = new Name("module_dir");
+            Context context(scope);
+            if (Tree * dir = context.Bound(module_dir))
+            {
+                if (Text * txt = dir->AsText())
+                {
+                    path = txt->value + "/" + modname;
+                    utf8_filestat_t st;
+                    if (utf8_stat (path.c_str(), &st) < 0)
+                        path = "";
+                }
+            }
+        }
+        if (path == "")
+        {
+            Ooops("Source file $2 not found for $1", self).Arg(modname);
+            return XL::xl_false;
+        }
+        info = new ImportedFileInfo(path);
+        self->SetInfo<ImportedFileInfo> (info);
+    }
+    bool exists = MAIN->files.count(path);
+    if (!exists)
+    {
+        record(fileload, "Loading %s", path.c_str());
+        bool hadError = MAIN->LoadFile(path);
+        if (hadError)
+        {
+            Ooops("Unable to load file $2 for $1", self).Arg(path);
+            return XL::xl_false;
+        }
+    }
+    SourceFile &sf = MAIN->files[path];
+    return sf.tree;
+}
+
+Tree *xl_import(Scope *scope, text path)
+// ----------------------------------------------------------------------------
+//    Load a file by path and return its tree
+// ----------------------------------------------------------------------------
+{
+    if (!MAIN->files.count(path))
+    {
+        if (MAIN->LoadFile(path))
+            return nullptr;
+    }
+    auto it = MAIN->files.find(path);
+    return (it != MAIN->files.end()) ? it->second.tree : nullptr;
+}
+
 Tree *xl_load(Scope *scope, Tree *self)
 // ----------------------------------------------------------------------------
 //    Load a file from disk

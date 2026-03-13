@@ -34,15 +34,15 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-PREFIX(WriteText,       boolean, "write", text,
+PREFIX(WriteText,       boolean, "write", PARM(left, text, ),
        R_BOOL(std::cout << left.value));
-PREFIX(WriteInteger,    boolean, "write", integer,
+PREFIX(WriteInteger,    boolean, "write", PARM(left, integer, ),
        R_BOOL(std::cout << left.value));
-PREFIX(WriteReal,       boolean, "write", real,
+PREFIX(WriteReal,       boolean, "write", PARM(left, real, ),
        R_BOOL(std::cout << left.value));
-PREFIX(WriteCharacter,  boolean, "write", character,
+PREFIX(WriteCharacter,  boolean, "write", PARM(left, character, ),
        R_BOOL(std::cout << left.value));
-PREFIX(WriteTree,       boolean, "write", value,
+PREFIX(WriteTree,       boolean, "write", PARM(left, value, ),
        Tree *value = leftPtr;
        if (Tree *eval = Interpreter::IsClosure(value, NULL))
            value = eval;
@@ -50,6 +50,6 @@ PREFIX(WriteTree,       boolean, "write", value,
 NAME_FN(WriteNewLine,   boolean, "print",
        R_BOOL(std::cout << "\n"));
 
-PREFIX(DebugTree,       boolean, "debug", value,
+PREFIX(DebugTree,       boolean, "debug", PARM(left, value, ),
        Tree *value = leftPtr;
        R_BOOL(std::cout << value));
