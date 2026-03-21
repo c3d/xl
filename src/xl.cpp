@@ -38,9 +38,9 @@
 #include "basics.h"
 #include <recorder/recorder.h>
 
-#if HAVE_SBRK
-#include <unistd.h>
-#endif // HAVE_SBRK
+#if HAVE_GETRUSAGE
+#include <sys/resource.h>
+#endif // HAVE_GETRUSAGE
 
 int main(int argc, char **argv)
 // ----------------------------------------------------------------------------
@@ -49,10 +49,6 @@ int main(int argc, char **argv)
 {
     recorder_dump_on_common_signals(0, 0);
     record(main, "XL Compiler version %+s starting", XL_VERSION);
-
-#if HAVE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
 
     XL::path_list bin { XL_BIN,
                         "/usr/local/bin/", "/bin/", "/usr/bin/" };
@@ -66,10 +62,11 @@ int main(int argc, char **argv)
     IFTRACE2(memory, gc_statistics)
         XL::GarbageCollector::GC()->PrintStatistics();
 
-#if HAVE_SBRK
-    record(main, "Total memory usage %ldK\n",
-           long ((char *) sbrk(1) - low_water) / 1024);
-#endif
+#if HAVE_GETRUSAGE
+    struct rusage ru = { };
+    int rurc = getrusage(RUSAGE_SELF, &ru);
+    record(main, "Peak resident memory %ldK (rc=%d)\n", ru.ru_maxrss, rurc);
+#endif // HAVE_GETRUSAGE
 
     RECORD(main, "Compiler exit code %d", rc);
 

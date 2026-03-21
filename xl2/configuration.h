@@ -73,7 +73,7 @@
 #define CONFIG_HAS_LONGLONG             1
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 0
 #define CONFIG_DIRENT_HAS_TYPE          1
-#define CONFIG_USE_SBRK                 1
+#define CONFIG_USE_GETRUSAGE                 1
 #define CONFIG_C_COMPILER               "cc -g"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ""
@@ -98,7 +98,7 @@
 #define CONFIG_HAS_INT64                0
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 1
 #define CONFIG_DIRENT_HAS_TYPE          1
-#define CONFIG_USE_SBRK                 1
+#define CONFIG_USE_GETRUSAGE                 1
 #define CONFIG_C_COMPILER               "cc -g"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ""
@@ -123,7 +123,7 @@
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 0
 #define CONFIG_NM_DASH_P                1
 #define CONFIG_DIRENT_HAS_TYPE          1
-#define CONFIG_USE_SBRK                 1
+#define CONFIG_USE_GETRUSAGE                 1
 #define CONFIG_C_COMPILER               "cc -g"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ""
@@ -148,7 +148,7 @@
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 0
 #define CONFIG_NM_DASH_P                1
 #define CONFIG_DIRENT_HAS_TYPE          0
-#define CONFIG_USE_SBRK                 1
+#define CONFIG_USE_GETRUSAGE                 1
 #define CONFIG_C_COMPILER               "gcc -g"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ""
@@ -172,7 +172,7 @@
 #define CONFIG_HAS_INT64                0
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 0
 #define CONFIG_DIRENT_HAS_TYPE          1
-#define CONFIG_USE_SBRK                 1
+#define CONFIG_USE_GETRUSAGE                 1
 #define CONFIG_C_COMPILER               "cc -g"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ""
@@ -196,7 +196,7 @@
 #define CONFIG_HAS_INT64                0
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 1
 #define CONFIG_DIRENT_HAS_TYPE          0
-#define CONFIG_USE_SBRK                 1
+#define CONFIG_USE_GETRUSAGE                 1
 #define CONFIG_C_COMPILER               "gcc"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ".exe"
@@ -220,7 +220,7 @@
 #define CONFIG_HAS_INT64                1
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 1
 #define CONFIG_DIRENT_HAS_TYPE          0
-#define CONFIG_USE_SBRK                 0
+#define CONFIG_USE_GETRUSAGE                 0
 #define CONFIG_C_COMPILER               "cl /nologo"
 #define CONFIG_OBJ_EXT                  ".obj"
 #define CONFIG_EXE_EXT                  ".exe"
@@ -244,7 +244,7 @@
 #define CONFIG_HAS_INT64                0
 #define CONFIG_LEADING_UNDERSCORE_IN_NM 1
 #define CONFIG_DIRENT_HAS_TYPE          0
-#define CONFIG_USE_SBRK                 0
+#define CONFIG_USE_GETRUSAGE                 0
 #define CONFIG_C_COMPILER               "gcc"
 #define CONFIG_OBJ_EXT                  ".o"
 #define CONFIG_EXE_EXT                  ".exe"

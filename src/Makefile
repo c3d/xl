@@ -112,7 +112,7 @@ INCLUDES=. .. ../include
 
 CONFIG= sigaction                       \
         struct_stat                     \
-        sbrk                            \
+        getrusage                       \
         posix_memalign                  \
         mingw_aligned_malloc            \
         <regex.h>                       \

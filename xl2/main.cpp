@@ -35,10 +35,9 @@
 // *****************************************************************************
 
 #include "configuration.h"
-#if CONFIG_USE_SBRK
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+#if CONFIG_USE_GETRUSAGE
+#include <sys/resource.h>
+#include <cstdio>
 #endif
 #include <map>
 #include <iostream>
@@ -213,10 +212,6 @@ int main(int argc, char **argv)
 //   Parse the command line and run the compiler phases
 // ----------------------------------------------------------------------------
 {
-#if CONFIG_USE_SBRK
-    char *low_water = (char *) sbrk(0);
-#endif
-
     text cmd, end = "";
 
     // Make sure debug function is linked in...
@@ -248,10 +243,21 @@ int main(int argc, char **argv)
         XL2C(tree);
     }
 
-#if CONFIG_USE_SBRK
+#if CONFIG_USE_GETRUSAGE
         IFTRACE(timing)
-            fprintf(stderr, "Total memory usage: %ldK\n",
-                    long ((char *) malloc(1) - low_water) / 1024);
+        {
+            struct rusage ru;
+            if (getrusage(RUSAGE_SELF, &ru) == 0)
+            {
+                long peak_kb =
+#if defined(__APPLE__)
+                    ru.ru_maxrss / 1024;
+#else
+                    ru.ru_maxrss;
+#endif
+                fprintf(stderr, "Peak resident memory: %ldK\n", peak_kb);
+            }
+        }
 #endif
 
     return 0;
