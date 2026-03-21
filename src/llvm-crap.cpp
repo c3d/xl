@@ -1206,7 +1206,13 @@ PointerType_p JIT::PointerType(Type_p rty)
 //    Create a pointer type (always in address space 0)
 // ----------------------------------------------------------------------------
 {
+#if LLVM_VERSION >= 1700
+    // Opaque pointers: type is not encoded on the pointer; rty kept for callers.
+    (void) rty;
+    return llvm::PointerType::get(p.ContextRef(), 0);
+#else
     return llvm::PointerType::get(rty, 0);
+#endif
 }
 
 
@@ -1561,7 +1567,17 @@ Value_p JITBlock::TextConstant(text value)
 //   Return a constant array of characters for the input text
 // ----------------------------------------------------------------------------
 {
+#if LLVM_VERSION >= 1700
+    // CreateGlobalStringPtr is deprecated; replicate its i8* result (GEP to [0,0]).
+    llvm::GlobalVariable *gv = b->CreateGlobalString(value);
+    llvm::Constant *z = llvm::ConstantInt::get(
+        llvm::Type::getInt32Ty(b->getContext()), 0);
+    llvm::Constant *idx[] = {z, z};
+    Value_p result = llvm::ConstantExpr::getInBoundsGetElementPtr(
+        gv->getValueType(), gv, idx);
+#else
     Value_p result = b->CreateGlobalStringPtr(value);
+#endif
     record(llvm_constants, "Text constant %v for %s", result, value.c_str());
     return result;
 }
