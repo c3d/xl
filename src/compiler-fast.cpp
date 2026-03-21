@@ -2140,13 +2140,10 @@ O1CompileUnit::O1CompileUnit(FastCompiler &compiler,
     value[source] = inputArg;
 
     // Associate the value for the additional arguments (read-only, no alloca)
-    TreeList::iterator parm;
-    ulong parmsCount = 0;
     for (Tree *parm : parms)
     {
         inputArg = *args++;
         value[parm] = inputArg;
-        parmsCount++;
     }
 
     // Create the exit basic block, stack pop and return statement
