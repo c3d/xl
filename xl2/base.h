@@ -38,11 +38,12 @@
 
 /* Include the places where conflicting versions of some types may exist */
 #include <sys/types.h>
-#include <stddef.h>
 #include <string>
+#include <cstddef>
+#include <stdint.h>
 
-/* Include the configuration file */
-#include "configuration.h"
+/* Auto-generated configuration (see libxlr/config.h; Makefile writes build dir copy) */
+#include "../../config.h"
 
 
 /* ========================================================================= */
@@ -102,47 +103,47 @@ typedef unsigned char   byte;
 
 
 /* Shortcuts for unsigned numbers - Quite uneasy to figure out in general */
-#if CONFIG_HAS_UCHAR
+#ifndef HAVE_UCHAR
 typedef unsigned char   uchar;
 #endif
 
-#if CONFIG_HAS_USHORT
+#ifndef HAVE_USHORT
 typedef unsigned short  ushort;
 #endif
 
-#if CONFIG_HAS_UINT
+#ifndef HAVE_UINT
 typedef unsigned int    uint;
 #endif
 
-#if CONFIG_HAS_ULONG
+#ifndef HAVE_ULONG
 typedef unsigned long   ulong;
 #endif
 
 /* The largest available integer type */
-#if CONFIG_HAS_LONGLONG
+#ifdef HAVE_LONGLONG
 typedef long long          longlong;
 typedef unsigned long long ulonglong;
-#elif CONFIG_HAS_INT64
+#elif HAVE_INT64
 typedef __int64          longlong;
 typedef unsigned __int64 ulonglong;
 #else
 typedef long            longlong;
 typedef unsigned long   ulonglong;
-#endif
+#endif /* LONGLONG or INT64 */
 
 /* Sized integers (dependent on the compiler...) - Only when needed */
-typedef char            int8;
-typedef short           int16;
-typedef long            int32;
-typedef long long       int64;
+typedef int8_t          int8;
+typedef int16_t         int16;
+typedef int32_t         int32;
+typedef int64_t         int64;
 
-typedef unsigned char   uint8;
-typedef unsigned short  uint16;
-typedef unsigned long   uint32;
-typedef unsigned long long uint64;
+typedef uint8_t         uint8;
+typedef uint16_t        uint16;
+typedef uint32_t        uint32;
+typedef uint64_t        uint64;
 
 /* A type that can be used to cast a pointer without data loss */
-typedef long            ptrint;
+typedef intptr_t        ptrint;
 
 
 /* Constant and non constant C-style string and void pointer */
@@ -205,13 +206,13 @@ extern ulong mz_traces;
 /*                                                                           */
 /* ========================================================================= */
 
-#if CONFIG_HAS_NAMESPACE
+#ifdef __cplusplus
 #define MZ_BEGIN                namespace Mozart {
 #define MZ_END                  }
-#else   /* !CONFIG_HAS_NAMESPACE */
+#else
 #define MZ_BEGIN
 #define MZ_END
-#endif  /* ?CONFIG_HAS_NAMESPACE */
+#endif
 
 
 #endif /* ELEMENTALS_H */

@@ -34,8 +34,8 @@
 // If not, see <https://www.gnu.org/licenses/>.
 // *****************************************************************************
 
-#include "configuration.h"
-#if CONFIG_USE_GETRUSAGE
+#include "../../config.h"
+#if HAVE_GETRUSAGE
 #include <sys/resource.h>
 #include <cstdio>
 #endif
@@ -243,7 +243,7 @@ int main(int argc, char **argv)
         XL2C(tree);
     }
 
-#if CONFIG_USE_GETRUSAGE
+#if HAVE_GETRUSAGE
         IFTRACE(timing)
         {
             struct rusage ru;
