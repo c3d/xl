@@ -123,8 +123,11 @@ CONFIG= sigaction                       \
         glob                            \
         uchar ushort uint ulong longlong
 
-MIQ=../make-it-quick/
+MIQ=../recorder/make-it-quick/
 include $(MIQ)rules.mk
+
+# Do not link configure probes against LLVM, libxl, librecorder, etc.
+MIQ_CFGLDFLAGS =
 
 # Name of 'llvm-config' to use - Note that XL now requires llvm 6.0 or above.
 # Can be overridden from environment (e.g. LLVM_CONFIG=/path/to/llvm-config).
@@ -245,7 +248,7 @@ ALLTESTS_ARG_O3=-O3
 
 .hello: .show_$(COMPILER)_version
 .show_llvm_version:
-	@$(INFO) "[INFO]" Building with LLVM version $(LLVM_VERSION)
+	@$(INFO) "[INFO]" "Building with LLVM version $(LLVM_VERSION)"
 .show_none_version:
 	@$(INFO) "[INFO]" Building in interpreter-only mode
 

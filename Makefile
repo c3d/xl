@@ -39,7 +39,7 @@ SUBDIRS=	recorder src
 # Disable generation of .pc file at top-level
 PACKAGE_NAME=
 
-MIQ=make-it-quick/
+MIQ=recorder/make-it-quick/
 include $(MIQ)rules.mk
 $(MIQ)rules.mk:
 	$(PRINT_BUILD) git submodule update --init --recursive
