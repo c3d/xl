@@ -54,3 +54,14 @@ xl2/rxl
 xl2/sxl
 xl2/xl2c
 xl2/www/*.html
+
+# Local / generated build artifacts
+.build/
+include/opcodes_declare.h
+include/opcodes_define.h
+include/opcodes_delete.h
+/libxl*.dylib
+/librecorder*.dylib
+/xl
+tests/**/*.log.output
+tests/lib*.dylib
