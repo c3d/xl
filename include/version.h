@@ -74,7 +74,7 @@ private:
 
     friend uintptr_t _recorder_arg(const Version &v)
     {
-        return (uintptr_t) std::string(v).c_str();
+        return (uintptr_t) v.major * 10000 + v.minor * 100 + v.patch;
     }
 };
 
