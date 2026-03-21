@@ -1,6 +1,3 @@
-[submodule "make-it-quick"]
-	path = make-it-quick
-	url = ../make-it-quick
 [submodule "recorder"]
 	path = recorder
 	url = ../recorder
