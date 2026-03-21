@@ -440,6 +440,7 @@ private:
 
 
 
+#if LLVM_VERSION < 1700
 static inline uint64_t globalSymbolAddress(const text &name)
 // ----------------------------------------------------------------------------
 //    Return the address of the symbol in the current address space
@@ -450,6 +451,7 @@ static inline uint64_t globalSymbolAddress(const text &name)
            name.c_str(), (void *) result);
     return result;
 }
+#endif // LLVM_VERSION
 
 
 #if LLVM_VERSION >= 380 && LLVM_VERSION < 1700
@@ -741,6 +743,7 @@ void JITPrivate::DeleteModule(ModuleID modID)
 }
 
 
+#if LLVM_VERSION < 1700
 static void dumpModule(Module_p module, kstring message)
 // ----------------------------------------------------------------------------
 //   Dump a module for debugging purpose
@@ -749,6 +752,7 @@ static void dumpModule(Module_p module, kstring message)
     llvm::errs() << "; " << message << ":\n";
     module->print(llvm::errs(), nullptr);
 }
+#endif // LLVM_VERSION
 
 
 Module_s JITPrivate::OptimizeModule(Module_s module)
@@ -1035,11 +1039,11 @@ Type_p JIT::PointedType(Type_p type)
 {
     if (type->isPointerTy())
     {
-        PointerType_p ptype = (PointerType_p) type;
 #if LLVM_VERSION >= 1700
         // Opaque pointers do not expose element types in modern LLVM.
         return nullptr;
 #else
+        PointerType_p ptype = (PointerType_p) type;
         return ptype->getElementType();
 #endif
     }
