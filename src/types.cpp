@@ -1479,7 +1479,9 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
             if (Name *name = def->AsName())
                 expr = name;
 
-        Tree *type = Type(expr);
+        Tree *type = KnownType(expr);
+        if (!type)
+            type = PatternType(expr);
         Tree *result = new Infix(":", expr, type, expr->Position());
         return result;
     }
@@ -1523,7 +1525,7 @@ Tree *Types::MakeTypesExplicit(Tree *expr)
         if (IsTypeAnnotation(infix))
         {
             Tree *right = EvaluateType(infix->right);
-            if (right != infix->right)
+            if (right && right != infix->right)
                 infix = new Infix(infix, infix->left, right);
             return infix;
         }
