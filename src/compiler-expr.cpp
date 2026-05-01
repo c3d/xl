@@ -798,7 +798,9 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                 if (Name *argName = arg->AsName())
                 {
                     if (JIT::Value_p known =
-                            function.Known(argName, CompilerFunction::knowValues))
+                            function.Known(argName,
+                                           CompilerFunction::knowValues |
+                                           CompilerFunction::knowLocals))
                     {
                         value = UnwrapThickIfNeeded(function,
                                                     function.unit,
@@ -832,7 +834,9 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             if (Name *argName = arg->AsName())
             {
                 if (JIT::Value_p known =
-                        function.Known(argName, CompilerFunction::knowValues))
+                        function.Known(argName,
+                                       CompilerFunction::knowValues |
+                                       CompilerFunction::knowLocals))
                 {
                     value = UnwrapThickIfNeeded(function,
                                                 function.unit,
