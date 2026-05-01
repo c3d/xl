@@ -245,6 +245,120 @@ static JIT::Value_p UnwrapThickIfNeeded(CompilerFunction &fn,
 }
 
 
+void CompilerExpression::SeedKnownCompositeLeaves(Tree *expansion,
+                                                  JIT::Value_p boxed,
+                                                  JIT::Type_p boxedTy,
+                                                  uint &index)
+// ----------------------------------------------------------------------------
+//   Seed peeled leaf values from a known composite argument
+// ----------------------------------------------------------------------------
+{
+    switch(expansion->Kind())
+    {
+    case NATURAL:
+    case REAL:
+    case TEXT:
+    case NAME:
+        function.values[expansion] =
+            function.code.StructLoad(boxedTy, boxed, index++, "peel");
+        return;
+
+    case BLOCK:
+        SeedKnownCompositeLeaves(((Block *) expansion)->child,
+                                 boxed, boxedTy, index);
+        return;
+
+    case PREFIX:
+    {
+        Prefix *prefix = (Prefix *) expansion;
+        if (prefix->left->Kind() != NAME)
+            SeedKnownCompositeLeaves(prefix->left, boxed, boxedTy, index);
+        SeedKnownCompositeLeaves(prefix->right, boxed, boxedTy, index);
+        return;
+    }
+
+    case POSTFIX:
+    {
+        Postfix *postfix = (Postfix *) expansion;
+        if (postfix->right->Kind() != NAME)
+            SeedKnownCompositeLeaves(postfix->right, boxed, boxedTy, index);
+        SeedKnownCompositeLeaves(postfix->left, boxed, boxedTy, index);
+        return;
+    }
+
+    case INFIX:
+    {
+        Infix *infix = (Infix *) expansion;
+        if (IsTypeAnnotation(infix) || IsPatternCondition(infix))
+        {
+            SeedKnownCompositeLeaves(infix->left, boxed, boxedTy, index);
+            return;
+        }
+        SeedKnownCompositeLeaves(infix->left, boxed, boxedTy, index);
+        SeedKnownCompositeLeaves(infix->right, boxed, boxedTy, index);
+        return;
+    }
+    }
+}
+
+
+void CompilerExpression::SeedKnownCompositeLeaves(Name *sourceName,
+                                                  Tree *expansion)
+// ----------------------------------------------------------------------------
+//   Prime peeled leaves when the source name already has a boxed value
+// ----------------------------------------------------------------------------
+{
+    if (!sourceName || !expansion || expansion->IsLeaf())
+        return;
+
+    JIT::Value_p boxed = function.Known(sourceName,
+                                        CompilerFunction::knowValues |
+                                        CompilerFunction::knowLocals);
+    if (!boxed)
+        return;
+
+    JIT::Type_p boxedTy = function.code.Type(boxed);
+    if (!boxedTy ||
+        function.compiler.IsTreePointerType(boxedTy) ||
+        function.unit.IsClosureType(boxedTy))
+        return;
+
+    uint index = 0;
+    SeedKnownCompositeLeaves(expansion, boxed, boxedTy, index);
+    record(closures, "Seed peeled values %t => %t from %v",
+           sourceName, expansion, boxed);
+}
+
+
+void CompilerExpression::SeedPeeledKnownValues(Tree *call, Tree *rewriteCall)
+// ----------------------------------------------------------------------------
+//   Seed peeled call leaves from known composite arguments
+// ----------------------------------------------------------------------------
+{
+    if (!call || !rewriteCall || call == rewriteCall)
+        return;
+
+    if (Prefix *from = call->AsPrefix())
+        if (Prefix *to = rewriteCall->AsPrefix())
+            if (Name *arg = from->right->AsName())
+                SeedKnownCompositeLeaves(arg, to->right);
+
+    if (Postfix *from = call->AsPostfix())
+        if (Postfix *to = rewriteCall->AsPostfix())
+            if (Name *arg = from->left->AsName())
+                SeedKnownCompositeLeaves(arg, to->left);
+
+    if (Infix *from = call->AsInfix())
+        if (Infix *to = rewriteCall->AsInfix())
+        {
+            if (Name *left = from->left->AsName())
+                SeedKnownCompositeLeaves(left, to->left);
+            if (Name *right = from->right->AsName())
+                SeedKnownCompositeLeaves(right, to->right);
+        }
+}
+
+
 // ============================================================================
 //
 //    Compile an expression
@@ -369,18 +483,21 @@ JIT::Value_p CompilerExpression::Do(Name *what)
 
     if (!existing && !rewrite)
     {
-        if (JIT::Value_p known = function.Known(what, CompilerFunction::knowValues))
+        if (JIT::Value_p known =
+            function.Known(what,
+                           CompilerFunction::knowLocals |
+                           CompilerFunction::knowValues))
         {
             JIT::Type_p kty = code.Type(known);
             if (kty != function.compiler.treePtrTy)
             {
                 record(boxed_assign,
-                       "Do(Name) %t context miss, use known value %v type %T",
+                       "Do(Name) %t context miss, use local/known value %v type %T",
                        what, known, kty);
                 return UnwrapThickIfNeeded(function, unit, code, what, known);
             }
             record(boxed_assign,
-                   "Do(Name) %t context miss, ignore known raw tree value %v",
+                   "Do(Name) %t context miss, ignore local/known raw tree value %v",
                    what, known);
         }
     }
@@ -554,7 +671,10 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
                          rewriteCall,
                          rc);
     if (rewriteCall != call)
+    {
+        SeedPeeledKnownValues(call, rewriteCall);
         record(closures, "DoCall rewrote %t -> %t", call, rewriteCall);
+    }
     record(types_calls, "Looking up %t in %p: got %p", rewriteCall, types, rc);
     if (mayfail && !rc)
         return nullptr;

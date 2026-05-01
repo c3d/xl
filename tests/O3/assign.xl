@@ -35,3 +35,7 @@ print "tval=", tval
 
 ival := 42
 print "ival=", ival, " after overwrite"
+
+tval := "Hello World again"
+ival := 177
+print "tval=", tval, " and ival=", ival
