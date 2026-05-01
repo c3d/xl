@@ -1970,6 +1970,30 @@ JIT::BasicBlock_p JITBlock::NewBlock(kstring name)
 }
 
 
+bool JITBlock::IsTerminated() const
+// ----------------------------------------------------------------------------
+//   Check if the current block already has a terminator
+// ----------------------------------------------------------------------------
+{
+    return b.block->getTerminator() != nullptr;
+}
+
+
+bool JITBlock::MarkTailCall(JIT::Value_p value)
+// ----------------------------------------------------------------------------
+//   Mark a returned call as a tail call when possible
+// ----------------------------------------------------------------------------
+{
+    if (auto *call = llvm::dyn_cast<llvm::CallInst>(value))
+    {
+        call->setTailCall(true);
+        record(llvm_ir, "Mark tail call %v", call);
+        return true;
+    }
+    return false;
+}
+
+
 JIT::Value_p JITBlock::Return(JIT::Value_p value)
 // ----------------------------------------------------------------------------
 //  Return the given value, or RetVoid if nullptr

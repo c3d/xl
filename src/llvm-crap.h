@@ -353,6 +353,8 @@ public:
 
     JIT::BasicBlock_p   Block();
     JIT::BasicBlock_p   NewBlock(kstring name);
+    bool                IsTerminated() const;
+    bool                MarkTailCall(JIT::Value_p value);
     JIT::Value_p        Return(JIT::Value_p value = nullptr);
     JIT::Value_p        Branch(JITBlock &to);
     JIT::Value_p        Branch(JIT::BasicBlock_p to);

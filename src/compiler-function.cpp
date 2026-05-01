@@ -179,7 +179,14 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
     CompilerExpression expr(*this);
     JIT::Value_p result = expr.Evaluate(tree, force);
     if (returned)
-        Return(tree, result);
+    {
+        JIT::Type_p retTy = jit.ReturnType(function);
+        JIT::Value_p direct = result;
+        result = Autobox(tree, result, retTy);
+        if (result == direct)
+            code.MarkTailCall(result);
+        code.Return(result);
+    }
     return function;
 }
 
@@ -204,7 +211,8 @@ eval_fn CompilerFunction::Finalize(bool createCode)
     record(llvm, "Finalize function %v", function);
 
     // Branch to the exit block from the current main body of code
-    code.Branch(exit);
+    if (!code.IsTerminated())
+        code.Branch(exit);
 
     // Connect the "allocas" data prologue to the actual entry point
     data.Branch(entry);
