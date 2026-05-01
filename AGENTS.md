@@ -54,23 +54,33 @@ This file records conventions and debugging context for automated assistants
 
 ## Workflow (standing rule)
 
-- Before treating a change as **done**, run **`make tests`** from the repo root
-  and ensure it reports success. Inference or codegen tweaks can regress many
-  tests with exit **114** (crash) or wrong negatives; the suite is the gate.
-  Do **not** substitute a **`make`** run only under **`src/`** (recorder may be
+- After any significant change, and before marking anything as **done**, run
+  **`make tests`** from the repo root and ensure it reports success.
+- Inference or codegen tweaks can regress many tests with exit **114** (crash)
+  or wrong negatives; the suite is a gate to be taken seriously.
+- Do **not** substitute a **`make`** run only under **`src/`** (recorder may be
   missing and the link fails); root **`make tests`** is the supported pipeline.
-- Preferably build and test using `make tests` at least initially. Do not
-  try to optimize the build away: `make test` does build beforehand, so no point
-  in asking for two commands when one will do the two steps.
-- Focused runs (e.g. `./alltests ... PATTERN`) are for fast iteration only.
-  They do not replace a full `make tests` pass before marking work done.
-- Claims about tests: do not assert that failures are “pre-existing” without
-  verifying (e.g. `git stash` / checkout) the same tests on the base revision.
+- Always build and test using `make tests`. Do not try to optimize the build
+  away: `make test` does build beforehand, so no point in asking for two
+  commands when one will do the two steps.
+- Focused runs (e.g. `./alltests ... PATTERN` or direct runs of the `xl` binary)
+  are for investigation only, and should only be done if `xl` was previously
+  built and sanity-checked with `make tests`. **Never** try to optimize the
+  build or testing, you **always** get it wrong, and it happened **many times**,
+  already wasting **hours**.
+- After each substantive edit run root `make tests` before making further
+  speculative fixes. Do not stack ad-hoc repairs on top of a regressed suite,
+  step back immediately and refocus the change to avoid the regression.
+- Treat any test regressions as a hard stop: fix them before continuing
+  the feature work.
+- **Never change tests** to make something pass. The tests are the reference.
+  Any change under `tests/` is a **mistake** on your part.
+- Do not assert that failures are “pre-existing” without verifying (e.g.
+  `git stash` / checkout) the same tests on the base revision.
 - Treat `assert(...)` failures as contract violations to investigate at the
   root cause (type analysis / invariants / call flow). Do not "fix" crashes by
   replacing asserts with permissive fallback behavior, unless the assert is
   explicitly marking an unimplemented path.
-
 - **LLVM stays in `llvm-crap`:** Do not add `#include <llvm/...>` (or any LLVM
   header) to other translation units such as `src/compiler-expr.cpp`. Put every
   LLVM API use and every LLVM include in **`llvm-crap.cpp`** / **`llvm-crap.h`**
