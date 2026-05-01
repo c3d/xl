@@ -38,6 +38,7 @@
 #include "tree.h"
 #include "context.h"
 #include <map>
+#include <set>
 
 XL_BEGIN
 
@@ -69,6 +70,8 @@ public:
     // Create rewrite calls for this class
     virtual RewriteCalls *NewRewriteCalls();
     Types                *EvaluationInProgress(Tree *expr);
+    void                  BeginEvaluation(Tree *expr);
+    void                  EndEvaluation(Tree *expr);
 
 public:
     // Main entry point: perform type analysis on a whole program
@@ -177,6 +180,7 @@ protected:
     tree_map    types;          // Type associated with an expression if any
     tree_map    unifications;   // Map a type to its reference type
     tree_map    captured;       // Trees captured from enclosing context
+    std::set<Tree_g> evalInProgress; // Trees currently inside Evaluate()
     rcall_map   rcalls;         // Rewrites to call for a given tree
     Types_g     parent;         // Parent type information if any
     Types_g     values;         // Call-side values for binding types

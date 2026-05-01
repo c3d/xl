@@ -38,6 +38,8 @@
 #include "basics.h"
 #include "cdecls.h"
 
+#include <vector>
+
 
 XL_BEGIN
 
@@ -142,22 +144,60 @@ Types *Types::EvaluationInProgress(Tree *what)
 //   Evaluate sees the same subtree as recursive and returns a fresh unknown
 //   for HM unification instead of re-entering Lookup until stack overflow.
 {
-    if (values)
-        if (auto it = values->rcalls.find(what); it != values->rcalls.end())
-            if (RewriteCalls_g rc = (*it).second; !rc || !rc->Evaluated())
-                return values;
-
-    for (Types *ts = this; ts; ts = ts->parent)
+    std::vector<Types *> pending = { this };
+    std::set<Types *> seen;
+    while (!pending.empty())
     {
-        if (auto it = ts->rcalls.find(what); it != ts->rcalls.end())
-        {
-            RewriteCalls_g rc = (*it).second;
-            if (!rc->Evaluated())
-                return ts;
-        }
+        Types *ts = pending.back();
+        pending.pop_back();
+        if (!ts || !seen.insert(ts).second)
+            continue;
+        if (ts->evalInProgress.find(what) != ts->evalInProgress.end())
+            return ts;
+        pending.push_back(ts->parent);
+        pending.push_back(ts->values);
     }
     return nullptr;
 }
+
+
+void Types::BeginEvaluation(Tree *what)
+// ----------------------------------------------------------------------------
+//   Record that this tree is currently inside Evaluate().
+// ----------------------------------------------------------------------------
+{
+    evalInProgress.insert(what);
+}
+
+
+void Types::EndEvaluation(Tree *what)
+// ----------------------------------------------------------------------------
+//   Clear the Evaluate() recursion marker for this tree.
+// ----------------------------------------------------------------------------
+{
+    evalInProgress.erase(what);
+}
+
+
+struct EvaluatingGuard
+// ----------------------------------------------------------------------------
+//   Mark a tree as being evaluated in this Types object.
+// ----------------------------------------------------------------------------
+{
+    EvaluatingGuard(Types *types, Tree *what)
+        : types(types), what(what)
+    {
+        types->BeginEvaluation(what);
+    }
+
+    ~EvaluatingGuard()
+    {
+        types->EndEvaluation(what);
+    }
+
+    Types *types;
+    Tree  *what;
+};
 
 
 Tree *Types::Type(Tree *expr)
@@ -909,6 +949,7 @@ Tree *Types::Evaluate(Tree *what, bool mayFail)
         type = AssignType(what, type);
         return type;
     }
+    EvaluatingGuard evaluating(this, what);
 
     // Identify all candidate rewrites in the current context
     RewriteCalls_g rc = NewRewriteCalls();
