@@ -854,6 +854,15 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
     Tree *rhs = rw->right;
     std::vector<JIT::Type_p> thickOverrides;
     thickOverrides.reserve(bnds.size());
+    auto NormalizeVoidResult = [&](JIT::Value_p value) -> JIT::Value_p
+    {
+        if (value && code.Type(value)->isVoidTy())
+        {
+            record(closures, "Rewrite %t normalizes void result to nil", rw);
+            return function.ConstantTree(xl_nil);
+        }
+        return value;
+    };
     for (RewriteBinding &b : bnds)
     {
         Tree        *arg   = b.value;
@@ -1036,6 +1045,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             size_t sz = args.size();
             JIT::Value_p *a = &args[0];
             result = function.Primitive(builtin, op, sz, a);
+            result = NormalizeVoidResult(result);
             record(compiler_expr, "Rewrite %t is builtin %t: %v",
                    rw, builtin, result);
         }
@@ -1043,6 +1053,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
     else if (JIT::Function_p fn = function.Compile(call, cand, args))
     {
         result = code.Call(fn, args);
+        result = NormalizeVoidResult(result);
         record(compiler_expr, "Rewrite %t function %v call %v",
                rw, fn, result);
     }
