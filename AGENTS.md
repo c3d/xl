@@ -63,6 +63,9 @@ This file records conventions and debugging context for automated assistants
 - Always build and test using `make tests`. Do not try to optimize the build
   away: `make test` does build beforehand, so no point in asking for two
   commands when one will do the two steps.
+- The test harness now has timeouts for hung tests. Treat a timeout exactly
+  like any other regression signal from `make tests`: stop, diagnose, and fix
+  the code instead of piling on speculative changes.
 - Focused runs (e.g. `./alltests ... PATTERN` or direct runs of the `xl` binary)
   are for investigation only, and should only be done if `xl` was previously
   built and sanity-checked with `make tests`. **Never** try to optimize the
