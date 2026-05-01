@@ -316,6 +316,17 @@ JIT::Function_p CompilerFunction::Compile(Tree *call,
         CompilerTypes *const btypes     = rc->BindingTypes();
         Tree *const          base       = btypes->BaseType(rc->type);
         JIT::Type_p          retTy      = rc->RewriteType();
+        auto WantsTreeReturnFallback = [&](Tree *type) -> bool
+        {
+            if (!type)
+                return false;
+            if (btypes->IsPatternType(type))
+                return true;
+            if (Name *name = btypes->BaseType(type)->AsName())
+                return !name->value.empty() && name->value[0] == '#';
+            return false;
+        };
+        Tree *bodyType = nullptr;
         if (!retTy && rc->type)
         {
             retTy = BoxedType(base);
@@ -338,7 +349,7 @@ JIT::Function_p CompilerFunction::Compile(Tree *call,
             }
             else
             {
-                Tree *bodyType = types->KnownType(body);
+                bodyType = types->KnownType(body);
                 if (!bodyType)
                     bodyType = base;
                 if (bodyType)
@@ -347,7 +358,13 @@ JIT::Function_p CompilerFunction::Compile(Tree *call,
                     retTy = ValueMachineType(rc->RewritePattern(), true);
             }
             if (!retTy)
-                retTy = jit.VoidType();
+            {
+                if (WantsTreeReturnFallback(bodyType) ||
+                    WantsTreeReturnFallback(base))
+                    retTy = compiler.treePtrTy;
+                else
+                    retTy = jit.VoidType();
+            }
             rc->RewriteType(retTy);
         }
 
@@ -1109,6 +1126,33 @@ JIT::Value_p CompilerFunction::InvokeThickClosure(Tree *expr,
 }
 
 
+JIT::Value_p CompilerFunction::InvokeAndAutoboxThickClosure(Tree *expr,
+                                                            JIT::Value_p thick,
+                                                            JIT::Type_p  thickTy)
+// ----------------------------------------------------------------------------
+//   Force-evaluate a thick closure and match the caller's machine type.
+// ----------------------------------------------------------------------------
+{
+    JIT::Value_p result = InvokeThickClosure(expr, thick, thickTy);
+    JIT::Type_p want = ValueMachineType(expr, true);
+    if (!result || !want || want->isVoidTy() || unit.IsClosureType(want))
+        return result;
+    return Autobox(expr, result, want);
+}
+
+
+static bool IsSyntheticBoxedJoinType(CompilerTypes *types, Tree *type)
+{
+    if (!types || !type)
+        return false;
+    if (Name *name = types->BaseType(type)->AsName())
+        return name->value.size() > 1 &&
+               name->value[0] == '#' &&
+               name->value[1] == 'B';
+    return false;
+}
+
+
 JIT::Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
 // ----------------------------------------------------------------------------
 //    Return machine type associated to a type name or expression, if any
@@ -1122,6 +1166,12 @@ JIT::Type_p CompilerFunction::ValueMachineType(Tree *tree, bool mayfail)
             return nullptr;
         Ooops("Internal: No type deduced for $1, using natural", tree);
         return compiler.naturalTy;
+    }
+
+    if (IsSyntheticBoxedJoinType(types, base))
+    {
+        AddBoxedType(base, compiler.treePtrTy);
+        return compiler.treePtrTy;
     }
 
     // Find the corresponding machine type
@@ -1258,6 +1308,8 @@ void CompilerFunction::ValueMachineType(Tree *tree, JIT::Type_p type)
 // ----------------------------------------------------------------------------
 {
     Tree *base = types->CodeGenerationType(tree);
+    if (IsSyntheticBoxedJoinType(types, base))
+        type = compiler.treePtrTy;
     record(compiler_function,
            "ValueMachineType set tree %t base %t mtype %T in types %p",
            tree, base, type, types);

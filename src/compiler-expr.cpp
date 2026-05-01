@@ -85,11 +85,16 @@ static bool ArgWantsLazyThickClosure(Tree *arg)
 // ----------------------------------------------------------------------------
 //   True if a NORMAL rewrite argument should be passed as a thick closure.
 // ----------------------------------------------------------------------------
-//   Names stay lazy. Composite-form lazy closures are staged separately.
+//   Deferred bodies stay lazy. Plain names are handled separately by remapping
+//   them to their lazy-binding source before using any eager known value.
 {
     if (!arg)
         return false;
-    return arg->Kind() == NAME;
+    if (Block *block = arg->AsBlock())
+        return block->IsIndent() || block->IsBraces();
+    if (Infix *infix = arg->AsInfix())
+        return IsSequence(infix) || IsDefinition(infix);
+    return false;
 }
 
 
@@ -99,8 +104,9 @@ static Tree *LazyCompositeExpansionForName(lazy_binding_map &lazyBindings,
 // ----------------------------------------------------------------------------
 //   Lazy NORMAL binding tree for n when it is composite (!IsLeaf after peel).
 // ----------------------------------------------------------------------------
-//   Maps lazyBindingSource then Bound; unwraps closures. Returns nullptr if n
-//   is missing, leaf-shaped, or unmapped.
+//   Uses lazyBindingSource only; ordinary local bindings must not be peeled
+//   through Context::Bound() because locals like [I] may be backed by mutable
+//   assignments such as [I := I + 1].
 {
     if (!n)
         return nullptr;
@@ -108,8 +114,6 @@ static Tree *LazyCompositeExpansionForName(lazy_binding_map &lazyBindings,
     auto lit = lazyBindings.find(n->value);
     if (lit != lazyBindings.end())
         exp = lit->second;
-    if (!exp)
-        exp = ctx->Bound(n);
     if (!exp)
         return nullptr;
     Context_g peelCtx = ctx;
@@ -239,7 +243,7 @@ static JIT::Value_p UnwrapThickIfNeeded(CompilerFunction &fn,
     {
         record(closures, "Unwrap thick lazy value %v for %t type %T",
                v, forExpr, t);
-        return fn.InvokeThickClosure(forExpr, v, t);
+        return fn.InvokeAndAutoboxThickClosure(forExpr, v, t);
     }
     return v;
 }
@@ -869,8 +873,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
         Tree        *argtype = vtypes->ValueType(arg);
         JIT::Value_p value = nullptr;
         JIT::Type_p  sigOverride = nullptr;
-        bool keepLazyShape = ArgWantsLazyThickClosure(arg) &&
-                             btypes->IsPatternType(argtype);
+        bool keepLazyShape = ArgWantsLazyThickClosure(arg);
         record(closures,
                "Binding %t arg %t argtype %t keepLazyShape %u",
                b.name, arg, argtype, uint(keepLazyShape));
@@ -926,10 +929,19 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             {
                 if (Name *argName = arg->AsName())
                 {
-                    if (JIT::Value_p known =
-                            function.Known(argName,
-                                           CompilerFunction::knowValues |
-                                           CompilerFunction::knowLocals))
+                    auto it = function.unit.lazyBindingSource.find(argName->value);
+                    if (it != function.unit.lazyBindingSource.end() &&
+                        it->second && it->second != arg)
+                    {
+                        value = Value(it->second);
+                        record(closures,
+                               "Binding %t eager remap %t -> %t => %v",
+                               b.name, argName, it->second, value);
+                    }
+                    else if (JIT::Value_p known =
+                                 function.Known(argName,
+                                                CompilerFunction::knowValues |
+                                                CompilerFunction::knowLocals))
                     {
                         value = UnwrapThickIfNeeded(function,
                                                     function.unit,
@@ -939,18 +951,6 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                         record(closures,
                                "Binding %t eager known name %t => %v",
                                b.name, argName, value);
-                    }
-                    else
-                    {
-                        auto it = function.unit.lazyBindingSource.find(argName->value);
-                        if (it != function.unit.lazyBindingSource.end() &&
-                            it->second && it->second != arg)
-                        {
-                            value = Value(it->second);
-                            record(closures,
-                                   "Binding %t eager remap %t -> %t => %v",
-                                   b.name, argName, it->second, value);
-                        }
                     }
                 }
                 if (!value)

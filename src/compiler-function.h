@@ -90,6 +90,9 @@ public:
     JIT::Value_p        InvokeThickClosure(Tree *expr,
                                            JIT::Value_p thick,
                                            JIT::Type_p  thickTy);
+    JIT::Value_p        InvokeAndAutoboxThickClosure(Tree *expr,
+                                                     JIT::Value_p thick,
+                                                     JIT::Type_p  thickTy);
 
     JIT::Type_p         ValueMachineType(Tree *expr, bool mayfail = false);
     void                ValueMachineType(Tree *expr, JIT::Type_p type);
