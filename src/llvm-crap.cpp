@@ -1972,10 +1972,11 @@ JIT::BasicBlock_p JITBlock::NewBlock(kstring name)
 
 bool JITBlock::IsTerminated() const
 // ----------------------------------------------------------------------------
-//   Check if the current block already has a terminator
+//   Check if the current insertion block already has a terminator
 // ----------------------------------------------------------------------------
 {
-    return b.block->getTerminator() != nullptr;
+    llvm::BasicBlock *cur = b->GetInsertBlock();
+    return cur && cur->getTerminator() != nullptr;
 }
 
 
@@ -2001,6 +2002,17 @@ JIT::Value_p JITBlock::Return(JIT::Value_p value)
 {
     auto inst = value ? b->CreateRet(value) : b->CreateRetVoid();
     record(llvm_ir, "Return(%v) is %v", value, inst);
+    return inst;
+}
+
+
+JIT::Value_p JITBlock::Unreachable()
+// ----------------------------------------------------------------------------
+//   Mark the current block as unreachable
+// ----------------------------------------------------------------------------
+{
+    auto inst = b->CreateUnreachable();
+    record(llvm_ir, "Unreachable() is %v", inst);
     return inst;
 }
 

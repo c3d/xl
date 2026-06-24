@@ -216,12 +216,20 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
     JIT::Value_p result = expr.Evaluate(tree, force);
     if (returned)
     {
-        JIT::Type_p retTy = jit.ReturnType(function);
-        JIT::Value_p direct = result;
-        result = Autobox(tree, result, retTy);
-        if (result == direct)
-            code.MarkTailCall(result);
-        code.Return(result);
+        if (!result && loopHead && code.IsTerminated())
+        {
+            record(compiler_function,
+                   "Compile %t self-tail loop, skip return", tree);
+        }
+        else
+        {
+            JIT::Type_p retTy = jit.ReturnType(function);
+            JIT::Value_p direct = result;
+            result = Autobox(tree, result, retTy);
+            if (result == direct)
+                code.MarkTailCall(result);
+            code.Return(result);
+        }
     }
     return function;
 }

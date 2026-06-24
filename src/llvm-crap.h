@@ -356,6 +356,7 @@ public:
     bool                IsTerminated() const;
     bool                MarkTailCall(JIT::Value_p value);
     JIT::Value_p        Return(JIT::Value_p value = nullptr);
+    JIT::Value_p        Unreachable();
     JIT::Value_p        Branch(JITBlock &to);
     JIT::Value_p        Branch(JIT::BasicBlock_p to);
     JIT::Value_p        IfBranch(JIT::Value_p cond,

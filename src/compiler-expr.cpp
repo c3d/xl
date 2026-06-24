@@ -885,6 +885,13 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         }
         return function.Autobox(rewriteCall, value, storageType);
     };
+    auto FinishTailDoCall = [&]() -> JIT::Value_p
+    {
+        code.SwitchTo(isDone);
+        if (!code.IsTerminated())
+            code.Unreachable();
+        return nullptr;
+    };
 
     for (i = 0; i < max; i++)
     {
@@ -933,6 +940,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 
             result = DoRewrite(rewriteCall, (CompilerRewriteCandidate *) cand);
             computed = saveComputed;
+            if (!result && function.loopHead)
+                return FinishTailDoCall();
             result = NormalizeResult(result);
             record(compiler_expr, "Call %t candidate %u is conditional: %v",
                    rewriteCall, i, result);
@@ -946,8 +955,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             // If this particular call was unconditional, we are done
             result = DoRewrite(rewriteCall, (CompilerRewriteCandidate *) cand);
             function.values = savedValues;
-            if (!result && function.code.IsTerminated())
-                return nullptr;
+            if (!result && function.loopHead)
+                return FinishTailDoCall();
             result = NormalizeResult(result);
             code.Store(result, storage);
             code.Branch(isDone);
