@@ -882,6 +882,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     if (storageType)
         storage = function.NeedStorage(rewriteCall, storageType);
     Compiler &compiler = function.compiler;
+    bool branchedToDone = false;
     auto NormalizeResult = [&](JIT::Value_p value) -> JIT::Value_p
     {
         if (!storageType)
@@ -894,9 +895,12 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     };
     auto FinishTailDoCall = [&]() -> JIT::Value_p
     {
-        code.SwitchTo(isDone);
-        if (!code.IsTerminated())
-            code.Unreachable();
+        if (!branchedToDone)
+        {
+            code.SwitchTo(isDone);
+            if (!code.IsTerminated())
+                code.Unreachable();
+        }
         return nullptr;
     };
 
@@ -954,6 +958,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
                    rewriteCall, i, result);
             code.Store(result, storage);
             code.Branch(isDone);
+            branchedToDone = true;
             code.SwitchTo(isBad);
             function.values = savedValues;
         }
@@ -967,6 +972,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             result = NormalizeResult(result);
             code.Store(result, storage);
             code.Branch(isDone);
+            branchedToDone = true;
             code.SwitchTo(isDone);
             result = code.Load(storageType, storage);
             return result;
@@ -978,6 +984,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     result = NormalizeResult(result);
     code.Store(result, storage);
     code.Branch(isDone);
+    branchedToDone = true;
     code.SwitchTo(isDone);
     result = code.Load(storageType, storage);
     record(compiler_expr, "No match for call %t, inserted form error: %v",
