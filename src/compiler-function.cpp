@@ -252,6 +252,10 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
 //    Compile a given tree in given function and return the associated value
 // ----------------------------------------------------------------------------
 {
+    lazy_binding_map savedLazy;
+    if (loopHead)
+        savedLazy.swap(unit.lazyBindingSource);
+
     Tree *prefix = nullptr;
     Tree *tail   = tree;
     if (loopHead)
@@ -289,6 +293,10 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
             code.Return(result);
         }
     }
+
+    if (loopHead)
+        unit.lazyBindingSource.swap(savedLazy);
+
     return function;
 }
 
@@ -458,6 +466,15 @@ JIT::Value_p CompilerFunction::CoerceTailParam(RewriteBinding &binding,
     if (!source)
         source = binding.name;
     return Autobox(source, value, ty);
+}
+
+
+bool CompilerFunction::HasTailLoopParam(Name *name) const
+// ----------------------------------------------------------------------------
+//   True when [name] is a tail-recursion loop parameter of this function
+// ----------------------------------------------------------------------------
+{
+    return loopHead && name && paramStorage.count(name);
 }
 
 

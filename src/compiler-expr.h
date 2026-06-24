@@ -55,7 +55,8 @@ class CompilerExpression
     bool                inTailPosition; // True when value is returned directly
 
 private:
-    void        SeedCandidateBindings(CompilerRewriteCandidate *cand);
+    void        SeedCandidateBindings(CompilerRewriteCandidate *cand,
+                                      Tree *call = nullptr);
     void        SeedPeeledKnownValues(Tree *call, Tree *rewriteCall);
     void        SeedKnownCompositeLeaves(Name *sourceName, Tree *expansion);
     void        SeedKnownCompositeLeaves(Tree *expansion,

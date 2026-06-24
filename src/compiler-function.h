@@ -104,6 +104,7 @@ public:
     JIT::Value_p        CoerceTailParam(RewriteBinding &binding,
                                         JIT::Value_p value,
                                         JIT::Type_p ty);
+    bool                HasTailLoopParam(Name *name) const;
 
 private:
     // Function interface creation

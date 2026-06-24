@@ -413,6 +413,28 @@ static Tree *BindingArgFromCall(Tree *call, Rewrite *rw, Name *param)
 }
 
 
+static bool PatternHasWhen(Tree *pattern)
+// ----------------------------------------------------------------------------
+//   True when a rewrite pattern includes a when guard
+// ----------------------------------------------------------------------------
+{
+    if (!pattern)
+        return false;
+    for (;;)
+    {
+        Tree *old = pattern;
+        if (Infix *w = pattern->AsInfix())
+            if (IsPatternCondition(w))
+                return true;
+        if (Block *b = pattern->AsBlock())
+            pattern = b->child;
+        if (pattern == old)
+            break;
+    }
+    return false;
+}
+
+
 static void RemoveDeadBindingArgFromCall(Tree *&arg, Tree *call,
                                          Rewrite *rw, Name *param)
 // ----------------------------------------------------------------------------
@@ -427,7 +449,8 @@ static void RemoveDeadBindingArgFromCall(Tree *&arg, Tree *call,
 }
 
 
-void CompilerExpression::SeedCandidateBindings(CompilerRewriteCandidate *cand)
+void CompilerExpression::SeedCandidateBindings(CompilerRewriteCandidate *cand,
+                                               Tree *call)
 // ----------------------------------------------------------------------------
 //   Bind pattern parameters while testing rewrite candidate conditions
 // ----------------------------------------------------------------------------
@@ -883,6 +906,23 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         storage = function.NeedStorage(rewriteCall, storageType);
     Compiler &compiler = function.compiler;
     bool branchedToDone = false;
+    JIT::Value_p callArgVal = nullptr;
+    if (function.loopHead)
+    {
+        Tree *callArg = nullptr;
+        if (Prefix *pc = rewriteCall->AsPrefix())
+            callArg = pc->right;
+        else if (Infix *ic = rewriteCall->AsInfix())
+            callArg = ic->right;
+        if (callArg)
+        {
+            callArgVal = BindingArgValue(callArg);
+            if (!callArgVal)
+                callArgVal = Value(callArg);
+            if (callArgVal)
+                computed[callArg] = callArgVal;
+        }
+    }
     auto NormalizeResult = [&](JIT::Value_p value) -> JIT::Value_p
     {
         if (!storageType)
@@ -895,11 +935,20 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     };
     auto FinishTailDoCall = [&]() -> JIT::Value_p
     {
-        if (!branchedToDone)
+        code.SwitchTo(isDone);
+        if (!code.IsTerminated())
         {
-            code.SwitchTo(isDone);
-            if (!code.IsTerminated())
+            if (branchedToDone)
+            {
+                result = code.Load(storageType, storage);
+                JIT::Type_p retTy = function.jit.ReturnType(function.function);
+                result = function.Autobox(rewriteCall, result, retTy);
+                code.Return(result);
+            }
+            else
+            {
                 code.Unreachable();
+            }
         }
         return nullptr;
     };
@@ -909,8 +958,22 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         // Now evaluate in that candidate's type system
         CompilerRewriteCandidate *cand = rc->Candidate(i);
         value_map savedValues = function.values;
-        SeedCandidateBindings(cand);
+        value_map saveComputed = computed;
+        SeedCandidateBindings(cand, rewriteCall);
         JIT::Value_p condition = nullptr;
+        value_map saveCallParam;
+        bool swapForGuard = callArgVal &&
+            PatternHasWhen(cand->rewrite->left);
+        if (swapForGuard)
+        {
+            for (RewriteBinding &b : cand->bindings)
+            {
+                if (!b.name)
+                    continue;
+                saveCallParam[b.name] = function.values[b.name];
+                function.values[b.name] = callArgVal;
+            }
+        }
 
         // Perform tree-kind tests to check if this candidate is valid
         for (RewriteTypeCheck &tc : cand->typechecks)
@@ -939,18 +1002,32 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
                 condition = compare;
         }
 
+        if (swapForGuard)
+        {
+            for (RewriteBinding &b : cand->bindings)
+            {
+                if (!b.name)
+                    continue;
+                auto it = saveCallParam.find(b.name);
+                if (it != saveCallParam.end())
+                    function.values[b.name] = it->second;
+                else
+                    function.values.erase(b.name);
+            }
+        }
+
         if (condition)
         {
             JITBlock isBad(code, "bad");
             JITBlock isGood(code, "good");
             code.IfBranch(condition, isGood, isBad);
             code.SwitchTo(isGood);
-            value_map saveComputed = computed;
+            value_map saveComputedRewrite = computed;
 
             // REVISIT: Insert cast of types here
 
             result = DoRewrite(rewriteCall, (CompilerRewriteCandidate *) cand);
-            computed = saveComputed;
+            computed = saveComputedRewrite;
             if (!result && function.loopHead)
                 return FinishTailDoCall();
             result = NormalizeResult(result);
@@ -961,12 +1038,14 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             branchedToDone = true;
             code.SwitchTo(isBad);
             function.values = savedValues;
+            computed = saveComputed;
         }
         else
         {
             // If this particular call was unconditional, we are done
             result = DoRewrite(rewriteCall, (CompilerRewriteCandidate *) cand);
             function.values = savedValues;
+            computed = saveComputed;
             if (!result && function.loopHead)
                 return FinishTailDoCall();
             result = NormalizeResult(result);
@@ -1146,28 +1225,35 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             {
                 if (Name *argName = arg->AsName())
                 {
-                    auto it = function.unit.lazyBindingSource.find(argName->value);
-                    if (it != function.unit.lazyBindingSource.end() &&
-                        it->second && it->second != arg)
+                    if (!function.HasTailLoopParam(argName))
                     {
-                        value = Value(it->second);
-                        record(closures,
-                               "Binding %t eager remap %t -> %t => %v",
-                               b.name, argName, it->second, value);
+                        auto it = function.unit.lazyBindingSource.find(
+                            argName->value);
+                        if (it != function.unit.lazyBindingSource.end() &&
+                            it->second && it->second != arg)
+                        {
+                            value = Value(it->second);
+                            record(closures,
+                                   "Binding %t eager remap %t -> %t => %v",
+                                   b.name, argName, it->second, value);
+                        }
                     }
-                    else if (JIT::Value_p known =
-                                 function.Known(argName,
-                                                CompilerFunction::knowValues |
-                                                CompilerFunction::knowLocals))
+                    if (!value)
                     {
-                        value = UnwrapThickIfNeeded(function,
-                                                    function.unit,
-                                                    code,
-                                                    arg,
-                                                    known);
-                        record(closures,
-                               "Binding %t eager known name %t => %v",
-                               b.name, argName, value);
+                        if (JIT::Value_p known =
+                                function.Known(argName,
+                                               CompilerFunction::knowValues |
+                                               CompilerFunction::knowLocals))
+                        {
+                            value = UnwrapThickIfNeeded(function,
+                                                        function.unit,
+                                                        code,
+                                                        arg,
+                                                        known);
+                            record(closures,
+                                   "Binding %t eager known name %t => %v",
+                                   b.name, argName, value);
+                        }
                     }
                 }
                 if (!value && b.name)
@@ -1197,9 +1283,10 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                            "Binding %t non-lazy known name %t => %v",
                            b.name, argName, value);
                 }
-                else
+                else if (!function.HasTailLoopParam(argName))
                 {
-                    auto it = function.unit.lazyBindingSource.find(argName->value);
+                    auto it = function.unit.lazyBindingSource.find(
+                        argName->value);
                     if (it != function.unit.lazyBindingSource.end() &&
                         it->second && it->second != arg)
                     {
