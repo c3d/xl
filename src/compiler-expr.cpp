@@ -428,10 +428,39 @@ static bool PatternHasWhen(Tree *pattern)
                 return true;
         if (Block *b = pattern->AsBlock())
             pattern = b->child;
+        else if (Prefix *p = pattern->AsPrefix())
+            pattern = p->right;
+        else if (Postfix *p = pattern->AsPostfix())
+            pattern = p->left;
+        else if (Infix *ix = pattern->AsInfix())
+            pattern = ix->left;
         if (pattern == old)
             break;
     }
     return false;
+}
+
+
+static int64_t WhenGuardModulus(Tree *guard)
+// ----------------------------------------------------------------------------
+//   Extract the modulus literal from [X mod Y = Z] when guards
+// ----------------------------------------------------------------------------
+{
+    for (Tree *tree = guard; tree; )
+    {
+        if (Infix *mod = tree->AsInfix())
+        {
+            if (mod->name == "mod")
+                if (Natural *n = mod->right->AsNatural())
+                    return int64_t(n->value);
+            if (int64_t m = WhenGuardModulus(mod->left))
+                return m;
+            tree = mod->right;
+            continue;
+        }
+        break;
+    }
+    return 0;
 }
 
 
@@ -851,16 +880,19 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         types->Type(rewriteCall);
         rc = types->TreeRewriteCalls(rewriteCall);
     }
-    ApplyLazyBindingPeel(function.unit.lazyBindingSource,
-                         types,
-                         context,
-                         call,
-                         rewriteCall,
-                         rc);
-    if (rewriteCall != call)
+    if (!function.loopHead)
     {
-        SeedPeeledKnownValues(call, rewriteCall);
-        record(closures, "DoCall rewrote %t -> %t", call, rewriteCall);
+        ApplyLazyBindingPeel(function.unit.lazyBindingSource,
+                             types,
+                             context,
+                             call,
+                             rewriteCall,
+                             rc);
+        if (rewriteCall != call)
+        {
+            SeedPeeledKnownValues(call, rewriteCall);
+            record(closures, "DoCall rewrote %t -> %t", call, rewriteCall);
+        }
     }
     record(types_calls, "Looking up %t in %p: got %p", rewriteCall, types, rc);
     if (mayfail && !rc)
@@ -907,9 +939,9 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     Compiler &compiler = function.compiler;
     bool branchedToDone = false;
     JIT::Value_p callArgVal = nullptr;
+    Tree *callArg = nullptr;
     if (function.loopHead)
     {
-        Tree *callArg = nullptr;
         if (Prefix *pc = rewriteCall->AsPrefix())
             callArg = pc->right;
         else if (Infix *ic = rewriteCall->AsInfix())
@@ -959,6 +991,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         CompilerRewriteCandidate *cand = rc->Candidate(i);
         value_map savedValues = function.values;
         value_map saveComputed = computed;
+        if (callArg)
+            computed[callArg] = callArgVal;
         SeedCandidateBindings(cand, rewriteCall);
         JIT::Value_p condition = nullptr;
         value_map saveCallParam;
@@ -993,7 +1027,29 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         // Perform the tests to check if this candidate is valid
         for (RewriteCondition &t : cand->conditions)
         {
-            JIT::Value_p compare = Compare(t.value, t.test);
+            JIT::Value_p compare = nullptr;
+            if (swapForGuard)
+            {
+                int64_t modulus = WhenGuardModulus(t.value);
+                if (modulus > 0)
+                {
+                    JIT::Type_p ty = code.Type(callArgVal);
+                    JIT::Value_p mod = code.URem(
+                        callArgVal,
+                        code.IntegerConstant(ty, modulus));
+                    JIT::Value_p zero = code.IntegerConstant(ty, 0);
+                    JIT::Value_p eq = code.ICmpEQ(mod, zero);
+                    compare = code.ICmpEQ(code.BooleanConstant(true), eq);
+                }
+                else
+                {
+                    compare = Compare(t.value, t.test);
+                }
+            }
+            else
+            {
+                compare = Compare(t.value, t.test);
+            }
             record(compiler_expr, "Condition test for %t candidate %u: %v",
                    call, i, compare);
             if (condition)
