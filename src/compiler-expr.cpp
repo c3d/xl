@@ -323,6 +323,7 @@ void CompilerExpression::SeedKnownCompositeLeaves(Name *sourceName,
 
     JIT::Type_p boxedTy = function.code.Type(boxed);
     if (!boxedTy ||
+        !JIT::IsStructType(boxedTy) ||
         function.compiler.IsTreePointerType(boxedTy) ||
         function.unit.IsClosureType(boxedTy))
         return;
@@ -874,6 +875,23 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
         JIT::Value_p value = nullptr;
         JIT::Type_p  sigOverride = nullptr;
         bool keepLazyShape = ArgWantsLazyThickClosure(arg);
+        if (lazyBindings && !keepLazyShape)
+        {
+            if (Name *argName = arg->AsName())
+            {
+                Scope_g argWhere = nullptr;
+                Rewrite_g argRewrite = nullptr;
+                if (context->Bound(argName, true, &argRewrite, &argWhere) &&
+                    argRewrite &&
+                    argWhere == context->Symbols())
+                {
+                    keepLazyShape = true;
+                    record(closures,
+                           "Binding %t keeps lazy local name %t",
+                           b.name, argName);
+                }
+            }
+        }
         record(closures,
                "Binding %t arg %t argtype %t keepLazyShape %u",
                b.name, arg, argtype, uint(keepLazyShape));
