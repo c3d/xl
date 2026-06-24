@@ -59,11 +59,14 @@ protected:
     JITBlock            code;       // A basic block for current code
     JITBlock            exit;       // A basic block for shared exit
     JIT::BasicBlock_p   entry;      // The entry point for the function code
+    JIT::BasicBlock_p   loopHead;   // Tail-call loop head (rewrite functions)
     JIT::Value_p        returned;   // Returned value
     JIT::Type_p         closure;    // Closure type if any
     value_map           values;     // Tree -> LLVM value
     value_map           storage;    // Tree -> LLVM storage (alloca)
     std::map<Tree_g, JIT::Type_p> storageTypes; // Tree -> storage machine type
+    std::map<Name_g, JIT::Value_p> paramStorage; // Tail-loop parameter slots
+    std::map<Name_g, JIT::Type_p>  paramTypes;   // Tail-loop parameter types
 
     friend class CompilerExpression;
 
@@ -102,6 +105,7 @@ private:
     // Function interface creation
     void                InitializeArgs();
     void                InitializeArgs(CompilerRewriteCandidate *rc);
+    void                ReloadParams(CompilerRewriteCandidate *rc);
 
     // Machine types management
     void                AddBoxedType(Tree *treeType, JIT::Type_p machineType);

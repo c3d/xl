@@ -51,6 +51,33 @@ RECORDER(boxed_assign_data, 128, "Boxed tree Data() assignment/read debug");
 
 XL_BEGIN
 
+static bool IsIoBuiltinRewrite(const text &fname)
+// ----------------------------------------------------------------------------
+//   True for builtin I/O rewrites that use isDone dispatch, not tail loops
+// ----------------------------------------------------------------------------
+{
+    text base = fname;
+    if (base.compare(0, 3, "xl.") == 0)
+        base = base.substr(3);
+    size_t dot = base.find('.');
+    if (dot != text::npos)
+        base = base.substr(0, dot);
+    return base == "write" || base == "print" || base == "writeln";
+}
+
+
+static bool UsesTailLoop(CompilerRewriteCandidate *rc)
+// ----------------------------------------------------------------------------
+//   True when a rewrite function needs the tail-recursion parameter loop
+// ----------------------------------------------------------------------------
+{
+    if (!rc || IsIoBuiltinRewrite(rc->FunctionName()))
+        return false;
+    CompilerTypes::Decl d = CompilerTypes::RewriteCategory(rc);
+    return d != CompilerTypes::Decl::DATA && d != CompilerTypes::Decl::C;
+}
+
+
 CompilerFunction::CompilerFunction(CompilerUnit &unit,
                                    Tree *pattern,
                                    Tree *body,
@@ -70,6 +97,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
+      loopHead(nullptr),
       returned(data.AllocateReturnValue(function, "retval")),
       closure(nullptr)
 {
@@ -95,10 +123,18 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       code(jit, function, "code"),
       exit(jit, function, "exit"),
       entry(code.Block()),
+      loopHead(nullptr),
       returned(data.AllocateReturnValue(function, "retval")),
       closure(nullptr)
 {
     InitializeArgs(rc);
+    if (UsesTailLoop(rc))
+    {
+        loopHead = code.NewBlock("loop");
+        code.Branch(loopHead);
+        code.SwitchTo(loopHead);
+        ReloadParams(rc);
+    }
     record(compiler_function,
            "Created optimized %p called by %p for %t function %v",
            this, &caller, pattern, function);
@@ -176,7 +212,7 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
 //    Compile a given tree in given function and return the associated value
 // ----------------------------------------------------------------------------
 {
-    CompilerExpression expr(*this);
+    CompilerExpression expr(*this, true);
     JIT::Value_p result = expr.Evaluate(tree, force);
     if (returned)
     {
@@ -209,6 +245,13 @@ eval_fn CompilerFunction::Finalize(bool createCode)
 // ----------------------------------------------------------------------------
 {
     record(llvm, "Finalize function %v", function);
+
+    if (loopHead)
+    {
+        code.SwitchTo(loopHead);
+        if (!code.IsTerminated())
+            code.Branch(exit);
+    }
 
     // Branch to the exit block from the current main body of code
     if (!code.IsTerminated())
@@ -275,25 +318,54 @@ void CompilerFunction::InitializeArgs(CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Initialize the arguments and return statements for optimized functions
 // ----------------------------------------------------------------------------
-//   In that case, the arguments are from the function itself
-//   They may start with a closure pointer, which we read here to have
-//   the values set during the rest of the code generation
+//   Tail-loop functions keep parameters in allocas for in-place updates.
 {
-    // Associate the value for the additional arguments (read-only, no alloca)
     JITArguments inputs(function);
+    bool tailLoop = UsesTailLoop(rc);
 
-    // Read the actual parameters
     for (RewriteBinding &binding : rc->bindings)
     {
         JIT::Value_p input = *inputs++;
-        values[binding.name] = input;
+        if (tailLoop)
+        {
+            JIT::Type_p  ty   = code.Type(input);
+            JIT::Value_p slot = data.Alloca(ty, binding.name->value.c_str());
+            data.Store(input, slot);
+            paramStorage[binding.name] = slot;
+            paramTypes[binding.name] = ty;
+            values[binding.name] = code.Load(ty, slot);
+        }
+        else
+        {
+            values[binding.name] = input;
+        }
     }
 
-    // Insert 'self', mapping to pattern, and 'scope' for the evaluation scope
     Scope *scope = rc->value_types->TypesScope();
     Tree *pattern = rc->RewritePattern();
     values[scope_type] = data.PointerConstant(compiler.scopePtrTy, scope);
     values[xl_self] = data.PointerConstant(compiler.treePtrTy, pattern);
+}
+
+
+void CompilerFunction::ReloadParams(CompilerRewriteCandidate *rc)
+// ----------------------------------------------------------------------------
+//   Reload rewrite parameters from allocas at the tail-recursion loop head
+// ----------------------------------------------------------------------------
+{
+    for (RewriteBinding &binding : rc->bindings)
+    {
+        if (!binding.name)
+            continue;
+        auto it = paramStorage.find(binding.name);
+        if (it == paramStorage.end())
+            continue;
+        JIT::Value_p slot = it->second;
+        auto         tyIt = paramTypes.find(binding.name);
+        JIT::Type_p  ty   = tyIt != paramTypes.end() ? tyIt->second
+                                                     : code.Type(slot);
+        values[binding.name] = code.Load(ty, slot);
+    }
 }
 
 

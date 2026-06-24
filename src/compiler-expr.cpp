@@ -364,17 +364,155 @@ void CompilerExpression::SeedPeeledKnownValues(Tree *call, Tree *rewriteCall)
 }
 
 
+static Tree *BindingArgFromCall(Tree *call, Rewrite *rw, Name *param)
+// ----------------------------------------------------------------------------
+//   Recover a pattern parameter from a call-shaped binding value
+// ----------------------------------------------------------------------------
+{
+    if (!call || !rw || !param)
+        return nullptr;
+    Tree *pat = rw->left;
+    for (;;)
+    {
+        Tree *old = pat;
+        if (Infix *w = pat->AsInfix())
+            if (IsPatternCondition(w) || IsTypeAnnotation(w))
+                pat = w->left;
+        if (Block *b = pat->AsBlock())
+            pat = b->child;
+        if (pat == old)
+            break;
+    }
+    if (Prefix *pc = call->AsPrefix())
+    {
+        if (Prefix *pp = pat->AsPrefix())
+            if (Name *pname = pp->right->AsName())
+                if (pname->value == param->value)
+                    return pc->right;
+        if (Infix *ip = pat->AsInfix())
+            if (Name *op = ip->left->AsName())
+                if (Name *cop = pc->left->AsName())
+                    if (op->value == cop->value)
+                        if (Name *pname = ip->right->AsName())
+                            if (pname->value == param->value)
+                                return pc->right;
+    }
+    if (Infix *ic = call->AsInfix())
+    {
+        if (Infix *ip = pat->AsInfix())
+        {
+            if (Name *pname = ip->right->AsName())
+                if (pname->value == param->value)
+                    return ic->right;
+            if (Name *pname = ip->left->AsName())
+                if (pname->value == param->value)
+                    return ic->left;
+        }
+    }
+    return nullptr;
+}
+
+
+static void RemoveDeadBindingArgFromCall(Tree *&arg, Tree *call,
+                                         Rewrite *rw, Name *param)
+// ----------------------------------------------------------------------------
+//   Replace a call-shaped binding argument with the matching parameter slot
+// ----------------------------------------------------------------------------
+{
+    if (!arg || !call || !rw || !param)
+        return;
+    if (arg == call)
+        if (Tree *fromCall = BindingArgFromCall(call, rw, param))
+            arg = fromCall;
+}
+
+
+void CompilerExpression::SeedCandidateBindings(CompilerRewriteCandidate *cand)
+// ----------------------------------------------------------------------------
+//   Bind pattern parameters while testing rewrite candidate conditions
+// ----------------------------------------------------------------------------
+{
+    if (!cand)
+        return;
+    for (RewriteBinding &b : cand->bindings)
+    {
+        if (!b.name || !b.value)
+            continue;
+        if (function.Known(b.name, CompilerFunction::knowValues))
+            continue;
+        JIT::Value_p value = nullptr;
+        JIT::Type_p  paramTy = nullptr;
+        auto         tyIt = function.paramTypes.find(b.name);
+        if (tyIt != function.paramTypes.end())
+            paramTy = tyIt->second;
+        if (Natural *n = b.value->AsNatural())
+        {
+            if (paramTy == function.compiler.naturalTy)
+                value = function.code.IntegerConstant(function.compiler.naturalTy,
+                                                      int64_t(n->value));
+            else
+                value = function.ConstantNatural(n);
+        }
+        else if (Real *r = b.value->AsReal())
+        {
+            if (paramTy == function.compiler.realTy)
+                value = function.code.FloatConstant(function.compiler.realTy,
+                                                    r->value);
+            else
+                value = function.ConstantReal(r);
+        }
+        else if (Text *t = b.value->AsText())
+            value = function.ConstantText(t);
+        else if (Name *vn = b.value->AsName())
+            value = function.Known(vn, CompilerFunction::knowValues |
+                                        CompilerFunction::knowLocals);
+        if (value)
+            function.values[b.name] = value;
+        record(compiler_expr, "Seed binding %t = %t as %v",
+               b.name, b.value, value);
+    }
+}
+
+
+JIT::Value_p CompilerExpression::BindingArgValue(Tree *arg)
+// ----------------------------------------------------------------------------
+//   Evaluate simple binding argument shapes without re-entering calls
+// ----------------------------------------------------------------------------
+{
+    if (Infix *ix = arg->AsInfix())
+    {
+        if (ix->name == "-")
+        {
+            if (Name *n = ix->left->AsName())
+            {
+                JIT::Value_p lhs = function.Known(n,
+                                                  CompilerFunction::knowValues |
+                                                  CompilerFunction::knowLocals);
+                if (lhs)
+                {
+                    JIT::Value_p rhs = Value(ix->right);
+                    if (rhs)
+                        return function.code.Sub(lhs, rhs);
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
+
 // ============================================================================
 //
 //    Compile an expression
 //
 // ============================================================================
 
-CompilerExpression::CompilerExpression(CompilerFunction &function)
+CompilerExpression::CompilerExpression(CompilerFunction &function,
+                                       bool               tail)
 // ----------------------------------------------------------------------------
 //   Constructor for a compiler expression
 // ----------------------------------------------------------------------------
-    : CompilerExpression(function, function.FunctionContext())
+    : CompilerExpression(function, function.FunctionContext(), tail)
 {}
 
 
@@ -383,9 +521,20 @@ CompilerExpression::CompilerExpression(CompilerFunction &function,
 // ----------------------------------------------------------------------------
 //   Constructor for a compiler expression
 // ----------------------------------------------------------------------------
+    : CompilerExpression(function, context, false)
+{}
+
+
+CompilerExpression::CompilerExpression(CompilerFunction &function,
+                                       Context          *context,
+                                       bool               tail)
+// ----------------------------------------------------------------------------
+//   Constructor for a compiler expression
+// ----------------------------------------------------------------------------
     : function(function),
       computed(),
-      context(context)
+      context(context),
+      inTailPosition(tail)
 {}
 
 
@@ -563,7 +712,10 @@ JIT::Value_p CompilerExpression::Do(Infix *infix)
     // Sequences
     if (IsSequence(infix))
     {
+        bool savedTail = inTailPosition;
+        inTailPosition = false;
         JIT::Value_p left = Evaluate(infix->left, true);
+        inTailPosition = savedTail;
         JIT::Value_p right = Evaluate(infix->right, true);
         if (right)
             return right;
@@ -699,6 +851,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         if (cand->Unconditional())
         {
             result = DoRewrite(rewriteCall, (CompilerRewriteCandidate *) cand);
+            if (!result && function.code.IsTerminated())
+                return nullptr;
             return result;
         }
     }
@@ -736,6 +890,8 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     {
         // Now evaluate in that candidate's type system
         CompilerRewriteCandidate *cand = rc->Candidate(i);
+        value_map savedValues = function.values;
+        SeedCandidateBindings(cand);
         JIT::Value_p condition = nullptr;
 
         // Perform tree-kind tests to check if this candidate is valid
@@ -783,11 +939,15 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             code.Store(result, storage);
             code.Branch(isDone);
             code.SwitchTo(isBad);
+            function.values = savedValues;
         }
         else
         {
             // If this particular call was unconditional, we are done
             result = DoRewrite(rewriteCall, (CompilerRewriteCandidate *) cand);
+            function.values = savedValues;
+            if (!result && function.code.IsTerminated())
+                return nullptr;
             result = NormalizeResult(result);
             code.Store(result, storage);
             code.Branch(isDone);
@@ -822,6 +982,22 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
     Compiler &compiler = function.compiler;
 
     record(compiler_expr, "Rewrite: %t", rw);
+
+    bool savedTail = inTailPosition;
+    inTailPosition = false;
+
+    struct RestoreTailPosition
+    {
+        CompilerExpression *expr;
+        bool                saved;
+        RestoreTailPosition(CompilerExpression *e, bool s)
+            : expr(e), saved(s)
+        {}
+        ~RestoreTailPosition()
+        {
+            expr->inTailPosition = saved;
+        }
+    } restoreTail(this, savedTail);
 
     struct ClearThickLazyArgOverride
     {
@@ -971,6 +1147,10 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                                b.name, argName, value);
                     }
                 }
+                if (!value && b.name)
+                    RemoveDeadBindingArgFromCall(arg, call, rw, b.name);
+                if (!value)
+                    value = BindingArgValue(arg);
                 if (!value)
                     value = Value(arg);
                 record(closures, "Binding %t eager value %v", b.name, value);
@@ -1007,6 +1187,10 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                     }
                 }
             }
+            if (!value && b.name)
+                RemoveDeadBindingArgFromCall(arg, call, rw, b.name);
+            if (!value)
+                value = BindingArgValue(arg);
             if (!value)
                 value = Value(arg);
             record(closures, "Binding %t non-lazy value %v",
@@ -1070,10 +1254,28 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
     }
     else if (JIT::Function_p fn = function.Compile(call, cand, args))
     {
-        result = code.Call(fn, args);
-        result = NormalizeVoidResult(result);
-        record(compiler_expr, "Rewrite %t function %v call %v",
-               rw, fn, result);
+        if (savedTail && fn == function.Function() && function.loopHead)
+        {
+            for (size_t bi = 0; bi < cand->bindings.size(); bi++)
+            {
+                RewriteBinding &b = cand->bindings[bi];
+                if (!b.name || bi >= args.size())
+                    continue;
+                auto it = function.paramStorage.find(b.name);
+                if (it != function.paramStorage.end())
+                    code.Store(args[bi], it->second);
+            }
+            code.Branch(function.loopHead);
+            result = nullptr;
+            record(compiler_expr, "Rewrite %t tail-jump to loop %v", rw, fn);
+        }
+        else
+        {
+            result = code.Call(fn, args);
+            result = NormalizeVoidResult(result);
+            record(compiler_expr, "Rewrite %t function %v call %v",
+                   rw, fn, result);
+        }
     }
     else
     {

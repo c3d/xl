@@ -52,19 +52,23 @@ class CompilerExpression
     CompilerFunction &  function;       // Current compilation function
     value_map           computed;       // Values we already computed
     Context_g           context;        // Context of evaluation
+    bool                inTailPosition; // True when value is returned directly
 
 private:
+    void        SeedCandidateBindings(CompilerRewriteCandidate *cand);
     void        SeedPeeledKnownValues(Tree *call, Tree *rewriteCall);
     void        SeedKnownCompositeLeaves(Name *sourceName, Tree *expansion);
     void        SeedKnownCompositeLeaves(Tree *expansion,
                                          JIT::Value_p boxed,
                                          JIT::Type_p boxedTy,
                                          uint &index);
+    JIT::Value_p BindingArgValue(Tree *arg);
 
   public:
     typedef JIT::Value_p value_type;
-    CompilerExpression(CompilerFunction &function);
+    CompilerExpression(CompilerFunction &function, bool tail = false);
     CompilerExpression(CompilerFunction &function, Context *context);
+    CompilerExpression(CompilerFunction &function, Context *context, bool tail);
 
 public:
     value_type  Evaluate(Tree *tree, bool force = false);
