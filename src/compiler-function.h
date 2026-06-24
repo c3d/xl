@@ -60,6 +60,7 @@ protected:
     JITBlock            exit;       // A basic block for shared exit
     JIT::BasicBlock_p   entry;      // The entry point for the function code
     JIT::BasicBlock_p   loopHead;   // Tail-call loop head (rewrite functions)
+    CompilerRewriteCandidate_g tailRc; // Rewrite owning the tail loop
     JIT::Value_p        returned;   // Returned value
     JIT::Type_p         closure;    // Closure type if any
     value_map           values;     // Tree -> LLVM value

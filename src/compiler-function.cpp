@@ -93,6 +93,8 @@ static bool UsesTailLoop(CompilerRewriteCandidate *rc)
     text fname = rc->FunctionName();
     if (fname.compare(0, 6, "infix[") == 0)
         return false;
+    if (rc->bindings.empty())
+        return false;
     CompilerTypes::Decl d = CompilerTypes::RewriteCategory(rc);
     return d != CompilerTypes::Decl::DATA && d != CompilerTypes::Decl::C;
 }
@@ -118,6 +120,7 @@ CompilerFunction::CompilerFunction(CompilerUnit &unit,
       exit(jit, function, "exit"),
       entry(code.Block()),
       loopHead(nullptr),
+      tailRc(nullptr),
       returned(data.AllocateReturnValue(function, "retval")),
       closure(nullptr)
 {
@@ -144,6 +147,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
       exit(jit, function, "exit"),
       entry(code.Block()),
       loopHead(nullptr),
+      tailRc(nullptr),
       returned(data.AllocateReturnValue(function, "retval")),
       closure(nullptr)
 {
@@ -151,9 +155,7 @@ CompilerFunction::CompilerFunction(CompilerFunction &caller,
     if (UsesTailLoop(rc))
     {
         loopHead = code.NewBlock("loop");
-        code.Branch(loopHead);
-        code.SwitchTo(loopHead);
-        ReloadParams(rc);
+        tailRc = rc;
     }
     record(compiler_function,
            "Created optimized %p called by %p for %t function %v",
@@ -227,13 +229,49 @@ bool CompilerFunction::IsInterfaceOnly()
 }
 
 
+static Tree *TailLoopSplit(Tree *body, Tree **prefix)
+// ----------------------------------------------------------------------------
+//   Split [prefix; tail] bodies so tail-loop jumps skip non-tail statements
+// ----------------------------------------------------------------------------
+{
+    *prefix = nullptr;
+    Tree *tree = body;
+    if (Block *block = body->AsBlock())
+        tree = block->child;
+    if (Infix *seq = IsSequence(tree))
+    {
+        *prefix = seq->left;
+        return seq->right;
+    }
+    return body;
+}
+
+
 JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
 // ----------------------------------------------------------------------------
 //    Compile a given tree in given function and return the associated value
 // ----------------------------------------------------------------------------
 {
+    Tree *prefix = nullptr;
+    Tree *tail   = tree;
+    if (loopHead)
+        tail = TailLoopSplit(tree, &prefix);
+
+    if (loopHead && prefix)
+    {
+        CompilerExpression prologue(*this, false);
+        (void) prologue.Evaluate(prefix, force);
+    }
+
+    if (loopHead)
+    {
+        code.Branch(loopHead);
+        code.SwitchTo(loopHead);
+        ReloadParams(tailRc);
+    }
+
     CompilerExpression expr(*this, true);
-    JIT::Value_p result = expr.Evaluate(tree, force);
+    JIT::Value_p result = expr.Evaluate(tail, force);
     if (returned)
     {
         if (!result && loopHead && code.IsTerminated())
