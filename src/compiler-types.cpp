@@ -162,6 +162,19 @@ void CompilerTypes::AddBoxedType(Tree *type, JIT::Type_p mtype)
            this, mtype, type, base);
     if (boxed[base] && boxed[base] != mtype)
     {
+        if (Name *n = base->AsName())
+        {
+            if (n->value == "natural")
+            {
+                if (boxed[base]->isIntegerTy() && !mtype->isIntegerTy())
+                    return;
+                if (mtype->isIntegerTy() && !boxed[base]->isIntegerTy())
+                {
+                    boxed[base] = mtype;
+                    return;
+                }
+            }
+        }
         Ooops("Incompatible machine representations for type $1", base);
         return;
     }

@@ -445,9 +445,16 @@ void CompilerExpression::SeedCandidateBindings(CompilerRewriteCandidate *cand)
         auto         tyIt = function.paramTypes.find(b.name);
         if (tyIt != function.paramTypes.end())
             paramTy = tyIt->second;
+        CompilerTypes *btypes = cand->BindingTypes();
+        Tree *valueType = cand->ValueType(b.value);
+        if (!paramTy && valueType)
+            paramTy = btypes->BoxedType(valueType);
         if (Natural *n = b.value->AsNatural())
         {
-            if (paramTy == function.compiler.naturalTy)
+            if (paramTy && paramTy->isIntegerTy())
+                value = function.code.IntegerConstant(paramTy,
+                                                      int64_t(n->value));
+            else if (paramTy == function.compiler.naturalTy)
                 value = function.code.IntegerConstant(function.compiler.naturalTy,
                                                       int64_t(n->value));
             else
@@ -1272,7 +1279,13 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                     continue;
                 auto it = function.paramStorage.find(b.name);
                 if (it != function.paramStorage.end())
-                    code.Store(args[bi], it->second);
+                {
+                    JIT::Value_p arg = args[bi];
+                    auto         tyIt = function.paramTypes.find(b.name);
+                    if (tyIt != function.paramTypes.end())
+                        arg = function.CoerceTailParam(b, arg, tyIt->second);
+                    code.Store(arg, it->second);
+                }
             }
             code.Branch(function.loopHead);
             result = nullptr;
@@ -1451,7 +1464,8 @@ JIT::Value_p CompilerExpression::Compare(Tree *valueTree, Tree *testTree)
     // Comparison of natural values
     if (testType->isIntegerTy())
     {
-        if (valueType == compiler.naturalTreePtrTy)
+        if (valueType == compiler.naturalTreePtrTy ||
+            (valueType->isStructTy() && !valueType->isIntegerTy()))
         {
             value = function.Autobox(valueTree, value, compiler.naturalTy);
             valueType = code.Type(value);

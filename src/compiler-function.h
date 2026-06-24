@@ -100,12 +100,17 @@ public:
     JIT::Type_p         ValueMachineType(Tree *expr, bool mayfail = false);
     void                ValueMachineType(Tree *expr, JIT::Type_p type);
     JIT::Type_p         BoxedType(Tree *type);
+    JIT::Value_p        CoerceTailParam(RewriteBinding &binding,
+                                        JIT::Value_p value,
+                                        JIT::Type_p ty);
 
 private:
     // Function interface creation
     void                InitializeArgs();
     void                InitializeArgs(CompilerRewriteCandidate *rc);
     void                ReloadParams(CompilerRewriteCandidate *rc);
+    JIT::Type_p         TailLoopParamType(CompilerRewriteCandidate *rc,
+                                          RewriteBinding &binding);
 
     // Machine types management
     void                AddBoxedType(Tree *treeType, JIT::Type_p machineType);

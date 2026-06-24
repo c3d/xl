@@ -66,12 +66,32 @@ static bool IsIoBuiltinRewrite(const text &fname)
 }
 
 
+static bool IsControlBuiltinRewrite(const text &fname)
+// ----------------------------------------------------------------------------
+//   True for builtin control-flow rewrites that must not use tail loops
+// ----------------------------------------------------------------------------
+{
+    text base = fname;
+    if (base.compare(0, 3, "xl.") == 0)
+        base = base.substr(3);
+    size_t dot = base.find('.');
+    if (dot != text::npos)
+        base = base.substr(0, dot);
+    return base == "if" || base == "while" || base == "loop" ||
+           base == "until" || base == "for" || base == "every";
+}
+
+
 static bool UsesTailLoop(CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   True when a rewrite function needs the tail-recursion parameter loop
 // ----------------------------------------------------------------------------
 {
-    if (!rc || IsIoBuiltinRewrite(rc->FunctionName()))
+    if (!rc || IsIoBuiltinRewrite(rc->FunctionName()) ||
+        IsControlBuiltinRewrite(rc->FunctionName()))
+        return false;
+    text fname = rc->FunctionName();
+    if (fname.compare(0, 6, "infix[") == 0)
         return false;
     CompilerTypes::Decl d = CompilerTypes::RewriteCategory(rc);
     return d != CompilerTypes::Decl::DATA && d != CompilerTypes::Decl::C;
@@ -336,9 +356,12 @@ void CompilerFunction::InitializeArgs(CompilerRewriteCandidate *rc)
         JIT::Value_p input = *inputs++;
         if (tailLoop)
         {
-            JIT::Type_p  ty   = code.Type(input);
-            JIT::Value_p slot = data.Alloca(ty, binding.name->value.c_str());
-            data.Store(input, slot);
+            JIT::Type_p  ty     = TailLoopParamType(rc, binding);
+            if (!ty)
+                ty = code.Type(input);
+            JIT::Value_p stored = CoerceTailParam(binding, input, ty);
+            JIT::Value_p slot   = data.Alloca(ty, binding.name->value.c_str());
+            data.Store(stored, slot);
             paramStorage[binding.name] = slot;
             paramTypes[binding.name] = ty;
             values[binding.name] = code.Load(ty, slot);
@@ -353,6 +376,50 @@ void CompilerFunction::InitializeArgs(CompilerRewriteCandidate *rc)
     Tree *pattern = rc->RewritePattern();
     values[scope_type] = data.PointerConstant(compiler.scopePtrTy, scope);
     values[xl_self] = data.PointerConstant(compiler.treePtrTy, pattern);
+}
+
+
+JIT::Type_p CompilerFunction::TailLoopParamType(CompilerRewriteCandidate *rc,
+                                                RewriteBinding &binding)
+// ----------------------------------------------------------------------------
+//   Machine type for a tail-loop parameter alloca (native naturals, not trees)
+// ----------------------------------------------------------------------------
+{
+    CompilerTypes *btypes = rc->BindingTypes();
+    Tree *valueType = rc->ValueType(binding.value);
+    JIT::Type_p ty = btypes->BoxedType(valueType);
+    if (!ty)
+        ty = ValueMachineType(binding.value, true);
+    if (!ty)
+        return nullptr;
+    if (ty->isIntegerTy() || ty->isFloatingPointTy())
+        return ty;
+    if (ty == compiler.naturalTreePtrTy ||
+        jit.MachinePointerType(ty) == compiler.naturalTreePtrTy)
+        return compiler.naturalTy;
+    if (ty == compiler.realTreePtrTy ||
+        jit.MachinePointerType(ty) == compiler.realTreePtrTy)
+        return compiler.realTy;
+    return ty;
+}
+
+
+JIT::Value_p CompilerFunction::CoerceTailParam(RewriteBinding &binding,
+                                               JIT::Value_p value,
+                                               JIT::Type_p ty)
+// ----------------------------------------------------------------------------
+//   Coerce an incoming argument to the tail-loop parameter storage type
+// ----------------------------------------------------------------------------
+{
+    if (!value || !ty)
+        return value;
+    JIT::Type_p from = code.Type(value);
+    if (from == ty)
+        return value;
+    Tree *source = binding.value;
+    if (!source)
+        source = binding.name;
+    return Autobox(source, value, ty);
 }
 
 
@@ -670,14 +737,24 @@ JIT::Value_p CompilerFunction::Autobox(Tree        *source,
                                     result, 0, "ubox_charp");
             result = code.Load(compiler.characterTy, result, "ubox_char");
         }
-        else
+        else if (type == compiler.naturalTreePtrTy)
         {
-            // Convert natural constants
-            assert (type == compiler.naturalTreePtrTy);
+            JIT::Value_p ptr = value;
+            if (type->isStructTy())
+            {
+                JIT::Type_p raw = jit.MachinePointerType(type);
+                ptr = code.StructGEP(type, value, 0, "nat.box");
+                ptr = code.Load(raw, ptr, "nat.ptr");
+            }
             result = code.StructGEP(compiler.naturalTreeTy,
-                                    value, NATURAL_VALUE_INDEX, "ubox_int");
+                                    ptr, NATURAL_VALUE_INDEX, "ubox_int");
             if (req != compiler.naturalTy)
                 result = code.Trunc(result, req);
+        }
+        else if (type->isIntegerTy())
+        {
+            if (req != type)
+                result = code.Trunc(value, req);
         }
     }
     else if (req->isFloatingPointTy())
@@ -1412,6 +1489,20 @@ void CompilerFunction::AddBoxedType(Tree *type, JIT::Type_p mtype)
 ///  The tree type could be a named type, e.g. [natural], or data, e.g. [X,Y]
 //   The machine type could be naturalTy or StructType({naturalTy, realTy})
 {
+    Tree *base = types->BaseType(type);
+    if (Name *n = base->AsName())
+    {
+        if (n->value == "natural")
+        {
+            JIT::Type_p existing = types->BoxedType(base);
+            if (mtype == compiler.naturalTy || existing == compiler.naturalTy)
+                mtype = compiler.naturalTy;
+            else if (existing == compiler.naturalTy &&
+                     (mtype == compiler.naturalTreePtrTy ||
+                      mtype == compiler.naturalTreeTy))
+                return;
+        }
+    }
     types->AddBoxedType(type, mtype);
 }
 
