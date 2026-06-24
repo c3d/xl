@@ -1,0 +1,34 @@
+// ****************************************************************************
+//  tail-recursion.xl                                               XLR project
+// ****************************************************************************
+//
+//   File Description:
+//
+//     Test simple case of tail recursion optimization
+//
+//
+//
+//
+//
+//
+//
+//
+// ****************************************************************************
+//   (C) 2026 Christophe de Dinechin <christophe@dinechin.org>
+//   This software is licensed under the terms outlined in LICENSE.txt
+// ****************************************************************************
+//   This file is part of XLR.
+//
+//   XLR is free software: you can redistribute it and/or modify
+//   it under the terms outlined in the LICENSE.txt file
+//
+//   XLR is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// ****************************************************************************
+
+foo 0 is { print "Done"; 1 }
+foo N when N mod 100 = 0 is { print "Got N=", N; foo N-1 }
+foo N is { foo N-1 }
+
+foo 10000
