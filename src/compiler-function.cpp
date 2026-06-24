@@ -478,6 +478,17 @@ bool CompilerFunction::HasTailLoopParam(Name *name) const
 }
 
 
+JIT::Value_p CompilerFunction::LoadNamedStorage(Name *name)
+// ----------------------------------------------------------------------------
+//   Load a unit-level mutable local by name when present
+// ----------------------------------------------------------------------------
+{
+    if (!name)
+        return nullptr;
+    return unit.LoadNamedStorage(code, name->value);
+}
+
+
 void CompilerFunction::ReloadParams(CompilerRewriteCandidate *rc)
 // ----------------------------------------------------------------------------
 //   Reload rewrite parameters from allocas at the tail-recursion loop head
@@ -580,8 +591,38 @@ JIT::Function_p CompilerFunction::Compile(Tree *call,
 
         if (isC)
         {
-            CompilerPrototype proto(*this, rc);
-            function = proto.Function();
+            text cname;
+            if (Tree *body = rc->rewrite->right)
+                if (Prefix *pfx = body->AsPrefix())
+                    if (Name *ck = pfx->left->AsName())
+                        if (ck->value == "C")
+                            if (Name *sym = pfx->right->AsName())
+                                cname = sym->value;
+            if (!cname.empty())
+            {
+                JIT::FunctionType_p fty = rc->FunctionType(jit);
+                if (JIT::Function_p existing = jit.LookupFunction(fty, cname))
+                    function = existing;
+                else
+                {
+                    std::ostringstream os;
+                    os << "C:" << cname << '@' << (void *) fty->getReturnType();
+                    for (unsigned i = 0; i < fty->getNumParams(); ++i)
+                        os << '|' << (void *) fty->getParamType(i);
+                    JIT::Function_p &csym = unit.CompiledCSymbol(os.str());
+                    if (!csym)
+                    {
+                        CompilerPrototype proto(*this, rc);
+                        csym = proto.Function();
+                    }
+                    function = csym;
+                }
+            }
+            else
+            {
+                CompilerPrototype proto(*this, rc);
+                function = proto.Function();
+            }
         }
         else
         {
@@ -1067,6 +1108,12 @@ JIT::Value_p CompilerFunction::NeedStorage(Tree *tree, JIT::Type_p mtype)
 //    Allocate storage for a given tree
 // ----------------------------------------------------------------------------
 {
+    if (Name *n = tree->AsName())
+    {
+        if (JIT::Value_p shared = unit.NamedStorageSlot(n->value))
+            return shared;
+    }
+
     JIT::Value_p result = storage[tree];
     if (!result)
     {
@@ -1074,8 +1121,18 @@ JIT::Value_p CompilerFunction::NeedStorage(Tree *tree, JIT::Type_p mtype)
         if (!mtype)
             mtype = ValueMachineType(tree);
 
-        // Create alloca to store the new form
-        result = data.Alloca(mtype, "loc");
+        if (Name *n = tree->AsName())
+        {
+            std::ostringstream os;
+            os << "xl.named." << n->value;
+            result = jit.MutableGlobal(mtype, os.str());
+            unit.SetNamedStorage(n->value, result, mtype);
+        }
+        else
+        {
+            // Create alloca to store the new form
+            result = data.Alloca(mtype, "loc");
+        }
         storage[tree] = result;
         storageTypes[tree] = mtype;
 
@@ -1274,19 +1331,31 @@ JIT::Value_p CompilerFunction::ThickClosureForExpr(Tree *expr)
 
     JIT::Function_p &slot = unit.CompiledClosure(closureTypes->TypesScope(),
                                                  expr);
-    if (!slot)
+    JIT::Function_p invoke = nullptr;
+    auto prog = unit.closureInProgress.find(expr);
+    if (prog != unit.closureInProgress.end())
+    {
+        invoke = prog->second;
+        record(closures, "Reuse in-progress closure invoke for %t as %v",
+               expr, invoke);
+    }
+    else if (!slot)
     {
         record(closures, "Compile closure invoke for %t", expr);
         std::ostringstream os;
         os << "xl.clo." << (void *) expr;
         CompilerEval ce(unit, expr, closureTypes, os.str());
+        slot = ce.Function();
+        unit.closureInProgress[expr] = slot;
         ce.Compile(expr, true);
         (void) ce.Finalize(false);
-        slot = ce.Function();
+        unit.closureInProgress.erase(expr);
+        invoke = slot;
     }
     else
     {
         record(closures, "Reuse closure invoke for %t as %v", expr, slot);
+        invoke = slot;
     }
 
     JIT::Value_p envPtr = data.Alloca(compiler.closureEnvTy, "clenv");
@@ -1303,7 +1372,7 @@ JIT::Value_p CompilerFunction::ThickClosureForExpr(Tree *expr)
     JIT::Value_p invokeField =
         code.StructGEP(compiler.closureValueTy, thickPtr, 1, "thick.invoke");
     code.Store(envPtr, dataField);
-    code.Store(slot, invokeField);
+    code.Store(invoke, invokeField);
     JIT::Value_p thickVal = code.Load(compiler.closureValueTy,
                                       thickPtr,
                                       "thick.val");

@@ -160,6 +160,9 @@ eval_fn CompilerUnit::Compile()
     record(compiler_unit, "Compile %t in scope %t", source, scope);
 
     lazyBindingSource.clear();
+    namedStorage.clear();
+    namedStorageTypes.clear();
+    closureInProgress.clear();
 
     Tree *type = types->TypeAnalysis(source);
     if (!type)
@@ -222,6 +225,60 @@ void CompilerUnit::Global(Tree *tree, JIT::Value_p value)
 }
 
 
+JIT::Value_p CompilerUnit::NamedStorageSlot(text name) const
+// ----------------------------------------------------------------------------
+//   Return the alloca for a unit-level mutable local, if any
+// ----------------------------------------------------------------------------
+{
+    auto it = namedStorage.find(name);
+    if (it != namedStorage.end())
+        return it->second;
+    return nullptr;
+}
+
+
+JIT::Type_p CompilerUnit::NamedStorageType(text name) const
+// ----------------------------------------------------------------------------
+//   Machine type for a unit-level mutable local alloca
+// ----------------------------------------------------------------------------
+{
+    auto it = namedStorageTypes.find(name);
+    if (it != namedStorageTypes.end())
+        return it->second;
+    return nullptr;
+}
+
+
+void CompilerUnit::SetNamedStorage(text name,
+                                 JIT::Value_p slot,
+                                 JIT::Type_p ty)
+// ----------------------------------------------------------------------------
+//   Record a mutable local alloca shared across rewrite functions
+// ----------------------------------------------------------------------------
+{
+    namedStorage[name] = slot;
+    if (ty)
+        namedStorageTypes[name] = ty;
+    record(compiler_unit, "Named storage %s slot %v type %T",
+           name.c_str(), slot, ty);
+}
+
+
+JIT::Value_p CompilerUnit::LoadNamedStorage(JITBlock &code, text name)
+// ----------------------------------------------------------------------------
+//   Load a unit-level mutable local
+// ----------------------------------------------------------------------------
+{
+    JIT::Value_p slot = NamedStorageSlot(name);
+    if (!slot)
+        return nullptr;
+    JIT::Type_p ty = NamedStorageType(name);
+    if (!ty)
+        ty = code.Type(slot);
+    return code.Load(ty, slot, "named");
+}
+
+
 JIT::Function_p &CompilerUnit::Compiled(Scope *scope,
                                         RewriteCandidate *rc,
                                         const JIT::Values &args)
@@ -266,6 +323,15 @@ JIT::Function_p &CompilerUnit::CompiledClosure(Scope *scope, Tree *expr)
     std::ostringstream os;
     os << "Closure" << (void *) expr << "@" << (void *) scope;
     text key = os.str();
+    return compiled[key];
+}
+
+
+JIT::Function_p &CompilerUnit::CompiledCSymbol(text key)
+// ----------------------------------------------------------------------------
+//    Return a cached LLVM declaration for a C runtime symbol + signature
+// ----------------------------------------------------------------------------
+{
     return compiled[key];
 }
 

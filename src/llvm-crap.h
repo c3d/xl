@@ -233,8 +233,10 @@ public:
 
     // Functions
     Function_p          Function(FunctionType_p type, text name);
+    Function_p          LookupFunction(FunctionType_p type, text name);
     void                Finalize(Function_p function);
     void *              ExecutableCode(Function_p f);
+    Value_p             MutableGlobal(Type_p type, text name);
 
     // Prototypes and external functions
     Function_p          ExternFunction(FunctionType_p fty, text name);

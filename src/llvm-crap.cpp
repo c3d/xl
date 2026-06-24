@@ -468,6 +468,31 @@ static inline uint64_t globalSymbolAddress(const text &name)
            name.c_str(), (void *) result);
     return result;
 }
+
+
+static inline uint64_t runtimeSymbolAddress(text name)
+// ----------------------------------------------------------------------------
+//   Resolve a runtime symbol, including LLVM-uniquified decl names
+// ----------------------------------------------------------------------------
+//   Pre-OrcV2 legacy resolvers only; OrcV2 uses DynamicLibrarySearchGenerator.
+{
+    if (uint64_t addr = globalSymbolAddress(name))
+        return addr;
+    size_t dot = name.rfind('.');
+    if (dot != text::npos && dot + 1 < name.size())
+    {
+        bool digits = true;
+        for (size_t i = dot + 1; i < name.size(); i++)
+            if (!isdigit((unsigned char) name[i]))
+            {
+                digits = false;
+                break;
+            }
+        if (digits)
+            return globalSymbolAddress(name.substr(0, dot));
+    }
+    return 0;
+}
 #endif // LLVM_VERSION < 900
 
 
@@ -590,7 +615,7 @@ JITPrivate::JITPrivate(int argc, char **argv)
                            return sym;
                        else if (auto err = sym.takeError())
                            return std::move(err);
-                       if (auto addr = globalSymbolAddress(name))
+                       if (auto addr = runtimeSymbolAddress(name))
                            return JITSymbol(addr, JITSymbolFlags::Exported);
                        return nullptr;
                    },
@@ -1019,7 +1044,7 @@ JITTargetAddress JITPrivate::Address(text name)
                 if (auto sym = optimizer.findSymbol(name, false))
                     return rtsym(sym);
 # if LLVM_VERSION < 390
-                if (auto addr = globalSymbolAddress(name))
+                if (auto addr = runtimeSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
                 return syminfo(UINT64_MAX, JITSymbolFlags::None);
@@ -1027,7 +1052,7 @@ JITTargetAddress JITPrivate::Address(text name)
                 return nullsym;
             },
             [](const std::string &name) {
-                if (auto addr = globalSymbolAddress(name))
+                if (auto addr = runtimeSymbolAddress(name))
                     return syminfo(addr, JITSymbolFlags::Exported);
                 hadErrorWith = name;
 # if LLVM_VERSION < 500
@@ -1466,6 +1491,37 @@ JIT::Function_p JIT::Function(JIT::FunctionType_p type, text name)
            f, type, p.Module());
 
     return f;
+}
+
+
+JIT::Function_p JIT::LookupFunction(JIT::FunctionType_p type, text name)
+// ----------------------------------------------------------------------------
+//    Return an existing module function when name and type match
+// ----------------------------------------------------------------------------
+{
+    JIT::Module_p module = p.Module();
+    if (!module)
+        return nullptr;
+    if (JIT::Function_p existing = module->getFunction(name))
+        if (existing->getFunctionType() == type)
+            return existing;
+    return nullptr;
+}
+
+
+JIT::Value_p JIT::MutableGlobal(JIT::Type_p type, text name)
+// ----------------------------------------------------------------------------
+//   Create a module-local mutable global for cross-function local state
+// ----------------------------------------------------------------------------
+{
+    JIT::Module_p module = p.Module();
+    assert(module && "Creating a global without a module");
+    llvm::GlobalVariable *gv = new llvm::GlobalVariable(
+        *module, type, false, llvm::GlobalValue::InternalLinkage,
+        llvm::Constant::getNullValue(type), name);
+    record(llvm_functions, "Created mutable global %v type %T in module %p",
+           gv, type, module);
+    return gv;
 }
 
 

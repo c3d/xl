@@ -98,6 +98,30 @@ static bool ArgWantsLazyThickClosure(Tree *arg)
 }
 
 
+static Tree *RemapLazySelfArg(lazy_binding_map &lazyBindings,
+                              Name *            param,
+                              Tree *            arg)
+// ----------------------------------------------------------------------------
+//   Expand a lazy parameter passed as its own name (recursive while peel).
+// ----------------------------------------------------------------------------
+//   Peeled calls like [while Condition loop Body] still pass [Condition] as a
+//   bare name; map it to the outer lazy source (e.g. [I < 10]) when present.
+{
+    if (!param || !arg)
+        return arg;
+    Name *argName = arg->AsName();
+    if (!argName || argName->value != param->value)
+        return arg;
+    auto it = lazyBindings.find(argName->value);
+    if (it != lazyBindings.end() && it->second && it->second != arg)
+    {
+        record(closures, "Remap lazy self-arg %t -> %t", arg, it->second);
+        return it->second;
+    }
+    return arg;
+}
+
+
 static Tree *LazyCompositeExpansionForName(lazy_binding_map &lazyBindings,
                                            Context *          ctx,
                                            Name *             n)
@@ -249,6 +273,16 @@ static JIT::Value_p UnwrapThickIfNeeded(CompilerFunction &fn,
 }
 
 
+static JIT::Value_p NamedStorageForName(CompilerFunction &function,
+                                        Name *name)
+// ----------------------------------------------------------------------------
+//   Load a unit-level mutable local when [name] has := storage
+// ----------------------------------------------------------------------------
+{
+    return function.LoadNamedStorage(name);
+}
+
+
 void CompilerExpression::SeedKnownCompositeLeaves(Tree *expansion,
                                                   JIT::Value_p boxed,
                                                   JIT::Type_p boxedTy,
@@ -263,6 +297,12 @@ void CompilerExpression::SeedKnownCompositeLeaves(Tree *expansion,
     case REAL:
     case TEXT:
     case NAME:
+        if (Name *n = expansion->AsName())
+            if (JIT::Value_p named = NamedStorageForName(function, n))
+            {
+                function.values[expansion] = named;
+                return;
+            }
         function.values[expansion] =
             function.code.StructLoad(boxedTy, boxed, index++, "peel");
         return;
@@ -755,7 +795,26 @@ JIT::Value_p CompilerExpression::Do(Name *what)
 
     JIT::Value_p result = DoCall(what, true);
     if (!result)
-        result = Value(existing);
+    {
+        if (Name *n = what->AsName())
+            result = function.LoadNamedStorage(n);
+        if (!result)
+        {
+            if (rewrite && existing == rewrite->right)
+            {
+                if (JIT::Value_p local = function.Known(
+                        what, CompilerFunction::knowLocals |
+                              CompilerFunction::knowValues))
+                {
+                    JIT::Type_p kty = code.Type(local);
+                    if (kty != function.compiler.treePtrTy)
+                        result = local;
+                }
+            }
+        }
+        if (!result)
+            result = Value(existing);
+    }
     record(boxed_assign, "Name %t fallback result %v via existing %t",
            what, result, existing);
 
@@ -1205,6 +1264,8 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
     for (RewriteBinding &b : bnds)
     {
         Tree        *arg   = b.value;
+        if (lazyBindings && b.name)
+            arg = RemapLazySelfArg(function.unit.lazyBindingSource, b.name, arg);
         Tree        *argtype = vtypes->ValueType(arg);
         JIT::Value_p value = nullptr;
         JIT::Type_p  sigOverride = nullptr;
@@ -1213,16 +1274,19 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
         {
             if (Name *argName = arg->AsName())
             {
-                Scope_g argWhere = nullptr;
-                Rewrite_g argRewrite = nullptr;
-                if (context->Bound(argName, true, &argRewrite, &argWhere) &&
-                    argRewrite &&
-                    argWhere == context->Symbols())
+                if (!NamedStorageForName(function, argName))
                 {
-                    keepLazyShape = true;
-                    record(closures,
-                           "Binding %t keeps lazy local name %t",
-                           b.name, argName);
+                    Scope_g argWhere = nullptr;
+                    Rewrite_g argRewrite = nullptr;
+                    if (context->Bound(argName, true, &argRewrite, &argWhere) &&
+                        argRewrite &&
+                        argWhere == context->Symbols())
+                    {
+                        keepLazyShape = true;
+                        record(closures,
+                               "Binding %t keeps lazy local name %t",
+                               b.name, argName);
+                    }
                 }
             }
         }
@@ -1281,7 +1345,8 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             {
                 if (Name *argName = arg->AsName())
                 {
-                    if (!function.HasTailLoopParam(argName))
+                    value = NamedStorageForName(function, argName);
+                    if (!value && !function.HasTailLoopParam(argName))
                     {
                         auto it = function.unit.lazyBindingSource.find(
                             argName->value);
@@ -1325,31 +1390,35 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
         {
             if (Name *argName = arg->AsName())
             {
-                if (JIT::Value_p known =
-                        function.Known(argName,
-                                       CompilerFunction::knowValues |
-                                       CompilerFunction::knowLocals))
+                value = NamedStorageForName(function, argName);
+                if (!value)
                 {
-                    value = UnwrapThickIfNeeded(function,
-                                                function.unit,
-                                                code,
-                                                arg,
-                                                known);
-                    record(closures,
-                           "Binding %t non-lazy known name %t => %v",
-                           b.name, argName, value);
-                }
-                else if (!function.HasTailLoopParam(argName))
-                {
-                    auto it = function.unit.lazyBindingSource.find(
-                        argName->value);
-                    if (it != function.unit.lazyBindingSource.end() &&
-                        it->second && it->second != arg)
+                    if (JIT::Value_p known =
+                            function.Known(argName,
+                                           CompilerFunction::knowValues |
+                                           CompilerFunction::knowLocals))
                     {
-                        value = Value(it->second);
+                        value = UnwrapThickIfNeeded(function,
+                                                    function.unit,
+                                                    code,
+                                                    arg,
+                                                    known);
                         record(closures,
-                               "Binding %t non-lazy remap %t -> %t => %v",
-                               b.name, argName, it->second, value);
+                               "Binding %t non-lazy known name %t => %v",
+                               b.name, argName, value);
+                    }
+                    else if (!function.HasTailLoopParam(argName))
+                    {
+                        auto it = function.unit.lazyBindingSource.find(
+                            argName->value);
+                        if (it != function.unit.lazyBindingSource.end() &&
+                            it->second && it->second != arg)
+                        {
+                            value = Value(it->second);
+                            record(closures,
+                                   "Binding %t non-lazy remap %t -> %t => %v",
+                                   b.name, argName, it->second, value);
+                        }
                     }
                 }
             }

@@ -105,6 +105,7 @@ public:
                                         JIT::Value_p value,
                                         JIT::Type_p ty);
     bool                HasTailLoopParam(Name *name) const;
+    JIT::Value_p        LoadNamedStorage(Name *name);
 
 private:
     // Function interface creation

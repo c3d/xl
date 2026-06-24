@@ -1,3 +1,2 @@
-O3/while-loop.xl
 O3/factorial-loop.xl
 O3/while-loop-infinite.xl

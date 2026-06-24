@@ -48,6 +48,9 @@ typedef std::map<Tree *, JIT::Value_p>  value_map;
 typedef std::map<text, JIT::Function_p> compiled_map;
 typedef std::set<JIT::Type_p>           closure_set;
 typedef std::map<text, Tree *>         lazy_binding_map;
+typedef std::map<text, JIT::Value_p>   named_storage_map;
+typedef std::map<text, JIT::Type_p>    named_storage_type_map;
+typedef std::map<Tree *, JIT::Function_p> closure_progress_map;
 
 class CompilerUnit
 // ----------------------------------------------------------------------------
@@ -64,6 +67,9 @@ class CompilerUnit
     compiled_map        compiled;       // Already compiled functions
     closure_set         clotypes;       // Closure types
     lazy_binding_map    lazyBindingSource; // NORMAL lazy thick arg trees by name
+    named_storage_map   namedStorage;      // Mutable locals shared across functions
+    named_storage_type_map namedStorageTypes;
+    closure_progress_map closureInProgress; // Break recursive closure compile
 
     friend class        CompilerPrototype;
     friend class        CompilerFunction;
@@ -82,12 +88,21 @@ public:
     JIT::Value_p        Global(Tree *tree);
     void                Global(Tree *tree, JIT::Value_p value);
 
+    // Mutable locals (shared allocas for := bindings in this unit)
+    JIT::Value_p        NamedStorageSlot(text name) const;
+    JIT::Type_p         NamedStorageType(text name) const;
+    void                SetNamedStorage(text name,
+                                        JIT::Value_p slot,
+                                        JIT::Type_p ty);
+    JIT::Value_p        LoadNamedStorage(JITBlock &code, text name);
+
     // Cache of already compiled functions
     JIT::Function_p &   Compiled(Scope *,
                                  RewriteCandidate *,
                                  const JIT::Values &);
     JIT::Function_p &   CompiledUnbox(JIT::Type_p type);
     JIT::Function_p &   CompiledClosure(Scope *, Tree *expr);
+    JIT::Function_p &   CompiledCSymbol(text key);
 
     // Closure types management
     bool                IsClosureType(JIT::Type_p type);

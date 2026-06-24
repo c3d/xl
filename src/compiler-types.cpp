@@ -51,6 +51,37 @@
 
 XL_BEGIN
 
+static bool IsBooleanMachineType(JIT::Type_p ty)
+// ----------------------------------------------------------------------------
+//   True for i1 boolean machine types
+// ----------------------------------------------------------------------------
+{
+    return ty && ty->isIntegerTy() && ty->getIntegerBitWidth() == 1;
+}
+
+
+static bool IsThickClosureMachineType(JIT::Type_p ty)
+// ----------------------------------------------------------------------------
+//   True for thick closure structs { env*, eval_fn }
+// ----------------------------------------------------------------------------
+{
+    if (!ty || !ty->isStructTy() || ty->getStructNumElements() != 2)
+        return false;
+    return ty->getStructElementType(0)->isPointerTy() &&
+           ty->getStructElementType(1)->isPointerTy();
+}
+
+
+static bool IsTreeBoxMachineType(JIT::Type_p ty)
+// ----------------------------------------------------------------------------
+//   True for boxed tree struct types (%Tree_g = { ptr })
+// ----------------------------------------------------------------------------
+{
+    return ty && ty->isStructTy() && ty->getStructNumElements() == 1 &&
+           ty->getStructElementType(0)->isPointerTy();
+}
+
+
 // ============================================================================
 //
 //    Type allocation and unification algorithms (hacked Damas-Hilney-Milner)
@@ -162,8 +193,52 @@ void CompilerTypes::AddBoxedType(Tree *type, JIT::Type_p mtype)
            this, mtype, type, base);
     if (boxed[base] && boxed[base] != mtype)
     {
+        JIT::Type_p prev = boxed[base];
+        if (IsBooleanMachineType(mtype) &&
+            (IsThickClosureMachineType(prev) || IsTreeBoxMachineType(prev)))
+        {
+            boxed[base] = mtype;
+            return;
+        }
+        if (IsBooleanMachineType(prev) &&
+            (IsThickClosureMachineType(mtype) || IsTreeBoxMachineType(mtype)))
+            return;
+        if (IsTreeBoxMachineType(prev) && IsBooleanMachineType(mtype))
+        {
+            boxed[base] = mtype;
+            return;
+        }
+        if (IsThickClosureMachineType(prev) && IsTreeBoxMachineType(mtype))
+            return;
+        if (IsTreeBoxMachineType(prev) && IsThickClosureMachineType(mtype))
+            return;
+        if (IsThickClosureMachineType(prev) && !IsThickClosureMachineType(mtype) &&
+            !IsTreeBoxMachineType(mtype))
+        {
+            boxed[base] = mtype;
+            return;
+        }
+        if (IsThickClosureMachineType(mtype) && !IsThickClosureMachineType(prev) &&
+            !IsTreeBoxMachineType(prev))
+            return;
         if (Name *n = base->AsName())
         {
+            if (!n->value.empty() && n->value[0] == '#')
+            {
+                if (IsBooleanMachineType(mtype))
+                {
+                    boxed[base] = mtype;
+                    return;
+                }
+                if (IsThickClosureMachineType(prev))
+                    return;
+                if (IsThickClosureMachineType(mtype))
+                {
+                    boxed[base] = mtype;
+                    return;
+                }
+                return;
+            }
             if (n->value == "natural")
             {
                 if (boxed[base]->isIntegerTy() && !mtype->isIntegerTy())
