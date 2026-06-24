@@ -101,6 +101,9 @@ This file records conventions and debugging context for automated assistants
   API use, bad comment style, wrong file, etc.), record the **correct rule** or
   fact here so it does not recur. Brief bullets are enough; link to files if
   useful.
+- If the user intentionally keeps in-progress plumbing in the tree (e.g.
+  exploratory tail-call support), do not revert it just to return to an older
+  baseline. Preserve that state unless the user asks to remove it.
 - **Scope:** Prefer short, durable entries over chat transcripts. Skip one-off
   task status unless it encodes a repeatable convention.
 
