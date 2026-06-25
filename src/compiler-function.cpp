@@ -77,7 +77,7 @@ static bool IsControlBuiltinRewrite(const text &fname)
     size_t dot = base.find('.');
     if (dot != text::npos)
         base = base.substr(0, dot);
-    return base == "if" || base == "while" || base == "loop" ||
+    return base == "if" || base == "loop" ||
            base == "until" || base == "for" || base == "every";
 }
 
@@ -87,12 +87,16 @@ static bool UsesTailLoop(CompilerRewriteCandidate *rc)
 //   True when a rewrite function needs the tail-recursion parameter loop
 // ----------------------------------------------------------------------------
 {
-    if (!rc || IsIoBuiltinRewrite(rc->FunctionName()) ||
-        IsControlBuiltinRewrite(rc->FunctionName()))
+    if (!rc)
         return false;
     text fname = rc->FunctionName();
-    if (fname.compare(0, 6, "infix[") == 0)
+    if (IsIoBuiltinRewrite(fname) || IsControlBuiltinRewrite(fname))
         return false;
+    if (fname.compare(0, 6, "infix[") == 0)
+    {
+        if (fname != "infix[loop]")
+            return false;
+    }
     if (rc->bindings.empty())
         return false;
     CompilerTypes::Decl d = CompilerTypes::RewriteCategory(rc);
@@ -252,10 +256,6 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
 //    Compile a given tree in given function and return the associated value
 // ----------------------------------------------------------------------------
 {
-    lazy_binding_map savedLazy;
-    if (loopHead)
-        savedLazy.swap(unit.lazyBindingSource);
-
     Tree *prefix = nullptr;
     Tree *tail   = tree;
     if (loopHead)
@@ -293,9 +293,6 @@ JIT::Function_p CompilerFunction::Compile(Tree *tree, bool force)
             code.Return(result);
         }
     }
-
-    if (loopHead)
-        unit.lazyBindingSource.swap(savedLazy);
 
     return function;
 }
@@ -815,10 +812,23 @@ JIT::Value_p CompilerFunction::Autobox(Tree        *source,
     // Unboxing cases
     if (req == compiler.booleanTy)
     {
-        assert (type == compiler.treePtrTy || type == compiler.nameTreePtrTy);
-        JIT::Value_p falsePtr = code.PointerValue(ConstantTree(xl_false));
-        value = code.PointerValue(value);
-        result = code.ICmpNE(value, falsePtr, "notfalse");
+        if (type == compiler.booleanTy)
+            return result;
+        if (type->isIntegerTy())
+        {
+            JIT::Value_p zero = code.IntegerConstant(type, 0);
+            return code.ICmpNE(value, zero, "truthy");
+        }
+        if (type == compiler.treePtrTy || type == compiler.nameTreePtrTy)
+        {
+            JIT::Value_p falsePtr = code.PointerValue(ConstantTree(xl_false));
+            value = code.PointerValue(value);
+            result = code.ICmpNE(value, falsePtr, "notfalse");
+            return result;
+        }
+        record(compiler_function,
+               "Autobox to boolean from unexpected %T", type);
+        return code.BooleanConstant(false);
     }
     else if (req->isIntegerTy())
     {

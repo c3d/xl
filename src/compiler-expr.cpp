@@ -98,6 +98,46 @@ static bool ArgWantsLazyThickClosure(Tree *arg)
 }
 
 
+static bool TailLoopIfThenParts(Tree *call, Tree **cond, Tree **body)
+// ----------------------------------------------------------------------------
+//   Split [if Condition then TrueBody] for tail-loop codegen.
+// ----------------------------------------------------------------------------
+{
+    if (Infix *then = call->AsInfix())
+    {
+        if (then->name == "then")
+        {
+            if (Prefix *ifp = then->left->AsPrefix())
+            {
+                if (Name *n = ifp->left->AsName())
+                {
+                    if (n->value == "if")
+                    {
+                        *cond = ifp->right;
+                        *body = then->right;
+                        return *cond && *body;
+                    }
+                }
+            }
+        }
+    }
+    Prefix *pfx = call->AsPrefix();
+    if (!pfx)
+        return false;
+    Name *op = pfx->left->AsName();
+    if (!op || op->value != "if")
+        return false;
+    Infix *thenInfix = pfx->right->AsInfix();
+    if (!thenInfix || thenInfix->name != "then")
+        return false;
+    if (!thenInfix->left || !thenInfix->right)
+        return false;
+    *cond = thenInfix->left;
+    *body = thenInfix->right;
+    return true;
+}
+
+
 static Tree *RemapLazySelfArg(lazy_binding_map &lazyBindings,
                               Name *            param,
                               Tree *            arg)
@@ -962,6 +1002,61 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         return nullptr;
     }
 
+    Tree *ifCond = nullptr;
+    Tree *ifBody = nullptr;
+    if (function.loopHead &&
+        TailLoopIfThenParts(rewriteCall, &ifCond, &ifBody))
+    {
+        record(compiler_expr, "Tail-loop inline if-then %t", rewriteCall);
+        JITBlock &code = function.code;
+        Compiler &compiler = function.compiler;
+        JITBlock onTrue(code, "tl.ifT");
+        JITBlock onFalse(code, "tl.ifF");
+        JIT::Value_p condVal = Evaluate(ifCond, true);
+        JIT::Type_p  condTy  = code.Type(condVal);
+        JIT::Value_p isTrue  = condVal;
+        if (condTy == compiler.treePtrTy ||
+            condTy == compiler.nameTreePtrTy)
+        {
+            condVal = function.Autobox(ifCond, condVal, compiler.booleanTy);
+            isTrue = code.ICmpEQ(condVal, code.BooleanConstant(true));
+        }
+        else if (condTy != compiler.booleanTy)
+        {
+            condVal = function.Autobox(ifCond, condVal, compiler.booleanTy);
+            isTrue = code.ICmpEQ(condVal, code.BooleanConstant(true));
+        }
+        code.IfBranch(isTrue, onTrue, onFalse);
+        code.SwitchTo(onTrue);
+        Tree *bodyTree = ifBody;
+        if (Block *b = ifBody->AsBlock())
+            bodyTree = b->child;
+        if (Infix *seq = IsSequence(bodyTree))
+        {
+            (void) Evaluate(seq->left, true);
+            bool savedTail = inTailPosition;
+            inTailPosition = true;
+            (void) seq->right->Do(this);
+            inTailPosition = savedTail;
+        }
+        else
+        {
+            bool savedTail = inTailPosition;
+            inTailPosition = true;
+            (void) Evaluate(ifBody, false);
+            inTailPosition = savedTail;
+        }
+        bool trueTerminated = code.IsTerminated();
+        if (!trueTerminated)
+            code.Branch(onFalse);
+        code.SwitchTo(onFalse);
+        result = function.ConstantTree(xl_false);
+        JIT::Type_p retTy = function.jit.ReturnType(function.Function());
+        result = function.Autobox(rewriteCall, result, retTy);
+        code.Return(result);
+        return trueTerminated ? nullptr : result;
+    }
+
     // Optimize the frequent case where we have a single call candidate
     uint i, max = rc->Size();
     record(compiler_expr, "Call %t has %u candidates", rewriteCall, max);
@@ -1486,6 +1581,28 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             record(compiler_expr, "Rewrite %t is builtin %t: %v",
                    rw, builtin, result);
         }
+    }
+    else if (function.loopHead && function.tailRc && savedTail &&
+             cand->rewrite == function.tailRc->rewrite)
+    {
+        for (size_t bi = 0; bi < cand->bindings.size(); bi++)
+        {
+            RewriteBinding &b = cand->bindings[bi];
+            if (!b.name || bi >= args.size())
+                continue;
+            auto it = function.paramStorage.find(b.name);
+            if (it != function.paramStorage.end())
+            {
+                JIT::Value_p arg = args[bi];
+                auto         tyIt = function.paramTypes.find(b.name);
+                if (tyIt != function.paramTypes.end())
+                    arg = function.CoerceTailParam(b, arg, tyIt->second);
+                code.Store(arg, it->second);
+            }
+        }
+        code.Branch(function.loopHead);
+        result = nullptr;
+        record(compiler_expr, "Rewrite %t direct tail-jump to loop", rw);
     }
     else if (JIT::Function_p fn = function.Compile(call, cand, args))
     {

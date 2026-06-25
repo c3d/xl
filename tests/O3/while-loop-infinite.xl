@@ -26,6 +26,7 @@
 //   but WITHOUT ANY WARRANTY; without even the implied warranty of
 //   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // ****************************************************************************
-
+// TIMEOUT=1s
+// FILTER=wc -l
 while 3 < 10 loop
     print "Keep going"
