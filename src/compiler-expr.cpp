@@ -961,6 +961,65 @@ JIT::Value_p CompilerExpression::Do(Block *block)
 }
 
 
+void CompilerExpression::EmitTailLoopStatement(Tree *stmt)
+// ----------------------------------------------------------------------------
+//   Emit IR for a tail-loop statement, including thick closure invoke.
+// ----------------------------------------------------------------------------
+//   Prefer the lazy-binding source tree (loop body) over compile-time invoke.
+{
+    if (!stmt)
+        return;
+    JITBlock &code = function.code;
+    if (Name *n = stmt->AsName())
+    {
+        auto lit = function.unit.lazyBindingSource.find(n->value);
+        if (lit != function.unit.lazyBindingSource.end() && lit->second)
+        {
+            Tree *exp = lit->second;
+            if (Block *b = exp->AsBlock())
+                exp = b->child;
+            if (Infix *seq = IsSequence(exp))
+            {
+                (void) Evaluate(seq->left, false);
+                (void) Evaluate(seq->right, false);
+                return;
+            }
+            (void) Evaluate(lit->second, false);
+            return;
+        }
+    }
+    JIT::Value_p val = nullptr;
+    if (Name *n = stmt->AsName())
+    {
+        val = function.Known(n, CompilerFunction::knowValues |
+                                  CompilerFunction::knowLocals);
+        if (!val)
+        {
+            for (auto const &kv : function.paramStorage)
+            {
+                if (kv.first && kv.first->value == n->value)
+                {
+                    auto tyIt = function.paramTypes.find(kv.first);
+                    if (tyIt != function.paramTypes.end())
+                        val = code.Load(tyIt->second, kv.second);
+                    break;
+                }
+            }
+        }
+    }
+    if (!val)
+    {
+        (void) Evaluate(stmt, false);
+        return;
+    }
+    JIT::Type_p ty = code.Type(val);
+    if (function.unit.IsClosureType(ty))
+        (void) function.InvokeThickClosure(stmt, val, ty);
+    else
+        (void) Evaluate(stmt, false);
+}
+
+
 JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 // ----------------------------------------------------------------------------
 //   Compile expressions into calls for the right expression
@@ -1012,7 +1071,14 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         Compiler &compiler = function.compiler;
         JITBlock onTrue(code, "tl.ifT");
         JITBlock onFalse(code, "tl.ifF");
-        JIT::Value_p condVal = Evaluate(ifCond, true);
+        Tree *condExpr = ifCond;
+        if (Name *cn = ifCond->AsName())
+        {
+            auto lit = function.unit.lazyBindingSource.find(cn->value);
+            if (lit != function.unit.lazyBindingSource.end() && lit->second)
+                condExpr = lit->second;
+        }
+        JIT::Value_p condVal = Evaluate(condExpr, true);
         JIT::Type_p  condTy  = code.Type(condVal);
         JIT::Value_p isTrue  = condVal;
         if (condTy == compiler.treePtrTy ||
@@ -1033,7 +1099,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             bodyTree = b->child;
         if (Infix *seq = IsSequence(bodyTree))
         {
-            (void) Evaluate(seq->left, true);
+            EmitTailLoopStatement(seq->left);
             bool savedTail = inTailPosition;
             inTailPosition = true;
             (void) seq->right->Do(this);
@@ -1590,6 +1656,8 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             RewriteBinding &b = cand->bindings[bi];
             if (!b.name || bi >= args.size())
                 continue;
+            if (b.name->value == "Condition")
+                continue;
             auto it = function.paramStorage.find(b.name);
             if (it != function.paramStorage.end())
             {
@@ -1612,6 +1680,8 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             {
                 RewriteBinding &b = cand->bindings[bi];
                 if (!b.name || bi >= args.size())
+                    continue;
+                if (b.name->value == "Condition")
                     continue;
                 auto it = function.paramStorage.find(b.name);
                 if (it != function.paramStorage.end())

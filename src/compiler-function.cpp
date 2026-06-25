@@ -631,8 +631,23 @@ JIT::Function_p CompilerFunction::Compile(Tree *call,
             // Compile the body
             if (!isData)
             {
+                lazy_binding_map savedLazy;
+                if (evalfn.loopHead)
+                {
+                    savedLazy.swap(unit.lazyBindingSource);
+                    if (rc->FunctionName() == "infix[loop]")
+                    {
+                        for (RewriteBinding &b : rc->bindings)
+                        {
+                            if (b.name && b.value)
+                                unit.lazyBindingSource[b.name->value] = b.value;
+                        }
+                    }
+                }
                 // Regular function body: compile it
                 evalfn.Compile(body);
+                if (evalfn.loopHead)
+                    unit.lazyBindingSource.swap(savedLazy);
             }
             else
             {

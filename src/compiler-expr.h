@@ -64,6 +64,7 @@ private:
                                          JIT::Type_p boxedTy,
                                          uint &index);
     JIT::Value_p BindingArgValue(Tree *arg);
+    void         EmitTailLoopStatement(Tree *stmt);
 
   public:
     typedef JIT::Value_p value_type;
