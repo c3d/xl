@@ -94,6 +94,7 @@ public:
 public:
     // Type adjusted overrides
     CompilerRewriteCalls *TreeRewriteCalls(Tree *what, bool recurse = true);
+    CompilerRewriteCalls *LocalTreeRewriteCalls(Tree *what);
     void                TreeRewriteCalls(Tree *what, CompilerRewriteCalls *rc);
 
 
@@ -145,6 +146,16 @@ CompilerTypes::TreeRewriteCalls(Tree *what, bool recurse)
 // ----------------------------------------------------------------------------
 {
     return (CompilerRewriteCalls *) Types::TreeRewriteCalls(what, recurse);
+}
+
+
+inline CompilerRewriteCalls *
+CompilerTypes::LocalTreeRewriteCalls(Tree *what)
+// ----------------------------------------------------------------------------
+//   Rewrite calls on this [CompilerTypes] only (no parent walk).
+// ----------------------------------------------------------------------------
+{
+    return (CompilerRewriteCalls *) Types::LocalTreeRewriteCalls(what);
 }
 
 

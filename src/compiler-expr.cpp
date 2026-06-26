@@ -43,6 +43,7 @@
 #include "save.h"
 #include "basics.h"
 #include "errors.h"
+#include <sstream>
 #include "renderer.h"
 #include "llvm-crap.h"
 
@@ -95,6 +96,16 @@ static bool ArgWantsLazyThickClosure(Tree *arg)
     if (Infix *infix = arg->AsInfix())
         return IsSequence(infix) || IsDefinition(infix);
     return false;
+}
+
+
+static bool IsWhileBuiltinCondition(Tree *cond)
+// ----------------------------------------------------------------------------
+//   True when [cond] is the while rewrite's [Condition] parameter.
+// ----------------------------------------------------------------------------
+{
+    Name *n = cond->AsName();
+    return n && n->value == "Condition";
 }
 
 
@@ -1020,6 +1031,141 @@ void CompilerExpression::EmitTailLoopStatement(Tree *stmt)
 }
 
 
+JIT::Value_p CompilerExpression::TailLoopConditionIsTrue(Tree *condExpr,
+                                                         JITBlock &onTrue,
+                                                         JITBlock &onFalse)
+// ----------------------------------------------------------------------------
+//   Branch to [onTrue] or [onFalse] from a runtime boolean [condExpr].
+// ----------------------------------------------------------------------------
+{
+    JITBlock &code = function.code;
+    Compiler &compiler = function.compiler;
+    JIT::Value_p condVal = Evaluate(condExpr, true);
+    JIT::Type_p  condTy  = code.Type(condVal);
+    JIT::Value_p isTrue  = condVal;
+    if (condTy == compiler.treePtrTy ||
+        condTy == compiler.nameTreePtrTy)
+    {
+        condVal = function.Autobox(condExpr, condVal, compiler.booleanTy);
+        isTrue = code.ICmpEQ(condVal, code.BooleanConstant(true));
+    }
+    else if (condTy != compiler.booleanTy)
+    {
+        condVal = function.Autobox(condExpr, condVal, compiler.booleanTy);
+        isTrue = code.ICmpEQ(condVal, code.BooleanConstant(true));
+    }
+    code.IfBranch(isTrue, onTrue, onFalse);
+    return isTrue;
+}
+
+
+JIT::Value_p CompilerExpression::EmitTailLoopNestedIfThen(Tree *rewriteCall,
+                                                        Tree *ifCond,
+                                                        Tree *ifBody)
+// ----------------------------------------------------------------------------
+//   Inline [if Cond then Body] inside a tail-loop body (fall through on false).
+// ----------------------------------------------------------------------------
+{
+    record(compiler_expr, "Tail-loop nested if-then %t", rewriteCall);
+    JITBlock &code = function.code;
+    JITBlock onTrue(code, "tl.nifT");
+    JITBlock onFalse(code, "tl.nifF");
+    JITBlock merge(code, "tl.nifM");
+    (void) TailLoopConditionIsTrue(ifCond, onTrue, onFalse);
+    code.SwitchTo(onTrue);
+    Tree *bodyTree = ifBody;
+    if (Block *b = ifBody->AsBlock())
+        bodyTree = b->child;
+    (void) Evaluate(bodyTree, false);
+    if (!code.IsTerminated())
+        code.Branch(merge);
+    code.SwitchTo(onFalse);
+    if (!code.IsTerminated())
+        code.Branch(merge);
+    code.SwitchTo(merge);
+    return nullptr;
+}
+
+
+JIT::Value_p CompilerExpression::EmitTypedWriteParam(Tree *call)
+// ----------------------------------------------------------------------------
+//   Emit [write P] when [P] is a typed rewrite parameter in this function.
+// ----------------------------------------------------------------------------
+//   Avoids stale [write X:text] rcalls for [write Head] inside [write Head,
+//   Rest] bodies when Head is natural or other non-text machine type.
+{
+    Prefix *pfx = call->AsPrefix();
+    if (!pfx)
+        return nullptr;
+    Name *op = pfx->left->AsName();
+    if (!op || op->value != "write")
+        return nullptr;
+    Name *param = pfx->right->AsName();
+    if (!param)
+        return nullptr;
+    JIT::Value_p arg = nullptr;
+    for (auto const &kv : function.values)
+    {
+        if (Name *n = kv.first->AsName())
+        {
+            if (n->value == param->value)
+            {
+                arg = kv.second;
+                break;
+            }
+        }
+    }
+    if (!arg)
+    {
+        for (auto const &kv : function.paramStorage)
+        {
+            if (!kv.first || kv.first->value != param->value)
+                continue;
+            auto tyIt = function.paramTypes.find(kv.first);
+            if (tyIt == function.paramTypes.end())
+                continue;
+            arg = function.code.Load(tyIt->second, kv.second);
+            break;
+        }
+    }
+    if (!arg)
+        return nullptr;
+    JITBlock &code = function.code;
+    Compiler &compiler = function.compiler;
+    JIT::Type_p argTy = code.Type(arg);
+    text cname;
+    if (argTy == compiler.charPtrTy || argTy == compiler.textTy)
+        cname = "xl_write_text";
+    else if (argTy == compiler.characterTy)
+        cname = "xl_write_character";
+    else if (argTy == compiler.naturalTy)
+        cname = "xl_write_natural";
+    else if (argTy->isIntegerTy())
+        cname = "xl_write_integer";
+    else if (argTy->isFloatingPointTy())
+        cname = "xl_write_real";
+    else
+        return nullptr;
+    JIT::FunctionType_p fty =
+        function.jit.FunctionType(compiler.booleanTy, { argTy });
+    JIT::Function_p fn = function.jit.LookupFunction(fty, cname);
+    if (!fn)
+    {
+        std::ostringstream os;
+        os << "C:" << cname << '@' << (void *) fty->getReturnType();
+        for (unsigned i = 0; i < fty->getNumParams(); ++i)
+            os << '|' << (void *) fty->getParamType(i);
+        JIT::Function_p &csym = function.unit.CompiledCSymbol(os.str());
+        if (!csym)
+            csym = function.jit.Function(fty, cname);
+        fn = csym;
+    }
+    record(compiler_expr, "Typed write param %t as %s type %T", call,
+           cname.c_str(), argTy);
+    return code.Call(fty, fn, arg);
+}
+
+
 JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
 // ----------------------------------------------------------------------------
 //   Compile expressions into calls for the right expression
@@ -1028,16 +1174,22 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     JIT::Value_p result = nullptr;
 
     record(compiler_expr, "Call %t", call);
+    if (JIT::Value_p typedWrite = EmitTypedWriteParam(call))
+        return typedWrite;
     CompilerTypes *types = function.types;
     Tree *rewriteCall = call;
-    CompilerRewriteCalls *rc = types->TreeRewriteCalls(rewriteCall);
+    // Prefer rcalls from this binding context: parent Types may cache a
+    // single unconditional overload (e.g. write X:text for write Head).
+    CompilerRewriteCalls *rc = types->LocalTreeRewriteCalls(rewriteCall);
     if (!rc)
     {
         // Top-level TypeAnalysis may not have walked nested rewrite bodies
         // (e.g. builtins). Infer the call here so rcalls exist for codegen.
         types->Type(rewriteCall);
-        rc = types->TreeRewriteCalls(rewriteCall);
+        rc = types->LocalTreeRewriteCalls(rewriteCall);
     }
+    if (!rc)
+        rc = types->TreeRewriteCalls(rewriteCall);
     if (!function.loopHead)
     {
         ApplyLazyBindingPeel(function.unit.lazyBindingSource,
@@ -1064,11 +1216,16 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
     Tree *ifCond = nullptr;
     Tree *ifBody = nullptr;
     if (function.loopHead &&
-        TailLoopIfThenParts(rewriteCall, &ifCond, &ifBody))
+        TailLoopIfThenParts(rewriteCall, &ifCond, &ifBody) &&
+        !IsWhileBuiltinCondition(ifCond))
+        return EmitTailLoopNestedIfThen(rewriteCall, ifCond, ifBody);
+
+    if (function.loopHead &&
+        TailLoopIfThenParts(rewriteCall, &ifCond, &ifBody) &&
+        IsWhileBuiltinCondition(ifCond))
     {
         record(compiler_expr, "Tail-loop inline if-then %t", rewriteCall);
         JITBlock &code = function.code;
-        Compiler &compiler = function.compiler;
         JITBlock onTrue(code, "tl.ifT");
         JITBlock onFalse(code, "tl.ifF");
         Tree *condExpr = ifCond;
@@ -1078,21 +1235,7 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
             if (lit != function.unit.lazyBindingSource.end() && lit->second)
                 condExpr = lit->second;
         }
-        JIT::Value_p condVal = Evaluate(condExpr, true);
-        JIT::Type_p  condTy  = code.Type(condVal);
-        JIT::Value_p isTrue  = condVal;
-        if (condTy == compiler.treePtrTy ||
-            condTy == compiler.nameTreePtrTy)
-        {
-            condVal = function.Autobox(ifCond, condVal, compiler.booleanTy);
-            isTrue = code.ICmpEQ(condVal, code.BooleanConstant(true));
-        }
-        else if (condTy != compiler.booleanTy)
-        {
-            condVal = function.Autobox(ifCond, condVal, compiler.booleanTy);
-            isTrue = code.ICmpEQ(condVal, code.BooleanConstant(true));
-        }
-        code.IfBranch(isTrue, onTrue, onFalse);
+        (void) TailLoopConditionIsTrue(condExpr, onTrue, onFalse);
         code.SwitchTo(onTrue);
         Tree *bodyTree = ifBody;
         if (Block *b = ifBody->AsBlock())

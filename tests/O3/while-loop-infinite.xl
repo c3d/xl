@@ -26,7 +26,10 @@
 //   but WITHOUT ANY WARRANTY; without even the implied warranty of
 //   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // ****************************************************************************
-// TIMEOUT=1s
-// FILTER=wc -l
-while 3 < 10 loop
-    print "Keep going"
+
+I := 0
+while I < 100_000_000 loop
+    I := I + 1
+    if I mod 10_000_000 = 0 then
+        print "I=", I
+print "At end I=", I

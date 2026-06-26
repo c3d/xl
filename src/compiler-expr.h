@@ -65,6 +65,13 @@ private:
                                          uint &index);
     JIT::Value_p BindingArgValue(Tree *arg);
     void         EmitTailLoopStatement(Tree *stmt);
+    JIT::Value_p TailLoopConditionIsTrue(Tree *condExpr,
+                                         JITBlock &onTrue,
+                                         JITBlock &onFalse);
+    JIT::Value_p EmitTailLoopNestedIfThen(Tree *rewriteCall,
+                                          Tree *ifCond,
+                                          Tree *ifBody);
+    JIT::Value_p EmitTypedWriteParam(Tree *call);
 
   public:
     typedef JIT::Value_p value_type;

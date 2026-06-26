@@ -142,6 +142,7 @@ public:
 
     // Access to rewrite calls
     RewriteCalls *      TreeRewriteCalls(Tree *what, bool recurse = true);
+    RewriteCalls *      LocalTreeRewriteCalls(Tree *what);
     void                TreeRewriteCalls(Tree *what, RewriteCalls *rc);
 
 protected:

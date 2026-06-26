@@ -1601,6 +1601,23 @@ Infix *Types::IsUnionType(Tree *type)
 }
 
 
+RewriteCalls *Types::LocalTreeRewriteCalls(Tree *what)
+// ----------------------------------------------------------------------------
+//   Rewrite calls registered on this [Types] only (no parent walk).
+// ----------------------------------------------------------------------------
+{
+    auto it = rcalls.find(what);
+    if (it != rcalls.end())
+    {
+        RewriteCalls *rc = it->second;
+        record(types_calls, "Local calls in %p for %t are %p (%u entries)",
+               this, what, rc, rc->Size());
+        return rc;
+    }
+    return nullptr;
+}
+
+
 RewriteCalls *Types::TreeRewriteCalls(Tree *what, bool recurse)
 // ----------------------------------------------------------------------------
 //   Check if we have rewrite calls for this tree
