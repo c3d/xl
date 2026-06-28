@@ -99,16 +99,6 @@ static bool ArgWantsLazyThickClosure(Tree *arg)
 }
 
 
-static bool IsWhileBuiltinCondition(Tree *cond)
-// ----------------------------------------------------------------------------
-//   True when [cond] is the while rewrite's [Condition] parameter.
-// ----------------------------------------------------------------------------
-{
-    Name *n = cond->AsName();
-    return n && n->value == "Condition";
-}
-
-
 static bool TailLoopIfThenParts(Tree *call, Tree **cond, Tree **body)
 // ----------------------------------------------------------------------------
 //   Split [if Condition then TrueBody] for tail-loop codegen.
@@ -146,6 +136,138 @@ static bool TailLoopIfThenParts(Tree *call, Tree **cond, Tree **body)
     *cond = thenInfix->left;
     *body = thenInfix->right;
     return true;
+}
+
+
+static Tree *RewriteBodyTree(Tree *body)
+// ----------------------------------------------------------------------------
+//   Peel an optional block wrapper from a rewrite body.
+// ----------------------------------------------------------------------------
+{
+    if (Block *b = body->AsBlock())
+        return b->child;
+    return body;
+}
+
+
+static bool TailLoopLazyCommaDriverParts(Tree *call, Tree **cond, Tree **body)
+// ----------------------------------------------------------------------------
+//   Split [Op Cond, Body] comma-call shapes for tail-loop driver codegen.
+// ----------------------------------------------------------------------------
+{
+    Prefix *pfx = call->AsPrefix();
+    if (!pfx)
+        return false;
+    Infix *comma = pfx->right->AsInfix();
+    if (!comma || comma->name != ",")
+        return false;
+    if (!comma->left || !comma->right)
+        return false;
+    *cond = comma->left;
+    *body = comma->right;
+    return true;
+}
+
+
+static Name *TailLoopDriverDispatchOp(CompilerRewriteCandidate *rc)
+// ----------------------------------------------------------------------------
+//   Operator name in a tail-loop rewrite driver call ([if] or [bar] etc.).
+// ----------------------------------------------------------------------------
+{
+    if (!rc)
+        return nullptr;
+    Tree *body = RewriteBodyTree(rc->RewriteBody());
+    if (Prefix *pfx = body->AsPrefix())
+        return pfx->left ? pfx->left->AsName() : nullptr;
+    Tree *cond = nullptr;
+    Tree *rest = nullptr;
+    if (TailLoopIfThenParts(body, &cond, &rest))
+    {
+        Infix *then = body->AsInfix();
+        if (!then || then->name != "then")
+            return nullptr;
+        Prefix *ifp = then->left ? then->left->AsPrefix() : nullptr;
+        return ifp && ifp->left ? ifp->left->AsName() : nullptr;
+    }
+    return nullptr;
+}
+
+
+static Name *TailLoopDriverConditionName(CompilerRewriteCandidate *rc)
+// ----------------------------------------------------------------------------
+//   Name of the condition parameter in a tail-loop rewrite driver call.
+// ----------------------------------------------------------------------------
+{
+    if (!rc)
+        return nullptr;
+    Tree *body = RewriteBodyTree(rc->RewriteBody());
+    Tree *cond = nullptr;
+    Tree *rest = nullptr;
+    if (TailLoopIfThenParts(body, &cond, &rest) ||
+        TailLoopLazyCommaDriverParts(body, &cond, &rest))
+        return cond->AsName();
+    return nullptr;
+}
+
+
+static bool IsTailLoopDriverCommaDispatch(CompilerRewriteCandidate *rc,
+                                        Tree *                  call)
+// ----------------------------------------------------------------------------
+//   True when [call] is [Op Cond, Body] using the rewrite's driver [Op].
+// ----------------------------------------------------------------------------
+//   Excludes comma-list calls like [print "I=", I] that share the same shape.
+{
+    Tree *cond = nullptr;
+    Tree *body = nullptr;
+    if (!TailLoopLazyCommaDriverParts(call, &cond, &body))
+        return false;
+    Name *dispatch = TailLoopDriverDispatchOp(rc);
+    Prefix *pfx = call->AsPrefix();
+    Name *callOp = pfx && pfx->left ? pfx->left->AsName() : nullptr;
+    return dispatch && callOp && callOp->value == dispatch->value;
+}
+
+
+bool ShouldSeedTailLoopLazyBinding(CompilerRewriteCandidate *rc,
+                                   RewriteBinding &          binding)
+// ----------------------------------------------------------------------------
+//   True when a tail-loop compile should seed [lazyBindingSource] for [binding].
+// ----------------------------------------------------------------------------
+//   Seeds lazy body parameters and the driver condition name only. Plain value
+//   parameters like [N] in [foo N is foo N-1] must not be seeded.
+{
+    if (!rc || !binding.name || !binding.value)
+        return false;
+    Name *driver = TailLoopDriverConditionName(rc);
+    if (driver && driver->value == binding.name->value)
+        return true;
+    return ArgWantsLazyThickClosure(binding.value);
+}
+
+
+static bool IsTailLoopDriverCondition(CompilerRewriteCandidate *rc, Tree *cond)
+// ----------------------------------------------------------------------------
+//   True when [cond] is the lazy driver condition for [rc]'s tail loop.
+// ----------------------------------------------------------------------------
+{
+    Name *n = cond->AsName();
+    if (!n)
+        return false;
+    Name *driver = TailLoopDriverConditionName(rc);
+    return driver && driver->value == n->value;
+}
+
+
+static bool IsTailLoopDriverConditionParam(CompilerRewriteCandidate *rc,
+                                           Name *                  name)
+// ----------------------------------------------------------------------------
+//   True when [name] is the driver condition parameter for [rc].
+// ----------------------------------------------------------------------------
+{
+    if (!name)
+        return false;
+    Name *driver = TailLoopDriverConditionName(rc);
+    return driver && driver->value == name->value;
 }
 
 
@@ -1087,6 +1209,84 @@ JIT::Value_p CompilerExpression::EmitTailLoopNestedIfThen(Tree *rewriteCall,
 }
 
 
+JIT::Value_p CompilerExpression::EmitTailLoopDriverInline(Tree *rewriteCall,
+                                                          Tree *driverCond,
+                                                          Tree *driverBody)
+// ----------------------------------------------------------------------------
+//   Inline the tail-loop driver (if-then or comma dispatch) for one iteration.
+// ----------------------------------------------------------------------------
+{
+    record(compiler_expr, "Tail-loop driver inline %t", rewriteCall);
+    JITBlock &code = function.code;
+    JITBlock onTrue(code, "tl.drvT");
+    JITBlock onFalse(code, "tl.drvF");
+    Tree *condExpr = driverCond;
+    if (Name *cn = driverCond->AsName())
+    {
+        auto lit = function.unit.lazyBindingSource.find(cn->value);
+        if (lit != function.unit.lazyBindingSource.end() && lit->second)
+            condExpr = lit->second;
+    }
+    (void) TailLoopConditionIsTrue(condExpr, onTrue, onFalse);
+    code.SwitchTo(onTrue);
+    Tree *bodyTree = driverBody;
+    if (Block *b = driverBody->AsBlock())
+        bodyTree = b->child;
+    if (Infix *seq = IsSequence(bodyTree))
+    {
+        EmitTailLoopStatement(seq->left);
+        bool savedTail = inTailPosition;
+        inTailPosition = true;
+        (void) seq->right->Do(this);
+        inTailPosition = savedTail;
+    }
+    else
+    {
+        bool savedTail = inTailPosition;
+        inTailPosition = true;
+        (void) Evaluate(driverBody, false);
+        inTailPosition = savedTail;
+    }
+    bool trueTerminated = code.IsTerminated();
+    if (!trueTerminated)
+        code.Branch(onFalse);
+    code.SwitchTo(onFalse);
+    JIT::Value_p result = function.ConstantTree(xl_false);
+    JIT::Type_p retTy = function.jit.ReturnType(function.Function());
+    result = function.Autobox(rewriteCall, result, retTy);
+    code.Return(result);
+    return trueTerminated ? nullptr : result;
+}
+
+
+bool CompilerExpression::IsSelfTailLoopRewriteCall(CompilerTypes *types,
+                                                   Tree *          call)
+// ----------------------------------------------------------------------------
+//   True when [call] matches the tail-loop rewrite being compiled.
+// ----------------------------------------------------------------------------
+{
+    if (!function.tailRc || !function.loopHead || !types || !call)
+        return false;
+    CompilerRewriteCalls *rc = types->LocalTreeRewriteCalls(call);
+    if (!rc)
+    {
+        types->Type(call);
+        rc = types->LocalTreeRewriteCalls(call);
+    }
+    if (!rc)
+        rc = types->TreeRewriteCalls(call);
+    if (!rc)
+        return false;
+    for (uint i = 0; i < rc->Size(); i++)
+    {
+        CompilerRewriteCandidate *cand = rc->Candidate(i);
+        if (cand && cand->rewrite == function.tailRc->rewrite)
+            return true;
+    }
+    return false;
+}
+
+
 JIT::Value_p CompilerExpression::EmitTypedWriteParam(Tree *call)
 // ----------------------------------------------------------------------------
 //   Emit [write P] when [P] is a typed rewrite parameter in this function.
@@ -1213,57 +1413,23 @@ JIT::Value_p CompilerExpression::DoCall(Tree *call, bool mayfail)
         return nullptr;
     }
 
-    Tree *ifCond = nullptr;
-    Tree *ifBody = nullptr;
-    if (function.loopHead &&
-        TailLoopIfThenParts(rewriteCall, &ifCond, &ifBody) &&
-        !IsWhileBuiltinCondition(ifCond))
-        return EmitTailLoopNestedIfThen(rewriteCall, ifCond, ifBody);
-
-    if (function.loopHead &&
-        TailLoopIfThenParts(rewriteCall, &ifCond, &ifBody) &&
-        IsWhileBuiltinCondition(ifCond))
+    Tree *drvCond = nullptr;
+    Tree *drvBody = nullptr;
+    if (function.loopHead && function.tailRc &&
+        !IsSelfTailLoopRewriteCall(types, rewriteCall))
     {
-        record(compiler_expr, "Tail-loop inline if-then %t", rewriteCall);
-        JITBlock &code = function.code;
-        JITBlock onTrue(code, "tl.ifT");
-        JITBlock onFalse(code, "tl.ifF");
-        Tree *condExpr = ifCond;
-        if (Name *cn = ifCond->AsName())
+        if (TailLoopIfThenParts(rewriteCall, &drvCond, &drvBody) &&
+            IsTailLoopDriverCondition(function.tailRc, drvCond))
+            return EmitTailLoopDriverInline(rewriteCall, drvCond, drvBody);
+        if (IsTailLoopDriverCommaDispatch(function.tailRc, rewriteCall))
         {
-            auto lit = function.unit.lazyBindingSource.find(cn->value);
-            if (lit != function.unit.lazyBindingSource.end() && lit->second)
-                condExpr = lit->second;
+            TailLoopLazyCommaDriverParts(rewriteCall, &drvCond, &drvBody);
+            if (IsTailLoopDriverCondition(function.tailRc, drvCond))
+                return EmitTailLoopDriverInline(rewriteCall, drvCond, drvBody);
+            return EmitTailLoopNestedIfThen(rewriteCall, drvCond, drvBody);
         }
-        (void) TailLoopConditionIsTrue(condExpr, onTrue, onFalse);
-        code.SwitchTo(onTrue);
-        Tree *bodyTree = ifBody;
-        if (Block *b = ifBody->AsBlock())
-            bodyTree = b->child;
-        if (Infix *seq = IsSequence(bodyTree))
-        {
-            EmitTailLoopStatement(seq->left);
-            bool savedTail = inTailPosition;
-            inTailPosition = true;
-            (void) seq->right->Do(this);
-            inTailPosition = savedTail;
-        }
-        else
-        {
-            bool savedTail = inTailPosition;
-            inTailPosition = true;
-            (void) Evaluate(ifBody, false);
-            inTailPosition = savedTail;
-        }
-        bool trueTerminated = code.IsTerminated();
-        if (!trueTerminated)
-            code.Branch(onFalse);
-        code.SwitchTo(onFalse);
-        result = function.ConstantTree(xl_false);
-        JIT::Type_p retTy = function.jit.ReturnType(function.Function());
-        result = function.Autobox(rewriteCall, result, retTy);
-        code.Return(result);
-        return trueTerminated ? nullptr : result;
+        if (TailLoopIfThenParts(rewriteCall, &drvCond, &drvBody))
+            return EmitTailLoopNestedIfThen(rewriteCall, drvCond, drvBody);
     }
 
     // Optimize the frequent case where we have a single call candidate
@@ -1799,7 +1965,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
             RewriteBinding &b = cand->bindings[bi];
             if (!b.name || bi >= args.size())
                 continue;
-            if (b.name->value == "Condition")
+            if (IsTailLoopDriverConditionParam(function.tailRc, b.name))
                 continue;
             auto it = function.paramStorage.find(b.name);
             if (it != function.paramStorage.end())
@@ -1824,7 +1990,7 @@ JIT::Value_p CompilerExpression::DoRewrite(Tree *call,
                 RewriteBinding &b = cand->bindings[bi];
                 if (!b.name || bi >= args.size())
                     continue;
-                if (b.name->value == "Condition")
+                if (IsTailLoopDriverConditionParam(function.tailRc, b.name))
                     continue;
                 auto it = function.paramStorage.find(b.name);
                 if (it != function.paramStorage.end())

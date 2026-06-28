@@ -27,9 +27,11 @@
 //   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // ****************************************************************************
 
+// TIMEOUT=30s
+
 I := 0
-while I < 100_000_000 loop
+while I < 10_000_000_000 loop
     I := I + 1
-    if I mod 10_000_000 = 0 then
+    if I mod 1_000_000_000 = 0 then
         print "I=", I
 print "At end I=", I

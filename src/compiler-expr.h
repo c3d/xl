@@ -42,6 +42,12 @@
 
 XL_BEGIN
 
+bool ShouldSeedTailLoopLazyBinding(CompilerRewriteCandidate *rc,
+                                   RewriteBinding &          binding);
+// ----------------------------------------------------------------------------
+//   True when a tail-loop compile should seed [lazyBindingSource] for [binding].
+// ----------------------------------------------------------------------------
+
 class  JITBlock;
 
 class CompilerExpression
@@ -71,7 +77,11 @@ private:
     JIT::Value_p EmitTailLoopNestedIfThen(Tree *rewriteCall,
                                           Tree *ifCond,
                                           Tree *ifBody);
+    JIT::Value_p EmitTailLoopDriverInline(Tree *rewriteCall,
+                                          Tree *driverCond,
+                                          Tree *driverBody);
     JIT::Value_p EmitTypedWriteParam(Tree *call);
+    bool         IsSelfTailLoopRewriteCall(CompilerTypes *types, Tree *call);
 
   public:
     typedef JIT::Value_p value_type;

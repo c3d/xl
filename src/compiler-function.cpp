@@ -635,13 +635,10 @@ JIT::Function_p CompilerFunction::Compile(Tree *call,
                 if (evalfn.loopHead)
                 {
                     savedLazy.swap(unit.lazyBindingSource);
-                    if (rc->FunctionName() == "infix[loop]")
+                    for (RewriteBinding &b : rc->bindings)
                     {
-                        for (RewriteBinding &b : rc->bindings)
-                        {
-                            if (b.name && b.value)
-                                unit.lazyBindingSource[b.name->value] = b.value;
-                        }
+                        if (ShouldSeedTailLoopLazyBinding(rc, b))
+                            unit.lazyBindingSource[b.name->value] = b.value;
                     }
                 }
                 // Regular function body: compile it
